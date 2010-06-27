@@ -12,11 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.controller;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
-import java.rmi.Remote;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -25,28 +23,19 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
-public interface IClusterController extends Remote {
-    public NodeParameters registerNode(INodeController nodeController) throws Exception;
+public interface IJobManager {
+    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
-    public void unregisterNode(INodeController nodeController) throws Exception;
+    public void start(UUID jobId) throws Exception;
+
+    public void advanceJob(JobControl jobControlImpl) throws Exception;
 
     public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
             throws Exception;
 
-    public void nodeHeartbeat(String id) throws Exception;
-
-    /*
-     * Client Job Control methods.
-     */
-    public UUID createJob(JobSpecification jobSpec) throws Exception;
-
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
-
-    public JobStatus getJobStatus(UUID jobId) throws Exception;
-
-    public void start(UUID jobId) throws Exception;
+    public JobStatus getJobStatus(UUID jobId);
 
     public JobStatistics waitForCompletion(UUID jobId) throws Exception;
 
-    public Map<String, INodeController> getRegistry() throws Exception;
+    public void notifyNodeFailure(String nodeId);
 }

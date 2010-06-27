@@ -1,0 +1,50 @@
+program hyrackscc;
+
+import java.util.UUID;
+import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+
+define(testOp, keys(0, 1), {UUID, OperatorDescriptorId, IOperatorDescriptor});
+define(testConn, keys(0, 1), {UUID, ConnectorDescriptorId, OperatorDescriptorId, Integer, OperatorDescriptorId, Integer});
+
+testOp(JobId, Opid, Op) :- 
+    operatordescriptor(JobId, Opid, Op)
+    {
+        java.lang.System.err.println(Opid);
+    };
+
+testConn(JobId, Cid, SOpid, SPort, DOpid, DPort) :- 
+    connectordescriptor(JobId, Cid, SOpid, SPort, DOpid, DPort, _)
+    {
+        java.lang.System.err.println(Cid.toString() + " " + SOpid.toString() + ":" + SPort.toString() + " -> " + DOpid.toString() + ":" + DPort.toString());
+    };
+
+define(activitystage, keys(0, 1, 2, 3, 4), {UUID, OperatorDescriptorId, ActivityNodeId, OperatorDescriptorId, ActivityNodeId});
+
+activitystage(JobId, OperatorId, ActivityId, OperatorId, ActivityId) :-
+    activitynode(JobId, OperatorId, ActivityId, _)
+    {
+        java.lang.System.err.println("INITIAL: " + JobId.toString() + " " + OperatorId.toString() + " " + ActivityId.toString());
+    };
+
+activitystage(JobId, OperatorId2, ActivityId2, OperatorId1, ActivityId1) :-
+    activitystage(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2)
+    {
+        java.lang.System.err.println("CHANGE1: " + JobId.toString() + " " + OperatorId2.toString() + " " + ActivityId2.toString() + " " + OperatorId1.toString() + " " + ActivityId1.toString());
+    };
+
+activitystage(JobId, OperatorId1, ActivityId1, OperatorId3, ActivityId3) :-
+    activitystage(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2),
+    activitynode(JobId, OperatorId3, ActivityId3, _),
+    activityconnection(JobId, OperatorId2, Operator2Port, _, ActivityId2, _),
+    activityconnection(JobId, OperatorId3, Operator3Port, _, ActivityId3, _),
+    connectordescriptor(JobId, _, OperatorId2, Operator2Port, OperatorId3, Operator3Port, _)
+    {
+        java.lang.System.err.println("CHANGE2: " + JobId.toString() + " " + OperatorId1.toString() + " " + ActivityId1.toString() + " " + OperatorId3.toString() + " " + ActivityId3.toString());
+    };
+
+watch(activitynode, a);
+watch(activitystage, a);

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.controller;
+package edu.uci.ics.hyracks.controller.nodecontroller;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -38,7 +40,9 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.controller.NodeCapability;
+import edu.uci.ics.hyracks.api.controller.NodeParameters;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.Direction;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
@@ -56,8 +60,7 @@ import edu.uci.ics.hyracks.comm.ConnectionManager;
 import edu.uci.ics.hyracks.comm.DemuxDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.config.NCConfig;
 import edu.uci.ics.hyracks.context.HyracksContext;
-import edu.uci.ics.hyracks.job.Joblet;
-import edu.uci.ics.hyracks.job.Stagelet;
+import edu.uci.ics.hyracks.controller.AbstractRemoteService;
 import edu.uci.ics.hyracks.runtime.OperatorRunnable;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
@@ -73,11 +76,15 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final ConnectionManager connectionManager;
 
+    private final Timer timer;
+
     private IClusterController ccs;
 
     private Map<UUID, Joblet> jobletMap;
 
     private Executor executor;
+
+    private NodeParameters nodeParameters;
 
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
@@ -90,6 +97,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
         jobletMap = new HashMap<UUID, Joblet>();
         executor = Executors.newCachedThreadPool();
+        timer = new Timer(true);
     }
 
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
@@ -100,7 +108,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         connectionManager.start();
         Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
         IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
-        cc.registerNode(this);
+        this.nodeParameters = cc.registerNode(this);
+
+        // Schedule heartbeat generator.
+        timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod() * 1000);
+
         LOGGER.log(Level.INFO, "Started NodeControllerService");
     }
 
@@ -189,7 +201,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx);
                             connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
                             PortInstanceId piId = new PortInstanceId(op.getOperatorId(),
-                                    PortInstanceId.Direction.INPUT, plan.getTaskInputMap().get(hanId).get(j), i);
+                                    Direction.INPUT, plan.getTaskInputMap().get(hanId).get(j), i);
                             if (LOGGER.isLoggable(Level.FINEST)) {
                                 LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
                             }
@@ -270,7 +282,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 @Override
                                 public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
                                     PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
-                                            PortInstanceId.Direction.INPUT, spec.getConsumerInputIndex(conn), index);
+                                            Direction.INPUT, spec.getConsumerInputIndex(conn), index);
                                     Endpoint ep = globalPortMap.get(piId);
                                     if (LOGGER.isLoggable(Level.FINEST)) {
                                         LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
@@ -367,8 +379,25 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         this.ccs = ccs;
     }
 
-	@Override
-	public NCConfig getConfiguration() throws Exception {
-		return ncConfig;
-	}
+    @Override
+    public NCConfig getConfiguration() throws Exception {
+        return ncConfig;
+    }
+
+    private class HeartbeatTask extends TimerTask {
+        private IClusterController cc;
+
+        public HeartbeatTask(IClusterController cc) {
+            this.cc = cc;
+        }
+
+        @Override
+        public void run() {
+            try {
+                cc.nodeHeartbeat(id);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

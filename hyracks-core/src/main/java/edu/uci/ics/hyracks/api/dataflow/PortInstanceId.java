@@ -17,11 +17,6 @@ package edu.uci.ics.hyracks.api.dataflow;
 import java.io.Serializable;
 
 public final class PortInstanceId implements Serializable {
-    public enum Direction {
-        INPUT,
-        OUTPUT,
-    }
-
     private static final long serialVersionUID = 1L;
 
     private OperatorDescriptorId odId;

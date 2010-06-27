@@ -12,15 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.controller;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -31,6 +36,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jol.core.Runtime;
+
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -38,13 +45,14 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 
 import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
+import edu.uci.ics.hyracks.api.controller.NodeParameters;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.config.CCConfig;
-import edu.uci.ics.hyracks.job.JobManager;
+import edu.uci.ics.hyracks.controller.AbstractRemoteService;
 import edu.uci.ics.hyracks.web.WebServer;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController {
@@ -54,20 +62,32 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
-    private final Map<String, INodeController> nodeRegistry;
+    private final Map<String, NodeControllerState> nodeRegistry;
 
     private WebServer webServer;
 
-    private final JobManager jobManager;
+    private final IJobManager jobManager;
 
     private final Executor taskExecutor;
 
+    private final Timer timer;
+
+    private Runtime jolRuntime;
+
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
-        nodeRegistry = new LinkedHashMap<String, INodeController>();
-        jobManager = new JobManager(this);
+        nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
+        if (ccConfig.useJOL) {
+            jolRuntime = (Runtime) Runtime.create(Runtime.DEBUG_WATCH, System.err);
+            jobManager = new JOLJobManagerImpl(jolRuntime);
+        } else {
+            jobManager = new JobManagerImpl(this);
+        }
         taskExecutor = Executors.newCachedThreadPool();
-        webServer = new WebServer(new Handler[] { getAdminConsoleHandler() });
+        webServer = new WebServer(new Handler[] {
+            getAdminConsoleHandler()
+        });
+        this.timer = new Timer(true);
     }
 
     @Override
@@ -77,6 +97,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
+        timer.schedule(new DeadNodeSweeper(), 0, ccConfig.heartbeatPeriod * 1000);
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
@@ -98,16 +119,20 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void registerNode(INodeController nodeController) throws Exception {
+    public NodeParameters registerNode(INodeController nodeController) throws Exception {
         String id = nodeController.getId();
+        NodeControllerState state = new NodeControllerState(nodeController);
         synchronized (this) {
             if (nodeRegistry.containsKey(id)) {
                 throw new Exception("Node with this name already registered.");
             }
-            nodeRegistry.put(id, nodeController);
+            nodeRegistry.put(id, state);
         }
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
+        NodeParameters params = new NodeParameters();
+        params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
+        return params;
     }
 
     @Override
@@ -119,8 +144,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         LOGGER.log(Level.INFO, "Unregistered INodeController");
     }
 
-    @Override
-    public INodeController lookupNode(String id) throws Exception {
+    public synchronized NodeControllerState lookupNode(String id) throws Exception {
         return nodeRegistry.get(id);
     }
 
@@ -129,12 +153,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     public synchronized void notifyJobComplete(final UUID jobId) {
-        for (final INodeController nc : nodeRegistry.values()) {
+        for (final NodeControllerState ns : nodeRegistry.values()) {
             taskExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        nc.cleanUpJob(jobId);
+                        ns.getNodeController().cleanUpJob(jobId);
                     } catch (Exception e) {
                     }
                 }
@@ -145,7 +169,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
-            throws Exception {
+        throws Exception {
         jobManager.notifyStageletComplete(jobId, stageId, nodeId, statistics);
     }
 
@@ -169,7 +193,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         handler.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest, HttpServletRequest request,
-                    HttpServletResponse response) throws IOException, ServletException {
+                HttpServletResponse response) throws IOException, ServletException {
                 if (!"/".equals(target)) {
                     return;
                 }
@@ -182,12 +206,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 writer.println("<h2>Node Controllers</h2>");
                 writer.println("<table><tr><td>Node Id</td><td>Host</td></tr>");
                 synchronized (ClusterControllerService.this) {
-                    for (Map.Entry<String, INodeController> e : nodeRegistry.entrySet()) {
+                    for (Map.Entry<String, NodeControllerState> e : nodeRegistry.entrySet()) {
                         try {
-                            INodeController n = e.getValue();
                             writer.print("<tr><td>");
                             writer.print(e.getKey());
                             writer.print("</td><td>");
+                            writer.print(e.getValue().getLastHeartbeatDuration());
                             writer.print("</td></tr>");
                         } catch (Exception ex) {
                         }
@@ -203,6 +227,44 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public Map<String, INodeController> getRegistry() throws Exception {
-        return nodeRegistry;
+        Map<String, INodeController> map = new HashMap<String, INodeController>();
+        for (Map.Entry<String, NodeControllerState> e : nodeRegistry.entrySet()) {
+            map.put(e.getKey(), e.getValue().getNodeController());
+        }
+        return map;
+    }
+
+    @Override
+    public synchronized void nodeHeartbeat(String id) throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Heartbeat from: " + id);
+        }
+        NodeControllerState ns = nodeRegistry.get(id);
+        if (ns != null) {
+            ns.notifyHeartbeat();
+        }
+    }
+
+    private void killNode(String nodeId) {
+        nodeRegistry.remove(nodeId);
+        jobManager.notifyNodeFailure(nodeId);
+    }
+
+    private class DeadNodeSweeper extends TimerTask {
+        @Override
+        public void run() {
+            Set<String> deadNodes = new HashSet<String>();
+            synchronized (ClusterControllerService.this) {
+                for (Map.Entry<String, NodeControllerState> e : nodeRegistry.entrySet()) {
+                    NodeControllerState state = e.getValue();
+                    if (state.incrementLastHeartbeatDuration() >= ccConfig.maxHeartbeatLapsePeriods) {
+                        deadNodes.add(e.getKey());
+                    }
+                }
+                for (String deadNode : deadNodes) {
+                    killNode(deadNode);
+                }
+            }
+        }
     }
 }

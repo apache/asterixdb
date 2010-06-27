@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.job;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 public class JobControl {
     private static final long serialVersionUID = 1L;
 
-    private final JobManager jobManager;
+    private final IJobManager jobManager;
 
     private final JobPlan jobPlan;
 
@@ -44,7 +44,7 @@ public class JobControl {
 
     private JobStatistics jobStatistics;
 
-    public JobControl(JobManager jobManager, JobPlan jobPlan) throws RemoteException {
+    public JobControl(IJobManager jobManager, JobPlan jobPlan) throws RemoteException {
         this.jobManager = jobManager;
         this.jobPlan = jobPlan;
         jobId = UUID.randomUUID();

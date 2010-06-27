@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.job;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,13 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.Endpoint;
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.controller.INodeController;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
@@ -44,19 +38,19 @@ import edu.uci.ics.hyracks.api.job.JobStage;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
-import edu.uci.ics.hyracks.controller.ClusterControllerService;
-import edu.uci.ics.hyracks.dataflow.base.IOperatorDescriptorVisitor;
-import edu.uci.ics.hyracks.dataflow.util.PlanUtils;
 
-public class JobManager {
-    private static final Logger LOGGER = Logger.getLogger(JobManager.class.getName());
+public class JobManagerImpl implements IJobManager {
+    private static final Logger LOGGER = Logger.getLogger(JobManagerImpl.class.getName());
     private ClusterControllerService ccs;
 
     private final Map<UUID, JobControl> jobMap;
 
-    public JobManager(ClusterControllerService ccs) {
+    private final IJobPlanner planner;
+
+    public JobManagerImpl(ClusterControllerService ccs) {
         this.ccs = ccs;
         jobMap = new HashMap<UUID, JobControl>();
+        planner = new NaiveJobPlannerImpl();
     }
 
     public synchronized UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
@@ -119,7 +113,7 @@ public class JobManager {
         stage.setStarted();
         Set<String> candidateNodes = deploy(jc, stage);
         for (String nodeId : candidateNodes) {
-            ccs.lookupNode(nodeId).startStage(jc.getJobId(), stage.getId());
+            ccs.lookupNode(nodeId).getNodeController().startStage(jc.getJobId(), stage.getId());
         }
     }
 
@@ -148,15 +142,15 @@ public class JobManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deploying: " + stage);
         }
-        Set<String> candidateNodes = plan(jc, stage);
+        Set<String> participatingNodes = plan(jc, stage);
         StageProgress stageProgress = new StageProgress(stage.getId());
-        stageProgress.addPendingNodes(candidateNodes);
+        stageProgress.addPendingNodes(participatingNodes);
         Map<PortInstanceId, Endpoint> globalPortMap = runRemote(new Phase1Installer(jc, stage),
-                new PortMapMergingAccumulator(), candidateNodes);
-        runRemote(new Phase2Installer(jc, stage, globalPortMap), null, candidateNodes);
-        runRemote(new Phase3Installer(jc, stage), null, candidateNodes);
+                new PortMapMergingAccumulator(), participatingNodes);
+        runRemote(new Phase2Installer(jc, stage, globalPortMap), null, participatingNodes);
+        runRemote(new Phase3Installer(jc, stage), null, participatingNodes);
         jc.setStageProgress(stage.getId(), stageProgress);
-        return candidateNodes;
+        return participatingNodes;
     }
 
     private interface RemoteOp<T> {
@@ -255,7 +249,7 @@ public class JobManager {
         final Semaphore installComplete = new Semaphore(candidateNodes.size());
         final List<Exception> errors = new Vector<Exception>();
         for (final String nodeId : candidateNodes) {
-            final INodeController node = ccs.lookupNode(nodeId);
+            final INodeController node = ccs.lookupNode(nodeId).getNodeController();
 
             installComplete.acquire();
             Runnable remoteRunner = new Runnable() {
@@ -287,43 +281,11 @@ public class JobManager {
 
     private Set<String> plan(JobControl jc, JobStage stage) throws Exception {
         LOGGER.log(Level.INFO, String.valueOf(jc.getJobId()) + ": Planning");
-
-        final Set<OperatorDescriptorId> opSet = new HashSet<OperatorDescriptorId>();
-        for (ActivityNodeId t : stage.getTasks()) {
-            opSet.add(jc.getJobPlan().getActivityNodeMap().get(t).getOwner().getOperatorId());
-        }
-
-        final Set<String> candidateNodes = new HashSet<String>();
-
-        IOperatorDescriptorVisitor visitor = new IOperatorDescriptorVisitor() {
-            @Override
-            public void visit(IOperatorDescriptor op) throws Exception {
-                if (!opSet.contains(op.getOperatorId())) {
-                    return;
-                }
-                String[] partitions = op.getPartitions();
-                if (partitions == null) {
-                    PartitionConstraint pc = op.getPartitionConstraint();
-                    LocationConstraint[] lcs = pc.getLocationConstraints();
-                    String[] assignment = new String[lcs.length];
-                    for (int i = 0; i < lcs.length; ++i) {
-                        String nodeId = ((AbsoluteLocationConstraint) lcs[i]).getLocationId();
-                        assignment[i] = nodeId;
-                    }
-                    op.setPartitions(assignment);
-                    partitions = assignment;
-                }
-                for (String p : partitions) {
-                    candidateNodes.add(p);
-                }
-            }
-        };
-
-        PlanUtils.visit(jc.getJobPlan().getJobSpecification(), visitor);
+        Set<String> participatingNodes = planner.plan(jc, stage);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(stage + " Candidate nodes: " + candidateNodes);
+            LOGGER.info(stage + " Participating nodes: " + participatingNodes);
         }
-        return candidateNodes;
+        return participatingNodes;
     }
 
     public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId,
@@ -348,5 +310,12 @@ public class JobManager {
             return jc.waitForCompletion();
         }
         return null;
+    }
+
+    public synchronized void notifyNodeFailure(String nodeId) {
+        for(Map.Entry<UUID, JobControl> e : jobMap.entrySet()) {
+            JobControl jc = e.getValue();
+            
+        }
     }
 }
