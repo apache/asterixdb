@@ -23,13 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Vector;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.Endpoint;
-import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
@@ -54,9 +51,8 @@ public class JobManagerImpl implements IJobManager {
     }
 
     public synchronized UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        JobPlanBuilder builder = new JobPlanBuilder();
-        builder.init(jobSpec, jobFlags);
-        JobControl jc = new JobControl(this, builder.plan());
+        JobPlanner planner = new JobPlanner();
+        JobControl jc = new JobControl(this, planner.plan(jobSpec, jobFlags));
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jc.getJobPlan().toString());
         }
@@ -68,8 +64,7 @@ public class JobManagerImpl implements IJobManager {
     public synchronized void start(UUID jobId) throws Exception {
         JobControl jobControlImpl = jobMap.get(jobId);
         LOGGER
-                .info("Starting job: " + jobControlImpl.getJobId() + ", Current status: "
-                        + jobControlImpl.getJobStatus());
+            .info("Starting job: " + jobControlImpl.getJobId() + ", Current status: " + jobControlImpl.getJobStatus());
         if (jobControlImpl.getJobStatus() != JobStatus.INITIALIZED) {
             return;
         }
@@ -142,141 +137,37 @@ public class JobManagerImpl implements IJobManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deploying: " + stage);
         }
+        UUID jobId = jc.getJobId();
+        JobPlan plan = jc.getJobPlan();
+        UUID stageId = stage.getId();
         Set<String> participatingNodes = plan(jc, stage);
         StageProgress stageProgress = new StageProgress(stage.getId());
         stageProgress.addPendingNodes(participatingNodes);
-        Map<PortInstanceId, Endpoint> globalPortMap = runRemote(new Phase1Installer(jc, stage),
-                new PortMapMergingAccumulator(), participatingNodes);
-        runRemote(new Phase2Installer(jc, stage, globalPortMap), null, participatingNodes);
-        runRemote(new Phase3Installer(jc, stage), null, participatingNodes);
+        ClusterControllerService.Phase1Installer[] p1is = new ClusterControllerService.Phase1Installer[participatingNodes
+            .size()];
+        ClusterControllerService.Phase2Installer[] p2is = new ClusterControllerService.Phase2Installer[participatingNodes
+            .size()];
+        ClusterControllerService.Phase3Installer[] p3is = new ClusterControllerService.Phase3Installer[participatingNodes
+            .size()];
+        int i = 0;
+        for (String nodeId : participatingNodes) {
+            p1is[i++] = new ClusterControllerService.Phase1Installer(nodeId, jobId, plan, stageId, stage.getTasks());
+        }
+        Map<PortInstanceId, Endpoint> globalPortMap = ccs.runRemote(p1is,
+            new ClusterControllerService.PortMapMergingAccumulator());
+        i = 0;
+        for (String nodeId : participatingNodes) {
+            p2is[i++] = new ClusterControllerService.Phase2Installer(nodeId, jobId, plan, stageId, stage.getTasks(),
+                globalPortMap);
+        }
+        ccs.runRemote(p2is, null);
+        i = 0;
+        for (String nodeId : participatingNodes) {
+            p3is[i++] = new ClusterControllerService.Phase3Installer(nodeId, jobId, stageId);
+        }
+        ccs.runRemote(p3is, null);
         jc.setStageProgress(stage.getId(), stageProgress);
         return participatingNodes;
-    }
-
-    private interface RemoteOp<T> {
-        public T execute(INodeController node) throws Exception;
-    }
-
-    private interface Accumulator<T, R> {
-        public void accumulate(T o);
-
-        public R getResult();
-    }
-
-    private static class Phase1Installer implements RemoteOp<Map<PortInstanceId, Endpoint>> {
-        private JobControl jc;
-        private JobStage stage;
-
-        public Phase1Installer(JobControl jc, JobStage stage) {
-            this.jc = jc;
-            this.stage = stage;
-        }
-
-        @Override
-        public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
-            return node.initializeJobletPhase1(jc.getJobId(), jc.getJobPlan(), stage);
-        }
-
-        @Override
-        public String toString() {
-            return jc.getJobId() + " Distribution Phase 1";
-        }
-    }
-
-    private static class Phase2Installer implements RemoteOp<Void> {
-        private JobControl jc;
-        private JobStage stage;
-        private Map<PortInstanceId, Endpoint> globalPortMap;
-
-        public Phase2Installer(JobControl jc, JobStage stage, Map<PortInstanceId, Endpoint> globalPortMap) {
-            this.jc = jc;
-            this.stage = stage;
-            this.globalPortMap = globalPortMap;
-        }
-
-        @Override
-        public Void execute(INodeController node) throws Exception {
-            node.initializeJobletPhase2(jc.getJobId(), jc.getJobPlan(), stage, globalPortMap);
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return jc.getJobId() + " Distribution Phase 2";
-        }
-    }
-
-    private static class Phase3Installer implements RemoteOp<Void> {
-        private JobControl jc;
-        private JobStage stage;
-
-        public Phase3Installer(JobControl jc, JobStage stage) {
-            this.jc = jc;
-            this.stage = stage;
-        }
-
-        @Override
-        public Void execute(INodeController node) throws Exception {
-            node.commitJobletInitialization(jc.getJobId(), jc.getJobPlan(), stage);
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return jc.getJobId() + " Distribution Phase 3";
-        }
-    }
-
-    private static class PortMapMergingAccumulator implements
-            Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
-        Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
-
-        @Override
-        public void accumulate(Map<PortInstanceId, Endpoint> o) {
-            portMap.putAll(o);
-        }
-
-        @Override
-        public Map<PortInstanceId, Endpoint> getResult() {
-            return portMap;
-        }
-    }
-
-    private <T, R> R runRemote(final RemoteOp<T> remoteOp, final Accumulator<T, R> accumulator,
-            Set<String> candidateNodes) throws Exception {
-        LOGGER.log(Level.INFO, remoteOp + " : " + candidateNodes);
-
-        final Semaphore installComplete = new Semaphore(candidateNodes.size());
-        final List<Exception> errors = new Vector<Exception>();
-        for (final String nodeId : candidateNodes) {
-            final INodeController node = ccs.lookupNode(nodeId).getNodeController();
-
-            installComplete.acquire();
-            Runnable remoteRunner = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        T t = remoteOp.execute(node);
-                        if (accumulator != null) {
-                            synchronized (accumulator) {
-                                accumulator.accumulate(t);
-                            }
-                        }
-                    } catch (Exception e) {
-                        errors.add(e);
-                    } finally {
-                        installComplete.release();
-                    }
-                }
-            };
-
-            ccs.getExecutor().execute(remoteRunner);
-        }
-        installComplete.acquire(candidateNodes.size());
-        if (!errors.isEmpty()) {
-            throw errors.get(0);
-        }
-        return accumulator == null ? null : accumulator.getResult();
     }
 
     private Set<String> plan(JobControl jc, JobStage stage) throws Exception {
@@ -289,7 +180,7 @@ public class JobManagerImpl implements IJobManager {
     }
 
     public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId,
-            StageletStatistics statistics) throws Exception {
+        StageletStatistics statistics) throws Exception {
         JobControl jc = jobMap.get(jobId);
         if (jc != null) {
             jc.notifyStageletComplete(stageId, nodeId, statistics);
@@ -312,10 +203,7 @@ public class JobManagerImpl implements IJobManager {
         return null;
     }
 
+    @Override
     public synchronized void notifyNodeFailure(String nodeId) {
-        for(Map.Entry<UUID, JobControl> e : jobMap.entrySet()) {
-            JobControl jc = e.getValue();
-            
-        }
     }
 }

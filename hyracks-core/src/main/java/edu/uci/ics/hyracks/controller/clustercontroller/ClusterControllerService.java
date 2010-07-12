@@ -22,13 +22,16 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,10 +46,14 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
+import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.controller.NodeParameters;
+import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
@@ -78,8 +85,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
         if (ccConfig.useJOL) {
-            jolRuntime = (Runtime) Runtime.create(Runtime.DEBUG_WATCH, System.err);
-            jobManager = new JOLJobManagerImpl(jolRuntime);
+            jolRuntime = (Runtime) Runtime.create(Runtime.DEBUG_ALL, System.err);
+            jobManager = new JOLJobManagerImpl(this, jolRuntime);
         } else {
             jobManager = new JobManagerImpl(this);
         }
@@ -265,6 +272,161 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                     killNode(deadNode);
                 }
             }
+        }
+    }
+
+    interface RemoteOp<T> {
+        public String getNodeId();
+
+        public T execute(INodeController node) throws Exception;
+    }
+
+    interface Accumulator<T, R> {
+        public void accumulate(T o);
+
+        public R getResult();
+    }
+
+    <T, R> R runRemote(final RemoteOp<T>[] remoteOps, final Accumulator<T, R> accumulator) throws Exception {
+        final Semaphore installComplete = new Semaphore(remoteOps.length);
+        final List<Exception> errors = new Vector<Exception>();
+        for (final RemoteOp<T> remoteOp : remoteOps) {
+            final INodeController node = lookupNode(remoteOp.getNodeId()).getNodeController();
+
+            installComplete.acquire();
+            Runnable remoteRunner = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        T t = remoteOp.execute(node);
+                        if (accumulator != null) {
+                            synchronized (accumulator) {
+                                accumulator.accumulate(t);
+                            }
+                        }
+                    } catch (Exception e) {
+                        errors.add(e);
+                    } finally {
+                        installComplete.release();
+                    }
+                }
+            };
+
+            getExecutor().execute(remoteRunner);
+        }
+        installComplete.acquire(remoteOps.length);
+        if (!errors.isEmpty()) {
+            throw errors.get(0);
+        }
+        return accumulator == null ? null : accumulator.getResult();
+    }
+
+    static class Phase1Installer implements RemoteOp<Map<PortInstanceId, Endpoint>> {
+        private String nodeId;
+        private UUID jobId;
+        private JobPlan plan;
+        private UUID stageId;
+        private Set<ActivityNodeId> tasks;
+
+        public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> tasks) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+            this.plan = plan;
+            this.stageId = stageId;
+            this.tasks = tasks;
+        }
+
+        @Override
+        public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
+            return node.initializeJobletPhase1(jobId, plan, stageId, tasks);
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Distribution Phase 1";
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
+    static class Phase2Installer implements RemoteOp<Void> {
+        private String nodeId;
+        private UUID jobId;
+        private JobPlan plan;
+        private UUID stageId;
+        private Set<ActivityNodeId> tasks;
+        private Map<PortInstanceId, Endpoint> globalPortMap;
+
+        public Phase2Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> tasks,
+            Map<PortInstanceId, Endpoint> globalPortMap) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+            this.plan = plan;
+            this.stageId = stageId;
+            this.tasks = tasks;
+            this.globalPortMap = globalPortMap;
+        }
+
+        @Override
+        public Void execute(INodeController node) throws Exception {
+            node.initializeJobletPhase2(jobId, plan, stageId, tasks, globalPortMap);
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Distribution Phase 2";
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
+    static class Phase3Installer implements RemoteOp<Void> {
+        private String nodeId;
+        private UUID jobId;
+        private UUID stageId;
+
+        public Phase3Installer(String nodeId, UUID jobId, UUID stageId) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+            this.stageId = stageId;
+        }
+
+        @Override
+        public Void execute(INodeController node) throws Exception {
+            node.commitJobletInitialization(jobId, stageId);
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Distribution Phase 3";
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
+    static class PortMapMergingAccumulator implements
+        Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
+        Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
+
+        @Override
+        public void accumulate(Map<PortInstanceId, Endpoint> o) {
+            portMap.putAll(o);
+        }
+
+        @Override
+        public Map<PortInstanceId, Endpoint> getResult() {
+            return portMap;
         }
     }
 }

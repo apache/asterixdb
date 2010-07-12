@@ -16,28 +16,29 @@ package edu.uci.ics.hyracks.api.controller;
 
 import java.rmi.Remote;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.Endpoint;
+import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobPlan;
-import edu.uci.ics.hyracks.api.job.JobStage;
 import edu.uci.ics.hyracks.config.NCConfig;
 
 public interface INodeController extends Remote {
     public String getId() throws Exception;
-    
+
     public NCConfig getConfiguration() throws Exception;
 
     public NodeCapability getNodeCapability() throws Exception;
 
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, JobStage stage)
-            throws Exception;
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId,
+        Set<ActivityNodeId> activities) throws Exception;
 
-    public void initializeJobletPhase2(UUID jobId, JobPlan plan, JobStage stage,
-            Map<PortInstanceId, Endpoint> globalPortMap) throws Exception;
+    public void initializeJobletPhase2(UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> activities,
+        Map<PortInstanceId, Endpoint> globalPortMap) throws Exception;
 
-    public void commitJobletInitialization(UUID jobId, JobPlan plan, JobStage stage) throws Exception;
+    public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception;
 
     public void cleanUpJob(UUID jobId) throws Exception;
 

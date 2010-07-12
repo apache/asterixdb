@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -54,7 +55,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.JobStage;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.comm.ConnectionManager;
 import edu.uci.ics.hyracks.comm.DemuxDataReceiveListenerFactory;
@@ -150,7 +150,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         Matcher m = pattern.matcher(ipaddrStr);
         if (!m.matches()) {
             throw new Exception(MessageFormat.format(
-                    "Connection Manager IP Address String %s does is not a valid IP Address.", ipaddrStr));
+                "Connection Manager IP Address String %s does is not a valid IP Address.", ipaddrStr));
         }
         byte[] ipBytes = new byte[4];
         ipBytes[0] = (byte) Integer.parseInt(m.group(1));
@@ -161,22 +161,21 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, JobStage stage)
-            throws Exception {
-        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stage.getId()
-                + "]: Initializing Joblet Phase 1");
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId,
+        Set<ActivityNodeId> activities) throws Exception {
+        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
 
         final Joblet joblet = getLocalJoblet(jobId);
 
-        Stagelet stagelet = new Stagelet(joblet, stage.getId(), id);
-        joblet.setStagelet(stage.getId(), stagelet);
+        Stagelet stagelet = new Stagelet(joblet, stageId, id);
+        joblet.setStagelet(stageId, stagelet);
 
         final Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
         Map<OperatorInstanceId, OperatorRunnable> honMap = stagelet.getOperatorMap();
 
         List<Endpoint> endpointList = new ArrayList<Endpoint>();
 
-        for (ActivityNodeId hanId : stage.getTasks()) {
+        for (ActivityNodeId hanId : activities) {
             IActivityNode han = plan.getActivityNodeMap().get(hanId);
             if (LOGGER.isLoggable(Level.FINEST)) {
                 LOGGER.finest("Initializing " + hanId + " -> " + han);
@@ -200,8 +199,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             endpointList.add(endpoint);
                             DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx);
                             connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
-                            PortInstanceId piId = new PortInstanceId(op.getOperatorId(),
-                                    Direction.INPUT, plan.getTaskInputMap().get(hanId).get(j), i);
+                            PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
+                                .getTaskInputMap().get(hanId).get(j), i);
                             if (LOGGER.isLoggable(Level.FINEST)) {
                                 LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
                             }
@@ -221,7 +220,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     private IFrameReader createReader(final IConnectorDescriptor conn, IConnectionDemultiplexer demux,
-            final int receiverIndex, JobPlan plan, final Stagelet stagelet) throws HyracksDataException {
+        final int receiverIndex, JobPlan plan, final Stagelet stagelet) throws HyracksDataException {
         final IFrameReader reader = conn.createReceiveSideReader(ctx, plan, demux, receiverIndex);
 
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameReader() {
@@ -246,26 +245,25 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             public void close() throws HyracksDataException {
                 reader.close();
                 stagelet.getStatistics().getStatisticsMap().put(
-                        "framecount." + conn.getConnectorId().getId() + ".receiver." + receiverIndex,
-                        String.valueOf(frameCount));
+                    "framecount." + conn.getConnectorId().getId() + ".receiver." + receiverIndex,
+                    String.valueOf(frameCount));
             }
         } : reader;
     }
 
     @Override
-    public void initializeJobletPhase2(UUID jobId, final JobPlan plan, JobStage stage,
-            final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
-        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stage.getId()
-                + "]: Initializing Joblet Phase 2");
+    public void initializeJobletPhase2(UUID jobId, final JobPlan plan, UUID stageId, Set<ActivityNodeId> activities,
+        final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
+        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
         final Joblet ji = getLocalJoblet(jobId);
-        Stagelet si = (Stagelet) ji.getStagelet(stage.getId());
+        Stagelet si = (Stagelet) ji.getStagelet(stageId);
         final Map<OperatorInstanceId, OperatorRunnable> honMap = si.getOperatorMap();
 
-        final Stagelet stagelet = (Stagelet) ji.getStagelet(stage.getId());
+        final Stagelet stagelet = (Stagelet) ji.getStagelet(stageId);
 
         final JobSpecification spec = plan.getJobSpecification();
 
-        for (ActivityNodeId hanId : stage.getTasks()) {
+        for (ActivityNodeId hanId : activities) {
             IActivityNode han = plan.getActivityNodeMap().get(hanId);
             IOperatorDescriptor op = han.getOwner();
             List<IConnectorDescriptor> outputs = plan.getTaskOutputs(hanId);
@@ -282,13 +280,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 @Override
                                 public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
                                     PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
-                                            Direction.INPUT, spec.getConsumerInputIndex(conn), index);
+                                        Direction.INPUT, spec.getConsumerInputIndex(conn), index);
                                     Endpoint ep = globalPortMap.get(piId);
                                     if (LOGGER.isLoggable(Level.FINEST)) {
                                         LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
                                     }
                                     return createWriter(connectionManager.connect(ep.getNetworkAddress(), ep
-                                            .getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
+                                        .getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
                                 }
                             };
                             or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan, edwFactory, i));
@@ -301,7 +299,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     private IFrameWriter createWriter(final IFrameWriter writer, JobPlan plan, final IConnectorDescriptor conn,
-            final int senderIndex, final int receiverIndex, final Stagelet stagelet) throws HyracksDataException {
+        final int senderIndex, final int receiverIndex, final Stagelet stagelet) throws HyracksDataException {
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameWriter() {
             private int frameCount;
 
@@ -321,16 +319,16 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             public void close() throws HyracksDataException {
                 writer.close();
                 stagelet.getStatistics().getStatisticsMap().put(
-                        "framecount." + conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex,
-                        String.valueOf(frameCount));
+                    "framecount." + conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex,
+                    String.valueOf(frameCount));
             }
         } : writer;
     }
 
     @Override
-    public void commitJobletInitialization(UUID jobId, JobPlan plan, JobStage stage) throws Exception {
+    public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception {
         final Joblet ji = getLocalJoblet(jobId);
-        Stagelet si = (Stagelet) ji.getStagelet(stage.getId());
+        Stagelet si = (Stagelet) ji.getStagelet(stageId);
         for (Endpoint e : si.getEndpointList()) {
             connectionManager.unacceptConnection(e.getEndpointId());
         }

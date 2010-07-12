@@ -1,50 +1,115 @@
 program hyrackscc;
 
 import java.util.UUID;
+import java.util.Set;
+
+import jol.types.basic.Tuple;
+import jol.types.basic.TupleSet;
+
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 
-define(testOp, keys(0, 1), {UUID, OperatorDescriptorId, IOperatorDescriptor});
-define(testConn, keys(0, 1), {UUID, ConnectorDescriptorId, OperatorDescriptorId, Integer, OperatorDescriptorId, Integer});
+define(activitystage, keys(0, 1, 2), {UUID, OperatorDescriptorId, ActivityNodeId, Integer});
 
-testOp(JobId, Opid, Op) :- 
-    operatordescriptor(JobId, Opid, Op)
+activitystage(JobId, OperatorId, ActivityId, 0) :-
+    activitynode(JobId, OperatorId, ActivityId, _);
+
+activitystage(JobId, OperatorId2, ActivityId2, StageNumber) :-
+    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
+    activityblocked(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2),
+    StageNumber1 == StageNumber2
     {
-        java.lang.System.err.println(Opid);
+        StageNumber := StageNumber1 + 1;
     };
 
-testConn(JobId, Cid, SOpid, SPort, DOpid, DPort) :- 
-    connectordescriptor(JobId, Cid, SOpid, SPort, DOpid, DPort, _)
-    {
-        java.lang.System.err.println(Cid.toString() + " " + SOpid.toString() + ":" + SPort.toString() + " -> " + DOpid.toString() + ":" + DPort.toString());
-    };
-
-define(activitystage, keys(0, 1, 2, 3, 4), {UUID, OperatorDescriptorId, ActivityNodeId, OperatorDescriptorId, ActivityNodeId});
-
-activitystage(JobId, OperatorId, ActivityId, OperatorId, ActivityId) :-
-    activitynode(JobId, OperatorId, ActivityId, _)
-    {
-        java.lang.System.err.println("INITIAL: " + JobId.toString() + " " + OperatorId.toString() + " " + ActivityId.toString());
-    };
-
-activitystage(JobId, OperatorId2, ActivityId2, OperatorId1, ActivityId1) :-
-    activitystage(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2)
-    {
-        java.lang.System.err.println("CHANGE1: " + JobId.toString() + " " + OperatorId2.toString() + " " + ActivityId2.toString() + " " + OperatorId1.toString() + " " + ActivityId1.toString());
-    };
-
-activitystage(JobId, OperatorId1, ActivityId1, OperatorId3, ActivityId3) :-
-    activitystage(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2),
-    activitynode(JobId, OperatorId3, ActivityId3, _),
+activitystage(JobId, OperatorId1, ActivityId1, StageNumber) :-
+    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
+    activityconnection(JobId, OperatorId1, Operator1Port, _, ActivityId1, _),
     activityconnection(JobId, OperatorId2, Operator2Port, _, ActivityId2, _),
-    activityconnection(JobId, OperatorId3, Operator3Port, _, ActivityId3, _),
-    connectordescriptor(JobId, _, OperatorId2, Operator2Port, OperatorId3, Operator3Port, _)
+    connectordescriptor(JobId, _, OperatorId1, Operator1Port, OperatorId2, Operator2Port, _),
+    StageNumber1 != StageNumber2
     {
-        java.lang.System.err.println("CHANGE2: " + JobId.toString() + " " + OperatorId1.toString() + " " + ActivityId1.toString() + " " + OperatorId3.toString() + " " + ActivityId3.toString());
+        StageNumber := java.lang.Math.max(StageNumber1, StageNumber2);
     };
 
-watch(activitynode, a);
-watch(activitystage, a);
+activitystage(JobId, OperatorId2, ActivityId2, StageNumber) :-
+    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
+    activityconnection(JobId, OperatorId1, Operator1Port, _, ActivityId1, _),
+    activityconnection(JobId, OperatorId2, Operator2Port, _, ActivityId2, _),
+    connectordescriptor(JobId, _, OperatorId2, Operator2Port, OperatorId1, Operator1Port, _),
+    StageNumber1 != StageNumber2
+    {
+        StageNumber := java.lang.Math.max(StageNumber1, StageNumber2);
+    };
+
+define(jobstage, keys(0, 1), {UUID, Integer, UUID});
+
+jobstage(JobId, StageNumber, StageId) :-
+    activitystage(JobId, _, _, StageNumber)
+    {
+        StageId := java.util.UUID.randomUUID();
+    };
+
+watch(jobstage, a);
+
+define(stagestart, keys(0), {UUID, Integer});
+define(stagefinish, keys(), {UUID, Integer});
+
+watch(jobstart, i);
+
+stagestart_INITIAL stagestart(JobId, 0) :-
+    jobstart(JobId, _),
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, _, _),
+    notin stagestart(JobId, _);
+
+/*
+update_job_status_RUNNING job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan) :-
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan),
+    jobstart(JobId, _);
+*/
+
+stagestart_NEXT stagestart(JobId, NextStageNumber) :-
+    stagestart(JobId, StageNumber),
+    stagefinish(StageId, StageNumber)
+    {
+        NextStageNumber := StageNumber + 1;
+    };
+
+watch(stagestart, a);
+watch(stagestart, d);
+
+define(activitystart, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer, UUID, String});
+
+activitystart(JobId, OperatorId, ActivityId, StageNumber, StageId, NodeId) :-
+    stagestart(JobId, StageNumber),
+    operatordescriptor(JobId, OperatorId, _),
+    activitystage(JobId, OperatorId, ActivityId, StageNumber),
+    jobstage(JobId, StageNumber, StageId),
+    operatorlocation(JobId, OperatorId, NodeId);
+
+watch(activitystart, a);
+
+define(stageletstart, keys(0, 1), {UUID, UUID, JobPlan, String, ActivityNodeId});
+
+stageletstart(JobId, StageId, JobPlan, NodeId, ActivityId) :-
+    activitystart(JobId, _, ActivityId, _, StageId, NodeId),
+    job(JobId, _, _, JobPlan);
+
+watch(stageletstart, a);
+watch(stageletstart, i);
+
+startmessage(JobId, StageId, JobPlan, tupleset<Tuple>) :-
+    stageletstart(JobId, StageId, JobPlan, NodeId, ActivityId)
+    {
+        Tuple := new Tuple([NodeId, ActivityId]);
+    };
+
+watch(startmessage, i);
