@@ -24,6 +24,7 @@ import jol.types.basic.BasicTupleSet;
 import jol.types.basic.Tuple;
 import jol.types.basic.TupleSet;
 import jol.types.table.BasicTable;
+import jol.types.table.EventTable;
 import jol.types.table.Key;
 import jol.types.table.TableName;
 import edu.uci.ics.hyracks.api.comm.Endpoint;
@@ -83,7 +84,7 @@ public class JOLJobManagerImpl implements IJobManager {
         this.anTable = new ActivityNodeTable(jolRuntime);
         this.acTable = new ActivityConnectionTable(jolRuntime);
         this.abTable = new ActivityBlockedTable(jolRuntime);
-        this.jobStartTable = new JobStartTable(jolRuntime);
+        this.jobStartTable = new JobStartTable();
         this.startMessageTable = new StartMessageTable(jolRuntime);
 
         jolRuntime.catalog().register(jobTable);
@@ -434,17 +435,15 @@ public class JOLJobManagerImpl implements IJobManager {
     /*
      * declare(jobstart, keys(0), {JobId, SubmitTime})
      */
-    private static class JobStartTable extends BasicTable {
+    private static class JobStartTable extends EventTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "jobstart");
-
-        private static Key PRIMARY_KEY = new Key(0);
 
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, Long.class
         };
 
-        public JobStartTable(Runtime context) {
-            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        public JobStartTable() {
+            super(TABLE_NAME, SCHEMA);
         }
 
         static Tuple createTuple(UUID jobId, long submitTime) {
@@ -458,10 +457,10 @@ public class JOLJobManagerImpl implements IJobManager {
     private static class StartMessageTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "startmessage");
 
-        private static Key PRIMARY_KEY = new Key(0, 1);
+        private static Key PRIMARY_KEY = new Key(0, 1, 2);
 
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, UUID.class, JobPlan.class, TupleSet.class
+            UUID.class, UUID.class, JobPlan.class, Set.class
         };
 
         public StartMessageTable(Runtime context) {

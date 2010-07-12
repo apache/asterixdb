@@ -70,11 +70,9 @@ stagestart_INITIAL stagestart(JobId, 0) :-
     job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, _, _),
     notin stagestart(JobId, _);
 
-/*
 update_job_status_RUNNING job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan) :-
     job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan),
     jobstart(JobId, _);
-*/
 
 stagestart_NEXT stagestart(JobId, NextStageNumber) :-
     stagestart(JobId, StageNumber),
@@ -97,19 +95,19 @@ activitystart(JobId, OperatorId, ActivityId, StageNumber, StageId, NodeId) :-
 
 watch(activitystart, a);
 
-define(stageletstart, keys(0, 1), {UUID, UUID, JobPlan, String, ActivityNodeId});
+define(stageletstart, keys(0, 1), {UUID, UUID, JobPlan, String, Set});
 
-stageletstart(JobId, StageId, JobPlan, NodeId, ActivityId) :-
+stageletstart(JobId, StageId, JobPlan, NodeId, set<ActivityId>) :-
     activitystart(JobId, _, ActivityId, _, StageId, NodeId),
     job(JobId, _, _, JobPlan);
 
 watch(stageletstart, a);
 watch(stageletstart, i);
 
-startmessage(JobId, StageId, JobPlan, tupleset<Tuple>) :-
-    stageletstart(JobId, StageId, JobPlan, NodeId, ActivityId)
+startmessage(JobId, StageId, JobPlan, set<Tuple>) :-
+    stageletstart(JobId, StageId, JobPlan, NodeId, ActivityIdSet)
     {
-        Tuple := new Tuple([NodeId, ActivityId]);
+        Tuple := new Tuple([NodeId, ActivityIdSet]);
     };
 
 watch(startmessage, i);
