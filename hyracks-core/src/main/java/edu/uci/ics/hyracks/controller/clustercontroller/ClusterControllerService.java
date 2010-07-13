@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import jol.core.Runtime;
+import jol.core.Runtime.DebugLevel;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -85,7 +86,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
         if (ccConfig.useJOL) {
-            jolRuntime = (Runtime) Runtime.create(Runtime.DEBUG_ALL, System.err);
+            Set<DebugLevel> jolDebugLevel = LOGGER.isLoggable(Level.FINE) ? Runtime.DEBUG_ALL
+                : new HashSet<DebugLevel>();
+            jolRuntime = (Runtime) Runtime.create(jolDebugLevel, System.err);
             jobManager = new JOLJobManagerImpl(this, jolRuntime);
         } else {
             jobManager = new JobManagerImpl(this);
@@ -407,6 +410,34 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         @Override
         public String toString() {
             return jobId + " Distribution Phase 3";
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
+    static class StageStarter implements RemoteOp<Void> {
+        private String nodeId;
+        private UUID jobId;
+        private UUID stageId;
+
+        public StageStarter(String nodeId, UUID jobId, UUID stageId) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+            this.stageId = stageId;
+        }
+
+        @Override
+        public Void execute(INodeController node) throws Exception {
+            node.startStage(jobId, stageId);
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Started Stage: " + stageId;
         }
 
         @Override

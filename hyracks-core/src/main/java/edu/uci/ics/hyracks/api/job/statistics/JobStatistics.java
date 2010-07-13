@@ -64,8 +64,8 @@ public class JobStatistics implements Serializable {
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("{\n");
-        indent(buffer, 1).append("startTime: '").append(df.format(startTime)).append("',\n");
-        indent(buffer, 1).append("endTime: '").append(df.format(endTime)).append("',\n");
+        indent(buffer, 1).append("startTime: '").append(startTime == null ? null : df.format(startTime)).append("',\n");
+        indent(buffer, 1).append("endTime: '").append(endTime == null ? null : df.format(endTime)).append("',\n");
         indent(buffer, 1).append("stages: [\n");
         boolean first = true;
         for (StageStatistics ss : stages) {

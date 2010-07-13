@@ -15,6 +15,8 @@
 package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -23,6 +25,7 @@ import jol.core.Runtime;
 import jol.types.basic.BasicTupleSet;
 import jol.types.basic.Tuple;
 import jol.types.basic.TupleSet;
+import jol.types.exception.BadKeyException;
 import jol.types.table.BasicTable;
 import jol.types.table.EventTable;
 import jol.types.table.Key;
@@ -45,6 +48,7 @@ import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
+import edu.uci.ics.hyracks.api.job.statistics.StageStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
 public class JOLJobManagerImpl implements IJobManager {
@@ -74,6 +78,8 @@ public class JOLJobManagerImpl implements IJobManager {
 
     private final StartMessageTable startMessageTable;
 
+    private final StageletCompleteTable stageletCompleteTable;
+
     public JOLJobManagerImpl(final ClusterControllerService ccs, Runtime jolRuntime) throws Exception {
         this.ccs = ccs;
         this.jolRuntime = jolRuntime;
@@ -86,6 +92,7 @@ public class JOLJobManagerImpl implements IJobManager {
         this.abTable = new ActivityBlockedTable(jolRuntime);
         this.jobStartTable = new JobStartTable();
         this.startMessageTable = new StartMessageTable(jolRuntime);
+        this.stageletCompleteTable = new StageletCompleteTable(jolRuntime);
 
         jolRuntime.catalog().register(jobTable);
         jolRuntime.catalog().register(odTable);
@@ -96,6 +103,19 @@ public class JOLJobManagerImpl implements IJobManager {
         jolRuntime.catalog().register(abTable);
         jolRuntime.catalog().register(jobStartTable);
         jolRuntime.catalog().register(startMessageTable);
+        jolRuntime.catalog().register(stageletCompleteTable);
+
+        jobTable.register(new JobTable.Callback() {
+            @Override
+            public void deletion(TupleSet arg0) {
+                jobTable.notifyAll();
+            }
+
+            @Override
+            public void insertion(TupleSet arg0) {
+                jobTable.notifyAll();
+            }
+        });
 
         startMessageTable.register(new StartMessageTable.Callback() {
             @Override
@@ -112,11 +132,11 @@ public class JOLJobManagerImpl implements IJobManager {
                             UUID jobId = (UUID) data[0];
                             UUID stageId = (UUID) data[1];
                             JobPlan plan = (JobPlan) data[2];
-                            TupleSet ts = (TupleSet) data[3];
+                            Set<List> ts = (Set<List>) data[3];
                             ClusterControllerService.Phase1Installer[] p1is = new ClusterControllerService.Phase1Installer[ts
                                 .size()];
                             int i = 0;
-                            for (Tuple t2 : ts) {
+                            for (List t2 : ts) {
                                 Object[] t2Data = t2.toArray();
                                 p1is[i++] = new ClusterControllerService.Phase1Installer((String) t2Data[0], jobId,
                                     plan, stageId, (Set<ActivityNodeId>) t2Data[1]);
@@ -125,22 +145,23 @@ public class JOLJobManagerImpl implements IJobManager {
                                 new ClusterControllerService.PortMapMergingAccumulator());
                             ClusterControllerService.Phase2Installer[] p2is = new ClusterControllerService.Phase2Installer[ts
                                 .size()];
-                            i = 0;
-                            for (Tuple t2 : ts) {
-                                Object[] t2Data = t2.toArray();
-                                p2is[i++] = new ClusterControllerService.Phase2Installer((String) t2Data[0], jobId,
-                                    plan, stageId, (Set<ActivityNodeId>) t2Data[1], globalPortMap);
-                            }
-                            ccs.runRemote(p2is, null);
                             ClusterControllerService.Phase3Installer[] p3is = new ClusterControllerService.Phase3Installer[ts
                                 .size()];
+                            ClusterControllerService.StageStarter[] ss = new ClusterControllerService.StageStarter[ts
+                                .size()];
                             i = 0;
-                            for (Tuple t2 : ts) {
+                            for (List t2 : ts) {
                                 Object[] t2Data = t2.toArray();
-                                p3is[i++] = new ClusterControllerService.Phase3Installer((String) t2Data[0], jobId,
+                                p2is[i] = new ClusterControllerService.Phase2Installer((String) t2Data[0], jobId, plan,
+                                    stageId, (Set<ActivityNodeId>) t2Data[1], globalPortMap);
+                                p3is[i] = new ClusterControllerService.Phase3Installer((String) t2Data[0], jobId,
                                     stageId);
+                                ss[i] = new ClusterControllerService.StageStarter((String) t2Data[0], jobId, stageId);
+                                ++i;
                             }
+                            ccs.runRemote(p2is, null);
                             ccs.runRemote(p3is, null);
+                            ccs.runRemote(ss, null);
                         }
                     }
                 } catch (Exception e) {
@@ -235,7 +256,17 @@ public class JOLJobManagerImpl implements IJobManager {
 
     @Override
     public JobStatus getJobStatus(UUID jobId) {
-        return null;
+        synchronized (jobTable) {
+            try {
+                Tuple jobTuple = jobTable.lookupJob(jobId);
+                if (jobTuple == null) {
+                    return null;
+                }
+                return (JobStatus) jobTuple.value(1);
+            } catch (BadKeyException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -244,8 +275,14 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
-        throws Exception {
+    public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId,
+        StageletStatistics statistics) throws Exception {
+        BasicTupleSet scTuples = new BasicTupleSet();
+        scTuples.add(StageletCompleteTable.createTuple(jobId, stageId, nodeId, statistics));
+
+        jolRuntime.schedule(JOL_SCOPE, StageletCompleteTable.TABLE_NAME, scTuples, null);
+
+        jolRuntime.evaluate();
     }
 
     @Override
@@ -260,7 +297,13 @@ public class JOLJobManagerImpl implements IJobManager {
 
     @Override
     public JobStatistics waitForCompletion(UUID jobId) throws Exception {
-        return null;
+        synchronized (jobTable) {
+            Tuple jobTuple = null;
+            while ((jobTuple = jobTable.lookupJob(jobId)) != null && jobTuple.value(1) != JobStatus.TERMINATED) {
+                jobTable.wait();
+            }
+            return jobTuple == null ? null : jobTable.buildJobStatistics(jobTuple);
+        }
     }
 
     /*
@@ -272,7 +315,7 @@ public class JOLJobManagerImpl implements IJobManager {
         private static Key PRIMARY_KEY = new Key(0);
 
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, JobStatus.class, JobSpecification.class, JobPlan.class
+            UUID.class, JobStatus.class, JobSpecification.class, JobPlan.class, Set.class
         };
 
         public JobTable(Runtime context) {
@@ -280,7 +323,30 @@ public class JOLJobManagerImpl implements IJobManager {
         }
 
         static Tuple createInitialJobTuple(UUID jobId, JobSpecification jobSpec, JobPlan plan) {
-            return new Tuple(jobId, JobStatus.INITIALIZED, jobSpec, plan);
+            return new Tuple(jobId, JobStatus.INITIALIZED, jobSpec, plan, new HashSet());
+        }
+
+        JobStatistics buildJobStatistics(Tuple jobTuple) {
+            Set<Set<StageletStatistics>> statsSet = (Set<Set<StageletStatistics>>) jobTuple.value(4);
+            JobStatistics stats = new JobStatistics();
+            if (statsSet != null) {
+                for (Set<StageletStatistics> stageStatsSet : statsSet) {
+                    StageStatistics stageStats = new StageStatistics();
+                    for (StageletStatistics stageletStats : stageStatsSet) {
+                        stageStats.addStageletStatistics(stageletStats);
+                    }
+                    stats.addStageStatistics(stageStats);
+                }
+            }
+            return stats;
+        }
+
+        Tuple lookupJob(UUID jobId) throws BadKeyException {
+            TupleSet set = primary().lookupByKey(jobId);
+            if (set.isEmpty()) {
+                return null;
+            }
+            return (Tuple) set.toArray()[0];
         }
     }
 
@@ -457,7 +523,7 @@ public class JOLJobManagerImpl implements IJobManager {
     private static class StartMessageTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "startmessage");
 
-        private static Key PRIMARY_KEY = new Key(0, 1, 2);
+        private static Key PRIMARY_KEY = new Key(0, 1);
 
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, UUID.class, JobPlan.class, Set.class
@@ -465,6 +531,27 @@ public class JOLJobManagerImpl implements IJobManager {
 
         public StartMessageTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+    }
+
+    /*
+     * declare(stageletcomplete, keys(0, 1, 2), {JobId, StageId, NodeId, StageletStatistics})
+     */
+    private static class StageletCompleteTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "stageletcomplete");
+
+        private static Key PRIMARY_KEY = new Key(0, 1, 2);
+
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class, UUID.class, String.class, StageletStatistics.class
+        };
+
+        public StageletCompleteTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+
+        public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics) {
+            return new Tuple(jobId, stageId, nodeId, statistics);
         }
     }
 }

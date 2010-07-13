@@ -14,41 +14,57 @@ import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 
-define(activitystage, keys(0, 1, 2), {UUID, OperatorDescriptorId, ActivityNodeId, Integer});
+define(activitystage_temp, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer});
 
-activitystage(JobId, OperatorId, ActivityId, 0) :-
+activitystage_INITIAL activitystage_temp(JobId, OperatorId, ActivityId, 0) :-
     activitynode(JobId, OperatorId, ActivityId, _);
 
-activitystage(JobId, OperatorId2, ActivityId2, StageNumber) :-
-    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
-    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
+activitystage_BLOCKED activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber) :-
+    activitystage_temp(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber2),
     activityblocked(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2),
-    StageNumber1 == StageNumber2
+    StageNumber2 <= StageNumber1
     {
         StageNumber := StageNumber1 + 1;
     };
 
-activitystage(JobId, OperatorId1, ActivityId1, StageNumber) :-
-    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
-    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
-    activityconnection(JobId, OperatorId1, Operator1Port, _, ActivityId1, _),
-    activityconnection(JobId, OperatorId2, Operator2Port, _, ActivityId2, _),
+activitystage_PIPELINED_1 activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber) :-
+    activitystage_temp(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber2),
+    activityconnection(JobId, OperatorId1, Operator1Port, edu.uci.ics.hyracks.api.dataflow.Direction.OUTPUT, ActivityId1, _),
+    activityconnection(JobId, OperatorId2, Operator2Port, edu.uci.ics.hyracks.api.dataflow.Direction.INPUT, ActivityId2, _),
     connectordescriptor(JobId, _, OperatorId1, Operator1Port, OperatorId2, Operator2Port, _),
     StageNumber1 != StageNumber2
     {
         StageNumber := java.lang.Math.max(StageNumber1, StageNumber2);
     };
 
-activitystage(JobId, OperatorId2, ActivityId2, StageNumber) :-
-    activitystage(JobId, OperatorId1, ActivityId1, StageNumber1),
-    activitystage(JobId, OperatorId2, ActivityId2, StageNumber2),
-    activityconnection(JobId, OperatorId1, Operator1Port, _, ActivityId1, _),
-    activityconnection(JobId, OperatorId2, Operator2Port, _, ActivityId2, _),
-    connectordescriptor(JobId, _, OperatorId2, Operator2Port, OperatorId1, Operator1Port, _),
+activitystage_PIPELINED_2 activitystage_temp(JobId, OperatorId1, ActivityId1, StageNumber) :-
+    activitystage_temp(JobId, OperatorId1, ActivityId1, StageNumber1),
+    activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber2),
+    activityconnection(JobId, OperatorId1, Operator1Port, edu.uci.ics.hyracks.api.dataflow.Direction.OUTPUT, ActivityId1, _),
+    activityconnection(JobId, OperatorId2, Operator2Port, edu.uci.ics.hyracks.api.dataflow.Direction.INPUT, ActivityId2, _),
+    connectordescriptor(JobId, _, OperatorId1, Operator1Port, OperatorId2, Operator2Port, _),
     StageNumber1 != StageNumber2
     {
         StageNumber := java.lang.Math.max(StageNumber1, StageNumber2);
     };
+
+watch(activitystage_temp, a);
+
+watch(activityconnection, a);
+watch(activityblocked, a);
+watch(operatordescriptor, a);
+watch(connectordescriptor, a);
+
+watch(activitystage, a);
+watch(activitystage, i);
+watch(activitystage, d);
+
+define(activitystage, keys(0, 1, 2), {UUID, OperatorDescriptorId, ActivityNodeId, Integer});
+
+activitystage(JobId, OperatorId, ActivityId, max<StageNumber>) :-
+    activitystage_temp(JobId, OperatorId, ActivityId, StageNumber);
 
 define(jobstage, keys(0, 1), {UUID, Integer, UUID});
 
@@ -61,22 +77,22 @@ jobstage(JobId, StageNumber, StageId) :-
 watch(jobstage, a);
 
 define(stagestart, keys(0), {UUID, Integer});
-define(stagefinish, keys(), {UUID, Integer});
+define(stagefinish, keys(0, 1), {UUID, Integer, Set});
 
 watch(jobstart, i);
 
 stagestart_INITIAL stagestart(JobId, 0) :-
     jobstart(JobId, _),
-    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, _, _),
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, _, _, _),
     notin stagestart(JobId, _);
 
-update_job_status_RUNNING job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan) :-
-    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan),
+update_job_status_RUNNING job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, null) :-
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan, _),
     jobstart(JobId, _);
 
 stagestart_NEXT stagestart(JobId, NextStageNumber) :-
     stagestart(JobId, StageNumber),
-    stagefinish(StageId, StageNumber)
+    stagefinish#insert(StageId, StageNumber, _)
     {
         NextStageNumber := StageNumber + 1;
     };
@@ -95,19 +111,42 @@ activitystart(JobId, OperatorId, ActivityId, StageNumber, StageId, NodeId) :-
 
 watch(activitystart, a);
 
-define(stageletstart, keys(0, 1), {UUID, UUID, JobPlan, String, Set});
+define(stageletstart, keys(0, 1, 3), {UUID, UUID, JobPlan, String, Set});
 
 stageletstart(JobId, StageId, JobPlan, NodeId, set<ActivityId>) :-
-    activitystart(JobId, _, ActivityId, _, StageId, NodeId),
-    job(JobId, _, _, JobPlan);
+    activitystart#insert(JobId, _, ActivityId, StageNumber, StageId, NodeId),
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, _, JobPlan, _);
 
 watch(stageletstart, a);
 watch(stageletstart, i);
 
-startmessage(JobId, StageId, JobPlan, set<Tuple>) :-
+define(startmessage_agg, keys(0, 1), {UUID, UUID, JobPlan, Set});
+
+startmessage_agg(JobId, StageId, JobPlan, set<Tuple>) :-
     stageletstart(JobId, StageId, JobPlan, NodeId, ActivityIdSet)
     {
-        Tuple := new Tuple([NodeId, ActivityIdSet]);
+        Tuple := [NodeId, ActivityIdSet];
     };
 
+startmessage(JobId, StageId, JobPlan, TSet) :-
+    startmessage_agg(JobId, StageId, JobPlan, TSet);
+
+watch(startmessage, a);
 watch(startmessage, i);
+
+define(stageletcomplete_agg, keys(0, 1), {UUID, UUID, Set});
+
+stageletcomplete_agg(JobId, StageId, set<Statistics>) :-
+    stageletcomplete(JobId, StageId, NodeId, Statistics);
+
+stagefinish(JobId, StageNumber, SSet) :-
+    startmessage_agg(JobId, StageId, _, TSet),
+    stageletcomplete_agg(JobId, StageId, SSet),
+    jobstage(JobId, StageNumber, StageId),
+    TSet.size() == SSet.size();
+
+update_job_status_TERMINATED job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.TERMINATED, JobSpec, JobPlan, null) :-
+    job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, _),
+    stagestart#insert(JobId, StageNumber),
+    stagefinish(JobId, _, SSet),
+    notin jobstage(JobId, StageNumber);
