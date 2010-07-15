@@ -30,8 +30,8 @@ public interface IClusterController extends Remote {
 
     public void unregisterNode(INodeController nodeController) throws Exception;
 
-    public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
-            throws Exception;
+    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
+        StageletStatistics statistics) throws Exception;
 
     public void nodeHeartbeat(String id) throws Exception;
 

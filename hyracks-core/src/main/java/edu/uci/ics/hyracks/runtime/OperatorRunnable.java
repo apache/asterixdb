@@ -25,6 +25,7 @@ public class OperatorRunnable implements Runnable {
     private IOperatorNodePushable opNode;
     private IFrameReader reader;
     private ByteBuffer buffer;
+    private volatile boolean abort;
 
     public OperatorRunnable(HyracksContext ctx, IOperatorNodePushable opNode) {
         this.opNode = opNode;
@@ -39,6 +40,10 @@ public class OperatorRunnable implements Runnable {
         this.reader = reader;
     }
 
+    public void abort() {
+        abort = true;
+    }
+
     @Override
     public void run() {
         try {
@@ -46,6 +51,9 @@ public class OperatorRunnable implements Runnable {
             if (reader != null) {
                 reader.open();
                 while (reader.nextFrame(buffer)) {
+                    if (abort) {
+                        break;
+                    }
                     buffer.flip();
                     opNode.nextFrame(buffer);
                     buffer.compact();

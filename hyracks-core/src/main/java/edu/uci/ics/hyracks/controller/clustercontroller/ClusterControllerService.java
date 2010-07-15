@@ -178,9 +178,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
-        throws Exception {
-        jobManager.notifyStageletComplete(jobId, stageId, nodeId, statistics);
+    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
+        StageletStatistics statistics) throws Exception {
+        jobManager.notifyStageletComplete(jobId, stageId, attempt, nodeId, statistics);
     }
 
     @Override
@@ -255,7 +255,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         }
     }
 
-    private void killNode(String nodeId) {
+    private void killNode(String nodeId) throws Exception {
         nodeRegistry.remove(nodeId);
         jobManager.notifyNodeFailure(nodeId);
     }
@@ -272,7 +272,11 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                     }
                 }
                 for (String deadNode : deadNodes) {
-                    killNode(deadNode);
+                    try {
+                        killNode(deadNode);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -329,19 +333,22 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         private UUID jobId;
         private JobPlan plan;
         private UUID stageId;
+        private int attempt;
         private Set<ActivityNodeId> tasks;
 
-        public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> tasks) {
+        public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, int attempt,
+            Set<ActivityNodeId> tasks) {
             this.nodeId = nodeId;
             this.jobId = jobId;
             this.plan = plan;
             this.stageId = stageId;
+            this.attempt = attempt;
             this.tasks = tasks;
         }
 
         @Override
         public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
-            return node.initializeJobletPhase1(jobId, plan, stageId, tasks);
+            return node.initializeJobletPhase1(jobId, plan, stageId, attempt, tasks);
         }
 
         @Override
@@ -438,6 +445,34 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         @Override
         public String toString() {
             return jobId + " Started Stage: " + stageId;
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
+    static class JobletAborter implements RemoteOp<Void> {
+        private String nodeId;
+        private UUID jobId;
+        private UUID stageId;
+
+        public JobletAborter(String nodeId, UUID jobId, UUID stageId, int attempt) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+            this.stageId = stageId;
+        }
+
+        @Override
+        public Void execute(INodeController node) throws Exception {
+            node.abortJoblet(jobId, stageId);
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Aborting";
         }
 
         @Override

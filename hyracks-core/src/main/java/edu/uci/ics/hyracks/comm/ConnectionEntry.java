@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.context.HyracksContext;
@@ -41,6 +41,12 @@ public class ConnectionEntry implements IConnectionEntry {
 
     private final SelectionKey key;
 
+    private UUID jobId;
+
+    private UUID stageId;
+
+    private boolean aborted;
+
     public ConnectionEntry(HyracksContext ctx, SocketChannel socketChannel, SelectionKey key) {
         this.socketChannel = socketChannel;
         readBuffer = ctx.getResourceManager().allocateFrame();
@@ -55,6 +61,9 @@ public class ConnectionEntry implements IConnectionEntry {
     }
 
     public boolean dispatch(SelectionKey key) throws IOException {
+        if (aborted) {
+            recvListener.dataReceived(this);
+        }
         if (key.isReadable()) {
             if (LOGGER.isLoggable(Level.FINER)) {
                 LOGGER.finer("Before read: " + readBuffer.position() + " " + readBuffer.limit());
@@ -135,12 +144,46 @@ public class ConnectionEntry implements IConnectionEntry {
     }
 
     @Override
-    public void close() throws IOException {
-        socketChannel.close();
+    public void close() {
+        try {
+            socketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public SelectionKey getSelectionKey() {
         return key;
+    }
+
+    @Override
+    public UUID getJobId() {
+        return jobId;
+    }
+
+    @Override
+    public void setJobId(UUID jobId) {
+        this.jobId = jobId;
+    }
+
+    @Override
+    public UUID getStageId() {
+        return stageId;
+    }
+
+    @Override
+    public void setStageId(UUID stageId) {
+        this.stageId = stageId;
+    }
+
+    @Override
+    public void abort() {
+        aborted = true;
+    }
+
+    @Override
+    public boolean aborted() {
+        return aborted;
     }
 }

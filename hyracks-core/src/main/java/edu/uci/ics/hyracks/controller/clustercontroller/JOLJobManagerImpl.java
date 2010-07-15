@@ -56,8 +56,6 @@ public class JOLJobManagerImpl implements IJobManager {
 
     private static final String SCHEDULER_OLG_FILE = "edu/uci/ics/hyracks/controller/clustercontroller/scheduler.olg";
 
-    private final ClusterControllerService ccs;
-
     private final Runtime jolRuntime;
 
     private final JobTable jobTable;
@@ -80,8 +78,13 @@ public class JOLJobManagerImpl implements IJobManager {
 
     private final StageletCompleteTable stageletCompleteTable;
 
-    public JOLJobManagerImpl(final ClusterControllerService ccs, Runtime jolRuntime) throws Exception {
-        this.ccs = ccs;
+    private final FailedNodesTable failedNodesTable;
+
+    private final AbortMessageTable abortMessageTable;
+
+    private final AbortNotifyTable abortNotifyTable;
+
+    public JOLJobManagerImpl(final ClusterControllerService ccs, final Runtime jolRuntime) throws Exception {
         this.jolRuntime = jolRuntime;
         this.jobTable = new JobTable(jolRuntime);
         this.odTable = new OperatorDescriptorTable(jolRuntime);
@@ -93,6 +96,9 @@ public class JOLJobManagerImpl implements IJobManager {
         this.jobStartTable = new JobStartTable();
         this.startMessageTable = new StartMessageTable(jolRuntime);
         this.stageletCompleteTable = new StageletCompleteTable(jolRuntime);
+        this.failedNodesTable = new FailedNodesTable(jolRuntime);
+        this.abortMessageTable = new AbortMessageTable(jolRuntime);
+        this.abortNotifyTable = new AbortNotifyTable(jolRuntime);
 
         jolRuntime.catalog().register(jobTable);
         jolRuntime.catalog().register(odTable);
@@ -104,6 +110,9 @@ public class JOLJobManagerImpl implements IJobManager {
         jolRuntime.catalog().register(jobStartTable);
         jolRuntime.catalog().register(startMessageTable);
         jolRuntime.catalog().register(stageletCompleteTable);
+        jolRuntime.catalog().register(failedNodesTable);
+        jolRuntime.catalog().register(abortMessageTable);
+        jolRuntime.catalog().register(abortNotifyTable);
 
         jobTable.register(new JobTable.Callback() {
             @Override
@@ -123,6 +132,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void insertion(TupleSet tuples) {
                 try {
@@ -131,15 +141,16 @@ public class JOLJobManagerImpl implements IJobManager {
                             Object[] data = t.toArray();
                             UUID jobId = (UUID) data[0];
                             UUID stageId = (UUID) data[1];
-                            JobPlan plan = (JobPlan) data[2];
-                            Set<List> ts = (Set<List>) data[3];
+                            Integer attempt = (Integer) data[2];
+                            JobPlan plan = (JobPlan) data[3];
+                            Set<List> ts = (Set<List>) data[4];
                             ClusterControllerService.Phase1Installer[] p1is = new ClusterControllerService.Phase1Installer[ts
                                 .size()];
                             int i = 0;
                             for (List t2 : ts) {
                                 Object[] t2Data = t2.toArray();
                                 p1is[i++] = new ClusterControllerService.Phase1Installer((String) t2Data[0], jobId,
-                                    plan, stageId, (Set<ActivityNodeId>) t2Data[1]);
+                                    plan, stageId, attempt, (Set<ActivityNodeId>) t2Data[1]);
                             }
                             Map<PortInstanceId, Endpoint> globalPortMap = ccs.runRemote(p1is,
                                 new ClusterControllerService.PortMapMergingAccumulator());
@@ -162,6 +173,44 @@ public class JOLJobManagerImpl implements IJobManager {
                             ccs.runRemote(p2is, null);
                             ccs.runRemote(p3is, null);
                             ccs.runRemote(ss, null);
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        abortMessageTable.register(new AbortMessageTable.Callback() {
+            @Override
+            public void deletion(TupleSet tuples) {
+
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void insertion(TupleSet tuples) {
+                try {
+                    synchronized (JOLJobManagerImpl.this) {
+                        for (Tuple t : tuples) {
+                            Object[] data = t.toArray();
+                            UUID jobId = (UUID) data[0];
+                            UUID stageId = (UUID) data[1];
+                            Integer attempt = (Integer) data[2];
+                            Set<List> ts = (Set<List>) data[4];
+                            ClusterControllerService.JobletAborter[] jas = new ClusterControllerService.JobletAborter[ts
+                                .size()];
+                            int i = 0;
+                            BasicTupleSet notificationTuples = new BasicTupleSet();
+                            for (List t2 : ts) {
+                                Object[] t2Data = t2.toArray();
+                                String nodeId = (String) t2Data[0];
+                                jas[i++] = new ClusterControllerService.JobletAborter(nodeId, jobId, stageId, attempt);
+                                notificationTuples.add(AbortNotifyTable.createTuple(jobId, stageId, nodeId, attempt));
+                            }
+                            ccs.runRemote(jas, null);
+
+                            jolRuntime.schedule(JOL_SCOPE, AbortNotifyTable.TABLE_NAME, notificationTuples, null);
                         }
                     }
                 } catch (Exception e) {
@@ -270,15 +319,19 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public void notifyNodeFailure(String nodeId) {
+    public void notifyNodeFailure(String nodeId) throws Exception {
+        BasicTupleSet failedTuples = new BasicTupleSet(FailedNodesTable.createTuple(nodeId));
 
+        jolRuntime.schedule(JOL_SCOPE, FailedNodesTable.TABLE_NAME, failedTuples, null);
+
+        jolRuntime.evaluate();
     }
 
     @Override
-    public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId,
+    public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
         StageletStatistics statistics) throws Exception {
         BasicTupleSet scTuples = new BasicTupleSet();
-        scTuples.add(StageletCompleteTable.createTuple(jobId, stageId, nodeId, statistics));
+        scTuples.add(StageletCompleteTable.createTuple(jobId, stageId, nodeId, attempt, statistics));
 
         jolRuntime.schedule(JOL_SCOPE, StageletCompleteTable.TABLE_NAME, scTuples, null);
 
@@ -314,6 +367,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, JobStatus.class, JobSpecification.class, JobPlan.class, Set.class
         };
@@ -322,10 +376,12 @@ public class JOLJobManagerImpl implements IJobManager {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
+        @SuppressWarnings("unchecked")
         static Tuple createInitialJobTuple(UUID jobId, JobSpecification jobSpec, JobPlan plan) {
             return new Tuple(jobId, JobStatus.INITIALIZED, jobSpec, plan, new HashSet());
         }
 
+        @SuppressWarnings("unchecked")
         JobStatistics buildJobStatistics(Tuple jobTuple) {
             Set<Set<StageletStatistics>> statsSet = (Set<Set<StageletStatistics>>) jobTuple.value(4);
             JobStatistics stats = new JobStatistics();
@@ -358,6 +414,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0, 1);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, OperatorDescriptorId.class, IOperatorDescriptor.class
         };
@@ -379,6 +436,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key();
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, OperatorDescriptorId.class, String.class
         };
@@ -400,6 +458,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0, 1);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class,
             ConnectorDescriptorId.class,
@@ -433,6 +492,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0, 1, 2);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, OperatorDescriptorId.class, ActivityNodeId.class, IActivityNode.class
         };
@@ -455,6 +515,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0, 1, 2, 3);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, OperatorDescriptorId.class, Integer.class, Direction.class, ActivityNodeId.class, Integer.class
         };
@@ -477,6 +538,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         private static Key PRIMARY_KEY = new Key(0, 1, 2, 3, 4);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class,
             OperatorDescriptorId.class,
@@ -504,6 +566,7 @@ public class JOLJobManagerImpl implements IJobManager {
     private static class JobStartTable extends EventTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "jobstart");
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
             UUID.class, Long.class
         };
@@ -523,10 +586,11 @@ public class JOLJobManagerImpl implements IJobManager {
     private static class StartMessageTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "startmessage");
 
-        private static Key PRIMARY_KEY = new Key(0, 1);
+        private static Key PRIMARY_KEY = new Key(0, 1, 2);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, UUID.class, JobPlan.class, Set.class
+            UUID.class, UUID.class, Integer.class, JobPlan.class, Set.class
         };
 
         public StartMessageTable(Runtime context) {
@@ -535,23 +599,87 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     /*
-     * declare(stageletcomplete, keys(0, 1, 2), {JobId, StageId, NodeId, StageletStatistics})
+     * declare(stageletcomplete, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt, StageletStatistics})
      */
     private static class StageletCompleteTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "stageletcomplete");
 
-        private static Key PRIMARY_KEY = new Key(0, 1, 2);
+        private static Key PRIMARY_KEY = new Key(0, 1, 2, 3);
 
+        @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, UUID.class, String.class, StageletStatistics.class
+            UUID.class, UUID.class, String.class, Integer.class, StageletStatistics.class
         };
 
         public StageletCompleteTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
-        public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics) {
-            return new Tuple(jobId, stageId, nodeId, statistics);
+        public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, int attempt,
+            StageletStatistics statistics) {
+            return new Tuple(jobId, stageId, nodeId, attempt, statistics);
+        }
+    }
+
+    /*
+     * declare(failednodes, keys(0), {NodeId})
+     */
+    private static class FailedNodesTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "failednodes");
+
+        private static Key PRIMARY_KEY = new Key(0);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            String.class
+        };
+
+        public FailedNodesTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+
+        public static Tuple createTuple(String nodeId) {
+            return new Tuple(nodeId);
+        }
+    }
+
+    /*
+     * declare(abortmessage, keys(0, 1), {JobId, StageId, Attempt, JobPlan, TupleSet})
+     */
+    private static class AbortMessageTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "abortmessage");
+
+        private static Key PRIMARY_KEY = new Key(0, 1, 2);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class, UUID.class, Integer.class, JobPlan.class, Set.class
+        };
+
+        public AbortMessageTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+    }
+
+    /*
+     * declare(abortnotify, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt, StageletStatistics})
+     */
+    private static class AbortNotifyTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "abortnotify");
+
+        private static Key PRIMARY_KEY = new Key(0, 1, 2, 3);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class, UUID.class, String.class, Integer.class
+        };
+
+        public AbortNotifyTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+
+        public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, int attempt) {
+            return new Tuple(jobId, stageId, nodeId, attempt);
         }
     }
 }

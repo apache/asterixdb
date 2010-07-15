@@ -40,19 +40,24 @@ public class Stagelet {
 
     private final UUID stageId;
 
+    private final int attempt;
+
     private final Map<OperatorInstanceId, OperatorRunnable> honMap;
 
     private List<Endpoint> endpointList;
 
     private boolean started;
 
+    private volatile boolean abort;
+
     private final Set<OperatorInstanceId> pendingOperators;
 
     private final StageletStatistics stats;
 
-    public Stagelet(Joblet joblet, UUID stageId, String nodeId) throws RemoteException {
+    public Stagelet(Joblet joblet, UUID stageId, int attempt, String nodeId) throws RemoteException {
         this.joblet = joblet;
         this.stageId = stageId;
+        this.attempt = attempt;
         pendingOperators = new HashSet<OperatorInstanceId>();
         started = false;
         honMap = new HashMap<OperatorInstanceId, OperatorRunnable>();
@@ -85,6 +90,13 @@ public class Stagelet {
         notifyAll();
     }
 
+    public synchronized void abort() {
+        this.abort = true;
+        for (OperatorRunnable r : honMap.values()) {
+            r.abort();
+        }
+    }
+
     public void installRunnable(final OperatorInstanceId opIId) {
         pendingOperators.add(opIId);
         final OperatorRunnable hon = honMap.get(opIId);
@@ -97,9 +109,12 @@ public class Stagelet {
                     e.printStackTrace();
                     return;
                 }
+                if (abort) {
+                    return;
+                }
                 try {
                     LOGGER.log(Level.INFO, "Starting runnable for operator: " + joblet.getJobId() + ":" + stageId + ":"
-                            + opIId.getOperatorId() + ":" + opIId.getPartition());
+                        + opIId.getOperatorId() + ":" + opIId.getPartition());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -117,7 +132,7 @@ public class Stagelet {
         if (pendingOperators.isEmpty()) {
             stats.setEndTime(new Date());
             try {
-                joblet.notifyStageletComplete(stageId, stats);
+                joblet.notifyStageletComplete(stageId, attempt, stats);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -125,7 +140,7 @@ public class Stagelet {
     }
 
     private synchronized void waitUntilStarted() throws InterruptedException {
-        while (!started) {
+        while (!started && !abort) {
             wait();
         }
     }

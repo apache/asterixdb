@@ -26,9 +26,11 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,6 +64,8 @@ public class ConnectionManager {
 
     private final IDataReceiveListener initialDataReceiveListener;
 
+    private final Set<IConnectionEntry> connections;
+
     private volatile boolean stopped;
 
     private ByteBuffer emptyFrame;
@@ -76,7 +80,7 @@ public class ConnectionManager {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Connection manager listening on " + serverSocket.getInetAddress() + ":"
-                    + serverSocket.getLocalPort());
+                + serverSocket.getLocalPort());
         }
 
         pendingConnectionReceivers = new HashMap<UUID, IDataReceiveListenerFactory>();
@@ -85,6 +89,7 @@ public class ConnectionManager {
         initialDataReceiveListener = new InitialDataReceiveListener();
         emptyFrame = ctx.getResourceManager().allocateFrame();
         emptyFrame.putInt(FrameHelper.getTupleCountOffset(ctx), 0);
+        connections = new HashSet<IConnectionEntry>();
     }
 
     public synchronized void dumpStats() {
@@ -116,7 +121,7 @@ public class ConnectionManager {
     public IFrameWriter connect(NetworkAddress address, UUID id, int senderId) throws HyracksDataException {
         try {
             SocketChannel channel = SocketChannel
-                    .open(new InetSocketAddress(address.getIpAddress(), address.getPort()));
+                .open(new InetSocketAddress(address.getIpAddress(), address.getPort()));
             byte[] initialFrame = new byte[INITIAL_MESSAGE_LEN];
             ByteBuffer buffer = ByteBuffer.wrap(initialFrame);
             buffer.clear();
@@ -171,6 +176,20 @@ public class ConnectionManager {
             LOGGER.info("Connection manager unaccepting " + id);
         }
         pendingConnectionReceivers.remove(id);
+    }
+
+    public synchronized void abortConnections(UUID jobId, UUID stageId) {
+        List<IConnectionEntry> abortConnections = new ArrayList<IConnectionEntry>();
+        synchronized (this) {
+            for (IConnectionEntry ce : connections) {
+                if (ce.getJobId().equals(jobId) && ce.getStageId().equals(stageId)) {
+                    abortConnections.add(ce);
+                }
+            }
+        }
+        synchronized (dataListenerThread) {
+            dataListenerThread.pendingAbortConnections.addAll(abortConnections);
+        }
     }
 
     private final class NetworkFrameWriter implements IFrameWriter {
@@ -237,7 +256,8 @@ public class ConnectionManager {
     private final class DataListenerThread extends Thread {
         private Selector selector;
 
-        private List<SocketChannel> pendingSockets;
+        private List<SocketChannel> pendingNewSockets;
+        private List<IConnectionEntry> pendingAbortConnections;
 
         public DataListenerThread() {
             super("Hyracks Data Listener Thread");
@@ -246,12 +266,13 @@ public class ConnectionManager {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            pendingSockets = new ArrayList<SocketChannel>();
+            pendingNewSockets = new ArrayList<SocketChannel>();
+            pendingAbortConnections = new ArrayList<IConnectionEntry>();
         }
 
         synchronized void addSocketChannel(SocketChannel sc) throws IOException {
             LOGGER.info("Connection received");
-            pendingSockets.add(sc);
+            pendingNewSockets.add(sc);
             selector.wakeup();
         }
 
@@ -264,8 +285,8 @@ public class ConnectionManager {
                     }
                     int n = selector.select();
                     synchronized (this) {
-                        if (!pendingSockets.isEmpty()) {
-                            for (SocketChannel sc : pendingSockets) {
+                        if (!pendingNewSockets.isEmpty()) {
+                            for (SocketChannel sc : pendingNewSockets) {
                                 sc.configureBlocking(false);
                                 SelectionKey scKey = sc.register(selector, SelectionKey.OP_READ);
                                 ConnectionEntry entry = new ConnectionEntry(ctx, sc, scKey);
@@ -275,7 +296,19 @@ public class ConnectionManager {
                                     LOGGER.fine("Woke up selector");
                                 }
                             }
-                            pendingSockets.clear();
+                            pendingNewSockets.clear();
+                        }
+                        if (!pendingAbortConnections.isEmpty()) {
+                            for (IConnectionEntry ce : pendingAbortConnections) {
+                                SelectionKey key = ce.getSelectionKey();
+                                ce.abort();
+                                ((ConnectionEntry) ce).dispatch(key);
+                                key.cancel();
+                                ce.close();
+                                synchronized (ConnectionManager.this) {
+                                    connections.remove(ce);
+                                }
+                            }
                         }
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("Selector: " + n);
@@ -295,6 +328,9 @@ public class ConnectionManager {
                                 if (close) {
                                     key.cancel();
                                     entry.close();
+                                    synchronized (ConnectionManager.this) {
+                                        connections.remove(entry);
+                                    }
                                 }
                             }
                         }
@@ -331,6 +367,11 @@ public class ConnectionManager {
 
                 newListener = connectionReceiver.getDataReceiveListener(endpointID, entry, senderId);
                 entry.setDataReceiveListener(newListener);
+                entry.setJobId(connectionReceiver.getJobId());
+                entry.setStageId(connectionReceiver.getStageId());
+                synchronized (ConnectionManager.this) {
+                    connections.add(entry);
+                }
                 byte[] ack = new byte[4];
                 ByteBuffer ackBuffer = ByteBuffer.wrap(ack);
                 ackBuffer.clear();

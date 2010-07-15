@@ -161,13 +161,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId,
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId, int attempt,
         Set<ActivityNodeId> activities) throws Exception {
         LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
 
         final Joblet joblet = getLocalJoblet(jobId);
 
-        Stagelet stagelet = new Stagelet(joblet, stageId, id);
+        Stagelet stagelet = new Stagelet(joblet, stageId, attempt, id);
         joblet.setStagelet(stageId, stagelet);
 
         final Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
@@ -197,7 +197,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             IConnectorDescriptor conn = inputs.get(j);
                             Endpoint endpoint = new Endpoint(connectionManager.getNetworkAddress(), i);
                             endpointList.add(endpoint);
-                            DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx);
+                            DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx, jobId,
+                                stageId);
                             connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
                             PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
                                 .getTaskInputMap().get(hanId).get(j), i);
@@ -368,8 +369,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyStageComplete(UUID jobId, UUID stageId, StageletStatistics stats) throws Exception {
-        ccs.notifyStageletComplete(jobId, stageId, id, stats);
+    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, StageletStatistics stats) throws Exception {
+        ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
     }
 
     @Override
@@ -395,6 +396,18 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 cc.nodeHeartbeat(id);
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public synchronized void abortJoblet(UUID jobId, UUID stageId) throws Exception {
+        Joblet ji = jobletMap.get(jobId);
+        if (ji != null) {
+            Stagelet stagelet = ji.getStagelet(stageId);
+            if (stagelet != null) {
+                stagelet.abort();
+                connectionManager.abortConnections(jobId, stageId);
             }
         }
     }

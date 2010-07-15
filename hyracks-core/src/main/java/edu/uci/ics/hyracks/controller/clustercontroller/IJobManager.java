@@ -30,12 +30,12 @@ public interface IJobManager {
 
     public void advanceJob(JobControl jobControlImpl) throws Exception;
 
-    public void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId, StageletStatistics statistics)
-            throws Exception;
+    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
+        StageletStatistics statistics) throws Exception;
 
     public JobStatus getJobStatus(UUID jobId);
 
     public JobStatistics waitForCompletion(UUID jobId) throws Exception;
 
-    public void notifyNodeFailure(String nodeId);
+    public void notifyNodeFailure(String nodeId) throws Exception;
 }

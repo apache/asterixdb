@@ -55,6 +55,10 @@ public class NonDeterministicFrameReader implements IFrameReader {
         }
         while (true) {
             IConnectionEntry entry = demux.findNextReadyEntry(lastReadSender);
+            if (entry.aborted()) {
+                eos = true;
+                return false;
+            }
             lastReadSender = (Integer) entry.getAttachment();
             ByteBuffer netBuffer = entry.getReadBuffer();
             int tupleCount = netBuffer.getInt(FrameHelper.getTupleCountOffset(ctx));

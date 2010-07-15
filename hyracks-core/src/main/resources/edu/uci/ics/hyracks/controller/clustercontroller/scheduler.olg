@@ -76,34 +76,42 @@ jobstage(JobId, StageNumber, StageId) :-
 
 watch(jobstage, a);
 
-define(stagestart, keys(0), {UUID, Integer});
+define(stagestart, keys(), {UUID, Integer, Integer});
 define(stagefinish, keys(0, 1), {UUID, Integer, Set});
 
 watch(jobstart, i);
 
-stagestart_INITIAL stagestart(JobId, 0) :-
+stagestart_INITIAL stagestart(JobId, 0, 0) :-
     jobstart(JobId, _),
     job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, _, _, _),
-    notin stagestart(JobId, _);
+    notin stagestart(JobId, _, _);
 
 update_job_status_RUNNING job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, null) :-
     job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan, _),
     jobstart(JobId, _);
 
-stagestart_NEXT stagestart(JobId, NextStageNumber) :-
-    stagestart(JobId, StageNumber),
+stagestart_NEXT stagestart(JobId, NextStageNumber, 0) :-
+    stagestart(JobId, StageNumber, _),
     stagefinish#insert(StageId, StageNumber, _)
     {
         NextStageNumber := StageNumber + 1;
     };
 
+stagestart_AGAIN stagestart(JobId, StageNumber, NextAttempt) :-
+    stagestart(JobId, StageNumber, Attempt),
+    abortcomplete(JobId, StageId, Attempt),
+    jobstage(JobId, StageNumber, StageId)
+    {
+        NextAttempt := Attempt + 1;
+    };
+
 watch(stagestart, a);
 watch(stagestart, d);
 
-define(activitystart, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer, UUID, String});
+define(activitystart, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer, Integer, UUID, String});
 
-activitystart(JobId, OperatorId, ActivityId, StageNumber, StageId, NodeId) :-
-    stagestart(JobId, StageNumber),
+activitystart(JobId, OperatorId, ActivityId, StageNumber, Attempt, StageId, NodeId) :-
+    stagestart(JobId, StageNumber, Attempt),
     operatordescriptor(JobId, OperatorId, _),
     activitystage(JobId, OperatorId, ActivityId, StageNumber),
     jobstage(JobId, StageNumber, StageId),
@@ -111,37 +119,74 @@ activitystart(JobId, OperatorId, ActivityId, StageNumber, StageId, NodeId) :-
 
 watch(activitystart, a);
 
-define(stageletstart, keys(0, 1, 3), {UUID, UUID, JobPlan, String, Set});
+define(stageletstart, keys(0, 1, 3, 4), {UUID, UUID, JobPlan, String, Integer, Set});
 
-stageletstart(JobId, StageId, JobPlan, NodeId, set<ActivityId>) :-
-    activitystart#insert(JobId, _, ActivityId, StageNumber, StageId, NodeId),
+stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, set<ActivityId>) :-
+    activitystart#insert(JobId, _, ActivityId, StageNumber, Attempt, StageId, NodeId),
     job(JobId, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, _, JobPlan, _);
 
 watch(stageletstart, a);
 watch(stageletstart, i);
 
-define(startmessage_agg, keys(0, 1), {UUID, UUID, JobPlan, Set});
+define(startmessage_agg, keys(0, 1, 2), {UUID, UUID, Integer, JobPlan, Set});
 
-startmessage_agg(JobId, StageId, JobPlan, set<Tuple>) :-
-    stageletstart(JobId, StageId, JobPlan, NodeId, ActivityIdSet)
+startmessage_agg(JobId, StageId, Attempt, JobPlan, set<Tuple>) :-
+    stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet)
     {
         Tuple := [NodeId, ActivityIdSet];
     };
 
-startmessage(JobId, StageId, JobPlan, TSet) :-
-    startmessage_agg(JobId, StageId, JobPlan, TSet);
+startmessage(JobId, StageId, Attempt, JobPlan, TSet) :-
+    startmessage_agg(JobId, StageId, Attempt, JobPlan, TSet);
 
 watch(startmessage, a);
 watch(startmessage, i);
 
-define(stageletcomplete_agg, keys(0, 1), {UUID, UUID, Set});
+define(stageletabort, keys(0, 1, 3, 4), {UUID, UUID, JobPlan, String, Integer, Set});
 
-stageletcomplete_agg(JobId, StageId, set<Statistics>) :-
-    stageletcomplete(JobId, StageId, NodeId, Statistics);
+stageletabort(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet) :-
+    stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet),
+    failednodes(NodeId);
+
+stageletabort(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet) :-
+    stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet),
+    stageletabort(JobId, StageId, _, _, Attempt, _);
+
+define(abortmessage_agg, keys(0, 1, 2), {UUID, UUID, Integer, JobPlan, Set});
+
+abortmessage_agg(JobId, StageId, Attempt, JobPlan, set<Tuple>) :-
+    stageletabort(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet),
+    notin failednodes(NodeId)
+    {
+        Tuple := [NodeId, ActivityIdSet];
+    };
+
+abortmessage(JobId, StageId, Attempt, JobPlan, TSet) :-
+    abortmessage_agg(JobId, StageId, Attempt, JobPlan, TSet);
+
+watch(abortmessage, a);
+watch(abortmessage, i);
+
+define(abortnotify_agg, keys(0, 1, 2), {UUID, UUID, Integer, Set});
+
+abortnotify_agg(JobId, StageId, Attempt, set<NodeId>) :-
+    abortnotify(JobId, StageId, NodeId, Attempt);
+
+define(abortcomplete, keys(), {UUID, UUID, Integer});
+
+abortcomplete(JobId, StageId, Attempt) :-
+    abortnotify_agg(JobId, StageId, Attempt, NodeIdSet),
+    abortmessage_agg(JobId, StageId, Attempt, _, TSet),
+    TSet.size() == NodeIdSet.size();
+
+define(stageletcomplete_agg, keys(0, 1, 2), {UUID, UUID, Integer, Set});
+
+stageletcomplete_agg(JobId, StageId, Attempt, set<Statistics>) :-
+    stageletcomplete(JobId, StageId, NodeId, Attempt, Statistics);
 
 stagefinish(JobId, StageNumber, SSet) :-
-    startmessage_agg(JobId, StageId, _, TSet),
-    stageletcomplete_agg(JobId, StageId, SSet),
+    startmessage_agg(JobId, StageId, Attempt, _, TSet),
+    stageletcomplete_agg(JobId, StageId, Attempt, SSet),
     jobstage(JobId, StageNumber, StageId),
     TSet.size() == SSet.size();
 

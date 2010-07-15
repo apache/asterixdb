@@ -151,7 +151,7 @@ public class JobManagerImpl implements IJobManager {
             .size()];
         int i = 0;
         for (String nodeId : participatingNodes) {
-            p1is[i++] = new ClusterControllerService.Phase1Installer(nodeId, jobId, plan, stageId, stage.getTasks());
+            p1is[i++] = new ClusterControllerService.Phase1Installer(nodeId, jobId, plan, stageId, 0, stage.getTasks());
         }
         Map<PortInstanceId, Endpoint> globalPortMap = ccs.runRemote(p1is,
             new ClusterControllerService.PortMapMergingAccumulator());
@@ -179,7 +179,8 @@ public class JobManagerImpl implements IJobManager {
         return participatingNodes;
     }
 
-    public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, String nodeId,
+    @Override
+    public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
         StageletStatistics statistics) throws Exception {
         JobControl jc = jobMap.get(jobId);
         if (jc != null) {
@@ -187,11 +188,13 @@ public class JobManagerImpl implements IJobManager {
         }
     }
 
+    @Override
     public synchronized JobStatus getJobStatus(UUID jobId) {
         JobControl jc = jobMap.get(jobId);
         return jc.getJobStatus();
     }
 
+    @Override
     public JobStatistics waitForCompletion(UUID jobId) throws Exception {
         JobControl jc;
         synchronized (this) {

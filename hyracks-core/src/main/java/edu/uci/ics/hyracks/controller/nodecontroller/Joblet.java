@@ -87,8 +87,8 @@ public class Joblet {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, StageletStatistics stats) throws Exception {
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletStatistics stats) throws Exception {
         stageletMap.remove(stageId);
-        nodeController.notifyStageComplete(jobId, stageId, stats);
+        nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
 }
