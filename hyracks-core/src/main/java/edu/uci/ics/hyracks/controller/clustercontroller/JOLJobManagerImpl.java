@@ -233,7 +233,7 @@ public class JOLJobManagerImpl implements IJobManager {
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
@@ -264,7 +264,7 @@ public class JOLJobManagerImpl implements IJobManager {
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
@@ -302,7 +302,7 @@ public class JOLJobManagerImpl implements IJobManager {
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
