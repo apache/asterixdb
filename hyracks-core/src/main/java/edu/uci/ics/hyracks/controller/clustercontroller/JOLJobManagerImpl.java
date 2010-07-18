@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import jol.types.table.Key;
 import jol.types.table.TableName;
 import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
+import edu.uci.ics.hyracks.api.constraints.ChoiceLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
@@ -74,9 +76,17 @@ public class JOLJobManagerImpl implements IJobManager {
 
     private final JobStartTable jobStartTable;
 
+    private final JobCleanUpTable jobCleanUpTable;
+
+    private final JobCleanUpCompleteTable jobCleanUpCompleteTable;
+
     private final StartMessageTable startMessageTable;
 
     private final StageletCompleteTable stageletCompleteTable;
+
+    private final StageletFailureTable stageletFailureTable;
+
+    private final AvailableNodesTable availableNodesTable;
 
     private final FailedNodesTable failedNodesTable;
 
@@ -94,8 +104,12 @@ public class JOLJobManagerImpl implements IJobManager {
         this.acTable = new ActivityConnectionTable(jolRuntime);
         this.abTable = new ActivityBlockedTable(jolRuntime);
         this.jobStartTable = new JobStartTable();
+        this.jobCleanUpTable = new JobCleanUpTable(jolRuntime);
+        this.jobCleanUpCompleteTable = new JobCleanUpCompleteTable();
         this.startMessageTable = new StartMessageTable(jolRuntime);
         this.stageletCompleteTable = new StageletCompleteTable(jolRuntime);
+        this.stageletFailureTable = new StageletFailureTable(jolRuntime);
+        this.availableNodesTable = new AvailableNodesTable(jolRuntime);
         this.failedNodesTable = new FailedNodesTable(jolRuntime);
         this.abortMessageTable = new AbortMessageTable(jolRuntime);
         this.abortNotifyTable = new AbortNotifyTable(jolRuntime);
@@ -108,8 +122,12 @@ public class JOLJobManagerImpl implements IJobManager {
         jolRuntime.catalog().register(acTable);
         jolRuntime.catalog().register(abTable);
         jolRuntime.catalog().register(jobStartTable);
+        jolRuntime.catalog().register(jobCleanUpTable);
+        jolRuntime.catalog().register(jobCleanUpCompleteTable);
         jolRuntime.catalog().register(startMessageTable);
         jolRuntime.catalog().register(stageletCompleteTable);
+        jolRuntime.catalog().register(stageletFailureTable);
+        jolRuntime.catalog().register(availableNodesTable);
         jolRuntime.catalog().register(failedNodesTable);
         jolRuntime.catalog().register(abortMessageTable);
         jolRuntime.catalog().register(abortNotifyTable);
@@ -144,13 +162,40 @@ public class JOLJobManagerImpl implements IJobManager {
                             Integer attempt = (Integer) data[2];
                             JobPlan plan = (JobPlan) data[3];
                             Set<List> ts = (Set<List>) data[4];
+                            Map<OperatorDescriptorId, Set<Integer>> opPartitions = new HashMap<OperatorDescriptorId, Set<Integer>>();
+                            for (List t2 : ts) {
+                                Object[] t2Data = t2.toArray();
+                                Set<List> activityInfoSet = (Set<List>) t2Data[1];
+                                for (List l : activityInfoSet) {
+                                    Object[] lData = l.toArray();
+                                    ActivityNodeId aid = (ActivityNodeId) lData[0];
+                                    Set<Integer> opParts = opPartitions.get(aid.getOperatorDescriptorId());
+                                    if (opParts == null) {
+                                        opParts = new HashSet<Integer>();
+                                        opPartitions.put(aid.getOperatorDescriptorId(), opParts);
+                                    }
+                                    opParts.add((Integer) lData[1]);
+                                }
+                            }
                             ClusterControllerService.Phase1Installer[] p1is = new ClusterControllerService.Phase1Installer[ts
                                 .size()];
                             int i = 0;
                             for (List t2 : ts) {
                                 Object[] t2Data = t2.toArray();
+                                Map<ActivityNodeId, Set<Integer>> tasks = new HashMap<ActivityNodeId, Set<Integer>>();
+                                Set<List> activityInfoSet = (Set<List>) t2Data[1];
+                                for (List l : activityInfoSet) {
+                                    Object[] lData = l.toArray();
+                                    ActivityNodeId aid = (ActivityNodeId) lData[0];
+                                    Set<Integer> aParts = tasks.get(aid);
+                                    if (aParts == null) {
+                                        aParts = new HashSet<Integer>();
+                                        tasks.put(aid, aParts);
+                                    }
+                                    aParts.add((Integer) lData[1]);
+                                }
                                 p1is[i++] = new ClusterControllerService.Phase1Installer((String) t2Data[0], jobId,
-                                    plan, stageId, attempt, (Set<ActivityNodeId>) t2Data[1]);
+                                    plan, stageId, attempt, tasks, opPartitions);
                             }
                             Map<PortInstanceId, Endpoint> globalPortMap = ccs.runRemote(p1is,
                                 new ClusterControllerService.PortMapMergingAccumulator());
@@ -163,8 +208,20 @@ public class JOLJobManagerImpl implements IJobManager {
                             i = 0;
                             for (List t2 : ts) {
                                 Object[] t2Data = t2.toArray();
+                                Map<ActivityNodeId, Set<Integer>> tasks = new HashMap<ActivityNodeId, Set<Integer>>();
+                                Set<List> activityInfoSet = (Set<List>) t2Data[1];
+                                for (List l : activityInfoSet) {
+                                    Object[] lData = l.toArray();
+                                    ActivityNodeId aid = (ActivityNodeId) lData[0];
+                                    Set<Integer> aParts = tasks.get(aid);
+                                    if (aParts == null) {
+                                        aParts = new HashSet<Integer>();
+                                        tasks.put(aid, aParts);
+                                    }
+                                    aParts.add((Integer) lData[1]);
+                                }
                                 p2is[i] = new ClusterControllerService.Phase2Installer((String) t2Data[0], jobId, plan,
-                                    stageId, (Set<ActivityNodeId>) t2Data[1], globalPortMap);
+                                    stageId, tasks, opPartitions, globalPortMap);
                                 p3is[i] = new ClusterControllerService.Phase3Installer((String) t2Data[0], jobId,
                                     stageId);
                                 ss[i] = new ClusterControllerService.StageStarter((String) t2Data[0], jobId, stageId);
@@ -173,6 +230,37 @@ public class JOLJobManagerImpl implements IJobManager {
                             ccs.runRemote(p2is, null);
                             ccs.runRemote(p3is, null);
                             ccs.runRemote(ss, null);
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        jobCleanUpTable.register(new JobCleanUpTable.Callback() {
+            @Override
+            public void deletion(TupleSet tuples) {
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void insertion(TupleSet tuples) {
+                try {
+                    synchronized (JOLJobManagerImpl.this) {
+                        for (Tuple t : tuples) {
+                            Object[] data = t.toArray();
+                            UUID jobId = (UUID) data[0];
+                            Set<String> ts = (Set<String>) data[1];
+                            ClusterControllerService.JobCompleteNotifier[] jcns = new ClusterControllerService.JobCompleteNotifier[ts
+                                .size()];
+                            int i = 0;
+                            for (String n : ts) {
+                                jcns[i++] = new ClusterControllerService.JobCompleteNotifier(n, jobId);
+                            }
+                            ccs.runRemote(jcns, null);
+                            BasicTupleSet jccTuples = new BasicTupleSet(JobCleanUpCompleteTable.createTuple(jobId));
+                            jolRuntime.schedule(JOL_SCOPE, JobCleanUpCompleteTable.TABLE_NAME, jccTuples, null);
                         }
                     }
                 } catch (Exception e) {
@@ -224,11 +312,6 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public void advanceJob(JobControl jobControlImpl) throws Exception {
-
-    }
-
-    @Override
     public synchronized UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         final UUID jobId = UUID.randomUUID();
 
@@ -270,16 +353,13 @@ public class JOLJobManagerImpl implements IJobManager {
         BasicTupleSet olTuples = new BasicTupleSet();
         for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : jobSpec.getOperatorMap().entrySet()) {
             IOperatorDescriptor od = e.getValue();
-            odTuples.add(OperatorDescriptorTable.createTuple(jobId, od));
             PartitionConstraint pc = od.getPartitionConstraint();
             LocationConstraint[] locationConstraints = pc.getLocationConstraints();
-            String[] partitions = new String[locationConstraints.length];
+            int nPartitions = locationConstraints.length;
+            odTuples.add(OperatorDescriptorTable.createTuple(jobId, nPartitions, od));
             for (int i = 0; i < locationConstraints.length; ++i) {
-                String nodeId = ((AbsoluteLocationConstraint) locationConstraints[i]).getLocationId();
-                olTuples.add(OperatorLocationTable.createTuple(jobId, od.getOperatorId(), nodeId));
-                partitions[i] = nodeId;
+                addLocationConstraintTuple(olTuples, jobId, od.getOperatorId(), i, locationConstraints[i]);
             }
-            od.setPartitions(partitions);
             od.contributeTaskGraph(gBuilder);
         }
 
@@ -303,6 +383,21 @@ public class JOLJobManagerImpl implements IJobManager {
         return jobId;
     }
 
+    private void addLocationConstraintTuple(BasicTupleSet olTuples, UUID jobId, OperatorDescriptorId opId, int i,
+        LocationConstraint locationConstraint) {
+        switch (locationConstraint.getConstraintType()) {
+            case ABSOLUTE:
+                String nodeId = ((AbsoluteLocationConstraint) locationConstraint).getLocationId();
+                olTuples.add(OperatorLocationTable.createTuple(jobId, opId, nodeId, i));
+                break;
+
+            case CHOICE:
+                for (LocationConstraint lc : ((ChoiceLocationConstraint) locationConstraint).getChoices()) {
+                    addLocationConstraintTuple(olTuples, jobId, opId, i, lc);
+                }
+        }
+    }
+
     @Override
     public JobStatus getJobStatus(UUID jobId) {
         synchronized (jobTable) {
@@ -320,6 +415,12 @@ public class JOLJobManagerImpl implements IJobManager {
 
     @Override
     public void notifyNodeFailure(String nodeId) throws Exception {
+        BasicTupleSet unavailableTuples = new BasicTupleSet(AvailableNodesTable.createTuple(nodeId));
+
+        jolRuntime.schedule(JOL_SCOPE, AvailableNodesTable.TABLE_NAME, null, unavailableTuples);
+
+        jolRuntime.evaluate();
+
         BasicTupleSet failedTuples = new BasicTupleSet(FailedNodesTable.createTuple(nodeId));
 
         jolRuntime.schedule(JOL_SCOPE, FailedNodesTable.TABLE_NAME, failedTuples, null);
@@ -339,11 +440,31 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
+    public synchronized void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId)
+        throws Exception {
+        BasicTupleSet sfTuples = new BasicTupleSet();
+        sfTuples.add(StageletFailureTable.createTuple(jobId, stageId, nodeId, attempt));
+
+        jolRuntime.schedule(JOL_SCOPE, StageletFailureTable.TABLE_NAME, sfTuples, null);
+
+        jolRuntime.evaluate();
+    }
+
+    @Override
     public synchronized void start(UUID jobId) throws Exception {
         BasicTupleSet jsTuples = new BasicTupleSet();
         jsTuples.add(JobStartTable.createTuple(jobId, System.currentTimeMillis()));
 
         jolRuntime.schedule(JOL_SCOPE, JobStartTable.TABLE_NAME, jsTuples, null);
+
+        jolRuntime.evaluate();
+    }
+
+    @Override
+    public void registerNode(String nodeId) throws Exception {
+        BasicTupleSet availableTuples = new BasicTupleSet(AvailableNodesTable.createTuple(nodeId));
+
+        jolRuntime.schedule(JOL_SCOPE, AvailableNodesTable.TABLE_NAME, availableTuples, null);
 
         jolRuntime.evaluate();
     }
@@ -416,20 +537,20 @@ public class JOLJobManagerImpl implements IJobManager {
 
         @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, OperatorDescriptorId.class, IOperatorDescriptor.class
+            UUID.class, OperatorDescriptorId.class, Integer.class, IOperatorDescriptor.class
         };
 
         public OperatorDescriptorTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
-        static Tuple createTuple(UUID jobId, IOperatorDescriptor od) {
-            return new Tuple(jobId, od.getOperatorId(), od);
+        static Tuple createTuple(UUID jobId, int nPartitions, IOperatorDescriptor od) {
+            return new Tuple(jobId, od.getOperatorId(), nPartitions, od);
         }
     }
 
     /*
-     * declare(operatordescriptor, keys(0, 1), {JobId, ODId, OperatorDescriptor})
+     * declare(operatorlocation, keys(0, 1), {JobId, ODId, NodeId})
      */
     private static class OperatorLocationTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "operatorlocation");
@@ -438,15 +559,15 @@ public class JOLJobManagerImpl implements IJobManager {
 
         @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] {
-            UUID.class, OperatorDescriptorId.class, String.class
+            UUID.class, OperatorDescriptorId.class, String.class, Integer.class
         };
 
         public OperatorLocationTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
-        static Tuple createTuple(UUID jobId, OperatorDescriptorId opId, String nodeId) {
-            return new Tuple(jobId, opId, nodeId);
+        static Tuple createTuple(UUID jobId, OperatorDescriptorId opId, String nodeId, int partition) {
+            return new Tuple(jobId, opId, nodeId, partition);
         }
     }
 
@@ -599,6 +720,44 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     /*
+     * declare(jobcleanup, keys(0), {JobId, Set<NodeId>})
+     */
+    private static class JobCleanUpTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "jobcleanup");
+
+        private static Key PRIMARY_KEY = new Key(0);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class, Set.class
+        };
+
+        public JobCleanUpTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+    }
+
+    /*
+     * declare(jobcleanupcomplete, keys(0), {JobId})
+     */
+    private static class JobCleanUpCompleteTable extends EventTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "jobcleanupcomplete");
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class
+        };
+
+        public JobCleanUpCompleteTable() {
+            super(TABLE_NAME, SCHEMA);
+        }
+
+        public static Tuple createTuple(UUID jobId) {
+            return new Tuple(jobId);
+        }
+    }
+
+    /*
      * declare(stageletcomplete, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt, StageletStatistics})
      */
     private static class StageletCompleteTable extends BasicTable {
@@ -618,6 +777,50 @@ public class JOLJobManagerImpl implements IJobManager {
         public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, int attempt,
             StageletStatistics statistics) {
             return new Tuple(jobId, stageId, nodeId, attempt, statistics);
+        }
+    }
+
+    /*
+     * declare(stageletfailure, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt})
+     */
+    private static class StageletFailureTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "stageletfailure");
+
+        private static Key PRIMARY_KEY = new Key(0, 1, 2, 3);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            UUID.class, UUID.class, String.class, Integer.class
+        };
+
+        public StageletFailureTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+
+        public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, int attempt) {
+            return new Tuple(jobId, stageId, nodeId, attempt);
+        }
+    }
+
+    /*
+     * declare(availablenodes, keys(0), {NodeId})
+     */
+    private static class AvailableNodesTable extends BasicTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "availablenodes");
+
+        private static Key PRIMARY_KEY = new Key(0);
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] {
+            String.class
+        };
+
+        public AvailableNodesTable(Runtime context) {
+            super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
+        }
+
+        public static Tuple createTuple(String nodeId) {
+            return new Tuple(nodeId);
         }
     }
 

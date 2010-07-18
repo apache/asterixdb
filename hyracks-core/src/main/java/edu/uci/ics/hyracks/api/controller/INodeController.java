@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.config.NCConfig;
@@ -33,10 +34,11 @@ public interface INodeController extends Remote {
     public NodeCapability getNodeCapability() throws Exception;
 
     public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId, int attempt,
-        Set<ActivityNodeId> activities) throws Exception;
+        Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) throws Exception;
 
-    public void initializeJobletPhase2(UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> activities,
-        Map<PortInstanceId, Endpoint> globalPortMap) throws Exception;
+    public void initializeJobletPhase2(UUID jobId, JobPlan plan, UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks,
+        Map<OperatorDescriptorId, Set<Integer>> opPartitions, Map<PortInstanceId, Endpoint> globalPortMap)
+        throws Exception;
 
     public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception;
 

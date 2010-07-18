@@ -28,14 +28,16 @@ public interface IJobManager {
 
     public void start(UUID jobId) throws Exception;
 
-    public void advanceJob(JobControl jobControlImpl) throws Exception;
-
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
         StageletStatistics statistics) throws Exception;
+
+    public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 
     public JobStatus getJobStatus(UUID jobId);
 
     public JobStatistics waitForCompletion(UUID jobId) throws Exception;
 
     public void notifyNodeFailure(String nodeId) throws Exception;
+
+    public void registerNode(String nodeId) throws Exception;
 }

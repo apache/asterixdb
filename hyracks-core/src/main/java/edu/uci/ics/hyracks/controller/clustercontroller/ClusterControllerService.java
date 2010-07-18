@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.controller.NodeParameters;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
@@ -85,17 +86,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
-        if (ccConfig.useJOL) {
-            Set<DebugLevel> jolDebugLevel = LOGGER.isLoggable(Level.FINE) ? Runtime.DEBUG_ALL
-                : new HashSet<DebugLevel>();
-            jolRuntime = (Runtime) Runtime.create(jolDebugLevel, System.err);
-            jobManager = new JOLJobManagerImpl(this, jolRuntime);
-        } else {
-            jobManager = new JobManagerImpl(this);
-        }
+        Set<DebugLevel> jolDebugLevel = LOGGER.isLoggable(Level.FINE) ? Runtime.DEBUG_ALL : new HashSet<DebugLevel>();
+        jolRuntime = (Runtime) Runtime.create(jolDebugLevel, System.err);
+        jobManager = new JOLJobManagerImpl(this, jolRuntime);
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(new Handler[] {
-            getAdminConsoleHandler()
+            getAdminConsoleHandler(), getApplicationDataHandler()
         });
         this.timer = new Timer(true);
     }
@@ -107,7 +103,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
-        timer.schedule(new DeadNodeSweeper(), 0, ccConfig.heartbeatPeriod * 1000);
+        timer.schedule(new DeadNodeSweeper(), 0, ccConfig.heartbeatPeriod);
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
@@ -139,6 +135,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
             nodeRegistry.put(id, state);
         }
         nodeController.notifyRegistration(this);
+        jobManager.registerNode(id);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
         params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
@@ -181,6 +178,11 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
         StageletStatistics statistics) throws Exception {
         jobManager.notifyStageletComplete(jobId, stageId, attempt, nodeId, statistics);
+    }
+
+    @Override
+    public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception {
+        jobManager.notifyStageletFailure(jobId, stageId, attempt, nodeId);
     }
 
     @Override
@@ -235,6 +237,17 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return handler;
     }
 
+    private Handler getApplicationDataHandler() {
+        ContextHandler handler = new ContextHandler("/applications");
+        handler.setHandler(new AbstractHandler() {
+            @Override
+            public void handle(String target, Request baseRequest, HttpServletRequest request,
+                HttpServletResponse response) throws IOException, ServletException {
+            }
+        });
+        return handler;
+    }
+
     @Override
     public Map<String, INodeController> getRegistry() throws Exception {
         Map<String, INodeController> map = new HashMap<String, INodeController>();
@@ -273,6 +286,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 }
                 for (String deadNode : deadNodes) {
                     try {
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Killing node: " + deadNode);
+                        }
                         killNode(deadNode);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -298,7 +314,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         final Semaphore installComplete = new Semaphore(remoteOps.length);
         final List<Exception> errors = new Vector<Exception>();
         for (final RemoteOp<T> remoteOp : remoteOps) {
-            final INodeController node = lookupNode(remoteOp.getNodeId()).getNodeController();
+            NodeControllerState nodeState = lookupNode(remoteOp.getNodeId());
+            final INodeController node = nodeState.getNodeController();
 
             installComplete.acquire();
             Runnable remoteRunner = new Runnable() {
@@ -334,21 +351,23 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         private JobPlan plan;
         private UUID stageId;
         private int attempt;
-        private Set<ActivityNodeId> tasks;
+        private Map<ActivityNodeId, Set<Integer>> tasks;
+        private Map<OperatorDescriptorId, Set<Integer>> opPartitions;
 
         public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, int attempt,
-            Set<ActivityNodeId> tasks) {
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) {
             this.nodeId = nodeId;
             this.jobId = jobId;
             this.plan = plan;
             this.stageId = stageId;
             this.attempt = attempt;
             this.tasks = tasks;
+            this.opPartitions = opPartitions;
         }
 
         @Override
         public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
-            return node.initializeJobletPhase1(jobId, plan, stageId, attempt, tasks);
+            return node.initializeJobletPhase1(jobId, plan, stageId, attempt, tasks, opPartitions);
         }
 
         @Override
@@ -367,22 +386,25 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         private UUID jobId;
         private JobPlan plan;
         private UUID stageId;
-        private Set<ActivityNodeId> tasks;
+        private Map<ActivityNodeId, Set<Integer>> tasks;
+        private Map<OperatorDescriptorId, Set<Integer>> opPartitions;
         private Map<PortInstanceId, Endpoint> globalPortMap;
 
-        public Phase2Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, Set<ActivityNodeId> tasks,
+        public Phase2Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId,
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
             Map<PortInstanceId, Endpoint> globalPortMap) {
             this.nodeId = nodeId;
             this.jobId = jobId;
             this.plan = plan;
             this.stageId = stageId;
             this.tasks = tasks;
+            this.opPartitions = opPartitions;
             this.globalPortMap = globalPortMap;
         }
 
         @Override
         public Void execute(INodeController node) throws Exception {
-            node.initializeJobletPhase2(jobId, plan, stageId, tasks, globalPortMap);
+            node.initializeJobletPhase2(jobId, plan, stageId, tasks, opPartitions, globalPortMap);
             return null;
         }
 
@@ -481,6 +503,32 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         }
     }
 
+    static class JobCompleteNotifier implements RemoteOp<Void> {
+        private String nodeId;
+        private UUID jobId;
+
+        public JobCompleteNotifier(String nodeId, UUID jobId) {
+            this.nodeId = nodeId;
+            this.jobId = jobId;
+        }
+
+        @Override
+        public Void execute(INodeController node) throws Exception {
+            node.cleanUpJob(jobId);
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return jobId + " Cleaning Up";
+        }
+
+        @Override
+        public String getNodeId() {
+            return nodeId;
+        }
+    }
+
     static class PortMapMergingAccumulator implements
         Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
         Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
@@ -494,5 +542,20 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         public Map<PortInstanceId, Endpoint> getResult() {
             return portMap;
         }
+    }
+
+    @Override
+    public void createApplication(String appName) throws Exception {
+
+    }
+
+    @Override
+    public void destroyApplication(String appName) throws Exception {
+
+    }
+
+    @Override
+    public void startApplication(String appName) throws Exception {
+
     }
 }

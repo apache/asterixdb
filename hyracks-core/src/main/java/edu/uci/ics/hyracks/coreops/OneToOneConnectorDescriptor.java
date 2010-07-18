@@ -34,13 +34,13 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
 
     @Override
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return edwFactory.createFrameWriter(index);
     }
 
     @Override
     public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
     }
 }

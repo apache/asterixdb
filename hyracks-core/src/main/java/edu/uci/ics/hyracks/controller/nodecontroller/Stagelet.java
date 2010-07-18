@@ -117,11 +117,13 @@ public class Stagelet {
                         + opIId.getOperatorId() + ":" + opIId.getPartition());
                 } catch (Exception e) {
                     e.printStackTrace();
+                    notifyOperatorFailure(opIId);
                 }
                 try {
                     hon.run();
-                } finally {
                     notifyOperatorCompletion(opIId);
+                } catch (Exception e) {
+                    notifyOperatorFailure(opIId);
                 }
             }
         });
@@ -136,6 +138,15 @@ public class Stagelet {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    protected synchronized void notifyOperatorFailure(OperatorInstanceId opIId) {
+        abort();
+        try {
+            joblet.notifyStageletFailed(stageId, attempt);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

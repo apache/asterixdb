@@ -65,21 +65,6 @@ public interface IOperatorDescriptor extends Serializable {
     public void setPartitionConstraint(PartitionConstraint partitionConstraint);
 
     /**
-     * Returns the final partition locations selected for scheduling. These are decided by Hyracks such that they satisfy the partition constraints.
-     * 
-     * @return array indicating number and node ids of the nodes to schedule the operator runtimes.
-     */
-    public String[] getPartitions();
-
-    /**
-     * Sets the partition locations.
-     * 
-     * @param partitions
-     *            node ids to schedule the operators.
-     */
-    public void setPartitions(String[] partitions);
-
-    /**
      * Gets the output record descriptor
      * 
      * @return Array of RecordDescriptor, one per output.

@@ -91,4 +91,13 @@ public class Joblet {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
+
+    public void notifyStageletFailed(UUID stageId, int attempt) throws Exception {
+        stageletMap.remove(stageId);
+        nodeController.notifyStageFailed(jobId, stageId, attempt);        
+    }
+
+    public NodeControllerService getNodeController() {
+        return nodeController;
+    }
 }

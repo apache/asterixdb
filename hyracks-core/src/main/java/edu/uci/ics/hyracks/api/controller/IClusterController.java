@@ -33,7 +33,18 @@ public interface IClusterController extends Remote {
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
         StageletStatistics statistics) throws Exception;
 
+    public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
+
     public void nodeHeartbeat(String id) throws Exception;
+
+    /*
+     * Client Application Control Methods.
+     */
+    public void createApplication(String appName) throws Exception;
+
+    public void startApplication(String appName) throws Exception;
+
+    public void destroyApplication(String appName) throws Exception;
 
     /*
      * Client Job Control methods.
