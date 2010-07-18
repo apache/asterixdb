@@ -170,7 +170,7 @@ watch(stageletstart, i);
 define(startmessage_agg, keys(0, 1, 2), {UUID, UUID, Integer, JobPlan, Set});
 
 startmessage_agg(JobId, StageId, Attempt, JobPlan, set<Tuple>) :-
-    stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, ActivityInfoSet),
+    stageletstart#insert(JobId, StageId, JobPlan, NodeId, Attempt, ActivityInfoSet),
     availablenodes(NodeId),
     ActivityInfoSet.size() != 0
     {
