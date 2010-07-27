@@ -122,48 +122,6 @@ watch(availablenodes, a);
 watch(availablenodes, i);
 watch(availablenodes, d);
 
-/*
-
-define(rankedavailablenodes_temp, keys(), {String, Integer});
-
-rankedavailablenodes_temp(NodeId, 0) :-
-    availablenodes#insert(NodeId);
-
-rankedavailablenodes_temp(NodeId2, NewRank) :-
-    rankedavailablenodes_temp#insert(NodeId1, Rank),
-    rankedavailablenodes_temp(NodeId2, Rank),
-    NodeId1 < NodeId2
-    {
-        NewRank := Rank + 1;
-    };
-
-rankedavailablenodes_temp(NodeId2, NewRank) :-
-    rankedavailablenodes_temp(NodeId1, Rank),
-    rankedavailablenodes_temp#insert(NodeId2, Rank),
-    NodeId1 < NodeId2
-    {
-        NewRank := Rank + 1;
-    };
-
-rankedavailablenodes_temp(NodeId, Rank) :-
-    availablenodes(NodeId),
-    rankedavailablenodes_temp(NodeId, Rank);
-
-rankedavailablenodes_temp(NodeId, NewRank) :-
-    rankedavailablenodes_temp(NodeId, Rank),
-    Rank != 0,
-    notin rankedavailablenodes_temp(_, Rank - 1)
-    {
-        NewRank := Rank - 1;
-    };
-
-define(rankedavailablenodes, keys(0), {String, Integer});
-
-rankedavailablenodes(NodeId, max<Rank>) :-
-    rankedavailablenodes_temp(NodeId, Rank);
-
-*/
-
 define(availablenodecount, keys(0), {Integer, Integer});
 
 watch(availablenodecount, a);
@@ -213,40 +171,7 @@ define(operatorclonecount_temp, keys(), {UUID, OperatorDescriptorId, Integer, In
 operatorclonecount_temp(JobId, OperatorId, NPartitions, 0) :-
     operatorclonecount(JobId, OperatorId, NPartitions);
 
-/*
-define(operatorclonecountexpansion, keys(0, 1), {UUID, OperatorDescriptorId, Integer});
-
-operatorclonecountexpansion(JobId, OperatorId, 0) :-
-    operatorclonecount(JobId, OperatorId, _);
-
-operatorclonecountexpansion(JobId, OperatorId, Partition + 1) :-
-    operatorclonecountexpansion#insert(JobId, OperatorId, Partition),
-    operatorclonecount(JobId, OperatorId, NPartitions),
-    Partition < NPartitions - 1;
-*/
-
 define(operatorclonecountexpansiontotalorder, keys(0, 1, 2), {UUID, OperatorDescriptorId, Integer, Integer});
-
-/*
-operatorclonecountexpansiontotalorder(JobId, OperatorId, Partition, 0) :-
-    operatorclonecountexpansion#insert(JobId, OperatorId, Partition);
-
-operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, NewRank) :-
-    operatorclonecountexpansiontotalorder#insert(JobId, OperatorId1, Partition1, Rank),
-    operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, Rank),
-    OperatorId1.hashCode() < OperatorId2.hashCode() || (OperatorId1.hashCode() == OperatorId2.hashCode() && Partition1 < Partition2)
-    {
-        NewRank := Rank + 1;
-    };
-
-operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, NewRank) :-
-    operatorclonecountexpansiontotalorder(JobId, OperatorId1, Partition1, Rank),
-    operatorclonecountexpansiontotalorder#insert(JobId, OperatorId2, Partition2, Rank),
-    OperatorId1.hashCode() < OperatorId2.hashCode() || (OperatorId1.hashCode() == OperatorId2.hashCode() && Partition1 < Partition2)
-    {
-        NewRank := Rank + 1;
-    };
-*/
 
 operatorclonecountexpansiontotalorder(JobId, OperatorId, Partition, Rank) :-
     expandpartitioncountconstraint(operatorclonecount_temp(JobId, OperatorId, Partition, Rank));
@@ -258,12 +183,6 @@ watch(operatorclonecountexpansiontotalorder, d);
 watch(operatorclonecount, a);
 watch(operatorclonecount, i);
 watch(operatorclonecount, d);
-
-/*
-watch(operatorclonecountexpansion, a);
-watch(operatorclonecountexpansion, i);
-watch(operatorclonecountexpansion, d);
-*/
 
 define(activitystart, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer, Integer, UUID, String, Integer});
 

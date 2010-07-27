@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -228,6 +229,115 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
             new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID)
         });
         join.setPartitionConstraint(joinPartitionConstraint);
+
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID)
+        });
+        printer.setPartitionConstraint(printerPartitionConstraint);
+
+        IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
+            new FieldHashPartitionComputerFactory(new int[] {
+                1
+            }, new IBinaryHashFunctionFactory[] {
+                StringBinaryHashFunctionFactory.INSTANCE
+            }));
+        spec.connect(ordJoinConn, ordScanner, 0, join, 0);
+
+        IConnectorDescriptor custJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
+            new FieldHashPartitionComputerFactory(new int[] {
+                0
+            }, new IBinaryHashFunctionFactory[] {
+                StringBinaryHashFunctionFactory.INSTANCE
+            }));
+        spec.connect(custJoinConn, custScanner, 0, join, 1);
+
+        IConnectorDescriptor joinPrinterConn = new MToNReplicatingConnectorDescriptor(spec);
+        spec.connect(joinPrinterConn, join, 0, printer, 0);
+
+        spec.addRoot(printer);
+        runTest(spec);
+    }
+
+    @Test
+    public void customerOrderCIDJoinAutoExpand() throws Exception {
+        JobSpecification spec = new JobSpecification();
+
+        FileSplit[] custSplits = new FileSplit[] {
+            new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl")),
+            new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl"))
+        };
+        RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE
+        });
+
+        FileSplit[] ordersSplits = new FileSplit[] {
+            new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl")),
+            new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl"))
+        };
+        RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE
+        });
+
+        RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE
+        });
+
+        CSVFileScanOperatorDescriptor ordScanner = new CSVFileScanOperatorDescriptor(spec, ordersSplits, ordersDesc,
+            '|', "'\"");
+        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID)
+        });
+        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+
+        CSVFileScanOperatorDescriptor custScanner = new CSVFileScanOperatorDescriptor(spec, custSplits, custDesc, '|',
+            "'\"");
+        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID)
+        });
+        custScanner.setPartitionConstraint(custPartitionConstraint);
+
+        InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] {
+            1
+        }, new int[] {
+            0
+        }, new IBinaryHashFunctionFactory[] {
+            StringBinaryHashFunctionFactory.INSTANCE
+        }, new IBinaryComparatorFactory[] {
+            StringBinaryComparatorFactory.INSTANCE
+        }, custOrderJoinDesc, 128);
+        join.setPartitionConstraint(new PartitionCountConstraint(2));
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
         PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
