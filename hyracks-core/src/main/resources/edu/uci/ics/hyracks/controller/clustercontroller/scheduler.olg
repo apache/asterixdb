@@ -112,20 +112,76 @@ stagestart_NEXT stagestart(JobId, NextStageNumber, Attempt) :-
 watch(stagestart, a);
 watch(stagestart, d);
 
-define(operatorlocationcandidates, keys(), {UUID, OperatorDescriptorId, String, Integer, String});
+define(operatorlocationcandidates, keys(), {UUID, OperatorDescriptorId, String, Integer, Integer});
 
 operatorlocationcandidates(JobId, OperatorId, NodeId, Partition, Benefit) :-
-    operatorlocation(JobId, OperatorId, NodeId, Partition),
-    availablenodes(NodeId)
+    operatorlocation(JobId, OperatorId, NodeId, Partition, Benefit),
+    availablenodes(NodeId);
+
+watch(availablenodes, a);
+watch(availablenodes, i);
+watch(availablenodes, d);
+
+/*
+
+define(rankedavailablenodes_temp, keys(), {String, Integer});
+
+rankedavailablenodes_temp(NodeId, 0) :-
+    availablenodes#insert(NodeId);
+
+rankedavailablenodes_temp(NodeId2, NewRank) :-
+    rankedavailablenodes_temp#insert(NodeId1, Rank),
+    rankedavailablenodes_temp(NodeId2, Rank),
+    NodeId1 < NodeId2
     {
-        Benefit := NodeId;
+        NewRank := Rank + 1;
     };
+
+rankedavailablenodes_temp(NodeId2, NewRank) :-
+    rankedavailablenodes_temp(NodeId1, Rank),
+    rankedavailablenodes_temp#insert(NodeId2, Rank),
+    NodeId1 < NodeId2
+    {
+        NewRank := Rank + 1;
+    };
+
+rankedavailablenodes_temp(NodeId, Rank) :-
+    availablenodes(NodeId),
+    rankedavailablenodes_temp(NodeId, Rank);
+
+rankedavailablenodes_temp(NodeId, NewRank) :-
+    rankedavailablenodes_temp(NodeId, Rank),
+    Rank != 0,
+    notin rankedavailablenodes_temp(_, Rank - 1)
+    {
+        NewRank := Rank - 1;
+    };
+
+define(rankedavailablenodes, keys(0), {String, Integer});
+
+rankedavailablenodes(NodeId, max<Rank>) :-
+    rankedavailablenodes_temp(NodeId, Rank);
+
+*/
+
+define(availablenodecount, keys(0), {Integer, Integer});
+
+watch(availablenodecount, a);
+watch(availablenodecount, i);
+watch(availablenodecount, d);
+
+availablenodecount(0, count<NodeId>) :-
+    availablenodes(NodeId);
+
+watch(rankedavailablenodes, a);
+watch(rankedavailablenodes, i);
+watch(rankedavailablenodes, d);
 
 watch(operatorlocationcandidates, a);
 watch(operatorlocationcandidates, i);
 watch(operatorlocationcandidates, d);
 
-define(maxoperatorlocationbenefit, keys(0, 1, 2), {UUID, OperatorDescriptorId, Integer, String});
+define(maxoperatorlocationbenefit, keys(0, 1, 2), {UUID, OperatorDescriptorId, Integer, Integer});
 
 maxoperatorlocationbenefit(JobId, OperatorId, Partition, max<Benefit>) :-
     operatorlocationcandidates(JobId, OperatorId, _, Partition, Benefit);
@@ -134,15 +190,80 @@ watch(maxoperatorlocationbenefit, a);
 watch(maxoperatorlocationbenefit, i);
 watch(maxoperatorlocationbenefit, d);
 
-define(operatorlocationdecision, keys(0, 1, 3), {UUID, OperatorDescriptorId, String, Integer});
+define(attemptoperatorlocationdecision, keys(0, 1, 3, 4), {UUID, OperatorDescriptorId, String, Integer, Integer});
 
-watch(operatorlocationdecision, a);
-watch(operatorlocationdecision, i);
-watch(operatorlocationdecision, d);
+watch(attemptoperatorlocationdecision, a);
+watch(attemptoperatorlocationdecision, i);
+watch(attemptoperatorlocationdecision, d);
 
-operatorlocationdecision(JobId, OperatorId, NodeId, Partition) :-
+attemptoperatorlocationdecision(JobId, OperatorId, NodeId, Partition, Attempt) :-
+    jobattempt#insert(JobId, Attempt),
     operatorlocationcandidates(JobId, OperatorId, NodeId, Partition, Benefit),
     maxoperatorlocationbenefit(JobId, OperatorId, Partition, Benefit);
+
+attemptoperatorlocationdecision(JobId, OperatorId, NodeId, Partition, Attempt) :-
+    jobattempt#insert(JobId, Attempt),
+    operatorclonecountexpansiontotalorder(JobId, OperatorId, Partition, CloneRank),
+    rankedavailablenodes(NodeId, NodeRank),
+    availablenodecount(_, NodeCount),
+    NodeRank == CloneRank % NodeCount;
+
+define(operatorclonecount_temp, keys(), {UUID, OperatorDescriptorId, Integer, Integer});
+
+operatorclonecount_temp(JobId, OperatorId, NPartitions, 0) :-
+    operatorclonecount(JobId, OperatorId, NPartitions);
+
+/*
+define(operatorclonecountexpansion, keys(0, 1), {UUID, OperatorDescriptorId, Integer});
+
+operatorclonecountexpansion(JobId, OperatorId, 0) :-
+    operatorclonecount(JobId, OperatorId, _);
+
+operatorclonecountexpansion(JobId, OperatorId, Partition + 1) :-
+    operatorclonecountexpansion#insert(JobId, OperatorId, Partition),
+    operatorclonecount(JobId, OperatorId, NPartitions),
+    Partition < NPartitions - 1;
+*/
+
+define(operatorclonecountexpansiontotalorder, keys(0, 1, 2), {UUID, OperatorDescriptorId, Integer, Integer});
+
+/*
+operatorclonecountexpansiontotalorder(JobId, OperatorId, Partition, 0) :-
+    operatorclonecountexpansion#insert(JobId, OperatorId, Partition);
+
+operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, NewRank) :-
+    operatorclonecountexpansiontotalorder#insert(JobId, OperatorId1, Partition1, Rank),
+    operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, Rank),
+    OperatorId1.hashCode() < OperatorId2.hashCode() || (OperatorId1.hashCode() == OperatorId2.hashCode() && Partition1 < Partition2)
+    {
+        NewRank := Rank + 1;
+    };
+
+operatorclonecountexpansiontotalorder(JobId, OperatorId2, Partition2, NewRank) :-
+    operatorclonecountexpansiontotalorder(JobId, OperatorId1, Partition1, Rank),
+    operatorclonecountexpansiontotalorder#insert(JobId, OperatorId2, Partition2, Rank),
+    OperatorId1.hashCode() < OperatorId2.hashCode() || (OperatorId1.hashCode() == OperatorId2.hashCode() && Partition1 < Partition2)
+    {
+        NewRank := Rank + 1;
+    };
+*/
+
+operatorclonecountexpansiontotalorder(JobId, OperatorId, Partition, Rank) :-
+    expandpartitioncountconstraint(operatorclonecount_temp(JobId, OperatorId, Partition, Rank));
+
+watch(operatorclonecountexpansiontotalorder, a);
+watch(operatorclonecountexpansiontotalorder, i);
+watch(operatorclonecountexpansiontotalorder, d);
+
+watch(operatorclonecount, a);
+watch(operatorclonecount, i);
+watch(operatorclonecount, d);
+
+/*
+watch(operatorclonecountexpansion, a);
+watch(operatorclonecountexpansion, i);
+watch(operatorclonecountexpansion, d);
+*/
 
 define(activitystart, keys(), {UUID, OperatorDescriptorId, ActivityNodeId, Integer, Integer, UUID, String, Integer});
 
@@ -151,7 +272,7 @@ activitystart(JobId, OperatorId, ActivityId, StageNumber, Attempt, StageId, Node
     operatordescriptor(JobId, OperatorId, _, _),
     activitystage(JobId, OperatorId, ActivityId, StageNumber),
     jobstage(JobId, StageNumber, StageId),
-    operatorlocationdecision(JobId, OperatorId, NodeId, Partition);
+    attemptoperatorlocationdecision(JobId, OperatorId, NodeId, Partition, Attempt);
 
 watch(activitystart, a);
 
@@ -192,7 +313,7 @@ stageletabort(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet) :-
 stageletabort(JobId, StageId, JobPlan, NodeIdOther, Attempt, ActivityIdSet) :-
     stageletstart(JobId, StageId, JobPlan, NodeId, Attempt, _),
     stageletstart(JobId, StageId, _, NodeIdOther, Attempt, ActivityIdSet),
-    failednodes(NodeId),
+    failednodes#insert(NodeId),
     notin stageletcomplete(JobId, StageId, NodeId, Attempt, _);
 
 watch(stageletabort, a);
@@ -202,19 +323,20 @@ watch(stageletabort, d);
 define(stageabort, keys(0, 1, 2), {UUID, UUID, Integer, Set});
 
 stageabort(JobId, StageId, Attempt, set<NodeId>) :-
-    stageletabort(JobId, StageId, _, NodeId, Attempt, _);
+    stageletabort#insert(JobId, StageId, _, NodeId, Attempt, _);
 
 define(abortmessage_agg, keys(0, 1, 2), {UUID, UUID, Integer, JobPlan, Set});
 
 abortmessage_agg(JobId, StageId, Attempt, JobPlan, set<Tuple>) :-
-    stageletabort(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet),
+    stageletabort#insert(JobId, StageId, JobPlan, NodeId, Attempt, ActivityIdSet),
     availablenodes(NodeId)
     {
         Tuple := [NodeId, ActivityIdSet];
     };
 
 abortmessage(JobId, StageId, Attempt, JobPlan, TSet) :-
-    abortmessage_agg(JobId, StageId, Attempt, JobPlan, TSet);
+    abortmessage_agg(JobId, StageId, Attempt, JobPlan, TSet),
+    TSet.size() != 0;
 
 watch(abortmessage, a);
 watch(abortmessage, i);
@@ -226,7 +348,7 @@ stageletabortcomplete(JobId, StageId, NodeId, Attempt) :-
 
 stageletabortcomplete(JobId, StageId, NodeId, Attempt) :-
     stageletabort(JobId, StageId, _, NodeId, Attempt, _),
-    failednodes(NodeId);
+    notin availablenodes(NodeId);
 
 define(stageletabortcomplete_agg, keys(0, 1, 2), {UUID, UUID, Integer, Set});
 
@@ -262,7 +384,7 @@ define(jobcleanup_agg, {UUID, Set});
 jobcleanup_agg(JobId, set<NodeId>) :-
     stagestart#insert(JobId, StageNumber, Attempt),
     stagefinish(JobId, _, Attempt, _),
-    operatorlocationdecision(JobId, _, NodeId, Attempt),
+    attemptoperatorlocationdecision(JobId, _, NodeId, _, Attempt),
     notin jobstage(JobId, StageNumber);
 
 jobcleanup(JobId, NodeIdSet) :-

@@ -35,6 +35,7 @@ import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
+import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.controller.IClusterController;
@@ -61,7 +62,7 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
         private Object value;
 
         public HDFSCustomReader(Map<String, String> jobConfMap, HadoopFileSplit inputSplit,
-                String inputFormatClassName, Reporter reporter) {
+            String inputFormatClassName, Reporter reporter) {
             try {
                 JobConf conf = DatatypeHelper.hashMap2JobConf((HashMap) jobConfMap);
                 FileSystem fileSystem = null;
@@ -74,7 +75,7 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
                 Class inputFormatClass = Class.forName(inputFormatClassName);
                 InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
                 hadoopRecordReader = (RecordReader) inputFormat.getRecordReader(getFileSplit(inputSplit), conf,
-                        reporter);
+                    reporter);
                 if (hadoopRecordReader instanceof SequenceFileRecordReader) {
                     inputKeyClass = ((SequenceFileRecordReader) hadoopRecordReader).getKeyClass();
                     inputValueClass = ((SequenceFileRecordReader) hadoopRecordReader).getValueClass();
@@ -130,27 +131,27 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
 
         private FileSplit getFileSplit(HadoopFileSplit hadoopFileSplit) {
             FileSplit fileSplit = new FileSplit(new Path(hadoopFileSplit.getFile()), hadoopFileSplit.getStart(),
-                    hadoopFileSplit.getLength(), hadoopFileSplit.getHosts());
+                hadoopFileSplit.getLength(), hadoopFileSplit.getHosts());
             return fileSplit;
         }
     }
 
     public HadoopReadOperatorDescriptor(Map<String, String> jobConfMap, JobSpecification spec,
-            HadoopFileSplit[] splits, String inputFormatClassName, RecordDescriptor recordDescriptor) {
+        HadoopFileSplit[] splits, String inputFormatClassName, RecordDescriptor recordDescriptor) {
         super(spec, splits, recordDescriptor);
         this.inputFormatClassName = inputFormatClassName;
         this.jobConfMap = jobConfMap;
     }
 
     public HadoopReadOperatorDescriptor(Map<String, String> jobConfMap, InetSocketAddress nameNode,
-            JobSpecification spec, String inputFormatClassName, RecordDescriptor recordDescriptor) {
+        JobSpecification spec, String inputFormatClassName, RecordDescriptor recordDescriptor) {
         super(spec, null, recordDescriptor);
         this.inputFormatClassName = inputFormatClassName;
         this.jobConfMap = jobConfMap;
     }
 
     public HadoopReadOperatorDescriptor(IClusterController clusterController, Map<String, String> jobConfMap,
-            JobSpecification spec, String fileSystemURL, String inputFormatClassName, RecordDescriptor recordDescriptor) {
+        JobSpecification spec, String fileSystemURL, String inputFormatClassName, RecordDescriptor recordDescriptor) {
         super(spec, null, recordDescriptor);
         HadoopAdapter hadoopAdapter = HadoopAdapter.getInstance(fileSystemURL);
         String inputPathString = jobConfMap.get("mapred.input.dir");
@@ -170,7 +171,7 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
     }
 
     private void configurePartitionConstraints(IClusterController clusterController,
-            Map<String, List<HadoopFileSplit>> blocksToRead) {
+        Map<String, List<HadoopFileSplit>> blocksToRead) {
         List<LocationConstraint> locationConstraints = new ArrayList<LocationConstraint>();
         Map<String, INodeController> registry = null;
         try {
@@ -223,8 +224,8 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
             }
         }
 
-        PartitionConstraint partitionConstraint = new PartitionConstraint(locationConstraints
-                .toArray(new LocationConstraint[] {}));
+        PartitionConstraint partitionConstraint = new ExplicitPartitionConstraint(locationConstraints
+            .toArray(new LocationConstraint[] {}));
         this.setPartitionConstraint(partitionConstraint);
     }
 

@@ -187,9 +187,7 @@ public class ConnectionManager {
                 }
             }
         }
-        synchronized (dataListenerThread) {
-            dataListenerThread.pendingAbortConnections.addAll(abortConnections);
-        }
+        dataListenerThread.addPendingAbortConnections(abortConnections);
     }
 
     private final class NetworkFrameWriter implements IFrameWriter {
@@ -271,8 +269,12 @@ public class ConnectionManager {
         }
 
         synchronized void addSocketChannel(SocketChannel sc) throws IOException {
-            LOGGER.info("Connection received");
             pendingNewSockets.add(sc);
+            selector.wakeup();
+        }
+
+        synchronized void addPendingAbortConnections(List<IConnectionEntry> abortConnections) {
+            pendingAbortConnections.addAll(abortConnections);
             selector.wakeup();
         }
 
@@ -309,6 +311,7 @@ public class ConnectionManager {
                                     connections.remove(ce);
                                 }
                             }
+                            pendingAbortConnections.clear();
                         }
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("Selector: " + n);
@@ -335,7 +338,7 @@ public class ConnectionManager {
                             }
                         }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }

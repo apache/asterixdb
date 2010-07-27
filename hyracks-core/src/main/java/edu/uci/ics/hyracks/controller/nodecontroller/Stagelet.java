@@ -117,13 +117,14 @@ public class Stagelet {
                         + opIId.getOperatorId() + ":" + opIId.getPartition());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    notifyOperatorFailure(opIId);
+                    // notifyOperatorFailure(opIId);
                 }
                 try {
                     hon.run();
                     notifyOperatorCompletion(opIId);
                 } catch (Exception e) {
-                    notifyOperatorFailure(opIId);
+                    e.printStackTrace();
+                    // notifyOperatorFailure(opIId);
                 }
             }
         });

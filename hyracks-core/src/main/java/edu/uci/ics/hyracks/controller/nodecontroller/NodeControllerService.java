@@ -288,6 +288,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
                                     Direction.INPUT, spec.getConsumerInputIndex(conn), index);
                                 Endpoint ep = globalPortMap.get(piId);
+                                if (ep == null) {
+                                    LOGGER.info("Got null Endpoint for " + piId);
+                                    throw new NullPointerException();
+                                }
                                 if (LOGGER.isLoggable(Level.FINEST)) {
                                     LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
                                 }

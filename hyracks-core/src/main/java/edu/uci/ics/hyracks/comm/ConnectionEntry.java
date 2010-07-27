@@ -63,43 +63,44 @@ public class ConnectionEntry implements IConnectionEntry {
     public boolean dispatch(SelectionKey key) throws IOException {
         if (aborted) {
             recvListener.dataReceived(this);
-        }
-        if (key.isReadable()) {
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("Before read: " + readBuffer.position() + " " + readBuffer.limit());
-            }
-            int bytesRead = socketChannel.read(readBuffer);
-            if (bytesRead < 0) {
-                recvListener.eos(this);
-                return true;
-            }
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("After read: " + readBuffer.position() + " " + readBuffer.limit());
-            }
-            recvListener.dataReceived(this);
-        } else if (key.isWritable()) {
-            synchronized (this) {
-                writeBuffer.flip();
+        } else {
+            if (key.isReadable()) {
                 if (LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.finer("Before write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    LOGGER.finer("Before read: " + readBuffer.position() + " " + readBuffer.limit());
                 }
-                int bytesWritten = socketChannel.write(writeBuffer);
-                if (bytesWritten < 0) {
+                int bytesRead = socketChannel.read(readBuffer);
+                if (bytesRead < 0) {
+                    recvListener.eos(this);
                     return true;
                 }
                 if (LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.finer("After write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    LOGGER.finer("After read: " + readBuffer.position() + " " + readBuffer.limit());
                 }
-                if (writeBuffer.remaining() <= 0) {
-                    int ops = key.interestOps();
-                    key.interestOps(ops & ~SelectionKey.OP_WRITE);
+                recvListener.dataReceived(this);
+            } else if (key.isWritable()) {
+                synchronized (this) {
+                    writeBuffer.flip();
+                    if (LOGGER.isLoggable(Level.FINER)) {
+                        LOGGER.finer("Before write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    }
+                    int bytesWritten = socketChannel.write(writeBuffer);
+                    if (bytesWritten < 0) {
+                        return true;
+                    }
+                    if (LOGGER.isLoggable(Level.FINER)) {
+                        LOGGER.finer("After write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    }
+                    if (writeBuffer.remaining() <= 0) {
+                        int ops = key.interestOps();
+                        key.interestOps(ops & ~SelectionKey.OP_WRITE);
+                    }
+                    writeBuffer.compact();
+                    notifyAll();
                 }
-                writeBuffer.compact();
-                notifyAll();
+            } else {
+                LOGGER.warning("Spurious event triggered: " + key.readyOps());
+                return true;
             }
-        } else {
-            LOGGER.warning("Spurious event triggered: " + key.readyOps());
-            return true;
         }
         return false;
     }

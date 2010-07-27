@@ -27,8 +27,8 @@ public class AbsoluteLocationConstraint extends LocationConstraint {
     }
 
     @Override
-    public ConstraintType getConstraintType() {
-        return ConstraintType.ABSOLUTE;
+    public LocationConstraintType getConstraintType() {
+        return LocationConstraintType.ABSOLUTE;
     }
 
     public String getLocationId() {

@@ -28,7 +28,7 @@ public class ChoiceLocationConstraint extends LocationConstraint {
     }
 
     @Override
-    public ConstraintType getConstraintType() {
-        return ConstraintType.CHOICE;
+    public LocationConstraintType getConstraintType() {
+        return LocationConstraintType.CHOICE;
     }
 }

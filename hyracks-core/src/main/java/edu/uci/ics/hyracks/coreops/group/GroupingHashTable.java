@@ -34,8 +34,7 @@ import edu.uci.ics.hyracks.context.HyracksContext;
 
 class GroupingHashTable {
     /**
-     * The pointers in the link store 3 int values for each entry in the
-     * hashtable: (bufferIdx, tIndex, accumulatorIdx).
+     * The pointers in the link store 3 int values for each entry in the hashtable: (bufferIdx, tIndex, accumulatorIdx).
      * 
      * @author vinayakb
      */
@@ -81,8 +80,8 @@ class GroupingHashTable {
     private final FrameTupleAccessor storedKeysAccessor;
 
     GroupingHashTable(HyracksContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
-            ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
-            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
+        ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
+        RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
         this.ctx = ctx;
         appender = new FrameTupleAppender(ctx);
         buffers = new ArrayList<ByteBuffer>();
@@ -161,7 +160,7 @@ class GroupingHashTable {
             }
             int saIndex = accumulatorSize++;
             aggregator = accumulators[saIndex] = aggregatorFactory.createAggregator(inRecordDescriptor,
-                    outRecordDescriptor);
+                outRecordDescriptor);
             aggregator.init(accessor, tIndex);
             link.add(sbIndex, stIndex, saIndex);
         }

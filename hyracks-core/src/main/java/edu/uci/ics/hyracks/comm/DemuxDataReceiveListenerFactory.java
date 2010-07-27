@@ -75,8 +75,10 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
                 LOGGER.finest("NonDeterministicDataReceiveListener: frame received: sender = " + senderIndex);
             }
             SelectionKey key = entry.getSelectionKey();
-            int ops = key.interestOps();
-            key.interestOps(ops & ~SelectionKey.OP_READ);
+            if (key.isValid()) {
+                int ops = key.interestOps();
+                key.interestOps(ops & ~SelectionKey.OP_READ);
+            }
             readyBits.set(senderIndex);
             notifyAll();
             return;
