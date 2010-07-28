@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.coreops.RepartitionComputerFactory;
 import edu.uci.ics.hyracks.coreops.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.coreops.base.AbstractOperatorDescriptor;
 
@@ -264,10 +265,6 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
             IOperatorNodePushable op = new IOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
-                private ITuplePartitionComputer hpc0 = new FieldHashPartitionComputerFactory(keys0,
-                        hashFunctionFactories).createPartitioner();
-                private ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1,
-                        hashFunctionFactories).createPartitioner();
 
                 private IFrameWriter writer;
                 private FileChannel[] channelsR;
@@ -281,8 +278,10 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                     channelsS = (FileChannel[]) env.get(LARGERELATION);
                     numPartitions = (Integer) env.get(NUM_PARTITION);
 
-                    ITuplePartitionComputer hpcRep0 = new RepartitionComputer(numPartitions, hpc0);
-                    ITuplePartitionComputer hpcRep1 = new RepartitionComputer(numPartitions, hpc1);
+                    ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(numPartitions,
+                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)).createPartitioner();
+                    ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(numPartitions,
+                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)).createPartitioner();
 
                     writer.open();// open for probe
 
