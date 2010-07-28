@@ -74,13 +74,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             final RecordDescriptor rd0 = plan.getJobSpecification()
                     .getOperatorInputRecordDescriptor(getOperatorId(), 0);
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, rd0);
@@ -135,13 +135,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, final IOperatorEnvironment env,
-                int partition) {
+        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan,
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             return new IOperatorNodePushable() {
                 private IFrameWriter writer;
 

@@ -73,14 +73,14 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
     protected FileSplit[] splits;
 
     public FileSplit[] getSplits() {
-		return splits;
-	}
+        return splits;
+    }
 
-	public void setSplits(FileSplit[] splits) {
-		this.splits = splits;
-	}
+    public void setSplits(FileSplit[] splits) {
+        this.splits = splits;
+    }
 
-	public AbstractFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits) {
+    public AbstractFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits) {
         super(spec, 1, 0);
         this.splits = splits;
     }
@@ -89,13 +89,13 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
 
     @Override
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new FileWriteOperator(partition), plan, getActivityNodeId());
     }
 

@@ -30,8 +30,8 @@ public interface IActivityNode extends Serializable {
     public boolean supportsPullInterface();
 
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition);
+            int partition, int nPartitions);
 
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition);
+            int partition, int nPartitions);
 }

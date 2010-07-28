@@ -90,9 +90,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         jolRuntime = (Runtime) Runtime.create(jolDebugLevel, System.err);
         jobManager = new JOLJobManagerImpl(this, jolRuntime);
         taskExecutor = Executors.newCachedThreadPool();
-        webServer = new WebServer(new Handler[] {
-            getAdminConsoleHandler(), getApplicationDataHandler()
-        });
+        webServer = new WebServer(new Handler[] { getAdminConsoleHandler(), getApplicationDataHandler() });
         this.timer = new Timer(true);
     }
 
@@ -176,7 +174,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-        StageletStatistics statistics) throws Exception {
+            StageletStatistics statistics) throws Exception {
         jobManager.notifyStageletComplete(jobId, stageId, attempt, nodeId, statistics);
     }
 
@@ -205,7 +203,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         handler.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest, HttpServletRequest request,
-                HttpServletResponse response) throws IOException, ServletException {
+                    HttpServletResponse response) throws IOException, ServletException {
                 if (!"/".equals(target)) {
                     return;
                 }
@@ -242,7 +240,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         handler.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest, HttpServletRequest request,
-                HttpServletResponse response) throws IOException, ServletException {
+                    HttpServletResponse response) throws IOException, ServletException {
             }
         });
         return handler;
@@ -355,7 +353,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         private Map<OperatorDescriptorId, Set<Integer>> opPartitions;
 
         public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, int attempt,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) {
+                Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) {
             this.nodeId = nodeId;
             this.jobId = jobId;
             this.plan = plan;
@@ -391,8 +389,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         private Map<PortInstanceId, Endpoint> globalPortMap;
 
         public Phase2Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
-            Map<PortInstanceId, Endpoint> globalPortMap) {
+                Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
+                Map<PortInstanceId, Endpoint> globalPortMap) {
             this.nodeId = nodeId;
             this.jobId = jobId;
             this.plan = plan;
@@ -530,7 +528,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     static class PortMapMergingAccumulator implements
-        Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
+            Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
         Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
 
         @Override

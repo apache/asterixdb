@@ -80,13 +80,13 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             final RecordDescriptor rd0 = plan.getJobSpecification()
                     .getOperatorInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = plan.getJobSpecification()
@@ -150,13 +150,13 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             IOperatorNodePushable op = new IOperatorNodePushable() {
                 private IFrameWriter writer;
                 private InMemoryHashJoin joiner;
