@@ -12,24 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.coreops.join;
+package edu.uci.ics.hyracks.coreops;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 
-public class RepartitionComputer implements ITuplePartitionComputer {
-    private int factor;
-    private ITuplePartitionComputer delegate;
+public class RepartitionComputerFactory implements ITuplePartitionComputerFactory {
+    private static final long serialVersionUID = 1L;
 
-    public RepartitionComputer(int factor, ITuplePartitionComputer delegate) {
-        super();
+    private int factor;
+    private ITuplePartitionComputerFactory delegateFactory;
+
+    public RepartitionComputerFactory(int factor, ITuplePartitionComputerFactory delegate) {
         this.factor = factor;
-        this.delegate = delegate;
+        this.delegateFactory = delegate;
     }
 
     @Override
-    public int partition(FrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
-        return delegate.partition(accessor, tIndex, factor * nParts) / factor;
+    public ITuplePartitionComputer createPartitioner() {
+        return new ITuplePartitionComputer() {
+            private ITuplePartitionComputer delegate = delegateFactory.createPartitioner();
+
+            @Override
+            public int partition(FrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
+                return delegate.partition(accessor, tIndex, factor * nParts) / factor;
+            }
+        };
     }
 }
