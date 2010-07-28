@@ -22,4 +22,13 @@ public class CCConfig {
 
     @Option(name = "-http-port", usage = "Sets the http port for the admin console")
     public int httpPort;
+
+    @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")
+    public int heartbeatPeriod = 10000;
+
+    @Option(name = "-max-heartbeat-lapse-periods", usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
+    public int maxHeartbeatLapsePeriods = 5;
+
+    @Option(name = "-use-jol", usage = "Forces Hyracks to use the JOL based scheduler (default: false)")
+    public boolean useJOL = false;
 }

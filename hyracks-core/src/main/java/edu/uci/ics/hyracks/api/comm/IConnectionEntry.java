@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.api.comm;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.UUID;
 
 public interface IConnectionEntry {
     ByteBuffer getReadBuffer();
@@ -32,4 +33,16 @@ public interface IConnectionEntry {
     void close() throws IOException;
 
     void write(ByteBuffer buffer);
+
+    UUID getJobId();
+
+    UUID getStageId();
+
+    void setJobId(UUID jobId);
+
+    void setStageId(UUID stageId);
+
+    boolean aborted();
+
+    void abort();
 }

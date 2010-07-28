@@ -50,11 +50,15 @@ public interface IConnectorDescriptor extends Serializable {
      *            Endpoint writer factory.
      * @param index
      *            ordinal index of the data producer partition.
+     * @param nProducerPartitions
+     *            Number of partitions of the producing operator.
+     * @param nConsumerPartitions
+     *            Number of partitions of the consuming operator.
      * @return data writer.
      * @throws Exception
      */
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException;
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException;
 
     /**
      * Factory metod to create the receive side reader that reads data from this connector.
@@ -67,11 +71,15 @@ public interface IConnectorDescriptor extends Serializable {
      *            Connection Demultiplexer
      * @param index
      *            ordinal index of the data consumer partition
+     * @param nProducerPartitions
+     *            Number of partitions of the producing operator.
+     * @param nConsumerPartitions
+     *            Number of partitions of the consuming operator.
      * @return data reader
      * @throws HyracksDataException
      */
     public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-            int index) throws HyracksDataException;
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException;
 
     /**
      * Translate this connector descriptor to JSON.

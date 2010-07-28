@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.driver;
 import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.hyracks.config.CCConfig;
-import edu.uci.ics.hyracks.controller.ClusterControllerService;
+import edu.uci.ics.hyracks.controller.clustercontroller.ClusterControllerService;
 
 public class CCDriver {
     public static void main(String args[]) throws Exception {

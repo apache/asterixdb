@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFactory, IConnectionDemultiplexer,
-        IDataReceiveListener {
+    IDataReceiveListener {
     private static final Logger LOGGER = Logger.getLogger(DemuxDataReceiveListenerFactory.class.getName());
 
     private final NonDeterministicFrameReader frameReader;
@@ -40,10 +40,14 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
     private final BitSet readyBits;
     private IConnectionEntry senders[];
     private int openSenderCount;
+    private UUID jobId;
+    private UUID stageId;
 
-    public DemuxDataReceiveListenerFactory(HyracksContext ctx) {
+    public DemuxDataReceiveListenerFactory(HyracksContext ctx, UUID jobId, UUID stageId) {
         frameReader = new NonDeterministicFrameReader(ctx, this);
         this.ctx = ctx;
+        this.jobId = jobId;
+        this.stageId = stageId;
         readyBits = new BitSet();
         senders = null;
         openSenderCount = 0;
@@ -66,13 +70,15 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
         ByteBuffer buffer = entry.getReadBuffer();
         buffer.flip();
         int dataLen = buffer.remaining();
-        if (dataLen >= ctx.getFrameSize()) {
+        if (dataLen >= ctx.getFrameSize() || entry.aborted()) {
             if (LOGGER.isLoggable(Level.FINEST)) {
                 LOGGER.finest("NonDeterministicDataReceiveListener: frame received: sender = " + senderIndex);
             }
             SelectionKey key = entry.getSelectionKey();
-            int ops = key.interestOps();
-            key.interestOps(ops & ~SelectionKey.OP_READ);
+            if (key.isValid()) {
+                int ops = key.interestOps();
+                key.interestOps(ops & ~SelectionKey.OP_READ);
+            }
             readyBits.set(senderIndex);
             notifyAll();
             return;
@@ -138,5 +144,15 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
     @Override
     public synchronized int getSenderCount() {
         return senders.length;
+    }
+
+    @Override
+    public UUID getJobId() {
+        return jobId;
+    }
+
+    @Override
+    public UUID getStageId() {
+        return stageId;
     }
 }

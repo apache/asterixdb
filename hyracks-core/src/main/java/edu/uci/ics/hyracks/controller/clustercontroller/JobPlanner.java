@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.job;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
-import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -38,60 +36,8 @@ import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.dataflow.base.IOperatorDescriptorVisitor;
 import edu.uci.ics.hyracks.dataflow.util.PlanUtils;
 
-public class JobPlanBuilder implements IActivityGraphBuilder {
-    private static final Logger LOGGER = Logger.getLogger(JobPlanBuilder.class.getName());
-
-    private JobPlan plan;
-
-    @Override
-    public void addBlockingEdge(IActivityNode blocker, IActivityNode blocked) {
-        addToValueSet(plan.getBlocker2BlockedMap(), blocker.getActivityNodeId(), blocked.getActivityNodeId());
-        addToValueSet(plan.getBlocked2BlockerMap(), blocked.getActivityNodeId(), blocker.getActivityNodeId());
-    }
-
-    @Override
-    public void addSourceEdge(int operatorInputIndex, IActivityNode task, int taskInputIndex) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding source edge: " + task.getOwner().getOperatorId() + ":" + operatorInputIndex + " -> "
-                    + task.getActivityNodeId() + ":" + taskInputIndex);
-        }
-        insertIntoIndexedMap(plan.getTaskInputMap(), task.getActivityNodeId(), taskInputIndex, operatorInputIndex);
-        insertIntoIndexedMap(plan.getOperatorInputMap(), task.getOwner().getOperatorId(), operatorInputIndex, task
-                .getActivityNodeId());
-    }
-
-    @Override
-    public void addTargetEdge(int operatorOutputIndex, IActivityNode task, int taskOutputIndex) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding target edge: " + task.getOwner().getOperatorId() + ":" + operatorOutputIndex + " -> "
-                    + task.getActivityNodeId() + ":" + taskOutputIndex);
-        }
-        insertIntoIndexedMap(plan.getTaskOutputMap(), task.getActivityNodeId(), taskOutputIndex, operatorOutputIndex);
-        insertIntoIndexedMap(plan.getOperatorOutputMap(), task.getOwner().getOperatorId(), operatorOutputIndex, task
-                .getActivityNodeId());
-    }
-
-    @Override
-    public void addTask(IActivityNode task) {
-        plan.getActivityNodeMap().put(task.getActivityNodeId(), task);
-        addToValueSet(plan.getOperatorTaskMap(), task.getOwner().getOperatorId(), task.getActivityNodeId());
-    }
-
-    private <K, V> void addToValueSet(Map<K, Set<V>> map, K n1, V n2) {
-        Set<V> targets = map.get(n1);
-        if (targets == null) {
-            targets = new HashSet<V>();
-            map.put(n1, targets);
-        }
-        targets.add(n2);
-    }
-
-    private <T> void extend(List<T> list, int index) {
-        int n = list.size();
-        for (int i = n; i <= index; ++i) {
-            list.add(null);
-        }
-    }
+public class JobPlanner {
+    private static final Logger LOGGER = Logger.getLogger(JobPlanner.class.getName());
 
     private Pair<ActivityNodeId, ActivityNodeId> findMergePair(JobPlan plan, JobSpecification spec, Set<JobStage> eqSets) {
         Map<ActivityNodeId, IActivityNode> activityNodeMap = plan.getActivityNodeMap();
@@ -127,12 +73,11 @@ public class JobPlanBuilder implements IActivityGraphBuilder {
         return null;
     }
 
-    private JobStage inferStages() throws Exception {
+    private JobStage inferStages(JobPlan plan) throws Exception {
         JobSpecification spec = plan.getJobSpecification();
 
         /*
-         * Build initial equivalence sets map. We create a map such that for
-         * each IOperatorTask, t -> { t }
+         * Build initial equivalence sets map. We create a map such that for each IOperatorTask, t -> { t }
          */
         Map<ActivityNodeId, JobStage> stageMap = new HashMap<ActivityNodeId, JobStage>();
         Set<JobStage> stages = new HashSet<JobStage>();
@@ -185,22 +130,8 @@ public class JobPlanBuilder implements IActivityGraphBuilder {
         return endStage;
     }
 
-    public void init(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
-        plan = new JobPlan(jobSpec, jobFlags);
-    }
-
-    private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {
-        List<V> vList = map.get(key);
-        if (vList == null) {
-            vList = new ArrayList<V>();
-            map.put(key, vList);
-        }
-        extend(vList, index);
-        vList.set(index, value);
-    }
-
     private void merge(Map<ActivityNodeId, JobStage> eqSetMap, Set<JobStage> eqSets, ActivityNodeId t1,
-            ActivityNodeId t2) {
+        ActivityNodeId t2) {
         JobStage stage1 = eqSetMap.get(t1);
         Set<ActivityNodeId> s1 = stage1.getTasks();
         JobStage stage2 = eqSetMap.get(t2);
@@ -220,14 +151,17 @@ public class JobPlanBuilder implements IActivityGraphBuilder {
         }
     }
 
-    public JobPlan plan() throws Exception {
-        PlanUtils.visit(plan.getJobSpecification(), new IOperatorDescriptorVisitor() {
+    public JobPlan plan(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+        final JobPlanBuilder builder = new JobPlanBuilder();
+        builder.init(jobSpec, jobFlags);
+        PlanUtils.visit(jobSpec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) throws Exception {
-                op.contributeTaskGraph(JobPlanBuilder.this);
+                op.contributeTaskGraph(builder);
             }
         });
-        JobStage endStage = inferStages();
+        JobPlan plan = builder.getPlan();
+        JobStage endStage = inferStages(plan);
         plan.setEndStage(endStage);
 
         return plan;

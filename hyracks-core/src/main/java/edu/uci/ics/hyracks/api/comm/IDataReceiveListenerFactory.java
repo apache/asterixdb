@@ -18,4 +18,8 @@ import java.util.UUID;
 
 public interface IDataReceiveListenerFactory {
     public IDataReceiveListener getDataReceiveListener(UUID endpointUUID, IConnectionEntry entry, int senderIndex);
+
+    public UUID getJobId();
+
+    public UUID getStageId();
 }

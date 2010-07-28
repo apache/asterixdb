@@ -41,7 +41,7 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
         private final FrameTupleAccessor tupleAccessor;
 
         public RangeDataWriter(HyracksContext ctx, int consumerPartitionCount, IFrameWriter[] epWriters,
-                FrameTupleAppender[] appenders, RecordDescriptor recordDescriptor) {
+            FrameTupleAppender[] appenders, RecordDescriptor recordDescriptor) {
             this.consumerPartitionCount = consumerPartitionCount;
             this.epWriters = epWriters;
             this.appenders = appenders;
@@ -106,12 +106,11 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
 
     @Override
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         JobSpecification spec = plan.getJobSpecification();
-        final int consumerPartitionCount = spec.getConsumer(this).getPartitions().length;
-        final IFrameWriter[] epWriters = new IFrameWriter[consumerPartitionCount];
-        final FrameTupleAppender[] appenders = new FrameTupleAppender[consumerPartitionCount];
-        for (int i = 0; i < consumerPartitionCount; ++i) {
+        final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
+        final FrameTupleAppender[] appenders = new FrameTupleAppender[nConsumerPartitions];
+        for (int i = 0; i < nConsumerPartitions; ++i) {
             try {
                 epWriters[i] = edwFactory.createFrameWriter(i);
                 appenders[i] = new FrameTupleAppender(ctx);
@@ -120,14 +119,14 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
                 throw new HyracksDataException(e);
             }
         }
-        final RangeDataWriter rangeWriter = new RangeDataWriter(ctx, consumerPartitionCount, epWriters, appenders, spec
-                .getConnectorRecordDescriptor(this));
+        final RangeDataWriter rangeWriter = new RangeDataWriter(ctx, nConsumerPartitions, epWriters, appenders, spec
+            .getConnectorRecordDescriptor(this));
         return rangeWriter;
     }
 
     @Override
     public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
     }
 }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.job;
+package edu.uci.ics.hyracks.controller.nodecontroller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
-import edu.uci.ics.hyracks.controller.NodeControllerService;
 
 public class Joblet {
     private static final long serialVersionUID = 1L;
@@ -88,8 +87,17 @@ public class Joblet {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, StageletStatistics stats) throws Exception {
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletStatistics stats) throws Exception {
         stageletMap.remove(stageId);
-        nodeController.notifyStageComplete(jobId, stageId, stats);
+        nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
+    }
+
+    public void notifyStageletFailed(UUID stageId, int attempt) throws Exception {
+        stageletMap.remove(stageId);
+        nodeController.notifyStageFailed(jobId, stageId, attempt);        
+    }
+
+    public NodeControllerService getNodeController() {
+        return nodeController;
     }
 }

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-core</artifactId>
-  <version>0.0.4</version>
+  <version>0.0.5-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>
@@ -126,6 +126,13 @@
   		<groupId>org.json</groupId>
   		<artifactId>json</artifactId>
   		<version>20090211</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>jol</groupId>
+  		<artifactId>jol</artifactId>
+  		<version>1.0.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

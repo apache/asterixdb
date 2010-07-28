@@ -74,16 +74,6 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     }
 
     @Override
-    public String[] getPartitions() {
-        return partitions;
-    }
-
-    @Override
-    public void setPartitions(String[] partitions) {
-        this.partitions = partitions;
-    }
-
-    @Override
     public RecordDescriptor[] getOutputRecordDescriptors() {
         return recordDescriptors;
     }

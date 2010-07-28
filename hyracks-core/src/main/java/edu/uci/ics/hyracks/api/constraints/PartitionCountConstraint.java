@@ -14,15 +14,21 @@
  */
 package edu.uci.ics.hyracks.api.constraints;
 
-import java.io.Serializable;
-
-public abstract class LocationConstraint implements Serializable {
+public class PartitionCountConstraint extends PartitionConstraint {
     private static final long serialVersionUID = 1L;
 
-    public enum LocationConstraintType {
-        ABSOLUTE,
-        CHOICE
+    private final int count;
+
+    public PartitionCountConstraint(int count) {
+        this.count = count;
     }
 
-    public abstract LocationConstraintType getConstraintType();
+    public int getCount() {
+        return count;
+    }
+
+    @Override
+    public PartitionConstraintType getPartitionConstraintType() {
+        return PartitionConstraintType.COUNT;
+    }
 }

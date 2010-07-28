@@ -131,7 +131,7 @@ public class FrameTupleAppender {
                 int fLen = accessor.getFieldEndOffset(tIndex, fields[i])
                         - accessor.getFieldStartOffset(tIndex, fields[i]);
                 System.arraycopy(accessor.getBuffer().array(), fSrcStart, buffer.array(), tupleDataEndOffset
-                        + fSrcSlotsLength + fStartOffset, fLen);
+                        + fTargetSlotsLength + fStartOffset, fLen);
                 fEndOffset += fLen;
                 buffer.putShort(tupleDataEndOffset + i * 2, (short) fEndOffset);
                 fStartOffset = fEndOffset;

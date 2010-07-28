@@ -19,6 +19,7 @@ import java.io.File;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
+import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -43,39 +44,57 @@ public class SortMergeTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl")),
-                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl")) };
+            new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl")),
+            new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl"))
+        };
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
-                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
-                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
-                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
-                StringSerializerDeserializer.INSTANCE });
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE,
+            StringSerializerDeserializer.INSTANCE
+        });
 
         CSVFileScanOperatorDescriptor ordScanner = new CSVFileScanOperatorDescriptor(spec, ordersSplits, ordersDesc,
-                '|', "'\"");
-        PartitionConstraint ordersPartitionConstraint = new PartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
+            '|', "'\"");
+        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID)
+        });
         ordScanner.setPartitionConstraint(ordersPartitionConstraint);
 
-        InMemorySortOperatorDescriptor sorter = new InMemorySortOperatorDescriptor(spec, new int[] { 1 },
-                new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
-        PartitionConstraint sortersPartitionConstraint = new PartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
+        InMemorySortOperatorDescriptor sorter = new InMemorySortOperatorDescriptor(spec, new int[] {
+            1
+        }, new IBinaryComparatorFactory[] {
+            StringBinaryComparatorFactory.INSTANCE
+        }, ordersDesc);
+        PartitionConstraint sortersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID)
+        });
         sorter.setPartitionConstraint(sortersPartitionConstraint);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new PartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC1_ID)
+        });
         printer.setPartitionConstraint(printerPartitionConstraint);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
 
         spec.connect(new MToNHashPartitioningMergingConnectorDescriptor(spec, new FieldHashPartitionComputerFactory(
-                new int[] { 1 }, new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE }),
-                new int[] { 1 }, new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }), sorter, 0,
-                printer, 0);
-        
+            new int[] {
+                1
+            }, new IBinaryHashFunctionFactory[] {
+                StringBinaryHashFunctionFactory.INSTANCE
+            }), new int[] {
+            1
+        }, new IBinaryComparatorFactory[] {
+            StringBinaryComparatorFactory.INSTANCE
+        }), sorter, 0, printer, 0);
+
         runTest(spec);
     }
 }
