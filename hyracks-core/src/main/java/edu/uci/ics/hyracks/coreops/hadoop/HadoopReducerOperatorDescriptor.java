@@ -22,11 +22,11 @@ import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataReader;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
@@ -183,7 +183,6 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
     private static final String reducerClassKey = "mapred.reducer.class";
     private static final String comparatorClassKey = "mapred.output.value.groupfn.class";
     private IComparatorFactory comparatorFactory;
-    
 
     public HadoopReducerOperatorDescriptor(JobSpecification spec, IComparatorFactory comparatorFactory,
             Class<? extends Reducer> reducerClass, RecordDescriptor recordDescriptor, JobConf jobConf) {
@@ -192,49 +191,49 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
         this.reducerClass = reducerClass;
     }
 
-    
     public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IHadoopClassFactory classFactory) {
-        super(spec, null , conf, classFactory);
+        super(spec, null, conf, classFactory);
     }
-    
+
     private Reducer<K2, V2, K3, V3> createReducer() throws Exception {
-        if(reducerClass != null){
-        	return reducerClass.newInstance();
-        }else{
-        	Object reducer = getHadoopClassFactory().createReducer(getJobConfMap().get(reducerClassKey));
+        if (reducerClass != null) {
+            return reducerClass.newInstance();
+        } else {
+            Object reducer = getHadoopClassFactory().createReducer(getJobConfMap().get(reducerClassKey));
             reducerClass = (Class<? extends Reducer>) reducer.getClass();
-            return (Reducer)reducer;	
+            return (Reducer) reducer;
         }
     }
 
     @Override
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         try {
-        	if(this.comparatorFactory == null){
-	            String comparatorClassName  = getJobConfMap().get(comparatorClassKey);
-	            RawComparator rawComparator = null;
-	            if(comparatorClassName != null){
-		            Class comparatorClazz = getHadoopClassFactory().loadClass(comparatorClassName);
-				    this.comparatorFactory = new KeyComparatorFactory(comparatorClazz);
-		            
-			    }else{
-		        	String mapOutputKeyClass = getJobConfMap().get("mapred.mapoutput.key.class");
-		        	if(getHadoopClassFactory() != null){
-		        		rawComparator = WritableComparator.get(getHadoopClassFactory().loadClass(mapOutputKeyClass));
-		        	}else{
-		        		rawComparator = WritableComparator.get((Class<? extends WritableComparable>)Class.forName(mapOutputKeyClass));
-		        	}
-		        	this.comparatorFactory = new WritableComparingComparatorFactory(rawComparator.getClass());
-		        }
-        	}
-	        IOpenableDataWriterOperator op = new PreclusteredGroupOperator(new int[] { 0 },
+            if (this.comparatorFactory == null) {
+                String comparatorClassName = getJobConfMap().get(comparatorClassKey);
+                RawComparator rawComparator = null;
+                if (comparatorClassName != null) {
+                    Class comparatorClazz = getHadoopClassFactory().loadClass(comparatorClassName);
+                    this.comparatorFactory = new KeyComparatorFactory(comparatorClazz);
+
+                } else {
+                    String mapOutputKeyClass = getJobConfMap().get("mapred.mapoutput.key.class");
+                    if (getHadoopClassFactory() != null) {
+                        rawComparator = WritableComparator.get(getHadoopClassFactory().loadClass(mapOutputKeyClass));
+                    } else {
+                        rawComparator = WritableComparator.get((Class<? extends WritableComparable>) Class
+                                .forName(mapOutputKeyClass));
+                    }
+                    this.comparatorFactory = new WritableComparingComparatorFactory(rawComparator.getClass());
+                }
+            }
+            IOpenableDataWriterOperator op = new PreclusteredGroupOperator(new int[] { 0 },
                     new IComparator[] { comparatorFactory.createComparator() }, new ReducerAggregator(createReducer()));
             return new DeserializedOperatorNodePushable(ctx, op, plan, getActivityNodeId());
         } catch (Exception e) {
@@ -260,21 +259,25 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
         return true;
     }
 
-	@Override
-	public RecordDescriptor getRecordDescriptor(JobConf conf) {
-		String outputKeyClassName = conf.get("mapred.output.key.class");
-		String outputValueClassName = conf.get("mapred.output.value.class");
-		RecordDescriptor recordDescriptor = null;
-		try{
-			if(getHadoopClassFactory() == null){
-				recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>)Class.forName(outputKeyClassName), (Class<? extends Writable>)Class.forName(outputValueClassName));
-			}else{
-				recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>)getHadoopClassFactory().loadClass(outputKeyClassName), (Class<? extends Writable>)getHadoopClassFactory().loadClass(outputValueClassName));
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-			return null;
-		}	
-		return recordDescriptor;
-	}
+    @Override
+    public RecordDescriptor getRecordDescriptor(JobConf conf) {
+        String outputKeyClassName = conf.get("mapred.output.key.class");
+        String outputValueClassName = conf.get("mapred.output.value.class");
+        RecordDescriptor recordDescriptor = null;
+        try {
+            if (getHadoopClassFactory() == null) {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                        (Class<? extends Writable>) Class.forName(outputKeyClassName),
+                        (Class<? extends Writable>) Class.forName(outputValueClassName));
+            } else {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(outputKeyClassName),
+                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(outputValueClassName));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return recordDescriptor;
+    }
 }

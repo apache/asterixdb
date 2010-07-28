@@ -77,13 +77,13 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             return null;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -240,13 +240,13 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             return null;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             IOperatorNodePushable op = new IOperatorNodePushable() {
                 private IFrameWriter writer;
 

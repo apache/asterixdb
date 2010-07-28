@@ -102,13 +102,13 @@ public abstract class AbstractFileScanOperatorDescriptor extends AbstractSingleA
 
     @Override
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), plan, getActivityNodeId());
     }
 

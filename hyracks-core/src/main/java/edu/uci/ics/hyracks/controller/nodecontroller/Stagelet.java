@@ -113,8 +113,8 @@ public class Stagelet {
                     return;
                 }
                 try {
-                    LOGGER.log(Level.INFO, "Starting runnable for operator: " + joblet.getJobId() + ":" + stageId + ":"
-                        + opIId.getOperatorId() + ":" + opIId.getPartition());
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + ": STARTING");
                 } catch (Exception e) {
                     e.printStackTrace();
                     // notifyOperatorFailure(opIId);
@@ -122,6 +122,13 @@ public class Stagelet {
                 try {
                     hon.run();
                     notifyOperatorCompletion(opIId);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // notifyOperatorFailure(opIId);
+                }
+                try {
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + ": TERMINATED");
                 } catch (Exception e) {
                     e.printStackTrace();
                     // notifyOperatorFailure(opIId);

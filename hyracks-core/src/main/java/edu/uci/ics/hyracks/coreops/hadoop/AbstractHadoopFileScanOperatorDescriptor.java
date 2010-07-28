@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.coreops.hadoop;
 
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
@@ -143,13 +143,13 @@ public abstract class AbstractHadoopFileScanOperatorDescriptor extends AbstractS
 
     @Override
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), plan, getActivityNodeId());
     }
 

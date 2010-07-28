@@ -33,7 +33,6 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.coreops.util.DeserializedOperatorNodePushable;
-import edu.uci.ics.hyracks.hadoop.util.ClasspathBasedHadoopClassFactory;
 import edu.uci.ics.hyracks.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.hadoop.util.IHadoopClassFactory;
 
@@ -91,7 +90,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
     private static final long serialVersionUID = 1L;
     private static final String mapClassNameKey = "mapred.mapper.class";
     private Class<? extends Mapper> mapperClass;
-   
+
     public HadoopMapperOperatorDescriptor(JobSpecification spec, Class<? extends Mapper> mapperClass,
             RecordDescriptor recordDescriptor, JobConf jobConf) {
         super(spec, recordDescriptor, jobConf, null);
@@ -102,20 +101,24 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         super(spec, null, jobConf, hadoopClassFactory);
     }
 
-    public RecordDescriptor getRecordDescriptor(JobConf conf){
-    	RecordDescriptor recordDescriptor = null;
-    	String mapOutputKeyClassName = conf.getMapOutputKeyClass().getName();
-		String mapOutputValueClassName = conf.getMapOutputValueClass().getName();
-		try{
-			if(getHadoopClassFactory() == null){
-				recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class < ? extends Writable>) Class.forName(mapOutputKeyClassName),(Class < ? extends Writable>) Class.forName(mapOutputValueClassName));
-			}else{
-				recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class < ? extends Writable>) getHadoopClassFactory().loadClass(mapOutputKeyClassName),(Class < ? extends Writable>) getHadoopClassFactory().loadClass(mapOutputValueClassName));
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return recordDescriptor;
+    public RecordDescriptor getRecordDescriptor(JobConf conf) {
+        RecordDescriptor recordDescriptor = null;
+        String mapOutputKeyClassName = conf.getMapOutputKeyClass().getName();
+        String mapOutputValueClassName = conf.getMapOutputValueClass().getName();
+        try {
+            if (getHadoopClassFactory() == null) {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                        (Class<? extends Writable>) Class.forName(mapOutputKeyClassName),
+                        (Class<? extends Writable>) Class.forName(mapOutputValueClassName));
+            } else {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(mapOutputKeyClassName),
+                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(mapOutputValueClassName));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return recordDescriptor;
     }
 
     private Mapper<K1, V1, K2, V2> createMapper() throws Exception {
@@ -123,21 +126,21 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             return mapperClass.newInstance();
         } else {
             String mapperClassName = super.getJobConfMap().get(mapClassNameKey);
-        	Object mapper = getHadoopClassFactory().createMapper(mapperClassName);
+            Object mapper = getHadoopClassFactory().createMapper(mapperClassName);
             mapperClass = (Class<? extends Mapper>) mapper.getClass();
-            return (Mapper)mapper;
+            return (Mapper) mapper;
         }
     }
 
     @Override
     public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition) {
+            int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new MapperOperator(), plan, getActivityNodeId());
     }
 

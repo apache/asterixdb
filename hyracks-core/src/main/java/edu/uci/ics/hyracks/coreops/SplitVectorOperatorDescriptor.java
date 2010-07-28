@@ -50,13 +50,13 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, final IOperatorEnvironment env,
-                int partition) {
+        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan,
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
                 private ArrayList<Object[]> buffer;
 
@@ -105,13 +105,13 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, final IOperatorEnvironment env,
-                int partition) {
+        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan,
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
                 private IOpenableDataWriter<Object[]> writer;
 

@@ -151,7 +151,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         Matcher m = pattern.matcher(ipaddrStr);
         if (!m.matches()) {
             throw new Exception(MessageFormat.format(
-                "Connection Manager IP Address String %s does is not a valid IP Address.", ipaddrStr));
+                    "Connection Manager IP Address String %s does is not a valid IP Address.", ipaddrStr));
         }
         byte[] ipBytes = new byte[4];
         ipBytes[0] = (byte) Integer.parseInt(m.group(1));
@@ -163,7 +163,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     @Override
     public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId, int attempt,
-        Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) throws Exception {
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
+            throws Exception {
         LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
 
         final Joblet joblet = getLocalJoblet(jobId);
@@ -184,7 +185,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             IOperatorDescriptor op = han.getOwner();
             List<IConnectorDescriptor> inputs = plan.getTaskInputs(hanId);
             for (int i : tasks.get(hanId)) {
-                IOperatorNodePushable hon = han.createPushRuntime(ctx, plan, joblet.getEnvironment(op, i), i);
+                IOperatorNodePushable hon = han.createPushRuntime(ctx, plan, joblet.getEnvironment(op, i), i,
+                        opPartitions.get(op.getOperatorId()).size());
                 OperatorRunnable or = new OperatorRunnable(ctx, hon);
                 stagelet.setOperator(op.getOperatorId(), i, or);
                 if (inputs != null) {
@@ -194,21 +196,21 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                         }
                         IConnectorDescriptor conn = inputs.get(j);
                         OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                            .getOperatorId();
+                                .getOperatorId();
                         OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                            .getOperatorId();
+                                .getOperatorId();
                         Endpoint endpoint = new Endpoint(connectionManager.getNetworkAddress(), i);
                         endpointList.add(endpoint);
                         DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx, jobId, stageId);
                         connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
                         PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
-                            .getTaskInputMap().get(hanId).get(j), i);
+                                .getTaskInputMap().get(hanId).get(j), i);
                         if (LOGGER.isLoggable(Level.FINEST)) {
                             LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
                         }
                         portMap.put(piId, endpoint);
                         IFrameReader reader = createReader(conn, drlf, i, plan, stagelet, opPartitions
-                            .get(producerOpId).size(), opPartitions.get(consumerOpId).size());
+                                .get(producerOpId).size(), opPartitions.get(consumerOpId).size());
                         or.setFrameReader(reader);
                     }
                 }
@@ -222,10 +224,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     private IFrameReader createReader(final IConnectorDescriptor conn, IConnectionDemultiplexer demux,
-        final int receiverIndex, JobPlan plan, final Stagelet stagelet, int nProducerCount, int nConsumerCount)
-        throws HyracksDataException {
+            final int receiverIndex, JobPlan plan, final Stagelet stagelet, int nProducerCount, int nConsumerCount)
+            throws HyracksDataException {
         final IFrameReader reader = conn.createReceiveSideReader(ctx, plan, demux, receiverIndex, nProducerCount,
-            nConsumerCount);
+                nConsumerCount);
 
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameReader() {
             private int frameCount;
@@ -248,17 +250,18 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             @Override
             public void close() throws HyracksDataException {
                 reader.close();
-                stagelet.getStatistics().getStatisticsMap().put(
-                    "framecount." + conn.getConnectorId().getId() + ".receiver." + receiverIndex,
-                    String.valueOf(frameCount));
+                stagelet.getStatistics()
+                        .getStatisticsMap()
+                        .put("framecount." + conn.getConnectorId().getId() + ".receiver." + receiverIndex,
+                                String.valueOf(frameCount));
             }
         } : reader;
     }
 
     @Override
     public void initializeJobletPhase2(UUID jobId, final JobPlan plan, UUID stageId,
-        Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
-        final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
+            final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
         LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
         final Joblet ji = getLocalJoblet(jobId);
         Stagelet si = (Stagelet) ji.getStagelet(stageId);
@@ -278,15 +281,15 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                     for (int j = 0; j < outputs.size(); ++j) {
                         final IConnectorDescriptor conn = outputs.get(j);
                         OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                            .getOperatorId();
+                                .getOperatorId();
                         OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                            .getOperatorId();
+                                .getOperatorId();
                         final int senderIndex = i;
                         IEndpointDataWriterFactory edwFactory = new IEndpointDataWriterFactory() {
                             @Override
                             public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
                                 PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
-                                    Direction.INPUT, spec.getConsumerInputIndex(conn), index);
+                                        Direction.INPUT, spec.getConsumerInputIndex(conn), index);
                                 Endpoint ep = globalPortMap.get(piId);
                                 if (ep == null) {
                                     LOGGER.info("Got null Endpoint for " + piId);
@@ -295,12 +298,12 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 if (LOGGER.isLoggable(Level.FINEST)) {
                                     LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
                                 }
-                                return createWriter(connectionManager.connect(ep.getNetworkAddress(), ep
-                                    .getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
+                                return createWriter(connectionManager.connect(ep.getNetworkAddress(),
+                                        ep.getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
                             }
                         };
-                        or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan, edwFactory, i, opPartitions.get(
-                            producerOpId).size(), opPartitions.get(consumerOpId).size()));
+                        or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan, edwFactory, i,
+                                opPartitions.get(producerOpId).size(), opPartitions.get(consumerOpId).size()));
                     }
                 }
                 stagelet.installRunnable(new OperatorInstanceId(op.getOperatorId(), i));
@@ -309,7 +312,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     private IFrameWriter createWriter(final IFrameWriter writer, JobPlan plan, final IConnectorDescriptor conn,
-        final int senderIndex, final int receiverIndex, final Stagelet stagelet) throws HyracksDataException {
+            final int senderIndex, final int receiverIndex, final Stagelet stagelet) throws HyracksDataException {
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameWriter() {
             private int frameCount;
 
@@ -328,9 +331,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             @Override
             public void close() throws HyracksDataException {
                 writer.close();
-                stagelet.getStatistics().getStatisticsMap().put(
-                    "framecount." + conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex,
-                    String.valueOf(frameCount));
+                stagelet.getStatistics()
+                        .getStatisticsMap()
+                        .put("framecount." + conn.getConnectorId().getId() + ".sender." + senderIndex + "."
+                                + receiverIndex, String.valueOf(frameCount));
             }
         } : writer;
     }

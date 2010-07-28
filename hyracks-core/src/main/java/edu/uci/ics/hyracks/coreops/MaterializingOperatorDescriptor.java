@@ -63,13 +63,13 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             return new IOperatorNodePushable() {
                 private FileChannel out;
                 private int frameCount;
@@ -141,13 +141,13 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
 
         @Override
         public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition) {
+                int partition, int nPartitions) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition) {
+                final IOperatorEnvironment env, int partition, int nPartitions) {
             return new IOperatorNodePushable() {
                 private IFrameWriter writer;
 
