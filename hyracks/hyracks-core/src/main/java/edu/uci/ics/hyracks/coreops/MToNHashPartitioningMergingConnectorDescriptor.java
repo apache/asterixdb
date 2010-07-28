@@ -36,7 +36,7 @@ public class MToNHashPartitioningMergingConnectorDescriptor extends AbstractConn
     private final IBinaryComparatorFactory[] comparatorFactories;
 
     public MToNHashPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
-            int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
+        int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec);
         this.tpcf = tpcf;
         this.sortFields = sortFields;
@@ -45,19 +45,18 @@ public class MToNHashPartitioningMergingConnectorDescriptor extends AbstractConn
 
     @Override
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         JobSpecification spec = plan.getJobSpecification();
-        final int consumerPartitionCount = spec.getConsumer(this).getPartitions().length;
-        final HashDataWriter hashWriter = new HashDataWriter(ctx, consumerPartitionCount, edwFactory, spec
-                .getConnectorRecordDescriptor(this), tpcf.createPartitioner());
+        final HashDataWriter hashWriter = new HashDataWriter(ctx, nConsumerPartitions, edwFactory, spec
+            .getConnectorRecordDescriptor(this), tpcf.createPartitioner());
         return hashWriter;
     }
 
     @Override
-    public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux, int index)
-            throws HyracksDataException {
+    public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-        for(int i = 0; i < comparatorFactories.length; ++i) {
+        for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         JobSpecification spec = plan.getJobSpecification();

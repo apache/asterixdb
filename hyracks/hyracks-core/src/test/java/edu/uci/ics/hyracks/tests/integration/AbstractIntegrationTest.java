@@ -24,8 +24,8 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.config.CCConfig;
 import edu.uci.ics.hyracks.config.NCConfig;
-import edu.uci.ics.hyracks.controller.ClusterControllerService;
-import edu.uci.ics.hyracks.controller.NodeControllerService;
+import edu.uci.ics.hyracks.controller.clustercontroller.ClusterControllerService;
+import edu.uci.ics.hyracks.controller.nodecontroller.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {
     public static final String NC1_ID = "nc1";
@@ -39,6 +39,7 @@ public abstract class AbstractIntegrationTest {
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
+        ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 

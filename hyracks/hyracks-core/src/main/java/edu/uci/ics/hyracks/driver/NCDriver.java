@@ -19,7 +19,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import edu.uci.ics.dcache.client.DCacheClient;
 import edu.uci.ics.dcache.client.DCacheClientConfig;
 import edu.uci.ics.hyracks.config.NCConfig;
-import edu.uci.ics.hyracks.controller.NodeControllerService;
+import edu.uci.ics.hyracks.controller.nodecontroller.NodeControllerService;
 
 public class NCDriver {
     public static void main(String args[]) throws Exception {

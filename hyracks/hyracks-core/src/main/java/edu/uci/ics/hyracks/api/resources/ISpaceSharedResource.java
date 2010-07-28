@@ -12,17 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.constraints;
+package edu.uci.ics.hyracks.api.resources;
 
-import java.io.Serializable;
+public interface ISpaceSharedResource {
 
-public abstract class LocationConstraint implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    public enum LocationConstraintType {
-        ABSOLUTE,
-        CHOICE
-    }
-
-    public abstract LocationConstraintType getConstraintType();
 }

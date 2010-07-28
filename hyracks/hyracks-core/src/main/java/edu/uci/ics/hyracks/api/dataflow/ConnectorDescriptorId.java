@@ -46,4 +46,9 @@ public final class ConnectorDescriptorId implements Serializable {
         ConnectorDescriptorId other = (ConnectorDescriptorId) obj;
         return id.equals(other.id);
     }
+
+    @Override
+    public String toString() {
+        return "CDID:" + id;
+    }
 }

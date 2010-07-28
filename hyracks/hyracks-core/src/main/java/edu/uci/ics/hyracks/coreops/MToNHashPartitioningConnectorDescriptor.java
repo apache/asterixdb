@@ -37,17 +37,16 @@ public class MToNHashPartitioningConnectorDescriptor extends AbstractConnectorDe
 
     @Override
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         JobSpecification spec = plan.getJobSpecification();
-        final int consumerPartitionCount = spec.getConsumer(this).getPartitions().length;
-        final HashDataWriter hashWriter = new HashDataWriter(ctx, consumerPartitionCount, edwFactory, spec
-                .getConnectorRecordDescriptor(this), tpcf.createPartitioner());
+        final HashDataWriter hashWriter = new HashDataWriter(ctx, nConsumerPartitions, edwFactory, spec
+            .getConnectorRecordDescriptor(this), tpcf.createPartitioner());
         return hashWriter;
     }
 
     @Override
     public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
     }
 }

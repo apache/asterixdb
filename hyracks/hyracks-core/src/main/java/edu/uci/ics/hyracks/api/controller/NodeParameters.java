@@ -12,17 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.constraints;
+package edu.uci.ics.hyracks.api.controller;
 
 import java.io.Serializable;
 
-public abstract class LocationConstraint implements Serializable {
+public class NodeParameters implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public enum LocationConstraintType {
-        ABSOLUTE,
-        CHOICE
+    private int heartbeatPeriod;
+
+    public int getHeartbeatPeriod() {
+        return heartbeatPeriod;
     }
 
-    public abstract LocationConstraintType getConstraintType();
+    public void setHeartbeatPeriod(int heartbeatPeriod) {
+        this.heartbeatPeriod = heartbeatPeriod;
+    }
 }

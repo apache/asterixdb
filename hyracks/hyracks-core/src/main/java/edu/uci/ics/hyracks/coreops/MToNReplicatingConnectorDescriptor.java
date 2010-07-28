@@ -36,11 +36,9 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
 
     @Override
     public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-            int index) throws HyracksDataException {
-        JobSpecification spec = plan.getJobSpecification();
-        final int consumerPartitionCount = spec.getConsumer(this).getPartitions().length;
-        final IFrameWriter[] epWriters = new IFrameWriter[consumerPartitionCount];
-        for (int i = 0; i < consumerPartitionCount; ++i) {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
+        final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
+        for (int i = 0; i < nConsumerPartitions; ++i) {
             epWriters[i] = edwFactory.createFrameWriter(i);
         }
         return new IFrameWriter() {
@@ -73,7 +71,7 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
 
     @Override
     public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-            int index) throws HyracksDataException {
+        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
     }
 }

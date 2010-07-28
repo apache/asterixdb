@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.context.HyracksContext;
@@ -41,6 +41,12 @@ public class ConnectionEntry implements IConnectionEntry {
 
     private final SelectionKey key;
 
+    private UUID jobId;
+
+    private UUID stageId;
+
+    private boolean aborted;
+
     public ConnectionEntry(HyracksContext ctx, SocketChannel socketChannel, SelectionKey key) {
         this.socketChannel = socketChannel;
         readBuffer = ctx.getResourceManager().allocateFrame();
@@ -55,42 +61,46 @@ public class ConnectionEntry implements IConnectionEntry {
     }
 
     public boolean dispatch(SelectionKey key) throws IOException {
-        if (key.isReadable()) {
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("Before read: " + readBuffer.position() + " " + readBuffer.limit());
-            }
-            int bytesRead = socketChannel.read(readBuffer);
-            if (bytesRead < 0) {
-                recvListener.eos(this);
-                return true;
-            }
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("After read: " + readBuffer.position() + " " + readBuffer.limit());
-            }
+        if (aborted) {
             recvListener.dataReceived(this);
-        } else if (key.isWritable()) {
-            synchronized (this) {
-                writeBuffer.flip();
+        } else {
+            if (key.isReadable()) {
                 if (LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.finer("Before write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    LOGGER.finer("Before read: " + readBuffer.position() + " " + readBuffer.limit());
                 }
-                int bytesWritten = socketChannel.write(writeBuffer);
-                if (bytesWritten < 0) {
+                int bytesRead = socketChannel.read(readBuffer);
+                if (bytesRead < 0) {
+                    recvListener.eos(this);
                     return true;
                 }
                 if (LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.finer("After write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    LOGGER.finer("After read: " + readBuffer.position() + " " + readBuffer.limit());
                 }
-                if (writeBuffer.remaining() <= 0) {
-                    int ops = key.interestOps();
-                    key.interestOps(ops & ~SelectionKey.OP_WRITE);
+                recvListener.dataReceived(this);
+            } else if (key.isWritable()) {
+                synchronized (this) {
+                    writeBuffer.flip();
+                    if (LOGGER.isLoggable(Level.FINER)) {
+                        LOGGER.finer("Before write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    }
+                    int bytesWritten = socketChannel.write(writeBuffer);
+                    if (bytesWritten < 0) {
+                        return true;
+                    }
+                    if (LOGGER.isLoggable(Level.FINER)) {
+                        LOGGER.finer("After write: " + writeBuffer.position() + " " + writeBuffer.limit());
+                    }
+                    if (writeBuffer.remaining() <= 0) {
+                        int ops = key.interestOps();
+                        key.interestOps(ops & ~SelectionKey.OP_WRITE);
+                    }
+                    writeBuffer.compact();
+                    notifyAll();
                 }
-                writeBuffer.compact();
-                notifyAll();
+            } else {
+                LOGGER.warning("Spurious event triggered: " + key.readyOps());
+                return true;
             }
-        } else {
-            LOGGER.warning("Spurious event triggered: " + key.readyOps());
-            return true;
         }
         return false;
     }
@@ -135,12 +145,46 @@ public class ConnectionEntry implements IConnectionEntry {
     }
 
     @Override
-    public void close() throws IOException {
-        socketChannel.close();
+    public void close() {
+        try {
+            socketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public SelectionKey getSelectionKey() {
         return key;
+    }
+
+    @Override
+    public UUID getJobId() {
+        return jobId;
+    }
+
+    @Override
+    public void setJobId(UUID jobId) {
+        this.jobId = jobId;
+    }
+
+    @Override
+    public UUID getStageId() {
+        return stageId;
+    }
+
+    @Override
+    public void setStageId(UUID stageId) {
+        this.stageId = stageId;
+    }
+
+    @Override
+    public void abort() {
+        aborted = true;
+    }
+
+    @Override
+    public boolean aborted() {
+        return aborted;
     }
 }

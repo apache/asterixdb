@@ -14,15 +14,21 @@
  */
 package edu.uci.ics.hyracks.api.constraints;
 
-import java.io.Serializable;
-
-public abstract class LocationConstraint implements Serializable {
+public class ChoiceLocationConstraint extends LocationConstraint {
     private static final long serialVersionUID = 1L;
 
-    public enum LocationConstraintType {
-        ABSOLUTE,
-        CHOICE
+    private LocationConstraint[] choices;
+
+    public ChoiceLocationConstraint(LocationConstraint... choices) {
+        this.choices = choices;
     }
 
-    public abstract LocationConstraintType getConstraintType();
+    public LocationConstraint[] getChoices() {
+        return choices;
+    }
+
+    @Override
+    public LocationConstraintType getConstraintType() {
+        return LocationConstraintType.CHOICE;
+    }
 }

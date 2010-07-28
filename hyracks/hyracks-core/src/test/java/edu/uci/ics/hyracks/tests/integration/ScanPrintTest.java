@@ -19,6 +19,7 @@ import java.io.File;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
+import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -36,19 +37,23 @@ public class ScanPrintTest extends AbstractIntegrationTest {
     public void scanPrint01() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] splits = new FileSplit[] { new FileSplit(NC2_ID, new File("data/words.txt")),
-                new FileSplit(NC1_ID, new File("data/words.txt")) };
-        RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { StringSerializerDeserializer.INSTANCE });
+        FileSplit[] splits = new FileSplit[] {
+            new FileSplit(NC2_ID, new File("data/words.txt")), new FileSplit(NC1_ID, new File("data/words.txt"))
+        };
+        RecordDescriptor desc = new RecordDescriptor(new ISerializerDeserializer[] {
+            StringSerializerDeserializer.INSTANCE
+        });
 
         CSVFileScanOperatorDescriptor csvScanner = new CSVFileScanOperatorDescriptor(spec, splits, desc);
-        PartitionConstraint csvPartitionConstraint = new PartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
+        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID)
+        });
         csvScanner.setPartitionConstraint(csvPartitionConstraint);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new PartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
+        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+            new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID)
+        });
         printer.setPartitionConstraint(printerPartitionConstraint);
 
         IConnectorDescriptor conn = new OneToOneConnectorDescriptor(spec);

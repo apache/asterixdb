@@ -14,15 +14,28 @@
  */
 package edu.uci.ics.hyracks.api.constraints;
 
-import java.io.Serializable;
+import java.util.Arrays;
 
-public abstract class LocationConstraint implements Serializable {
+public class ExplicitPartitionConstraint extends PartitionConstraint {
     private static final long serialVersionUID = 1L;
 
-    public enum LocationConstraintType {
-        ABSOLUTE,
-        CHOICE
+    private final LocationConstraint[] locationConstraints;
+
+    public ExplicitPartitionConstraint(LocationConstraint[] locationConstraints) {
+        this.locationConstraints = locationConstraints;
     }
 
-    public abstract LocationConstraintType getConstraintType();
+    public LocationConstraint[] getLocationConstraints() {
+        return locationConstraints;
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.deepToString(locationConstraints);
+    }
+
+    @Override
+    public PartitionConstraintType getPartitionConstraintType() {
+        return PartitionConstraintType.EXPLICIT;
+    }
 }
