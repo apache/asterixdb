@@ -41,6 +41,7 @@ import edu.uci.ics.hyracks.coreops.data.StringSerializerDeserializer;
 import edu.uci.ics.hyracks.coreops.file.CSVFileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.coreops.file.FileSplit;
 import edu.uci.ics.hyracks.coreops.join.GraceHashJoinOperatorDescriptor;
+import edu.uci.ics.hyracks.coreops.join.HybridHashJoinOperatorDescriptor;
 import edu.uci.ics.hyracks.coreops.join.InMemoryHashJoinOperatorDescriptor;
 
 public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
@@ -158,6 +159,74 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         custScanner.setPartitionConstraint(custPartitionConstraint);
 
         GraceHashJoinOperatorDescriptor join = new GraceHashJoinOperatorDescriptor(spec, 4, 10, 200, 1.2,
+                new int[] { 1 }, new int[] { 0 },
+                new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE },
+                new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
+        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        join.setPartitionConstraint(joinPartitionConstraint);
+
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        printer.setPartitionConstraint(printerPartitionConstraint);
+
+        IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
+        spec.connect(ordJoinConn, ordScanner, 0, join, 0);
+
+        IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
+        spec.connect(custJoinConn, custScanner, 0, join, 1);
+
+        IConnectorDescriptor joinPrinterConn = new OneToOneConnectorDescriptor(spec);
+        spec.connect(joinPrinterConn, join, 0, printer, 0);
+
+        spec.addRoot(printer);
+        runTest(spec);
+    }
+
+    @Test
+    public void customerOrderCIDHybridHashJoin() throws Exception {
+        JobSpecification spec = new JobSpecification();
+
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File("data/tpch0.001/customer.tbl")) };
+        RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE });
+
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File("data/tpch0.001/orders.tbl")) };
+        RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE });
+
+        RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE });
+
+        CSVFileScanOperatorDescriptor ordScanner = new CSVFileScanOperatorDescriptor(spec, ordersSplits, ordersDesc,
+                '|', "'\"");
+        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+
+        CSVFileScanOperatorDescriptor custScanner = new CSVFileScanOperatorDescriptor(spec, custSplits, custDesc, '|',
+                "'\"");
+        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        custScanner.setPartitionConstraint(custPartitionConstraint);
+
+        HybridHashJoinOperatorDescriptor join = new HybridHashJoinOperatorDescriptor(spec, 5, 20, 200, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
@@ -305,6 +374,82 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         custScanner.setPartitionConstraint(custPartitionConstraint);
 
         GraceHashJoinOperatorDescriptor join = new GraceHashJoinOperatorDescriptor(spec, 3, 20, 100, 1.2,
+                new int[] { 1 }, new int[] { 0 },
+                new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE },
+                new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
+        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
+        join.setPartitionConstraint(joinPartitionConstraint);
+
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+        printer.setPartitionConstraint(printerPartitionConstraint);
+
+        IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                new FieldHashPartitionComputerFactory(new int[] { 1 },
+                        new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE }));
+        spec.connect(ordJoinConn, ordScanner, 0, join, 0);
+
+        IConnectorDescriptor custJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                new FieldHashPartitionComputerFactory(new int[] { 0 },
+                        new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE }));
+        spec.connect(custJoinConn, custScanner, 0, join, 1);
+
+        IConnectorDescriptor joinPrinterConn = new MToNReplicatingConnectorDescriptor(spec);
+        spec.connect(joinPrinterConn, join, 0, printer, 0);
+
+        spec.addRoot(printer);
+        runTest(spec);
+    }
+
+    @Test
+    public void customerOrderCIDHybridHashJoinMulti() throws Exception {
+        JobSpecification spec = new JobSpecification();
+
+        FileSplit[] custSplits = new FileSplit[] {
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl")),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl")) };
+        RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE });
+
+        FileSplit[] ordersSplits = new FileSplit[] {
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl")),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl")) };
+        RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE });
+
+        RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE, StringSerializerDeserializer.INSTANCE,
+                StringSerializerDeserializer.INSTANCE });
+
+        CSVFileScanOperatorDescriptor ordScanner = new CSVFileScanOperatorDescriptor(spec, ordersSplits, ordersDesc,
+                '|', "'\"");
+        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
+        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+
+        CSVFileScanOperatorDescriptor custScanner = new CSVFileScanOperatorDescriptor(spec, custSplits, custDesc, '|',
+                "'\"");
+        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
+                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
+        custScanner.setPartitionConstraint(custPartitionConstraint);
+
+        HybridHashJoinOperatorDescriptor join = new HybridHashJoinOperatorDescriptor(spec, 3, 20, 100, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
