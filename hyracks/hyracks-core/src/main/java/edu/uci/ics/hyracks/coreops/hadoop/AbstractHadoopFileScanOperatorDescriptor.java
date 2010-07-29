@@ -18,15 +18,14 @@ import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.coreops.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.coreops.file.IRecordReader;
@@ -142,24 +141,9 @@ public abstract class AbstractHadoopFileScanOperatorDescriptor extends AbstractS
     }
 
     @Override
-    public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), plan, getActivityNodeId());
-    }
-
-    @Override
-    public boolean supportsPullInterface() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsPushInterface() {
-        return true;
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition),
+                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
     }
 }

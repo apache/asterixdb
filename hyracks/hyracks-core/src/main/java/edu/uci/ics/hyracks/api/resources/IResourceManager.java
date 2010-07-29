@@ -12,12 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.io;
+package edu.uci.ics.hyracks.api.resources;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
-public class FrameHelper {
-    public static int getTupleCountOffset(IHyracksContext ctx) {
-        return ctx.getFrameSize() - 4;
-    }
+public interface IResourceManager {
+
+    public ByteBuffer allocateFrame();
+
+    public File createFile(String prefix, String suffix) throws IOException;
+
 }

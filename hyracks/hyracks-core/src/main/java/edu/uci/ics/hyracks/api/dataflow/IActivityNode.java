@@ -16,22 +16,15 @@ package edu.uci.ics.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public interface IActivityNode extends Serializable {
     public ActivityNodeId getActivityNodeId();
 
     public IOperatorDescriptor getOwner();
 
-    public boolean supportsPushInterface();
-
-    public boolean supportsPullInterface();
-
-    public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions);
-
-    public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions);
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions);
 }

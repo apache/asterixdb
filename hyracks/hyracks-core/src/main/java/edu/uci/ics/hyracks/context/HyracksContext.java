@@ -14,10 +14,12 @@
  */
 package edu.uci.ics.hyracks.context;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.resources.IResourceManager;
 import edu.uci.ics.hyracks.resources.ResourceManager;
 
-public class HyracksContext {
-    private final ResourceManager resourceManager;
+public class HyracksContext implements IHyracksContext {
+    private final IResourceManager resourceManager;
     private final int frameSize;
 
     public HyracksContext(int frameSize) {
@@ -25,10 +27,12 @@ public class HyracksContext {
         this.frameSize = frameSize;
     }
 
-    public ResourceManager getResourceManager() {
+    @Override
+    public IResourceManager getResourceManager() {
         return resourceManager;
     }
 
+    @Override
     public int getFrameSize() {
         return frameSize;
     }

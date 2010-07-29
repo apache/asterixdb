@@ -17,15 +17,15 @@ package edu.uci.ics.hyracks.coreops;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.comm.SortMergeFrameReader;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.AbstractConnectorDescriptor;
 
 public class MToNHashPartitioningMergingConnectorDescriptor extends AbstractConnectorDescriptor {
@@ -36,7 +36,7 @@ public class MToNHashPartitioningMergingConnectorDescriptor extends AbstractConn
     private final IBinaryComparatorFactory[] comparatorFactories;
 
     public MToNHashPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
-        int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
+            int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec);
         this.tpcf = tpcf;
         this.sortFields = sortFields;
@@ -44,22 +44,22 @@ public class MToNHashPartitioningMergingConnectorDescriptor extends AbstractConn
     }
 
     @Override
-    public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
-        JobSpecification spec = plan.getJobSpecification();
-        final HashDataWriter hashWriter = new HashDataWriter(ctx, nConsumerPartitions, edwFactory, spec
-            .getConnectorRecordDescriptor(this), tpcf.createPartitioner());
+    public IFrameWriter createSendSideWriter(IHyracksContext ctx, RecordDescriptor recordDesc,
+            IEndpointDataWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
+            throws HyracksDataException {
+        final HashDataWriter hashWriter = new HashDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
+                tpcf.createPartitioner());
         return hashWriter;
     }
 
     @Override
-    public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
+    public IFrameReader createReceiveSideReader(IHyracksContext ctx, RecordDescriptor recordDesc,
+            IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
+            throws HyracksDataException {
         IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
-        JobSpecification spec = plan.getJobSpecification();
-        return new SortMergeFrameReader(ctx, demux, sortFields, comparators, spec.getConnectorRecordDescriptor(this));
+        return new SortMergeFrameReader(ctx, demux, sortFields, comparators, recordDesc);
     }
 }

@@ -28,18 +28,17 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataReader;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.coreops.group.IGroupAggregator;
 import edu.uci.ics.hyracks.coreops.group.PreclusteredGroupOperator;
@@ -206,14 +205,8 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
     }
 
     @Override
-    public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-            int partition, int nPartitions) {
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         try {
             if (this.comparatorFactory == null) {
                 String comparatorClassName = getJobConfMap().get(comparatorClassKey);
@@ -235,7 +228,8 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             }
             IOpenableDataWriterOperator op = new PreclusteredGroupOperator(new int[] { 0 },
                     new IComparator[] { comparatorFactory.createComparator() }, new ReducerAggregator(createReducer()));
-            return new DeserializedOperatorNodePushable(ctx, op, plan, getActivityNodeId());
+            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
+                    getOperatorId(), 0));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -247,16 +241,6 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
     public void setReducerClass(Class<? extends Reducer> reducerClass) {
         this.reducerClass = reducerClass;
-    }
-
-    @Override
-    public boolean supportsPullInterface() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsPushInterface() {
-        return true;
     }
 
     @Override

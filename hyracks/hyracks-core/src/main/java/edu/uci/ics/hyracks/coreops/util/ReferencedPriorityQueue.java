@@ -18,12 +18,12 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Comparator;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class ReferencedPriorityQueue {
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
     private final RecordDescriptor recordDescriptor;
     private final ReferenceEntry entries[];
     private final int size;
@@ -32,7 +32,7 @@ public class ReferencedPriorityQueue {
 
     private final Comparator<ReferenceEntry> comparator;
 
-    public ReferencedPriorityQueue(HyracksContext ctx, RecordDescriptor recordDescriptor, int initSize,
+    public ReferencedPriorityQueue(IHyracksContext ctx, RecordDescriptor recordDescriptor, int initSize,
             Comparator<ReferenceEntry> comparator) throws IOException {
         this.ctx = ctx;
         this.recordDescriptor = recordDescriptor;

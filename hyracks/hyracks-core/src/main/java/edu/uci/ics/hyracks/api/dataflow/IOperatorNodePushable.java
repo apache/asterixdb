@@ -15,7 +15,8 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IOperatorNodePushable extends IFrameWriter {
-    public void setFrameWriter(int index, IFrameWriter writer);
+    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
 }

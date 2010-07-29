@@ -21,19 +21,19 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameHelper;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class NonDeterministicFrameReader implements IFrameReader {
     private static final Logger LOGGER = Logger.getLogger(NonDeterministicFrameReader.class.getName());
 
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
     private final IConnectionDemultiplexer demux;
     private int lastReadSender;
     private boolean eos;
 
-    public NonDeterministicFrameReader(HyracksContext ctx, IConnectionDemultiplexer demux) {
+    public NonDeterministicFrameReader(IHyracksContext ctx, IConnectionDemultiplexer demux) {
         this.ctx = ctx;
         this.demux = demux;
     }

@@ -18,8 +18,9 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.context.HyracksContext;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class OperatorRunnable implements Runnable {
     private IOperatorNodePushable opNode;
@@ -27,13 +28,13 @@ public class OperatorRunnable implements Runnable {
     private ByteBuffer buffer;
     private volatile boolean abort;
 
-    public OperatorRunnable(HyracksContext ctx, IOperatorNodePushable opNode) {
+    public OperatorRunnable(IHyracksContext ctx, IOperatorNodePushable opNode) {
         this.opNode = opNode;
         buffer = ctx.getResourceManager().allocateFrame();
     }
 
-    public void setFrameWriter(int index, IFrameWriter writer) {
-        opNode.setFrameWriter(index, writer);
+    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        opNode.setFrameWriter(index, writer, recordDesc);
     }
 
     public void setFrameReader(IFrameReader reader) {

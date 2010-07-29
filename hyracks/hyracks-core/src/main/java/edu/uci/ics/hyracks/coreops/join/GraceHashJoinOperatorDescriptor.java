@@ -21,24 +21,23 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.coreops.RepartitionComputerFactory;
 import edu.uci.ics.hyracks.coreops.base.AbstractActivityNode;
@@ -113,22 +112,15 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, final int nPartitions) {
-            final RecordDescriptor rd0 = plan.getJobSpecification().getOperatorInputRecordDescriptor(getOperatorId(),
-                    operatorInputIndex);
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
             IOperatorNodePushable op = new IOperatorNodePushable() {
-                private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx, rd0);
+                private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx,
+                        recordDescProvider.getInputRecordDescriptor(getOperatorId(), operatorInputIndex));
 
                 ITuplePartitionComputer hpc = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories)
                         .createPartitioner();
@@ -140,7 +132,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 private final int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
 
@@ -229,39 +221,20 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         public IOperatorDescriptor getOwner() {
             return GraceHashJoinOperatorDescriptor.this;
         }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
-        }
-
     }
 
     private class JoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
-            final RecordDescriptor rd0 = plan.getJobSpecification()
-                    .getOperatorInputRecordDescriptor(getOperatorId(), 0);
-            final RecordDescriptor rd1 = plan.getJobSpecification()
-                    .getOperatorInputRecordDescriptor(getOperatorId(), 1);
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
+            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
 
             IOperatorNodePushable op = new IOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
@@ -357,7 +330,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     if (index != 0) {
                         throw new IllegalStateException();
                     }
@@ -370,16 +343,6 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         @Override
         public IOperatorDescriptor getOwner() {
             return GraceHashJoinOperatorDescriptor.this;
-        }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
         }
     }
 }

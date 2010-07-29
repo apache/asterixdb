@@ -17,16 +17,16 @@ package edu.uci.ics.hyracks.comm.io;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class FrameDeserializingDataWriter implements IFrameWriter {
     private final IOpenableDataWriter<Object[]> writer;
     private final FrameDeserializer frameDeserializer;
 
-    public FrameDeserializingDataWriter(HyracksContext ctx, IOpenableDataWriter<Object[]> writer,
+    public FrameDeserializingDataWriter(IHyracksContext ctx, IOpenableDataWriter<Object[]> writer,
             RecordDescriptor recordDescriptor) {
         this.writer = writer;
         this.frameDeserializer = new FrameDeserializer(ctx, recordDescriptor);

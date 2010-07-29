@@ -18,13 +18,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class HashDataWriter implements IFrameWriter {
     private final int consumerPartitionCount;
@@ -33,7 +33,7 @@ public class HashDataWriter implements IFrameWriter {
     private final FrameTupleAccessor tupleAccessor;
     private final ITuplePartitionComputer tpc;
 
-    public HashDataWriter(HyracksContext ctx, int consumerPartitionCount, IEndpointDataWriterFactory edwFactory,
+    public HashDataWriter(IHyracksContext ctx, int consumerPartitionCount, IEndpointDataWriterFactory edwFactory,
             RecordDescriptor recordDescriptor, ITuplePartitionComputer tpc) throws HyracksDataException {
         this.consumerPartitionCount = consumerPartitionCount;
         epWriters = new IFrameWriter[consumerPartitionCount];
