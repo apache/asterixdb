@@ -29,20 +29,20 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.coreops.FieldHashPartitionComputerFactory;
-import edu.uci.ics.hyracks.coreops.MToNHashPartitioningConnectorDescriptor;
-import edu.uci.ics.hyracks.coreops.MToNReplicatingConnectorDescriptor;
-import edu.uci.ics.hyracks.coreops.MaterializingOperatorDescriptor;
-import edu.uci.ics.hyracks.coreops.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.coreops.PrinterOperatorDescriptor;
-import edu.uci.ics.hyracks.coreops.data.StringBinaryComparatorFactory;
-import edu.uci.ics.hyracks.coreops.data.StringBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.coreops.data.StringSerializerDeserializer;
-import edu.uci.ics.hyracks.coreops.file.CSVFileScanOperatorDescriptor;
-import edu.uci.ics.hyracks.coreops.file.FileSplit;
-import edu.uci.ics.hyracks.coreops.join.GraceHashJoinOperatorDescriptor;
-import edu.uci.ics.hyracks.coreops.join.HybridHashJoinOperatorDescriptor;
-import edu.uci.ics.hyracks.coreops.join.InMemoryHashJoinOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.std.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.MToNReplicatingConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.MaterializingOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.PrinterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.data.StringBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.data.StringBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.dataflow.std.data.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.file.CSVFileScanOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.hyracks.dataflow.std.join.GraceHashJoinOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.join.HybridHashJoinOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor;
 
 public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     /*
