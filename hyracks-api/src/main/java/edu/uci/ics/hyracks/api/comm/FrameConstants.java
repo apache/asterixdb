@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.util;
+package edu.uci.ics.hyracks.api.comm;
 
-public interface ILifeCycle {
-    public void start() throws Exception;
+public interface FrameConstants {
+    public static final int SIZE_LEN = 4;
 
-    public void stop() throws Exception;
+    public static final boolean DEBUG_FRAME_IO = false;
+
+    public static final int FRAME_FIELD_MAGIC = 0x12345678;
 }
