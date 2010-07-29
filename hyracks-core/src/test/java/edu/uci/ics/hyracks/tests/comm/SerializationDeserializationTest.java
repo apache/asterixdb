@@ -34,8 +34,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameDeserializingDataReader;
 import edu.uci.ics.hyracks.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.context.HyracksContext;
-import edu.uci.ics.hyracks.coreops.data.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.coreops.data.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.data.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.data.StringSerializerDeserializer;
 
 public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";
