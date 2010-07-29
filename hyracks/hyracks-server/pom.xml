@@ -85,7 +85,7 @@
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-core</artifactId>
+  		<artifactId>hyracks-runtime</artifactId>
   		<version>0.1.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
