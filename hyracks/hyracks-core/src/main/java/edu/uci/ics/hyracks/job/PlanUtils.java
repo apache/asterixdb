@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.util;
+package edu.uci.ics.hyracks.job;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +20,6 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.base.IOperatorDescriptorVisitor;
 
 public class PlanUtils {
     public static void visit(JobSpecification spec, IOperatorDescriptorVisitor visitor) throws Exception {

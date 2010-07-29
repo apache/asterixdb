@@ -31,10 +31,10 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.util.Pair;
-import edu.uci.ics.hyracks.dataflow.base.IOperatorDescriptorVisitor;
-import edu.uci.ics.hyracks.dataflow.util.PlanUtils;
+import edu.uci.ics.hyracks.job.IOperatorDescriptorVisitor;
 import edu.uci.ics.hyracks.job.JobPlan;
 import edu.uci.ics.hyracks.job.JobStage;
+import edu.uci.ics.hyracks.job.PlanUtils;
 
 public class JobPlanner {
     private static final Logger LOGGER = Logger.getLogger(JobPlanner.class.getName());
