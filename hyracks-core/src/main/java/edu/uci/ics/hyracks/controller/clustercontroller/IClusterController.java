@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.controller;
+package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.rmi.Remote;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
+import edu.uci.ics.hyracks.controller.NodeParameters;
+import edu.uci.ics.hyracks.controller.nodecontroller.INodeController;
 
 public interface IClusterController extends Remote, IHyracksClientInterface {
     public NodeParameters registerNode(INodeController nodeController) throws Exception;
