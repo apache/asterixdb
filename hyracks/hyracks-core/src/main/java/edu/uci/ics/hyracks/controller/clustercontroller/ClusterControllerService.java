@@ -48,9 +48,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
-import edu.uci.ics.hyracks.api.controller.IClusterController;
-import edu.uci.ics.hyracks.api.controller.INodeController;
-import edu.uci.ics.hyracks.api.controller.NodeParameters;
+import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
@@ -62,6 +60,8 @@ import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.comm.Endpoint;
 import edu.uci.ics.hyracks.config.CCConfig;
 import edu.uci.ics.hyracks.controller.AbstractRemoteService;
+import edu.uci.ics.hyracks.controller.NodeParameters;
+import edu.uci.ics.hyracks.controller.nodecontroller.INodeController;
 import edu.uci.ics.hyracks.job.JobPlan;
 import edu.uci.ics.hyracks.web.WebServer;
 
@@ -99,6 +99,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService");
         Registry registry = LocateRegistry.createRegistry(ccConfig.port);
+        registry.rebind(IHyracksClientInterface.class.getName(), this);
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();

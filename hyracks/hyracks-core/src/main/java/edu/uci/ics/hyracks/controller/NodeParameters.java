@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.controller;
+package edu.uci.ics.hyracks.controller;
 
 import java.io.Serializable;
 
-public class NodeCapability implements Serializable {
+public class NodeParameters implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int cpuCount;
+    private int heartbeatPeriod;
 
-    public int getCPUCount() {
-        return cpuCount;
+    public int getHeartbeatPeriod() {
+        return heartbeatPeriod;
     }
 
-    public void setCPUCount(int cpuCount) {
-        this.cpuCount = cpuCount;
+    public void setHeartbeatPeriod(int heartbeatPeriod) {
+        this.heartbeatPeriod = heartbeatPeriod;
     }
 }

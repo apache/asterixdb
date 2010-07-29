@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.controller;
+package edu.uci.ics.hyracks.controller.nodecontroller;
 
 import java.rmi.Remote;
 import java.util.Map;
@@ -24,6 +24,8 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.comm.Endpoint;
 import edu.uci.ics.hyracks.config.NCConfig;
+import edu.uci.ics.hyracks.controller.NodeCapability;
+import edu.uci.ics.hyracks.controller.clustercontroller.IClusterController;
 import edu.uci.ics.hyracks.job.JobPlan;
 
 public interface INodeController extends Remote {

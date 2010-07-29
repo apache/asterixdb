@@ -1,6 +1,6 @@
 package edu.uci.ics.hyracks.controller.clustercontroller;
 
-import edu.uci.ics.hyracks.api.controller.INodeController;
+import edu.uci.ics.hyracks.controller.nodecontroller.INodeController;
 
 public class NodeControllerState {
     private final INodeController nodeController;
