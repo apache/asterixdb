@@ -14,11 +14,11 @@
  */
 package edu.uci.ics.hyracks.coreops;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
-import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 
 public class FieldHashPartitionComputerFactory implements ITuplePartitionComputerFactory {
     private static final long serialVersionUID = 1L;
@@ -38,7 +38,7 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
         }
         return new ITuplePartitionComputer() {
             @Override
-            public int partition(FrameTupleAccessor accessor, int tIndex, int nParts) {
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) {
                 int h = 0;
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int slotLength = accessor.getFieldSlotsLength();

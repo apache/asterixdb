@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.value;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 
 public interface ITuplePartitionComputer {
-    public int partition(FrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException;
+    public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException;
 }

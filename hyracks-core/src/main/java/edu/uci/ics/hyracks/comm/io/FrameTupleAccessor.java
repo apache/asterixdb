@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.comm.io;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -32,7 +33,7 @@ import edu.uci.ics.hyracks.comm.util.ByteBufferInputStream;
  * 
  * @author vinayakb
  */
-public final class FrameTupleAccessor {
+public final class FrameTupleAccessor implements IFrameTupleAccessor {
     private final IHyracksContext ctx;
     private final RecordDescriptor recordDescriptor;
 
@@ -43,34 +44,42 @@ public final class FrameTupleAccessor {
         this.recordDescriptor = recordDescriptor;
     }
 
+    @Override
     public void reset(ByteBuffer buffer) {
         this.buffer = buffer;
     }
 
+    @Override
     public ByteBuffer getBuffer() {
         return buffer;
     }
 
+    @Override
     public int getTupleCount() {
         return buffer.getInt(FrameHelper.getTupleCountOffset(ctx));
     }
 
+    @Override
     public int getTupleStartOffset(int tupleIndex) {
         return tupleIndex == 0 ? 0 : buffer.getInt(FrameHelper.getTupleCountOffset(ctx) - 4 * tupleIndex);
     }
 
+    @Override
     public int getTupleEndOffset(int tupleIndex) {
         return buffer.getInt(FrameHelper.getTupleCountOffset(ctx) - 4 * (tupleIndex + 1));
     }
 
+    @Override
     public int getFieldStartOffset(int tupleIndex, int fIdx) {
         return fIdx == 0 ? 0 : buffer.getShort(getTupleStartOffset(tupleIndex) + (fIdx - 1) * 2);
     }
 
+    @Override
     public int getFieldEndOffset(int tupleIndex, int fIdx) {
         return buffer.getShort(getTupleStartOffset(tupleIndex) + fIdx * 2);
     }
 
+    @Override
     public int getFieldSlotsLength() {
         return recordDescriptor.getFields().length * 2;
     }

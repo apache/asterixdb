@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
@@ -442,7 +443,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     }
                 }
 
-                private void closeRun(int index, RunFileReader[] runCursors, FrameTupleAccessor[] tupleAccessor) {
+                private void closeRun(int index, RunFileReader[] runCursors, IFrameTupleAccessor[] tupleAccessor) {
                     runCursors[index] = null;
                     tupleAccessor[index] = null;
                 }

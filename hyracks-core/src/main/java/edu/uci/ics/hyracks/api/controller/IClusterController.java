@@ -15,49 +15,20 @@
 package edu.uci.ics.hyracks.api.controller;
 
 import java.rmi.Remote;
-import java.util.EnumSet;
-import java.util.Map;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
+import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
-public interface IClusterController extends Remote {
+public interface IClusterController extends Remote, IHyracksClientInterface {
     public NodeParameters registerNode(INodeController nodeController) throws Exception;
 
     public void unregisterNode(INodeController nodeController) throws Exception;
 
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-        StageletStatistics statistics) throws Exception;
+            StageletStatistics statistics) throws Exception;
 
     public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 
     public void nodeHeartbeat(String id) throws Exception;
-
-    /*
-     * Client Application Control Methods.
-     */
-    public void createApplication(String appName) throws Exception;
-
-    public void startApplication(String appName) throws Exception;
-
-    public void destroyApplication(String appName) throws Exception;
-
-    /*
-     * Client Job Control methods.
-     */
-    public UUID createJob(JobSpecification jobSpec) throws Exception;
-
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
-
-    public JobStatus getJobStatus(UUID jobId) throws Exception;
-
-    public void start(UUID jobId) throws Exception;
-
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception;
-
-    public Map<String, INodeController> getRegistry() throws Exception;
 }

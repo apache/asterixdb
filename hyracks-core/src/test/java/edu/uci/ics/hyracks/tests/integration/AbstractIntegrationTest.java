@@ -20,6 +20,8 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.config.CCConfig;
@@ -31,9 +33,10 @@ public abstract class AbstractIntegrationTest {
     public static final String NC1_ID = "nc1";
     public static final String NC2_ID = "nc2";
 
-    protected static ClusterControllerService cc;
-    protected static NodeControllerService nc1;
-    protected static NodeControllerService nc2;
+    private static ClusterControllerService cc;
+    private static NodeControllerService nc1;
+    private static NodeControllerService nc2;
+    private static IHyracksClientConnection hcc;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -58,6 +61,8 @@ public abstract class AbstractIntegrationTest {
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
+
+        hcc = new HyracksLocalConnection(cc);
     }
 
     @AfterClass
@@ -68,9 +73,9 @@ public abstract class AbstractIntegrationTest {
     }
 
     void runTest(JobSpecification spec) throws Exception {
-        UUID jobId = cc.createJob(spec, EnumSet.of(JobFlag.COLLECT_FRAME_COUNTS));
+        UUID jobId = hcc.createJob(spec, EnumSet.of(JobFlag.COLLECT_FRAME_COUNTS));
         System.err.println(spec.toJSON());
-        cc.start(jobId);
+        hcc.start(jobId);
         System.err.print(jobId);
         System.err.println(cc.waitForCompletion(jobId));
     }
