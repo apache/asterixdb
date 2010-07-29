@@ -7,6 +7,9 @@
 
   <modules>
     <module>hyracks-api</module>
+    <module>hyracks-dataflow-common</module>
+    <module>hyracks-dataflow-std</module>
     <module>hyracks-core</module>
+    <module>hyracks-server</module>
   </modules>
 </project>

@@ -35,14 +35,14 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.FrameConstants;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameConstants;
-import edu.uci.ics.hyracks.comm.io.FrameHelper;
 
 public class ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
@@ -79,7 +79,7 @@ public class ConnectionManager {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Connection manager listening on " + serverSocket.getInetAddress() + ":"
-                + serverSocket.getLocalPort());
+                    + serverSocket.getLocalPort());
         }
 
         pendingConnectionReceivers = new HashMap<UUID, IDataReceiveListenerFactory>();
@@ -120,7 +120,7 @@ public class ConnectionManager {
     public IFrameWriter connect(NetworkAddress address, UUID id, int senderId) throws HyracksDataException {
         try {
             SocketChannel channel = SocketChannel
-                .open(new InetSocketAddress(address.getIpAddress(), address.getPort()));
+                    .open(new InetSocketAddress(address.getIpAddress(), address.getPort()));
             byte[] initialFrame = new byte[INITIAL_MESSAGE_LEN];
             ByteBuffer buffer = ByteBuffer.wrap(initialFrame);
             buffer.clear();

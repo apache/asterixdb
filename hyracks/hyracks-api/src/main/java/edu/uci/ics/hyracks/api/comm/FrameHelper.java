@@ -12,8 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.service;
+package edu.uci.ics.hyracks.api.comm;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 
-public interface IService extends ILifeCycle {
+public class FrameHelper {
+    public static int getTupleCountOffset(IHyracksContext ctx) {
+        return ctx.getFrameSize() - 4;
+    }
 }

@@ -27,15 +27,13 @@ import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFactory, IConnectionDemultiplexer,
-    IDataReceiveListener {
+        IDataReceiveListener {
     private static final Logger LOGGER = Logger.getLogger(DemuxDataReceiveListenerFactory.class.getName());
 
-    private final NonDeterministicFrameReader frameReader;
     private final IHyracksContext ctx;
     private final BitSet readyBits;
     private IConnectionEntry senders[];
@@ -44,7 +42,6 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
     private UUID stageId;
 
     public DemuxDataReceiveListenerFactory(IHyracksContext ctx, UUID jobId, UUID stageId) {
-        frameReader = new NonDeterministicFrameReader(ctx, this);
         this.ctx = ctx;
         this.jobId = jobId;
         this.stageId = stageId;
@@ -58,10 +55,6 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
         entry.attach(senderIndex);
         addSender(senderIndex, entry);
         return this;
-    }
-
-    public IFrameReader getFrameReader() {
-        return frameReader;
     }
 
     @Override
