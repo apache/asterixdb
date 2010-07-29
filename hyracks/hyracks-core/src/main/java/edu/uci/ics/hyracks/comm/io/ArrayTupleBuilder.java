@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.comm.io;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 

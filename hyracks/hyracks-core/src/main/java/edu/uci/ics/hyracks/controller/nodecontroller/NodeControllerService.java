@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -57,14 +56,15 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.comm.ConnectionManager;
 import edu.uci.ics.hyracks.comm.DemuxDataReceiveListenerFactory;
+import edu.uci.ics.hyracks.comm.Endpoint;
 import edu.uci.ics.hyracks.config.NCConfig;
 import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.controller.AbstractRemoteService;
+import edu.uci.ics.hyracks.job.JobPlan;
 import edu.uci.ics.hyracks.runtime.OperatorRunnable;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {

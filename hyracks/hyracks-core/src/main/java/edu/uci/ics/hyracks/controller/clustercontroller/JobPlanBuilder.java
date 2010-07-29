@@ -12,8 +12,8 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.job.JobPlan;
 
 public class JobPlanBuilder implements IActivityGraphBuilder {
     private static final Logger LOGGER = Logger.getLogger(JobPlanBuilder.class.getName());

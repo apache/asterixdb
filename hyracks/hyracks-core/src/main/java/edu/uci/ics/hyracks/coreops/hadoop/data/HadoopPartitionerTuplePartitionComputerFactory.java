@@ -19,11 +19,11 @@ import java.io.DataInputStream;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.Partitioner;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.util.ByteBufferInputStream;
 
 public class HadoopPartitionerTuplePartitionComputerFactory<K extends Writable, V extends Writable> extends
@@ -46,7 +46,7 @@ public class HadoopPartitionerTuplePartitionComputerFactory<K extends Writable, 
             private final DataInputStream dis = new DataInputStream(bbis);
 
             @Override
-            public int partition(FrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
+            public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
                 int keyStart = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                         + accessor.getFieldStartOffset(tIndex, 0);
                 bbis.setByteBuffer(accessor.getBuffer(), keyStart);

@@ -19,12 +19,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.comm.Endpoint;
 import edu.uci.ics.hyracks.config.NCConfig;
+import edu.uci.ics.hyracks.job.JobPlan;
 
 public interface INodeController extends Remote {
     public String getId() throws Exception;

@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm;
+package edu.uci.ics.hyracks.api.client;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
-public interface ISenderProtocolStack {
-    public IFrameWriter createFrameWriter(Endpoint endpoint) throws HyracksDataException;
+public final class HyracksLocalConnection extends AbstractHyracksConnection {
+    public HyracksLocalConnection(IHyracksClientInterface hci) {
+        super(hci);
+    }
 }

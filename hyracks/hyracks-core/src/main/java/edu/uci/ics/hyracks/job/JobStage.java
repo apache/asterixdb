@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job;
+package edu.uci.ics.hyracks.job;
 
 import java.io.Serializable;
 import java.util.HashSet;

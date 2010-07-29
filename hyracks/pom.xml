@@ -6,6 +6,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>hyracks-api</module>
     <module>hyracks-core</module>
   </modules>
 </project>

@@ -175,7 +175,8 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
         List<LocationConstraint> locationConstraints = new ArrayList<LocationConstraint>();
         Map<String, INodeController> registry = null;
         try {
-            registry = clusterController.getRegistry();
+            // registry = clusterController.getRegistry();
+            // TODO
         } catch (Exception e) {
             e.printStackTrace();
         }

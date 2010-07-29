@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.coreops.group;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
 
 public interface IAccumulatingAggregator {
@@ -28,7 +28,7 @@ public interface IAccumulatingAggregator {
      *            - Index of the tuple in the accessor.
      * @throws HyracksDataException
      */
-    public void init(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
+    public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
 
     /**
      * Called once per tuple that belongs to this group.
@@ -39,7 +39,7 @@ public interface IAccumulatingAggregator {
      *            - Index of tuple in the accessor.
      * @throws HyracksDataException
      */
-    public void accumulate(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
+    public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
 
     /**
      * Called finally to emit output. This method is called until it returns true. The method is free to
@@ -55,6 +55,6 @@ public interface IAccumulatingAggregator {
      * @return true if all output is written, false if the appender is full.
      * @throws HyracksDataException
      */
-    public boolean output(FrameTupleAppender appender, FrameTupleAccessor accessor, int tIndex)
+    public boolean output(FrameTupleAppender appender, IFrameTupleAccessor accessor, int tIndex)
             throws HyracksDataException;
 }

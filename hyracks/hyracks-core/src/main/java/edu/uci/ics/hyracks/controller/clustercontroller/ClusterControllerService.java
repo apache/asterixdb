@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.controller.clustercontroller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.EnumSet;
@@ -47,7 +48,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
-import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.controller.NodeParameters;
@@ -55,13 +55,14 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
+import edu.uci.ics.hyracks.comm.Endpoint;
 import edu.uci.ics.hyracks.config.CCConfig;
 import edu.uci.ics.hyracks.controller.AbstractRemoteService;
+import edu.uci.ics.hyracks.job.JobPlan;
 import edu.uci.ics.hyracks.web.WebServer;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController {
@@ -247,12 +248,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public Map<String, INodeController> getRegistry() throws Exception {
+    public Map<String, InetAddress[]> getRegistry() throws Exception {
         Map<String, INodeController> map = new HashMap<String, INodeController>();
         for (Map.Entry<String, NodeControllerState> e : nodeRegistry.entrySet()) {
             map.put(e.getKey(), e.getValue().getNodeController());
         }
-        return map;
+        // return map;
+        throw new UnsupportedOperationException();
     }
 
     @Override
