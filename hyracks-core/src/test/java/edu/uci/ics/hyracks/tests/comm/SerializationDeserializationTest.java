@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
@@ -40,7 +41,7 @@ public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";
 
     private static class SerDeserRunner {
-        private final HyracksContext ctx;
+        private final IHyracksContext ctx;
         private static final int FRAME_SIZE = 32768;
         private RecordDescriptor rDes;
         private List<ByteBuffer> buffers;

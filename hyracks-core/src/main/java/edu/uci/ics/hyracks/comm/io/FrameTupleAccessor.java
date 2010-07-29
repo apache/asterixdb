@@ -17,10 +17,10 @@ package edu.uci.ics.hyracks.comm.io;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 /**
  * FrameTupleCursor is used to navigate over tuples in a Frame.
@@ -33,12 +33,12 @@ import edu.uci.ics.hyracks.context.HyracksContext;
  * @author vinayakb
  */
 public final class FrameTupleAccessor {
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
     private final RecordDescriptor recordDescriptor;
 
     private ByteBuffer buffer;
 
-    public FrameTupleAccessor(HyracksContext ctx, RecordDescriptor recordDescriptor) {
+    public FrameTupleAccessor(IHyracksContext ctx, RecordDescriptor recordDescriptor) {
         this.ctx = ctx;
         this.recordDescriptor = recordDescriptor;
     }

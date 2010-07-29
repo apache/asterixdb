@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -30,7 +31,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.comm.io.FrameTuplePairComparator;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 class GroupingHashTable {
     /**
@@ -60,7 +60,7 @@ class GroupingHashTable {
     }
 
     private static final int INIT_ACCUMULATORS_SIZE = 8;
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
     private final FrameTupleAppender appender;
     private final List<ByteBuffer> buffers;
     private final Link[] table;
@@ -79,7 +79,7 @@ class GroupingHashTable {
 
     private final FrameTupleAccessor storedKeysAccessor;
 
-    GroupingHashTable(HyracksContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
+    GroupingHashTable(IHyracksContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
         ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
         RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
         this.ctx = ctx;

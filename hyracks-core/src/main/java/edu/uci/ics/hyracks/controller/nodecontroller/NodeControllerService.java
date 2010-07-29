@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.controller.IClusterController;
 import edu.uci.ics.hyracks.api.controller.INodeController;
 import edu.uci.ics.hyracks.api.controller.NodeCapability;
@@ -52,6 +53,8 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorInstanceId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
@@ -71,7 +74,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final String id;
 
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
 
     private final NodeCapability nodeCapability;
 
@@ -162,71 +165,90 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, JobPlan plan, UUID stageId, int attempt,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, final JobPlan plan, UUID stageId,
+            int attempt, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
             throws Exception {
-        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
+        try {
+            LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
 
-        final Joblet joblet = getLocalJoblet(jobId);
-
-        Stagelet stagelet = new Stagelet(joblet, stageId, attempt, id);
-        joblet.setStagelet(stageId, stagelet);
-
-        final Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
-        Map<OperatorInstanceId, OperatorRunnable> honMap = stagelet.getOperatorMap();
-
-        List<Endpoint> endpointList = new ArrayList<Endpoint>();
-
-        for (ActivityNodeId hanId : tasks.keySet()) {
-            IActivityNode han = plan.getActivityNodeMap().get(hanId);
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest("Initializing " + hanId + " -> " + han);
-            }
-            IOperatorDescriptor op = han.getOwner();
-            List<IConnectorDescriptor> inputs = plan.getTaskInputs(hanId);
-            for (int i : tasks.get(hanId)) {
-                IOperatorNodePushable hon = han.createPushRuntime(ctx, plan, joblet.getEnvironment(op, i), i,
-                        opPartitions.get(op.getOperatorId()).size());
-                OperatorRunnable or = new OperatorRunnable(ctx, hon);
-                stagelet.setOperator(op.getOperatorId(), i, or);
-                if (inputs != null) {
-                    for (int j = 0; j < inputs.size(); ++j) {
-                        if (j >= 1) {
-                            throw new IllegalStateException();
-                        }
-                        IConnectorDescriptor conn = inputs.get(j);
-                        OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                .getOperatorId();
-                        OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                .getOperatorId();
-                        Endpoint endpoint = new Endpoint(connectionManager.getNetworkAddress(), i);
-                        endpointList.add(endpoint);
-                        DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx, jobId, stageId);
-                        connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
-                        PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
-                                .getTaskInputMap().get(hanId).get(j), i);
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
-                        }
-                        portMap.put(piId, endpoint);
-                        IFrameReader reader = createReader(conn, drlf, i, plan, stagelet, opPartitions
-                                .get(producerOpId).size(), opPartitions.get(consumerOpId).size());
-                        or.setFrameReader(reader);
-                    }
+            IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
+                @Override
+                public RecordDescriptor getOutputRecordDescriptor(OperatorDescriptorId opId, int outputIndex) {
+                    return plan.getJobSpecification().getOperatorOutputRecordDescriptor(opId, outputIndex);
                 }
-                honMap.put(new OperatorInstanceId(op.getOperatorId(), i), or);
+
+                @Override
+                public RecordDescriptor getInputRecordDescriptor(OperatorDescriptorId opId, int inputIndex) {
+                    return plan.getJobSpecification().getOperatorInputRecordDescriptor(opId, inputIndex);
+                }
+            };
+
+            final Joblet joblet = getLocalJoblet(jobId);
+
+            Stagelet stagelet = new Stagelet(joblet, stageId, attempt, id);
+            joblet.setStagelet(stageId, stagelet);
+
+            final Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
+            Map<OperatorInstanceId, OperatorRunnable> honMap = stagelet.getOperatorMap();
+
+            List<Endpoint> endpointList = new ArrayList<Endpoint>();
+
+            for (ActivityNodeId hanId : tasks.keySet()) {
+                IActivityNode han = plan.getActivityNodeMap().get(hanId);
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("Initializing " + hanId + " -> " + han);
+                }
+                IOperatorDescriptor op = han.getOwner();
+                List<IConnectorDescriptor> inputs = plan.getTaskInputs(hanId);
+                for (int i : tasks.get(hanId)) {
+                    IOperatorNodePushable hon = han.createPushRuntime(ctx, joblet.getEnvironment(op, i), rdp, i,
+                            opPartitions.get(op.getOperatorId()).size());
+                    OperatorRunnable or = new OperatorRunnable(ctx, hon);
+                    stagelet.setOperator(op.getOperatorId(), i, or);
+                    if (inputs != null) {
+                        for (int j = 0; j < inputs.size(); ++j) {
+                            if (j >= 1) {
+                                throw new IllegalStateException();
+                            }
+                            IConnectorDescriptor conn = inputs.get(j);
+                            OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
+                                    .getOperatorId();
+                            OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
+                                    .getOperatorId();
+                            Endpoint endpoint = new Endpoint(connectionManager.getNetworkAddress(), i);
+                            endpointList.add(endpoint);
+                            DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(ctx, jobId,
+                                    stageId);
+                            connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
+                            PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
+                                    .getTaskInputMap().get(hanId).get(j), i);
+                            if (LOGGER.isLoggable(Level.FINEST)) {
+                                LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
+                            }
+                            portMap.put(piId, endpoint);
+                            IFrameReader reader = createReader(conn, drlf, i, plan, stagelet,
+                                    opPartitions.get(producerOpId).size(), opPartitions.get(consumerOpId).size());
+                            or.setFrameReader(reader);
+                        }
+                    }
+                    honMap.put(new OperatorInstanceId(op.getOperatorId(), i), or);
+                }
             }
+
+            stagelet.setEndpointList(endpointList);
+
+            return portMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
-
-        stagelet.setEndpointList(endpointList);
-
-        return portMap;
     }
 
     private IFrameReader createReader(final IConnectorDescriptor conn, IConnectionDemultiplexer demux,
             final int receiverIndex, JobPlan plan, final Stagelet stagelet, int nProducerCount, int nConsumerCount)
             throws HyracksDataException {
-        final IFrameReader reader = conn.createReceiveSideReader(ctx, plan, demux, receiverIndex, nProducerCount,
+        final IFrameReader reader = conn.createReceiveSideReader(ctx, plan.getJobSpecification()
+                .getConnectorRecordDescriptor(conn), demux, receiverIndex, nProducerCount,
                 nConsumerCount);
 
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameReader() {
@@ -262,52 +284,59 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     public void initializeJobletPhase2(UUID jobId, final JobPlan plan, UUID stageId,
             Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
             final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
-        LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
-        final Joblet ji = getLocalJoblet(jobId);
-        Stagelet si = (Stagelet) ji.getStagelet(stageId);
-        final Map<OperatorInstanceId, OperatorRunnable> honMap = si.getOperatorMap();
+        try {
+            LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
+            final Joblet ji = getLocalJoblet(jobId);
+            Stagelet si = (Stagelet) ji.getStagelet(stageId);
+            final Map<OperatorInstanceId, OperatorRunnable> honMap = si.getOperatorMap();
 
-        final Stagelet stagelet = (Stagelet) ji.getStagelet(stageId);
+            final Stagelet stagelet = (Stagelet) ji.getStagelet(stageId);
 
-        final JobSpecification spec = plan.getJobSpecification();
+            final JobSpecification spec = plan.getJobSpecification();
 
-        for (ActivityNodeId hanId : tasks.keySet()) {
-            IActivityNode han = plan.getActivityNodeMap().get(hanId);
-            IOperatorDescriptor op = han.getOwner();
-            List<IConnectorDescriptor> outputs = plan.getTaskOutputs(hanId);
-            for (int i : tasks.get(hanId)) {
-                OperatorRunnable or = honMap.get(new OperatorInstanceId(op.getOperatorId(), i));
-                if (outputs != null) {
-                    for (int j = 0; j < outputs.size(); ++j) {
-                        final IConnectorDescriptor conn = outputs.get(j);
-                        OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                .getOperatorId();
-                        OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                .getOperatorId();
-                        final int senderIndex = i;
-                        IEndpointDataWriterFactory edwFactory = new IEndpointDataWriterFactory() {
-                            @Override
-                            public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
-                                PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
-                                        Direction.INPUT, spec.getConsumerInputIndex(conn), index);
-                                Endpoint ep = globalPortMap.get(piId);
-                                if (ep == null) {
-                                    LOGGER.info("Got null Endpoint for " + piId);
-                                    throw new NullPointerException();
+            for (ActivityNodeId hanId : tasks.keySet()) {
+                IActivityNode han = plan.getActivityNodeMap().get(hanId);
+                IOperatorDescriptor op = han.getOwner();
+                List<IConnectorDescriptor> outputs = plan.getTaskOutputs(hanId);
+                for (int i : tasks.get(hanId)) {
+                    OperatorRunnable or = honMap.get(new OperatorInstanceId(op.getOperatorId(), i));
+                    if (outputs != null) {
+                        for (int j = 0; j < outputs.size(); ++j) {
+                            final IConnectorDescriptor conn = outputs.get(j);
+                            OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
+                                    .getOperatorId();
+                            OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
+                                    .getOperatorId();
+                            final int senderIndex = i;
+                            IEndpointDataWriterFactory edwFactory = new IEndpointDataWriterFactory() {
+                                @Override
+                                public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
+                                    PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
+                                            Direction.INPUT, spec.getConsumerInputIndex(conn), index);
+                                    Endpoint ep = globalPortMap.get(piId);
+                                    if (ep == null) {
+                                        LOGGER.info("Got null Endpoint for " + piId);
+                                        throw new NullPointerException();
+                                    }
+                                    if (LOGGER.isLoggable(Level.FINEST)) {
+                                        LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
+                                    }
+                                    return createWriter(connectionManager.connect(ep.getNetworkAddress(),
+                                            ep.getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
                                 }
-                                if (LOGGER.isLoggable(Level.FINEST)) {
-                                    LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
-                                }
-                                return createWriter(connectionManager.connect(ep.getNetworkAddress(),
-                                        ep.getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
-                            }
-                        };
-                        or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan, edwFactory, i,
-                                opPartitions.get(producerOpId).size(), opPartitions.get(consumerOpId).size()));
+                            };
+                            or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan.getJobSpecification()
+                                    .getConnectorRecordDescriptor(conn), edwFactory, i,
+                                    opPartitions.get(producerOpId).size(), opPartitions.get(consumerOpId).size()), spec
+                                    .getConnectorRecordDescriptor(conn));
+                        }
                     }
+                    stagelet.installRunnable(new OperatorInstanceId(op.getOperatorId(), i));
                 }
-                stagelet.installRunnable(new OperatorInstanceId(op.getOperatorId(), i));
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 

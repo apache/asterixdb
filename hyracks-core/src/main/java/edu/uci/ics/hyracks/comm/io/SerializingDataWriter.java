@@ -19,10 +19,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
     private static final Logger LOGGER = Logger.getLogger(SerializingDataWriter.class.getName());
@@ -39,7 +39,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
 
     private boolean open;
 
-    public SerializingDataWriter(HyracksContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter) {
+    public SerializingDataWriter(IHyracksContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter) {
         buffer = ctx.getResourceManager().allocateFrame();
         tb = new ArrayTupleBuilder(recordDescriptor.getFields().length);
         this.recordDescriptor = recordDescriptor;

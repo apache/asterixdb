@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
-import edu.uci.ics.hyracks.context.HyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 
 public class ConnectionEntry implements IConnectionEntry {
     private static final Logger LOGGER = Logger.getLogger(ConnectionEntry.class.getName());
@@ -47,7 +47,7 @@ public class ConnectionEntry implements IConnectionEntry {
 
     private boolean aborted;
 
-    public ConnectionEntry(HyracksContext ctx, SocketChannel socketChannel, SelectionKey key) {
+    public ConnectionEntry(IHyracksContext ctx, SocketChannel socketChannel, SelectionKey key) {
         this.socketChannel = socketChannel;
         readBuffer = ctx.getResourceManager().allocateFrame();
         readBuffer.clear();

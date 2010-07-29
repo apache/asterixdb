@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -34,12 +35,11 @@ import edu.uci.ics.hyracks.comm.io.FrameHelper;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.comm.io.FrameTuplePairComparator;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class SortMergeFrameReader implements IFrameReader {
     private static final Logger LOGGER = Logger.getLogger(SortMergeFrameReader.class.getName());
 
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
     private final IConnectionDemultiplexer demux;
     private final FrameTuplePairComparator tpc;
     private final FrameTupleAppender appender;
@@ -50,7 +50,7 @@ public class SortMergeFrameReader implements IFrameReader {
     private int lastReadSender;
     private boolean first;
 
-    public SortMergeFrameReader(HyracksContext ctx, IConnectionDemultiplexer demux, int[] sortFields,
+    public SortMergeFrameReader(IHyracksContext ctx, IConnectionDemultiplexer demux, int[] sortFields,
             IBinaryComparator[] comparators, RecordDescriptor recordDescriptor) {
         this.ctx = ctx;
         this.demux = demux;

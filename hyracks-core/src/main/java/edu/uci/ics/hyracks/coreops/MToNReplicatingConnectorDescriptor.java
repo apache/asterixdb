@@ -19,12 +19,12 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.comm.NonDeterministicFrameReader;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.AbstractConnectorDescriptor;
 
 public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescriptor {
@@ -35,7 +35,7 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
+    public IFrameWriter createSendSideWriter(IHyracksContext ctx, RecordDescriptor recordDesc, IEndpointDataWriterFactory edwFactory,
         int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
         for (int i = 0; i < nConsumerPartitions; ++i) {
@@ -70,7 +70,7 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
     }
 
     @Override
-    public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
+    public IFrameReader createReceiveSideReader(IHyracksContext ctx, RecordDescriptor recordDesc, IConnectionDemultiplexer demux,
         int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
     }

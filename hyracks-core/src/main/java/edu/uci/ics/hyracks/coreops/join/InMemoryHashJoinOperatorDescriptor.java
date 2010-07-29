@@ -17,23 +17,22 @@ package edu.uci.ics.hyracks.coreops.join;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.coreops.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.coreops.base.AbstractOperatorDescriptor;
@@ -79,18 +78,10 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
-            final RecordDescriptor rd0 = plan.getJobSpecification()
-                    .getOperatorInputRecordDescriptor(getOperatorId(), 0);
-            final RecordDescriptor rd1 = plan.getJobSpecification()
-                    .getOperatorInputRecordDescriptor(getOperatorId(), 1);
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -122,7 +113,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
             };
@@ -133,30 +124,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         public IOperatorDescriptor getOwner() {
             return InMemoryHashJoinOperatorDescriptor.this;
         }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
-        }
     }
 
     private class HashProbeActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             IOperatorNodePushable op = new IOperatorNodePushable() {
                 private IFrameWriter writer;
                 private InMemoryHashJoin joiner;
@@ -180,7 +155,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     if (index != 0) {
                         throw new IllegalStateException();
                     }
@@ -193,16 +168,6 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         @Override
         public IOperatorDescriptor getOwner() {
             return InMemoryHashJoinOperatorDescriptor.this;
-        }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
         }
     }
 }

@@ -41,9 +41,9 @@ import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.io.FrameHelper;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
@@ -54,7 +54,7 @@ public class ConnectionManager {
 
     private ServerSocketChannel serverSocketChannel;
 
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
 
     private final Map<UUID, IDataReceiveListenerFactory> pendingConnectionReceivers;
 
@@ -70,7 +70,7 @@ public class ConnectionManager {
 
     private ByteBuffer emptyFrame;
 
-    public ConnectionManager(HyracksContext ctx, InetAddress address) throws IOException {
+    public ConnectionManager(IHyracksContext ctx, InetAddress address) throws IOException {
         this.ctx = ctx;
         serverSocketChannel = ServerSocketChannel.open();
         ServerSocket serverSocket = serverSocketChannel.socket();

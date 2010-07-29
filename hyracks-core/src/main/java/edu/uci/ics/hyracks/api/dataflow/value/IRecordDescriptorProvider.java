@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.io;
+package edu.uci.ics.hyracks.api.dataflow.value;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 
-public class FrameHelper {
-    public static int getTupleCountOffset(IHyracksContext ctx) {
-        return ctx.getFrameSize() - 4;
-    }
+public interface IRecordDescriptorProvider {
+    public RecordDescriptor getInputRecordDescriptor(OperatorDescriptorId opId, int inputIndex);
+
+    public RecordDescriptor getOutputRecordDescriptor(OperatorDescriptorId opId, int outputIndex);
 }

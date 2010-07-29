@@ -16,10 +16,10 @@ package edu.uci.ics.hyracks.comm.io;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.context.HyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 
 public class FrameTupleAppender {
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
 
     private ByteBuffer buffer;
 
@@ -27,7 +27,7 @@ public class FrameTupleAppender {
 
     private int tupleDataEndOffset;
 
-    public FrameTupleAppender(HyracksContext ctx) {
+    public FrameTupleAppender(IHyracksContext ctx) {
         this.ctx = ctx;
     }
 

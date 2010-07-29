@@ -17,10 +17,10 @@ package edu.uci.ics.hyracks.comm.io;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class FrameDeserializingDataReader implements IOpenableDataReader<Object[]> {
     private final ByteBuffer buffer;
@@ -33,7 +33,7 @@ public class FrameDeserializingDataReader implements IOpenableDataReader<Object[
 
     private final FrameDeserializer frameDeserializer;
 
-    public FrameDeserializingDataReader(HyracksContext ctx, IFrameReader frameReader, RecordDescriptor recordDescriptor) {
+    public FrameDeserializingDataReader(IHyracksContext ctx, IFrameReader frameReader, RecordDescriptor recordDescriptor) {
         buffer = ctx.getResourceManager().allocateFrame();
         this.frameReader = frameReader;
         this.frameDeserializer = new FrameDeserializer(ctx, recordDescriptor);

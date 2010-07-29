@@ -21,10 +21,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.FrameConstants;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 public class FrameDeserializer {
     private static final Logger LOGGER = Logger.getLogger(FrameDeserializer.class.getName());
@@ -43,7 +43,7 @@ public class FrameDeserializer {
 
     private ByteBuffer buffer;
 
-    public FrameDeserializer(HyracksContext ctx, RecordDescriptor recordDescriptor) {
+    public FrameDeserializer(IHyracksContext ctx, RecordDescriptor recordDescriptor) {
         this.bbis = new ByteBufferInputStream();
         this.di = new DataInputStream(bbis);
         this.recordDescriptor = recordDescriptor;

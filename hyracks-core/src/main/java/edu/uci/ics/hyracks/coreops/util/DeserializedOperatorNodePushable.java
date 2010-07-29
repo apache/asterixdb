@@ -15,43 +15,33 @@
 package edu.uci.ics.hyracks.coreops.util;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.comm.io.FrameDeserializer;
 import edu.uci.ics.hyracks.comm.io.SerializingDataWriter;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.IOpenableDataWriterOperator;
 
 public final class DeserializedOperatorNodePushable implements IOperatorNodePushable {
-    private final HyracksContext ctx;
+    private final IHyracksContext ctx;
 
     private final IOpenableDataWriterOperator delegate;
 
-    private final JobPlan plan;
-
-    private final ActivityNodeId aid;
-
     private final FrameDeserializer deserializer;
 
-    public DeserializedOperatorNodePushable(HyracksContext ctx, IOpenableDataWriterOperator delegate, JobPlan plan,
-            ActivityNodeId aid) {
+    public DeserializedOperatorNodePushable(IHyracksContext ctx, IOpenableDataWriterOperator delegate,
+            RecordDescriptor inRecordDesc) {
         this.ctx = ctx;
         this.delegate = delegate;
-        this.plan = plan;
-        this.aid = aid;
-        List<Integer> inList = plan.getTaskInputMap().get(aid);
-        deserializer = inList == null ? null : new FrameDeserializer(ctx, plan.getTaskInputRecordDescriptor(aid, 0));
+        deserializer = inRecordDesc == null ? null : new FrameDeserializer(ctx, inRecordDesc);
     }
 
     @Override
-    public void setFrameWriter(int index, IFrameWriter writer) {
-        delegate.setDataWriter(index, new SerializingDataWriter(ctx, plan.getTaskOutputRecordDescriptor(aid, index),
-                writer));
+    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        delegate.setDataWriter(index, new SerializingDataWriter(ctx, recordDesc, writer));
     }
 
     @Override

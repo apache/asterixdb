@@ -22,9 +22,9 @@ import org.json.JSONObject;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobPlan;
-import edu.uci.ics.hyracks.context.HyracksContext;
 
 /**
  * Connector that connects operators in a Job.
@@ -44,8 +44,8 @@ public interface IConnectorDescriptor extends Serializable {
      * 
      * @param ctx
      *            Context
-     * @param plan
-     *            Job plan
+     * @param recordDesc
+     *            Record Descriptor
      * @param edwFactory
      *            Endpoint writer factory.
      * @param index
@@ -57,15 +57,16 @@ public interface IConnectorDescriptor extends Serializable {
      * @return data writer.
      * @throws Exception
      */
-    public IFrameWriter createSendSideWriter(HyracksContext ctx, JobPlan plan, IEndpointDataWriterFactory edwFactory,
-        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException;
+    public IFrameWriter createSendSideWriter(IHyracksContext ctx, RecordDescriptor recordDesc,
+            IEndpointDataWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
+            throws HyracksDataException;
 
     /**
      * Factory metod to create the receive side reader that reads data from this connector.
      * 
      * @param ctx
      *            Context
-     * @param plan
+     * @param recordDesc
      *            Job plan
      * @param demux
      *            Connection Demultiplexer
@@ -78,8 +79,9 @@ public interface IConnectorDescriptor extends Serializable {
      * @return data reader
      * @throws HyracksDataException
      */
-    public IFrameReader createReceiveSideReader(HyracksContext ctx, JobPlan plan, IConnectionDemultiplexer demux,
-        int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException;
+    public IFrameReader createReceiveSideReader(IHyracksContext ctx, RecordDescriptor recordDesc,
+            IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
+            throws HyracksDataException;
 
     /**
      * Translate this connector descriptor to JSON.

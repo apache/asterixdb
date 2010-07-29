@@ -17,18 +17,17 @@ package edu.uci.ics.hyracks.coreops;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.coreops.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.coreops.base.IOpenableDataWriterOperator;
@@ -49,14 +48,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
                 private ArrayList<Object[]> buffer;
 
@@ -81,17 +74,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                     buffer.add(data);
                 }
             };
-            return new DeserializedOperatorNodePushable(ctx, op, plan, getActivityNodeId());
-        }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
+            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
+                    getOperatorId(), 0));
         }
     }
 
@@ -104,14 +88,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
                 private IOpenableDataWriter<Object[]> writer;
 
@@ -143,17 +121,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                     writer.close();
                 }
             };
-            return new DeserializedOperatorNodePushable(ctx, op, plan, getActivityNodeId());
-        }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
+            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
+                    getOperatorId(), 0));
         }
     }
 

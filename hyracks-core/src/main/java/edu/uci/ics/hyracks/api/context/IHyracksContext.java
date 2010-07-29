@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.io;
+package edu.uci.ics.hyracks.api.context;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.resources.IResourceManager;
 
-public class FrameHelper {
-    public static int getTupleCountOffset(IHyracksContext ctx) {
-        return ctx.getFrameSize() - 4;
-    }
+public interface IHyracksContext {
+    public IResourceManager getResourceManager();
+
+    public int getFrameSize();
 }

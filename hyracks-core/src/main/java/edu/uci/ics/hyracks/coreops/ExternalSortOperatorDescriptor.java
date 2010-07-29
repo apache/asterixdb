@@ -27,20 +27,19 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePullable;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.context.HyracksContext;
 import edu.uci.ics.hyracks.coreops.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.coreops.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.coreops.util.ReferenceEntry;
@@ -91,14 +90,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            return null;
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -278,21 +271,11 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
             };
             return op;
-        }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return false;
         }
     }
 
@@ -305,14 +288,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePullable createPullRuntime(HyracksContext ctx, JobPlan plan, IOperatorEnvironment env,
-                int partition, int nPartitions) {
-            return null;
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final HyracksContext ctx, JobPlan plan,
-                final IOperatorEnvironment env, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -368,7 +345,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer) {
+                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     if (index != 0) {
                         throw new IllegalArgumentException();
                     }
@@ -472,16 +449,6 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             };
             return op;
         }
-
-        @Override
-        public boolean supportsPullInterface() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsPushInterface() {
-            return true;
-        }
     }
 
     private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {
@@ -511,7 +478,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
         };
     }
 
-    private void flushFrames(HyracksContext ctx, List<ByteBuffer> inFrames, ByteBuffer outFrame, long[] tPointers,
+    private void flushFrames(IHyracksContext ctx, List<ByteBuffer> inFrames, ByteBuffer outFrame, long[] tPointers,
             IFrameWriter writer) throws HyracksDataException {
         FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptors[0]);
         FrameTupleAppender outFrameAppender = new FrameTupleAppender(ctx);

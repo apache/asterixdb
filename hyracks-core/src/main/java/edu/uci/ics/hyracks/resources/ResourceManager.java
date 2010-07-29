@@ -18,19 +18,22 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.context.HyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.resources.IResourceManager;
 
-public final class ResourceManager {
-    private final HyracksContext ctx;
+public final class ResourceManager implements IResourceManager {
+    private final IHyracksContext ctx;
 
-    public ResourceManager(HyracksContext ctx) {
+    public ResourceManager(IHyracksContext ctx) {
         this.ctx = ctx;
     }
 
+    @Override
     public ByteBuffer allocateFrame() {
         return ByteBuffer.allocate(ctx.getFrameSize());
     }
 
+    @Override
     public File createFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(prefix, suffix);
     }
