@@ -15,8 +15,6 @@
 package edu.uci.ics.hyracks.dataflow.std.map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.IMapper;
-import edu.uci.ics.hyracks.dataflow.std.IMapperFactory;
 
 public class ReflectionBasedMapperFactory implements IMapperFactory {
     private static final long serialVersionUID = 1L;

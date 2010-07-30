@@ -19,7 +19,7 @@ import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
-import edu.uci.ics.hyracks.util.ReflectionUtils;
+import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class WritableComparingComparatorFactory<T> implements IComparatorFactory<WritableComparable<T>> {
     private Class<? extends WritableComparator> klass;

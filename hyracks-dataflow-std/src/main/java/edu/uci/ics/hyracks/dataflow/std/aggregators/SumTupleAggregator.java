@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.std.aggregators;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.ITupleAggregator;
 
 public class SumTupleAggregator implements ITupleAggregator {
 

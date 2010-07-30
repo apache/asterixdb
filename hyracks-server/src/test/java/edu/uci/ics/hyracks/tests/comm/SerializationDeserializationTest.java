@@ -31,11 +31,11 @@ import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameDeserializingDataReader;
-import edu.uci.ics.hyracks.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.context.HyracksContext;
-import edu.uci.ics.hyracks.dataflow.std.data.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.std.data.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.StringSerializerDeserializer;
 
 public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";

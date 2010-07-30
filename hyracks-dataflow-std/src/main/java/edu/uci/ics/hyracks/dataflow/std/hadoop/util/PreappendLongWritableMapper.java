@@ -21,7 +21,7 @@ import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.IMapper;
+import edu.uci.ics.hyracks.dataflow.std.map.IMapper;
 
 public class PreappendLongWritableMapper implements IMapper {
 

@@ -18,7 +18,7 @@ import org.apache.hadoop.io.RawComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.util.ReflectionUtils;
+import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class KeyBinaryComparatorFactory<T> implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
