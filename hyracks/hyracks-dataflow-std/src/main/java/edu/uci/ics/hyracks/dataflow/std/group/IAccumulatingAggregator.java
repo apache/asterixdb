@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 public interface IAccumulatingAggregator {
     /**

@@ -18,8 +18,6 @@ import java.util.Random;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.IMapper;
-import edu.uci.ics.hyracks.dataflow.std.IMapperFactory;
 
 public class SamplerMapFactory implements IMapperFactory {
     private static final long serialVersionUID = 1L;

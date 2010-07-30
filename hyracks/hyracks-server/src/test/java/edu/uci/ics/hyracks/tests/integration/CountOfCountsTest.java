@@ -29,21 +29,21 @@ import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.FieldHashPartitionComputerFactory;
-import edu.uci.ics.hyracks.dataflow.std.InMemorySortOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.MToNHashPartitioningConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.MToNReplicatingConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.PrinterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.StringBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.StringComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.hash.StringBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.SumStringGroupAggregator;
-import edu.uci.ics.hyracks.dataflow.std.data.StringBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.data.StringBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.dataflow.std.data.StringComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.data.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNReplicatingConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.CSVFileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 
 public class CountOfCountsTest extends AbstractIntegrationTest {
     @Test

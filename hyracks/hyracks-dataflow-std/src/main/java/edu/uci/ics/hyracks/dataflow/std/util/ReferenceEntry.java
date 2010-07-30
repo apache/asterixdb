@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.util;
 
-import edu.uci.ics.hyracks.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ReferenceEntry {
     private final int runid;

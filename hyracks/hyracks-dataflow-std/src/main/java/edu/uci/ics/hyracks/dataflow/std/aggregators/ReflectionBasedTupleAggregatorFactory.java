@@ -15,8 +15,6 @@
 package edu.uci.ics.hyracks.dataflow.std.aggregators;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.ITupleAggregator;
-import edu.uci.ics.hyracks.dataflow.std.ITupleAggregatorFactory;
 
 public class ReflectionBasedTupleAggregatorFactory implements
         ITupleAggregatorFactory {

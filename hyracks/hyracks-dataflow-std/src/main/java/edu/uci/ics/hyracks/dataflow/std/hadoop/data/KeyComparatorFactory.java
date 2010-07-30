@@ -18,7 +18,7 @@ import org.apache.hadoop.io.RawComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
-import edu.uci.ics.hyracks.util.ReflectionUtils;
+import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class KeyComparatorFactory<T> implements IComparatorFactory<T> {
     private static final long serialVersionUID = 1L;
