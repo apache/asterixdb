@@ -56,7 +56,6 @@
             <configuration>
               <descriptors>
                 <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
-                <descriptor>src/main/assembly/source-assembly.xml</descriptor>
               </descriptors>
             </configuration>
             <phase>package</phase>
