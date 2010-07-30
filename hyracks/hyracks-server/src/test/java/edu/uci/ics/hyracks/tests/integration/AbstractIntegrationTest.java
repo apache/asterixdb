@@ -24,10 +24,10 @@ import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.config.CCConfig;
-import edu.uci.ics.hyracks.config.NCConfig;
-import edu.uci.ics.hyracks.controller.clustercontroller.ClusterControllerService;
-import edu.uci.ics.hyracks.controller.nodecontroller.NodeControllerService;
+import edu.uci.ics.hyracks.control.cc.CCConfig;
+import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.nc.NCConfig;
+import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {
     public static final String NC1_ID = "nc1";

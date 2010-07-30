@@ -30,11 +30,11 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.driver.CCDriver</mainClass>
+                  <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
                   <name>hyrackscc</name>
                 </program>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.driver.NCDriver</mainClass>
+                  <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
                   <name>hyracksnc</name>
                 </program>
               </programs>
