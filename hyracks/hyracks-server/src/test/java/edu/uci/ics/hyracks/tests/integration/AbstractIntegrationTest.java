@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.CCConfig;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.nc.NCConfig;
+import edu.uci.ics.hyracks.control.common.api.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {

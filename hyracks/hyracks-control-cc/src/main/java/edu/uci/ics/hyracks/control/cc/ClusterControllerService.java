@@ -60,9 +60,10 @@ import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.NodeParameters;
+import edu.uci.ics.hyracks.control.common.api.IClusterController;
+import edu.uci.ics.hyracks.control.common.api.INodeController;
 import edu.uci.ics.hyracks.control.common.comm.Endpoint;
 import edu.uci.ics.hyracks.control.common.job.JobPlan;
-import edu.uci.ics.hyracks.control.nc.INodeController;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController {
     private static final long serialVersionUID = 1L;
