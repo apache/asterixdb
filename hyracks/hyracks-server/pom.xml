@@ -84,14 +84,14 @@
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-runtime</artifactId>
+  		<artifactId>hyracks-control-cc</artifactId>
   		<version>0.1.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-control-cc</artifactId>
+  		<artifactId>hyracks-control-nc</artifactId>
   		<version>0.1.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
