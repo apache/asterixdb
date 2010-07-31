@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc;
+package edu.uci.ics.hyracks.control.common.api;
 
 import java.rmi.Remote;
 import java.util.Map;
@@ -22,7 +22,6 @@ import java.util.UUID;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
-import edu.uci.ics.hyracks.control.cc.IClusterController;
 import edu.uci.ics.hyracks.control.common.NodeCapability;
 import edu.uci.ics.hyracks.control.common.comm.Endpoint;
 import edu.uci.ics.hyracks.control.common.job.JobPlan;
