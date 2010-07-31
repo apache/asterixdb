@@ -10,7 +10,8 @@
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
     <module>hyracks-control-common</module>
-    <module>hyracks-runtime</module>
+    <module>hyracks-control-cc</module>
+    <module>hyracks-control-nc</module>
     <module>hyracks-server</module>
   </modules>
 </project>
