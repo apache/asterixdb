@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.EnumSet;
 import java.util.Map;
@@ -25,15 +26,13 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 public interface IHyracksClientConnection {
-    public void createApplication(String appName) throws Exception;
-
-    public void startApplication(String appName) throws Exception;
+    public void createApplication(String appName, File harFile) throws Exception;
 
     public void destroyApplication(String appName) throws Exception;
 
-    public UUID createJob(JobSpecification jobSpec) throws Exception;
+    public UUID createJob(String appName, JobSpecification jobSpec) throws Exception;
 
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     public JobStatus getJobStatus(UUID jobId) throws Exception;
 

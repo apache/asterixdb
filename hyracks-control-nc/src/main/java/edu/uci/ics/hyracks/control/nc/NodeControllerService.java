@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.rmi.registry.LocateRegistry;
@@ -21,6 +24,7 @@ import java.rmi.registry.Registry;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,10 +38,22 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.control.IClusterController;
+import edu.uci.ics.hyracks.api.control.INodeController;
+import edu.uci.ics.hyracks.api.control.NCConfig;
+import edu.uci.ics.hyracks.api.control.NodeCapability;
+import edu.uci.ics.hyracks.api.control.NodeParameters;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.Direction;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
@@ -51,17 +67,14 @@ import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
-import edu.uci.ics.hyracks.control.common.NodeCapability;
-import edu.uci.ics.hyracks.control.common.NodeParameters;
-import edu.uci.ics.hyracks.control.common.api.IClusterController;
-import edu.uci.ics.hyracks.control.common.api.INodeController;
-import edu.uci.ics.hyracks.control.common.api.NCConfig;
-import edu.uci.ics.hyracks.control.common.comm.Endpoint;
-import edu.uci.ics.hyracks.control.common.job.JobPlan;
+import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.nc.comm.ConnectionManager;
 import edu.uci.ics.hyracks.control.nc.comm.DemuxDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
@@ -90,6 +103,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private NodeParameters nodeParameters;
 
+    private final ServerContext serverCtx;
+
+    private final Map<String, ApplicationContext> applications;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -102,6 +119,9 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         jobletMap = new HashMap<UUID, Joblet>();
         executor = Executors.newCachedThreadPool();
         timer = new Timer(true);
+        serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
+                NodeControllerService.class.getName()), id));
+        applications = new Hashtable<String, ApplicationContext>();
     }
 
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
@@ -165,11 +185,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(UUID jobId, final JobPlan plan, UUID stageId,
-            int attempt, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
-            throws Exception {
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, byte[] planBytes,
+            UUID stageId, int attempt, Map<ActivityNodeId, Set<Integer>> tasks,
+            Map<OperatorDescriptorId, Set<Integer>> opPartitions) throws Exception {
         try {
             LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
+
+            ApplicationContext appCtx = applications.get(appName);
+            final JobPlan plan = (JobPlan) appCtx.deserialize(planBytes);
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -248,8 +271,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             final int receiverIndex, JobPlan plan, final Stagelet stagelet, int nProducerCount, int nConsumerCount)
             throws HyracksDataException {
         final IFrameReader reader = conn.createReceiveSideReader(ctx, plan.getJobSpecification()
-                .getConnectorRecordDescriptor(conn), demux, receiverIndex, nProducerCount,
-                nConsumerCount);
+                .getConnectorRecordDescriptor(conn), demux, receiverIndex, nProducerCount, nConsumerCount);
 
         return plan.getJobFlags().contains(JobFlag.COLLECT_FRAME_COUNTS) ? new IFrameReader() {
             private int frameCount;
@@ -281,11 +303,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void initializeJobletPhase2(UUID jobId, final JobPlan plan, UUID stageId,
+    public void initializeJobletPhase2(String appName, UUID jobId, byte[] planBytes, UUID stageId,
             Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
             final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
         try {
             LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
+            ApplicationContext appCtx = applications.get(appName);
+            final JobPlan plan = (JobPlan) appCtx.deserialize(planBytes);
+
             final Joblet ji = getLocalJoblet(jobId);
             Stagelet si = (Stagelet) ji.getStagelet(stageId);
             final Map<OperatorInstanceId, OperatorRunnable> honMap = si.getOperatorMap();
@@ -326,8 +351,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 }
                             };
                             or.setFrameWriter(j, conn.createSendSideWriter(ctx, plan.getJobSpecification()
-                                    .getConnectorRecordDescriptor(conn), edwFactory, i,
-                                    opPartitions.get(producerOpId).size(), opPartitions.get(consumerOpId).size()), spec
+                                    .getConnectorRecordDescriptor(conn), edwFactory, i, opPartitions.get(producerOpId)
+                                    .size(), opPartitions.get(consumerOpId).size()), spec
                                     .getConnectorRecordDescriptor(conn));
                         }
                     }
@@ -412,11 +437,21 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, StageletStatistics stats) throws Exception {
-        ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
+        try {
+            ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public void notifyStageFailed(UUID jobId, UUID stageId, int attempt) throws Exception {
-        ccs.notifyStageletFailure(jobId, stageId, attempt, id);
+        try {
+            ccs.notifyStageletFailure(jobId, stageId, attempt, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
@@ -455,6 +490,41 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 stagelet.abort();
                 connectionManager.abortConnections(jobId, stageId);
             }
+        }
+    }
+
+    @Override
+    public void createApplication(String appName, boolean deployHar) throws Exception {
+        ApplicationContext appCtx;
+        synchronized (applications) {
+            if (applications.containsKey(appName)) {
+                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
+            }
+            appCtx = new ApplicationContext(serverCtx, appName);
+            applications.put(appName, appCtx);
+        }
+        if (deployHar) {
+            HttpClient hc = new DefaultHttpClient();
+            HttpGet get = new HttpGet("http://" + ncConfig.ccHost + ":"
+                    + nodeParameters.getClusterControllerInfo().getWebPort() + "/applications/" + appName);
+            HttpResponse response = hc.execute(get);
+            InputStream is = response.getEntity().getContent();
+            OutputStream os = appCtx.getHarOutputStream();
+            try {
+                IOUtils.copyLarge(is, os);
+            } finally {
+                os.close();
+                is.close();
+            }
+        }
+        appCtx.initialize();
+    }
+
+    @Override
+    public void destroyApplication(String appName) throws Exception {
+        ApplicationContext appCtx = applications.remove(appName);
+        if (appCtx != null) {
+            appCtx.deinitialize();
         }
     }
 }

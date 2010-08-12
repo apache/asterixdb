@@ -21,20 +21,19 @@ import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 public interface IHyracksClientInterface extends Remote {
+    public ClusterControllerInfo getClusterControllerInfo() throws Exception;
+
     public void createApplication(String appName) throws Exception;
 
     public void startApplication(String appName) throws Exception;
 
     public void destroyApplication(String appName) throws Exception;
 
-    public UUID createJob(JobSpecification jobSpec) throws Exception;
-
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public UUID createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     public JobStatus getJobStatus(UUID jobId) throws Exception;
 

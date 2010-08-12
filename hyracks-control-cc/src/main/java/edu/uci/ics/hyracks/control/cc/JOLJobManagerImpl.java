@@ -36,6 +36,7 @@ import jol.types.table.EventTable;
 import jol.types.table.Function;
 import jol.types.table.Key;
 import jol.types.table.TableName;
+import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ChoiceLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
@@ -52,13 +53,12 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
-import edu.uci.ics.hyracks.control.common.comm.Endpoint;
-import edu.uci.ics.hyracks.control.common.job.JobPlan;
 
 public class JOLJobManagerImpl implements IJobManager {
     private static final Logger LOGGER = Logger.getLogger(JOLJobManagerImpl.class.getName());
@@ -194,8 +194,9 @@ public class JOLJobManagerImpl implements IJobManager {
                                 UUID jobId = (UUID) data[0];
                                 UUID stageId = (UUID) data[1];
                                 Integer attempt = (Integer) data[2];
-                                JobPlan plan = (JobPlan) data[3];
-                                Set<List> ts = (Set<List>) data[4];
+                                String appName = (String) data[3];
+                                JobPlan plan = (JobPlan) data[4];
+                                Set<List> ts = (Set<List>) data[5];
                                 Map<OperatorDescriptorId, Set<Integer>> opPartitions = new HashMap<OperatorDescriptorId, Set<Integer>>();
                                 for (List t2 : ts) {
                                     Object[] t2Data = t2.toArray();
@@ -229,7 +230,7 @@ public class JOLJobManagerImpl implements IJobManager {
                                         aParts.add((Integer) lData[1]);
                                     }
                                     p1is[i++] = new ClusterControllerService.Phase1Installer((String) t2Data[0], jobId,
-                                            plan, stageId, attempt, tasks, opPartitions);
+                                            appName, plan, stageId, attempt, tasks, opPartitions);
                                 }
                                 LOGGER.info("Stage start - Phase 1");
                                 Map<PortInstanceId, Endpoint> globalPortMap = ccs.runRemote(p1is,
@@ -257,7 +258,7 @@ public class JOLJobManagerImpl implements IJobManager {
                                         aParts.add((Integer) lData[1]);
                                     }
                                     p2is[i] = new ClusterControllerService.Phase2Installer((String) t2Data[0], jobId,
-                                            plan, stageId, tasks, opPartitions, globalPortMap);
+                                            appName, plan, stageId, tasks, opPartitions, globalPortMap);
                                     p3is[i] = new ClusterControllerService.Phase3Installer((String) t2Data[0], jobId,
                                             stageId);
                                     ss[i] = new ClusterControllerService.StageStarter((String) t2Data[0], jobId,
@@ -368,7 +369,7 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         final UUID jobId = UUID.randomUUID();
 
         final JobPlanBuilder builder = new JobPlanBuilder();
@@ -420,7 +421,8 @@ public class JOLJobManagerImpl implements IJobManager {
             cdTuples.add(ConnectorDescriptorTable.createTuple(jobId, jobSpec, e.getValue()));
         }
 
-        BasicTupleSet jobTuples = new BasicTupleSet(JobTable.createInitialJobTuple(jobId, jobSpec, builder.getPlan()));
+        BasicTupleSet jobTuples = new BasicTupleSet(JobTable.createInitialJobTuple(jobId, appName, jobSpec,
+                builder.getPlan()));
 
         jolRuntime.schedule(JOL_SCOPE, JobTable.TABLE_NAME, jobTuples, null);
         jolRuntime.schedule(JOL_SCOPE, OperatorDescriptorTable.TABLE_NAME, odTuples, null);
@@ -481,7 +483,7 @@ public class JOLJobManagerImpl implements IJobManager {
                 if (jobTuple == null) {
                     return null;
                 }
-                return (JobStatus) jobTuple.value(1);
+                return (JobStatus) jobTuple.value(JobTable.JOBSTATUS_FIELD_INDEX);
             } catch (BadKeyException e) {
                 throw new RuntimeException(e);
             }
@@ -583,7 +585,8 @@ public class JOLJobManagerImpl implements IJobManager {
     public JobStatistics waitForCompletion(UUID jobId) throws Exception {
         synchronized (jobTable) {
             Tuple jobTuple = null;
-            while ((jobTuple = jobTable.lookupJob(jobId)) != null && jobTuple.value(1) != JobStatus.TERMINATED) {
+            while ((jobTuple = jobTable.lookupJob(jobId)) != null
+                    && jobTuple.value(JobTable.JOBSTATUS_FIELD_INDEX) != JobStatus.TERMINATED) {
                 jobTable.wait();
             }
             return jobTuple == null ? null : jobTable.buildJobStatistics(jobTuple);
@@ -599,21 +602,29 @@ public class JOLJobManagerImpl implements IJobManager {
         private static Key PRIMARY_KEY = new Key(0);
 
         @SuppressWarnings("unchecked")
-        private static final Class[] SCHEMA = new Class[] { UUID.class, JobStatus.class, JobSpecification.class,
-                JobPlan.class, Set.class };
+        private static final Class[] SCHEMA = new Class[] { UUID.class, String.class, JobStatus.class,
+                JobSpecification.class, JobPlan.class, Set.class };
+
+        public static final int JOBID_FIELD_INDEX = 0;
+        public static final int APPNAME_FIELD_INDEX = 1;
+        public static final int JOBSTATUS_FIELD_INDEX = 2;
+        public static final int JOBSPEC_FIELD_INDEX = 3;
+        public static final int JOBPLAN_FIELD_INDEX = 4;
+        public static final int STATISTICS_FIELD_INDEX = 5;
 
         public JobTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
         @SuppressWarnings("unchecked")
-        static Tuple createInitialJobTuple(UUID jobId, JobSpecification jobSpec, JobPlan plan) {
-            return new Tuple(jobId, JobStatus.INITIALIZED, jobSpec, plan, new HashSet());
+        static Tuple createInitialJobTuple(UUID jobId, String appName, JobSpecification jobSpec, JobPlan plan) {
+            return new Tuple(jobId, appName, JobStatus.INITIALIZED, jobSpec, plan, new HashSet());
         }
 
         @SuppressWarnings("unchecked")
         JobStatistics buildJobStatistics(Tuple jobTuple) {
-            Set<Set<StageletStatistics>> statsSet = (Set<Set<StageletStatistics>>) jobTuple.value(4);
+            Set<Set<StageletStatistics>> statsSet = (Set<Set<StageletStatistics>>) jobTuple
+                    .value(JobTable.STATISTICS_FIELD_INDEX);
             JobStatistics stats = new JobStatistics();
             if (statsSet != null) {
                 for (Set<StageletStatistics> stageStatsSet : statsSet) {
@@ -822,8 +833,8 @@ public class JOLJobManagerImpl implements IJobManager {
         private static Key PRIMARY_KEY = new Key(0, 1, 2);
 
         @SuppressWarnings("unchecked")
-        private static final Class[] SCHEMA = new Class[] { UUID.class, UUID.class, Integer.class, JobPlan.class,
-                Set.class };
+        private static final Class[] SCHEMA = new Class[] { UUID.class, UUID.class, Integer.class, String.class,
+                JobPlan.class, Set.class };
 
         public StartMessageTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
@@ -1010,6 +1021,11 @@ public class JOLJobManagerImpl implements IJobManager {
         private static final Class[] SCHEMA = new Class[] { UUID.class, OperatorDescriptorId.class, Integer.class,
                 Integer.class };
 
+        public static final int JOBID_FIELD_INDEX = 0;
+        public static final int ODID_FIELD_INDEX = 1;
+        public static final int NPARTITIONS_FIELD_INDEX = 2;
+        public static final int ORDINAL_FIELD_INDEX = 3;
+
         public ExpandPartitionCountConstraintTableFunction() {
             super(TABLE_NAME, SCHEMA);
         }
@@ -1019,9 +1035,9 @@ public class JOLJobManagerImpl implements IJobManager {
             TupleSet result = new BasicTupleSet();
             int counter = 0;
             for (Tuple t : tuples) {
-                int nPartitions = (Integer) t.value(2);
+                int nPartitions = (Integer) t.value(NPARTITIONS_FIELD_INDEX);
                 for (int i = 0; i < nPartitions; ++i) {
-                    result.add(new Tuple(t.value(0), t.value(1), i, counter++));
+                    result.add(new Tuple(t.value(JOBID_FIELD_INDEX), t.value(ODID_FIELD_INDEX), i, counter++));
                 }
             }
             return result;

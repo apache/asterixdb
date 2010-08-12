@@ -14,7 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.cc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
@@ -22,6 +27,7 @@ import java.rmi.registry.Registry;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,29 +49,36 @@ import javax.servlet.http.HttpServletResponse;
 import jol.core.Runtime;
 import jol.core.Runtime.DebugLevel;
 
+import org.apache.commons.io.IOUtils;
+import org.eclipse.jetty.http.HttpMethods;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
+import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
+import edu.uci.ics.hyracks.api.comm.Endpoint;
+import edu.uci.ics.hyracks.api.control.IClusterController;
+import edu.uci.ics.hyracks.api.control.INodeController;
+import edu.uci.ics.hyracks.api.control.NodeParameters;
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
-import edu.uci.ics.hyracks.control.common.NodeParameters;
-import edu.uci.ics.hyracks.control.common.api.IClusterController;
-import edu.uci.ics.hyracks.control.common.api.INodeController;
-import edu.uci.ics.hyracks.control.common.comm.Endpoint;
-import edu.uci.ics.hyracks.control.common.job.JobPlan;
+import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.common.context.ServerContext;
 
-public class ClusterControllerService extends AbstractRemoteService implements IClusterController {
+public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
+        IHyracksClientInterface {
     private static final long serialVersionUID = 1L;
 
     private CCConfig ccConfig;
@@ -74,7 +87,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final Map<String, NodeControllerState> nodeRegistry;
 
+    private final Map<String, ApplicationContext> applications;
+
+    private final ServerContext serverCtx;
+
     private WebServer webServer;
+
+    private ClusterControllerInfo info;
 
     private final IJobManager jobManager;
 
@@ -87,11 +106,16 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
+        applications = new Hashtable<String, ApplicationContext>();
+        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(
+                ClusterControllerService.class.getName()));
         Set<DebugLevel> jolDebugLevel = LOGGER.isLoggable(Level.FINE) ? Runtime.DEBUG_ALL : new HashSet<DebugLevel>();
         jolRuntime = (Runtime) Runtime.create(jolDebugLevel, System.err);
         jobManager = new JOLJobManagerImpl(this, jolRuntime);
         taskExecutor = Executors.newCachedThreadPool();
-        webServer = new WebServer(new Handler[] { getAdminConsoleHandler(), getApplicationDataHandler() });
+        webServer = new WebServer();
+        webServer.addHandler(getAdminConsoleHandler());
+        webServer.addHandler(getApplicationInstallationHandler());
         this.timer = new Timer(true);
     }
 
@@ -103,6 +127,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
+        info = new ClusterControllerInfo();
+        info.setWebPort(webServer.getListeningPort());
         timer.schedule(new DeadNodeSweeper(), 0, ccConfig.heartbeatPeriod);
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
@@ -115,13 +141,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public UUID createJob(JobSpecification jobSpec) throws Exception {
-        return jobManager.createJob(jobSpec, EnumSet.noneOf(JobFlag.class));
-    }
-
-    @Override
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        return jobManager.createJob(jobSpec, jobFlags);
+    public UUID createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+        ApplicationContext appCtx = applications.get(appName);
+        if (appCtx == null) {
+            throw new HyracksException("No application with id " + appName + " found");
+        }
+        return jobManager.createJob(appName, (JobSpecification) appCtx.deserialize(jobSpec), jobFlags);
     }
 
     @Override
@@ -138,6 +163,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         jobManager.registerNode(id);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
+        params.setClusterControllerInfo(info);
         params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
         return params;
     }
@@ -237,12 +263,54 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return handler;
     }
 
-    private Handler getApplicationDataHandler() {
+    private Handler getApplicationInstallationHandler() {
         ContextHandler handler = new ContextHandler("/applications");
         handler.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest, HttpServletRequest request,
                     HttpServletResponse response) throws IOException, ServletException {
+                try {
+                    while (target.startsWith("/")) {
+                        target = target.substring(1);
+                    }
+                    while (target.endsWith("/")) {
+                        target = target.substring(0, target.length() - 1);
+                    }
+                    String[] parts = target.split("/");
+                    if (parts.length != 1) {
+                        return;
+                    }
+                    String appName = parts[0];
+                    ApplicationContext appCtx;
+                    appCtx = applications.get(appName);
+                    if (appCtx != null) {
+                        if (HttpMethods.PUT.equals(request.getMethod())) {
+                            OutputStream os = appCtx.getHarOutputStream();
+                            try {
+                                IOUtils.copyLarge(request.getInputStream(), os);
+                            } finally {
+                                os.close();
+                            }
+                        } else if (HttpMethods.GET.equals(request.getMethod())) {
+                            if (!appCtx.containsHar()) {
+                                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            } else {
+                                InputStream is = appCtx.getHarInputStream();
+                                response.setContentType("application/octet-stream");
+                                response.setStatus(HttpServletResponse.SC_OK);
+                                try {
+                                    IOUtils.copyLarge(is, response.getOutputStream());
+                                } finally {
+                                    is.close();
+                                }
+                            }
+                        }
+                        baseRequest.setHandled(true);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw e;
+                }
             }
         });
         return handler;
@@ -272,6 +340,47 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     private void killNode(String nodeId) throws Exception {
         nodeRegistry.remove(nodeId);
         jobManager.notifyNodeFailure(nodeId);
+    }
+
+    @Override
+    public void createApplication(String appName) throws Exception {
+        synchronized (applications) {
+            if (applications.containsKey(appName)) {
+                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
+            }
+            ApplicationContext appCtx = new ApplicationContext(serverCtx, appName);
+            applications.put(appName, appCtx);
+        }
+    }
+
+    @Override
+    public void destroyApplication(String appName) throws Exception {
+        ApplicationContext appCtx = applications.remove(appName);
+        if (appCtx != null) {
+            synchronized (this) {
+                for (NodeControllerState ncs : nodeRegistry.values()) {
+                    ncs.getNodeController().destroyApplication(appName);
+                }
+            }
+            appCtx.deinitialize();
+        }
+    }
+
+    @Override
+    public void startApplication(String appName) throws Exception {
+        ApplicationContext appCtx = applications.get(appName);
+        appCtx.initialize();
+        boolean deployHar = appCtx.containsHar();
+        synchronized (this) {
+            for (NodeControllerState ncs : nodeRegistry.values()) {
+                ncs.getNodeController().createApplication(appName, deployHar);
+            }
+        }
+    }
+
+    @Override
+    public ClusterControllerInfo getClusterControllerInfo() throws Exception {
+        return info;
     }
 
     private class DeadNodeSweeper extends TimerTask {
@@ -346,19 +455,28 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return accumulator == null ? null : accumulator.getResult();
     }
 
+    private static byte[] serialize(Object o) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(o);
+        return baos.toByteArray();
+    }
+
     static class Phase1Installer implements RemoteOp<Map<PortInstanceId, Endpoint>> {
         private String nodeId;
         private UUID jobId;
+        private String appName;
         private JobPlan plan;
         private UUID stageId;
         private int attempt;
         private Map<ActivityNodeId, Set<Integer>> tasks;
         private Map<OperatorDescriptorId, Set<Integer>> opPartitions;
 
-        public Phase1Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId, int attempt,
+        public Phase1Installer(String nodeId, UUID jobId, String appName, JobPlan plan, UUID stageId, int attempt,
                 Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions) {
             this.nodeId = nodeId;
             this.jobId = jobId;
+            this.appName = appName;
             this.plan = plan;
             this.stageId = stageId;
             this.attempt = attempt;
@@ -368,7 +486,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
         @Override
         public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
-            return node.initializeJobletPhase1(jobId, plan, stageId, attempt, tasks, opPartitions);
+            return node.initializeJobletPhase1(appName, jobId, serialize(plan), stageId, attempt, tasks, opPartitions);
         }
 
         @Override
@@ -385,17 +503,19 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     static class Phase2Installer implements RemoteOp<Void> {
         private String nodeId;
         private UUID jobId;
+        private String appName;
         private JobPlan plan;
         private UUID stageId;
         private Map<ActivityNodeId, Set<Integer>> tasks;
         private Map<OperatorDescriptorId, Set<Integer>> opPartitions;
         private Map<PortInstanceId, Endpoint> globalPortMap;
 
-        public Phase2Installer(String nodeId, UUID jobId, JobPlan plan, UUID stageId,
+        public Phase2Installer(String nodeId, UUID jobId, String appName, JobPlan plan, UUID stageId,
                 Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
                 Map<PortInstanceId, Endpoint> globalPortMap) {
             this.nodeId = nodeId;
             this.jobId = jobId;
+            this.appName = appName;
             this.plan = plan;
             this.stageId = stageId;
             this.tasks = tasks;
@@ -405,7 +525,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
         @Override
         public Void execute(INodeController node) throws Exception {
-            node.initializeJobletPhase2(jobId, plan, stageId, tasks, opPartitions, globalPortMap);
+            node.initializeJobletPhase2(appName, jobId, serialize(plan), stageId, tasks, opPartitions, globalPortMap);
             return null;
         }
 
@@ -543,20 +663,5 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         public Map<PortInstanceId, Endpoint> getResult() {
             return portMap;
         }
-    }
-
-    @Override
-    public void createApplication(String appName) throws Exception {
-
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-
-    }
-
-    @Override
-    public void startApplication(String appName) throws Exception {
-
     }
 }

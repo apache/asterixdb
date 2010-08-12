@@ -20,8 +20,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public final class HyracksRMIConnection extends AbstractHyracksConnection {
-    public HyracksRMIConnection(String host, int port) throws RemoteException, NotBoundException {
-        super(lookupHCI(host, port));
+    public HyracksRMIConnection(String host, int port) throws Exception {
+        super(host, lookupHCI(host, port));
     }
 
     private static IHyracksClientInterface lookupHCI(String host, int port) throws RemoteException, NotBoundException {

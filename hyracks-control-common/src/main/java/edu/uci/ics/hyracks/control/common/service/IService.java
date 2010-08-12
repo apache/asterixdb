@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.common.service;
 
+public interface IService {
+    public void start() throws Exception;
 
-public interface IService extends ILifeCycle {
+    public void stop() throws Exception;
 }

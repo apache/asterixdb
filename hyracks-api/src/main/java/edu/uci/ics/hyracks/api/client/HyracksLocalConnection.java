@@ -15,7 +15,7 @@
 package edu.uci.ics.hyracks.api.client;
 
 public final class HyracksLocalConnection extends AbstractHyracksConnection {
-    public HyracksLocalConnection(IHyracksClientInterface hci) {
-        super(hci);
+    public HyracksLocalConnection(IHyracksClientInterface hci) throws Exception {
+        super("localhost", hci);
     }
 }

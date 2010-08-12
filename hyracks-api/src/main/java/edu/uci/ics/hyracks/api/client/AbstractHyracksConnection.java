@@ -14,30 +14,53 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 abstract class AbstractHyracksConnection implements IHyracksClientConnection {
-    private IHyracksClientInterface hci;
+    private final String ccHost;
 
-    public AbstractHyracksConnection(IHyracksClientInterface hci) {
+    private final IHyracksClientInterface hci;
+
+    private final ClusterControllerInfo ccInfo;
+
+    public AbstractHyracksConnection(String ccHost, IHyracksClientInterface hci) throws Exception {
+        this.ccHost = ccHost;
         this.hci = hci;
+        ccInfo = hci.getClusterControllerInfo();
     }
 
     @Override
-    public void createApplication(String appName) throws Exception {
+    public void createApplication(String appName, File harFile) throws Exception {
         hci.createApplication(appName);
-    }
-
-    @Override
-    public void startApplication(String appName) throws Exception {
+        if (harFile != null) {
+            HttpClient hc = new DefaultHttpClient();
+            HttpPut put = new HttpPut("http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/" + appName);
+            put.setEntity(new FileEntity(harFile, "application/octet-stream"));
+            HttpResponse response = hc.execute(put);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                hci.destroyApplication(appName);
+                throw new HyracksException(response.getStatusLine().toString());
+            }
+        }
         hci.startApplication(appName);
     }
 
@@ -47,13 +70,20 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public UUID createJob(JobSpecification jobSpec) throws Exception {
-        return hci.createJob(jobSpec);
+    public UUID createJob(String appName, JobSpecification jobSpec) throws Exception {
+        return createJob(appName, jobSpec, EnumSet.noneOf(JobFlag.class));
     }
 
     @Override
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.createJob(jobSpec, jobFlags);
+    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+        return hci.createJob(appName, serialize(jobSpec), jobFlags);
+    }
+
+    private byte[] serialize(JobSpecification jobSpec) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(jobSpec);
+        return baos.toByteArray();
     }
 
     @Override

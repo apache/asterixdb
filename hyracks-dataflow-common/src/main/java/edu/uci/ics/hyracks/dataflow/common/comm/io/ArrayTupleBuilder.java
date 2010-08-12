@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.common.comm.io;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -49,7 +50,7 @@ public class ArrayTupleBuilder {
         return baaos.size();
     }
 
-    public void addField(FrameTupleAccessor accessor, int tIndex, int fIndex) throws HyracksDataException {
+    public void addField(IFrameTupleAccessor accessor, int tIndex, int fIndex) throws HyracksDataException {
         int startOffset = accessor.getTupleStartOffset(tIndex);
         int fStartOffset = accessor.getFieldStartOffset(tIndex, fIndex);
         int fLen = accessor.getFieldEndOffset(tIndex, fIndex) - fStartOffset;

@@ -18,26 +18,31 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class WebServer {
-    private Server server;
-    private SelectChannelConnector connector;
+    private final Server server;
+    private final SelectChannelConnector connector;
+    private final HandlerCollection handlerCollection;
 
-    public WebServer(Handler[] handlers) throws Exception {
+    public WebServer() throws Exception {
         server = new Server();
 
         connector = new SelectChannelConnector();
 
         server.setConnectors(new Connector[] { connector });
 
-        ContextHandlerCollection handler = new ContextHandlerCollection();
-        handler.setHandlers(handlers);
-        server.setHandler(handler);
+        handlerCollection = new ContextHandlerCollection();
+        server.setHandler(handlerCollection);
     }
 
     public void setPort(int port) {
         connector.setPort(port);
+    }
+
+    public int getListeningPort() {
+        return connector.getLocalPort();
     }
 
     public void start() throws Exception {
@@ -46,5 +51,9 @@ public class WebServer {
 
     public void stop() throws Exception {
         server.stop();
+    }
+
+    public void addHandler(Handler handler) {
+        handlerCollection.addHandler(handler);
     }
 }
