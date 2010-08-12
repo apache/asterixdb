@@ -24,12 +24,12 @@ import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
 public interface IJobManager {
-    public UUID createJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     public void start(UUID jobId) throws Exception;
 
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-        StageletStatistics statistics) throws Exception;
+            StageletStatistics statistics) throws Exception;
 
     public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 

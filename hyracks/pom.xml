@@ -13,5 +13,7 @@
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-server</module>
+    <module>hyracks-cli</module>
+    <module>hyracks-examples</module>
   </modules>
 </project>

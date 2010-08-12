@@ -25,20 +25,6 @@
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>org.eclipse.jetty</groupId>
-  		<artifactId>jetty-server</artifactId>
-  		<version>8.0.0.M0</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
-  		<groupId>args4j</groupId>
-  		<artifactId>args4j</artifactId>
-  		<version>2.0.12</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
   		<groupId>org.apache.wicket</groupId>
   		<artifactId>wicket</artifactId>
   		<version>1.4.7</version>
@@ -49,6 +35,13 @@
   		<groupId>jol</groupId>
   		<artifactId>jol</artifactId>
   		<version>1.0.0</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.eclipse.jetty</groupId>
+  		<artifactId>jetty-server</artifactId>
+  		<version>8.0.0.M1</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

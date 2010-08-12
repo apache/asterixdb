@@ -35,7 +35,7 @@ public class Joblet {
 
     private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
 
-    public Joblet(NodeControllerService nodeController, UUID jobId) throws Exception {
+    public Joblet(NodeControllerService nodeController, UUID jobId) {
         this.nodeController = nodeController;
         this.jobId = jobId;
         stageletMap = new HashMap<UUID, Stagelet>();
@@ -87,14 +87,15 @@ public class Joblet {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletStatistics stats) throws Exception {
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletStatistics stats)
+            throws Exception {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
 
     public void notifyStageletFailed(UUID stageId, int attempt) throws Exception {
         stageletMap.remove(stageId);
-        nodeController.notifyStageFailed(jobId, stageId, attempt);        
+        nodeController.notifyStageFailed(jobId, stageId, attempt);
     }
 
     public NodeControllerService getNodeController() {

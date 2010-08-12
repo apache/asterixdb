@@ -22,11 +22,11 @@ import org.junit.BeforeClass;
 
 import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.control.NCConfig;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.CCConfig;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.api.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {
@@ -63,6 +63,7 @@ public abstract class AbstractIntegrationTest {
         nc2.start();
 
         hcc = new HyracksLocalConnection(cc);
+        hcc.createApplication("test", null);
     }
 
     @AfterClass
@@ -73,7 +74,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     void runTest(JobSpecification spec) throws Exception {
-        UUID jobId = hcc.createJob(spec, EnumSet.of(JobFlag.COLLECT_FRAME_COUNTS));
+        UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.COLLECT_FRAME_COUNTS));
         System.err.println(spec.toJSON());
         hcc.start(jobId);
         System.err.print(jobId);
