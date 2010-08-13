@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.hadoop;
+package edu.uci.ics.hyracks.dataflow.hadoop;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +37,11 @@ import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.std.file.AbstractFileWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IRecordWriter;
 import edu.uci.ics.hyracks.dataflow.std.file.RecordWriter;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.DatatypeHelper;
 
 
 

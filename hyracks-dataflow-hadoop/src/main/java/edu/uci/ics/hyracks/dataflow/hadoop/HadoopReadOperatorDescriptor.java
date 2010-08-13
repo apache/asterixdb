@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.hadoop;
+package edu.uci.ics.hyracks.dataflow.hadoop;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,10 +40,10 @@ import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.HadoopAdapter;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.HadoopFileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IRecordReader;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.DatatypeHelper;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.HadoopAdapter;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.HadoopFileSplit;
 
 public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperatorDescriptor {
 

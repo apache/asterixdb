@@ -9,6 +9,7 @@
     <module>hyracks-api</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
+    <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control-common</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>

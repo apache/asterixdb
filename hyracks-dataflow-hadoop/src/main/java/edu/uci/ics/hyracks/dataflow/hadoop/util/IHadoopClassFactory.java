@@ -12,19 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.hadoop.util;
+package edu.uci.ics.hyracks.dataflow.hadoop.util;
 
-import java.util.Properties;
+import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.map.IMapper;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.Reducer;
 
-public class DuplicateKeyMapper implements IMapper {
+public interface IHadoopClassFactory extends Serializable{
 
-    @Override
-    public void map(Object[] data, IDataWriter<Object[]> writer) throws HyracksDataException {
-        writer.writeData(new Object[] { data[0], data[1], data[0] });
-
-    }
+	public Mapper createMapper(String mapClassName) throws Exception;
+	
+	public Reducer createReducer(String reduceClassName) throws Exception;
+	
+	public Class loadClass(String className) throws Exception;
 }

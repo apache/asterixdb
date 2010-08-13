@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.hadoop;
+package edu.uci.ics.hyracks.dataflow.hadoop;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -39,14 +39,14 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.data.WritableComparingComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.ClasspathBasedHadoopClassFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
 import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperator;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.data.KeyComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.data.WritableComparingComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.ClasspathBasedHadoopClassFactory;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.DatatypeHelper;
-import edu.uci.ics.hyracks.dataflow.std.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHadoopOperatorDescriptor {
