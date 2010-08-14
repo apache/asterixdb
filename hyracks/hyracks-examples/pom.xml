@@ -7,5 +7,6 @@
 
   <modules>
     <module>tpch-example</module>
+    <module>hyracks-integration-tests</module>
   </modules>
 </project>
