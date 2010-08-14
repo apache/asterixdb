@@ -89,16 +89,16 @@ public class Main {
 
         CSVFileScanOperatorDescriptor ordScanner = new CSVFileScanOperatorDescriptor(spec, ordersSplits, ordersDesc,
                 '|', "'\"");
-        ordScanner.setPartitionConstraint(createRRPartitionConstraint(10));
+        ordScanner.setPartitionConstraint(createRRPartitionConstraint(2));
 
         CSVFileScanOperatorDescriptor custScanner = new CSVFileScanOperatorDescriptor(spec, custSplits, custDesc, '|',
                 "'\"");
-        custScanner.setPartitionConstraint(createRRPartitionConstraint(10));
+        custScanner.setPartitionConstraint(createRRPartitionConstraint(2));
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 0 },
                 new int[] { 1 }, new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 6000000);
-        join.setPartitionConstraint(new PartitionCountConstraint(40));
+        join.setPartitionConstraint(new PartitionCountConstraint(4));
 
         RecordDescriptor groupResultDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -108,10 +108,10 @@ public class Main {
                         new IBinaryHashFunctionFactory[] { StringBinaryHashFunctionFactory.INSTANCE }),
                 new IBinaryComparatorFactory[] { StringBinaryComparatorFactory.INSTANCE },
                 new CountAccumulatingAggregatorFactory(), groupResultDesc, 16);
-        gby.setPartitionConstraint(new PartitionCountConstraint(40));
+        gby.setPartitionConstraint(new PartitionCountConstraint(4));
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        printer.setPartitionConstraint(new PartitionCountConstraint(40));
+        printer.setPartitionConstraint(new PartitionCountConstraint(4));
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -136,32 +136,26 @@ public class Main {
     }
 
     private static FileSplit[] createOrdersFileSplits() {
-        FileSplit fss[] = new FileSplit[40];
+        FileSplit fss[] = new FileSplit[2];
         for (int i = 0; i < fss.length; ++i) {
-            fss[i] = new FileSplit("foo", new File("/home/ubuntu/vinayakb/data/tpch.40.splits/disk" + (i % 4)
-                    + "/orders" + i + ".dat"));
+            fss[i] = new FileSplit("foo", new File("data/tpch0.001/orders-part" + (i + 1) + ".tbl"));
         }
         return fss;
     }
 
     private static FileSplit[] createCustomerFileSplits() {
-        FileSplit fss[] = new FileSplit[40];
+        FileSplit fss[] = new FileSplit[2];
         for (int i = 0; i < fss.length; ++i) {
-            fss[i] = new FileSplit("foo", new File("/home/ubuntu/vinayakb/data/tpch.40.splits/disk" + (i % 4)
-                    + "/customer" + i + ".dat"));
+            fss[i] = new FileSplit("foo", new File("data/tpch0.001/customer-part" + (i + 1) + ".tbl"));
         }
         return fss;
     }
 
-    private static final LocationConstraint[] LCS = { new AbsoluteLocationConstraint("asterix-001"),
-            new AbsoluteLocationConstraint("asterix-002"), new AbsoluteLocationConstraint("asterix-003"),
-            new AbsoluteLocationConstraint("asterix-004"), new AbsoluteLocationConstraint("asterix-005"),
-            new AbsoluteLocationConstraint("asterix-006"), new AbsoluteLocationConstraint("asterix-007"),
-            new AbsoluteLocationConstraint("asterix-008"), new AbsoluteLocationConstraint("asterix-009"),
-            new AbsoluteLocationConstraint("asterix-010"), };
+    private static final LocationConstraint[] LCS = { new AbsoluteLocationConstraint("NC1"),
+            new AbsoluteLocationConstraint("NC2") };
 
     private static PartitionConstraint createRRPartitionConstraint(int k) {
-        LocationConstraint[] lcs = new LocationConstraint[40];
+        LocationConstraint[] lcs = new LocationConstraint[2];
         for (int i = 0; i < lcs.length; ++i) {
             lcs[i] = createRRSteppedChoiceConstraint(i, k);
         }
