@@ -15,13 +15,8 @@
 package edu.uci.ics.hyracks.dataflow.hadoop;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -34,14 +29,9 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.HadoopAdapter;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.HadoopFileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IRecordReader;
 
@@ -146,86 +136,6 @@ public class HadoopReadOperatorDescriptor extends AbstractHadoopFileScanOperator
         this.inputFormatClassName = inputFormatClassName;
         this.jobConfMap = jobConfMap;
     }
-
-    // public HadoopReadOperatorDescriptor(IClusterController clusterController, Map<String, String> jobConfMap,
-    // JobSpecification spec, String fileSystemURL, String inputFormatClassName, RecordDescriptor recordDescriptor) {
-    // super(spec, null, recordDescriptor);
-    // HadoopAdapter hadoopAdapter = HadoopAdapter.getInstance(fileSystemURL);
-    // String inputPathString = jobConfMap.get("mapred.input.dir");
-    // String[] inputPaths = inputPathString.split(",");
-    // Map<String, List<HadoopFileSplit>> blocksToRead = hadoopAdapter.getInputSplits(inputPaths);
-    // List<HadoopFileSplit> hadoopFileSplits = new ArrayList<HadoopFileSplit>();
-    // for (String filePath : blocksToRead.keySet()) {
-    // hadoopFileSplits.addAll(blocksToRead.get(filePath));
-    // }
-    // for (HadoopFileSplit hadoopFileSplit : hadoopFileSplits) {
-    // System.out.println(" Hadoop File Split : " + hadoopFileSplit);
-    // }
-    // super.splits = hadoopFileSplits.toArray(new HadoopFileSplit[] {});
-    // configurePartitionConstraints(clusterController, blocksToRead);
-    // this.inputFormatClassName = inputFormatClassName;
-    // this.jobConfMap = jobConfMap;
-    // }
-
-    // private void configurePartitionConstraints(IClusterController clusterController,
-    // Map<String, List<HadoopFileSplit>> blocksToRead) {
-    // List<LocationConstraint> locationConstraints = new ArrayList<LocationConstraint>();
-    // Map<String, INodeController> registry = null;
-    // try {
-    // // registry = clusterController.getRegistry();
-    // // TODO
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // }
-    // Map<String, String> hostnameToNodeIdMap = new HashMap<String, String>();
-    // NCConfig ncConfig = null;
-    // for (String nodeId : registry.keySet()) {
-    // try {
-    // ncConfig = ((INodeController) registry.get(nodeId)).getConfiguration();
-    // String ipAddress = ncConfig.dataIPAddress;
-    // String hostname = InetAddress.getByName(ipAddress).getHostName();
-    // System.out.println(" hostname :" + hostname + " nodeid:" + nodeId);
-    // hostnameToNodeIdMap.put(hostname, nodeId);
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // }
-    // }
-    //
-    // for (String filePath : blocksToRead.keySet()) {
-    // List<HadoopFileSplit> hadoopFileSplits = blocksToRead.get(filePath);
-    // for (HadoopFileSplit hadoopFileSplit : hadoopFileSplits) {
-    // String hostname = hadoopFileSplit.getHosts()[0];
-    // System.out.println("host name is :" + hostname);
-    // InetAddress address = null;
-    // try {
-    // address = InetAddress.getByName(hostname);
-    // if (address.isLoopbackAddress()) {
-    // Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
-    // while (netInterfaces.hasMoreElements()) {
-    // NetworkInterface ni = netInterfaces.nextElement();
-    // InetAddress inetAddress = (InetAddress) ni.getInetAddresses().nextElement();
-    // if (!inetAddress.isLoopbackAddress()) {
-    // address = inetAddress;
-    // break;
-    // }
-    // }
-    // }
-    // hostname = address.getHostName();
-    // System.out.println("cannonical host name hyracks :" + hostname);
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // }
-    // String nodeId = hostnameToNodeIdMap.get(hostname);
-    // System.out.println(" corresponding node id is :" + nodeId);
-    // LocationConstraint locationConstraint = new AbsoluteLocationConstraint(nodeId);
-    // locationConstraints.add(locationConstraint);
-    // }
-    // }
-    //
-    // PartitionConstraint partitionConstraint = new ExplicitPartitionConstraint(locationConstraints
-    // .toArray(new LocationConstraint[] {}));
-    // this.setPartitionConstraint(partitionConstraint);
-    // }
 
     @Override
     protected IRecordReader createRecordReader(HadoopFileSplit fileSplit, RecordDescriptor desc) throws Exception {

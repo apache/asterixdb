@@ -18,9 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -99,10 +97,5 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     @Override
     public JobStatistics waitForCompletion(UUID jobId) throws Exception {
         return hci.waitForCompletion(jobId);
-    }
-
-    @Override
-    public Map<String, InetAddress[]> getRegistry() throws Exception {
-        return hci.getRegistry();
     }
 }
