@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.EnumSet;
@@ -314,16 +313,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
             }
         });
         return handler;
-    }
-
-    @Override
-    public Map<String, InetAddress[]> getRegistry() throws Exception {
-        Map<String, INodeController> map = new HashMap<String, INodeController>();
-        for (Map.Entry<String, NodeControllerState> e : nodeRegistry.entrySet()) {
-            map.put(e.getKey(), e.getValue().getNodeController());
-        }
-        // return map;
-        throw new UnsupportedOperationException();
     }
 
     @Override

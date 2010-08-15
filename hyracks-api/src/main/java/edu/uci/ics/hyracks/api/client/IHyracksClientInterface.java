@@ -14,10 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
-import java.net.InetAddress;
 import java.rmi.Remote;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -40,6 +38,4 @@ public interface IHyracksClientInterface extends Remote {
     public void start(UUID jobId) throws Exception;
 
     public JobStatistics waitForCompletion(UUID jobId) throws Exception;
-
-    public Map<String, InetAddress[]> getRegistry() throws Exception;
 }
