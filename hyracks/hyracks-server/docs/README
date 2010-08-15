@@ -56,14 +56,19 @@ Prerequisites:
 
 Steps:
 
-1. Download and unzip the Hyracks source assembly
-2. Download dcache-client-0.0.1.jar
+1. Checkout source from SVN
+2. Download dcache-client-0.0.1.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
 3. Run the following command: (Replacing /path/to/file with the path to the dcache-client jar file).
 
  mvn install:install-file -DgroupId=edu.uci.ics.dcache -DartifactId=dcache-client -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/dcache-client-0.0.1.jar
 
-4. cd into the hyracks-core folder where the source assembly was unzipped
-5. Run
+4. Download jol.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
+5. Run the following command: (Replacing /path/to/file with the path to the jol jar file).
+
+ mvn install:install-file -DgroupId=jol -DartifactId=jol -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/jol.jar
+
+6. cd into the hyracks folder where the source was checked out
+7. Run
 
  mvn package
 
@@ -81,5 +86,6 @@ You will need to have the Eclipse Maven plugin (http://m2eclipse.sonatype.org/)
 2. Right click in the Package Explorer pane.
 3. Click on Import...
 4. Under "General" choose "Existing Projects into Workspace"
-5. Pick the project root option and browse to the hyracks-core folder
-6. Click on Finish
+5. Pick the project root option and browse to the hyracks folder
+6. Import all projects.
+7. Click on Finish
