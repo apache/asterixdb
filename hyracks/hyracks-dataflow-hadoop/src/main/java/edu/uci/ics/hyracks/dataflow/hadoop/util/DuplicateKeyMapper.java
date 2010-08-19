@@ -18,9 +18,9 @@ import java.util.Properties;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.map.IMapper;
+import edu.uci.ics.hyracks.dataflow.std.map.IDeserializedMapper;
 
-public class DuplicateKeyMapper implements IMapper {
+public class DuplicateKeyMapper implements IDeserializedMapper {
 
     @Override
     public void map(Object[] data, IDataWriter<Object[]> writer) throws HyracksDataException {

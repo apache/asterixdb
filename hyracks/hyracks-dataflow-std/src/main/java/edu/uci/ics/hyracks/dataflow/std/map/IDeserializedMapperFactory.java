@@ -14,9 +14,10 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.map;
 
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
+import java.io.Serializable;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface IMapper {
-    public void map(Object[] data, IDataWriter<Object[]> writer) throws HyracksDataException;
+public interface IDeserializedMapperFactory extends Serializable {
+    public IDeserializedMapper createMapper() throws HyracksDataException;
 }
