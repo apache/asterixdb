@@ -3,6 +3,13 @@
   <groupId>edu.uci.ics.hyracks.examples.tpch</groupId>
   <artifactId>tpchclient</artifactId>
   <version>0.1.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>edu.uci.ics.hyracks.examples</groupId>
+    <artifactId>tpch-example</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+  </parent>
+
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>

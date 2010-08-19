@@ -5,6 +5,12 @@
   <version>0.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>hyracks-examples</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+  </parent>
+
   <modules>
     <module>tpchhelper</module>
     <module>tpchclient</module>

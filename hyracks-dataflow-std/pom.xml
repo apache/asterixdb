@@ -3,6 +3,13 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-dataflow-std</artifactId>
   <version>0.1.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>hyracks</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+  </parent>
+
   <build>
     <plugins>
       <plugin>
