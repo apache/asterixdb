@@ -3,6 +3,13 @@
   <groupId>edu.uci.ics.hyracks.examples</groupId>
   <artifactId>hyracks-integration-tests</artifactId>
   <version>0.1.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>hyracks-examples</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+  </parent>
+
   <build>
     <plugins>
       <plugin>
