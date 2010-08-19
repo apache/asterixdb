@@ -14,10 +14,25 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.map;
 
-import java.io.Serializable;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface IMapperFactory extends Serializable {
-    public IMapper createMapper() throws HyracksDataException;
+public class ReflectionBasedDeserializedMapperFactory implements IDeserializedMapperFactory {
+    private static final long serialVersionUID = 1L;
+
+    private final Class<? extends IDeserializedMapper> mapperClass;
+
+    public ReflectionBasedDeserializedMapperFactory(Class<? extends IDeserializedMapper> mapperClass) {
+        this.mapperClass = mapperClass;
+    }
+
+    @Override
+    public IDeserializedMapper createMapper() throws HyracksDataException {
+        try {
+            return mapperClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new HyracksDataException(e);
+        } catch (IllegalAccessException e) {
+            throw new HyracksDataException(e);
+        }
+    }
 }

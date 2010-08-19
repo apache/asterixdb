@@ -19,17 +19,17 @@ import java.util.Random;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class SamplerMapFactory implements IMapperFactory {
+public class SamplerDeserializedMapperFactory implements IDeserializedMapperFactory {
     private static final long serialVersionUID = 1L;
     private final float sampleRatio;
 
-    public SamplerMapFactory(float sampleRatio) {
+    public SamplerDeserializedMapperFactory(float sampleRatio) {
         this.sampleRatio = sampleRatio;
     }
 
     @Override
-    public IMapper createMapper() throws HyracksDataException {
-        return new IMapper() {
+    public IDeserializedMapper createMapper() throws HyracksDataException {
+        return new IDeserializedMapper() {
             private Random random = new Random();
 
             @Override

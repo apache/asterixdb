@@ -21,9 +21,9 @@ import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.map.IMapper;
+import edu.uci.ics.hyracks.dataflow.std.map.IDeserializedMapper;
 
-public class PreappendLongWritableMapper implements IMapper {
+public class PreappendLongWritableMapper implements IDeserializedMapper {
 
     @Override
     public void map(Object[] data, IDataWriter<Object[]> writer) throws HyracksDataException {

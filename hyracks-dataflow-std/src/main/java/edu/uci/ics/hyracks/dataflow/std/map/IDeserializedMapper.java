@@ -14,25 +14,9 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.map;
 
+import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class ReflectionBasedMapperFactory implements IMapperFactory {
-    private static final long serialVersionUID = 1L;
-
-    private final Class<? extends IMapper> mapperClass;
-
-    public ReflectionBasedMapperFactory(Class<? extends IMapper> mapperClass) {
-        this.mapperClass = mapperClass;
-    }
-
-    @Override
-    public IMapper createMapper() throws HyracksDataException {
-        try {
-            return mapperClass.newInstance();
-        } catch (InstantiationException e) {
-            throw new HyracksDataException(e);
-        } catch (IllegalAccessException e) {
-            throw new HyracksDataException(e);
-        }
-    }
+public interface IDeserializedMapper {
+    public void map(Object[] data, IDataWriter<Object[]> writer) throws HyracksDataException;
 }

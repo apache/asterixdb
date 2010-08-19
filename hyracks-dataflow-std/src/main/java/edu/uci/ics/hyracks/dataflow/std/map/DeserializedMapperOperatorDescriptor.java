@@ -26,9 +26,9 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
-public class MapperOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private class MapperOperator implements IOpenableDataWriterOperator {
-        private IMapper mapper;
+        private IDeserializedMapper mapper;
         private IOpenableDataWriter<Object[]> writer;
 
         @Override
@@ -59,9 +59,9 @@ public class MapperOperatorDescriptor extends AbstractSingleActivityOperatorDesc
 
     private static final long serialVersionUID = 1L;
 
-    private final IMapperFactory mapperFactory;
+    private final IDeserializedMapperFactory mapperFactory;
 
-    public MapperOperatorDescriptor(JobSpecification spec, IMapperFactory mapperFactory,
+    public DeserializedMapperOperatorDescriptor(JobSpecification spec, IDeserializedMapperFactory mapperFactory,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.mapperFactory = mapperFactory;
