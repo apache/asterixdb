@@ -44,5 +44,6 @@
     <module>hyracks-cli</module>
     <module>hyracks-examples</module>
     <module>hyracks-server</module>
+    <module>hyracks-storage-common</module>
   </modules>
 </project>
