@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";
@@ -129,7 +129,7 @@ public class SerializationDeserializationTest {
     @Test
     public void serdeser01() throws Exception {
         RecordDescriptor rDes = new RecordDescriptor(new ISerializerDeserializer[] {
-                StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
         LineProcessor processor = new LineProcessor() {
             @Override
             public void process(String line, IDataWriter<Object[]> writer) throws Exception {

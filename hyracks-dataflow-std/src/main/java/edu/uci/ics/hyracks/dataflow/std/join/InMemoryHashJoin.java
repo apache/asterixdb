@@ -105,7 +105,7 @@ public class InMemoryHashJoin {
     private void flushFrame(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
         buffer.position(0);
         buffer.limit(buffer.capacity());
-        writer.nextFrame(outBuffer);
+        writer.nextFrame(buffer);
         buffer.position(0);
         buffer.limit(buffer.capacity());
     }

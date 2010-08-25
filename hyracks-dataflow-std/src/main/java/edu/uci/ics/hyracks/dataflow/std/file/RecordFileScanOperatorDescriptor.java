@@ -23,7 +23,7 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
-public class RecordFileScanOperatorDescriptor extends AbstractFileScanOperatorDescriptor {
+public class RecordFileScanOperatorDescriptor extends AbstractDeserializedFileScanOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     public RecordFileScanOperatorDescriptor(JobSpecification spec, FileSplit[] splits, RecordDescriptor recordDescriptor) {

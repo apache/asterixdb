@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -67,6 +68,23 @@ public class ArrayTupleBuilder {
 
     public <T> void addField(ISerializerDeserializer<T> serDeser, T instance) throws HyracksDataException {
         serDeser.serialize(instance, dos);
+        fEndOffsets[nextField++] = baaos.size();
+    }
+
+    public void addField(byte[] bytes, int start, int length) throws HyracksDataException {
+        try {
+            dos.write(bytes, start, length);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        fEndOffsets[nextField++] = baaos.size();
+    }
+
+    public DataOutput getDataOutput() {
+        return dos;
+    }
+
+    public void addFieldEndOffset() {
         fEndOffsets[nextField++] = baaos.size();
     }
 }

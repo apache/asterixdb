@@ -21,12 +21,12 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class StringSerializerDeserializer implements ISerializerDeserializer<String> {
-    public static final StringSerializerDeserializer INSTANCE = new StringSerializerDeserializer();
+public class UTF8StringSerializerDeserializer implements ISerializerDeserializer<String> {
+    public static final UTF8StringSerializerDeserializer INSTANCE = new UTF8StringSerializerDeserializer();
 
     private static final long serialVersionUID = 1L;
 
-    private StringSerializerDeserializer() {
+    private UTF8StringSerializerDeserializer() {
     }
 
     @Override
