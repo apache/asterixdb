@@ -39,6 +39,7 @@ public class BufferCache implements IBufferCacheInternal {
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final FileManager fileManager;
     private final CleanerThread cleanerThread;
+    private final Object cleanNotification;
 
     private boolean closed;
 
@@ -58,6 +59,7 @@ public class BufferCache implements IBufferCacheInternal {
         }
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.fileManager = fileManager;
+        cleanNotification = new Object();
         cleanerThread = new CleanerThread();
         cleanerThread.start();
         closed = false;
@@ -82,7 +84,8 @@ public class BufferCache implements IBufferCacheInternal {
         if (!newPage) {
             if (!cPage.valid) {
                 /*
-                 * We got a buffer and we have pinned it. But its invalid. If its a new page, we just mark it as valid and return. Or else, while we hold the page lock, we get a write latch on the data and start a read.
+                 * We got a buffer and we have pinned it. But its invalid. If its a new page, we just mark it as valid
+                 * and return. Or else, while we hold the page lock, we get a write latch on the data and start a read.
                  */
                 cPage.acquireWriteLatch(false);
                 try {
@@ -129,7 +132,24 @@ public class BufferCache implements IBufferCacheInternal {
             CachedPage victim = (CachedPage) pageReplacementStrategy.findVictim();
             if (victim != null) {
                 /*
-                 * We have a victim with the following invariants. 1. The dpid on the CachedPage may or may not be valid. 2. We have a pin on the CachedPage. We have to deal with three cases here. Case 1: The dpid on the CachedPage is invalid (-1). This indicates that this buffer has never been used. So we are the only ones holding it. Get a lock on the required dpid's hash bucket, check if someone inserted the page we want into the table. If so, decrement the pincount on the victim and return the winner page in the table. If such a winner does not exist, insert the victim and return it. Case 2: The dpid on the CachedPage is valid. Case 2a: The current dpid and required dpid hash to the same bucket. Get the bucket lock, check that the victim is still at pinCount == 1 If so check if there is a winning CachedPage with the required dpid. If so, decrement the pinCount on the victim and return the winner. If not, update the contents of the CachedPage to hold the required dpid and return it. If the picCount on the victim was != 1 or CachedPage was dirty someone used the victim for its old contents -- Decrement the pinCount and retry. Case 2b: The current dpid and required dpid hash to different buckets. Get the two bucket locks in the order of the bucket indexes (Ordering prevents deadlocks). Check for the existence of a winner in the new bucket and for potential use of the victim (pinCount != 1). If everything looks good, remove the CachedPage from the old bucket, and add it to the new bucket and update its header with the new dpid.
+                 * We have a victim with the following invariants.
+                 * 1. The dpid on the CachedPage may or may not be valid.
+                 * 2. We have a pin on the CachedPage. We have to deal with three cases here.
+                 *  Case 1: The dpid on the CachedPage is invalid (-1). This indicates that this buffer has never been used.
+                 *  So we are the only ones holding it. Get a lock on the required dpid's hash bucket, check if someone inserted
+                 *  the page we want into the table. If so, decrement the pincount on the victim and return the winner page in the
+                 *  table. If such a winner does not exist, insert the victim and return it.
+                 *  Case 2: The dpid on the CachedPage is valid.
+                 *      Case 2a: The current dpid and required dpid hash to the same bucket.
+                 *      Get the bucket lock, check that the victim is still at pinCount == 1 If so check if there is a winning
+                 *      CachedPage with the required dpid. If so, decrement the pinCount on the victim and return the winner.
+                 *      If not, update the contents of the CachedPage to hold the required dpid and return it. If the picCount
+                 *      on the victim was != 1 or CachedPage was dirty someone used the victim for its old contents -- Decrement
+                 *      the pinCount and retry.
+                 *  Case 2b: The current dpid and required dpid hash to different buckets. Get the two bucket locks in the order
+                 *  of the bucket indexes (Ordering prevents deadlocks). Check for the existence of a winner in the new bucket
+                 *  and for potential use of the victim (pinCount != 1). If everything looks good, remove the CachedPage from
+                 *  the old bucket, and add it to the new bucket and update its header with the new dpid.
                  */
                 if (victim.dpid < 0) {
                     /*
@@ -231,13 +251,15 @@ public class BufferCache implements IBufferCacheInternal {
             if (++victimizationTryCount >= MAX_VICTIMIZATION_TRY_COUNT) {
                 return null;
             }
-            try {
-                synchronized (cleanerThread) {
-                    cleanerThread.notifyAll();
+            synchronized (cleanerThread) {
+                cleanerThread.notifyAll();
+            }
+            synchronized (cleanNotification) {
+                try {
+                    cleanNotification.wait(1000);
+                } catch (InterruptedException e) {
+                    // Do nothing
                 }
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                // Do nothing
             }
         }
     }
@@ -390,6 +412,9 @@ public class BufferCache implements IBufferCacheInternal {
                                     if (cleaned) {
                                         cPage.dirty.set(false);
                                         cPage.pinCount.decrementAndGet();
+                                        synchronized (cleanNotification) {
+                                            cleanNotification.notifyAll();
+                                        }
                                     }
                                 } finally {
                                     cPage.latch.readLock().unlock();
