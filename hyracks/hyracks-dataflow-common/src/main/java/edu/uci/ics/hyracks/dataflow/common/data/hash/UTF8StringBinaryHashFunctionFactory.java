@@ -18,12 +18,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
-public class StringBinaryHashFunctionFactory implements IBinaryHashFunctionFactory {
-    public static final StringBinaryHashFunctionFactory INSTANCE = new StringBinaryHashFunctionFactory();
+public class UTF8StringBinaryHashFunctionFactory implements IBinaryHashFunctionFactory {
+    public static final UTF8StringBinaryHashFunctionFactory INSTANCE = new UTF8StringBinaryHashFunctionFactory();
 
     private static final long serialVersionUID = 1L;
 
-    private StringBinaryHashFunctionFactory() {
+    private UTF8StringBinaryHashFunctionFactory() {
     }
 
     @Override

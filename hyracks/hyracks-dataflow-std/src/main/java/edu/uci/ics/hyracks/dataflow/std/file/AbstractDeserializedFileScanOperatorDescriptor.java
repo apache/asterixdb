@@ -28,12 +28,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
-public abstract class AbstractFileScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public abstract class AbstractDeserializedFileScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     protected FileSplit[] splits;
 
-    public AbstractFileScanOperatorDescriptor(JobSpecification spec, FileSplit[] splits,
+    public AbstractDeserializedFileScanOperatorDescriptor(JobSpecification spec, FileSplit[] splits,
             RecordDescriptor recordDescriptor) {
         super(spec, 0, 1);
         recordDescriptors[0] = recordDescriptor;
@@ -44,11 +44,11 @@ public abstract class AbstractFileScanOperatorDescriptor extends AbstractSingleA
 
     protected abstract void configure() throws Exception;
 
-    protected class FileScanOperator implements IOpenableDataWriterOperator {
+    protected class DeserializedFileScanOperator implements IOpenableDataWriterOperator {
         private IOpenableDataWriter<Object[]> writer;
         private int index;
 
-        FileScanOperator(int index) {
+        DeserializedFileScanOperator(int index) {
             this.index = index;
         }
 
@@ -102,6 +102,6 @@ public abstract class AbstractFileScanOperatorDescriptor extends AbstractSingleA
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), null);
+        return new DeserializedOperatorNodePushable(ctx, new DeserializedFileScanOperator(partition), null);
     }
 }

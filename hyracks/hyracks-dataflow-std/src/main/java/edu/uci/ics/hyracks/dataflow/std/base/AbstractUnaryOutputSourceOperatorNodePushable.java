@@ -12,30 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm.util;
+package edu.uci.ics.hyracks.dataflow.std.base;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class FrameUtils {
-    public static void copy(ByteBuffer srcFrame, ByteBuffer destFrame) {
-        makeReadable(srcFrame);
-        destFrame.clear();
-        destFrame.put(srcFrame);
-    }
-
-    public static void makeReadable(ByteBuffer frame) {
-        frame.position(0);
-        frame.limit(frame.capacity());
-    }
-
-    public static void flushFrame(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-        writer.nextFrame(buffer);
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
+public abstract class AbstractUnaryOutputSourceOperatorNodePushable extends AbstractUnaryOutputOperatorNodePushable {
+    @Override
+    public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        throw new UnsupportedOperationException();
     }
 }

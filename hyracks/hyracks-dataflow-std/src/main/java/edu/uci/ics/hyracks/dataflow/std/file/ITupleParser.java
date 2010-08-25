@@ -12,30 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm.util;
+package edu.uci.ics.hyracks.dataflow.std.file;
 
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class FrameUtils {
-    public static void copy(ByteBuffer srcFrame, ByteBuffer destFrame) {
-        makeReadable(srcFrame);
-        destFrame.clear();
-        destFrame.put(srcFrame);
-    }
-
-    public static void makeReadable(ByteBuffer frame) {
-        frame.position(0);
-        frame.limit(frame.capacity());
-    }
-
-    public static void flushFrame(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-        writer.nextFrame(buffer);
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-    }
+public interface ITupleParser {
+    public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException;
 }

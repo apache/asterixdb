@@ -18,12 +18,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
-public class StringBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class UTF8StringBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    public static final StringBinaryComparatorFactory INSTANCE = new StringBinaryComparatorFactory();
+    public static final UTF8StringBinaryComparatorFactory INSTANCE = new UTF8StringBinaryComparatorFactory();
 
-    private StringBinaryComparatorFactory() {
+    private UTF8StringBinaryComparatorFactory() {
     }
 
     @Override
