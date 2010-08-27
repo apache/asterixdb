@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.sync;
+package edu.uci.ics.hyracks.storage.common.sync;
 
 public enum LatchType {
     LATCH_X,

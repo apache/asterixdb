@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.buffercache;
+package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
+    private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
+
     private final Lock lock;
     private IBufferCacheInternal bufferCache;
     private int clockPtr;
@@ -53,11 +55,17 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         lock.lock();
         try {
             int startClockPtr = clockPtr;
+            int cycleCount = 0;
             do {
                 ICachedPageInternal cPage = bufferCache.getPage(clockPtr);
 
                 /*
-                 * We do two things here: 1. If the page has been accessed, then we skip it -- The CAS would return false if the current value is false which makes the page a possible candidate for replacement. 2. We check with the buffer manager if it feels its a good idea to use this page as a victim.
+                 * We do two things here:
+                 * 1. If the page has been accessed, then we skip it -- The CAS would return
+                 * false if the current value is false which makes the page a possible candidate
+                 * for replacement.
+                 * 2. We check with the buffer manager if it feels its a good idea to use this
+                 * page as a victim.
                  */
                 AtomicBoolean accessedFlag = getPerPageObject(cPage);
                 if (!accessedFlag.compareAndSet(true, false)) {
@@ -66,7 +74,10 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
                     }
                 }
                 clockPtr = (clockPtr + 1) % bufferCache.getNumPages();
-            } while (clockPtr != startClockPtr);
+                if (clockPtr == startClockPtr) {
+                    ++cycleCount;
+                }
+            } while (cycleCount < MAX_UNSUCCESSFUL_CYCLE_COUNT);
         } finally {
             lock.unlock();
         }

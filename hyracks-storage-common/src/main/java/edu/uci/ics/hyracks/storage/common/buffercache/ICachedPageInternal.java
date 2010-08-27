@@ -12,17 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.buffercache;
+package edu.uci.ics.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
+public interface ICachedPageInternal extends ICachedPage {
+    public int getCachedPageId();
 
-public class DirectBufferAllocator implements ICacheMemoryAllocator {
-    @Override
-    public ByteBuffer[] allocate(int pageSize, int numPages) {
-        ByteBuffer[] buffers = new ByteBuffer[numPages];
-        for (int i = 0; i < numPages; ++i) {
-            buffers[i] = ByteBuffer.allocateDirect(pageSize);
-        }
-        return buffers;
-    }
+    public Object getReplacementStrategyObject();
+
+    public boolean pinIfGoodVictim();
 }

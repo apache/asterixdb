@@ -12,18 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.buffercache;
+package edu.uci.ics.hyracks.storage.common.buffercache;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import java.nio.ByteBuffer;
 
-public interface IBufferCache {
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
-
-    public void unpin(ICachedPage page) throws HyracksDataException;
-
-    public int getPageSize();
-
-    public int getNumPages();
-
-    public void close();
+public interface ICacheMemoryAllocator {
+    public ByteBuffer[] allocate(int pageSize, int numPages);
 }
