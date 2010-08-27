@@ -12,10 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.buffercache;
+package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.nio.ByteBuffer;
 
-public interface ICacheMemoryAllocator {
-    public ByteBuffer[] allocate(int pageSize, int numPages);
+public class HeapBufferAllocator implements ICacheMemoryAllocator {
+    @Override
+    public ByteBuffer[] allocate(int pageSize, int numPages) {
+        ByteBuffer[] buffers = new ByteBuffer[numPages];
+        for (int i = 0; i < numPages; ++i) {
+            buffers[i] = ByteBuffer.allocate(pageSize);
+        }
+        return buffers;
+    }
 }

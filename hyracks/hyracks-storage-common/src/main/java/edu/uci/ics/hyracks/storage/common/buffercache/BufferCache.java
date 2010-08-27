@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.storage.buffercache;
+package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,8 +24,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.common.storage.file.FileInfo;
-import edu.uci.ics.hyracks.storage.common.storage.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BufferCache implements IBufferCacheInternal {
     private static final int MAP_FACTOR = 2;
@@ -39,7 +39,6 @@ public class BufferCache implements IBufferCacheInternal {
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final FileManager fileManager;
     private final CleanerThread cleanerThread;
-    private final Object cleanNotification;
 
     private boolean closed;
 
@@ -59,7 +58,6 @@ public class BufferCache implements IBufferCacheInternal {
         }
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.fileManager = fileManager;
-        cleanNotification = new Object();
         cleanerThread = new CleanerThread();
         cleanerThread.start();
         closed = false;
@@ -106,6 +104,10 @@ public class BufferCache implements IBufferCacheInternal {
 
     private CachedPage findPage(long dpid, boolean newPage) {
         int victimizationTryCount = 0;
+        int localCleanCount = -1;
+        synchronized (cleanerThread.cleanNotification) {
+            localCleanCount = cleanerThread.cleanCount;
+        }
         while (true) {
             CachedPage cPage = null;
             /*
@@ -254,11 +256,13 @@ public class BufferCache implements IBufferCacheInternal {
             synchronized (cleanerThread) {
                 cleanerThread.notifyAll();
             }
-            synchronized (cleanNotification) {
-                try {
-                    cleanNotification.wait(1000);
-                } catch (InterruptedException e) {
-                    // Do nothing
+            synchronized (cleanerThread.cleanNotification) {
+                if (cleanerThread.cleanCount == localCleanCount) {
+                    try {
+                        cleanerThread.cleanNotification.wait(1000);
+                    } catch (InterruptedException e) {
+                        // Do nothing
+                    }
                 }
             }
         }
@@ -393,6 +397,12 @@ public class BufferCache implements IBufferCacheInternal {
     private class CleanerThread extends Thread {
         private boolean shutdownStart = false;
         private boolean shutdownComplete = false;
+        private final Object cleanNotification = new Object();
+        private int cleanCount = 0;
+
+        public CleanerThread() {
+            setPriority(MAX_PRIORITY);
+        }
 
         @Override
         public synchronized void run() {
@@ -413,6 +423,7 @@ public class BufferCache implements IBufferCacheInternal {
                                         cPage.dirty.set(false);
                                         cPage.pinCount.decrementAndGet();
                                         synchronized (cleanNotification) {
+                                            ++cleanCount;
                                             cleanNotification.notifyAll();
                                         }
                                     }
