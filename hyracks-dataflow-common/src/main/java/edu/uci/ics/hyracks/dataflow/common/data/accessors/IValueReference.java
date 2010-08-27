@@ -12,26 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.comm;
+package edu.uci.ics.hyracks.dataflow.common.data.accessors;
 
-import java.nio.ByteBuffer;
+public interface IValueReference {
+    public byte[] getBytes();
 
-public interface IFrameTupleAccessor {
-    public int getFieldSlotsLength();
+    public int getStartIndex();
 
-    public int getFieldEndOffset(int tupleIndex, int fIdx);
-
-    public int getFieldStartOffset(int tupleIndex, int fIdx);
-
-    public int getFieldLength(int tupleIndex, int fIdx);
-
-    public int getTupleEndOffset(int tupleIndex);
-
-    public int getTupleStartOffset(int tupleIndex);
-
-    public int getTupleCount();
-
-    public ByteBuffer getBuffer();
-
-    public void reset(ByteBuffer buffer);
+    public int getLength();
 }

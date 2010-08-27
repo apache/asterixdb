@@ -21,8 +21,9 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
-public class ArrayTupleBuilder {
+public class ArrayTupleBuilder implements IDataOutputProvider {
     private final ByteArrayAccessibleOutputStream baaos;
     private final DataOutputStream dos;
     private final int[] fEndOffsets;
@@ -80,6 +81,7 @@ public class ArrayTupleBuilder {
         fEndOffsets[nextField++] = baaos.size();
     }
 
+    @Override
     public DataOutput getDataOutput() {
         return dos;
     }

@@ -80,6 +80,11 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
     }
 
     @Override
+    public int getFieldLength(int tupleIndex, int fIdx) {
+        return getFieldEndOffset(tupleIndex, fIdx) - getFieldStartOffset(tupleIndex, fIdx);
+    }
+
+    @Override
     public int getFieldSlotsLength() {
         return recordDescriptor.getFields().length * 2;
     }
