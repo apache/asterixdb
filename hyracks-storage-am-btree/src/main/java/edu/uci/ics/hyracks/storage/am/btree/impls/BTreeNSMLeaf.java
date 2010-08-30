@@ -1,23 +1,9 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.asterix.indexing.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
 
 public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {    
 	protected static final int prevLeafOff = smFlagOff + 1;
@@ -74,7 +60,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 			buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
 			buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + data.length);
 			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - data.length - slotManager.getSlotSize());
-		}
+		}	
 	}
 	
 	@Override
@@ -89,6 +75,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 
 	@Override
 	public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {
+		
 		// before doing anything check if key already exists
 		int slotOff = slotManager.findSlot(buf, data, cmp, true);
 		if (slotOff >= 0) {			
@@ -137,7 +124,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 		int keySize = cmp.getKeySize(buf.array(), recOff);				
 		splitKey.initData(keySize);
 		System.arraycopy(buf.array(), recOff, splitKey.getData(), 0, keySize);
-		
+			
 		return 0;
 	}
 

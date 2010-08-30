@@ -1,39 +1,25 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.hyracks.storage.am.btree.frames;
+package edu.uci.ics.asterix.indexing.btree.frames;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.asterix.indexing.btree.compressors.FieldPrefixCompressor;
+import edu.uci.ics.asterix.indexing.btree.impls.BTreeException;
+import edu.uci.ics.asterix.indexing.btree.impls.FieldIterator;
+import edu.uci.ics.asterix.indexing.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
+import edu.uci.ics.asterix.indexing.btree.impls.SlotOffRecOff;
+import edu.uci.ics.asterix.indexing.btree.impls.SplitKey;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IFrameCompressor;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManager;
+import edu.uci.ics.asterix.indexing.btree.interfaces.SpaceStatus;
+import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
 
 public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
 	
@@ -42,20 +28,21 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     protected static final int freeSpaceOff = numRecordsOff + 4;      		// 8
     protected static final int totalFreeSpaceOff = freeSpaceOff + 4;        // 12	
 	protected static final int levelOff = totalFreeSpaceOff + 4;         	// 16
-	protected static final int smFlagOff = levelOff + 1;                   	// 20
-	protected static final int numPrefixRecordsOff = smFlagOff + 1; 		// 21
+	protected static final int smFlagOff = levelOff + 1;                   	// 17
+	protected static final int numUncompressedRecordsOff = smFlagOff + 1;				// 18
+	protected static final int numPrefixRecordsOff = numUncompressedRecordsOff + 4; 		// 21
 	
 	protected static final int prevLeafOff = numPrefixRecordsOff + 4;		// 22
 	protected static final int nextLeafOff = prevLeafOff + 4;				// 26
 	
 	protected ICachedPage page = null;
     protected ByteBuffer buf = null;
-    protected IFrameCompressor compressor;
+    public IFrameCompressor compressor;
     public IPrefixSlotManager slotManager; // TODO: should be protected, but will trigger some refactoring
     
     public FieldPrefixNSMLeaf() {
         this.slotManager = new FieldPrefixSlotManager();
-        this.compressor = new FieldPrefixCompressor();        
+        this.compressor = new FieldPrefixCompressor(0.001f, 2);        
     }
     
     @Override
@@ -76,8 +63,8 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     }
         
     @Override
-    public void compress(MultiComparator cmp) throws Exception {
-        compressor.compress(this, cmp);
+    public boolean compress(MultiComparator cmp) throws Exception {
+        return compressor.compress(this, cmp);
     }
     
     // assumptions: 
@@ -254,6 +241,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
         buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn during creation
         buf.putInt(numRecordsOff, 0);   
         resetSpaceParams();
+        buf.putInt(numUncompressedRecordsOff, 0);
         buf.putInt(numPrefixRecordsOff, 0);
         buf.put(levelOff, level);
         buf.put(smFlagOff, (byte)0);
@@ -270,7 +258,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     }
     
     @Override
-    public void insert(byte[] data, MultiComparator cmp) throws Exception {        
+    public void insert(byte[] data, MultiComparator cmp) throws Exception {    	
     	int slot = slotManager.findSlot(buf, data, cmp, false);        
         slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));
         
@@ -294,17 +282,20 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
             for(int i = numPrefixFields; i < cmp.getFields().length; i++) {
                 suffixSize += cmp.getFields()[i].getLength(data, suffixSize);
             }
-            suffixSize -= suffixStartOff;                        
+            suffixSize -= suffixStartOff;                  
+        }
+        else {
+        	buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) + 1);
         }
         
         int freeSpace = buf.getInt(freeSpaceOff);
-        System.arraycopy(data, suffixStartOff, buf.array(), freeSpace, suffixSize);            
+        System.arraycopy(data, suffixStartOff, buf.array(), freeSpace, suffixSize);                    
         buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + suffixSize);
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - suffixSize - slotManager.getSlotSize());
                
         //System.out.println(buf.getInt(totalFreeSpaceOff) + " " + buf.getInt(freeSpaceOff) + " " + buf.getInt(numRecordsOff));        
-        //System.out.println("COPIED: " + suffixSize + " / " + data.length);
+        //System.out.println("COPIED: " + suffixSize + " / " + data.length);      
     }
     
     public void verifyPrefixes(MultiComparator cmp) {
@@ -434,10 +425,6 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     @Override
     public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {
     	    	
-    	//System.out.println("ORIG");
-    	//String orig = printKeys(cmp);
-    	//System.out.println(orig);
-    	
     	FieldPrefixNSMLeaf rf = (FieldPrefixNSMLeaf)rightFrame;
     	
     	// before doing anything check if key already exists
@@ -555,7 +542,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
 		
 		right.putInt(numRecordsOff, recordsToRight);
 		right.putInt(numPrefixRecordsOff, prefixesToRight);
-				
+		
 		// on left page move slots to reflect possibly removed prefixes
 		src = slotManager.getRecSlotEndOff() + recordsToRight * slotManager.getSlotSize();
 		dest = slotManager.getRecSlotEndOff() + recordsToRight * slotManager.getSlotSize() + (numPrefixRecords - prefixesToLeft) * slotManager.getSlotSize();
@@ -563,33 +550,11 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
 		System.arraycopy(buf.array(), src, buf.array(), dest, length);
 		
 		buf.putInt(numRecordsOff, recordsToLeft);
-		buf.putInt(numPrefixRecordsOff, prefixesToLeft);	
-					
-		
-		//System.out.println("VERIFY LEFT");
-		//verifyPrefixes(cmp);
-		
-		//System.out.println("VERIFY RIGHT");
-		//rf.verifyPrefixes(cmp);
-		
-		String a = printKeys(cmp);
-		String b = rightFrame.printKeys(cmp);		 
-		//System.out.println("BEFORE COMPACT");
-		//System.out.println(a);		
-		//System.out.println(b);
-		
+		buf.putInt(numPrefixRecordsOff, prefixesToLeft);		
+				
 		// compact both pages		
 		compact(cmp);
 		rightFrame.compact(cmp);
-						
-		a = printKeys(cmp);
-		b = rightFrame.printKeys(cmp);		 
-		//System.out.println("AFTER COMPACT");
-		//System.out.println(a);		
-		//System.out.println(b);
-		
-		//System.out.println("AFTER SPLIT REC: " + getNumRecords() + " " + rightFrame.getNumRecords());
-		//System.out.println("AFTER SPLIT TOT: " + getTotalFreeSpace() + " " + rightFrame.getTotalFreeSpace());
 		
 		// insert last key
 		targetFrame.insert(data, cmp);			
@@ -642,5 +607,13 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
 	@Override
 	public int getPrevLeaf() {
 		return buf.getInt(prevLeafOff);
+	}
+	
+	public int getNumUncompressedRecords() {
+		return buf.getInt(numUncompressedRecordsOff);
+	}
+	
+	public void setNumUncompressedRecords(int numUncompressedRecords) {
+		buf.putInt(numUncompressedRecordsOff, numUncompressedRecords);
 	}
 }

@@ -1,50 +1,35 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.asterix.indexing.btree.impls;
 
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInteriorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManagerFactory;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInterior;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInteriorFactory;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeafFactory;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManager;
+import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManagerFactory;
+import edu.uci.ics.asterix.indexing.btree.interfaces.SpaceStatus;
+import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
+import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.asterix.storage.file.FileInfo;
 
 public class BTree {
-    private static final Logger LOGGER = Logger.getLogger(BTree.class.getName());
-
+	
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
 
     private final int metaDataPage = 0; // page containing meta data, e.g.,
                                         // maxPage
     private final int rootPage = 1; // the root page never changes
-
+    
     private final IBufferCache bufferCache;
     private int fileId;
     private final IBTreeFrameInteriorFactory interiorFrameFactory;
@@ -53,7 +38,7 @@ public class BTree {
     private final ISlotManagerFactory leafSlotManagerFactory;
     private final MultiComparator cmp;
     private final ReadWriteLock treeLatch;
-
+    
     public int rootSplits = 0;
     public int[] splitsByLevel = new int[500];
     public long readLatchesAcquired = 0;
@@ -70,7 +55,7 @@ public class BTree {
 
     public int usefulCompression = 0;
     public int uselessCompression = 0;
-
+    
     public String printStats() {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.append("\n");
@@ -96,12 +81,12 @@ public class BTree {
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
     }
-
+    
     public void create(int fileId, IBTreeFrameLeaf leafFrame, IBTreeFrameMeta metaFrame) throws Exception {
         // initialize meta data page
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
-
+        
         metaNode.acquireWriteLatch();
         writeLatchesAcquired++;
         try {
@@ -114,11 +99,11 @@ public class BTree {
             bufferCache.unpin(metaNode);
             unpins++;
         }
-
+        
         // initialize root page
         ICachedPage rootNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rootPage), true);
         pins++;
-
+        
         rootNode.acquireWriteLatch();
         writeLatchesAcquired++;
         try {
@@ -126,7 +111,7 @@ public class BTree {
             leafFrame.initBuffer((byte) 0);
         } finally {
             rootNode.releaseWriteLatch();
-            writeLatchesReleased++;
+            writeLatchesReleased++;            
             bufferCache.unpin(rootNode);
             unpins++;
         }
@@ -144,10 +129,10 @@ public class BTree {
     private int getFreePage(IBTreeFrameMeta metaFrame) throws Exception {
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
-
+        
         metaNode.acquireWriteLatch();
         writeLatchesAcquired++;
-
+        
         int freePage = -1;
         try {
             metaFrame.setPage(metaNode);
@@ -157,7 +142,7 @@ public class BTree {
                 if (nextPage > 0) { // sibling may have free pages
                     ICachedPage nextNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, nextPage), false);
                     pins++;
-
+                    
                     nextNode.acquireWriteLatch();
                     writeLatchesAcquired++;
                     // we copy over the free space entries of nextpage into the
@@ -171,9 +156,8 @@ public class BTree {
                         // copy entire page (including sibling pointer, free
                         // page entries, and all other info)
                         // after this copy nextPage is considered a free page
-                        System.arraycopy(nextNode.getBuffer().array(), 0, metaNode.getBuffer().array(), 0, nextNode
-                                .getBuffer().capacity());
-
+                        System.arraycopy(nextNode.getBuffer().array(), 0, metaNode.getBuffer().array(), 0, nextNode.getBuffer().capacity());
+                        
                         // reset unchanged entry
                         metaFrame.setMaxPage(maxPage);
 
@@ -206,7 +190,7 @@ public class BTree {
 
         return freePage;
     }
-
+    
     private void addFreePages(BTreeOpContext ctx) throws Exception {
         for (Integer i : ctx.freePages) {
             addFreePage(ctx.metaFrame, i);
@@ -216,101 +200,102 @@ public class BTree {
 
     private void addFreePage(IBTreeFrameMeta metaFrame, int freePage) throws Exception {
         // root page is special, don't add it to free pages
-        if (freePage == rootPage)
-            return;
-
+        if (freePage == rootPage) return;
+        
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
-
+        
         metaNode.acquireWriteLatch();
         writeLatchesAcquired++;
-
+        
         metaFrame.setPage(metaNode);
 
         try {
-            if (metaFrame.hasSpace()) {
-                metaFrame.addFreePage(freePage);
-            } else {
+            if(metaFrame.hasSpace()) {
+                metaFrame.addFreePage(freePage);                
+            }
+            else {                
                 // allocate a new page in the chain of meta pages
                 int newPage = metaFrame.getFreePage();
-                if (newPage < 0) {
+                if(newPage < 0) {
                     throw new Exception("Inconsistent Meta Page State. It has no space, but it also has no entries.");
                 }
-
+                
                 ICachedPage newNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, newPage), false);
                 pins++;
-
+                
                 newNode.acquireWriteLatch();
                 writeLatchesAcquired++;
-
-                try {
+                
+                
+                try {                
                     int metaMaxPage = metaFrame.getMaxPage();
 
                     // copy metaDataPage to newNode
-                    System.arraycopy(metaNode.getBuffer().array(), 0, newNode.getBuffer().array(), 0, metaNode
-                            .getBuffer().capacity());
-
+                    System.arraycopy(metaNode.getBuffer().array(), 0, newNode.getBuffer().array(), 0, metaNode.getBuffer().capacity());
+                    
                     metaFrame.initBuffer(-1);
                     metaFrame.setNextPage(newPage);
                     metaFrame.setMaxPage(metaMaxPage);
-                    metaFrame.addFreePage(freePage);
+                    metaFrame.addFreePage(freePage);              
                 } finally {
                     newNode.releaseWriteLatch();
                     writeLatchesReleased++;
-
+                    
                     bufferCache.unpin(newNode);
                     unpins++;
                 }
-            }
+            }                                   
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             metaNode.releaseWriteLatch();
             writeLatchesReleased++;
-
+            
             bufferCache.unpin(metaNode);
             unpins++;
         }
     }
-
+    
     public void printTree(IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame) throws Exception {
         printTree(rootPage, null, false, leafFrame, interiorFrame);
     }
 
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeFrameLeaf leafFrame,
             IBTreeFrameInterior interiorFrame) throws Exception {
-
+        
         ICachedPage node = bufferCache.pin(FileInfo.getDiskPageId(fileId, pageId), false);
         pins++;
         node.acquireReadLatch();
         readLatchesAcquired++;
-
+        
         try {
             if (parent != null && unpin == true) {
                 parent.releaseReadLatch();
                 readLatchesReleased++;
-
+                
                 bufferCache.unpin(parent);
                 unpins++;
             }
 
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest(String.format("%1d ", level));
-                LOGGER.finest(String.format("%3d ", pageId));
+            if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {
+                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%1d ", level));
+                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%3d ", pageId));
                 for (int i = 0; i < currentLevel - level; i++)
-                    LOGGER.finest("    ");
-
+                    GlobalConfig.ASTERIX_LOGGER.finest("    ");
+                
                 String keyString;
-                if (interiorFrame.isLeaf()) {
-                    leafFrame.setPage(node);
-                    keyString = leafFrame.printKeys(cmp);
-                } else {
-                    keyString = interiorFrame.printKeys(cmp);
+                if(interiorFrame.isLeaf()) {
+                	leafFrame.setPage(node);
+                	keyString = leafFrame.printKeys(cmp);
                 }
-
-                LOGGER.finest(keyString);
+                else {
+                	keyString = interiorFrame.printKeys(cmp);
+                }
+                
+                GlobalConfig.ASTERIX_LOGGER.finest(keyString);
             }
 
             if (!interiorFrame.isLeaf()) {
@@ -321,41 +306,40 @@ public class BTree {
             } else {
                 node.releaseReadLatch();
                 readLatchesReleased++;
-
+                
                 bufferCache.unpin(node);
                 unpins++;
             }
         } catch (Exception e) {
             node.releaseReadLatch();
             readLatchesReleased++;
-
+            
             bufferCache.unpin(node);
             unpins++;
         }
     }
 
-    public void diskOrderScan(BTreeDiskOrderScanCursor cursor, IBTreeFrameLeaf leafFrame, IBTreeFrameMeta metaFrame)
-            throws Exception {
+    public void diskOrderScan(BTreeDiskOrderScanCursor cursor, IBTreeFrameLeaf leafFrame, IBTreeFrameMeta metaFrame) throws Exception {
         int currentPageId = rootPage + 1;
         int maxPageId = -1;
-
+        
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
-
+        
         metaNode.acquireReadLatch();
         readLatchesAcquired++;
-
+        
         try {
             metaFrame.setPage(metaNode);
             maxPageId = metaFrame.getMaxPage();
         } finally {
             metaNode.releaseReadLatch();
             readLatchesAcquired++;
-
+            
             bufferCache.unpin(metaNode);
             unpins++;
         }
-
+        
         ICachedPage page = bufferCache.pin(FileInfo.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();
         cursor.setBufferCache(bufferCache);
@@ -364,7 +348,7 @@ public class BTree {
         cursor.setMaxPageId(maxPageId);
         cursor.open(page, null);
     }
-
+    
     public void search(IBTreeCursor cursor, RangePredicate pred, IBTreeFrameLeaf leafFrame,
             IBTreeFrameInterior interiorFrame) throws Exception {
         BTreeOpContext ctx = new BTreeOpContext();
@@ -519,131 +503,134 @@ public class BTree {
             repeatOp = false;
         }
     }
-
+    
+    public long uselessCompressionTime = 0;
+    
     private void insertLeaf(ICachedPage node, int pageId, byte[] data, BTreeOpContext ctx) throws Exception {
-        ctx.leafFrame.setPage(node);
-        SpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(data, cmp);
-        switch (spaceStatus) {
+    	ctx.leafFrame.setPage(node);
+    	SpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(data, cmp);
+    	switch (spaceStatus) {
+    	
+    	case SUFFICIENT_CONTIGUOUS_SPACE: {
+    		// System.out.println("INSERT LEAF");
+    		ctx.leafFrame.insert(data, cmp);
+    		ctx.splitKey.reset();
+    	} break;
 
-            case SUFFICIENT_CONTIGUOUS_SPACE: {
-                // System.out.println("INSERT LEAF");
-                ctx.leafFrame.insert(data, cmp);
-                ctx.splitKey.reset();
-            }
-                break;
+    	case SUFFICIENT_SPACE: {
+    		ctx.leafFrame.compact(cmp);
+    		ctx.leafFrame.insert(data, cmp);
+    		ctx.splitKey.reset();
+    	} break;
 
-            case SUFFICIENT_SPACE: {
-                ctx.leafFrame.compact(cmp);
-                ctx.leafFrame.insert(data, cmp);
-                ctx.splitKey.reset();
-            }
-                break;
+    	case INSUFFICIENT_SPACE: {
+    		// try compressing the page first and see if there is space available    		
+    		long start = System.currentTimeMillis();
+    		boolean reCompressed = ctx.leafFrame.compress(cmp);
+    		long end = System.currentTimeMillis();
+    		if(reCompressed) spaceStatus = ctx.leafFrame.hasSpaceInsert(data, cmp);
+    		
+    		if(spaceStatus == SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {    		
+    			ctx.leafFrame.insert(data, cmp);
+    			ctx.splitKey.reset();    			    			
+    			
+    			usefulCompression++;    			
+    		}
+    		else {
+    			uselessCompressionTime += (end - start);    			    			    			
+    			uselessCompression++;
+    			
+    			// perform split
+    			splitsByLevel[0]++; // debug
+    			int rightSiblingPageId = ctx.leafFrame.getNextLeaf();
+    			ICachedPage rightSibling = null;
+    			if (rightSiblingPageId > 0) {
+    				rightSibling = bufferCache.pin(FileInfo.getDiskPageId(fileId, rightSiblingPageId), false);
+    				pins++;
+    			}
 
-            case INSUFFICIENT_SPACE: {
-                // try compressing the page first and see if there is space available    		
-                ctx.leafFrame.compress(cmp);
-                spaceStatus = ctx.leafFrame.hasSpaceInsert(data, cmp);
+    			treeLatch.writeLock().lock(); // lock is released in
+    			// unsetSmPages(), after sm has
+    			// fully completed
+    			treeLatchesAcquired++;
+    			try {
 
-                if (spaceStatus == SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
-                    ctx.leafFrame.insert(data, cmp);
-                    ctx.splitKey.reset();
+    				int rightPageId = getFreePage(ctx.metaFrame);
+    				ICachedPage rightNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rightPageId), true);
+    				pins++;
+    				rightNode.acquireWriteLatch();
+    				writeLatchesAcquired++;
+    				try {
+    					ISlotManager rightSlotManager = leafSlotManagerFactory.getSlotManager();
+    					IBTreeFrameLeaf rightFrame = leafFrameFactory.getFrame();
+    					rightFrame.setPage(rightNode);
+    					rightFrame.initBuffer((byte) 0);
 
-                    usefulCompression++;
-                } else {
-                    uselessCompression++;
+    					int ret = ctx.leafFrame.split(rightFrame, data, cmp, ctx.splitKey);
 
-                    // perform split
-                    splitsByLevel[0]++; // debug
-                    int rightSiblingPageId = ctx.leafFrame.getNextLeaf();
-                    ICachedPage rightSibling = null;
-                    if (rightSiblingPageId > 0) {
-                        rightSibling = bufferCache.pin(FileInfo.getDiskPageId(fileId, rightSiblingPageId), false);
-                        pins++;
-                    }
+    					ctx.smPages.add(pageId);
+    					ctx.smPages.add(rightPageId);
+    					ctx.leafFrame.setSmFlag(true);
+    					rightFrame.setSmFlag(true);
 
-                    treeLatch.writeLock().lock(); // lock is released in
-                    // unsetSmPages(), after sm has
-                    // fully completed
-                    treeLatchesAcquired++;
-                    try {
+    					rightFrame.setNextLeaf(ctx.leafFrame.getNextLeaf());
+    					rightFrame.setPrevLeaf(pageId);
+    					ctx.leafFrame.setNextLeaf(rightPageId);
 
-                        int rightPageId = getFreePage(ctx.metaFrame);
-                        ICachedPage rightNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rightPageId), true);
-                        pins++;
-                        rightNode.acquireWriteLatch();
-                        writeLatchesAcquired++;
-                        try {
-                            ISlotManager rightSlotManager = leafSlotManagerFactory.getSlotManager();
-                            IBTreeFrameLeaf rightFrame = leafFrameFactory.getFrame();
-                            rightFrame.setPage(rightNode);
-                            rightFrame.initBuffer((byte) 0);
+    					// TODO: we just use increasing numbers as pageLsn, we
+    					// should tie this together with the LogManager and
+    					// TransactionManager
+    					rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
+    					ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
 
-                            int ret = ctx.leafFrame.split(rightFrame, data, cmp, ctx.splitKey);
+    					if (ret != 0) {
+    						ctx.splitKey.reset();
+    					} else {
+    						// System.out.print("LEAF SPLITKEY: ");
+    						// cmp.printKey(splitKey.getData(), 0);
+    						// System.out.println("");
 
-                            ctx.smPages.add(pageId);
-                            ctx.smPages.add(rightPageId);
-                            ctx.leafFrame.setSmFlag(true);
-                            rightFrame.setSmFlag(true);
+    						ctx.splitKey.setPages(pageId, rightPageId);
+    					}
+    					if (rightSibling != null) {
+    						rightSibling.acquireWriteLatch();
+    						writeLatchesAcquired++;
+    						try {
+    							rightFrame.setPage(rightSibling); // reuse
+    							// rightFrame
+    							// for
+    							// modification
+    							rightFrame.setPrevLeaf(rightPageId);
+    						} finally {
+    							rightSibling.releaseWriteLatch();
+    							writeLatchesReleased++;
+    						}
+    					}
+    				} finally {
+    					rightNode.releaseWriteLatch();
+    					writeLatchesReleased++;
+    					bufferCache.unpin(rightNode);
+    					unpins++;
+    				}
+    			} catch (Exception e) {
+    				treeLatch.writeLock().unlock();
+    				treeLatchesReleased++;
+    				throw e;
+    			} finally {
+    				if (rightSibling != null) {
+    					bufferCache.unpin(rightSibling);
+    					unpins++;
+    				}
+    			}    	
+    		}
+    	} break;   
+    	
+    	}
 
-                            rightFrame.setNextLeaf(ctx.leafFrame.getNextLeaf());
-                            rightFrame.setPrevLeaf(pageId);
-                            ctx.leafFrame.setNextLeaf(rightPageId);
-
-                            // TODO: we just use increasing numbers as pageLsn, we
-                            // should tie this together with the LogManager and
-                            // TransactionManager
-                            rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
-                            ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
-
-                            if (ret != 0) {
-                                ctx.splitKey.reset();
-                            } else {
-                                // System.out.print("LEAF SPLITKEY: ");
-                                // cmp.printKey(splitKey.getData(), 0);
-                                // System.out.println("");
-
-                                ctx.splitKey.setPages(pageId, rightPageId);
-                            }
-                            if (rightSibling != null) {
-                                rightSibling.acquireWriteLatch();
-                                writeLatchesAcquired++;
-                                try {
-                                    rightFrame.setPage(rightSibling); // reuse
-                                    // rightFrame
-                                    // for
-                                    // modification
-                                    rightFrame.setPrevLeaf(rightPageId);
-                                } finally {
-                                    rightSibling.releaseWriteLatch();
-                                    writeLatchesReleased++;
-                                }
-                            }
-                        } finally {
-                            rightNode.releaseWriteLatch();
-                            writeLatchesReleased++;
-                            bufferCache.unpin(rightNode);
-                            unpins++;
-                        }
-                    } catch (Exception e) {
-                        treeLatch.writeLock().unlock();
-                        treeLatchesReleased++;
-                        throw e;
-                    } finally {
-                        if (rightSibling != null) {
-                            bufferCache.unpin(rightSibling);
-                            unpins++;
-                        }
-                    }
-                }
-            }
-                break;
-
-        }
-
-        node.releaseWriteLatch();
-        writeLatchesReleased++;
-        bufferCache.unpin(node);
-        unpins++;
+    	node.releaseWriteLatch();
+    	writeLatchesReleased++;
+    	bufferCache.unpin(node);
+    	unpins++;
     }
 
     private void insertInterior(ICachedPage node, int pageId, byte[] data, BTreeOpContext ctx) throws Exception {
@@ -1052,8 +1039,7 @@ public class BTree {
                     } // end while
                 } else { // smFlag
                     ctx.opRestarts++;
-                    System.out.println("ONGOING SM ON PAGE " + pageId + " AT LEVEL " + ctx.interiorFrame.getLevel()
-                            + ", RESTARTS: " + ctx.opRestarts);
+                    System.out.println("ONGOING SM ON PAGE " + pageId + " AT LEVEL " + ctx.interiorFrame.getLevel() + ", RESTARTS: " + ctx.opRestarts);                    
                     releaseLatch(node, ctx.op, isLeaf);
                     bufferCache.unpin(node);
                     unpins++;
@@ -1107,6 +1093,7 @@ public class BTree {
             // failure to pin a new node during a
             // split
             System.out.println("ASTERIX EXCEPTION");
+            e.printStackTrace();
             releaseLatch(node, ctx.op, isLeaf);
             bufferCache.unpin(node);
             unpins++;
@@ -1121,7 +1108,7 @@ public class BTree {
 
     private boolean bulkNewPage = false;
 
-    public final class BulkLoadContext {
+    public final class BulkLoadContext {               
         public int slotSize;
         public int leafMaxBytes;
         public int interiorMaxBytes;
@@ -1214,18 +1201,17 @@ public class BTree {
         frontier.lastRecord = insBytes;
         frontier.bytesInserted += spaceNeeded;
     }
-
+    
     // assumes btree has been created and opened
-    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeFrameLeaf leafFrame,
-            IBTreeFrameInterior interiorFrame, IBTreeFrameMeta metaFrame) throws Exception {
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);
+    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame, IBTreeFrameMeta metaFrame) throws Exception {
+        BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);        
         return ctx;
     }
-
-    public void bulkLoadAddRecord(BulkLoadContext ctx, byte[] record) throws Exception {
+    
+    public void bulkLoadAddRecord(BulkLoadContext ctx, byte[] record) throws Exception {                        
         NodeFrontier leafFrontier = ctx.nodeFrontiers.get(0);
         IBTreeFrameLeaf leafFrame = ctx.leafFrame;
-
+        
         int spaceNeeded = record.length + ctx.slotSize;
         if (leafFrontier.bytesInserted + spaceNeeded > ctx.leafMaxBytes) {
             int splitKeySize = cmp.getKeySize(leafFrontier.lastRecord, 0);
@@ -1248,22 +1234,21 @@ public class BTree {
             leafFrame.setPrevLeaf(prevPageId);
             leafFrontier.bytesInserted = 0;
         }
-
+        
         leafFrame.setPage(leafFrontier.page);
         leafFrame.insertSorted(record, cmp);
         leafFrontier.lastRecord = record;
         leafFrontier.bytesInserted += spaceNeeded;
     }
-
-    public void endBulkLoad(BulkLoadContext ctx) throws Exception {
+    
+    public void endBulkLoad(BulkLoadContext ctx) throws Exception {                
         // copy root
         ICachedPage rootNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rootPage), bulkNewPage);
         rootNode.acquireWriteLatch();
-        try {
+        try {        
             ICachedPage toBeRoot = ctx.nodeFrontiers.get(ctx.nodeFrontiers.size() - 1).page;
-            System.arraycopy(toBeRoot.getBuffer().array(), 0, rootNode.getBuffer().array(), 0, toBeRoot.getBuffer()
-                    .capacity());
-        } finally {
+            System.arraycopy(toBeRoot.getBuffer().array(), 0, rootNode.getBuffer().array(), 0, toBeRoot.getBuffer().capacity());        
+        } finally {        
             rootNode.releaseWriteLatch();
             bufferCache.unpin(rootNode);
 
@@ -1276,7 +1261,7 @@ public class BTree {
         // debug
         currentLevel = (byte) ctx.nodeFrontiers.size();
     }
-
+    
     public IBTreeFrameInteriorFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }
