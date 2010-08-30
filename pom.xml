@@ -32,6 +32,15 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <modules>
     <module>hyracks-api</module>
     <module>hyracks-dataflow-common</module>
@@ -44,5 +53,6 @@
     <module>hyracks-examples</module>
     <module>hyracks-server</module>
     <module>hyracks-storage-common</module>
+    <module>hyracks-storage-am-btree</module>
   </modules>
 </project>
