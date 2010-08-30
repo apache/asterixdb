@@ -1,19 +1,34 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
 
 public class MultiComparator {
     
-	private IComparator[] cmps = null;
+	private IBinaryComparator[] cmps = null;
 	private IFieldAccessor[] fields = null;
 	
-	public MultiComparator(IComparator[] cmps, IFieldAccessor[] fields) {
+	public MultiComparator(IBinaryComparator[] cmps, IFieldAccessor[] fields) {
 		this.cmps = cmps;
 		this.fields = fields;
 	}
 	
-	public IComparator[] getComparators() {
+	public IBinaryComparator[] getComparators() {
 	    return cmps;
 	}
 	
@@ -21,7 +36,7 @@ public class MultiComparator {
 	    return cmps.length;
 	}
 	
-	public void setComparators(IComparator[] cmps) {
+	public void setComparators(IBinaryComparator[] cmps) {
 		this.cmps = cmps;
 	}
 	
@@ -38,23 +53,31 @@ public class MultiComparator {
 	}
 		
 	public int compare(byte[] dataA, int recOffA, byte[] dataB, int recOffB) {
+		int lenA;
+		int lenB;
 		for(int i = 0; i < cmps.length; i++) {
-    		int cmp = cmps[i].compare(dataA, recOffA, dataB, recOffB);	
+			lenA = fields[i].getLength(dataA, recOffA);
+			lenB = fields[i].getLength(dataB, recOffB);			
+			int cmp = cmps[i].compare(dataA, recOffA, lenA, dataB, recOffB, lenB);	
     		if(cmp < 0) return -1;
     		else if(cmp > 0) return 1;
-    		recOffA += fields[i].getLength(dataA, recOffA);
-    		recOffB += fields[i].getLength(dataB, recOffB);
+    		recOffA += lenA; 
+   			recOffB += lenB;    			
     	}
     	return 0;
 	}
 	
 	public int fieldRangeCompare(byte[] dataA, int recOffA, byte[] dataB, int recOffB, int startFieldIndex, int numFields) {
+		int lenA;
+		int lenB;
 		for(int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
-		    int cmp = cmps[i].compare(dataA, recOffA, dataB, recOffB);
+			lenA = fields[i].getLength(dataA, recOffA);
+			lenB = fields[i].getLength(dataB, recOffB);			
+			int cmp = cmps[i].compare(dataA, recOffA, lenA, dataB, recOffB, lenB);
     		if(cmp < 0) return -1;
     		else if(cmp > 0) return 1;
-    		recOffA += fields[i].getLength(dataA, recOffA);
-    		recOffB += fields[i].getLength(dataB, recOffB);
+    		recOffA += lenA; 
+   			recOffB += lenB;
     	}
     	return 0;
 	}

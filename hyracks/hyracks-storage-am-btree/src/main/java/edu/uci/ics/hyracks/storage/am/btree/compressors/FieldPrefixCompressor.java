@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.compressors;
 
 import java.nio.ByteBuffer;
@@ -5,11 +20,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
@@ -41,7 +56,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     	float ratio = (float)numUncompressedRecords / (float)numRecords;    	
     	if(ratio < ratioThreshold) return false;
     	
-        IComparator[] cmps = cmp.getComparators();
+        IBinaryComparator[] cmps = cmp.getComparators();
         IFieldAccessor[] fields = cmp.getFields();
         
         ByteBuffer buf = frame.getBuffer();
@@ -152,7 +167,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                         // check if records match in numFieldsToCompress of their first fields
                         int prefixFieldsMatch = 0;
                         for(int j = 0; j < numFieldsToCompress; j++) {                                                    
-                            if(cmps[j].compare(pageArray, prevRec.getFieldOff(), pageArray, rec.getFieldOff()) == 0) prefixFieldsMatch++;
+                            if(cmps[j].compare(pageArray, prevRec.getFieldOff(), prevRec.getFieldSize(), pageArray, rec.getFieldOff(), rec.getFieldSize()) == 0) prefixFieldsMatch++;
                             else break;
                             prevRec.nextField();
                             rec.nextField();
@@ -285,9 +300,9 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     // the prefix length may be different for different keypartitions
     // the occurrenceThreshold determines the minimum number of records that must share a common prefix in order for us to consider compressing them        
     private ArrayList<KeyPartition> getKeyPartitions(FieldPrefixNSMLeaf frame, MultiComparator cmp, int occurrenceThreshold) {        
-    	IComparator[] cmps = cmp.getComparators();
+    	IBinaryComparator[] cmps = cmp.getComparators();
         IFieldAccessor[] fields = cmp.getFields();
-                
+        
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
@@ -314,7 +329,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             
             for(int j = 0; j < maxCmps; j++) {                
             	            	
-            	if(cmps[j].compare(pageArray, prevRec.getFieldOff(), pageArray, rec.getFieldOff()) == 0) {
+            	if(cmps[j].compare(pageArray, prevRec.getFieldOff(), prevRec.getFieldSize(), pageArray, rec.getFieldOff(), prevRec.getFieldSize()) == 0) {
                     prefixFieldsMatch++;
                     kp.pmi[j].matches++;                     
                     prefixBytes += rec.getFieldSize();            
