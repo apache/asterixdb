@@ -1,65 +1,63 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.hyracks.storage.am.btree.compressors;
+package edu.uci.ics.asterix.indexing.btree.compressors;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.asterix.indexing.btree.impls.FieldIterator;
+import edu.uci.ics.asterix.indexing.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IFrameCompressor;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
+		
+	// minimum ratio of uncompressed records to total records to consider re-compression
+	private float ratioThreshold;
 	
-	public void compress(FieldPrefixNSMLeaf frame, MultiComparator cmp) throws HyracksDataException {
-    	int numRecords = frame.getNumRecords();       
-        //System.out.println("NUMRECORDS: " + numRecords);
+	// minimum number of records matching field prefixes to consider compressing them 
+	private int occurrenceThreshold;
+	
+	public FieldPrefixCompressor(float ratioThreshold, int occurrenceThreshold) {
+		this.ratioThreshold = ratioThreshold;
+		this.occurrenceThreshold = occurrenceThreshold;
+	}
+	
+	@Override
+	public boolean compress(FieldPrefixNSMLeaf frame, MultiComparator cmp) throws Exception {		
+		int numRecords = frame.getNumRecords();
     	if(numRecords <= 0) {
             frame.setNumPrefixRecords(0);
             frame.setFreeSpaceOff(frame.getOrigFreeSpaceOff());
             frame.setTotalFreeSpace(frame.getOrigTotalFreeSpace());
-            return;
+            return false;
         }
-        
+    	
+    	int numUncompressedRecords = frame.getNumUncompressedRecords();
+    	float ratio = (float)numUncompressedRecords / (float)numRecords;    	
+    	if(ratio < ratioThreshold) return false;
+    	
         IComparator[] cmps = cmp.getComparators();
         IFieldAccessor[] fields = cmp.getFields();
         
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
         IPrefixSlotManager slotManager = frame.slotManager;
-        
-        int occurrenceThreshold = 2;
-        
+                
         // perform analysis pass
         ArrayList<KeyPartition> keyPartitions = getKeyPartitions(frame, cmp, occurrenceThreshold);
-        if(keyPartitions.size() == 0) return;
-        
-        //System.out.println("KEYPARTITIONS: " + keyPartitions.size());
+        if(keyPartitions.size() == 0) return false;
         
         // for each keyPartition, determine the best prefix length for compression, and count how many prefix records we would need in total
         int totalSlotsNeeded = 0;
         int totalPrefixBytes = 0;
-        for(KeyPartition kp : keyPartitions) {                                	
+        for(KeyPartition kp : keyPartitions) {        	
+        	         	
         	for(int j = 0; j < kp.pmi.length; j++) {
                 int benefitMinusCost = kp.pmi[j].spaceBenefit - kp.pmi[j].spaceCost;            
                 if(benefitMinusCost > kp.maxBenefitMinusCost) {
@@ -68,11 +66,13 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                 }
             }
         	        	
-            if(kp.maxBenefitMinusCost <= 0) continue; // ignore keyPartitions with no benefit
+        	// ignore keyPartitions with no benefit and don't count bytes and slots needed
+        	if(kp.maxBenefitMinusCost <= 0) continue; 
             
             totalPrefixBytes += kp.pmi[kp.maxPmiIndex].prefixBytes;
             totalSlotsNeeded += kp.pmi[kp.maxPmiIndex].prefixSlotsNeeded;
         }
+        
         //System.out.println("TOTAL SLOTS NEEDED: " + totalSlotsNeeded);
         
         // we use a greedy heuristic to solve this "knapsack"-like problem
@@ -128,6 +128,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         int kpIndex = 0;
         int recSlotNum = 0;
         int prefixSlotNum = 0;
+        numUncompressedRecords = 0;
         FieldIterator recToWrite = new FieldIterator(fields, frame);
         while(recSlotNum < numRecords) {           
             if(kpIndex < keyPartitions.size()) {
@@ -175,11 +176,12 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                         		    newRecordSlots[numRecords - 1 - slotNum] = slotManager.encodeSlotFields(FieldPrefixSlotManager.RECORD_UNCOMPRESSED, recordFreeSpace);
                         		    recordFreeSpace += recToWrite.copyFields(0, fields.length - 1, buffer, recordFreeSpace);
                         		}
+                        		numUncompressedRecords += recordsInSegment;
                         	}
                         	else {
                         	    // segment has enough records, compress segment
-                        		// extract prefix, write prefix record to buffer, and set prefix slot
-                        	    newPrefixSlots[newPrefixSlots.length - 1 - prefixSlotNum] = slotManager.encodeSlotFields(numFieldsToCompress, prefixFreeSpace);
+                        		// extract prefix, write prefix record to buffer, and set prefix slot                        	    
+                        		newPrefixSlots[newPrefixSlots.length - 1 - prefixSlotNum] = slotManager.encodeSlotFields(numFieldsToCompress, prefixFreeSpace);
                         	    //int tmp = freeSpace;
                         	    //prevRec.reset();
                         	    //System.out.println("SOURCE CONTENTS: " + buf.getInt(prevRec.getFieldOff()) + " " + buf.getInt(prevRec.getFieldOff()+4));
@@ -214,6 +216,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             	    recToWrite.openRecSlotNum(recSlotNum);
             	    newRecordSlots[numRecords - 1 - recSlotNum] = slotManager.encodeSlotFields(FieldPrefixSlotManager.RECORD_UNCOMPRESSED, recordFreeSpace);
             	    recordFreeSpace += recToWrite.copyFields(0, fields.length - 1, buffer, recordFreeSpace);
+            	    numUncompressedRecords++;
             	}
             }
             else {
@@ -221,20 +224,21 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                 recToWrite.openRecSlotNum(recSlotNum);
                 newRecordSlots[numRecords - 1 - recSlotNum] = slotManager.encodeSlotFields(FieldPrefixSlotManager.RECORD_UNCOMPRESSED, recordFreeSpace);
                 recordFreeSpace += recToWrite.copyFields(0, fields.length - 1, buffer, recordFreeSpace);
+                numUncompressedRecords++;
             }   
             recSlotNum++;
         }            
         
         // sanity check to see if we have written exactly as many prefix bytes as computed before
         if(prefixFreeSpace != frame.getOrigFreeSpaceOff() + totalPrefixBytes) {
-        	throw new HyracksDataException("ERROR: Number of prefix bytes written don't match computed number");
+        	throw new AsterixException("ERROR: Number of prefix bytes written don't match computed number");
         }
                 
         // in some rare instances our procedure could even increase the space requirement which is very dangerous
         // this can happen to to the greedy solution of the knapsack-like problem
         // therefore, we check if the new space exceeds the page size to avoid the only danger of an increasing space
         int totalSpace = recordFreeSpace + newRecordSlots.length * slotManager.getSlotSize() + newPrefixSlots.length * slotManager.getSlotSize();
-        if(totalSpace > buf.capacity()) return; // just leave the page as is
+        if(totalSpace > buf.capacity()) return false; // just leave the page as is
         
         // copy new records and new slots into original page
         int freeSpaceAfterInit = frame.getOrigFreeSpaceOff();
@@ -268,8 +272,11 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         // update space fields, TODO: we need to update more fields 
         frame.setFreeSpaceOff(recordFreeSpace);
         frame.setNumPrefixRecords(newPrefixSlots.length);
+        frame.setNumUncompressedRecords(numUncompressedRecords);
         int totalFreeSpace = buf.capacity() - recordFreeSpace - ((newRecordSlots.length + newPrefixSlots.length) * slotManager.getSlotSize());
         frame.setTotalFreeSpace(totalFreeSpace);
+        
+        return true;
     }
 	
     // we perform an analysis pass over the records to determine the costs and benefits of different compression options
@@ -306,19 +313,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             int prefixFieldsMatch = 0;            
             int prefixBytes = 0; // counts the bytes of the common prefix fields
             
-            for(int j = 0; j < maxCmps; j++) {            	                
-                // debug
-            	if(rec.getFieldOff() > 50000) {
-                	System.out.println("NUMRECORDS: " + numRecords + " " + frame.getNumPrefixRecords());
-                	int recSlotOff = slotManager.getRecSlotOff(i);
-                	int recSlot = buf.getInt(recSlotOff);
-                	int prefixSlotNum = slotManager.decodeFirstSlotField(recSlot);
-                	int recOff = slotManager.decodeSecondSlotField(recSlot);
-                	
-                	System.out.println("HERE: " + recSlotOff + " " + recSlot + " " + prefixSlotNum + " " + recOff);
-                	String keys = frame.printKeys(cmp);
-                	System.out.println(keys);
-                }
+            for(int j = 0; j < maxCmps; j++) {                
             	            	
             	if(cmps[j].compare(pageArray, prevRec.getFieldOff(), pageArray, rec.getFieldOff()) == 0) {
                     prefixFieldsMatch++;
@@ -386,26 +381,15 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         public PrefixMatchInfo[] pmi;
         
         public int maxBenefitMinusCost = 0;
-        public int maxPmiIndex = -1;
-        
-        public int totalUncompressedSpace = 0;
+        public int maxPmiIndex = -1;        
+        // number of fields used for compression for this kp of current page
         
         public KeyPartition(int numKeyFields) {
             pmi = new PrefixMatchInfo[numKeyFields];
             for(int i = 0; i < numKeyFields; i++) {
                 pmi[i] = new PrefixMatchInfo();
             }
-        }
-        
-        void print() {
-            for(int i = 0; i < pmi.length; i++) {
-                System.out.println("PMI: " + i + " | " 
-                        + "MATCHES: " + pmi[i].matches + " | "                         
-                        + "SPACECOST: " + pmi[i].spaceCost + " | "
-                        + "SPACEBENEFIT: " + pmi[i].spaceBenefit + " | "
-                        + "SLOTSNEEDED: " + pmi[i].prefixSlotsNeeded);
-            }
-        }     
+        }        
     }    
     
     private class SortByHeuristic implements Comparator<KeyPartition>{

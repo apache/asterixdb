@@ -1,26 +1,13 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.asterix.indexing.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
 
 //TODO: make members private, only for debugging now
 public class FieldIterator {
     public int recSlotOff = -1;
     public int recOff = -1;
+    public int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
     public int numPrefixFields = 0;
     public IFieldAccessor[] fields;
     public FieldPrefixNSMLeaf frame;
@@ -55,7 +42,7 @@ public class FieldIterator {
         currentField = 0;
         numPrefixFields = 0;
         int recSlot = frame.getBuffer().getInt(recSlotOff);
-        int prefixSlotNum = frame.slotManager.decodeFirstSlotField(recSlot);
+        prefixSlotNum = frame.slotManager.decodeFirstSlotField(recSlot);
         recOff = frame.slotManager.decodeSecondSlotField(recSlot);
                 
         // position to prefix records first (if record is compressed)
@@ -67,14 +54,15 @@ public class FieldIterator {
         }
         else {
             recOffRunner = recOff;
-        }
+        }        
     }
     
     public void nextField() {                   
-        // if we have passed the prefix fields of any of the two records, position them to the suffix record
+            	
+    	// if we have passed the prefix fields of any of the two records, position them to the suffix record
         if(currentField+1 == numPrefixFields) recOffRunner = recOff;
         else recOffRunner += fields[currentField].getLength(frame.getBuffer().array(), recOffRunner);
-        currentField++;                        
+        currentField++;        
     }
     
     public int getFieldOff() {
