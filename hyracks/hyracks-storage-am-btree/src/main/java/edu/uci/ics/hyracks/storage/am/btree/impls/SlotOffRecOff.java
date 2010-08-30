@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 public class SlotOffRecOff implements Comparable<SlotOffRecOff> {
 	public int slotOff;

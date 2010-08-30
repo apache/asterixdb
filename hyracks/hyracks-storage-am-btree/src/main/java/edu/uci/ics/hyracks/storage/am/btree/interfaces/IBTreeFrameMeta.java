@@ -1,6 +1,6 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface IBTreeFrameMeta {
     public void initBuffer(int level);

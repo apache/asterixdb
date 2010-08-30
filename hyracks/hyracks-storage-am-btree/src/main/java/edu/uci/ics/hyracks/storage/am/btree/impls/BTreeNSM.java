@@ -1,6 +1,6 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
 
 public abstract class BTreeNSM extends NSMFrame implements IBTreeFrame {
 	

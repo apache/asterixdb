@@ -1,8 +1,8 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 
 public interface ISlotManager {

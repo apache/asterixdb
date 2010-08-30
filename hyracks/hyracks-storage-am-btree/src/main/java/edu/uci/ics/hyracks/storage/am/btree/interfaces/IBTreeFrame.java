@@ -1,7 +1,7 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
 public interface IBTreeFrame extends IFrame {
 	// TODO; what if records more than half-page size?

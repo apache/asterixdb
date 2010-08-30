@@ -1,6 +1,6 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class NodeFrontier {
 	public int bytesInserted;

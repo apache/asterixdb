@@ -1,9 +1,9 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface IFrame {	
 	public void setPage(ICachedPage page);

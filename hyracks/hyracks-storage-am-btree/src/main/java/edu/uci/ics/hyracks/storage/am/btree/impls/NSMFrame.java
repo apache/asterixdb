@@ -1,13 +1,13 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFrame;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManager;
-import edu.uci.ics.asterix.indexing.btree.interfaces.SpaceStatus;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrame;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class NSMFrame implements IFrame {	
 	

@@ -1,19 +1,18 @@
-package edu.uci.ics.asterix.indexing.btree.compressors;
+package edu.uci.ics.hyracks.storage.am.btree.compressors;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.asterix.indexing.btree.impls.FieldIterator;
-import edu.uci.ics.asterix.indexing.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
 		
@@ -231,7 +230,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         
         // sanity check to see if we have written exactly as many prefix bytes as computed before
         if(prefixFreeSpace != frame.getOrigFreeSpaceOff() + totalPrefixBytes) {
-        	throw new AsterixException("ERROR: Number of prefix bytes written don't match computed number");
+        	throw new Exception("ERROR: Number of prefix bytes written don't match computed number");
         }
                 
         // in some rare instances our procedure could even increase the space requirement which is very dangerous
@@ -414,5 +413,5 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         public int compare(KeyPartition a, KeyPartition b) {
             return a.firstRecSlotNum - b.firstRecSlotNum;
         }
-    }
+    }	
 }
