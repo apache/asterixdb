@@ -1,8 +1,8 @@
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.1</version>
   <packaging>pom</packaging>
 
   <build>
@@ -16,10 +16,10 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</developerConnection>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.1</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.1</developerConnection>
     <tag>HEAD</tag>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks</url>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/hyracks-0.1.1</url>
   </scm>
 
   <distributionManagement>
