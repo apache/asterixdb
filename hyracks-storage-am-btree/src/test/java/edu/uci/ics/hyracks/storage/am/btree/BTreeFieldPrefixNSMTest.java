@@ -1,33 +1,49 @@
-package edu.uci.ics.asterix.test.storage;
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+package edu.uci.ics.hyracks.storage.am.btree;
+
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.asterix.indexing.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
-import edu.uci.ics.asterix.indexing.types.Int32Accessor;
-import edu.uci.ics.asterix.indexing.types.Int32Comparator;
-import edu.uci.ics.asterix.om.AInt32;
-import edu.uci.ics.asterix.storage.buffercache.BufferAllocator;
-import edu.uci.ics.asterix.storage.buffercache.BufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ClockPageReplacementStrategy;
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
-import edu.uci.ics.asterix.storage.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.asterix.storage.file.FileInfo;
-import edu.uci.ics.asterix.storage.file.FileManager;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
+import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BTreeFieldPrefixNSMTest {
 	
@@ -40,21 +56,35 @@ public class BTreeFieldPrefixNSMTest {
     
     // to help with the logger madness
     private void print(String str) {
-    	if(GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {            
-        	GlobalConfig.ASTERIX_LOGGER.finest(str);
-        }
+    	System.out.print(str);
+    	
+//    	if(GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {            
+//        	GlobalConfig.ASTERIX_LOGGER.finest(str);
+//        }
     }       
+    
+    public class BufferAllocator implements ICacheMemoryAllocator {
+        @Override
+        public ByteBuffer[] allocate(int pageSize, int numPages) {
+            ByteBuffer[] buffers = new ByteBuffer[numPages];
+            for (int i = 0; i < numPages; ++i) {
+                buffers[i] = ByteBuffer.allocate(pageSize);
+            }
+            return buffers;
+        }
+    }
     
     private void tupleInsert(FieldPrefixNSMLeaf frame, MultiComparator cmp, int f0, int f1, int f2, boolean print, ArrayList<byte[]> records) throws Exception {
     	if(print) System.out.println("INSERTING: " + f0 + " " + f1 + " " + f2);
     	
-    	byte[] record = new byte[12];
-        AInt32 field0 = new AInt32(f0);
-        AInt32 field1 = new AInt32(f1);
-        AInt32 field2 = new AInt32(f2);
-        System.arraycopy(field0.toBytes(), 0, record, 0, 4);
-        System.arraycopy(field1.toBytes(), 0, record, 4, 4);
-        System.arraycopy(field2.toBytes(), 0, record, 8, 4);
+    	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+    	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+    	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+    	
+    	byte[] record = baaos.toByteArray();        
         frame.insert(record, cmp);
         
         if(records != null) records.add(record);
@@ -81,10 +111,10 @@ public class BTreeFieldPrefixNSMTest {
         fields[2] = new Int32Accessor(); // third key field
         
         int keyLen = 3;
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new Int32Comparator();
-        cmps[1] = new Int32Comparator();
-        cmps[2] = new Int32Comparator();
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(cmps, fields);
         
         Random rnd = new Random();

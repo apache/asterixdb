@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.util.ArrayList;
@@ -23,7 +38,7 @@ public class BTree {
 		
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
-
+    
     private final int metaDataPage = 0; // page containing meta data, e.g.,
                                         // maxPage
     private final int rootPage = 1; // the root page never changes
@@ -378,7 +393,7 @@ public class BTree {
         ctx.pageLsns = new Stack<Integer>();
         if (ctx.pred.getComparator() == null)
             ctx.pred.setComparator(cmp); // simple index scan
-
+        
         boolean repeatOp = true;
         // we use this loop to deal with possibly multiple operation restarts
         // due to ongoing structure modifications during the descent

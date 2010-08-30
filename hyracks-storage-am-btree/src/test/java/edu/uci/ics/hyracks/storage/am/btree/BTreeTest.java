@@ -1,46 +1,61 @@
-package edu.uci.ics.asterix.test.storage;
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+package edu.uci.ics.hyracks.storage.am.btree;
+
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.junit.Test;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.indexing.btree.impls.BTree;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeDiskOrderScanCursor;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeMetaFactory;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeNSMInteriorFactory;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeNSMLeafFactory;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeRangeSearchCursor;
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.impls.OrderedSlotManagerFactory;
-import edu.uci.ics.asterix.indexing.btree.impls.RangePredicate;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInteriorFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeafFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMetaFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManagerFactory;
-import edu.uci.ics.asterix.indexing.types.Int32Accessor;
-import edu.uci.ics.asterix.indexing.types.Int32Comparator;
-import edu.uci.ics.asterix.indexing.types.StringAccessor;
-import edu.uci.ics.asterix.indexing.types.StringComparator;
-import edu.uci.ics.asterix.om.AInt32;
-import edu.uci.ics.asterix.storage.buffercache.BufferAllocator;
-import edu.uci.ics.asterix.storage.buffercache.BufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ClockPageReplacementStrategy;
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.asterix.storage.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.asterix.storage.file.FileInfo;
-import edu.uci.ics.asterix.storage.file.FileManager;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeMetaFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMInteriorFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManagerFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInteriorFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMetaFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManagerFactory;
+import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
+import edu.uci.ics.hyracks.storage.am.btree.types.StringAccessor;
+import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BTreeTest {    
     private static final int PAGE_SIZE = 128;
@@ -49,8 +64,21 @@ public class BTreeTest {
     
     // to help with the logger madness
     private void print(String str) {
-    	if(GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {
-            GlobalConfig.ASTERIX_LOGGER.finest(str);
+    	System.out.print(str);
+    	
+//    	if(GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {            
+//        	GlobalConfig.ASTERIX_LOGGER.finest(str);
+//        }
+    }       
+    
+    public class BufferAllocator implements ICacheMemoryAllocator {
+        @Override
+        public ByteBuffer[] allocate(int pageSize, int numPages) {
+            ByteBuffer[] buffers = new ByteBuffer[numPages];
+            for (int i = 0; i < numPages; ++i) {
+                buffers[i] = ByteBuffer.allocate(pageSize);
+            }
+            return buffers;
         }
     }
     
@@ -89,8 +117,8 @@ public class BTreeTest {
         fields[1] = new Int32Accessor(); // value field
 
         int keyLen = 1;
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new Int32Comparator();
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, interiorSlotManagerFactory, leafSlotManagerFactory, cmp);
@@ -103,21 +131,22 @@ public class BTreeTest {
         long start = System.currentTimeMillis();                
         
         print("INSERTING INTO TREE\n");
-
-        byte[] record = new byte[8];
+        
         for (int i = 0; i < 10000; i++) {
-            AInt32 field0 = new AInt32(rnd.nextInt() % 10000);
-            AInt32 field1 = new AInt32(5);
-
-            byte[] f0 = field0.toBytes();
-            byte[] f1 = field1.toBytes();
-            
-            System.arraycopy(f0, 0, record, 0, 4);
-            System.arraycopy(f1, 0, record, 4, 4);
-            
+        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+        	
+        	int f0 = rnd.nextInt() % 10000;
+        	int f1 = 5;
+        	
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	
+        	byte[] record = baaos.toByteArray();
+        	        	           
             if (i % 1000 == 0) {
                 long end = System.currentTimeMillis();
-                print("INSERTING " + i + " : " + field0.getIntegerValue() + " " + field1.getIntegerValue() + " " + (end - start) + "\n");            	
+                print("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start) + "\n");            	
             }
             
             try {                                
@@ -178,16 +207,21 @@ public class BTreeTest {
  
         IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
-        AInt32 lk = new AInt32(-1000);
-        byte[] lowKey = lk.toBytes();
-
-        AInt32 hk = new AInt32(1000);
-        byte[] highKey = hk.toBytes();
-
-        IComparator[] searchCmps = new IComparator[1];
-        searchCmps[0] = new Int32Comparator();
+        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(-1000, lkdos);
+    	
+    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(1000, hkdos);
+    	    	        
+        byte[] lowKey = lkbaaos.toByteArray();
+        byte[] highKey = hkbaaos.toByteArray();
+        
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
-
+        
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
@@ -248,9 +282,9 @@ public class BTreeTest {
         fields[2] = new Int32Accessor(); // value field
 
         int keyLen = 2;
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new Int32Comparator();
-        cmps[1] = new Int32Comparator();        
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
         BTree btree = new BTree(bufferCache, 
@@ -268,22 +302,22 @@ public class BTreeTest {
         long start = System.currentTimeMillis();
         
         print("INSERTING INTO TREE\n");
-        byte[] record = new byte[12];
         for (int i = 0; i < 10000; i++) {
-            AInt32 field0 = new AInt32(rnd.nextInt() % 2000);
-            AInt32 field1 = new AInt32(rnd.nextInt() % 1000);
-            AInt32 field2 = new AInt32(5);
-
-            byte[] f0 = field0.toBytes();
-            byte[] f1 = field1.toBytes();
-            byte[] f2 = field2.toBytes();
-            
-            System.arraycopy(f0, 0, record, 0, 4);
-            System.arraycopy(f1, 0, record, 4, 4);
-            System.arraycopy(f2, 0, record, 8, 4);             
-            
+        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+        	
+        	int f0 = rnd.nextInt() % 2000;
+        	int f1 = rnd.nextInt() % 1000;
+        	int f2 = 5;
+        	        	
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        	
+        	byte[] record = baaos.toByteArray();
+        	
             if (i % 1000 == 0) {
-            	print("INSERTING " + i + " : " + field0.getIntegerValue() + " " + field1.getIntegerValue() + "\n");
+            	print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
             }
             
             try {
@@ -321,14 +355,19 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");        
         IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
-        AInt32 lk = new AInt32(-3);
-        byte[] lowKey = lk.toBytes();
+        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(-3, lkdos);
+    	
+    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(3, hkdos);
+    	    	        
+        byte[] lowKey = lkbaaos.toByteArray();
+        byte[] highKey = hkbaaos.toByteArray();
         
-        AInt32 hk = new AInt32(3);
-        byte[] highKey = hk.toBytes();
-                
-        IComparator[] searchCmps = new IComparator[1];
-        searchCmps[0] = new Int32Comparator();
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields); // use only a single comparator for searching
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
@@ -391,11 +430,10 @@ public class BTreeTest {
     	fields[1] = new StringAccessor(); // value
 
     	int keyLen = 1;
-    	IComparator[] cmps = new IComparator[keyLen];
-    	cmps[0] = new StringComparator();
-
+    	IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+    	cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     	MultiComparator cmp = new MultiComparator(cmps, fields);
-
+    	
     	BTree btree = new BTree(bufferCache, 
     			interiorFrameFactory, 
     			leafFrameFactory, 
@@ -410,25 +448,17 @@ public class BTreeTest {
 
     	int maxLength = 10; // max string length to be generated
     	for (int i = 0; i < 10000; i++) {
-    		String field0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
-    		String field1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+    		String f0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+    		String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
     		
-    		byte[] f0 = field0.getBytes();
-    		byte[] f1 = field1.getBytes();
-
-    		byte[] record = new byte[f0.length + f1.length + 8];
-    		ByteBuffer buf = ByteBuffer.wrap(record);
-
-    		int start = 0;
-    		buf.putInt(start, f0.length);
-    		start += 4;
-    		System.arraycopy(f0, 0, record, start, f0.length);
-    		start += f0.length;
-    		buf.putInt(start, f1.length);
-    		start += 4;
-    		System.arraycopy(f1, 0, record, start, f1.length);
-    		start += f1.length;
-
+    		ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+        	
+        	UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	
+    		byte[] record = baaos.toByteArray();
+    		
     		if (i % 1000 == 0) {
     			print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");
     		}
@@ -465,20 +495,21 @@ public class BTreeTest {
         
         IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
                 
-        byte[] lowKey = new byte[7];        
-        ByteBuffer lkByteBuf = ByteBuffer.wrap(lowKey);
-        lkByteBuf.putInt(0, 3);
-        System.arraycopy("cbf".getBytes(), 0, lowKey, 4, 3);
+        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
+    	UTF8StringSerializerDeserializer.INSTANCE.serialize("cbf", lkdos);
+    	
+    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
+    	UTF8StringSerializerDeserializer.INSTANCE.serialize("cc7", hkdos);
         
-        byte[] highKey = new byte[7];
-        ByteBuffer hkByteBuf = ByteBuffer.wrap(highKey);
-        hkByteBuf.putInt(0, 3);
-        System.arraycopy("cc7".getBytes(), 0, highKey, 4, 3);
-                     
-        IComparator[] searchCmps = new IComparator[1];
-        searchCmps[0] = new StringComparator();
+        byte[] lowKey = lkbaaos.toByteArray();                        
+        byte[] highKey = hkbaaos.toByteArray();
+        
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
-
+        
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
@@ -539,9 +570,9 @@ public class BTreeTest {
         fields[1] = new StringAccessor(); // value
 
         int keyLen = 1;
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new StringComparator();
-
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
         BTree btree = new BTree(bufferCache, 
@@ -568,25 +599,16 @@ public class BTreeTest {
             int insDone = 0;
             int[] insDoneCmp = new int[ins];
             for (int i = 0; i < ins; i++) {
-                String field0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
-                String field1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
-
-                byte[] f0 = field0.getBytes();
-                byte[] f1 = field1.getBytes();
-
-                byte[] record = new byte[f0.length + f1.length + 8];
-                ByteBuffer buf = ByteBuffer.wrap(record);
-
-                int start = 0;
-                buf.putInt(start, f0.length);
-                start += 4;
-                System.arraycopy(f0, 0, record, start, f0.length);
-                start += f0.length;
-                buf.putInt(start, f1.length);
-                start += 4;
-                System.arraycopy(f1, 0, record, start, f1.length);
-                start += f1.length;
+                String f0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+                String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
                 
+        		ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+            	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+            	
+            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+                
+            	byte[] record = baaos.toByteArray();            	
                 records[i] = record;
 
                 if (i % 1000 == 0) {
@@ -678,10 +700,10 @@ public class BTreeTest {
         fields[1] = new Int32Accessor();
         fields[2] = new Int32Accessor();
 
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new Int32Comparator();
-        cmps[1] = new Int32Comparator();
-
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
         BTree btree = new BTree(bufferCache, 
@@ -700,20 +722,18 @@ public class BTreeTest {
         int ins = 100000;
         byte[][] records = new byte[ins][];
         for (int i = 0; i < ins; i++) {
-            byte[] record = new byte[12];
-
-            AInt32 field0 = new AInt32(i);
-            AInt32 field1 = new AInt32(i);
-            AInt32 field2 = new AInt32(rnd.nextInt() % 100);
-
-            byte[] f0 = field0.toBytes();
-            byte[] f1 = field1.toBytes();
-            byte[] f2 = field2.toBytes();
-
-            System.arraycopy(f0, 0, record, 0, 4);
-            System.arraycopy(f1, 0, record, 4, 4);
-            System.arraycopy(f2, 0, record, 8, 4);
-            records[i] = record;
+        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+        	
+        	int f0 = i;
+        	int f1 = i;
+        	int f2 = 5;
+        	
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        	
+            records[i] = baaos.toByteArray();
         }
 
         print("BULK LOADING " + ins + " RECORDS\n");
@@ -733,14 +753,22 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");
         IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
         
-        AInt32 lowKey = new AInt32(44444);
-        AInt32 highKey = new AInt32(44500);
-
-        IComparator[] searchCmps = new IComparator[1];
-        searchCmps[0] = new Int32Comparator();
+        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(44444, lkdos);
+    	
+    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(44500, hkdos);
+    	    	        
+        byte[] lowKey = lkbaaos.toByteArray();
+        byte[] highKey = hkbaaos.toByteArray();
+                
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
-
-        RangePredicate rangePred = new RangePredicate(false, lowKey.toBytes(), highKey.toBytes(), searchCmp);
+        
+        RangePredicate rangePred = new RangePredicate(false, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
         try {
@@ -800,10 +828,9 @@ public class BTreeTest {
         fields[1] = new Int32Accessor();
         fields[2] = new Int32Accessor();
 
-        IComparator[] cmps = new IComparator[keyLen];
-        cmps[0] = new Int32Comparator();
-        cmps[1] = new Int32Comparator();
-
+        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();        
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
         BTree btree = new BTree(bufferCache, 
@@ -819,9 +846,7 @@ public class BTreeTest {
         rnd.setSeed(50);
         
         long start = System.currentTimeMillis();
-
-        byte[] record = new byte[12];
-
+        
         int intervalCount = 10;
         int[][] intervals = new int[intervalCount][2];
 
@@ -857,19 +882,20 @@ public class BTreeTest {
 
         // int exceptionCount = 0;
         for (int i = 0; i < intervalCount; i++) {
-            AInt32 field0 = new AInt32(intervals[i][0]);
-            AInt32 field1 = new AInt32(intervals[i][1]);
-            AInt32 field2 = new AInt32(rnd.nextInt() % 100);
-
-            byte[] f0 = field0.toBytes();
-            byte[] f1 = field1.toBytes();
-            byte[] f2 = field2.toBytes();
-
-            System.arraycopy(f0, 0, record, 0, 4);
-            System.arraycopy(f1, 0, record, 4, 4);
-            System.arraycopy(f2, 0, record, 8, 4);
-
-            print("INSERTING " + i + " : " + field0.getIntegerValue() + " " + field1.getIntegerValue() + "\n");
+        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
+        	
+        	int f0 = intervals[i][0];
+        	int f1 = intervals[i][1];
+        	int f2 = rnd.nextInt() % 100;
+        	
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        	
+        	byte[] record = baaos.toByteArray();
+        	
+            print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
 
             try {
                 btree.insert(record, leafFrame, interiorFrame, metaFrame);
@@ -909,25 +935,24 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");
         IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
-        AInt32 lowerBound = new AInt32(12);
-        AInt32 upperBound = new AInt32(19);
-        byte[] lbBytes = lowerBound.toBytes();
-        byte[] hbBytes = upperBound.toBytes();
-
-        byte[] lowKey = new byte[8];
-        byte[] highKey = new byte[8];
-
-        System.arraycopy(lbBytes, 0, lowKey, 0, 4);
-        System.arraycopy(lbBytes, 0, lowKey, 4, 4);
-
-        System.arraycopy(hbBytes, 0, highKey, 0, 4);
-        System.arraycopy(hbBytes, 0, highKey, 4, 4);
-
-        IComparator[] searchCmps = new IComparator[2];
-        searchCmps[0] = new Int32Comparator();
-        searchCmps[1] = new Int32Comparator();
+        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(12, lkdos);
+    	IntegerSerializerDeserializer.INSTANCE.serialize(12, lkdos);
+    	
+    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
+    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
+    	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);
+    	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);    	        
+    	
+        byte[] lowKey = lkbaaos.toByteArray();
+        byte[] highKey = hkbaaos.toByteArray();
+        
+        IBinaryComparator[] searchCmps = new IBinaryComparator[2];
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        searchCmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
-
+        
         print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);

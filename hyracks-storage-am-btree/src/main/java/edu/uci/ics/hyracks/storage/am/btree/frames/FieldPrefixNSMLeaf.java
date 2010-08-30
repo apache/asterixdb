@@ -1,9 +1,25 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
@@ -13,7 +29,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
@@ -147,7 +162,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
             int recSlotOff = slotManager.getRecSlotOff(recSlotNum);
             
             if(exactDelete) {                    
-                IComparator[] cmps = cmp.getComparators();
+                IBinaryComparator[] cmps = cmp.getComparators();
                 IFieldAccessor[] fields = cmp.getFields();
                 FieldIterator fieldIter = new FieldIterator(fields, this);                    
                 fieldIter.openRecSlotOff(recSlotOff);
@@ -158,10 +173,11 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
                     fieldIter.nextField();                   
                 }                
                 for(int i = cmp.getKeyLength(); i < fields.length; i++) {
-                    if(cmps[i].compare(data, dataRunner, buf.array(), fieldIter.getFieldOff()) != 0) {
+                    int dataFieldLen = fields[i].getLength(data, dataRunner);
+                	if(cmps[i].compare(data, dataRunner, dataFieldLen, buf.array(), fieldIter.getFieldOff(), fieldIter.getFieldSize()) != 0) {
                         throw new BTreeException("Cannot delete record. Byte-by-byte comparison failed to prove equality.");
                     }
-                    dataRunner += fields[i].getLength(data, dataRunner);
+                    dataRunner += dataFieldLen;
                     fieldIter.nextField();    
                 }                                
             }

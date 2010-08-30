@@ -13,9 +13,22 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.types;
 
-public interface IFieldAccessor {	    
-    public int getLength(byte[] data, int offset); // skip to next field (equivalent to adding length of field to offset)        
-	public String print(byte[] data, int offset); // debug
+import java.nio.ByteBuffer;
+
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+
+public class Int32Accessor implements IFieldAccessor {
+	    
+	@Override
+	public int getLength(byte[] data, int offset) {
+		return 4;
+	}
+	
+	@Override
+	public String print(byte[] data, int offset) {
+	    ByteBuffer buf = ByteBuffer.wrap(data);
+	    return String.format("%6d ", buf.getInt(offset));
+	}
 }

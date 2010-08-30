@@ -1,9 +1,24 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
 
 public class FieldPrefixSlotManager implements IPrefixSlotManager {
@@ -140,7 +155,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	}	
 	
 	public int compareCompressed(byte[] record, byte[] page, int prefixSlotNum, int recSlotNum, MultiComparator multiCmp) {                          
-         IComparator[] cmps = multiCmp.getComparators();
+         IBinaryComparator[] cmps = multiCmp.getComparators();
          fieldIter.setFields(multiCmp.getFields());
          fieldIter.setFrame(frame);         
          fieldIter.openRecSlotNum(recSlotNum);
@@ -148,11 +163,12 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
          int recRunner = 0;
          int cmp = 0;
          for(int i = 0; i < multiCmp.getKeyLength(); i++) {
-        	 cmp = cmps[i].compare(record, recRunner, buf.array(), fieldIter.getFieldOff());             
+        	 int recFieldLen = multiCmp.getFields()[i].getLength(record, recRunner);
+        	 cmp = cmps[i].compare(record, recRunner, recFieldLen, buf.array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());             
              if(cmp < 0) return -1;                 
              else if(cmp > 0) return 1;             
              fieldIter.nextField();
-             recRunner += multiCmp.getFields()[i].getLength(record, recRunner);
+             recRunner += recFieldLen;
          }
          return 0;
 	}
