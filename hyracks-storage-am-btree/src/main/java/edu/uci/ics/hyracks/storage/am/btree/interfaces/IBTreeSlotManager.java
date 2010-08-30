@@ -1,8 +1,8 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 // a slot consists of two fields:
 // first field is 1 byte, it indicates the slot number of a prefix record

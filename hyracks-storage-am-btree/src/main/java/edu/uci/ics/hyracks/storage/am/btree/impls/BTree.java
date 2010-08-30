@@ -1,28 +1,26 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInteriorFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeafFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManager;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManagerFactory;
-import edu.uci.ics.asterix.indexing.btree.interfaces.SpaceStatus;
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
-import edu.uci.ics.asterix.storage.file.FileInfo;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInteriorFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManagerFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
 public class BTree {
-	
+		
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
 
@@ -280,24 +278,43 @@ public class BTree {
 
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
-            if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {
-                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%1d ", level));
-                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%3d ", pageId));
-                for (int i = 0; i < currentLevel - level; i++)
-                    GlobalConfig.ASTERIX_LOGGER.finest("    ");
-                
-                String keyString;
-                if(interiorFrame.isLeaf()) {
-                	leafFrame.setPage(node);
-                	keyString = leafFrame.printKeys(cmp);
-                }
-                else {
-                	keyString = interiorFrame.printKeys(cmp);
-                }
-                
-                GlobalConfig.ASTERIX_LOGGER.finest(keyString);
+            
+            
+//            if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {
+//                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%1d ", level));
+//                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%3d ", pageId));
+//                for (int i = 0; i < currentLevel - level; i++)
+//                    GlobalConfig.ASTERIX_LOGGER.finest("    ");
+//                
+//                String keyString;
+//                if(interiorFrame.isLeaf()) {
+//                	leafFrame.setPage(node);
+//                	keyString = leafFrame.printKeys(cmp);
+//                }
+//                else {
+//                	keyString = interiorFrame.printKeys(cmp);
+//                }
+//                
+//                GlobalConfig.ASTERIX_LOGGER.finest(keyString);
+//            }
+
+
+            System.out.format("%1d ", level);
+            System.out.format("%3d ", pageId);
+            for (int i = 0; i < currentLevel - level; i++)
+            	System.out.format("    ");
+
+            String keyString;
+            if(interiorFrame.isLeaf()) {
+            	leafFrame.setPage(node);
+            	keyString = leafFrame.printKeys(cmp);
+            }
+            else {
+            	keyString = interiorFrame.printKeys(cmp);
             }
 
+            System.out.format(keyString);
+            
             if (!interiorFrame.isLeaf()) {
                 ArrayList<Integer> children = ((BTreeNSMInterior) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {

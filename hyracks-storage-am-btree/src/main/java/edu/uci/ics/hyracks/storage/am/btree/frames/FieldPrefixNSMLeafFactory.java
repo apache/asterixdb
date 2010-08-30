@@ -1,7 +1,7 @@
-package edu.uci.ics.asterix.indexing.btree.frames;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
 
 public class FieldPrefixNSMLeafFactory implements IBTreeFrameLeafFactory {
 	@Override

@@ -1,6 +1,6 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISearchPredicate;
 
 public class RangePredicate implements ISearchPredicate {
 	

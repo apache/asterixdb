@@ -1,12 +1,12 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.util.ArrayList;
 import java.util.Stack;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
 
 public final class BTreeOpContext {
 	public BTreeOp op;

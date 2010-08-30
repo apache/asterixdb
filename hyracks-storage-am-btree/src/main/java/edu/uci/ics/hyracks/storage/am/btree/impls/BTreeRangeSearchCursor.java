@@ -1,11 +1,11 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISearchPredicate;
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
-import edu.uci.ics.asterix.storage.file.FileInfo;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
 public class BTreeRangeSearchCursor implements IBTreeCursor {
 

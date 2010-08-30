@@ -1,7 +1,7 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface IBTreeCursor {
 	public void reset();

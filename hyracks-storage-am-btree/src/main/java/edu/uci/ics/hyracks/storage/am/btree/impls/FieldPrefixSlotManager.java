@@ -1,10 +1,10 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
 
 public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	

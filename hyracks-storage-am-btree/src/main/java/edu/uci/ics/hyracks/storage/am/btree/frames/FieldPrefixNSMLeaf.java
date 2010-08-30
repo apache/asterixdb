@@ -1,25 +1,25 @@
-package edu.uci.ics.asterix.indexing.btree.frames;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.asterix.indexing.btree.compressors.FieldPrefixCompressor;
-import edu.uci.ics.asterix.indexing.btree.impls.BTreeException;
-import edu.uci.ics.asterix.indexing.btree.impls.FieldIterator;
-import edu.uci.ics.asterix.indexing.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.impls.SlotOffRecOff;
-import edu.uci.ics.asterix.indexing.btree.impls.SplitKey;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IComparator;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IPrefixSlotManager;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISlotManager;
-import edu.uci.ics.asterix.indexing.btree.interfaces.SpaceStatus;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IComparator;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
 	

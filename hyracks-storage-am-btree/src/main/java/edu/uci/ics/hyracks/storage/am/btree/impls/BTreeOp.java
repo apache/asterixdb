@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 public enum BTreeOp {
 	BTO_INSERT,

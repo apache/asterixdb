@@ -1,12 +1,11 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.ISearchPredicate;
-import edu.uci.ics.asterix.storage.buffercache.IBufferCache;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
-import edu.uci.ics.asterix.storage.file.FileInfo;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
 public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     
@@ -26,7 +25,7 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     }
     
     @Override
-    public void close() throws AsterixException {
+    public void close() throws Exception {
         page.releaseReadLatch();
         bufferCache.unpin(page);
         page = null;
@@ -42,7 +41,7 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
         return page;
     }
     
-    private boolean positionToNextLeaf(boolean skipCurrent) throws AsterixException {
+    private boolean positionToNextLeaf(boolean skipCurrent) throws Exception {
         while( (frame.getLevel() != 0 || skipCurrent) && currentPageId <= maxPageId) {            
             currentPageId++;
             
@@ -62,7 +61,7 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     }
     
     @Override
-    public boolean hasNext() throws AsterixException {        
+    public boolean hasNext() throws Exception {        
         if(recordNum >= frame.getNumRecords()) {
             boolean nextLeafExists = positionToNextLeaf(true);
             if(nextLeafExists) {
@@ -79,12 +78,12 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     }
 
     @Override
-    public void next() throws AsterixException {        
+    public void next() throws Exception {        
         recordNum++;
     }
     
     @Override
-    public void open(ICachedPage page, ISearchPredicate searchPred) throws AsterixException {       
+    public void open(ICachedPage page, ISearchPredicate searchPred) throws Exception {       
         // in case open is called multiple times without closing
         if(this.page != null) {
             this.page.releaseReadLatch();
@@ -96,7 +95,7 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
         frame.setPage(page);
         boolean leafExists = positionToNextLeaf(false);
         if(!leafExists) {
-            throw new AsterixException("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
+            throw new Exception("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
         }
     }
     

@@ -1,9 +1,9 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.asterix.storage.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 // all meta pages of this kind have a negative level
 // the first meta page has level -1, all other meta pages have level -2

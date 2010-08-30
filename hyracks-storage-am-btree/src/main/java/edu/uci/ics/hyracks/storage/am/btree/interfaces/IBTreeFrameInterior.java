@@ -1,7 +1,7 @@
-package edu.uci.ics.asterix.indexing.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.interfaces;
 
-import edu.uci.ics.asterix.indexing.btree.impls.MultiComparator;
-import edu.uci.ics.asterix.indexing.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 
 public interface IBTreeFrameInterior extends IBTreeFrame {
 	//public int getChildPageId(IFieldAccessor[] fields, MultiComparator cmp);

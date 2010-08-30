@@ -1,7 +1,7 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.asterix.indexing.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
 
 //TODO: make members private, only for debugging now
 public class FieldIterator {

@@ -1,12 +1,11 @@
-package edu.uci.ics.asterix.indexing.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.asterix.indexing.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.asterix.om.AInt32;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
 
 public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		
