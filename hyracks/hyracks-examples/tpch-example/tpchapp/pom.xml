@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.tpch</groupId>
   <artifactId>tpchapp</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -51,7 +51,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.tpch</groupId>
   		<artifactId>tpchhelper</artifactId>
-  		<version>0.1.1</version>
+  		<version>0.1.2-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   </dependencies>
