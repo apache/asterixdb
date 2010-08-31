@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
 
 public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {    
 	protected static final int prevLeafOff = smFlagOff + 1;

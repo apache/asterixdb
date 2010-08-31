@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.nio.ByteBuffer;
 

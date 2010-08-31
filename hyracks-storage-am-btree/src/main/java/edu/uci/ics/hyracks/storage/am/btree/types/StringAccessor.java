@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
 public class StringAccessor implements IFieldAccessor {
 		

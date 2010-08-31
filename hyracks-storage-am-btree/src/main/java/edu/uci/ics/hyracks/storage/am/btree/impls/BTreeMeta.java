@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 // all meta pages of this kind have a negative level

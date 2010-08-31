@@ -19,8 +19,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
 
 public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		

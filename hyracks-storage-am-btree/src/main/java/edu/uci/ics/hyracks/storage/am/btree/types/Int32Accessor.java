@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.types;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
 public class Int32Accessor implements IFieldAccessor {
 	    

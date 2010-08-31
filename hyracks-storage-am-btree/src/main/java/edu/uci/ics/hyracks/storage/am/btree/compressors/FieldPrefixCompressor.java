@@ -21,13 +21,13 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
 		

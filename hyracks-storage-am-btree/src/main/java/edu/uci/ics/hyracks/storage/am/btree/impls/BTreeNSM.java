@@ -19,9 +19,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.api.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class BTreeNSM implements IBTreeFrame {

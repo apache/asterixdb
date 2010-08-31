@@ -15,8 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInteriorFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInteriorFactory;
 
 public class BTreeNSMInteriorFactory implements IBTreeFrameInteriorFactory {
 	@Override
