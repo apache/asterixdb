@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 // a slot consists of two fields:
@@ -39,17 +40,20 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 // potentially all records slots would have to change their prefix slot pointers
 // all prefixes are recomputed during a reorg or compaction
 
-public interface IBTreeSlotManager {
-	public void setFrame(IBTreeFrame frame);		
+public interface IPrefixSlotManager {
+	public void setFrame(FieldPrefixNSMLeaf frame);
 	
 	public int decodeFirstSlotField(int slot);
 	public int decodeSecondSlotField(int slot);		
 	public int encodeSlotFields(int firstField, int secondField);
 	
 	// TODO: first argument can be removed. frame must be set and buffer can be gotten from there
-	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact);
-	public int insertSlot(int slotOff, int recOff);
+	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact);	
+	public int insertSlot(int slot, int recOff);
 					
+	// returns prefix slot number, returns RECORD_UNCOMPRESSED if none found
+	public int findPrefix(byte[] data, MultiComparator multiCmp);
+	
 	public int getRecSlotStartOff();
 	public int getRecSlotEndOff();
 	
@@ -61,7 +65,10 @@ public interface IBTreeSlotManager {
 		
 	public int getSlotSize();		
 	
+	public void setSlot(int offset, int value);
+	
+	public int compareCompressed(byte[] record, byte[] page, int prefixSlotNum, int recSlotNum, MultiComparator multiCmp);
+	
 	// functions for testing
 	public void setPrefixSlot(int slotNum, int slot);
-	
 }

@@ -13,8 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IBTreeFrameInteriorFactory {	
-	public IBTreeFrameInterior getFrame();
+public interface IBTreeFrameLeaf extends IBTreeFrame {	
+	public void setNextLeaf(int nextPage);
+	public int getNextLeaf();
+	
+	public void setPrevLeaf(int prevPage);
+	public int getPrevLeaf();
 }

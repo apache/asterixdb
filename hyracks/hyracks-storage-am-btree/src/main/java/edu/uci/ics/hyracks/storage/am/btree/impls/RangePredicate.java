@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 
 public class RangePredicate implements ISearchPredicate {
 	

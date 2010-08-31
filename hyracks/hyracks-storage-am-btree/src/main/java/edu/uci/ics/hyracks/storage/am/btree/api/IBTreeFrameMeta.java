@@ -13,16 +13,26 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public interface IBTreeFrameInterior extends IBTreeFrame {
-	//public int getChildPageId(IFieldAccessor[] fields, MultiComparator cmp);
-	public int getChildPageId(RangePredicate pred, MultiComparator srcCmp);
-	public int getLeftmostChildPageId(MultiComparator cmp);
-	public int getRightmostChildPageId(MultiComparator cmp);
-	public void setRightmostChildPageId(int pageId);
-	public void deleteGreatest(MultiComparator cmp);
+public interface IBTreeFrameMeta {
+    public void initBuffer(int level);
+    
+    public void setPage(ICachedPage page);
+    public ICachedPage getPage();
+    
+    public byte getLevel();
+    public void setLevel(byte level);
+    
+    public int getNextPage();
+    public void setNextPage(int nextPage);
+    
+    public int getMaxPage();
+    public void setMaxPage(int maxPage);
+    
+    public int getFreePage();
+    public boolean hasSpace();
+    public void addFreePage(int freePage);
 }

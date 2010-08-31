@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface ISlotManagerFactory {
-	public ISlotManager getSlotManager();
+public interface IBTreeFrameInteriorFactory {	
+	public IBTreeFrameInterior getFrame();
 }

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IFieldAccessorFactory {
-	public IFieldAccessor getKey();
+public interface IBTreeFrameLeafFactory {	
+	public IBTreeFrameLeaf getFrame();
 }

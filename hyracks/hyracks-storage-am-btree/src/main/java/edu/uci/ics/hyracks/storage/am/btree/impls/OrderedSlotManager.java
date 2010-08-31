@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 
 public class OrderedSlotManager implements ISlotManager {
 	

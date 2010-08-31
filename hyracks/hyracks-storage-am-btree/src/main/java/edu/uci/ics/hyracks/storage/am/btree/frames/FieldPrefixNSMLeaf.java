@@ -20,6 +20,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.api.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
@@ -27,13 +34,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFrameCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {

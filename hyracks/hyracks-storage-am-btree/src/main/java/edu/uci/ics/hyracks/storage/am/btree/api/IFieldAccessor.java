@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IBTreeFrameFactory {	
-	public IBTreeFrame getFrame(ISlotManager slotManager);
+public interface IFieldAccessor {	    
+    public int getLength(byte[] data, int offset); // skip to next field (equivalent to adding length of field to offset)        
+	public String print(byte[] data, int offset); // debug
 }

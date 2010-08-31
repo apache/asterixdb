@@ -18,10 +18,10 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
 
 public final class BTreeOpContext {
 	public BTreeOp op;

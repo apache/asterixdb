@@ -15,8 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeafFactory;
 
 public class FieldPrefixNSMLeafFactory implements IBTreeFrameLeafFactory {
 	@Override

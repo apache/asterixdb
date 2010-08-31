@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.interfaces;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IComparator {		
-	public int compare(byte[] dataA, int recOffA, byte[] dataB, int recOffB);
+public interface IFieldAccessorFactory {
+	public IFieldAccessor getKey();
 }

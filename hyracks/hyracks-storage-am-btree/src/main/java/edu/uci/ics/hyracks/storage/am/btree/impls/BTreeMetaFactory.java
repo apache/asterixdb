@@ -15,8 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMetaFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMetaFactory;
 
 public class BTreeMetaFactory implements IBTreeFrameMetaFactory {
     @Override

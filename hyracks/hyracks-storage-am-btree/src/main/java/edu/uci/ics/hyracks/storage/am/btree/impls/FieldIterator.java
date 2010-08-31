@@ -15,8 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
 
 //TODO: make members private, only for debugging now
 public class FieldIterator {
