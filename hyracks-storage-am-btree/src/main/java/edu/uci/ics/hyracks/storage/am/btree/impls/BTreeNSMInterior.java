@@ -69,7 +69,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - recSize - slotManager.getSlotSize());
 			
 			// did insert into the rightmost slot?
-			if(slotOff == slotManager.getSlotStartOff()) { 
+			if(slotOff == slotManager.getSlotEndOff()) { 
 				System.arraycopy(data, recSize, buf.array(), rightLeafOff, childPtrSize);
 			}
 			else {
@@ -128,8 +128,8 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
 		
 		// on right page we need to copy rightmost slots to left		
-		int src = rightFrame.getSlotManager().getSlotStartOff();
-		int dest = rightFrame.getSlotManager().getSlotStartOff() + recordsToLeft * rightFrame.getSlotManager().getSlotSize();
+		int src = rightFrame.getSlotManager().getSlotEndOff();
+		int dest = rightFrame.getSlotManager().getSlotEndOff() + recordsToLeft * rightFrame.getSlotManager().getSlotSize();
 		int length = rightFrame.getSlotManager().getSlotSize() * recordsToRight;
 		System.arraycopy(right.array(), src, right.array(), dest, length);				
 		right.putInt(numRecordsOff, recordsToRight);
@@ -142,12 +142,12 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		System.arraycopy(data, 0, savedData, 0, data.length);
 		
 		// set split key to be highest value in left page	
-		int recOff = slotManager.getRecOff(slotManager.getSlotStartOff());
+		int recOff = slotManager.getRecOff(slotManager.getSlotEndOff());
 		int splitKeySize = cmp.getKeySize(buf.array(), recOff);
 		splitKey.initData(splitKeySize);
 		System.arraycopy(buf.array(), recOff, splitKey.getData(), 0, splitKeySize);
 		
-		int deleteRecOff = slotManager.getRecOff(slotManager.getSlotStartOff());
+		int deleteRecOff = slotManager.getRecOff(slotManager.getSlotEndOff());
 		int deleteKeySize = cmp.getKeySize(buf.array(), deleteRecOff); 		
 		buf.putInt(rightLeafOff, buf.getInt(deleteRecOff + deleteKeySize));
 		buf.putInt(numRecordsOff, recordsToLeft - 1);
@@ -232,7 +232,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 				slotOff -= slotManager.getSlotSize();
 			}
 			else {
-				int minSlotOff = slotManager.getSlotStartOff() - slotManager.getSlotSize();
+				int minSlotOff = slotManager.getSlotEndOff() - slotManager.getSlotSize();
 				slotOff -= slotManager.getSlotSize();
 				while(slotOff > minSlotOff) {
 					cmpRecOff = slotManager.getRecOff(slotOff);
@@ -254,7 +254,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		int keySize;
 		
 		if(slotOff < 0) {						
-			recOff = slotManager.getRecOff(slotManager.getSlotStartOff());
+			recOff = slotManager.getRecOff(slotManager.getSlotEndOff());
 			keySize = cmp.getKeySize(buf.array(), recOff);
 			// copy new rightmost pointer
 			System.arraycopy(buf.array(), recOff + keySize, buf.array(), rightLeafOff, childPtrSize);						
@@ -263,7 +263,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 			recOff = slotManager.getRecOff(slotOff);
 			keySize = cmp.getKeySize(buf.array(), recOff);	
 			// perform deletion (we just do a memcpy to overwrite the slot)
-			int slotStartOff = slotManager.getSlotStartOff();
+			int slotStartOff = slotManager.getSlotEndOff();
 			int length = slotOff - slotStartOff;
 			System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);						
 		}
@@ -281,7 +281,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		
 	@Override
 	public int getLeftmostChildPageId(MultiComparator cmp) {						
-		int recOff = slotManager.getRecOff(slotManager.getSlotEndOff());
+		int recOff = slotManager.getRecOff(slotManager.getSlotStartOff());
 		int childPageOff = getLeftChildPageOff(recOff, cmp);		
 		return buf.getInt(childPageOff);
 	}
@@ -315,7 +315,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 
 	@Override
 	public void deleteGreatest(MultiComparator cmp) {
-		int slotOff = slotManager.getSlotStartOff();
+		int slotOff = slotManager.getSlotEndOff();
 		int recOff = slotManager.getRecOff(slotOff);
 		int keySize = cmp.getKeySize(buf.array(), recOff); 
 		System.arraycopy(buf.array(), recOff + keySize, buf.array(), rightLeafOff, childPtrSize);

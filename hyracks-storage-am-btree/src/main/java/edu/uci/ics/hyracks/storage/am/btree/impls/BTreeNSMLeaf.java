@@ -59,7 +59,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 	public void insert(byte[] data, MultiComparator cmp) throws Exception {		
 		int slotOff = slotManager.findSlot(buf, data, cmp, false);
 		boolean isDuplicate = true;
-
+		
 		if (slotOff < 0) isDuplicate = false; // greater than all existing keys
 		else if (cmp.compare(data, 0, buf.array(), slotManager.getRecOff(slotOff)) != 0) isDuplicate = false;
 
@@ -105,7 +105,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 		int recordsToLeft;
 		int mid = numRecords / 2;
 		IBTreeFrame targetFrame = null;
-		if ((cmp.compare(data, 0, buf.array(), slotManager.getRecOff(slotManager.getSlotStartOff() + slotManager.getSlotSize() * mid))) >= 0) {
+		if ((cmp.compare(data, 0, buf.array(), slotManager.getRecOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid))) >= 0) {
 			recordsToLeft = mid + (numRecords % 2);
 			targetFrame = rightFrame;
 		} else {
@@ -118,8 +118,8 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 		System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
 		
 		// on right page we need to copy rightmost slots to left
-		int src = rightFrame.getSlotManager().getSlotStartOff();
-		int dest = rightFrame.getSlotManager().getSlotStartOff() + recordsToLeft * rightFrame.getSlotManager().getSlotSize();
+		int src = rightFrame.getSlotManager().getSlotEndOff();
+		int dest = rightFrame.getSlotManager().getSlotEndOff() + recordsToLeft * rightFrame.getSlotManager().getSlotSize();
 		int length = rightFrame.getSlotManager().getSlotSize() * recordsToRight; 
 		System.arraycopy(right.array(), src, right.array(), dest, length);
 		right.putInt(numRecordsOff, recordsToRight);
@@ -135,7 +135,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 		targetFrame.insert(data, cmp);			
 		
 		// set split key to be highest value in left page
-		int recOff = slotManager.getRecOff(slotManager.getSlotStartOff());
+		int recOff = slotManager.getRecOff(slotManager.getSlotEndOff());
 		int keySize = cmp.getKeySize(buf.array(), recOff);				
 		splitKey.initData(keySize);
 		System.arraycopy(buf.array(), recOff, splitKey.getData(), 0, keySize);
