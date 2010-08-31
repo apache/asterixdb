@@ -13,16 +13,21 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
-public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
+public class BTreeNSMInterior extends BTreeNSM implements IBTreeInteriorFrame {
 		
 	private static final int rightLeafOff = smFlagOff + 1;
 	
@@ -48,7 +53,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 	@Override
 	public void insert(byte[] data, MultiComparator cmp) throws Exception {
 		
-		int slotOff = slotManager.findSlot(buf, data, cmp, false);
+		int slotOff = slotManager.findSlot(data, cmp, false);
 		boolean isDuplicate = true;
 		
 		if(slotOff < 0) isDuplicate = false; // greater than all existing keys
@@ -104,7 +109,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 	@Override
 	public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {		
 		// before doing anything check if key already exists
-		int slotOff = slotManager.findSlot(buf, data, cmp, true);
+		int slotOff = slotManager.findSlot(data, cmp, true);
 		if(slotOff >= 0) {
 			if(cmp.compare(data, 0, buf.array(), slotManager.getRecOff(slotOff)) == 0) {				
 				throw new BTreeException("Inserting duplicate key in interior node during split");				
@@ -214,7 +219,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 		}
 		
 		MultiComparator targetCmp = pred.getComparator();
-		int slotOff = slotManager.findSlot(buf, data, targetCmp, false);
+		int slotOff = slotManager.findSlot(data, targetCmp, false);
 		if(slotOff < 0) {
 			return buf.getInt(rightLeafOff);
 		}
@@ -249,7 +254,7 @@ public class BTreeNSMInterior extends BTreeNSM implements IBTreeFrameInterior {
 	
 	@Override
 	public void delete(byte[] data, MultiComparator cmp, boolean exactDelete) throws Exception {
-		int slotOff = slotManager.findSlot(buf, data, cmp, false);
+		int slotOff = slotManager.findSlot(data, cmp, false);
 		int recOff;
 		int keySize;
 		

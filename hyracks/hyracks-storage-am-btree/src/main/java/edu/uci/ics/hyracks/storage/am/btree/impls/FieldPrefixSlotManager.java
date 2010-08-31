@@ -67,7 +67,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    return FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
 	}
 	
-	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact) {				
+	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact) {				
 		if(frame.getNumRecords() <= 0) encodeSlotFields(RECORD_UNCOMPRESSED, GREATEST_SLOT);
 								
 	    int prefixMid;

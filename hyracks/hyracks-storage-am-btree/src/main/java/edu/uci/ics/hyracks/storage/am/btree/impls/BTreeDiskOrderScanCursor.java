@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -32,10 +32,10 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     int currentPageId = -1;
     int maxPageId = -1; // TODO: figure out how to scan to the end of file, this is dirty and may not with concurrent updates
     private ICachedPage page = null;
-    private IBTreeFrameLeaf frame = null;
+    private IBTreeLeafFrame frame = null;
     private IBufferCache bufferCache = null;
     
-    public BTreeDiskOrderScanCursor(IBTreeFrameLeaf frame) {
+    public BTreeDiskOrderScanCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
     }
     

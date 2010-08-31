@@ -19,15 +19,15 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 
 public final class BTreeOpContext {
 	public BTreeOp op;
-	public IBTreeFrameLeaf leafFrame;
-	public IBTreeFrameInterior interiorFrame;
-	public IBTreeFrameMeta metaFrame;
+	public IBTreeLeafFrame leafFrame;
+	public IBTreeInteriorFrame interiorFrame;
+	public IBTreeMetaDataFrame metaFrame;
 	public IBTreeCursor cursor;
 	public RangePredicate pred;	
 	public SplitKey splitKey;

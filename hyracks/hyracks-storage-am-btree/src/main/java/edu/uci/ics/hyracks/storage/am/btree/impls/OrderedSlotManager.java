@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 
@@ -27,7 +25,7 @@ public class OrderedSlotManager implements ISlotManager {
 		
 	// TODO: mix in interpolation search
 	@Override
-	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact) {
+	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact) {
 		if(frame.getNumRecords() <= 0) return -1;
 		
 		int mid;
@@ -38,7 +36,7 @@ public class OrderedSlotManager implements ISlotManager {
             mid = (begin + end) / 2;
         	int slotOff = getSlotOff(mid);        	
         	int recOff = getRecOff(slotOff);
-        	int cmp = multiCmp.compare(data, 0, buf.array(), recOff);
+        	int cmp = multiCmp.compare(data, 0, frame.getBuffer().array(), recOff);
         	if(cmp < 0)
         		end = mid - 1;
         	else if(cmp > 0)
@@ -52,7 +50,7 @@ public class OrderedSlotManager implements ISlotManager {
         
         int slotOff = getSlotOff(begin);
         int recOff = getRecOff(slotOff);
-        if(multiCmp.compare(data, 0, buf.array(), recOff)  < 0)
+        if(multiCmp.compare(data, 0, frame.getBuffer().array(), recOff)  < 0)
         	return slotOff;
         else
         	return -1;		

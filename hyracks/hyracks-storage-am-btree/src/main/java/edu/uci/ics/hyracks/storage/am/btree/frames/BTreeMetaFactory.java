@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManagerFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 
-public class OrderedSlotManagerFactory implements ISlotManagerFactory {
-	
-	@Override
-	public ISlotManager getSlotManager() {
-		return new OrderedSlotManager();
-	}	
+public class BTreeMetaFactory implements IBTreeMetaDataFrameFactory {
+    @Override
+    public IBTreeMetaDataFrame getFrame() {     
+        return new BTreeMeta();
+    }   
 }

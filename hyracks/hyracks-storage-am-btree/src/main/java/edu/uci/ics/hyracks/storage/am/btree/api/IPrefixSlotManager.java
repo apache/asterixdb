@@ -47,8 +47,7 @@ public interface IPrefixSlotManager {
 	public int decodeSecondSlotField(int slot);		
 	public int encodeSlotFields(int firstField, int secondField);
 	
-	// TODO: first argument can be removed. frame must be set and buffer can be gotten from there
-	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact);	
+	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact);
 	public int insertSlot(int slot, int recOff);
 					
 	// returns prefix slot number, returns RECORD_UNCOMPRESSED if none found

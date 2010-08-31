@@ -22,12 +22,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInteriorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeafFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
-import edu.uci.ics.hyracks.storage.am.btree.api.SpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInterior;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
@@ -43,8 +43,8 @@ public class BTree {
     
     private final IBufferCache bufferCache;
     private int fileId;
-    private final IBTreeFrameInteriorFactory interiorFrameFactory;
-    private final IBTreeFrameLeafFactory leafFrameFactory;    
+    private final IBTreeInteriorFrameFactory interiorFrameFactory;
+    private final IBTreeLeafFrameFactory leafFrameFactory;    
     private final MultiComparator cmp;
     private final ReadWriteLock treeLatch;
     
@@ -79,8 +79,8 @@ public class BTree {
         return strBuilder.toString();
     }
 
-    public BTree(IBufferCache bufferCache, IBTreeFrameInteriorFactory interiorFrameFactory,
-            IBTreeFrameLeafFactory leafFrameFactory, MultiComparator cmp) {
+    public BTree(IBufferCache bufferCache, IBTreeInteriorFrameFactory interiorFrameFactory,
+            IBTreeLeafFrameFactory leafFrameFactory, MultiComparator cmp) {
         this.bufferCache = bufferCache;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;       
@@ -88,7 +88,7 @@ public class BTree {
         this.treeLatch = new ReentrantReadWriteLock(true);
     }
     
-    public void create(int fileId, IBTreeFrameLeaf leafFrame, IBTreeFrameMeta metaFrame) throws Exception {
+    public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
         // initialize meta data page
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
@@ -132,7 +132,7 @@ public class BTree {
         fileId = -1;
     }
 
-    private int getFreePage(IBTreeFrameMeta metaFrame) throws Exception {
+    private int getFreePage(IBTreeMetaDataFrame metaFrame) throws Exception {
         ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
         pins++;
         
@@ -204,7 +204,7 @@ public class BTree {
         ctx.freePages.clear();
     }
 
-    private void addFreePage(IBTreeFrameMeta metaFrame, int freePage) throws Exception {
+    private void addFreePage(IBTreeMetaDataFrame metaFrame, int freePage) throws Exception {
         // root page is special, don't add it to free pages
         if (freePage == rootPage) return;
         
@@ -263,12 +263,12 @@ public class BTree {
         }
     }
     
-    public void printTree(IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame) throws Exception {
+    public void printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame) throws Exception {
         printTree(rootPage, null, false, leafFrame, interiorFrame);
     }
 
-    public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeFrameLeaf leafFrame,
-            IBTreeFrameInterior interiorFrame) throws Exception {
+    public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
+            IBTreeInteriorFrame interiorFrame) throws Exception {
         
         ICachedPage node = bufferCache.pin(FileInfo.getDiskPageId(fileId, pageId), false);
         pins++;
@@ -344,7 +344,7 @@ public class BTree {
         }
     }
 
-    public void diskOrderScan(BTreeDiskOrderScanCursor cursor, IBTreeFrameLeaf leafFrame, IBTreeFrameMeta metaFrame) throws Exception {
+    public void diskOrderScan(BTreeDiskOrderScanCursor cursor, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
         int currentPageId = rootPage + 1;
         int maxPageId = -1;
         
@@ -374,8 +374,8 @@ public class BTree {
         cursor.open(page, null);
     }
     
-    public void search(IBTreeCursor cursor, RangePredicate pred, IBTreeFrameLeaf leafFrame,
-            IBTreeFrameInterior interiorFrame) throws Exception {
+    public void search(IBTreeCursor cursor, RangePredicate pred, IBTreeLeafFrame leafFrame,
+            IBTreeInteriorFrame interiorFrame) throws Exception {
         BTreeOpContext ctx = new BTreeOpContext();
         ctx.op = BTreeOp.BTO_SEARCH;
         ctx.leafFrame = leafFrame;
@@ -493,8 +493,8 @@ public class BTree {
         }
     }
 
-    public void insert(byte[] data, IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame,
-            IBTreeFrameMeta metaFrame) throws Exception {
+    public void insert(byte[] data, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+            IBTreeMetaDataFrame metaFrame) throws Exception {
         BTreeOpContext ctx = new BTreeOpContext();
         ctx.op = BTreeOp.BTO_INSERT;
         ctx.leafFrame = leafFrame;
@@ -586,7 +586,7 @@ public class BTree {
     				rightNode.acquireWriteLatch();
     				writeLatchesAcquired++;
     				try {
-    					IBTreeFrameLeaf rightFrame = leafFrameFactory.getFrame();
+    					IBTreeLeafFrame rightFrame = leafFrameFactory.getFrame();
     					rightFrame.setPage(rightNode);
     					rightFrame.initBuffer((byte) 0);
 
@@ -723,8 +723,8 @@ public class BTree {
         }
     }
 
-    public void delete(byte[] data, IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame,
-            IBTreeFrameMeta metaFrame) throws Exception {
+    public void delete(byte[] data, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+            IBTreeMetaDataFrame metaFrame) throws Exception {
         BTreeOpContext ctx = new BTreeOpContext();
         ctx.op = BTreeOp.BTO_DELETE;
         ctx.leafFrame = leafFrame;
@@ -781,7 +781,7 @@ public class BTree {
 
         // will this leaf become empty?
         if (ctx.leafFrame.getNumRecords() == 1) {
-            IBTreeFrameLeaf siblingFrame = leafFrameFactory.getFrame();
+            IBTreeLeafFrame siblingFrame = leafFrameFactory.getFrame();
 
             ICachedPage leftNode = null;
             ICachedPage rightNode = null;
@@ -1144,12 +1144,12 @@ public class BTree {
         // for
         // each
         // level
-        IBTreeFrameLeaf leafFrame;
-        IBTreeFrameInterior interiorFrame;
-        IBTreeFrameMeta metaFrame;
+        IBTreeLeafFrame leafFrame;
+        IBTreeInteriorFrame interiorFrame;
+        IBTreeMetaDataFrame metaFrame;
 
-        public BulkLoadContext(float fillFactor, IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame,
-                IBTreeFrameMeta metaFrame) throws Exception {
+        public BulkLoadContext(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+                IBTreeMetaDataFrame metaFrame) throws Exception {
             NodeFrontier leafFrontier = new NodeFrontier();
             leafFrontier.pageId = getFreePage(metaFrame);
             leafFrontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
@@ -1225,14 +1225,14 @@ public class BTree {
     }
     
     // assumes btree has been created and opened
-    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeFrameLeaf leafFrame, IBTreeFrameInterior interiorFrame, IBTreeFrameMeta metaFrame) throws Exception {
+    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);        
         return ctx;
     }
     
     public void bulkLoadAddRecord(BulkLoadContext ctx, byte[] record) throws Exception {                        
         NodeFrontier leafFrontier = ctx.nodeFrontiers.get(0);
-        IBTreeFrameLeaf leafFrame = ctx.leafFrame;
+        IBTreeLeafFrame leafFrame = ctx.leafFrame;
         
         int spaceNeeded = record.length + ctx.slotSize;
         if (leafFrontier.bytesInserted + spaceNeeded > ctx.leafMaxBytes) {
@@ -1284,11 +1284,11 @@ public class BTree {
         currentLevel = (byte) ctx.nodeFrontiers.size();
     }
     
-    public IBTreeFrameInteriorFactory getInteriorFrameFactory() {
+    public IBTreeInteriorFrameFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }
 
-    public IBTreeFrameLeafFactory getLeafFrameFactory() {
+    public IBTreeLeafFrameFactory getLeafFrameFactory() {
         return leafFrameFactory;
     }
     

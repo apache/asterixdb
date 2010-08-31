@@ -15,16 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-
 
 public interface ISlotManager {
 	public void setFrame(IBTreeFrame frame);
 	
-	// TODO: first argument can be removed. frame must be set and buffer can be gotten from there
-	public int findSlot(ByteBuffer buf, byte[] data, MultiComparator multiCmp, boolean exact);
+	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact);
 	public int insertSlot(int slotOff, int recOff);
 	
 	public int getSlotStartOff();

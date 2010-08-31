@@ -13,8 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-public interface IBTreeFrameMetaFactory {   
-    public IBTreeFrameMeta getFrame();
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
+
+public class BTreeNSMInteriorFactory implements IBTreeInteriorFrameFactory {
+	@Override
+	public IBTreeInteriorFrame getFrame() {		
+		return new BTreeNSMInterior();
+	}	
 }
