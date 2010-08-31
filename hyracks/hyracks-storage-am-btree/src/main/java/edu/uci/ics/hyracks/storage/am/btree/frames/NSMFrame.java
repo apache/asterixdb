@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public abstract class BTreeNSM implements IBTreeFrame {
+public abstract class NSMFrame implements IBTreeFrame {
 	
 	protected static final int pageLsnOff = 0;								// 0
 	protected static final int numRecordsOff = pageLsnOff + 4;				// 4
@@ -41,7 +41,7 @@ public abstract class BTreeNSM implements IBTreeFrame {
 	protected ByteBuffer buf = null;
 	protected ISlotManager slotManager;
 	
-	public BTreeNSM() {
+	public NSMFrame() {
 		this.slotManager = new OrderedSlotManager();
 	}
 	

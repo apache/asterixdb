@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
 public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	
@@ -29,7 +29,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	public static final int GREATEST_SLOT = 0x00FFFFFF;
 	
 	private ByteBuffer buf;
-	private FieldPrefixNSMLeaf frame;
+	private FieldPrefixNSMLeafFrame frame;
 	FieldIterator fieldIter = new FieldIterator(null, null);
 	
 	public int decodeFirstSlotField(int slot) {
@@ -220,7 +220,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 		}
 	}
 	
-	public void setFrame(FieldPrefixNSMLeaf frame) {
+	public void setFrame(FieldPrefixNSMLeafFrame frame) {
 		this.frame = frame;
 		this.buf = frame.getBuffer();
 	}

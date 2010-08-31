@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
-public class BTreeRangeSearchCursor implements IBTreeCursor {
+public class RangeSearchCursor implements IBTreeCursor {
 
 	private ISearchPredicate searchPred = null;	
 	private int recordNum = 0;
@@ -32,7 +32,7 @@ public class BTreeRangeSearchCursor implements IBTreeCursor {
 	private IBTreeLeafFrame frame = null;
 	private IBufferCache bufferCache = null;
 	
-	public BTreeRangeSearchCursor(IBTreeLeafFrame frame) {
+	public RangeSearchCursor(IBTreeLeafFrame frame) {
 		this.frame = frame;		
 	}
 	

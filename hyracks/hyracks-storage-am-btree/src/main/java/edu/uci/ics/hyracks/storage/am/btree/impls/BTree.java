@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInterior;
+import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
@@ -324,7 +324,7 @@ public class BTree {
             System.out.format(keyString);
             
             if (!interiorFrame.isLeaf()) {
-                ArrayList<Integer> children = ((BTreeNSMInterior) (interiorFrame)).getChildren(cmp);
+                ArrayList<Integer> children = ((NSMInteriorFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {
                     printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame);
                 }
@@ -344,7 +344,7 @@ public class BTree {
         }
     }
 
-    public void diskOrderScan(BTreeDiskOrderScanCursor cursor, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
+    public void diskOrderScan(DiskOrderScanCursor cursor, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
         int currentPageId = rootPage + 1;
         int maxPageId = -1;
         

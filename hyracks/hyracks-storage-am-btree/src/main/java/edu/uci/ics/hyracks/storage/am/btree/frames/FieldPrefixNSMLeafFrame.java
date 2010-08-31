@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class FieldPrefixNSMLeaf implements IBTreeLeafFrame {
+public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	
     protected static final int pageLsnOff = 0;                              // 0
     protected static final int numRecordsOff = pageLsnOff + 4;              // 4    
@@ -55,7 +55,7 @@ public class FieldPrefixNSMLeaf implements IBTreeLeafFrame {
     public IFrameCompressor compressor;
     public IPrefixSlotManager slotManager; // TODO: should be protected, but will trigger some refactoring
     
-    public FieldPrefixNSMLeaf() {
+    public FieldPrefixNSMLeafFrame() {
         this.slotManager = new FieldPrefixSlotManager();
         this.compressor = new FieldPrefixCompressor(0.001f, 2);        
     }
@@ -441,7 +441,7 @@ public class FieldPrefixNSMLeaf implements IBTreeLeafFrame {
     @Override
     public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {
     	    	
-    	FieldPrefixNSMLeaf rf = (FieldPrefixNSMLeaf)rightFrame;
+    	FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame)rightFrame;
     	
     	// before doing anything check if key already exists
 		int slot = slotManager.findSlot(data, cmp, true);

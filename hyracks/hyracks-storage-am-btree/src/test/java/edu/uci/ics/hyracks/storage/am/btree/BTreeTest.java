@@ -37,12 +37,12 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeMetaFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
@@ -100,9 +100,9 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -163,7 +163,7 @@ public class BTreeTest {
         
         // ordered scan
         print("ORDERED SCAN:\n");
-        IBTreeCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         try {
@@ -182,7 +182,7 @@ public class BTreeTest {
         
         // disk-order scan
         print("DISK-ORDER SCAN:\n");        
-        BTreeDiskOrderScanCursor diskOrderCursor = new BTreeDiskOrderScanCursor(leafFrame);
+        DiskOrderScanCursor diskOrderCursor = new DiskOrderScanCursor(leafFrame);
         btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame);
         try {
             while (diskOrderCursor.hasNext()) {
@@ -201,7 +201,7 @@ public class BTreeTest {
         // range search in [-1000, 1000]
         print("RANGE SEARCH:\n");        
  
-        IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
         ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
@@ -262,9 +262,9 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
                 
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -322,7 +322,7 @@ public class BTreeTest {
         
         // try a simple index scan
         print("ORDERED SCAN:\n");        
-        IBTreeCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         
@@ -342,7 +342,7 @@ public class BTreeTest {
 
         // range search in [(-3),(3)]
         print("RANGE SEARCH:\n");        
-        IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
         ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
@@ -404,9 +404,9 @@ public class BTreeTest {
     	FileInfo fi = new FileInfo(fileId, raf);
     	fileManager.registerFile(fi);
     	
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -454,7 +454,7 @@ public class BTreeTest {
 
     	// ordered scan
         print("ORDERED SCAN:\n");        
-        IBTreeCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         
@@ -475,7 +475,7 @@ public class BTreeTest {
         // range search in ["cbf", cc7"]
         print("RANGE SEARCH:\n");        
         
-        IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
                 
         ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
@@ -537,9 +537,9 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
                 
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -658,9 +658,9 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -719,7 +719,7 @@ public class BTreeTest {
         
         // range search
         print("RANGE SEARCH:\n");
-        IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
         
         ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
@@ -779,9 +779,9 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);       
                 
-        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
@@ -874,7 +874,7 @@ public class BTreeTest {
         // try a simple index scan
 
         print("ORDERED SCAN:\n");
-        IBTreeCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
 
@@ -894,7 +894,7 @@ public class BTreeTest {
 
         // try a range search
         print("RANGE SEARCH:\n");
-        IBTreeCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
         ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	

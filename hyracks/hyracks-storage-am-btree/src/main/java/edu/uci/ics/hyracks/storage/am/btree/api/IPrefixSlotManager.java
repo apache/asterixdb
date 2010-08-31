@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 // a slot consists of two fields:
@@ -41,7 +41,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 // all prefixes are recomputed during a reorg or compaction
 
 public interface IPrefixSlotManager {
-	public void setFrame(FieldPrefixNSMLeaf frame);
+	public void setFrame(FieldPrefixNSMLeafFrame frame);
 	
 	public int decodeFirstSlotField(int slot);
 	public int decodeSecondSlotField(int slot);		

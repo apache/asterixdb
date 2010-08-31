@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
-public class BTreeDiskOrderScanCursor implements IBTreeCursor {
+public class DiskOrderScanCursor implements IBTreeCursor {
     
     // TODO: might want to return records in physical order, not logical order to speed up access
     
@@ -35,7 +35,7 @@ public class BTreeDiskOrderScanCursor implements IBTreeCursor {
     private IBTreeLeafFrame frame = null;
     private IBufferCache bufferCache = null;
     
-    public BTreeDiskOrderScanCursor(IBTreeLeafFrame frame) {
+    public DiskOrderScanCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
     }
     

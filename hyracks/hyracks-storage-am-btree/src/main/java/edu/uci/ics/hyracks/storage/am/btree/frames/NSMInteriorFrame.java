@@ -27,13 +27,13 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
-public class BTreeNSMInterior extends BTreeNSM implements IBTreeInteriorFrame {
+public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		
 	private static final int rightLeafOff = smFlagOff + 1;
 	
 	private static final int childPtrSize = 4;
 	
-	public BTreeNSMInterior() {
+	public NSMInteriorFrame() {
 		super();
 	}
 	
