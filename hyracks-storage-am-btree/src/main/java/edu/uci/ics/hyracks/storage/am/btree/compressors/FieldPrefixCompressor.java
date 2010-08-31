@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
@@ -43,7 +43,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
 	}
 	
 	@Override
-	public boolean compress(FieldPrefixNSMLeaf frame, MultiComparator cmp) throws Exception {		
+	public boolean compress(FieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception {		
 		int numRecords = frame.getNumRecords();
     	if(numRecords <= 0) {
             frame.setNumPrefixRecords(0);
@@ -299,7 +299,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     // i.e., all records in a keypartition will be compressed based on the same prefix length (number of fields)
     // the prefix length may be different for different keypartitions
     // the occurrenceThreshold determines the minimum number of records that must share a common prefix in order for us to consider compressing them        
-    private ArrayList<KeyPartition> getKeyPartitions(FieldPrefixNSMLeaf frame, MultiComparator cmp, int occurrenceThreshold) {        
+    private ArrayList<KeyPartition> getKeyPartitions(FieldPrefixNSMLeafFrame frame, MultiComparator cmp, int occurrenceThreshold) {        
     	IBinaryComparator[] cmps = cmp.getComparators();
         IFieldAccessor[] fields = cmp.getFields();
         

@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
 //TODO: make members private, only for debugging now
 public class FieldIterator {
@@ -25,17 +25,17 @@ public class FieldIterator {
     public int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
     public int numPrefixFields = 0;
     public IFieldAccessor[] fields;
-    public FieldPrefixNSMLeaf frame;
+    public FieldPrefixNSMLeafFrame frame;
     
     public int currentField = -1;
     public int recOffRunner = -1;
     
-    public FieldIterator(IFieldAccessor[] fields, FieldPrefixNSMLeaf frame) {
+    public FieldIterator(IFieldAccessor[] fields, FieldPrefixNSMLeafFrame frame) {
         this.fields = fields;
         this.frame = frame;
     }
     
-    public void setFrame(FieldPrefixNSMLeaf frame) {
+    public void setFrame(FieldPrefixNSMLeafFrame frame) {
         this.frame = frame;        
     }
     

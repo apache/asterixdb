@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 // the first meta page is special because it guarantees to have a correct max page
 // other meta pages (i.e., with level -2) have junk in the max page field
 
-public class BTreeMeta implements IBTreeMetaDataFrame {
+public class MetaDataFrame implements IBTreeMetaDataFrame {
         
     protected static final int numRecordsOff = 0;             
     protected static final int freeSpaceOff = numRecordsOff + 4;

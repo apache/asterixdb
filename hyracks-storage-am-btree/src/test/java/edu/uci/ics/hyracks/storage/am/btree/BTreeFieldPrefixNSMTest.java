@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
@@ -73,7 +73,7 @@ public class BTreeFieldPrefixNSMTest {
         }
     }
     
-    private void tupleInsert(FieldPrefixNSMLeaf frame, MultiComparator cmp, int f0, int f1, int f2, boolean print, ArrayList<byte[]> records) throws Exception {
+    private void tupleInsert(FieldPrefixNSMLeafFrame frame, MultiComparator cmp, int f0, int f1, int f2, boolean print, ArrayList<byte[]> records) throws Exception {
     	if(print) System.out.println("INSERTING: " + f0 + " " + f1 + " " + f2);
     	
     	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
@@ -123,7 +123,7 @@ public class BTreeFieldPrefixNSMTest {
         try {
         	        	        	        	
             IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
-            FieldPrefixNSMLeaf frame = new FieldPrefixNSMLeaf();                                    
+            FieldPrefixNSMLeafFrame frame = new FieldPrefixNSMLeafFrame();                                    
             frame.setPage(page);            
             frame.initBuffer((byte)0);
             slotManager.setFrame(frame);          

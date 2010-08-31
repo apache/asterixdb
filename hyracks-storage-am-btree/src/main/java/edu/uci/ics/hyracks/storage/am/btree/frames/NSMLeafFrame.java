@@ -23,11 +23,11 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
-public class BTreeNSMLeaf extends BTreeNSM implements IBTreeLeafFrame {    
+public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {    
 	protected static final int prevLeafOff = smFlagOff + 1;
 	protected static final int nextLeafOff = prevLeafOff + 4;
 	
-	public BTreeNSMLeaf() {
+	public NSMLeafFrame() {
 		super();
 	}
 	
