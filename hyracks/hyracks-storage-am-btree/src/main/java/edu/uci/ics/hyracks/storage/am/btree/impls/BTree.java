@@ -27,8 +27,6 @@ import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInteriorFactor
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeaf;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManagerFactory;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -46,9 +44,7 @@ public class BTree {
     private final IBufferCache bufferCache;
     private int fileId;
     private final IBTreeFrameInteriorFactory interiorFrameFactory;
-    private final IBTreeFrameLeafFactory leafFrameFactory;
-    private final ISlotManagerFactory interiorSlotManagerFactory;
-    private final ISlotManagerFactory leafSlotManagerFactory;
+    private final IBTreeFrameLeafFactory leafFrameFactory;    
     private final MultiComparator cmp;
     private final ReadWriteLock treeLatch;
     
@@ -84,13 +80,10 @@ public class BTree {
     }
 
     public BTree(IBufferCache bufferCache, IBTreeFrameInteriorFactory interiorFrameFactory,
-            IBTreeFrameLeafFactory leafFrameFactory, ISlotManagerFactory interiorSlotManagerFactory,
-            ISlotManagerFactory leafSlotManagerFactory, MultiComparator cmp) {
+            IBTreeFrameLeafFactory leafFrameFactory, MultiComparator cmp) {
         this.bufferCache = bufferCache;
         this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
-        this.interiorSlotManagerFactory = interiorSlotManagerFactory;
-        this.leafSlotManagerFactory = leafSlotManagerFactory;
+        this.leafFrameFactory = leafFrameFactory;       
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
     }
@@ -593,7 +586,6 @@ public class BTree {
     				rightNode.acquireWriteLatch();
     				writeLatchesAcquired++;
     				try {
-    					ISlotManager rightSlotManager = leafSlotManagerFactory.getSlotManager();
     					IBTreeFrameLeaf rightFrame = leafFrameFactory.getFrame();
     					rightFrame.setPage(rightNode);
     					rightFrame.initBuffer((byte) 0);
@@ -678,7 +670,6 @@ public class BTree {
                 rightNode.acquireWriteLatch();
                 writeLatchesAcquired++;
                 try {
-                    ISlotManager rightSlotManager = interiorSlotManagerFactory.getSlotManager();
                     IBTreeFrame rightFrame = interiorFrameFactory.getFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
@@ -790,7 +781,6 @@ public class BTree {
 
         // will this leaf become empty?
         if (ctx.leafFrame.getNumRecords() == 1) {
-            ISlotManager siblingSlotManager = leafSlotManagerFactory.getSlotManager();
             IBTreeFrameLeaf siblingFrame = leafFrameFactory.getFrame();
 
             ICachedPage leftNode = null;
@@ -1301,15 +1291,7 @@ public class BTree {
     public IBTreeFrameLeafFactory getLeafFrameFactory() {
         return leafFrameFactory;
     }
-
-    public ISlotManagerFactory getInteriorSlotManagerFactory() {
-        return interiorSlotManagerFactory;
-    }
-
-    public ISlotManagerFactory getLeafSlotManagerFactory() {
-        return leafSlotManagerFactory;
-    }
-
+    
     public MultiComparator getMultiComparator() {
         return cmp;
     }

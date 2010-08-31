@@ -36,7 +36,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMInteriorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMLeafFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManagerFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameInterior;
@@ -46,7 +45,6 @@ import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameLeafFactory;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMeta;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IBTreeFrameMetaFactory;
 import edu.uci.ics.hyracks.storage.am.btree.interfaces.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.interfaces.ISlotManagerFactory;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
 import edu.uci.ics.hyracks.storage.am.btree.types.StringAccessor;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
@@ -102,8 +100,6 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
-        ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -120,8 +116,8 @@ public class BTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(cmps, fields);
-
-        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, interiorSlotManagerFactory, leafSlotManagerFactory, cmp);
+        
+        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
@@ -265,9 +261,7 @@ public class BTreeTest {
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
-        
-        ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
+                
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -287,12 +281,7 @@ public class BTreeTest {
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
-        BTree btree = new BTree(bufferCache, 
-        		interiorFrameFactory, 
-        		leafFrameFactory, 
-        		interiorSlotManagerFactory,
-                leafSlotManagerFactory, 
-                cmp);
+        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
@@ -414,9 +403,7 @@ public class BTreeTest {
     	int fileId = 0;
     	FileInfo fi = new FileInfo(fileId, raf);
     	fileManager.registerFile(fi);
-
-    	ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
+    	
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -434,12 +421,7 @@ public class BTreeTest {
     	cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     	MultiComparator cmp = new MultiComparator(cmps, fields);
     	
-    	BTree btree = new BTree(bufferCache, 
-    			interiorFrameFactory, 
-    			leafFrameFactory, 
-    			interiorSlotManagerFactory,
-    			leafSlotManagerFactory, 
-    			cmp);
+    	BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
     	btree.create(fileId, leafFrame, metaFrame);
     	btree.open(fileId);
 
@@ -554,9 +536,7 @@ public class BTreeTest {
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
-        
-        ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
+                
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -575,12 +555,7 @@ public class BTreeTest {
         
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
-        BTree btree = new BTree(bufferCache, 
-        		interiorFrameFactory, 
-        		leafFrameFactory, 
-        		interiorSlotManagerFactory,
-                leafSlotManagerFactory, 
-                cmp);
+        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
@@ -682,9 +657,7 @@ public class BTreeTest {
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
-
-        ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
+        
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -706,12 +679,7 @@ public class BTreeTest {
         
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
-        BTree btree = new BTree(bufferCache, 
-        		interiorFrameFactory, 
-        		leafFrameFactory, 
-        		interiorSlotManagerFactory,
-                leafSlotManagerFactory, 
-                cmp);
+        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
@@ -810,9 +778,7 @@ public class BTreeTest {
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);       
-        
-        ISlotManagerFactory leafSlotManagerFactory = new OrderedSlotManagerFactory();
-        ISlotManagerFactory interiorSlotManagerFactory = new OrderedSlotManagerFactory();
+                
         IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
         IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
         IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
@@ -833,12 +799,7 @@ public class BTreeTest {
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();        
         MultiComparator cmp = new MultiComparator(cmps, fields);
 
-        BTree btree = new BTree(bufferCache, 
-        		interiorFrameFactory, 
-        		leafFrameFactory, 
-        		interiorSlotManagerFactory,
-                leafSlotManagerFactory, 
-                cmp);
+        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
