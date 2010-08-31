@@ -13,8 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-public interface IBTreeFrameLeafFactory {	
-	public IBTreeFrameLeaf getFrame();
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+
+public class BTreeNSMLeafFactory implements IBTreeLeafFrameFactory {
+	@Override
+	public IBTreeLeafFrame getFrame() {		
+		return new BTreeNSMLeaf();
+	}
 }

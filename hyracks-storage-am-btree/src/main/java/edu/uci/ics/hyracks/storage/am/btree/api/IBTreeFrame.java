@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 

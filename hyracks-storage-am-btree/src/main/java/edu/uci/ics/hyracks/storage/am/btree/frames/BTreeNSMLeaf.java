@@ -13,14 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
-public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {    
+public class BTreeNSMLeaf extends BTreeNSM implements IBTreeLeafFrame {    
 	protected static final int prevLeafOff = smFlagOff + 1;
 	protected static final int nextLeafOff = prevLeafOff + 4;
 	
@@ -57,7 +60,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 
 	@Override
 	public void insert(byte[] data, MultiComparator cmp) throws Exception {		
-		int slotOff = slotManager.findSlot(buf, data, cmp, false);
+		int slotOff = slotManager.findSlot(data, cmp, false);
 		boolean isDuplicate = true;
 		
 		if (slotOff < 0) isDuplicate = false; // greater than all existing keys
@@ -92,7 +95,7 @@ public class BTreeNSMLeaf extends BTreeNSM implements IBTreeFrameLeaf {
 	public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {
 		
 		// before doing anything check if key already exists
-		int slotOff = slotManager.findSlot(buf, data, cmp, true);
+		int slotOff = slotManager.findSlot(data, cmp, true);
 		if (slotOff >= 0) {			
 			if (cmp.compare(data, 0, buf.array(), slotManager.getRecOff(slotOff)) == 0) {
 				throw new BTreeException("Inserting duplicate key into unique index");

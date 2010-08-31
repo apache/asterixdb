@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -21,7 +21,11 @@ import java.util.Collections;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.api.SpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class BTreeNSM implements IBTreeFrame {
@@ -134,7 +138,7 @@ public abstract class BTreeNSM implements IBTreeFrame {
 
 	@Override
 	public void delete(byte[] data, MultiComparator cmp, boolean exactDelete) throws Exception {		
-		int slotOff = slotManager.findSlot(buf, data, cmp, true);
+		int slotOff = slotManager.findSlot(data, cmp, true);
 		if(slotOff < 0) {
 			throw new BTreeException("Key to be deleted does not exist.");
 		}
@@ -187,7 +191,7 @@ public abstract class BTreeNSM implements IBTreeFrame {
 	
 	@Override
 	public void insert(byte[] data, MultiComparator cmp) throws Exception {
-		int slotOff = slotManager.findSlot(buf, data, cmp, false);
+		int slotOff = slotManager.findSlot(data, cmp, false);
 		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));
 		
 		int recOff = buf.getInt(freeSpaceOff);

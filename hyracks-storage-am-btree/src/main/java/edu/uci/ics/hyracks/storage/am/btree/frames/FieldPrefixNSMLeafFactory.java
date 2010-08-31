@@ -15,12 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeafFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 
-public class FieldPrefixNSMLeafFactory implements IBTreeFrameLeafFactory {
+public class FieldPrefixNSMLeafFactory implements IBTreeLeafFrameFactory {
 	@Override
-	public IBTreeFrameLeaf getFrame() {		
+	public IBTreeLeafFrame getFrame() {		
 		return new FieldPrefixNSMLeaf();
 	}
 }

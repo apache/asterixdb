@@ -21,22 +21,22 @@ import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.api.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
+public class FieldPrefixNSMLeaf implements IBTreeLeafFrame {
 	
     protected static final int pageLsnOff = 0;                              // 0
     protected static final int numRecordsOff = pageLsnOff + 4;              // 4    
@@ -152,7 +152,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     
     @Override
     public void delete(byte[] data, MultiComparator cmp, boolean exactDelete) throws Exception {        
-        int slot = slotManager.findSlot(buf, data, cmp, true);
+        int slot = slotManager.findSlot(data, cmp, true);
         int recSlotNum = slotManager.decodeSecondSlotField(slot);
         if(recSlotNum == FieldPrefixSlotManager.GREATEST_SLOT) {
             throw new BTreeException("Key to be deleted does not exist.");   
@@ -275,7 +275,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     
     @Override
     public void insert(byte[] data, MultiComparator cmp) throws Exception {    	
-    	int slot = slotManager.findSlot(buf, data, cmp, false);        
+    	int slot = slotManager.findSlot(data, cmp, false);        
         slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));
         
         int suffixSize = data.length;
@@ -444,7 +444,7 @@ public class FieldPrefixNSMLeaf implements IBTreeFrameLeaf {
     	FieldPrefixNSMLeaf rf = (FieldPrefixNSMLeaf)rightFrame;
     	
     	// before doing anything check if key already exists
-		int slot = slotManager.findSlot(buf, data, cmp, true);
+		int slot = slotManager.findSlot(data, cmp, true);
 		int recSlotNum = slotManager.decodeSecondSlotField(slot);	
 		if(recSlotNum != FieldPrefixSlotManager.GREATEST_SLOT) {
 			int prefixSlotNum = slotManager.decodeFirstSlotField(slot);				

@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -29,10 +29,10 @@ public class BTreeRangeSearchCursor implements IBTreeCursor {
 	private int recordOffset = -1;
 	private int fileId = -1;
 	private ICachedPage page = null;
-	private IBTreeFrameLeaf frame = null;
+	private IBTreeLeafFrame frame = null;
 	private IBufferCache bufferCache = null;
 	
-	public BTreeRangeSearchCursor(IBTreeFrameLeaf frame) {
+	public BTreeRangeSearchCursor(IBTreeLeafFrame frame) {
 		this.frame = frame;		
 	}
 	

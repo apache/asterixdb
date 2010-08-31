@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-public interface IBTreeFrameLeaf extends IBTreeFrame {	
-	public void setNextLeaf(int nextPage);
-	public int getNextLeaf();
-	
-	public void setPrevLeaf(int prevPage);
-	public int getPrevLeaf();
+public enum SpaceStatus {
+	INSUFFICIENT_SPACE,
+	SUFFICIENT_CONTIGUOUS_SPACE,
+	SUFFICIENT_SPACE
 }

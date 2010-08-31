@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 // all meta pages of this kind have a negative level
@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 // the first meta page is special because it guarantees to have a correct max page
 // other meta pages (i.e., with level -2) have junk in the max page field
 
-public class BTreeMeta implements IBTreeFrameMeta {
+public class BTreeMeta implements IBTreeMetaDataFrame {
         
     protected static final int numRecordsOff = 0;             
     protected static final int freeSpaceOff = numRecordsOff + 4;

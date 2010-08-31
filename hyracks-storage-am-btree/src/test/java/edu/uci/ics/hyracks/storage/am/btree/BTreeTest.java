@@ -30,18 +30,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComp
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInterior;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameInteriorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeaf;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameLeafFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMeta;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrameMetaFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeMetaFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeMetaFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMInteriorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeNSMLeafFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -100,13 +100,13 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();        
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();        
         
         IFieldAccessor[] fields = new IFieldAccessor[2];
         fields[0] = new Int32Accessor(); // key field
@@ -262,13 +262,13 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
                 
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();   
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
         
         IFieldAccessor[] fields = new IFieldAccessor[3];
         fields[0] = new Int32Accessor(); // key field 1
@@ -404,13 +404,13 @@ public class BTreeTest {
     	FileInfo fi = new FileInfo(fileId, raf);
     	fileManager.registerFile(fi);
     	
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();   
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
 
     	IFieldAccessor[] fields = new IFieldAccessor[2];
     	fields[0] = new StringAccessor(); // key        
@@ -537,13 +537,13 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
                 
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();   
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
         
         IFieldAccessor[] fields = new IFieldAccessor[2];
         fields[0] = new StringAccessor(); // key        
@@ -658,13 +658,13 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();          
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();          
 
         int keyLen = 2;
 
@@ -779,13 +779,13 @@ public class BTreeTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);       
                 
-        IBTreeFrameLeafFactory leafFrameFactory = new BTreeNSMLeafFactory();
-        IBTreeFrameInteriorFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
-        IBTreeFrameMetaFactory metaFrameFactory = new BTreeMetaFactory();
+        IBTreeLeafFrameFactory leafFrameFactory = new BTreeNSMLeafFactory();
+        IBTreeInteriorFrameFactory interiorFrameFactory = new BTreeNSMInteriorFactory();
+        IBTreeMetaDataFrameFactory metaFrameFactory = new BTreeMetaFactory();
         
-        IBTreeFrameLeaf leafFrame = leafFrameFactory.getFrame();
-        IBTreeFrameInterior interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeFrameMeta metaFrame = metaFrameFactory.getFrame();
+        IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+        IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
         int keyLen = 2;
         
