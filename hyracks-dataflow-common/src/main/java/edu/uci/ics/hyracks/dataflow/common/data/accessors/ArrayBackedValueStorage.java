@@ -14,6 +14,10 @@ public class ArrayBackedValueStorage implements IValueReference, IDataOutputProv
         dos = new DataOutputStream(baaos);
     }
 
+    public void reset() {
+        baaos.reset();
+    }
+
     @Override
     public DataOutput getDataOutput() {
         return dos;
