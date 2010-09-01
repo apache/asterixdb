@@ -24,11 +24,11 @@
   <distributionManagement>
     <repository>
       <id>hyracks-releases</id>
-      <url>http://blacktitan.com/nexus/content/repositories/hyracks-releases</url>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
     </repository>
     <snapshotRepository>
       <id>hyracks-snapshots</id>
-      <url>http://blacktitan.com/nexus/content/repositories/hyracks-snapshots</url>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -40,6 +40,13 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <repositories>
+    <repository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+    </repository>
+  </repositories>
 
   <modules>
     <module>hyracks-api</module>
