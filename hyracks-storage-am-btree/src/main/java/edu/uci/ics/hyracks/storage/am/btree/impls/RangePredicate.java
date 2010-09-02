@@ -18,6 +18,8 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 
 public class RangePredicate implements ISearchPredicate {
+		
+	private static final long serialVersionUID = 1L;
 	
 	protected boolean isForward = true;
 	protected byte[] lowKeys = null;
