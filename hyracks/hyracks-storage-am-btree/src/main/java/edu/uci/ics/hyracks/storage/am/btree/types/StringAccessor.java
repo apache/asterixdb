@@ -25,21 +25,14 @@ import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
 public class StringAccessor implements IFieldAccessor {
-		
+	
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public int getLength(byte[] data, int offset) {
 		return StringUtils.getUTFLen(data, offset) + 2;
 	}
-	
-	/*
-	@Override
-	public int getLength(byte[] data, int offset) {
-		// TODO: this is very inefficient. We need a getInt() method that works
-		ByteBuffer buf = ByteBuffer.wrap(data);
-		return buf.getInt(offset) + 4; // assuming the first int indicates the length
-	}
-	*/	
-			
+		
 	@Override
 	public String print(byte[] data, int offset) {				
 		ByteBuffer buf = ByteBuffer.wrap(data);

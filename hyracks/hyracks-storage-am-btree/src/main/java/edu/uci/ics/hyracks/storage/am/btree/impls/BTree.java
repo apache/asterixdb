@@ -41,6 +41,8 @@ public class BTree {
                                         // maxPage
     private final int rootPage = 1; // the root page never changes
     
+    private boolean created = false;
+    
     private final IBufferCache bufferCache;
     private int fileId;
     private final IBTreeInteriorFrameFactory interiorFrameFactory;
@@ -64,6 +66,7 @@ public class BTree {
 
     public int usefulCompression = 0;
     public int uselessCompression = 0;
+        
     
     public String printStats() {
         StringBuilder strBuilder = new StringBuilder();
@@ -89,39 +92,56 @@ public class BTree {
     }
     
     public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
-        // initialize meta data page
-        ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
-        pins++;
-        
-        metaNode.acquireWriteLatch();
-        writeLatchesAcquired++;
-        try {
-            metaFrame.setPage(metaNode);
-            metaFrame.initBuffer((byte) -1);
-            metaFrame.setMaxPage(rootPage);
-        } finally {
-            metaNode.releaseWriteLatch();
-            writeLatchesReleased++;
-            bufferCache.unpin(metaNode);
-            unpins++;
-        }
-        
-        // initialize root page
-        ICachedPage rootNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rootPage), true);
-        pins++;
-        
-        rootNode.acquireWriteLatch();
-        writeLatchesAcquired++;
-        try {
-            leafFrame.setPage(rootNode);
-            leafFrame.initBuffer((byte) 0);
-        } finally {
-            rootNode.releaseWriteLatch();
-            writeLatchesReleased++;            
-            bufferCache.unpin(rootNode);
-            unpins++;
-        }
-        currentLevel = 0;
+
+    	if(created) return;
+    	
+    	treeLatch.writeLock().lock();    	
+    	try {
+    	
+    		// check if another thread bet us to it
+    		if(created) return;    		
+    		
+    		// initialize meta data page
+    		ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
+    		pins++;
+
+    		System.out.println(metaNode.getBuffer().capacity());
+
+    		metaNode.acquireWriteLatch();
+    		writeLatchesAcquired++;
+    		try {
+    			metaFrame.setPage(metaNode);
+    			metaFrame.initBuffer((byte) -1);
+    			metaFrame.setMaxPage(rootPage);
+    		} finally {
+    			metaNode.releaseWriteLatch();
+    			writeLatchesReleased++;
+    			bufferCache.unpin(metaNode);
+    			unpins++;
+    		}
+
+    		// initialize root page
+    		ICachedPage rootNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, rootPage), true);
+    		pins++;
+
+    		rootNode.acquireWriteLatch();
+    		writeLatchesAcquired++;
+    		try {
+    			leafFrame.setPage(rootNode);
+    			leafFrame.initBuffer((byte) 0);
+    		} finally {
+    			rootNode.releaseWriteLatch();
+    			writeLatchesReleased++;            
+    			bufferCache.unpin(rootNode);
+    			unpins++;
+    		}
+    		currentLevel = 0;
+    		
+    		created = true;
+    	}
+    	finally {
+    		treeLatch.writeLock().unlock();
+    	}
     }
 
     public void open(int fileId) {
@@ -1237,7 +1257,7 @@ public class BTree {
         int spaceNeeded = record.length + ctx.slotSize;
         if (leafFrontier.bytesInserted + spaceNeeded > ctx.leafMaxBytes) {
             int splitKeySize = cmp.getKeySize(leafFrontier.lastRecord, 0);
-            ctx.splitKey.initData(splitKeySize);
+            ctx.splitKey.initData(splitKeySize);            
             System.arraycopy(leafFrontier.lastRecord, 0, ctx.splitKey.getData(), 0, splitKeySize);
             ctx.splitKey.setLeftPage(leafFrontier.pageId);
             int prevPageId = leafFrontier.pageId;

@@ -20,7 +20,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
 public class Int32Accessor implements IFieldAccessor {
-	    
+	
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public int getLength(byte[] data, int offset) {
 		return 4;

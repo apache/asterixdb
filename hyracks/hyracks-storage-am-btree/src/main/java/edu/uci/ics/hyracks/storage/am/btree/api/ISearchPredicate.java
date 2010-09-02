@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface ISearchPredicate {
+import java.io.Serializable;
+
+public interface ISearchPredicate extends Serializable {
 	public boolean isForward();	
 }
