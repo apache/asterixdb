@@ -24,6 +24,7 @@ activitystage_INITIAL activitystage_temp(JobId, OperatorId, ActivityId, 0) :-
     activitynode(JobId, OperatorId, ActivityId, _);
 
 activitystage_BLOCKED activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber) :-
+/* use activitystage_temp#insert() to trigger only on insert */
     activitystage_temp(JobId, OperatorId1, ActivityId1, StageNumber1),
     activitystage_temp(JobId, OperatorId2, ActivityId2, StageNumber2),
     activityblocked(JobId, OperatorId1, ActivityId1, OperatorId2, ActivityId2),
@@ -132,6 +133,7 @@ watch(availablenodecount, a);
 watch(availablenodecount, i);
 watch(availablenodecount, d);
 
+/* Try not using a 0 key -- Tyson feels that should work! */
 availablenodecount(0, count<NodeId>) :-
     availablenodes(NodeId);
 
