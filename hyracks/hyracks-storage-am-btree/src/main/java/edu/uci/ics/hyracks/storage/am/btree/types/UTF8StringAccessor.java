@@ -24,10 +24,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
-public class StringAccessor implements IFieldAccessor {
+public class UTF8StringAccessor implements IFieldAccessor {
 	
-	private static final long serialVersionUID = 1L;
-
 	@Override
 	public int getLength(byte[] data, int offset) {
 		return StringUtils.getUTFLen(data, offset) + 2;

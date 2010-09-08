@@ -38,7 +38,7 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractBTreeOperato
 			e.printStackTrace();
 		}
 		
-		MultiComparator cmp = opDesc.getMultiComparator();
+		MultiComparator cmp = btree.getMultiComparator();
 		ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);
 		appender.reset(frame, true);

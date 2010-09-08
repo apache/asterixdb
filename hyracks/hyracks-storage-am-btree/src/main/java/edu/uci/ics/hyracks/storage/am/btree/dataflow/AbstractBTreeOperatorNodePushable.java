@@ -6,14 +6,18 @@ import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
@@ -33,7 +37,7 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
 		this.ctx = ctx;
 	}
 	
-	public void init() throws FileNotFoundException {
+	public void init() throws FileNotFoundException {				
 		IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
 		FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
 		
@@ -55,14 +59,24 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
             btreeRegistry.lock();
             try {
                 // check if btree has already been registered by another thread
-                btree = btreeRegistry.get(opDesc.getBtreeFileId());
-                if(btree == null) {
-                                    	
-                	// this thread should create and register the btee                                        
-                    btree = new BTree(bufferCache, 
-                    		opDesc.getInteriorFactory(), 
-                    		opDesc.getLeafFactory(), 
-                    		opDesc.getMultiComparator());
+                btree = btreeRegistry.get(opDesc.getBtreeFileId());                
+                if(btree == null) {                                    	                	                	
+                	// this thread should create and register the btee
+                	
+                	// start by building the multicomparator from the factories
+                	IFieldAccessor[] fields = new IFieldAccessor[opDesc.getFieldAccessorFactories().length];
+                	for(int i = 0; i < opDesc.getFieldAccessorFactories().length; i++) {
+                		fields[i] = opDesc.getFieldAccessorFactories()[i].getFieldAccessor();
+                	}
+                	
+                	IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getComparatorFactories().length];
+                	for(int i = 0; i < opDesc.getComparatorFactories().length; i++) {
+                		comparators[i] = opDesc.getComparatorFactories()[i].createBinaryComparator();
+                	}
+                	
+                    MultiComparator cmp = new MultiComparator(comparators, fields);
+                	
+                	btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
                     btree.open(opDesc.getBtreeFileId());
                     btreeRegistry.register(opDesc.getBtreeFileId(), btree);
                 }                
@@ -148,5 +162,35 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
             cursor.close();
         }	
         */	 
+	}
+	
+	protected byte[] buildBTreeRecordFromHyraxRecord(IFrameTupleAccessor accessor, int tupleId, int[] keyFields, int[] payloadFields) {
+		
+		// determine size of record
+		int btreeRecordSize = 0;			
+		for(int j = 0; j < keyFields.length; j++) {
+			btreeRecordSize += accessor.getFieldLength(tupleId, keyFields[j]);
+		}
+		for(int j = 0; j < payloadFields.length; j++) {
+			btreeRecordSize += accessor.getFieldLength(tupleId, payloadFields[j]);
+		}			
+		
+		// allocate record and copy fields
+		byte[] btreeRecord = new byte[btreeRecordSize];
+		int recRunner = 0;
+		for(int j = 0; j < keyFields.length; j++) {
+			int fieldStartOff = accessor.getTupleStartOffset(tupleId) + + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(tupleId, keyFields[j]);				
+			int fieldLength = accessor.getFieldLength(tupleId, keyFields[j]);						
+			System.arraycopy(accessor.getBuffer().array(), fieldStartOff, btreeRecord, recRunner, fieldLength);				
+			recRunner += fieldLength;
+		}
+		for(int j = 0; j < payloadFields.length; j++) {
+			int fieldStartOff = accessor.getTupleStartOffset(tupleId) + + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(tupleId, payloadFields[j]);
+			int fieldLength = accessor.getFieldLength(tupleId, payloadFields[j]);
+			System.arraycopy(accessor.getBuffer().array(), fieldStartOff, btreeRecord, recRunner, fieldLength);
+			recRunner += fieldLength;				
+		}						
+		
+		return btreeRecord;
 	}
 }

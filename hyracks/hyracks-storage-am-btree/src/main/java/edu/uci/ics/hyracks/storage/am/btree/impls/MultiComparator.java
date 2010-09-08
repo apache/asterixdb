@@ -15,12 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import java.io.Serializable;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
-public class MultiComparator implements Serializable {
+public class MultiComparator {
     	
 	private static final long serialVersionUID = 1L;
 	

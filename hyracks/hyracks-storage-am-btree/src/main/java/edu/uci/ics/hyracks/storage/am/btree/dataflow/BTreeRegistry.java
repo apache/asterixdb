@@ -16,8 +16,8 @@ public class BTreeRegistry {
     }
     
     // TODO: not very high concurrency, but good enough for now    
-    public void lock() {
-        registryLock.lock();
+    public void lock() {        
+    	registryLock.lock();
     }
     
     public void unlock() {
@@ -31,4 +31,8 @@ public class BTreeRegistry {
     public void unregister(int fileId) {
         map.remove(fileId);
     }        
+    
+    public int size() {
+    	return map.size();
+    }
 }

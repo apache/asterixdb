@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IFieldAccessorFactory {
-	public IFieldAccessor getKey();
+import java.io.Serializable;
+
+public interface IFieldAccessorFactory extends Serializable {
+	public IFieldAccessor getFieldAccessor();
 }
