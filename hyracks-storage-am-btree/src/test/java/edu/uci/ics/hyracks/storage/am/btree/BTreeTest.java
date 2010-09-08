@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
-import edu.uci.ics.hyracks.storage.am.btree.types.StringAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.types.UTF8StringAccessor;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -413,8 +413,8 @@ public class BTreeTest {
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
 
     	IFieldAccessor[] fields = new IFieldAccessor[2];
-    	fields[0] = new StringAccessor(); // key        
-    	fields[1] = new StringAccessor(); // value
+    	fields[0] = new UTF8StringAccessor(); // key        
+    	fields[1] = new UTF8StringAccessor(); // value
 
     	int keyLen = 1;
     	IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
@@ -546,8 +546,8 @@ public class BTreeTest {
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
         
         IFieldAccessor[] fields = new IFieldAccessor[2];
-        fields[0] = new StringAccessor(); // key        
-        fields[1] = new StringAccessor(); // value
+        fields[0] = new UTF8StringAccessor(); // key        
+        fields[1] = new UTF8StringAccessor(); // value
 
         int keyLen = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
