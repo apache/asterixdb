@@ -90,6 +90,20 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
                 appenders[i].reset(appenders[i].getBuffer(), true);
             }
         }
+
+        @Override
+        public void flush() throws HyracksDataException {
+            for (int i = 0; i < appenders.length; ++i) {
+                FrameTupleAppender appender = appenders[i];
+                if (appender.getTupleCount() > 0) {
+                    ByteBuffer buffer = appender.getBuffer();
+                    IFrameWriter frameWriter = epWriters[i];
+                    flushFrame(buffer, frameWriter);
+                    epWriters[i].flush();
+                    appender.reset(buffer, true);
+                }
+            }
+        }
     }
 
     private final int partitioningField;

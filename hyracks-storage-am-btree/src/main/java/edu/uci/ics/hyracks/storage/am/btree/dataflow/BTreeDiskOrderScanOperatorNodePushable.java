@@ -90,4 +90,8 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractBTreeOperato
 	@Override
 	public void close() throws HyracksDataException {            	
 	}
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }
 }

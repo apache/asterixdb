@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final String BUFFERS = "buffers";
@@ -208,6 +209,10 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
             return op;
         }
@@ -224,9 +229,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            IOperatorNodePushable op = new IOperatorNodePushable() {
-                private IFrameWriter writer;
-
+            IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void open() throws HyracksDataException {
                     List<ByteBuffer> buffers = (List<ByteBuffer>) env.get(BUFFERS);
@@ -265,21 +268,8 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    throw new IllegalStateException();
-                }
-
-                @Override
                 public void close() throws HyracksDataException {
                     // do nothing
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalArgumentException();
-                    }
-                    this.writer = writer;
                 }
             };
             return op;

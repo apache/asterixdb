@@ -23,5 +23,7 @@ public interface IFrameWriter {
 
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException;
 
+    public void flush() throws HyracksDataException;
+
     public void close() throws HyracksDataException;
 }

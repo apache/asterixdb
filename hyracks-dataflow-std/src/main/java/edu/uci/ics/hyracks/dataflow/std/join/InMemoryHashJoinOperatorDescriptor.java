@@ -116,6 +116,10 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
             return op;
         }
@@ -160,6 +164,11 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                         throw new IllegalStateException();
                     }
                     this.writer = writer;
+                }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    writer.flush();
                 }
             };
             return op;

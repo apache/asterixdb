@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComp
 import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final String SMALLRELATION = "RelR";
@@ -213,6 +214,9 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
                 }
 
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
             return op;
         }
@@ -236,10 +240,9 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
 
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
 
-                private IFrameWriter writer;
                 private FileChannel[] channelsR;
                 private FileChannel[] channelsS;
                 private int numPartitions;
@@ -318,23 +321,10 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    throw new IllegalStateException();
-                }
-
-                @Override
                 public void close() throws HyracksDataException {
                     env.set(LARGERELATION, null);
                     env.set(SMALLRELATION, null);
                     env.set(NUM_PARTITION, null);
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalStateException();
-                    }
-                    this.writer = writer;
                 }
             };
             return op;

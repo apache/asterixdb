@@ -108,5 +108,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractBTreeOperatorNodePu
 	
 	@Override
 	public void close() throws HyracksDataException {            	
-	}			
+	}
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }			
 }
