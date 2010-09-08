@@ -68,6 +68,10 @@ public class BTree {
     public int uselessCompression = 0;
         
     
+    public void treeLatchStatus() {
+    	System.out.println(treeLatch.writeLock().toString());
+    }
+    
     public String printStats() {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.append("\n");
@@ -95,18 +99,16 @@ public class BTree {
 
     	if(created) return;
     	
-    	treeLatch.writeLock().lock();    	
+    	treeLatch.writeLock().lock();	
     	try {
     	
     		// check if another thread bet us to it
-    		if(created) return;    		
+    		if(created) return;    		    		
     		
     		// initialize meta data page
     		ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
     		pins++;
-
-    		System.out.println(metaNode.getBuffer().capacity());
-
+    		
     		metaNode.acquireWriteLatch();
     		writeLatchesAcquired++;
     		try {

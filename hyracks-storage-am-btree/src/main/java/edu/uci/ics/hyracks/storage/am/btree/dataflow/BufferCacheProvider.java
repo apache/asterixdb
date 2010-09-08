@@ -19,7 +19,7 @@ public class BufferCacheProvider implements IBufferCacheProvider {
     private static final int NUM_PAGES = 40;
 	
 	@Override
-	public IBufferCache getBufferCache() {
+	public synchronized IBufferCache getBufferCache() {
 		
 		if(bufferCache == null) {
 			if(fileManager == null) fileManager = new FileManager();			
@@ -32,7 +32,7 @@ public class BufferCacheProvider implements IBufferCacheProvider {
 	}
 	
 	@Override
-	public FileManager getFileManager() {
+	public synchronized FileManager getFileManager() {
 		if(fileManager == null) fileManager = new FileManager();
 		return fileManager;
 	}	

@@ -7,10 +7,10 @@ public class BTreeRegistryProvider implements IBTreeRegistryProvider {
 	private static BTreeRegistry btreeRegistry = null;
 	
 	@Override
-	public BTreeRegistry getBTreeRegistry() {
+	public synchronized BTreeRegistry getBTreeRegistry() {
 		if(btreeRegistry == null) {
 			btreeRegistry = new BTreeRegistry();
 		}		
 		return btreeRegistry;
-	}	
+	}
 }

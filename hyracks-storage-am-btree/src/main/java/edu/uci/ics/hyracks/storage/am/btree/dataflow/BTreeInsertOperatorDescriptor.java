@@ -12,29 +12,26 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
 
-public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
+public class BTreeInsertOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
 	
 	private final int[] keyFields;
 	private final int[] payloadFields;
 	
-    private float fillFactor;
-	
-	public BTreeBulkLoadOperatorDescriptor(JobSpecification spec,
+	public BTreeInsertOperatorDescriptor(JobSpecification spec,
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId,
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, IFieldAccessorFactory[] fieldAccessorFactories, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] keyFields, int[] payloadFields, float fillFactor) {
-		super(spec, 1, 0, fileSplitProvider, recDesc, bufferCacheProvider,
+			int[] keyFields, int[] payloadFields) {
+		super(spec, 1, 1, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
 				leafFactory, fieldAccessorFactories, comparatorFactories);
 		this.keyFields = keyFields;
 		this.payloadFields = payloadFields;
-		this.fillFactor = fillFactor;
 	}
 	
 	@Override
@@ -42,7 +39,7 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeBulkLoadOperatorNodePushable(this, ctx, keyFields, payloadFields, fillFactor, recordDescProvider);
+		return new BTreeInsertOperatorNodePushable(this, ctx, keyFields, payloadFields, recordDescProvider);
 	}
 	
 }
