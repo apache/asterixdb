@@ -390,6 +390,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                         .put("framecount." + conn.getConnectorId().getId() + ".sender." + senderIndex + "."
                                 + receiverIndex, String.valueOf(frameCount));
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                writer.flush();
+            }
         } : writer;
     }
 

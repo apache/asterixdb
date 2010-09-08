@@ -23,4 +23,8 @@ public abstract class AbstractUnaryOutputSourceOperatorNodePushable extends Abst
     public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public final void flush() throws HyracksDataException {
+    }
 }

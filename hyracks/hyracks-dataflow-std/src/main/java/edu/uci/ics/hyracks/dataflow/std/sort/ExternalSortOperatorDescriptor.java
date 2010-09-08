@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
@@ -275,6 +276,10 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
             return op;
         }
@@ -295,8 +300,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            IOperatorNodePushable op = new IOperatorNodePushable() {
-                private IFrameWriter writer;
+            IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 private List<ByteBuffer> inFrames;
                 private ByteBuffer outFrame;
                 LinkedList<File> runs;
@@ -336,21 +340,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    throw new IllegalStateException();
-                }
-
-                @Override
                 public void close() throws HyracksDataException {
                     // do nothing
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalArgumentException();
-                    }
-                    this.writer = writer;
                 }
 
                 // creates a new run from runs that can fit in memory.
@@ -558,6 +549,10 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
+        }
+
+        @Override
+        public void flush() throws HyracksDataException {
         }
     }
 

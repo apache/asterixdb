@@ -61,4 +61,8 @@ public final class DeserializedOperatorNodePushable implements IOperatorNodePush
     public void open() throws HyracksDataException {
         delegate.open();
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }
 }

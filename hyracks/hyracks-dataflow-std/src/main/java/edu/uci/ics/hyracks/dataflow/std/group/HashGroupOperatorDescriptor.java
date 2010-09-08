@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final String HASHTABLE = "hashtable";
@@ -104,6 +105,10 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
                     throw new IllegalArgumentException();
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
         }
 
@@ -119,9 +124,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            return new IOperatorNodePushable() {
-                private IFrameWriter writer;
-
+            return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void open() throws HyracksDataException {
                     GroupingHashTable table = (GroupingHashTable) env.get(HASHTABLE);
@@ -132,21 +135,8 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    throw new IllegalStateException();
-                }
-
-                @Override
                 public void close() throws HyracksDataException {
                     // do nothing
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalArgumentException();
-                    }
-                    this.writer = writer;
                 }
             };
         }

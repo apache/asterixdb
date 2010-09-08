@@ -229,6 +229,10 @@ public class ConnectionManager {
         @Override
         public void open() throws HyracksDataException {
         }
+
+        @Override
+        public void flush() {
+        }
     }
 
     private final class ConnectionListenerThread extends Thread {

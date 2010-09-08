@@ -63,5 +63,9 @@ public class BTreeInsertOperatorNodePushable extends AbstractBTreeOperatorNodePu
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}	
+	}
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }	
 }

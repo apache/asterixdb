@@ -313,6 +313,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     ftappender.reset(inBuffer, true);
                 }
 
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             };
             return op;
         }
@@ -552,6 +555,11 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         throw new IllegalStateException();
                     }
                     this.writer = writer;
+                }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    writer.flush();
                 }
             };
             return op;

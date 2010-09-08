@@ -38,6 +38,10 @@ public class NullSinkOperatorDescriptor extends AbstractSingleActivityOperatorDe
             @Override
             public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
             }
+
+            @Override
+            public void flush() throws HyracksDataException {
+            }
         };
     }
 }

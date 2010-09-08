@@ -68,5 +68,8 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNode
 			e.printStackTrace();
 		}
 	}
-	
+
+    @Override
+    public void flush() throws HyracksDataException {
+    }	
 }

@@ -69,6 +69,10 @@ public class SerializationDeserializationTest {
                 public void close() throws HyracksDataException {
 
                 }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                }
             });
         }
 
