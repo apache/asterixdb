@@ -20,4 +20,24 @@ public final class FrameTupleReference implements IFrameTupleReference {
     public int getTupleIndex() {
         return tIndex;
     }
+
+    @Override
+    public int getFieldCount() {
+        return fta.getFieldCount();
+    }
+
+    @Override
+    public byte[] getFieldData(int fIdx) {
+        return fta.getBuffer().array();
+    }
+
+    @Override
+    public int getFieldStart(int fIdx) {
+        return fta.getFieldStartOffset(tIndex, fIdx);
+    }
+
+    @Override
+    public int getFieldLength(int fIdx) {
+        return fta.getFieldLength(tIndex, fIdx);
+    }
 }
