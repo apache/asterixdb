@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.api.comm;
 import java.nio.ByteBuffer;
 
 public interface IFrameTupleAccessor {
+    public int getFieldCount();
+
     public int getFieldSlotsLength();
 
     public int getFieldEndOffset(int tupleIndex, int fIdx);
