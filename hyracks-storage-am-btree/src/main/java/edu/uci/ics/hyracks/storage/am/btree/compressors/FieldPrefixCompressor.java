@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
@@ -48,13 +48,13 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     	if(numRecords <= 0) {
             frame.setNumPrefixRecords(0);
             frame.setFreeSpaceOff(frame.getOrigFreeSpaceOff());
-            frame.setTotalFreeSpace(frame.getOrigTotalFreeSpace());
+            frame.setTotalFreeSpace(frame.getOrigTotalFreeSpace());            
             return false;
         }
-    	
+    	    	
     	int numUncompressedRecords = frame.getNumUncompressedRecords();
     	float ratio = (float)numUncompressedRecords / (float)numRecords;    	
-    	if(ratio < ratioThreshold) return false;
+    	if(ratio < ratioThreshold) return false;    	
     	
         IBinaryComparator[] cmps = cmp.getComparators();
         IFieldAccessor[] fields = cmp.getFields();
@@ -65,7 +65,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                 
         // perform analysis pass
         ArrayList<KeyPartition> keyPartitions = getKeyPartitions(frame, cmp, occurrenceThreshold);
-        if(keyPartitions.size() == 0) return false;
+        if(keyPartitions.size() == 0) return false;        
         
         // for each keyPartition, determine the best prefix length for compression, and count how many prefix records we would need in total
         int totalSlotsNeeded = 0;
@@ -143,7 +143,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         int recSlotNum = 0;
         int prefixSlotNum = 0;
         numUncompressedRecords = 0;
-        FieldIterator recToWrite = new FieldIterator(fields, frame);
+        FieldPrefixFieldIterator recToWrite = new FieldPrefixFieldIterator(fields, frame);
         while(recSlotNum < numRecords) {           
             if(kpIndex < keyPartitions.size()) {
             	
@@ -157,8 +157,8 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             		
             		//System.out.println("PROCESSING KEYPARTITION: " + kpIndex + " RANGE: " + keyPartitions.get(kpIndex).firstRecSlotNum + " " + keyPartitions.get(kpIndex).lastRecSlotNum + " FIELDSTOCOMPRESS: " + numFieldsToCompress);
             		
-            		FieldIterator prevRec = new FieldIterator(fields, frame);        
-                    FieldIterator rec = new FieldIterator(fields, frame);
+            		FieldPrefixFieldIterator prevRec = new FieldPrefixFieldIterator(fields, frame);        
+                    FieldPrefixFieldIterator rec = new FieldPrefixFieldIterator(fields, frame);
                     
                     for(int i = recSlotNum + 1; i <= keyPartitions.get(kpIndex).lastRecSlotNum; i++) {
                     	prevRec.openRecSlotNum(i - 1);
@@ -312,8 +312,8 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         KeyPartition kp = new KeyPartition(maxCmps);        
         keyPartitions.add(kp);
         
-        FieldIterator prevRec = new FieldIterator(fields, frame);        
-        FieldIterator rec = new FieldIterator(fields, frame);
+        FieldPrefixFieldIterator prevRec = new FieldPrefixFieldIterator(fields, frame);        
+        FieldPrefixFieldIterator rec = new FieldPrefixFieldIterator(fields, frame);
         
         kp.firstRecSlotNum = 0;        
         int numRecords = frame.getNumRecords();

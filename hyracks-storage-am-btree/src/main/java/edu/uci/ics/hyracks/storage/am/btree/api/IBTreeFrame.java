@@ -68,12 +68,15 @@ public interface IBTreeFrame {
 	public boolean getSmFlag(); // structure modification flag
 	public void setSmFlag(boolean smFlag);	
 	
-	//public int getNumPrefixRecords();
-	//public void setNumPrefixRecords(int numPrefixRecords);
-	
 	public void insertSorted(byte[] data, MultiComparator cmp) throws Exception;
+	
+	public int getSlotSize();
+	
+	public IFieldIterator createFieldIterator();
 	
 	// for debugging
 	public int getFreeSpaceOff();
 	public void setFreeSpaceOff(int freeSpace);
+	
+	
 }

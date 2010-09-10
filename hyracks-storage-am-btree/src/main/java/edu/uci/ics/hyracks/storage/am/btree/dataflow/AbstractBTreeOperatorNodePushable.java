@@ -1,8 +1,22 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
@@ -32,17 +46,24 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
 	protected AbstractBTreeOperatorDescriptor opDesc;	
 	protected IHyracksContext ctx;
 	
-	public AbstractBTreeOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx) {
+	protected boolean createBTree;
+	
+	public AbstractBTreeOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree) {
 		this.opDesc = opDesc;
 		this.ctx = ctx;
+		this.createBTree = createBTree;
 	}
 	
-	public void init() throws FileNotFoundException {				
+	public void init() throws Exception {				
 		IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
 		FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
 		
         File f = new File(opDesc.getBtreeFileName());
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
+        
+        if(!f.exists() && !createBTree) {
+        	throw new Exception("Trying to open btree from file " + opDesc.getBtreeFileName() + " but file doesn't exist.");
+        }
         
         try {
         	FileInfo fi = new FileInfo(opDesc.getBtreeFileId(), raf);
@@ -50,6 +71,9 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
         }
         catch (Exception e) {
         }
+        
+        interiorFrame = opDesc.getInteriorFactory().getFrame();
+        leafFrame = opDesc.getLeafFactory().getFrame();    	
         
 		BTreeRegistry btreeRegistry = opDesc.getBtreeRegistryProvider().getBTreeRegistry();
 		btree = btreeRegistry.get(opDesc.getBtreeFileId());
@@ -77,23 +101,24 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
                     MultiComparator cmp = new MultiComparator(comparators, fields);
                 	
                 	btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
-                    btree.open(opDesc.getBtreeFileId());
+                	if(createBTree) {
+                		MetaDataFrame metaFrame = new MetaDataFrame();                		
+                		btree.create(opDesc.getBtreeFileId(), leafFrame, metaFrame);
+                	}
+                	btree.open(opDesc.getBtreeFileId());
                     btreeRegistry.register(opDesc.getBtreeFileId(), btree);
                 }                
             }
             finally {                        
                 btreeRegistry.unlock();
             }
-        }            
-                
-        interiorFrame = opDesc.getInteriorFactory().getFrame();
-        leafFrame = opDesc.getLeafFactory().getFrame();    	
+        }                      
 	}	
 	
 	// debug
 	protected void fill() throws Exception {
-		MetaDataFrame metaFrame = new MetaDataFrame();
 		
+		MetaDataFrame metaFrame = new MetaDataFrame();                		
 		btree.create(opDesc.getBtreeFileId(), leafFrame, metaFrame);
 		
 		Random rnd = new Random();

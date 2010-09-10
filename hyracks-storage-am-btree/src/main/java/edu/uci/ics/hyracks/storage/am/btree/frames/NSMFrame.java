@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.NSMFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
@@ -262,5 +264,15 @@ public abstract class NSMFrame implements IBTreeFrame {
     @Override
     public boolean compress(MultiComparator cmp) {
         return false;
+    }
+    
+    @Override
+    public int getSlotSize() {
+    	return slotManager.getSlotSize();
+    }
+    
+    @Override
+    public IFieldIterator createFieldIterator() {
+    	return new NSMFieldIterator();
     }
 }

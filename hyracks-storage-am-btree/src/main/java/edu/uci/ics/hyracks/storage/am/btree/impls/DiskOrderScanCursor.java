@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -27,7 +28,6 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     // TODO: might want to return records in physical order, not logical order to speed up access
     
     private int recordNum = 0;
-    private int recordOffset = -1;
     private int fileId = -1;    
     int currentPageId = -1;
     int maxPageId = -1; // TODO: figure out how to scan to the end of file, this is dirty and may not with concurrent updates
@@ -35,8 +35,12 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     private IBTreeLeafFrame frame = null;
     private IBufferCache bufferCache = null;
     
+    private IFieldIterator fieldIter;
+    
     public DiskOrderScanCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
+        this.fieldIter = frame.createFieldIterator();
+		this.fieldIter.setFrame(frame);
     }
     
     @Override
@@ -45,12 +49,13 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         bufferCache.unpin(page);
         page = null;
     }
-
+    
     @Override
-    public int getOffset() {
-        return recordOffset;
-    }
-
+    public IFieldIterator getFieldIterator() {
+		fieldIter.reset();
+		return fieldIter;
+	}
+    
     @Override
     public ICachedPage getPage() {
         return page;
@@ -80,7 +85,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         if(recordNum >= frame.getNumRecords()) {
             boolean nextLeafExists = positionToNextLeaf(true);
             if(nextLeafExists) {
-                recordOffset = frame.getRecordOffset(recordNum);
+            	fieldIter.openRecSlotNum(recordNum);
                 return true;
             }
             else {
@@ -88,7 +93,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
             }
         }        
         
-        recordOffset = frame.getRecordOffset(recordNum);
+        fieldIter.openRecSlotNum(recordNum);        
         return true;
     }
 
@@ -108,6 +113,9 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         this.page = page;
         recordNum = 0;
         frame.setPage(page);
+        RangePredicate pred = (RangePredicate)searchPred;
+		MultiComparator cmp = pred.getComparator();
+		this.fieldIter.setFields(cmp.getFields());
         boolean leafExists = positionToNextLeaf(false);
         if(!leafExists) {
             throw new Exception("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
@@ -117,7 +125,6 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     @Override
     public void reset() {
         recordNum = 0;
-        recordOffset = 0;
         currentPageId = -1;
         maxPageId = -1;
         page = null;     

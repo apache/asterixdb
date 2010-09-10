@@ -20,6 +20,7 @@ import java.util.Stack;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -33,7 +34,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
 public class BTree {
-		
+	
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
     
@@ -42,13 +43,14 @@ public class BTree {
     private final int rootPage = 1; // the root page never changes
     
     private boolean created = false;
-    
+            
     private final IBufferCache bufferCache;
     private int fileId;
     private final IBTreeInteriorFrameFactory interiorFrameFactory;
     private final IBTreeLeafFrameFactory leafFrameFactory;    
     private final MultiComparator cmp;
-    private final ReadWriteLock treeLatch;
+    private final ReadWriteLock treeLatch;    
+    private final RangePredicate diskOrderScanPredicate;
     
     public int rootSplits = 0;
     public int[] splitsByLevel = new int[500];
@@ -93,6 +95,7 @@ public class BTree {
         this.leafFrameFactory = leafFrameFactory;       
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
+        this.diskOrderScanPredicate = new RangePredicate(true, null, null, cmp);
     }
     
     public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
@@ -102,7 +105,7 @@ public class BTree {
     	treeLatch.writeLock().lock();	
     	try {
     	
-    		// check if another thread bet us to it
+    		// check if another thread beat us to it
     		if(created) return;    		    		
     		
     		// initialize meta data page
@@ -285,6 +288,26 @@ public class BTree {
         }
     }
     
+    public int getMaxPage(IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
+    	ICachedPage metaNode = bufferCache.pin(FileInfo.getDiskPageId(fileId, metaDataPage), false);
+		pins++;
+		
+		metaNode.acquireWriteLatch();
+		writeLatchesAcquired++;
+		int maxPage = -1;
+		try {
+			metaFrame.setPage(metaNode);			
+			maxPage = metaFrame.getMaxPage();
+		} finally {
+			metaNode.releaseWriteLatch();
+			writeLatchesReleased++;
+			bufferCache.unpin(metaNode);
+			unpins++;
+		}
+		
+		return maxPage;
+    }
+    
     public void printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame) throws Exception {
         printTree(rootPage, null, false, leafFrame, interiorFrame);
     }
@@ -393,7 +416,7 @@ public class BTree {
         cursor.setFileId(fileId);
         cursor.setCurrentPageId(currentPageId);
         cursor.setMaxPageId(maxPageId);
-        cursor.open(page, null);
+        cursor.open(page, diskOrderScanPredicate);
     }
     
     public void search(IBTreeCursor cursor, RangePredicate pred, IBTreeLeafFrame leafFrame,
@@ -1179,13 +1202,13 @@ public class BTree {
 
             interiorFrame.setPage(leafFrontier.page);
             interiorFrame.initBuffer((byte) 0);
-            interiorMaxBytes = (int) ((float) interiorFrame.getTotalFreeSpace() * fillFactor);
-
+            interiorMaxBytes = (int) ((float) interiorFrame.getBuffer().capacity() * fillFactor);
+            
             leafFrame.setPage(leafFrontier.page);
             leafFrame.initBuffer((byte) 0);
-            leafMaxBytes = (int) ((float) leafFrame.getTotalFreeSpace() * fillFactor);
-
-            slotSize = leafFrame.getSlotManager().getSlotSize();
+            leafMaxBytes = (int) ((float) leafFrame.getBuffer().capacity() * fillFactor);
+            
+            slotSize = leafFrame.getSlotSize();
 
             this.leafFrame = leafFrame;
             this.interiorFrame = interiorFrame;
@@ -1196,7 +1219,6 @@ public class BTree {
 
         private void addLevel() throws Exception {
             NodeFrontier frontier = new NodeFrontier();
-            frontier.bytesInserted = 0;
             frontier.pageId = getFreePage(metaFrame);
             frontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
             frontier.page.acquireWriteLatch();
@@ -1218,10 +1240,9 @@ public class BTree {
         ctx.interiorFrame.setPage(frontier.page);
         byte[] insBytes = ctx.splitKey.getData();
         int keySize = cmp.getKeySize(insBytes, 0);
-        int spaceNeeded = keySize + ctx.slotSize + 4; // TODO: this is a dirty
-        // constant for the size
-        // of a child pointer
-        if (frontier.bytesInserted + spaceNeeded > ctx.interiorMaxBytes) {
+        int spaceNeeded = keySize + ctx.slotSize + 4; // TODO: this is a dirty constant for the size of a child pointer
+        int spaceUsed = ctx.interiorFrame.getBuffer().capacity() - ctx.interiorFrame.getTotalFreeSpace();
+        if (spaceUsed + spaceNeeded > ctx.interiorMaxBytes) {
             ctx.interiorFrame.deleteGreatest(cmp);
             int splitKeySize = cmp.getKeySize(frontier.lastRecord, 0);
             ctx.splitKey.initData(splitKeySize);
@@ -1239,11 +1260,9 @@ public class BTree {
             frontier.page.acquireWriteLatch();
             ctx.interiorFrame.setPage(frontier.page);
             ctx.interiorFrame.initBuffer((byte) level);
-            frontier.bytesInserted = 0;
         }
         ctx.interiorFrame.insertSorted(insBytes, cmp);
         frontier.lastRecord = insBytes;
-        frontier.bytesInserted += spaceNeeded;
     }
     
     // assumes btree has been created and opened
@@ -1257,7 +1276,15 @@ public class BTree {
         IBTreeLeafFrame leafFrame = ctx.leafFrame;
         
         int spaceNeeded = record.length + ctx.slotSize;
-        if (leafFrontier.bytesInserted + spaceNeeded > ctx.leafMaxBytes) {
+        int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+        
+        // try to free space by compression
+        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {
+        	leafFrame.compress(cmp);
+        	spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+        }
+        
+        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {
             int splitKeySize = cmp.getKeySize(leafFrontier.lastRecord, 0);
             ctx.splitKey.initData(splitKeySize);            
             System.arraycopy(leafFrontier.lastRecord, 0, ctx.splitKey.getData(), 0, splitKeySize);
@@ -1276,13 +1303,11 @@ public class BTree {
             leafFrame.setPage(leafFrontier.page);
             leafFrame.initBuffer((byte) 0);
             leafFrame.setPrevLeaf(prevPageId);
-            leafFrontier.bytesInserted = 0;
         }
         
         leafFrame.setPage(leafFrontier.page);
         leafFrame.insertSorted(record, cmp);
         leafFrontier.lastRecord = record;
-        leafFrontier.bytesInserted += spaceNeeded;
     }
     
     public void endBulkLoad(BulkLoadContext ctx) throws Exception {                

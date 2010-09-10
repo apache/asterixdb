@@ -30,7 +30,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	
 	private ByteBuffer buf;
 	private FieldPrefixNSMLeafFrame frame;
-	FieldIterator fieldIter = new FieldIterator(null, null);
+	FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(null, null);
 	
 	public int decodeFirstSlotField(int slot) {
 		return (slot & 0xFF000000) >>> 24;

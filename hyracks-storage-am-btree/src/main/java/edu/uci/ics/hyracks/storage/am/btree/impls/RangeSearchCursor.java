@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -32,8 +33,12 @@ public class RangeSearchCursor implements IBTreeCursor {
 	private IBTreeLeafFrame frame = null;
 	private IBufferCache bufferCache = null;
 	
+	private IFieldIterator fieldIter;
+	
 	public RangeSearchCursor(IBTreeLeafFrame frame) {
-		this.frame = frame;		
+		this.frame = frame;
+		this.fieldIter = frame.createFieldIterator();
+		this.fieldIter.setFrame(frame);
 	}
 	
 	@Override
@@ -42,12 +47,12 @@ public class RangeSearchCursor implements IBTreeCursor {
 		bufferCache.unpin(page);
 		page = null;
 	}
-
-	@Override
-	public int getOffset() {
-		return recordOffset;
+	
+	public IFieldIterator getFieldIterator() {
+		fieldIter.reset();
+		return fieldIter;
 	}
-
+	
 	@Override
 	public ICachedPage getPage() {
 		return page;
@@ -86,10 +91,12 @@ public class RangeSearchCursor implements IBTreeCursor {
 		MultiComparator cmp = pred.getComparator();
 		if(searchPred.isForward()) {
 			byte[] highKeys = pred.getHighKeys();			
-			recordOffset = frame.getRecordOffset(recordNum);
+			fieldIter.openRecSlotNum(recordNum);
+			//recordOffset = frame.getRecordOffset(recordNum);
 			
-			if(highKeys == null) return true;						
-			if(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0) {
+			if(highKeys == null) return true;									
+			//if(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0) {
+			if(cmp.compare(highKeys, 0, fieldIter) < 0) {
 				return false;
 			}
 			else {
@@ -111,7 +118,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 	}
 
 	@Override
-	public void next() throws Exception {		
+	public void next() throws Exception {				
 		recordNum++;
 	}
 	
@@ -122,35 +129,40 @@ public class RangeSearchCursor implements IBTreeCursor {
 			this.page.releaseReadLatch();
 			bufferCache.unpin(this.page);
 		}
-		
+						
 		this.searchPred = searchPred;
 		this.page = page;
-		frame.setPage(page);
+		frame.setPage(page);					
 		
 		// position recordNum to the first appropriate key
 		// TODO: can be done more efficiently with binary search but this needs some thinking/refactoring
 		RangePredicate pred = (RangePredicate)searchPred;
 		MultiComparator cmp = pred.getComparator();
+		this.fieldIter.setFields(cmp.getFields());
 		if(searchPred.isForward()) {
 			byte[] lowKeys = pred.getLowKeys();
 						
-			recordOffset = frame.getRecordOffset(recordNum);
+			//recordOffset = frame.getRecordOffset(recordNum);			
+			fieldIter.openRecSlotNum(recordNum);
 			if(lowKeys == null) return; // null means -infinity
-			
-			while(cmp.compare(lowKeys, 0, page.getBuffer().array(), recordOffset) > 0 && recordNum < frame.getNumRecords()) {				
+						
+			while(cmp.compare(lowKeys, 0, fieldIter) > 0 && recordNum < frame.getNumRecords()) {
+			//while(cmp.compare(lowKeys, 0, page.getBuffer().array(), recordOffset) > 0 && recordNum < frame.getNumRecords()) {
 			    recordNum++;
-			    recordOffset = frame.getRecordOffset(recordNum);
-			}
+			    fieldIter.openRecSlotNum(recordNum);
+			}						
 		}
 		else {
 			byte[] highKeys = pred.getHighKeys();
 						
-			recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);			
+			//recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
+			fieldIter.openRecSlotNum(recordNum);
 			if(highKeys != null) return; // null means +infinity
 			    
 			while(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0 && recordNum < frame.getNumRecords()) {				
 			    recordNum++;
-			    recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);				
+			    fieldIter.openRecSlotNum(recordNum);
+			    //recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);			
 			}						
 		}
 	}

@@ -19,6 +19,9 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 
 public class NSMInteriorFrameFactory implements IBTreeInteriorFrameFactory {
+	
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public IBTreeInteriorFrame getFrame() {		
 		return new NSMInteriorFrame();

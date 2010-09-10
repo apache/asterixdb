@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.nio.ByteBuffer;
@@ -10,8 +25,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 
-public class BTreeInsertOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
+public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
 	
 	private final int[] keyFields;
 	private final int[] payloadFields;
@@ -22,11 +38,14 @@ public class BTreeInsertOperatorNodePushable extends AbstractBTreeOperatorNodePu
     
     private IBTreeMetaDataFrame metaFrame;
     
-	public BTreeInsertOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] keyFields, int[] payloadFields, IRecordDescriptorProvider recordDescProvider) {
-		super(opDesc, ctx);
+    private BTreeOp op;
+    
+	public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] keyFields, int[] payloadFields, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+		super(opDesc, ctx, false);
 		this.keyFields = keyFields;
 		this.payloadFields = payloadFields;
 		this.recordDescProvider = recordDescProvider;
+		this.op = op;
 	}
 	
 	@Override
@@ -42,7 +61,23 @@ public class BTreeInsertOperatorNodePushable extends AbstractBTreeOperatorNodePu
 		for(int i = 0; i < tupleCount; i++) {
 			byte[] btreeRecord = buildBTreeRecordFromHyraxRecord(accessor, i, keyFields, payloadFields);
 			try {
-				btree.insert(btreeRecord, leafFrame, interiorFrame, metaFrame);
+				
+				switch(op) {
+				
+				case BTO_INSERT: {
+					btree.insert(btreeRecord, leafFrame, interiorFrame, metaFrame);				
+				} break;
+				
+				case BTO_DELETE: {
+					btree.delete(btreeRecord, leafFrame, interiorFrame, metaFrame);				
+				} break;
+				
+				default: {
+					throw new HyracksDataException("Unsupported operation " + op + " in BTree InsertUpdateDelete operator");
+				}
+				
+				}
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

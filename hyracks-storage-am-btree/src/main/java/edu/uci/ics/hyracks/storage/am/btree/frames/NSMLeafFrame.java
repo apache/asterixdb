@@ -90,7 +90,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + data.length);
 		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - data.length - slotManager.getSlotSize());
 	}
-
+	
 	@Override
 	public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception {
 		
