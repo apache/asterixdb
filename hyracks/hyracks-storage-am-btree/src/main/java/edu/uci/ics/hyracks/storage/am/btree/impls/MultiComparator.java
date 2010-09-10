@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 
 public class MultiComparator {
     	
@@ -69,6 +70,24 @@ public class MultiComparator {
     	return 0;
 	}
 	
+	public int compare(byte[] data, int recOff, IFieldIterator fieldIter) {
+		 fieldIter.reset();
+         
+         int recRunner = 0;
+         int cmp = 0;
+         for(int i = 0; i < cmps.length; i++) {
+        	 int recFieldLen = fields[i].getLength(data, recRunner);
+        	 cmp = cmps[i].compare(data, recRunner, recFieldLen, fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());          
+             if(cmp < 0) return -1;
+             else if(cmp > 0) return 1;             
+             fieldIter.nextField();
+             recRunner += recFieldLen;
+         }
+         
+         fieldIter.reset();
+         return 0;
+	}
+	
 	public int fieldRangeCompare(byte[] dataA, int recOffA, byte[] dataB, int recOffB, int startFieldIndex, int numFields) {
 		int lenA;
 		int lenB;
@@ -100,6 +119,16 @@ public class MultiComparator {
 		return runner - recOff;
 	}		
 	
+	public String printRecord(IFieldIterator fieldIter) {
+		StringBuilder strBuilder = new StringBuilder();	    
+		fieldIter.reset();
+		for(int i = 0; i < fields.length; i++) {
+			strBuilder.append(fields[i].print(fieldIter.getBuffer().array(), fieldIter.getFieldOff()) + " ");						
+			fieldIter.nextField();
+		}
+		return strBuilder.toString();
+	}
+		
 	public String printRecord(byte[] data, int recOff) {
 		StringBuilder strBuilder = new StringBuilder();
 	    int runner = recOff;
@@ -109,7 +138,7 @@ public class MultiComparator {
 		}
 		return strBuilder.toString();
 	}
-	
+		
 	public String printKey(byte[] data, int recOff) {
 		StringBuilder strBuilder = new StringBuilder();		
 		int runner = recOff;

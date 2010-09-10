@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 

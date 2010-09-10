@@ -25,7 +25,7 @@ public class RangePredicate implements ISearchPredicate {
 	protected byte[] lowKeys = null;
 	protected byte[] highKeys = null;
 	protected MultiComparator cmp;
-	
+			
 	public RangePredicate() {
 	}
 	

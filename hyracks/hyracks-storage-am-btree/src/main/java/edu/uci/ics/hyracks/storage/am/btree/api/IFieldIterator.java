@@ -13,10 +13,28 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-import java.io.Serializable;
+import java.nio.ByteBuffer;
 
-public interface IBTreeRegistryProvider extends Serializable {
-	public BTreeRegistry getBTreeRegistry();
+public interface IFieldIterator {
+	public void setFrame(IBTreeFrame frame);
+
+    public void setFields(IFieldAccessor[] fields);
+    
+    public void openRecSlotNum(int recSlotNum);
+    
+    public void openRecSlotOff(int recSlotOff);
+    
+    public void reset();
+    
+    public void nextField();
+    
+    public int getFieldOff();
+    
+    public int getFieldSize();
+    
+    public int copyFields(int startField, int endField, byte[] dest, int destOff);   
+    
+    public ByteBuffer getBuffer();
 }

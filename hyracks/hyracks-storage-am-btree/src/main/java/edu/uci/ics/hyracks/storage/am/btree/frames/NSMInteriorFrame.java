@@ -103,7 +103,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + recSize);
 		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - recSize - slotManager.getSlotSize());
-		System.arraycopy(data, recSize, buf.array(), rightLeafOff, childPtrSize);			
+		System.arraycopy(data, recSize, buf.array(), rightLeafOff, childPtrSize);
 	}
 		
 	@Override

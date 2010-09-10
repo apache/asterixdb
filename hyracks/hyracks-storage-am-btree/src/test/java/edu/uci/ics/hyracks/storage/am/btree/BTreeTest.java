@@ -37,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -56,6 +57,7 @@ import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BTreeTest {    
+	
     private static final int PAGE_SIZE = 128;
     // private static final int PAGE_SIZE = 8192;
     private static final int NUM_PAGES = 10;
@@ -169,9 +171,8 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                byte[] array = scanCursor.getPage().getBuffer().array();
-                int recOffset = scanCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
+                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -187,9 +188,8 @@ public class BTreeTest {
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
-                byte[] array = diskOrderCursor.getPage().getBuffer().array();
-                int recOffset = diskOrderCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
+                IFieldIterator fieldIter = diskOrderCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -224,10 +224,9 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                byte[] array = rangeCursor.getPage().getBuffer().array();
-                int recOffset = rangeCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
-                print(rec + "\n");         
+                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
+                print(rec + "\n"); 
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -329,10 +328,9 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                byte[] array = scanCursor.getPage().getBuffer().array();
-                int recOffset = scanCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
-                print(rec + "\n");                
+                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
+                print(rec + "\n");         
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -365,10 +363,9 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                byte[] array = rangeCursor.getPage().getBuffer().array();
-                int recOffset = rangeCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
-                print(rec + "\n");                
+                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
+                print(rec + "\n");         
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -461,10 +458,9 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                byte[] array = scanCursor.getPage().getBuffer().array();
-                int recOffset = scanCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
-                print(rec + "\n");                
+                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
+                print(rec + "\n");          
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -498,10 +494,9 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                byte[] array = rangeCursor.getPage().getBuffer().array();
-                int recOffset = rangeCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
-                print(rec + "\n");         
+                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
+                print(rec + "\n");    
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -736,15 +731,15 @@ public class BTreeTest {
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
         
-        RangePredicate rangePred = new RangePredicate(false, lowKey, highKey, searchCmp);
+        // TODO: check when searching backwards
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                byte[] array = rangeCursor.getPage().getBuffer().array();
-                int recOffset = rangeCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
+                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -881,9 +876,8 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                byte[] array = scanCursor.getPage().getBuffer().array();
-                int recOffset = scanCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
+                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -922,9 +916,8 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                byte[] array = rangeCursor.getPage().getBuffer().array();
-                int recOffset = rangeCursor.getOffset();                
-                String rec = cmp.printRecord(array, recOffset);
+                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
+                String rec = cmp.printRecord(fieldIter);
                 print(rec + "\n");
             }
         } catch (Exception e) {

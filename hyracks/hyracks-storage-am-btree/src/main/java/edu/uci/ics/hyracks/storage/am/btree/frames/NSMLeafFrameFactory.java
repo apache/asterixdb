@@ -19,6 +19,9 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 
 public class NSMLeafFrameFactory implements IBTreeLeafFrameFactory {
+			
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public IBTreeLeafFrame getFrame() {		
 		return new NSMLeafFrame();

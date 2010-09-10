@@ -23,12 +23,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
@@ -164,7 +165,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             if(exactDelete) {                    
                 IBinaryComparator[] cmps = cmp.getComparators();
                 IFieldAccessor[] fields = cmp.getFields();
-                FieldIterator fieldIter = new FieldIterator(fields, this);                    
+                FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(fields, this);                    
                 fieldIter.openRecSlotOff(recSlotOff);
                 
                 int dataRunner = 0;
@@ -190,10 +191,11 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             // maintain space information, get size of record suffix (suffix could be entire record)
             int recSize = 0;                        
             int suffixFieldStart = 0;
-            FieldIterator fieldIter = new FieldIterator(cmp.getFields(), this);                 
+            FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(cmp.getFields(), this);                 
             fieldIter.openRecSlotOff(recSlotOff);
             if(prefixSlotNum == FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
                 suffixFieldStart = 0;
+                buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) - 1);
             }
             else {                
                 int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
@@ -355,13 +357,13 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     public ISlotManager getSlotManager() {
-        return null; // TODO: dummy
+        return null;
     }
     
     @Override
     public String printKeys(MultiComparator cmp) {      
         StringBuilder strBuilder = new StringBuilder();
-        FieldIterator rec = new FieldIterator(cmp.getFields(), this);      
+        FieldPrefixFieldIterator rec = new FieldPrefixFieldIterator(cmp.getFields(), this);      
         int numRecords = buf.getInt(numRecordsOff);
         for(int i = 0; i < numRecords; i++) {                               	
         	rec.openRecSlotNum(i);        	
@@ -378,7 +380,9 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public int getRecordOffset(int slotNum) {        
-    	return slotManager.getRecSlotOff(slotNum);
+    	int recSlotOff = slotManager.getRecSlotOff(slotNum);
+    	int recSlot = buf.getInt(recSlotOff);
+    	return slotManager.decodeSecondSlotField(recSlot);    	
     }
     
     @Override
@@ -433,9 +437,40 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	}
 
     @Override
-    public void insertSorted(byte[] data, MultiComparator cmp) throws Exception {
-        // TODO Auto-generated method stub
-        
+    public void insertSorted(byte[] data, MultiComparator cmp) throws Exception {    	
+    	int freeSpace = buf.getInt(freeSpaceOff);				
+		int fieldsToTruncate = 0;
+		if(buf.getInt(numPrefixRecordsOff) > 0) {
+			// check if record matches last prefix record
+			int prefixSlotOff = slotManager.getPrefixSlotOff(buf.getInt(numPrefixRecordsOff)-1);
+			int prefixSlot = buf.getInt(prefixSlotOff);
+			int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
+			int prefixRecOff = slotManager.decodeSecondSlotField(prefixSlot);
+			
+			if(cmp.fieldRangeCompare(data, 0, buf.array(), prefixRecOff, 0, numPrefixFields) == 0) {
+				fieldsToTruncate = numPrefixFields;													
+			}			
+		}
+				
+		// copy truncated record
+		int recStart = 0;		
+		for(int i = 0; i < fieldsToTruncate; i++) {
+			recStart += cmp.getFields()[i].getLength(data, recStart);
+		}
+		int recLen = data.length - recStart;
+		System.arraycopy(data, recStart, buf.array(), freeSpace, recLen);
+		
+		// insert slot
+		int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
+		if(fieldsToTruncate > 0) prefixSlotNum = buf.getInt(numPrefixRecordsOff)-1;					
+		else buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) + 1);					
+		int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_SLOT);				
+		slotManager.insertSlot(insSlot, freeSpace);
+		
+		// update page metadata
+		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
+		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + recLen);
+		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - recLen - slotManager.getSlotSize());			
     }
     
     @Override
@@ -579,7 +614,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		int splitKeyRecSlotOff = slotManager.getRecSlotEndOff();		
 		
 		int keySize = 0;
-		FieldIterator fieldIter = new FieldIterator(cmp.getFields(), this);
+		FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(cmp.getFields(), this);
 		fieldIter.openRecSlotOff(splitKeyRecSlotOff);		
 		for(int i = 0; i < cmp.getKeyLength(); i++) {
 			keySize += fieldIter.getFieldSize();
@@ -632,4 +667,14 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	public void setNumUncompressedRecords(int numUncompressedRecords) {
 		buf.putInt(numUncompressedRecordsOff, numUncompressedRecords);
 	}
+	
+	@Override
+	public int getSlotSize() {
+		return slotManager.getSlotSize();
+	}
+	
+	@Override
+    public IFieldIterator createFieldIterator() {
+    	return new FieldPrefixFieldIterator();
+    }
 }

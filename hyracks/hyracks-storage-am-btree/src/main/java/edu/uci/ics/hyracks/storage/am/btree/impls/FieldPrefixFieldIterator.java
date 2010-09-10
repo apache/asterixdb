@@ -15,11 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import java.nio.ByteBuffer;
+
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
-//TODO: make members private, only for debugging now
-public class FieldIterator {
+// TODO: make members private, only for debugging now
+public class FieldPrefixFieldIterator implements IFieldIterator {
     public int recSlotOff = -1;
     public int recOff = -1;
     public int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
@@ -30,13 +34,16 @@ public class FieldIterator {
     public int currentField = -1;
     public int recOffRunner = -1;
     
-    public FieldIterator(IFieldAccessor[] fields, FieldPrefixNSMLeafFrame frame) {
+    public FieldPrefixFieldIterator() {    	
+    }
+    
+    public FieldPrefixFieldIterator(IFieldAccessor[] fields, FieldPrefixNSMLeafFrame frame) {
         this.fields = fields;
         this.frame = frame;
     }
     
-    public void setFrame(FieldPrefixNSMLeafFrame frame) {
-        this.frame = frame;        
+    public void setFrame(IBTreeFrame frame) {
+        this.frame = (FieldPrefixNSMLeafFrame)frame;        
     }
     
     public void setFields(IFieldAccessor[] fields) {
@@ -121,4 +128,8 @@ public class FieldIterator {
         return bytesWritten;
     }
     
+    @Override
+    public ByteBuffer getBuffer() {
+    	return frame.getBuffer();
+    }
 }
