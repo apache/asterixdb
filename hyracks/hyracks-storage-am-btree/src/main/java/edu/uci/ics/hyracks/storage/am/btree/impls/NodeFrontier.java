@@ -20,6 +20,6 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public class NodeFrontier {
 	public ICachedPage page;
 	public int pageId;
-	public byte[] lastRecord;
+	public SelfDescTupleReference lastTuple = new SelfDescTupleReference();
 }
 

@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
@@ -30,7 +30,9 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	
 	private ByteBuffer buf;
 	private FieldPrefixNSMLeafFrame frame;
-	FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(null, null);
+	//private FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(null, null);
+	private FieldPrefixTuple pageTuple = new FieldPrefixTuple();
+	private FieldPrefixPrefixTuple pagePrefixTuple = new FieldPrefixPrefixTuple();
 	
 	public int decodeFirstSlotField(int slot) {
 		return (slot & 0xFF000000) >>> 24;
@@ -45,19 +47,22 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	}
 	
 	// returns prefix slot number, or RECORD_UNCOMPRESSED of no match was found
-	public int findPrefix(byte[] data, MultiComparator multiCmp) {
+	public int findPrefix(ITupleReference tuple, MultiComparator multiCmp) {
 		int prefixMid;
 	    int prefixBegin = 0;
 	    int prefixEnd = frame.getNumPrefixRecords() - 1;
 	     
+	    pagePrefixTuple.setFrame(frame);
+	    pagePrefixTuple.setFields(multiCmp.getFields());
+	    
 	    if(frame.getNumPrefixRecords() > 0) {
 	    	while(prefixBegin <= prefixEnd) {
 	    		prefixMid = (prefixBegin + prefixEnd) / 2;	    			    		
 	    		int prefixSlotOff = getPrefixSlotOff(prefixMid);
 	    		int prefixSlot = buf.getInt(prefixSlotOff);    		
 	    		int numPrefixFields = decodeFirstSlotField(prefixSlot);
-	    		int prefixRecOff = decodeSecondSlotField(prefixSlot);
-	    		int cmp = multiCmp.fieldRangeCompare(data, 0, buf.array(), prefixRecOff, 0, numPrefixFields);
+	    		pagePrefixTuple.openPrefixSlotNum(prefixMid);
+	    		int cmp = multiCmp.fieldRangeCompare(tuple, pagePrefixTuple, 0, numPrefixFields);
 	    		if(cmp < 0) prefixEnd = prefixMid - 1;				    		
 	    		else if(cmp > 0) prefixBegin = prefixMid + 1;	    		
 	    		else return prefixMid;
@@ -67,9 +72,14 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    return FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
 	}
 	
-	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact) {				
+	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact) {				
 		if(frame.getNumRecords() <= 0) encodeSlotFields(RECORD_UNCOMPRESSED, GREATEST_SLOT);
 								
+		pageTuple.setFrame(frame);
+		pageTuple.setFields(multiCmp.getFields());		
+		pagePrefixTuple.setFrame(frame);
+		pagePrefixTuple.setFields(multiCmp.getFields());
+		
 	    int prefixMid;
 	    int prefixBegin = 0;
 	    int prefixEnd = frame.getNumPrefixRecords() - 1;
@@ -85,9 +95,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    	int prefixSlotOff = getPrefixSlotOff(prefixMid);
 	    	int prefixSlot = buf.getInt(prefixSlotOff);    		
 	    	int numPrefixFields = decodeFirstSlotField(prefixSlot);
-	    	int prefixRecOff = decodeSecondSlotField(prefixSlot);
-	    	//System.out.println("PREFIX: " + prefixRecOff + " " + buf.getInt(prefixRecOff) + " " + buf.getInt(prefixRecOff+4));
-	    	int cmp = multiCmp.fieldRangeCompare(data, 0, buf.array(), prefixRecOff, 0, numPrefixFields);
+	    	pagePrefixTuple.openPrefixSlotNum(prefixMid);
+	    	int cmp = multiCmp.fieldRangeCompare(tuple, pagePrefixTuple, 0, numPrefixFields);
 	    	if(cmp < 0) {	    			
 	    		prefixEnd = prefixMid - 1;
 	    		recPrefixSlotNumLbound = prefixMid - 1;	    				    		
@@ -117,17 +126,20 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
             int recSlotOff = getRecSlotOff(recMid);
             int recSlot = buf.getInt(recSlotOff);              
             int prefixSlotNum = decodeFirstSlotField(recSlot);
-            int recOff = decodeSecondSlotField(recSlot);
             
             //System.out.println("RECS: " + recBegin + " " + recMid + " " + recEnd);
-            int cmp = 0;
-            if(prefixSlotNum == RECORD_UNCOMPRESSED) {                
-                cmp = multiCmp.compare(data, 0, buf.array(), recOff);                
+            int cmp = 0;            
+            if(prefixSlotNum == RECORD_UNCOMPRESSED) {            	            	
+            	pageTuple.openRecSlotNum(recMid);
+            	cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);      
             }
             else {             	
             	if(prefixSlotNum < recPrefixSlotNumLbound) cmp = 1;
             	else if(prefixSlotNum > recPrefixSlotNumUbound) cmp = -1;
-            	else cmp = compareCompressed(data, buf.array(), prefixSlotNum, recMid, multiCmp);            	            	            	
+            	else {
+            		pageTuple.openRecSlotNum(recMid);
+            		cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);            	            	            	
+            	}
             }    
             
             if(cmp < 0) recEnd = recMid - 1;
@@ -140,38 +152,12 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         if(exact) return encodeSlotFields(prefixMatch, GREATEST_SLOT);                       
         if(recBegin > (frame.getNumRecords() - 1)) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
         
-        // do final comparison to determine whether the search key is greater than all keys or in between some existing keys
-        int recSlotOff = getRecSlotOff(recBegin);
-        int recSlot = buf.getInt(recSlotOff);
-        int prefixSlotNum = decodeFirstSlotField(recSlot);
-        int recOff = decodeSecondSlotField(recSlot);
-        
-        int cmp = 0;
-        if(prefixSlotNum == RECORD_UNCOMPRESSED) cmp = multiCmp.compare(data, 0, buf.array(), recOff);        	
-        else cmp = compareCompressed(data, buf.array(), prefixSlotNum, recBegin, multiCmp);
-        
+        // do final comparison to determine whether the search key is greater than all keys or in between some existing keys        
+        pageTuple.openRecSlotNum(recBegin);
+        int cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);        
         if(cmp < 0) return encodeSlotFields(prefixMatch, recBegin);
         else return encodeSlotFields(prefixMatch, GREATEST_SLOT);
 	}	
-	
-	public int compareCompressed(byte[] record, byte[] page, int prefixSlotNum, int recSlotNum, MultiComparator multiCmp) {                          
-         IBinaryComparator[] cmps = multiCmp.getComparators();
-         fieldIter.setFields(multiCmp.getFields());
-         fieldIter.setFrame(frame);         
-         fieldIter.openRecSlotNum(recSlotNum);
-         
-         int recRunner = 0;
-         int cmp = 0;
-         for(int i = 0; i < multiCmp.getKeyLength(); i++) {
-        	 int recFieldLen = multiCmp.getFields()[i].getLength(record, recRunner);
-        	 cmp = cmps[i].compare(record, recRunner, recFieldLen, buf.array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());             
-             if(cmp < 0) return -1;                 
-             else if(cmp > 0) return 1;             
-             fieldIter.nextField();
-             recRunner += recFieldLen;
-         }
-         return 0;
-	}
 	
 	public int getPrefixSlotStartOff() {		
 	    return buf.capacity() - slotSize;	    

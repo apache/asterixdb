@@ -24,7 +24,8 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
 // TODO: make members private, only for debugging now
 public class FieldPrefixFieldIterator implements IFieldIterator {
-    public int recSlotOff = -1;
+	
+	public int recSlotOff = -1;
     public int recOff = -1;
     public int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
     public int numPrefixFields = 0;
@@ -58,7 +59,7 @@ public class FieldPrefixFieldIterator implements IFieldIterator {
         this.recSlotOff = recSlotOff;
         reset();
     }
-    
+       
     // re-position to first field
     public void reset() {
         currentField = 0;
@@ -78,7 +79,7 @@ public class FieldPrefixFieldIterator implements IFieldIterator {
             recOffRunner = recOff;
         }        
     }
-    
+        
     public void nextField() {                   
             	
     	// if we have passed the prefix fields of any of the two records, position them to the suffix record

@@ -32,8 +32,7 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 	
 	private static final long serialVersionUID = 1L;
 	
-	private final int[] keyFields;
-	private final int[] payloadFields;
+	private final int[] fieldPermutation;
 	
 	private BTreeOp op;
 	
@@ -44,12 +43,11 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, IFieldAccessorFactory[] fieldAccessorFactories, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] keyFields, int[] payloadFields, BTreeOp op) {
+			int[] fieldPermutation, BTreeOp op) {
 		super(spec, 1, 1, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
 				leafFactory, fieldAccessorFactories, comparatorFactories);
-		this.keyFields = keyFields;
-		this.payloadFields = payloadFields;
+		this.fieldPermutation = fieldPermutation;		
 		this.op = op;
 	}
 	
@@ -58,7 +56,6 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, keyFields, payloadFields, recordDescProvider, op);
-	}
-	
+		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, fieldPermutation, recordDescProvider, op);
+	}	
 }

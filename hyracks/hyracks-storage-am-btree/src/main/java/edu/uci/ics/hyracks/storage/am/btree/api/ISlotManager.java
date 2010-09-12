@@ -15,12 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 public interface ISlotManager {
 	public void setFrame(IBTreeFrame frame);
 	
-	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact);
+	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact);
 	public int insertSlot(int slotOff, int recOff);
 	
 	public int getSlotStartOff();

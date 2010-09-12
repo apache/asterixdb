@@ -15,23 +15,33 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
-import java.io.DataOutputStream;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
@@ -52,6 +62,7 @@ public class BTreeFieldPrefixNSMTest {
 	//private static final int PAGE_SIZE = 65536; // 64K
 	private static final int PAGE_SIZE = 131072; // 128K
     private static final int NUM_PAGES = 40;
+    private static final int HYRACKS_FRAME_SIZE = 128;
     
     // to help with the logger madness
     private void print(String str) {
@@ -73,22 +84,37 @@ public class BTreeFieldPrefixNSMTest {
         }
     }
     
-    private void tupleInsert(FieldPrefixNSMLeafFrame frame, MultiComparator cmp, int f0, int f1, int f2, boolean print, ArrayList<byte[]> records) throws Exception {
-    	if(print) System.out.println("INSERTING: " + f0 + " " + f1 + " " + f2);
+    private ITupleReference createTuple(int f0, int f1, int f2, boolean print) throws HyracksDataException {
+    	if(print) System.out.println("CREATING: " + f0 + " " + f1 + " " + f2);
     	
-    	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-    	    	
+    	IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer buf = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(buf);
+		FrameTupleReference tuple = new FrameTupleReference();
+		
+		tb.reset();
     	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+    	tb.addFieldEndOffset();
     	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
-    	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+    	tb.addFieldEndOffset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);    	        	
+    	tb.addFieldEndOffset();
     	
-    	byte[] record = baaos.toByteArray();        
-        frame.insert(record, cmp);
-        
-        if(records != null) records.add(record);
+    	appender.reset(buf, true);
+    	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+    	
+    	tuple.reset(accessor, 0);
+    	
+    	return tuple;
     }
-    
+        
     @Test
     public void test01() throws Exception {
     	
@@ -136,9 +162,9 @@ public class BTreeFieldPrefixNSMTest {
         	int compressFreq = 5;
         	int smallMax = 10;        	
         	int numRecords = 5000;
-        	ArrayList<byte[]> records = new ArrayList<byte[]>();
-        	records.ensureCapacity(numRecords);
-        	        	
+        	
+        	int[][] savedFields = new int[numRecords][3];   	
+        	
         	// insert records with random calls to compact and compress
         	for(int i = 0; i < numRecords; i++) {
         		
@@ -147,8 +173,22 @@ public class BTreeFieldPrefixNSMTest {
         		int a = rnd.nextInt() % smallMax;
         		int b = rnd.nextInt() % smallMax;
         		int c = i;
-        		tupleInsert(frame, cmp, a, b, c, false, records);
         		
+        		ITupleReference tuple = createTuple(a, b, c, false);
+        		try {
+        			frame.insert(tuple, cmp);
+        		} 
+        		catch (BTreeException e) {    
+        			e.printStackTrace();
+        		}
+        		catch (Exception e) {
+        			e.printStackTrace();
+        		}        		        	
+        		
+        		savedFields[i][0] = a;
+        		savedFields[i][1] = b;
+        		savedFields[i][2] = c;
+        		            
         		if(rnd.nextInt() % compactFreq == 0) {
         			before = frame.printKeys(cmp);
         			frame.compact(cmp);
@@ -165,11 +205,16 @@ public class BTreeFieldPrefixNSMTest {
         	}
         	
         	// delete records with random calls to compact and compress        	
-        	for(int i = 0; i < records.size(); i++) {        	            	    
+        	for(int i = 0; i < numRecords; i++) {        	            	    
         		
         		if((i+1) % 100 == 0) print("DELETING " + (i+1) + " / " + numRecords + "\n");
         		
-        		frame.delete(records.get(i), cmp, true);    
+        		ITupleReference tuple = createTuple(savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
+        		try {
+        			frame.delete(tuple, cmp, true);
+        		}
+        		catch (Exception e) {        			
+        		}
         		
         		if(rnd.nextInt() % compactFreq == 0) {
         			before = frame.printKeys(cmp);

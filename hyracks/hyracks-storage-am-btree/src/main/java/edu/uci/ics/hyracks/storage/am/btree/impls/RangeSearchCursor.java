@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
@@ -34,6 +35,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 	private IBufferCache bufferCache = null;
 	
 	private IFieldIterator fieldIter;
+	
 	
 	public RangeSearchCursor(IBTreeLeafFrame frame) {
 		this.frame = frame;
@@ -90,13 +92,13 @@ public class RangeSearchCursor implements IBTreeCursor {
 		RangePredicate pred = (RangePredicate)searchPred;
 		MultiComparator cmp = pred.getComparator();
 		if(searchPred.isForward()) {
-			byte[] highKeys = pred.getHighKeys();			
+			ITupleReference highKey = pred.getHighKey();		
 			fieldIter.openRecSlotNum(recordNum);
 			//recordOffset = frame.getRecordOffset(recordNum);
-			
-			if(highKeys == null) return true;									
+									
+			if(highKey == null) return true;									
 			//if(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0) {
-			if(cmp.compare(highKeys, 0, fieldIter) < 0) {
+			if(cmp.compare(highKey, fieldIter) < 0) {
 				return false;
 			}
 			else {
@@ -104,11 +106,12 @@ public class RangeSearchCursor implements IBTreeCursor {
 			}
 		}
 		else {
-			byte[] lowKeys = pred.getLowKeys();			
-			recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
-			if(lowKeys == null) return true;
+			ITupleReference lowKey = pred.getLowKey();						
+			fieldIter.openRecSlotNum(frame.getNumRecords() - recordNum - 1);
+			//recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
+			if(lowKey == null) return true;
 			
-			if(cmp.compare(lowKeys, 0, page.getBuffer().array(), recordOffset) > 0) {
+			if(cmp.compare(lowKey, fieldIter) > 0) {
 				return false;
 			}
 			else {
@@ -140,26 +143,26 @@ public class RangeSearchCursor implements IBTreeCursor {
 		MultiComparator cmp = pred.getComparator();
 		this.fieldIter.setFields(cmp.getFields());
 		if(searchPred.isForward()) {
-			byte[] lowKeys = pred.getLowKeys();
+			ITupleReference lowKey = pred.getLowKey();
 						
 			//recordOffset = frame.getRecordOffset(recordNum);			
 			fieldIter.openRecSlotNum(recordNum);
-			if(lowKeys == null) return; // null means -infinity
+			if(lowKey == null) return; // null means -infinity
 						
-			while(cmp.compare(lowKeys, 0, fieldIter) > 0 && recordNum < frame.getNumRecords()) {
+			while(cmp.compare(lowKey, fieldIter) > 0 && recordNum < frame.getNumRecords()) {
 			//while(cmp.compare(lowKeys, 0, page.getBuffer().array(), recordOffset) > 0 && recordNum < frame.getNumRecords()) {
 			    recordNum++;
 			    fieldIter.openRecSlotNum(recordNum);
 			}						
 		}
 		else {
-			byte[] highKeys = pred.getHighKeys();
-						
+			ITupleReference highKey = pred.getHighKey();
+			
 			//recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
-			fieldIter.openRecSlotNum(recordNum);
-			if(highKeys != null) return; // null means +infinity
+			fieldIter.openRecSlotNum(frame.getNumRecords() - recordNum - 1);
+			if(highKey != null) return; // null means +infinity
 			    
-			while(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0 && recordNum < frame.getNumRecords()) {				
+			while(cmp.compare(highKey, fieldIter) < 0 && recordNum < frame.getNumRecords()) {				
 			    recordNum++;
 			    fieldIter.openRecSlotNum(recordNum);
 			    //recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);			

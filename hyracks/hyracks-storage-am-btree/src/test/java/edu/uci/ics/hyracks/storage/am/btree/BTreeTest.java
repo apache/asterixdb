@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -23,8 +24,17 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -42,10 +52,12 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
 import edu.uci.ics.hyracks.storage.am.btree.types.UTF8StringAccessor;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
@@ -56,11 +68,14 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
+@SuppressWarnings("unchecked")
+
 public class BTreeTest {    
 	
-    private static final int PAGE_SIZE = 128;
-    // private static final int PAGE_SIZE = 8192;
+    //private static final int PAGE_SIZE = 128;
+    private static final int PAGE_SIZE = 8192;
     private static final int NUM_PAGES = 10;
+    private static final int HYRACKS_FRAME_SIZE = 128;
     
     // to help with the logger madness
     private void print(String str) {
@@ -88,7 +103,7 @@ public class BTreeTest {
     // perform ordered scan and range search
     @Test
     public void test01() throws Exception {
-
+    	
     	print("FIXED-LENGTH KEY TEST\n");
     	
         FileManager fileManager = new FileManager();
@@ -130,27 +145,50 @@ public class BTreeTest {
         
         print("INSERTING INTO TREE\n");
         
-        for (int i = 0; i < 10000; i++) {
-        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-        	
+        IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE};
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+		
+		// 10000
+        for (int i = 0; i < 10000; i++) {        	
         	int f0 = rnd.nextInt() % 10000;
         	int f1 = 5;
         	
+        	tb.reset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	tb.addFieldEndOffset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	tb.addFieldEndOffset();        	
+        	        	
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         	
-        	byte[] record = baaos.toByteArray();
-        	        	           
+        	tuple.reset(accessor, 0);
+        	
+        	//System.out.println(tuple.getFieldCount() + " " + tuple.getFieldLength(0) + " " + tuple.getFieldLength(1));
+        	
             if (i % 1000 == 0) {
                 long end = System.currentTimeMillis();
                 print("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start) + "\n");            	
             }
             
             try {                                
-                btree.insert(record, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+            } catch (BTreeException e) {            	
             } catch (Exception e) {
+            	e.printStackTrace();
             }
+            
+            //btree.printTree(leafFrame, interiorFrame);
+            //System.out.println();
         }
         //btree.printTree(leafFrame, interiorFrame);
         
@@ -211,8 +249,15 @@ public class BTreeTest {
     	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
     	IntegerSerializerDeserializer.INSTANCE.serialize(1000, hkdos);
     	    	        
-        byte[] lowKey = lkbaaos.toByteArray();
-        byte[] highKey = hkbaaos.toByteArray();
+        byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
         
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -239,7 +284,7 @@ public class BTreeTest {
         bufferCache.close();
         fileManager.close();
         print("\n");
-    }
+    }    
     
     // COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
     // create a B-tree with one two fixed-length "key" fields and one fixed-length "value" field
@@ -290,26 +335,44 @@ public class BTreeTest {
         long start = System.currentTimeMillis();
         
         print("INSERTING INTO TREE\n");
-        for (int i = 0; i < 10000; i++) {
-        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-        	
+        
+        IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, 
+				IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE};
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+        
+        for (int i = 0; i < 10000; i++) {        	
         	int f0 = rnd.nextInt() % 2000;
         	int f1 = rnd.nextInt() % 1000;
         	int f2 = 5;
         	        	
+        	tb.reset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	tb.addFieldEndOffset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	tb.addFieldEndOffset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        	tb.addFieldEndOffset();
         	
-        	byte[] record = baaos.toByteArray();
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         	
+        	tuple.reset(accessor, 0);
+        	        	
             if (i % 1000 == 0) {
             	print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
             }
             
             try {
-                btree.insert(record, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
             } catch (Exception e) {
             }
         }
@@ -349,9 +412,16 @@ public class BTreeTest {
     	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
     	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
     	IntegerSerializerDeserializer.INSTANCE.serialize(3, hkdos);
-    	    	        
-        byte[] lowKey = lkbaaos.toByteArray();
-        byte[] highKey = hkbaaos.toByteArray();
+    	
+        byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
         
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
@@ -425,25 +495,41 @@ public class BTreeTest {
     	Random rnd = new Random();
     	rnd.setSeed(50);
 
+    	IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+    	
     	int maxLength = 10; // max string length to be generated
     	for (int i = 0; i < 10000; i++) {
     		String f0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
     		String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
     		
-    		ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-        	
-        	UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+    		tb.reset();
+    		UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	tb.addFieldEndOffset();
         	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	tb.addFieldEndOffset();        	
         	
-    		byte[] record = baaos.toByteArray();
-    		
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+        	
+        	tuple.reset(accessor, 0);
+    		    		
     		if (i % 1000 == 0) {
-    			print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");
+    			//print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");
+    			print("INSERTING " + i + "\n");
     		}
 
     		try {
-    			btree.insert(record, leafFrame, interiorFrame, metaFrame);
+    			btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
     		} catch (Exception e) {
     		}
     	}     
@@ -481,8 +567,15 @@ public class BTreeTest {
     	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
     	UTF8StringSerializerDeserializer.INSTANCE.serialize("cc7", hkdos);
         
-        byte[] lowKey = lkbaaos.toByteArray();                        
-        byte[] highKey = hkbaaos.toByteArray();
+    	byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
         
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -557,6 +650,18 @@ public class BTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
+        IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+        
         int runs = 3;
         for (int run = 0; run < runs; run++) {
         	
@@ -565,30 +670,39 @@ public class BTreeTest {
             print("INSERTING INTO BTREE\n");
             int maxLength = 10;
             int ins = 10000;
-            byte[][] records = new byte[ins][];
+            String[] f0s = new String[ins];
+            String[] f1s = new String[ins];                                     
             int insDone = 0;
             int[] insDoneCmp = new int[ins];
             for (int i = 0; i < ins; i++) {
                 String f0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
                 String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
                 
-        		ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-            	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-            	
-            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
-            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+                f0s[i] = f0;
+                f1s[i] = f1;
                 
-            	byte[] record = baaos.toByteArray();            	
-                records[i] = record;
+        		tb.reset();
+        		UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+            	tb.addFieldEndOffset();
+            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+            	tb.addFieldEndOffset();        	
+            	
+            	appender.reset(frame, true);
+            	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+            	
+            	tuple.reset(accessor, 0);                        		                            	            	
 
                 if (i % 1000 == 0) {
-                    print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");                                       
+                	print("INSERTING " + i + "\n");
+                	//print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");                                       
                 }
 
                 try {
-                    btree.insert(record, leafFrame, interiorFrame, metaFrame);
+                    btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
                     insDone++;
+                } catch (BTreeException e) {                	
                 } catch (Exception e) {
+                	e.printStackTrace();
                 }
 
                 insDoneCmp[i] = insDone;
@@ -599,17 +713,31 @@ public class BTreeTest {
             print("DELETING FROM BTREE\n");
             int delDone = 0;
             for (int i = 0; i < ins; i++) {
-
+            	
+            	tb.reset();
+        		UTF8StringSerializerDeserializer.INSTANCE.serialize(f0s[i], dos);
+            	tb.addFieldEndOffset();
+            	UTF8StringSerializerDeserializer.INSTANCE.serialize(f1s[i], dos);
+            	tb.addFieldEndOffset();        	
+            	
+            	appender.reset(frame, true);
+            	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+            	
+            	tuple.reset(accessor, 0);    
+            	
                 if (i % 1000 == 0) {
-                    print("DELETING " + i + ": " + cmp.printRecord(records[i], 0) + "\n");                                    
+                    //print("DELETING " + i + ": " + cmp.printRecord(records[i], 0) + "\n");
+                	print("DELETING " + i + "\n");
                 }
 
                 try {
-                    btree.delete(records[i], leafFrame, interiorFrame, metaFrame);
+                    btree.delete(tuple, leafFrame, interiorFrame, metaFrame);
                     delDone++;
+                } catch (BTreeException e) {                	
                 } catch (Exception e) {
+                	e.printStackTrace();
                 }
-                
+
                 if (insDoneCmp[i] != delDone) {
                     print("INCONSISTENT STATE, ERROR IN DELETION TEST\n");
                     print("INSDONECMP: " + insDoneCmp[i] + " " + delDone + "\n"); 
@@ -632,7 +760,7 @@ public class BTreeTest {
         
         print("\n");
     }
-
+    
     // BULK LOAD TEST
     // insert 100,000 records in bulk
     // B-tree has a composite key to "simulate" non-unique index creation
@@ -681,32 +809,44 @@ public class BTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
+        IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+        
+		BTree.BulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f, leafFrame, interiorFrame, metaFrame);
+		
         // generate sorted records
         int ins = 100000;
-        byte[][] records = new byte[ins][];
-        for (int i = 0; i < ins; i++) {
-        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-        	
-        	int f0 = i;
-        	int f1 = i;
-        	int f2 = 5;
-        	
-        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
-        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
-        	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
-        	
-            records[i] = baaos.toByteArray();
-        }
-
         print("BULK LOADING " + ins + " RECORDS\n");
         long start = System.currentTimeMillis();
-        
-        BTree.BulkLoadContext ctx = btree.beginBulkLoad(0.7f, leafFrame, interiorFrame, metaFrame);                
         for (int i = 0; i < ins; i++) {
-            btree.bulkLoadAddRecord(ctx, records[i]);
+        	
+        	tb.reset();
+        	IntegerSerializerDeserializer.INSTANCE.serialize(i, dos);
+        	tb.addFieldEndOffset();
+        	IntegerSerializerDeserializer.INSTANCE.serialize(i, dos);
+        	tb.addFieldEndOffset();        	
+        	IntegerSerializerDeserializer.INSTANCE.serialize(5, dos);
+        	tb.addFieldEndOffset();
+        	
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+        	
+        	tuple.reset(accessor, 0);
+        	
+        	btree.bulkLoadAddRecord(bulkLoadCtx, tuple);
+        	
         }
-        btree.endBulkLoad(ctx);
+
+        btree.endBulkLoad(bulkLoadCtx);
         
         long end = System.currentTimeMillis();
         long duration = end - start;
@@ -724,9 +864,16 @@ public class BTreeTest {
     	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
     	IntegerSerializerDeserializer.INSTANCE.serialize(44500, hkdos);
     	    	        
-        byte[] lowKey = lkbaaos.toByteArray();
-        byte[] highKey = hkbaaos.toByteArray();
-                
+    	byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
+    	        
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
@@ -754,7 +901,7 @@ public class BTreeTest {
         fileManager.close();
         
         print("\n");
-    }
+    }    
     
     // TIME-INTERVAL INTERSECTION DEMO FOR EVENT PEOPLE
     // demo for Arjun to show easy support of intersection queries on time-intervals
@@ -801,6 +948,18 @@ public class BTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
         
+        IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		DataOutput dos = tb.getDataOutput();
+		
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+        
         long start = System.currentTimeMillis();
         
         int intervalCount = 10;
@@ -837,24 +996,29 @@ public class BTreeTest {
         intervals[9][1] = 35;
 
         // int exceptionCount = 0;
-        for (int i = 0; i < intervalCount; i++) {
-        	ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        	DataOutputStream dos = new DataOutputStream(baaos);        	        	
-        	
+        for (int i = 0; i < intervalCount; i++) {        	
         	int f0 = intervals[i][0];
         	int f1 = intervals[i][1];
         	int f2 = rnd.nextInt() % 100;
         	
+        	tb.reset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	tb.addFieldEndOffset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	tb.addFieldEndOffset();        	
         	IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        	tb.addFieldEndOffset();
         	
-        	byte[] record = baaos.toByteArray();
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         	
-            print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
+        	tuple.reset(accessor, 0);
+        	        	
+            //print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
+        	print("INSERTING " + i + "\n");
 
             try {
-                btree.insert(record, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
             } catch (Exception e) {
                 // e.printStackTrace();
             }
@@ -899,16 +1063,23 @@ public class BTreeTest {
     	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
     	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);
     	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);    	        
-    	
-        byte[] lowKey = lkbaaos.toByteArray();
-        byte[] highKey = hkbaaos.toByteArray();
+    	       
+        byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
         
         IBinaryComparator[] searchCmps = new IBinaryComparator[2];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         searchCmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
-        
-        print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
+                
+        //print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
@@ -933,7 +1104,7 @@ public class BTreeTest {
         
         print("\n");
     }
-
+    
     public static String randomString(int length, Random random) {
         String s = Long.toHexString(Double.doubleToLongBits(random.nextDouble()));
         StringBuilder strBuilder = new StringBuilder();
