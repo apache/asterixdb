@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 
 public class RangePredicate implements ISearchPredicate {
@@ -22,20 +23,20 @@ public class RangePredicate implements ISearchPredicate {
 	private static final long serialVersionUID = 1L;
 	
 	protected boolean isForward = true;
-	protected byte[] lowKeys = null;
-	protected byte[] highKeys = null;
+	protected ITupleReference lowKey = null;
+	protected ITupleReference highKey = null;
 	protected MultiComparator cmp;
-			
+	
 	public RangePredicate() {
 	}
 	
 	// TODO: for now range is [lowKey, highKey] but depending on user predicate the range could be exclusive on any end
 	// need to model this somehow	
 	// for point queries just use same value for low and high key
-	public RangePredicate(boolean isForward, byte[] lowKeys, byte[] highKeys, MultiComparator cmp) {
+	public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, MultiComparator cmp) {
 		this.isForward = isForward;
-		this.lowKeys = lowKeys;
-		this.highKeys = highKeys;
+		this.lowKey = lowKey;
+		this.highKey = highKey;
 		this.cmp = cmp;
 	}
 	
@@ -51,11 +52,11 @@ public class RangePredicate implements ISearchPredicate {
 		return isForward;
 	}	
 	
-	public byte[] getLowKeys() {
-		return lowKeys;
+	public ITupleReference getLowKey() {
+		return lowKey;
 	}
 	
-	public byte[] getHighKeys() {
-		return highKeys;
+	public ITupleReference getHighKey() {
+		return highKey;
 	}
 }

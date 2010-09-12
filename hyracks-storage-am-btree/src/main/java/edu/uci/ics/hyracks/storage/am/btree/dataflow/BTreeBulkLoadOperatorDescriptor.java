@@ -31,9 +31,7 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 	
 	private static final long serialVersionUID = 1L;
 	
-	private final int[] keyFields;
-	private final int[] payloadFields;
-	
+	private int[] fieldPermutation;	
     private float fillFactor;
 	
 	public BTreeBulkLoadOperatorDescriptor(JobSpecification spec,
@@ -43,21 +41,19 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, IFieldAccessorFactory[] fieldAccessorFactories, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] keyFields, int[] payloadFields, float fillFactor) {
+			int[] fieldPermutation, float fillFactor) {
 		super(spec, 1, 0, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
 				leafFactory, fieldAccessorFactories, comparatorFactories);
-		this.keyFields = keyFields;
-		this.payloadFields = payloadFields;
+		this.fieldPermutation = fieldPermutation;
 		this.fillFactor = fillFactor;
 	}
-	
+		
 	@Override
 	public IOperatorNodePushable createPushRuntime(IHyracksContext ctx,
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeBulkLoadOperatorNodePushable(this, ctx, keyFields, payloadFields, fillFactor, recordDescProvider);
-	}
-	
+		return new BTreeBulkLoadOperatorNodePushable(this, ctx, fieldPermutation, fillFactor, recordDescProvider);
+	}	
 }

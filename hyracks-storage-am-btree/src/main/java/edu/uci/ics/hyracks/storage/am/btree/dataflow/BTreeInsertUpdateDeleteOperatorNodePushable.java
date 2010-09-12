@@ -28,10 +28,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 
 public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
-	
-	private final int[] keyFields;
-	private final int[] payloadFields;
-	    
+		
     private FrameTupleAccessor accessor;
     
     private IRecordDescriptorProvider recordDescProvider;
@@ -40,12 +37,13 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractBTreeOp
     
     private BTreeOp op;
     
-	public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] keyFields, int[] payloadFields, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
-		super(opDesc, ctx, false);
-		this.keyFields = keyFields;
-		this.payloadFields = payloadFields;
+    private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+    
+	public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+		super(opDesc, ctx, false);		
 		this.recordDescProvider = recordDescProvider;
 		this.op = op;
+		tuple.setFieldPermutation(fieldPermutation);
 	}
 	
 	@Override
@@ -59,17 +57,17 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractBTreeOp
 		
 		int tupleCount = accessor.getTupleCount();
 		for(int i = 0; i < tupleCount; i++) {
-			byte[] btreeRecord = buildBTreeRecordFromHyraxRecord(accessor, i, keyFields, payloadFields);
+			tuple.reset(accessor, i);
 			try {
 				
 				switch(op) {
 				
 				case BTO_INSERT: {
-					btree.insert(btreeRecord, leafFrame, interiorFrame, metaFrame);				
+					btree.insert(tuple, leafFrame, interiorFrame, metaFrame);				
 				} break;
 				
 				case BTO_DELETE: {
-					btree.delete(btreeRecord, leafFrame, interiorFrame, metaFrame);				
+					btree.delete(tuple, leafFrame, interiorFrame, metaFrame);				
 				} break;
 				
 				default: {
@@ -102,5 +100,5 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractBTreeOp
 
     @Override
     public void flush() throws HyracksDataException {
-    }	
+    }    
 }

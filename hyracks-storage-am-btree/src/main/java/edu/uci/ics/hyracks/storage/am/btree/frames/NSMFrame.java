@@ -19,13 +19,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.NSMFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -42,6 +45,8 @@ public abstract class NSMFrame implements IBTreeFrame {
 	protected ICachedPage page = null;
 	protected ByteBuffer buf = null;
 	protected ISlotManager slotManager;
+	
+	protected SelfDescTupleReference pageTuple = new SelfDescTupleReference();
 	
 	public NSMFrame() {
 		this.slotManager = new OrderedSlotManager();
@@ -96,7 +101,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 	public void setPage(ICachedPage page) {
 		this.page = page;
 		this.buf = page.getBuffer();
-		slotManager.setFrame(this);
+		slotManager.setFrame(this);		
 	}
 	
 	@Override
@@ -139,24 +144,22 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 
 	@Override
-	public void delete(byte[] data, MultiComparator cmp, boolean exactDelete) throws Exception {		
-		int slotOff = slotManager.findSlot(data, cmp, true);
+	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {		
+		int slotOff = slotManager.findSlot(tuple, cmp, true);
 		if(slotOff < 0) {
 			throw new BTreeException("Key to be deleted does not exist.");
 		}
 		else {
 			if(exactDelete) {
 				// check the non-key columns for equality by byte-by-byte comparison
-				int storedRecOff = slotManager.getRecOff(slotOff);
-				int storedRecSize = cmp.getRecordSize(buf.array(), storedRecOff);						
-				if(data.length != storedRecSize) {
-					throw new BTreeException("Cannot delete record. Given record size does not match candidate record.");
-				}
-				for(int i = 0; i < storedRecSize; i++) {
-					if(data[i] != buf.array()[storedRecOff+i]) {
-						throw new BTreeException("Cannot delete record. Byte-by-byte comparison failed to prove equality.");
-					}				
-				}
+				int storedRecOff = slotManager.getRecOff(slotOff);			
+				pageTuple.setFields(cmp.getFields());
+				pageTuple.reset(buf, storedRecOff);
+				
+				int comparison = cmp.fieldRangeCompare(tuple, pageTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
+                if(comparison != 0) {
+                	throw new BTreeException("Cannot delete record. Byte-by-byte comparison failed to prove equality.");
+                }										
 			}
 			
 			int recOff = slotManager.getRecOff(slotOff);
@@ -174,14 +177,15 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 	
 	@Override
-	public SpaceStatus hasSpaceInsert(byte[] data, MultiComparator cmp) {				
-		if(data.length + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) - (buf.getInt(numRecordsOff) * slotManager.getSlotSize()) ) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-		else if(data.length + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
+	public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {				
+		int tupleSpace = spaceNeededForTuple(tuple);		
+		if(tupleSpace + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) - (buf.getInt(numRecordsOff) * slotManager.getSlotSize()) ) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+		else if(tupleSpace + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
 		else return SpaceStatus.INSUFFICIENT_SPACE;
 	}
 	
 	@Override
-	public SpaceStatus hasSpaceUpdate(int rid, byte[] data, MultiComparator cmp) {
+	public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
 		// TODO Auto-generated method stub
 		return SpaceStatus.INSUFFICIENT_SPACE;
 	}
@@ -192,20 +196,36 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 	
 	@Override
-	public void insert(byte[] data, MultiComparator cmp) throws Exception {
-		int slotOff = slotManager.findSlot(data, cmp, false);
-		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));
+	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
+		int slotOff = slotManager.findSlot(tuple, cmp, false);		
+		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));				
+		int bytesWritten = writeTupleFields(tuple, tuple.getFieldCount(), buf, buf.getInt(freeSpaceOff));
 		
-		int recOff = buf.getInt(freeSpaceOff);
-		System.arraycopy(data, 0, buf.array(), recOff, data.length);		
-					
 		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
-		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + data.length);
-		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - data.length - slotManager.getSlotSize());				
+		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());				
+	}
+	
+	// TODO: need to change these methods
+	protected int writeTupleFields(ITupleReference src, int numFields, ByteBuffer targetBuf, int targetOff) {
+		int runner = targetOff;		
+		for(int i = 0; i < numFields; i++) {
+			System.arraycopy(src.getFieldData(i), src.getFieldStart(i), targetBuf.array(), runner, src.getFieldLength(i));
+			runner += src.getFieldLength(i);
+		}
+		return runner - targetOff;
+	}
+	
+	protected int spaceNeededForTuple(ITupleReference src) {
+		int space = 0;
+		for(int i = 0; i < src.getFieldCount(); i++) {
+			space += src.getFieldLength(i);
+		}
+		return space;
 	}
 	
 	@Override
-	public void update(int rid, byte[] data) throws Exception {
+	public void update(int rid, ITupleReference tuple) throws Exception {
 		// TODO Auto-generated method stub
 		
 	}	
@@ -275,4 +295,9 @@ public abstract class NSMFrame implements IBTreeFrame {
     public IFieldIterator createFieldIterator() {
     	return new NSMFieldIterator();
     }
+    
+    @Override
+	public void setPageTupleFields(IFieldAccessor[] fields) {
+		pageTuple.setFields(fields);
+	}
 }

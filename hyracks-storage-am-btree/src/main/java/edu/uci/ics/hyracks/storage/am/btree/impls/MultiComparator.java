@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 
@@ -70,6 +71,35 @@ public class MultiComparator {
     	return 0;
 	}
 	
+	public int compare(ITupleReference tupleA, ITupleReference tupleB) {			
+		for(int i = 0; i < cmps.length; i++) {						
+			int cmp = cmps[i].compare(tupleA.getFieldData(i), 
+					tupleA.getFieldStart(i), 
+					tupleA.getFieldLength(i),
+					tupleB.getFieldData(i), 
+					tupleB.getFieldStart(i), 
+					tupleB.getFieldLength(i));
+    		if(cmp < 0) return -1;
+    		else if(cmp > 0) return 1;    			
+    	}
+    	return 0;
+	}
+	
+	public int compare(ITupleReference tuple, IFieldIterator fieldIter) {
+		fieldIter.reset();
+        
+        int cmp = 0;
+        for(int i = 0; i < cmps.length; i++) {       	
+       	 cmp = cmps[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i), fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());          
+            if(cmp < 0) return -1;
+            else if(cmp > 0) return 1;             
+            fieldIter.nextField();
+        }
+        
+        fieldIter.reset();
+        return 0;
+	}
+	
 	public int compare(byte[] data, int recOff, IFieldIterator fieldIter) {
 		 fieldIter.reset();
          
@@ -88,17 +118,17 @@ public class MultiComparator {
          return 0;
 	}
 	
-	public int fieldRangeCompare(byte[] dataA, int recOffA, byte[] dataB, int recOffB, int startFieldIndex, int numFields) {
-		int lenA;
-		int lenB;
-		for(int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
-			lenA = fields[i].getLength(dataA, recOffA);
-			lenB = fields[i].getLength(dataB, recOffB);			
-			int cmp = cmps[i].compare(dataA, recOffA, lenA, dataB, recOffB, lenB);
+	public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
+		for(int i = startFieldIndex; i < startFieldIndex + numFields; i++) {						
+			int cmp = cmps[i].compare(
+					tupleA.getFieldData(i), 
+					tupleA.getFieldStart(i), 
+					tupleA.getFieldLength(i), 
+					tupleB.getFieldData(i), 
+					tupleB.getFieldStart(i), 
+					tupleB.getFieldLength(i));
     		if(cmp < 0) return -1;
     		else if(cmp > 0) return 1;
-    		recOffA += lenA; 
-   			recOffB += lenB;
     	}
     	return 0;
 	}

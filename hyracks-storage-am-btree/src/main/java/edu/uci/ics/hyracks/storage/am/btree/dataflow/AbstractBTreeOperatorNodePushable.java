@@ -15,15 +15,21 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
-import java.io.DataOutputStream;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -37,7 +43,7 @@ import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOutputOperatorNodePushable {
-		
+	
 	protected IBTreeInteriorFrame interiorFrame;
 	protected IBTreeLeafFrame leafFrame;
 	
@@ -118,34 +124,50 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
 	// debug
 	protected void fill() throws Exception {
 		
+		
+		// TODO: uncomment and fix
 		MetaDataFrame metaFrame = new MetaDataFrame();                		
 		btree.create(opDesc.getBtreeFileId(), leafFrame, metaFrame);
 		
 		Random rnd = new Random();
 		rnd.setSeed(50);				
 		
-		for (int i = 0; i < 10000; i++) {
-			ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-			DataOutputStream dos = new DataOutputStream(baaos);        	        	
+		ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(2);
+		DataOutput dos = tb.getDataOutput();
 
+		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE};
+		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recDesc);
+		accessor.reset(frame);
+		FrameTupleReference tuple = new FrameTupleReference();
+		
+		for (int i = 0; i < 10000; i++) {			
 			int f0 = rnd.nextInt() % 10000;
 			int f1 = 5;
 
-			IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
-			IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
-
-			byte[] record = baaos.toByteArray();
-
+			tb.reset();
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        	tb.addFieldEndOffset();
+        	IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        	tb.addFieldEndOffset();        	
+        	        	
+        	appender.reset(frame, true);
+        	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+        	
+        	tuple.reset(accessor, 0);
+						
 			if (i % 1000 == 0) {
 				System.out.println("INSERTING " + i + " : " + f0 + " " + f1);            	
 			}
 
 			try {                                
-				btree.insert(record, leafFrame, interiorFrame, metaFrame);
+				btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
 			} catch (Exception e) {
 			}
 		}
-
+		
 		/*
         IFieldAccessor[] fields = new IFieldAccessor[2];
         fields[0] = new Int32Accessor(); // key field
@@ -217,5 +239,5 @@ public abstract class AbstractBTreeOperatorNodePushable extends AbstractUnaryOut
 		}						
 		
 		return btreeRecord;
-	}
+	}	
 }

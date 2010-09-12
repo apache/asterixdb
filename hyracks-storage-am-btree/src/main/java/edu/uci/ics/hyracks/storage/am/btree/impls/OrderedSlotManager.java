@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 
@@ -23,10 +24,14 @@ public class OrderedSlotManager implements ISlotManager {
 	private static final int slotSize = 4;
 	private IBTreeFrame frame;
 		
+	private SelfDescTupleReference pageTuple = new SelfDescTupleReference();
+		
 	// TODO: mix in interpolation search
 	@Override
-	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact) {
+	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact) {
 		if(frame.getNumRecords() <= 0) return -1;
+		
+		pageTuple.setFields(multiCmp.getFields());
 		
 		int mid;
 		int begin = 0;
@@ -36,7 +41,8 @@ public class OrderedSlotManager implements ISlotManager {
             mid = (begin + end) / 2;
         	int slotOff = getSlotOff(mid);        	
         	int recOff = getRecOff(slotOff);
-        	int cmp = multiCmp.compare(data, 0, frame.getBuffer().array(), recOff);
+        	pageTuple.reset(frame.getBuffer(), recOff);
+        	int cmp = multiCmp.compare(tuple, pageTuple);
         	if(cmp < 0)
         		end = mid - 1;
         	else if(cmp > 0)
@@ -50,7 +56,8 @@ public class OrderedSlotManager implements ISlotManager {
         
         int slotOff = getSlotOff(begin);
         int recOff = getRecOff(slotOff);
-        if(multiCmp.compare(data, 0, frame.getBuffer().array(), recOff)  < 0)
+        pageTuple.reset(frame.getBuffer(), recOff);
+        if(multiCmp.compare(tuple, pageTuple)  < 0)
         	return slotOff;
         else
         	return -1;		

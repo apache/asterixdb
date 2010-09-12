@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
@@ -45,11 +46,11 @@ public interface IPrefixSlotManager {
 	public int decodeSecondSlotField(int slot);		
 	public int encodeSlotFields(int firstField, int secondField);
 	
-	public int findSlot(byte[] data, MultiComparator multiCmp, boolean exact);
+	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact);
 	public int insertSlot(int slot, int recOff);
 					
 	// returns prefix slot number, returns RECORD_UNCOMPRESSED if none found
-	public int findPrefix(byte[] data, MultiComparator multiCmp);
+	public int findPrefix(ITupleReference tuple, MultiComparator multiCmp);
 	
 	public int getRecSlotStartOff();
 	public int getRecSlotEndOff();
@@ -63,9 +64,7 @@ public interface IPrefixSlotManager {
 	public int getSlotSize();		
 	
 	public void setSlot(int offset, int value);
-	
-	public int compareCompressed(byte[] record, byte[] page, int prefixSlotNum, int recSlotNum, MultiComparator multiCmp);
-	
+		
 	// functions for testing
 	public void setPrefixSlot(int slotNum, int slot);
 }

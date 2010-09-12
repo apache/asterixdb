@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
@@ -33,13 +34,13 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 
 public class BTreeSearchOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
-	
+
 	private boolean isForward;
-	private byte[] lowKey;
-	private byte[] highKey;
+	private ITupleReference lowKey;
+	private ITupleReference highKey;
 	private int searchKeyFields;
 	
-	public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, boolean isForward, byte[] lowKey, byte[] highKey, int searchKeyFields) {
+	public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, boolean isForward, ITupleReference lowKey, ITupleReference highKey, int searchKeyFields) {
 		super(opDesc, ctx, false);
 		this.isForward = isForward;
 		this.lowKey = lowKey;
@@ -126,5 +127,5 @@ public class BTreeSearchOperatorNodePushable extends AbstractBTreeOperatorNodePu
 
     @Override
     public void flush() throws HyracksDataException {
-    }			
+    }
 }

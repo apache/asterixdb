@@ -33,7 +33,7 @@ public final class FrameTupleReference implements IFrameTupleReference {
 
     @Override
     public int getFieldStart(int fIdx) {
-        return fta.getFieldStartOffset(tIndex, fIdx);
+    	return fta.getTupleStartOffset(tIndex) + fta.getFieldSlotsLength() + fta.getFieldStartOffset(tIndex, fIdx);
     }
 
     @Override

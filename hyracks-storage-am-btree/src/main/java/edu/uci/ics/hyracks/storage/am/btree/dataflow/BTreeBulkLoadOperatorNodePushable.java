@@ -27,10 +27,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 
 public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
-	
-	private final int[] keyFields;
-	private final int[] payloadFields;
-	
+		
     private float fillFactor;
     
     private FrameTupleAccessor accessor;
@@ -38,12 +35,13 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNode
     
     private IRecordDescriptorProvider recordDescProvider;
     
-	public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] keyFields, int[] payloadFields, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+    private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+    
+	public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
 		super(opDesc, ctx, true);
-		this.keyFields = keyFields;
-		this.payloadFields = payloadFields;
 		this.fillFactor = fillFactor;
 		this.recordDescProvider = recordDescProvider;
+		tuple.setFieldPermutation(fieldPermutation);
 	}
 	
 	@Override
@@ -61,9 +59,9 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNode
 		                      
 		int tupleCount = accessor.getTupleCount();
 		for(int i = 0; i < tupleCount; i++) {
-			byte[] btreeRecord = buildBTreeRecordFromHyraxRecord(accessor, i, keyFields, payloadFields);
+			tuple.reset(accessor, i);			
 			try {
-				btree.bulkLoadAddRecord(bulkLoadCtx, btreeRecord);
+				btree.bulkLoadAddRecord(bulkLoadCtx, tuple);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -86,5 +84,5 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNode
 
     @Override
     public void flush() throws HyracksDataException {
-    }	
+    }    
 }

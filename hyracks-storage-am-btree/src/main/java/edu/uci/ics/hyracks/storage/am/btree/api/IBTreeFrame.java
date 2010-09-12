@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
@@ -27,9 +28,9 @@ public interface IBTreeFrame {
 	public ICachedPage getPage();
 	public ByteBuffer getBuffer();
 	
-	public void insert(byte[] data, MultiComparator cmp) throws Exception;
-	public void update(int rid, byte[] data) throws Exception;
-	public void delete(byte[] data, MultiComparator cmp, boolean exactDelete) throws Exception;
+	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception;
+	public void update(int rid, ITupleReference tuple) throws Exception;
+	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
 	
 	public void compact(MultiComparator cmp);
 	public boolean compress(MultiComparator cmp) throws Exception;
@@ -39,8 +40,8 @@ public interface IBTreeFrame {
 	public int getNumRecords();
 		
 	// assumption: page must be write-latched at this point
-	public SpaceStatus hasSpaceInsert(byte[] data, MultiComparator cmp);
-	public SpaceStatus hasSpaceUpdate(int rid, byte[] data, MultiComparator cmp);
+	public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
+	public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
 	
 	public int getRecordOffset(int slotNum);
 	
@@ -55,7 +56,7 @@ public interface IBTreeFrame {
 	
 	
 	// TODO; what if records more than half-page size?
-	public int split(IBTreeFrame rightFrame, byte[] data, MultiComparator cmp, SplitKey splitKey) throws Exception;		
+	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception;		
 	
 	// TODO: check if we do something nicer than returning object
 	public ISlotManager getSlotManager();
@@ -68,11 +69,14 @@ public interface IBTreeFrame {
 	public boolean getSmFlag(); // structure modification flag
 	public void setSmFlag(boolean smFlag);	
 	
-	public void insertSorted(byte[] data, MultiComparator cmp) throws Exception;
+	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception;
 	
 	public int getSlotSize();
 	
 	public IFieldIterator createFieldIterator();
+	
+	// TODO: should be removed after new record format		
+	public void setPageTupleFields(IFieldAccessor[] fields);
 	
 	// for debugging
 	public int getFreeSpaceOff();

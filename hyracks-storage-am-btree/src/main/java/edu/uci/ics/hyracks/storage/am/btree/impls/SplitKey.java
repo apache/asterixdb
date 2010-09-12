@@ -18,8 +18,9 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import java.nio.ByteBuffer;
 
 public class SplitKey {		
-	private byte[] data = null;	
-	private ByteBuffer buf = null;
+	public byte[] data = null;	
+	public ByteBuffer buf = null;
+	public SelfDescTupleReference tuple = new SelfDescTupleReference();
 	
 	public void initData(int keySize) {
 		// try to reuse existing memory from a lower-level split if possible
@@ -38,6 +39,7 @@ public class SplitKey {
 		*/		
 		data = new byte[keySize + 8]; // add 8 for left and right page
 		buf = ByteBuffer.wrap(data);
+		tuple.reset(buf, 0);
 	}
 	
 	public void reset() {
@@ -49,8 +51,12 @@ public class SplitKey {
 		this.data = data;
 	}
 	
-	public byte[] getData() {
-		return data;
+	public ByteBuffer getBuffer() {
+		return buf;
+	}
+	
+	public SelfDescTupleReference getTuple() {
+		return tuple;
 	}
 	
 	public int getLeftPage() {
@@ -72,5 +78,15 @@ public class SplitKey {
 	public void setPages(int leftPage, int rightPage) {
 		buf.putInt(data.length - 8, leftPage);
 		buf.putInt(data.length - 4, rightPage);
+	}
+	
+	public SplitKey duplicate() {
+		SplitKey copy = new SplitKey();
+		copy.data = data.clone();		
+		copy.buf = ByteBuffer.wrap(copy.data);
+		copy.tuple = new SelfDescTupleReference();
+		copy.tuple.setFields(tuple.getFields());
+		copy.tuple.reset(copy.buf, 0);	
+		return copy;
 	}
 }

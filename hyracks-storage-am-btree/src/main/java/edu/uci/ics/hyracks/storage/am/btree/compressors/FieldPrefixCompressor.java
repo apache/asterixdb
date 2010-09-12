@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
-		
+	
 	// minimum ratio of uncompressed records to total records to consider re-compression
 	private float ratioThreshold;
 	
@@ -428,5 +428,5 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         public int compare(KeyPartition a, KeyPartition b) {
             return a.firstRecSlotNum - b.firstRecSlotNum;
         }
-    }	
+    }
 }
