@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -36,6 +35,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final String JOINER = "joiner";
@@ -86,7 +87,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
 
                 @Override
@@ -113,11 +114,6 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
-
-                @Override
                 public void flush() throws HyracksDataException {
                 }
             };
@@ -136,8 +132,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            IOperatorNodePushable op = new IOperatorNodePushable() {
-                private IFrameWriter writer;
+            IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
 
                 @Override
@@ -156,14 +151,6 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                     joiner.closeJoin(writer);
                     writer.close();
                     env.set(JOINER, null);
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalStateException();
-                    }
-                    this.writer = writer;
                 }
 
                 @Override

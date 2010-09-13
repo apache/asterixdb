@@ -20,7 +20,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -32,6 +31,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor {
@@ -64,7 +64,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            return new IOperatorNodePushable() {
+            return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private FileChannel out;
                 private int frameCount;
 
@@ -108,11 +108,6 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
-
-                @Override
                 public void flush() throws HyracksDataException {
                 }
             };
@@ -132,7 +127,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
-                public void open() throws HyracksDataException {
+                public void initialize() throws HyracksDataException {
                     try {
                         File inFile = new File((String) env.get(MATERIALIZED_FILE));
                         int frameCount = (Integer) env.get(FRAME_COUNT);
@@ -157,7 +152,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
 
                 @Override
-                public void close() throws HyracksDataException {
+                public void deinitialize() throws HyracksDataException {
                     env.set(MATERIALIZED_FILE, null);
                 }
             };

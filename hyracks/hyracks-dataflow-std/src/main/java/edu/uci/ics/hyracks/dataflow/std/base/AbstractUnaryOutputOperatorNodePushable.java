@@ -17,14 +17,26 @@ package edu.uci.ics.hyracks.dataflow.std.base;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractUnaryOutputOperatorNodePushable implements IOperatorNodePushable {
     protected IFrameWriter writer;
     protected RecordDescriptor recordDesc;
 
     @Override
-    public final void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+    public final void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        if (index != 0) {
+            throw new IllegalStateException();
+        }
         this.writer = writer;
         this.recordDesc = recordDesc;
+    }
+
+    @Override
+    public void initialize() throws HyracksDataException {
+    }
+
+    @Override
+    public void deinitialize() throws HyracksDataException {
     }
 }

@@ -14,17 +14,16 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.nio.ByteBuffer;
-
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 
 public abstract class AbstractUnaryOutputSourceOperatorNodePushable extends AbstractUnaryOutputOperatorNodePushable {
     @Override
-    public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+    public IFrameWriter getInputFrameWriter(int index) {
+        throw new IllegalStateException();
     }
 
     @Override
-    public final void flush() throws HyracksDataException {
+    public final int getInputArity() {
+        return 0;
     }
 }

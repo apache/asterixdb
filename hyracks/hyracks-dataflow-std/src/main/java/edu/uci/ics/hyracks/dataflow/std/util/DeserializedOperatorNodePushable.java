@@ -18,14 +18,14 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 
-public final class DeserializedOperatorNodePushable implements IOperatorNodePushable {
+public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     private final IHyracksContext ctx;
 
     private final IOpenableDataWriterOperator delegate;
@@ -40,7 +40,7 @@ public final class DeserializedOperatorNodePushable implements IOperatorNodePush
     }
 
     @Override
-    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
         delegate.setDataWriter(index, new SerializingDataWriter(ctx, recordDesc, writer));
     }
 
