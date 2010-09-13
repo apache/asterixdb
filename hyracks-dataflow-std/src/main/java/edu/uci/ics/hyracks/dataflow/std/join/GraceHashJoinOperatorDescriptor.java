@@ -20,7 +20,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -42,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComp
 import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
@@ -119,7 +119,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx,
                         recordDescProvider.getInputRecordDescriptor(getOperatorId(), operatorInputIndex));
 
@@ -131,11 +131,6 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 private File[] files;
                 private FileChannel[] channels;
                 private final int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
 
                 @Override
                 public void close() throws HyracksDataException {
@@ -249,7 +244,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 private int[] maxBufferRi;
 
                 @Override
-                public void open() throws HyracksDataException {
+                public void initialize() throws HyracksDataException {
                     channelsR = (FileChannel[]) env.get(SMALLRELATION);
                     channelsS = (FileChannel[]) env.get(LARGERELATION);
                     numPartitions = (Integer) env.get(NUM_PARTITION);
@@ -321,7 +316,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
 
                 @Override
-                public void close() throws HyracksDataException {
+                public void deinitialize() throws HyracksDataException {
                     env.set(LARGERELATION, null);
                     env.set(SMALLRELATION, null);
                     env.set(NUM_PARTITION, null);

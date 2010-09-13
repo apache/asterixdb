@@ -51,7 +51,7 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
         final ITupleParser tp = tupleParserFactory.createTupleParser(ctx);
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             @Override
-            public void open() throws HyracksDataException {
+            public void initialize() throws HyracksDataException {
                 File f = split.getLocalFile();
                 writer.open();
                 try {
@@ -65,10 +65,6 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 } finally {
                     writer.close();
                 }
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
             }
         };
     }

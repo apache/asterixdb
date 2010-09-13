@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.nio.ByteBuffer;
@@ -22,67 +21,70 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 
-public class BTreeBulkLoadOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
-		
+public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private float fillFactor;
-    
+    private final BTreeOpHelper btreeOpHelper;
     private FrameTupleAccessor accessor;
     private BTree.BulkLoadContext bulkLoadCtx;
-    
+
     private IRecordDescriptorProvider recordDescProvider;
-    
+
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-    
-	public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-		super(opDesc, ctx, true);
-		this.fillFactor = fillFactor;
-		this.recordDescProvider = recordDescProvider;
-		tuple.setFieldPermutation(fieldPermutation);
-	}
-	
-	@Override
-	public void close() throws HyracksDataException {
-		try {
-			btree.endBulkLoad(bulkLoadCtx);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}			
-	}
-	
-	@Override
-	public void nextFrame(ByteBuffer buffer) throws HyracksDataException {		
-		accessor.reset(buffer);
-		                      
-		int tupleCount = accessor.getTupleCount();
-		for(int i = 0; i < tupleCount; i++) {
-			tuple.reset(accessor, i);			
-			try {
-				btree.bulkLoadAddRecord(bulkLoadCtx, tuple);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}		
-	}
-	
-	@Override
-	public void open() throws HyracksDataException {		
-		RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);		
-		accessor = new FrameTupleAccessor(ctx, recDesc);
-		IBTreeMetaDataFrame metaFrame = new MetaDataFrame();		
-		try {
-			init();
-			btree.open(opDesc.getBtreeFileId());
-			bulkLoadCtx = btree.beginBulkLoad(fillFactor, leafFrame, interiorFrame, metaFrame);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+
+    public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
+            int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true);
+        this.fillFactor = fillFactor;
+        this.recordDescProvider = recordDescProvider;
+        tuple.setFieldPermutation(fieldPermutation);
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        try {
+            btreeOpHelper.getBTree().endBulkLoad(bulkLoadCtx);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        accessor.reset(buffer);
+
+        int tupleCount = accessor.getTupleCount();
+        for (int i = 0; i < tupleCount; i++) {
+            tuple.reset(accessor, i);
+            try {
+                btreeOpHelper.getBTree().bulkLoadAddRecord(bulkLoadCtx, tuple);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
+        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+        try {
+            btreeOpHelper.init();
+            btreeOpHelper.getBTree().open(opDesc.getBtreeFileId());
+            bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(),
+                    btreeOpHelper.getInteriorFrame(), metaFrame);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void flush() throws HyracksDataException {
-    }    
+    }
 }

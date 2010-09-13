@@ -34,7 +34,7 @@ public class OperatorRunnable implements Runnable {
     }
 
     public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-        opNode.setFrameWriter(index, writer, recordDesc);
+        opNode.setOutputFrameWriter(index, writer, recordDesc);
     }
 
     public void setFrameReader(IFrameReader reader) {
@@ -48,20 +48,23 @@ public class OperatorRunnable implements Runnable {
     @Override
     public void run() {
         try {
-            opNode.open();
+            opNode.initialize();
             if (reader != null) {
+                IFrameWriter writer = opNode.getInputFrameWriter(0);
+                writer.open();
                 reader.open();
                 while (reader.nextFrame(buffer)) {
                     if (abort) {
                         break;
                     }
                     buffer.flip();
-                    opNode.nextFrame(buffer);
+                    writer.nextFrame(buffer);
                     buffer.compact();
                 }
                 reader.close();
+                writer.close();
             }
-            opNode.close();
+            opNode.deinitialize();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

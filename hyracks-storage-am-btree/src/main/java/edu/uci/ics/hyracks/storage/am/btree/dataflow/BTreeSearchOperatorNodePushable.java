@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.DataOutput;
@@ -26,106 +25,102 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 
-public class BTreeSearchOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
+public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+    private BTreeOpHelper btreeOpHelper;
+    private boolean isForward;
+    private ITupleReference lowKey;
+    private ITupleReference highKey;
+    private int searchKeyFields;
 
-	private boolean isForward;
-	private ITupleReference lowKey;
-	private ITupleReference highKey;
-	private int searchKeyFields;
-	
-	public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, boolean isForward, ITupleReference lowKey, ITupleReference highKey, int searchKeyFields) {
-		super(opDesc, ctx, false);
-		this.isForward = isForward;
-		this.lowKey = lowKey;
-		this.highKey = highKey;
-		this.searchKeyFields = searchKeyFields;
-	}
-	
-	@Override
-	public void open() throws HyracksDataException {		
-		
-		IBTreeLeafFrame cursorFrame = opDesc.getLeafFactory().getFrame();
-		IBTreeCursor cursor = new RangeSearchCursor(cursorFrame);
-						
-		try {
-			init();										
-			fill();
-			
-			// construct range predicate
-			assert(searchKeyFields <= btree.getMultiComparator().getKeyLength());
-			IBinaryComparator[] searchComparators = new IBinaryComparator[searchKeyFields];
-			for(int i = 0; i < searchKeyFields; i++) {
-				searchComparators[i] = btree.getMultiComparator().getComparators()[i];
-			}			
-			MultiComparator searchCmp = new MultiComparator(searchComparators, btree.getMultiComparator().getFields());
-			RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, searchCmp);
-			
-			btree.search(cursor, rangePred, leafFrame, interiorFrame);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		MultiComparator cmp = btree.getMultiComparator();
-		ByteBuffer frame = ctx.getResourceManager().allocateFrame();
-		FrameTupleAppender appender = new FrameTupleAppender(ctx);
-		appender.reset(frame, true);
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
-		DataOutput dos = tb.getDataOutput();
-		
-		try {
-			while(cursor.hasNext()) {
-				tb.reset();                		
-				cursor.next();
-				
-				IFieldIterator fieldIter = cursor.getFieldIterator();
-				for(int i = 0; i < cmp.getFields().length; i++) {					
-					int fieldLen = fieldIter.getFieldSize();
-					dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
-					tb.addFieldEndOffset();
-				}
-
-				if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-					FrameUtils.flushFrame(frame, writer);
-					appender.reset(frame, true);
-					if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-						throw new IllegalStateException();
-					}
-				}
-
-				//int recOffset = cursor.getOffset();                
-				//String rec = cmp.printRecord(array, recOffset);
-				//System.out.println(rec);
-			}
-
-			if (appender.getTupleCount() > 0) {
-				FrameUtils.flushFrame(frame, writer);
-			}
-			writer.close();
-
-		} catch (Exception e) {					
-			e.printStackTrace();
-		}
-	}
-	
-	@Override
-    public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
+            boolean isForward, ITupleReference lowKey, ITupleReference highKey, int searchKeyFields) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
+        this.isForward = isForward;
+        this.lowKey = lowKey;
+        this.highKey = highKey;
+        this.searchKeyFields = searchKeyFields;
     }
-	
-	@Override
-	public void close() throws HyracksDataException {            	
-	}
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void initialize() throws HyracksDataException {
+        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
+        BTree btree = btreeOpHelper.getBTree();
+        IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
+        IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
+        IHyracksContext ctx = btreeOpHelper.getHyracksContext();
+
+        IBTreeLeafFrame cursorFrame = opDesc.getLeafFactory().getFrame();
+        IBTreeCursor cursor = new RangeSearchCursor(cursorFrame);
+
+        try {
+            btreeOpHelper.init();
+            btreeOpHelper.fill();
+
+            // construct range predicate
+            assert (searchKeyFields <= btree.getMultiComparator().getKeyLength());
+            IBinaryComparator[] searchComparators = new IBinaryComparator[searchKeyFields];
+            for (int i = 0; i < searchKeyFields; i++) {
+                searchComparators[i] = btree.getMultiComparator().getComparators()[i];
+            }
+            MultiComparator searchCmp = new MultiComparator(searchComparators, btree.getMultiComparator().getFields());
+            RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, searchCmp);
+
+            btree.search(cursor, rangePred, leafFrame, interiorFrame);
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        MultiComparator cmp = btree.getMultiComparator();
+        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx);
+        appender.reset(frame, true);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+        DataOutput dos = tb.getDataOutput();
+
+        try {
+            while (cursor.hasNext()) {
+                tb.reset();
+                cursor.next();
+
+                IFieldIterator fieldIter = cursor.getFieldIterator();
+                for (int i = 0; i < cmp.getFields().length; i++) {
+                    int fieldLen = fieldIter.getFieldSize();
+                    dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
+                    tb.addFieldEndOffset();
+                }
+
+                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                    FrameUtils.flushFrame(frame, writer);
+                    appender.reset(frame, true);
+                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                        throw new IllegalStateException();
+                    }
+                }
+
+                //int recOffset = cursor.getOffset();                
+                //String rec = cmp.printRecord(array, recOffset);
+                //System.out.println(rec);
+            }
+
+            if (appender.getTupleCount() > 0) {
+                FrameUtils.flushFrame(frame, writer);
+            }
+            writer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

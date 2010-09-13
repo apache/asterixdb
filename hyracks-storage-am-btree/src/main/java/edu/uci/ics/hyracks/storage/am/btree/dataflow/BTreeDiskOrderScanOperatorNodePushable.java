@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.DataOutput;
@@ -24,6 +23,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
@@ -31,81 +31,69 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
-public class BTreeDiskOrderScanOperatorNodePushable extends AbstractBTreeOperatorNodePushable {
-	
-	public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx) {
-		super(opDesc, ctx, false);
-	}
-	
-	@Override
-	public void open() throws HyracksDataException {		
-		
-		IBTreeLeafFrame cursorFrame = opDesc.getLeafFactory().getFrame();
-		DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
-		IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
-		
-		try {
-			init();				
-			fill();
-			btree.diskOrderScan(cursor, cursorFrame, metaFrame);			
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		MultiComparator cmp = btree.getMultiComparator();
-		ByteBuffer frame = ctx.getResourceManager().allocateFrame();
-		FrameTupleAppender appender = new FrameTupleAppender(ctx);
-		appender.reset(frame, true);
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
-		DataOutput dos = tb.getDataOutput();
-		
-		try {
-			while(cursor.hasNext()) {
-				tb.reset();                		
-				cursor.next();
+public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+    private final BTreeOpHelper btreeOpHelper;
 
-				IFieldIterator fieldIter = cursor.getFieldIterator();
-				for(int i = 0; i < cmp.getFields().length; i++) {					
-					int fieldLen = fieldIter.getFieldSize();
-					dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
-					tb.addFieldEndOffset();
-				}
-				
-				if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-					FrameUtils.flushFrame(frame, writer);
-					appender.reset(frame, true);
-					if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-						throw new IllegalStateException();
-					}
-				}
-
-				//int recOffset = cursor.getOffset();                
-				//String rec = cmp.printRecord(array, recOffset);
-				//System.out.println(rec);
-			}
-
-			if (appender.getTupleCount() > 0) {
-				FrameUtils.flushFrame(frame, writer);
-			}
-			writer.close();
-
-		} catch (Exception e) {					
-			e.printStackTrace();
-		}
-	}
-	
-	@Override
-    public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
     }
-	
-	@Override
-	public void close() throws HyracksDataException {            	
-	}
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void initialize() throws HyracksDataException {
+
+        IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
+        DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
+        IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+
+        try {
+            btreeOpHelper.init();
+            btreeOpHelper.fill();
+            btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
+        ByteBuffer frame = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());
+        appender.reset(frame, true);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+        DataOutput dos = tb.getDataOutput();
+
+        try {
+            while (cursor.hasNext()) {
+                tb.reset();
+                cursor.next();
+
+                IFieldIterator fieldIter = cursor.getFieldIterator();
+                for (int i = 0; i < cmp.getFields().length; i++) {
+                    int fieldLen = fieldIter.getFieldSize();
+                    dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
+                    tb.addFieldEndOffset();
+                }
+
+                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                    FrameUtils.flushFrame(frame, writer);
+                    appender.reset(frame, true);
+                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                        throw new IllegalStateException();
+                    }
+                }
+
+                //int recOffset = cursor.getOffset();                
+                //String rec = cmp.printRecord(array, recOffset);
+                //System.out.println(rec);
+            }
+
+            if (appender.getTupleCount() > 0) {
+                FrameUtils.flushFrame(frame, writer);
+            }
+            writer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

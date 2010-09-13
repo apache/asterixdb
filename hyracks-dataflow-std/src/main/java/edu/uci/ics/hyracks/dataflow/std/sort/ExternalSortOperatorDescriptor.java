@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
@@ -98,7 +99,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private final FrameTupleAccessor fta1 = new FrameTupleAccessor(ctx, recordDescriptors[0]);
                 private final FrameTupleAccessor fta2 = new FrameTupleAccessor(ctx, recordDescriptors[0]);
                 private List<ByteBuffer> inFrames;
@@ -273,11 +274,6 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
-
-                @Override
                 public void flush() throws HyracksDataException {
                 }
             };
@@ -307,7 +303,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 private FrameTupleAppender outFrameAppender;
 
                 @Override
-                public void open() throws HyracksDataException {
+                public void initialize() throws HyracksDataException {
                     inFrames = (List<ByteBuffer>) env.get(IN_FRAMES);
                     outFrame = ctx.getResourceManager().allocateFrame();
                     runs = (LinkedList<File>) env.get(RUNS);
@@ -337,11 +333,6 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     }
                     env.set(IN_FRAMES, null);
                     env.set(RUNS, null);
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    // do nothing
                 }
 
                 // creates a new run from runs that can fit in memory.

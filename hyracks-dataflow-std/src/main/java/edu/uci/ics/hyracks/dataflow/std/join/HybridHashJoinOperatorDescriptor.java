@@ -20,7 +20,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -43,6 +42,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComp
 import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final String JOINER0 = "joiner0";
@@ -132,7 +133,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
 
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private InMemoryHashJoin joiner0;
                 private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx, rd0);
                 ITuplePartitionComputer hpc0 = new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)
@@ -145,11 +146,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private FileChannel[] channels;
                 private int memoryForHashtable;
                 private int B;
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
 
                 @Override
                 public void close() throws HyracksDataException {
@@ -345,7 +341,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
 
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private InMemoryHashJoin joiner0;
                 private final FrameTupleAccessor accessor1 = new FrameTupleAccessor(ctx, rd1);
                 private ITuplePartitionComputerFactory hpcf0 = new FieldHashPartitionComputerFactory(keys0,
@@ -358,7 +354,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private final FrameTupleAppender ftap = new FrameTupleAppender(ctx);
                 private final ByteBuffer inBuffer = ctx.getResourceManager().allocateFrame();
                 private final ByteBuffer outBuffer = ctx.getResourceManager().allocateFrame();
-                private IFrameWriter writer;
                 private FileChannel[] channelsR;
                 private FileChannel[] channelsS;
                 private File filesS[];
@@ -547,14 +542,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     env.set(MEM_HASHTABLE, null);
                     env.set(NUM_PARTITION, null);
 
-                }
-
-                @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    if (index != 0) {
-                        throw new IllegalStateException();
-                    }
-                    this.writer = writer;
                 }
 
                 @Override

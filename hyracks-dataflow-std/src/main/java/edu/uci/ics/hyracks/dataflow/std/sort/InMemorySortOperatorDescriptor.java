@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -35,6 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
@@ -82,7 +82,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            IOperatorNodePushable op = new IOperatorNodePushable() {
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private List<ByteBuffer> buffers;
 
                 private final FrameTupleAccessor fta1 = new FrameTupleAccessor(ctx, recordDescriptors[0]);
@@ -206,11 +206,6 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
-
-                @Override
                 public void flush() throws HyracksDataException {
                 }
             };
@@ -231,7 +226,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
-                public void open() throws HyracksDataException {
+                public void initialize() throws HyracksDataException {
                     List<ByteBuffer> buffers = (List<ByteBuffer>) env.get(BUFFERS);
                     long[] tPointers = (long[]) env.get(TPOINTERS);
                     FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptors[0]);
@@ -265,11 +260,6 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                     frame.position(0);
                     frame.limit(frame.capacity());
                     writer.nextFrame(frame);
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    // do nothing
                 }
             };
             return op;

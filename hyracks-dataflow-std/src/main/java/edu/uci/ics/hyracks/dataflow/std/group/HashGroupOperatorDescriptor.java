@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -31,6 +30,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
@@ -77,7 +77,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx,
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
-            return new IOperatorNodePushable() {
+            return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private GroupingHashTable table;
 
                 @Override
@@ -102,11 +102,6 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-                    throw new IllegalArgumentException();
-                }
-
-                @Override
                 public void flush() throws HyracksDataException {
                 }
             };
@@ -126,17 +121,12 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
-                public void open() throws HyracksDataException {
+                public void initialize() throws HyracksDataException {
                     GroupingHashTable table = (GroupingHashTable) env.get(HASHTABLE);
                     writer.open();
                     table.write(writer);
                     writer.close();
                     env.set(HASHTABLE, null);
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    // do nothing
                 }
             };
         }

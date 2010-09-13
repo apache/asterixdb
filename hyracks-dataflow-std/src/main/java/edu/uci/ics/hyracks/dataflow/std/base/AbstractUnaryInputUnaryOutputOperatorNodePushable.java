@@ -12,20 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package edu.uci.ics.hyracks.dataflow.std.base;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface IOperatorNodePushable {
-    public void initialize() throws HyracksDataException;
+public abstract class AbstractUnaryInputUnaryOutputOperatorNodePushable extends AbstractUnaryOutputOperatorNodePushable
+        implements IFrameWriter {
+    @Override
+    public final IFrameWriter getInputFrameWriter(int index) {
+        return this;
+    }
 
-    public void deinitialize() throws HyracksDataException;
-
-    public int getInputArity();
-
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
-
-    public IFrameWriter getInputFrameWriter(int index);
+    @Override
+    public final int getInputArity() {
+        return 1;
+    }
 }
