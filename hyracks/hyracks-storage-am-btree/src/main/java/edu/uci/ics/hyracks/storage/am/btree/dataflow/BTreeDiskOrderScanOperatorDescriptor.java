@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
 
 public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
@@ -37,10 +36,10 @@ public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorD
 			IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId,
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, 
-			IFieldAccessorFactory[] fieldAccessorFactories, IBinaryComparatorFactory[] comparatorFactories) {
+			int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
 		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
-				leafFactory, fieldAccessorFactories, comparatorFactories);
+				leafFactory, fieldCount, comparatorFactories);
 	}
 	
 	@Override

@@ -67,7 +67,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	public int findSlot(ITupleReference tuple, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, boolean exact) {				
 		if(frame.getTupleCount() <= 0) encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_SLOT);
 								
-		frameTuple.setFieldCount(multiCmp.getFields().length);
+		frameTuple.setFieldCount(multiCmp.getFieldCount());
 		
 	    int prefixMid;
 	    int prefixBegin = 0;

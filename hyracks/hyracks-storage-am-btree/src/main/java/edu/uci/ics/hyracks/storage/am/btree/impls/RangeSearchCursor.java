@@ -134,7 +134,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 		// TODO: can be done more efficiently with binary search but this needs some thinking/refactoring
 		RangePredicate pred = (RangePredicate)searchPred;
 		MultiComparator cmp = pred.getComparator();
-		frameTuple.setFieldCount(cmp.getFields().length);
+		frameTuple.setFieldCount(cmp.getFieldCount());
 		if(searchPred.isForward()) {
 			ITupleReference lowKey = pred.getLowKey();			
 			

@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
@@ -58,30 +57,30 @@ final class BTreeOpHelper {
     }
 
     void init() throws Exception {
-        IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
+    	
+    	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
 
         File f = new File(opDesc.getBtreeFileName());
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
-
+        
         if (!f.exists() && !createBTree) {
-            throw new Exception("Trying to open btree from file " + opDesc.getBtreeFileName()
-                    + " but file doesn't exist.");
+            throw new Exception("Trying to open btree from file " + opDesc.getBtreeFileName() + " but file doesn't exist.");
         }
-
+        
         try {
             FileInfo fi = new FileInfo(opDesc.getBtreeFileId(), raf);
             fileManager.registerFile(fi);
         } catch (Exception e) {
         }
-
+        
         interiorFrame = opDesc.getInteriorFactory().getFrame();
         leafFrame = opDesc.getLeafFactory().getFrame();
 
         BTreeRegistry btreeRegistry = opDesc.getBtreeRegistryProvider().getBTreeRegistry();
         btree = btreeRegistry.get(opDesc.getBtreeFileId());
         if (btree == null) {
-
+        	
             // create new btree and register it            
             btreeRegistry.lock();
             try {
@@ -89,20 +88,14 @@ final class BTreeOpHelper {
                 btree = btreeRegistry.get(opDesc.getBtreeFileId());
                 if (btree == null) {
                     // this thread should create and register the btee
-
-                    // start by building the multicomparator from the factories
-                    IFieldAccessor[] fields = new IFieldAccessor[opDesc.getFieldAccessorFactories().length];
-                    for (int i = 0; i < opDesc.getFieldAccessorFactories().length; i++) {
-                        fields[i] = opDesc.getFieldAccessorFactories()[i].getFieldAccessor();
-                    }
-
+                	                   
                     IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getComparatorFactories().length];
                     for (int i = 0; i < opDesc.getComparatorFactories().length; i++) {
                         comparators[i] = opDesc.getComparatorFactories()[i].createBinaryComparator();
                     }
 
-                    MultiComparator cmp = new MultiComparator(comparators, fields);
-
+                    MultiComparator cmp = new MultiComparator(opDesc.getFieldCount(), comparators);
+                    
                     btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
                     if (createBTree) {
                         MetaDataFrame metaFrame = new MetaDataFrame();

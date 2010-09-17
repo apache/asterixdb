@@ -15,10 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -98,7 +103,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public void compact(MultiComparator cmp) {
         resetSpaceParams();
         
-        frameTuple.setFieldCount(cmp.getFields().length);
+        frameTuple.setFieldCount(cmp.getFieldCount());
         
         int tupleCount = buf.getInt(tupleCountOff);
         
@@ -161,10 +166,10 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
             
             if(exactDelete) {                
-                frameTuple.setFieldCount(cmp.getFields().length);
+                frameTuple.setFieldCount(cmp.getFieldCount());
                 frameTuple.resetByTupleIndex(this, tupleIndex);
                 
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
+                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount()-1, cmp.getFieldCount() - cmp.getKeyFieldCount());
                 if(comparison != 0) {
                 	throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }                                  
@@ -278,29 +283,6 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());       
     }
     
-    public void verifyPrefixes(MultiComparator cmp) {
-    	int numPrefixes = buf.getInt(prefixTupleCountOff);
-    	int totalPrefixBytes = 0;
-    	for(int i = 0; i < numPrefixes; i++) {
-    		int prefixSlotOff = slotManager.getPrefixSlotOff(i);
-    		int prefixSlot = buf.getInt(prefixSlotOff);
-    		
-    		int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-    		int prefixTupleOff = slotManager.decodeSecondSlotField(prefixSlot);
-    		
-    		System.out.print("VERIFYING " + i + " : " + numPrefixFields + " " + prefixTupleOff + " ");
-    		int tupleOffRunner = prefixTupleOff;
-    		for(int j = 0; j < numPrefixFields; j++) {
-    			System.out.print(buf.getInt(prefixTupleOff+j*4) + " ");
-    			int length = cmp.getFields()[j].getLength(buf.array(), tupleOffRunner);
-    			tupleOffRunner += length;
-    			totalPrefixBytes += length;    			
-    		}
-    		System.out.println();
-    	}    	        
-    	System.out.println("VER TOTALPREFIXBYTES: " + totalPrefixBytes + " " + numPrefixes);
-    }
-    
     @Override
     public void update(int rid, ITupleReference tuple) throws Exception {
         // TODO Auto-generated method stub
@@ -323,13 +305,17 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
-    public String printKeys(MultiComparator cmp, int fieldCount) {      
+    public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException {   
     	StringBuilder strBuilder = new StringBuilder();		
 		int tupleCount = buf.getInt(tupleCountOff);
+		frameTuple.setFieldCount(fields.length);
 		for(int i = 0; i < tupleCount; i++) {						
-			frameTuple.resetByTupleIndex(this, i);			
-			for(int j = 0; j < cmp.getKeyLength(); j++) {
-				strBuilder.append(cmp.getFields()[j].print(buf.array(), frameTuple.getFieldStart(j)) + " ");	
+			frameTuple.resetByTupleIndex(this, i);												
+			for(int j = 0; j < cmp.getKeyFieldCount(); j++) {
+				ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
+				DataInput dataIn = new DataInputStream(inStream);
+				Object o = fields[j].deserialize(dataIn);
+				strBuilder.append(o.toString() + " ");				
 			}
 			strBuilder.append(" | ");				
 		}
@@ -428,7 +414,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     	
     	FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame)rightFrame;
     	
-    	frameTuple.setFieldCount(cmp.getFields().length);
+    	frameTuple.setFieldCount(cmp.getFieldCount());
     	
     	// before doing anything check if key already exists
 		int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, true);
@@ -546,9 +532,9 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		// set split key to be highest value in left page		
 		frameTuple.resetByTupleIndex(this, getTupleCount()-1);
 		
-		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 		splitKey.initData(splitKeySize);
-		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyLength(), splitKey.getBuffer(), 0);
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
 				
 		return 0;
     }

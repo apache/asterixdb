@@ -37,41 +37,45 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private BTreeOpHelper btreeOpHelper;
     private boolean isForward;
-    private ITupleReference lowKey;
-    private ITupleReference highKey;
-    private int searchKeyFields;
+    private ITupleReferenceFactory[] searchKeys;    
+    private int searchKeyFieldCount;
 
     public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            boolean isForward, ITupleReference lowKey, ITupleReference highKey, int searchKeyFields) {
+            boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
         this.isForward = isForward;
-        this.lowKey = lowKey;
-        this.highKey = highKey;
-        this.searchKeyFields = searchKeyFields;
+        this.searchKeys = searchKeys;
+        this.searchKeyFieldCount = searchKeyFields;
     }
-
+    
     @Override
     public void initialize() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        BTree btree = btreeOpHelper.getBTree();
-        IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
-        IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
+        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();        
         IHyracksContext ctx = btreeOpHelper.getHyracksContext();
 
         IBTreeLeafFrame cursorFrame = opDesc.getLeafFactory().getFrame();
         IBTreeCursor cursor = new RangeSearchCursor(cursorFrame);
 
+        BTree btree = null;        
         try {
-            btreeOpHelper.init();
+        	btreeOpHelper.init();
             btreeOpHelper.fill();
+            btree = btreeOpHelper.getBTree();
 
+            IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
+            IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
+            
             // construct range predicate
-            assert (searchKeyFields <= btree.getMultiComparator().getKeyLength());
-            IBinaryComparator[] searchComparators = new IBinaryComparator[searchKeyFields];
-            for (int i = 0; i < searchKeyFields; i++) {
-                searchComparators[i] = btree.getMultiComparator().getComparators()[i];
+            assert (searchKeyFieldCount <= btree.getMultiComparator().getKeyFieldCount());
+            IBinaryComparator[] searchComparators = new IBinaryComparator[searchKeyFieldCount];
+            for (int i = 0; i < searchKeyFieldCount; i++) {                
+            	searchComparators[i] = btree.getMultiComparator().getComparators()[i];
             }
-            MultiComparator searchCmp = new MultiComparator(searchComparators, btree.getMultiComparator().getFields());
+            MultiComparator searchCmp = new MultiComparator(btree.getMultiComparator().getFieldCount(), searchComparators);
+            
+            ITupleReference lowKey = searchKeys[0].createTuple(ctx);
+            ITupleReference highKey = searchKeys[1].createTuple(ctx);
+            
             RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, searchCmp);
 
             btree.search(cursor, rangePred, leafFrame, interiorFrame);
@@ -85,7 +89,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx);
         appender.reset(frame, true);
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
 
         try {

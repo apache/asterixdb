@@ -61,7 +61,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
-		frameTuple.setFieldCount(cmp.getFields().length);
+		frameTuple.setFieldCount(cmp.getFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
 		boolean isDuplicate = true;
 				
@@ -99,7 +99,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	@Override
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception {
 				
-		frameTuple.setFieldCount(cmp.getFields().length);
+		frameTuple.setFieldCount(cmp.getFieldCount());
 		
 		// before doing anything check if key already exists
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
@@ -151,9 +151,9 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByOffset(buf, tupleOff);
 		
-		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 		splitKey.initData(splitKeySize);				
-		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyLength(), splitKey.getBuffer(), 0);
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
 		
 		return 0;
 	}

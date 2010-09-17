@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -31,7 +30,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
@@ -47,7 +45,6 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -57,9 +54,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
-import edu.uci.ics.hyracks.storage.am.btree.types.UTF8StringAccessor;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -125,15 +119,12 @@ public class BTreeTest {
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();        
-        
-        IFieldAccessor[] fields = new IFieldAccessor[2];
-        fields[0] = new Int32Accessor(); // key field
-        fields[1] = new Int32Accessor(); // value field
-        
-        int keyLen = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+               
+        int fieldCount = 2;
+        int keyFieldCount = 1;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(2, cmps);
         
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
@@ -149,7 +140,7 @@ public class BTreeTest {
         IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE};
@@ -247,27 +238,40 @@ public class BTreeTest {
  
         IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
-        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(-1000, lkdos);
+        // build low and high keys                       
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		DataOutput kdos = ktb.getDataOutput();
+		
+		ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+		IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx, keyDesc);
+		keyAccessor.reset(frame);
+		
+		appender.reset(frame, true);
+		
+		// build and append low key
+		ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(-1000, kdos);
+    	ktb.addFieldEndOffset();    	
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
     	
-    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(1000, hkdos);
-    	    	        
-        byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
+    	// build and append high key
+    	ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(1000, kdos);
+    	ktb.addFieldEndOffset();
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
-        
+    	// create tuplereferences for search keys
+    	FrameTupleReference lowKey = new FrameTupleReference();
+    	lowKey.reset(keyAccessor, 0);
+    	
+		FrameTupleReference highKey = new FrameTupleReference();
+		highKey.reset(keyAccessor, 1);
+    	
+		
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
+        MultiComparator searchCmp = new MultiComparator(fieldCount, searchCmps);
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
@@ -320,17 +324,13 @@ public class BTreeTest {
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
-        
-        IFieldAccessor[] fields = new IFieldAccessor[3];
-        fields[0] = new Int32Accessor(); // key field 1
-        fields[1] = new Int32Accessor(); // key field 2
-        fields[2] = new Int32Accessor(); // value field        
-        
-        int keyLen = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+         
+        int fieldCount = 3;
+        int keyFieldCount = 2;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
 
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
@@ -346,7 +346,7 @@ public class BTreeTest {
         IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, 
@@ -412,27 +412,41 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");        
         IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
-        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(-3, lkdos);
-    	
-    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(3, hkdos);
-    	
-        byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
+        // build low and high keys             
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		DataOutput kdos = ktb.getDataOutput();
+		
+		ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+		IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx, keyDesc);
+		keyAccessor.reset(frame);
+		
+		appender.reset(frame, true);
+		
+		// build and append low key
+		ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(-3, kdos);
+    	ktb.addFieldEndOffset();    	
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
+    	
+    	// build and append high key
+    	ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(3, kdos);
+    	ktb.addFieldEndOffset();
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
         
+    	// create tuplereferences for search keys
+    	FrameTupleReference lowKey = new FrameTupleReference();
+    	lowKey.reset(keyAccessor, 0);
+    	
+		FrameTupleReference highKey = new FrameTupleReference();
+		highKey.reset(keyAccessor, 1);
+		
+		
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
-        MultiComparator searchCmp = new MultiComparator(searchCmps, fields); // use only a single comparator for searching
+        MultiComparator searchCmp = new MultiComparator(fieldCount, searchCmps); // use only a single comparator for searching
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
@@ -486,15 +500,12 @@ public class BTreeTest {
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
-
-    	IFieldAccessor[] fields = new IFieldAccessor[2];
-    	fields[0] = new UTF8StringAccessor(); // key        
-    	fields[1] = new UTF8StringAccessor(); // value
-    	
-    	int keyLen = 1;
-    	IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        
+    	int fieldCount = 2;
+    	int keyFieldCount = 1;
+    	IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
     	cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    	MultiComparator cmp = new MultiComparator(cmps, fields);
+    	MultiComparator cmp = new MultiComparator(fieldCount, cmps);
     	
     	BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
     	btree.create(fileId, leafFrame, metaFrame);
@@ -506,7 +517,7 @@ public class BTreeTest {
     	IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
@@ -569,27 +580,40 @@ public class BTreeTest {
         
         IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
                 
-        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-    	UTF8StringSerializerDeserializer.INSTANCE.serialize("cbf", lkdos);
+        // build low and high keys                       
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		DataOutput kdos = ktb.getDataOutput();
+		
+		ISerializerDeserializer[] keyDescSers = { UTF8StringSerializerDeserializer.INSTANCE };
+		RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+		IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx, keyDesc);
+		keyAccessor.reset(frame);
+		
+		appender.reset(frame, true);
+		
+		// build and append low key
+		ktb.reset();
+		UTF8StringSerializerDeserializer.INSTANCE.serialize("cbf", kdos);
+    	ktb.addFieldEndOffset();    	
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
     	
-    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-    	UTF8StringSerializerDeserializer.INSTANCE.serialize("cc7", hkdos);
+    	// build and append high key
+    	ktb.reset();
+    	UTF8StringSerializerDeserializer.INSTANCE.serialize("cc7", kdos);
+    	ktb.addFieldEndOffset();
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
         
-    	byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
+    	// create tuplereferences for search keys
+    	FrameTupleReference lowKey = new FrameTupleReference();
+    	lowKey.reset(keyAccessor, 0);
+    	
+		FrameTupleReference highKey = new FrameTupleReference();
+		highKey.reset(keyAccessor, 1);
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
-        
+		
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
+        MultiComparator searchCmp = new MultiComparator(fieldCount, searchCmps);
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
@@ -644,15 +668,12 @@ public class BTreeTest {
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();   
         
-        IFieldAccessor[] fields = new IFieldAccessor[2];
-        fields[0] = new UTF8StringAccessor(); // key        
-        fields[1] = new UTF8StringAccessor(); // value
-
-        int keyLen = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        int fieldCount = 2;
+        int keyFieldCount = 1;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
 
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
@@ -664,7 +685,7 @@ public class BTreeTest {
         IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
@@ -799,19 +820,15 @@ public class BTreeTest {
         
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();          
+        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();       
         
-        IFieldAccessor[] fields = new IFieldAccessor[3];
-        fields[0] = new Int32Accessor();
-        fields[1] = new Int32Accessor();
-        fields[2] = new Int32Accessor();
-        
-        int keyLen = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        int fieldCount = 3;
+        int keyFieldCount = 2;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
 
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
@@ -823,7 +840,7 @@ public class BTreeTest {
         IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -868,27 +885,40 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");
         IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
         
-        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(44444, lkdos);
+        // build low and high keys                       
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(1);
+		DataOutput kdos = ktb.getDataOutput();
+		
+		ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+		IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx, keyDesc);
+		keyAccessor.reset(frame);
+		
+		appender.reset(frame, true);
+		
+		// build and append low key
+		ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(44444, kdos);
+    	ktb.addFieldEndOffset();    	
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
     	
-    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(44500, hkdos);
-    	    	        
-    	byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
+    	// build and append high key
+    	ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(44500, kdos);
+    	ktb.addFieldEndOffset();
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
+    	// create tuplereferences for search keys
+    	FrameTupleReference lowKey = new FrameTupleReference();
+    	lowKey.reset(keyAccessor, 0);
+    	
+		FrameTupleReference highKey = new FrameTupleReference();
+		highKey.reset(keyAccessor, 1);
+		              
     	        
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
+        MultiComparator searchCmp = new MultiComparator(fieldCount, searchCmps);
         
         // TODO: check when searching backwards
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
@@ -940,18 +970,13 @@ public class BTreeTest {
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();
-
-        int keyLen = 2;
         
-        IFieldAccessor[] fields = new IFieldAccessor[3];
-        fields[0] = new Int32Accessor();
-        fields[1] = new Int32Accessor();
-        fields[2] = new Int32Accessor();
-
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        int fieldCount = 3;
+        int keyFieldCount = 2;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();        
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
 
         BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
@@ -963,7 +988,7 @@ public class BTreeTest {
         IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer frame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
 		ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -1066,30 +1091,45 @@ public class BTreeTest {
         print("RANGE SEARCH:\n");
         IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
 
-        ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(12, lkdos);
-    	IntegerSerializerDeserializer.INSTANCE.serialize(12, lkdos);
+        // build low and high keys                       
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		DataOutput kdos = ktb.getDataOutput();
+		
+		ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+		RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+		IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx, keyDesc);
+		keyAccessor.reset(frame);
+		
+		appender.reset(frame, true);
+		
+		// build and append low key
+		ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(12, kdos);
+    	ktb.addFieldEndOffset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(12, kdos);
+    	ktb.addFieldEndOffset();    	
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
     	
-    	ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-    	DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-    	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);
-    	IntegerSerializerDeserializer.INSTANCE.serialize(19, hkdos);    	        
-    	       
-        byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
+    	// build and append high key
+    	ktb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(19, kdos);
+    	ktb.addFieldEndOffset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(19, kdos);
+    	ktb.addFieldEndOffset();
+    	appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
+    	// create tuplereferences for search keys
+    	FrameTupleReference lowKey = new FrameTupleReference();
+    	lowKey.reset(keyAccessor, 0);
+    	
+		FrameTupleReference highKey = new FrameTupleReference();
+		highKey.reset(keyAccessor, 1);
+		               
         
         IBinaryComparator[] searchCmps = new IBinaryComparator[2];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         searchCmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(searchCmps, fields);
+        MultiComparator searchCmp = new MultiComparator(fieldCount, searchCmps);
                 
         //print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         

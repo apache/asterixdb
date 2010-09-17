@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
@@ -58,7 +57,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     	if(ratio < ratioThreshold) return false;    	
     	
         IBinaryComparator[] cmps = cmp.getComparators();
-        IFieldAccessor[] fields = cmp.getFields();
+        int fieldCount = cmp.getKeyFieldCount();
         
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
@@ -147,7 +146,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         uncompressedTupleCount = 0;
         
         FieldPrefixTupleReference tupleToWrite = new FieldPrefixTupleReference();
-        tupleToWrite.setFieldCount(fields.length);
+        tupleToWrite.setFieldCount(fieldCount);
         
         SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
         
@@ -165,10 +164,10 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             		//System.out.println("PROCESSING KEYPARTITION: " + kpIndex + " RANGE: " + keyPartitions.get(kpIndex).firstRecSlotNum + " " + keyPartitions.get(kpIndex).lastRecSlotNum + " FIELDSTOCOMPRESS: " + numFieldsToCompress);
             		
             		FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference();
-            		prevTuple.setFieldCount(fields.length);
+            		prevTuple.setFieldCount(fieldCount);
             		
             		FieldPrefixTupleReference tuple = new FieldPrefixTupleReference();
-            		tuple.setFieldCount(fields.length);
+            		tuple.setFieldCount(fieldCount);
             		            	
                     for(int i = tupleIndex + 1; i <= keyPartitions.get(kpIndex).lastTupleIndex; i++) {
                     	prevTuple.resetByTupleIndex(frame, i - 1);
@@ -218,7 +217,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                         	        int currTupleIndex = segmentStart + j;
                                     tupleToWrite.resetByTupleIndex(frame, currTupleIndex);
                                     newTupleSlots[tupleCount - 1 - currTupleIndex] = slotManager.encodeSlotFields(prefixTupleIndex, tupleFreeSpace);                                    
-                                    tupleFreeSpace += tupleWriter.writeTupleFields(tupleToWrite, numFieldsToCompress, fields.length - numFieldsToCompress, byteBuffer, tupleFreeSpace);
+                                    tupleFreeSpace += tupleWriter.writeTupleFields(tupleToWrite, numFieldsToCompress, fieldCount - numFieldsToCompress, byteBuffer, tupleFreeSpace);
                                 }
                         	    
                         	    prefixTupleIndex++;
@@ -309,7 +308,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     // the occurrenceThreshold determines the minimum number of tuples that must share a common prefix in order for us to consider compressing them        
     private ArrayList<KeyPartition> getKeyPartitions(FieldPrefixNSMLeafFrame frame, MultiComparator cmp, int occurrenceThreshold) {        
     	IBinaryComparator[] cmps = cmp.getComparators();
-        IFieldAccessor[] fields = cmp.getFields();
+        int fieldCount = cmp.getKeyFieldCount();
         
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();
@@ -321,10 +320,10 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         keyPartitions.add(kp);
         
         FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference();
-		prevTuple.setFieldCount(fields.length);
+		prevTuple.setFieldCount(fieldCount);
 		
 		FieldPrefixTupleReference tuple = new FieldPrefixTupleReference();
-		tuple.setFieldCount(fields.length);
+		tuple.setFieldCount(fieldCount);
 		
 		SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
 		

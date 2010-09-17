@@ -38,13 +38,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.types.Int32Accessor;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -128,19 +126,17 @@ public class BTreeFieldPrefixNSMTest {
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
-                
-        int numFields = 3;
-        IFieldAccessor[] fields = new IFieldAccessor[numFields];
-        fields[0] = new Int32Accessor(); // first key field
-        fields[1] = new Int32Accessor(); // second key field
-        fields[2] = new Int32Accessor(); // third key field
         
-        int keyLen = 3;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
+        int fieldCount = 3;
+        int keyFieldCount = 3;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator cmp = new MultiComparator(cmps, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
+        
+        // just for printing
+        ISerializerDeserializer[] sers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -190,16 +186,16 @@ public class BTreeFieldPrefixNSMTest {
         		savedFields[i][2] = c;
         		            
         		if(rnd.nextInt() % compactFreq == 0) {
-        			before = frame.printKeys(cmp, fields.length);
+        			before = frame.printKeys(cmp, sers);
         			frame.compact(cmp);
-        			after = frame.printKeys(cmp, fields.length);
+        			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
         		}
         		
         		if(rnd.nextInt() % compressFreq == 0) {
-        			before = frame.printKeys(cmp, fields.length);
+        			before = frame.printKeys(cmp, sers);
         			frame.compress(cmp);
-        			after = frame.printKeys(cmp, fields.length);
+        			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
         		}
         	}
@@ -217,16 +213,16 @@ public class BTreeFieldPrefixNSMTest {
         		}
         		
         		if(rnd.nextInt() % compactFreq == 0) {
-        			before = frame.printKeys(cmp, fields.length);
+        			before = frame.printKeys(cmp, sers);
         			frame.compact(cmp);
-        			after = frame.printKeys(cmp, fields.length);
+        			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
         		}
         		
         		if(rnd.nextInt() % compressFreq == 0) {
-        			before = frame.printKeys(cmp, fields.length);
+        			before = frame.printKeys(cmp, sers);
         			frame.compress(cmp);
-        			after = frame.printKeys(cmp, fields.length);
+        			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
         		}  
         	}
