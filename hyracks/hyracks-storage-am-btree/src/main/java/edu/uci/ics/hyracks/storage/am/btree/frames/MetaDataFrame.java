@@ -27,8 +27,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class MetaDataFrame implements IBTreeMetaDataFrame {
         
-    protected static final int numRecordsOff = 0;             
-    protected static final int freeSpaceOff = numRecordsOff + 4;
+    protected static final int tupleCountOff = 0;             
+    protected static final int freeSpaceOff = tupleCountOff + 4;
     protected static final int maxPageOff = freeSpaceOff + 4;
     protected static final byte levelOff = maxPageOff + 1;
     protected static final byte nextPageOff = maxPageOff + 8;
@@ -45,13 +45,13 @@ public class MetaDataFrame implements IBTreeMetaDataFrame {
     }
         
     public int getFreePage() {                
-        int numRecords = buf.getInt(numRecordsOff); 
-        if(numRecords > 0) {
+        int tupleCount = buf.getInt(tupleCountOff); 
+        if(tupleCount > 0) {
             // return the last page from the linked list of free pages
             // TODO: this is a dumb policy, but good enough for now
             int lastPageOff = buf.getInt(freeSpaceOff) - 4;
             buf.putInt(freeSpaceOff, lastPageOff);
-            buf.putInt(numRecordsOff, numRecords - 1);
+            buf.putInt(tupleCountOff, tupleCount - 1);
             return buf.getInt(lastPageOff);
         }
         else {
@@ -71,7 +71,7 @@ public class MetaDataFrame implements IBTreeMetaDataFrame {
         int freeSpace = buf.getInt(freeSpaceOff);
         buf.putInt(freeSpace, freePage);
         buf.putInt(freeSpaceOff, freeSpace + 4);
-        buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class MetaDataFrame implements IBTreeMetaDataFrame {
     @Override
     public void initBuffer(int level) {
         buf.putInt(freeSpaceOff, nextPageOff + 4);
-        buf.putInt(numRecordsOff, 0);
+        buf.putInt(tupleCountOff, 0);
         buf.putInt(levelOff, level);
         buf.putInt(nextPageOff, -1);
     }

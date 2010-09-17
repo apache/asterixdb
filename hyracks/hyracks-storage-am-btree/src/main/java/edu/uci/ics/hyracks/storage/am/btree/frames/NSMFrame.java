@@ -21,23 +21,22 @@ import java.util.Collections;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.NSMFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SimpleTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SimpleTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class NSMFrame implements IBTreeFrame {
 	
 	protected static final int pageLsnOff = 0;								// 0
-	protected static final int numRecordsOff = pageLsnOff + 4;				// 4
-	protected static final int freeSpaceOff = numRecordsOff + 4;			// 8
+	protected static final int tupleCountOff = pageLsnOff + 4;				// 4
+	protected static final int freeSpaceOff = tupleCountOff + 4;			// 8
 	protected static final int totalFreeSpaceOff = freeSpaceOff + 4;		// 16
 	protected static final byte levelOff = totalFreeSpaceOff + 4; 	
 	protected static final byte smFlagOff = levelOff + 1;	
@@ -46,7 +45,8 @@ public abstract class NSMFrame implements IBTreeFrame {
 	protected ByteBuffer buf = null;
 	protected ISlotManager slotManager;
 	
-	protected SelfDescTupleReference pageTuple = new SelfDescTupleReference();
+	protected SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
+	protected SimpleTupleReference frameTuple = new SimpleTupleReference();
 	
 	public NSMFrame() {
 		this.slotManager = new OrderedSlotManager();
@@ -55,7 +55,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 	@Override
 	public void initBuffer(byte level) {
 		buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn during creation
-		buf.putInt(numRecordsOff, 0);	
+		buf.putInt(tupleCountOff, 0);	
 		resetSpaceParams();
 		buf.put(levelOff, level);
 		buf.put(smFlagOff, (byte)0);
@@ -116,54 +116,59 @@ public abstract class NSMFrame implements IBTreeFrame {
 	
 	@Override
 	public void compact(MultiComparator cmp) {		
-		resetSpaceParams();		
+		resetSpaceParams();
+		frameTuple.setFieldCount(cmp.getFields().length);	
 		
-		int numRecords = buf.getInt(numRecordsOff);
-		int freeSpace = buf.getInt(freeSpaceOff);
-		byte[] data = buf.array();
+		int tupleCount = buf.getInt(tupleCountOff);
+		int freeSpace = buf.getInt(freeSpaceOff);		
 		
-		ArrayList<SlotOffRecOff> sortedRecOffs = new ArrayList<SlotOffRecOff>();
-		sortedRecOffs.ensureCapacity(numRecords);
-		for(int i = 0; i < numRecords; i++) {			
+		ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
+		sortedTupleOffs.ensureCapacity(tupleCount);
+		for(int i = 0; i < tupleCount; i++) {			
 			int slotOff = slotManager.getSlotOff(i);
-			int recOff = slotManager.getRecOff(slotOff);
-			sortedRecOffs.add(new SlotOffRecOff(slotOff, recOff));
+			int tupleOff = slotManager.getTupleOff(slotOff);
+			sortedTupleOffs.add(new SlotOffTupleOff(i, slotOff, tupleOff));
 		}
-		Collections.sort(sortedRecOffs);
+		Collections.sort(sortedTupleOffs);
 		
-		for(int i = 0; i < sortedRecOffs.size(); i++) {
-			int recOff = sortedRecOffs.get(i).recOff;
-			int recSize = cmp.getRecordSize(data, recOff);
-			System.arraycopy(data, recOff, data, freeSpace, recSize);
-			slotManager.setSlot(sortedRecOffs.get(i).slotOff, freeSpace);
-			freeSpace += recSize;
+		for(int i = 0; i < sortedTupleOffs.size(); i++) {
+			int tupleOff = sortedTupleOffs.get(i).tupleOff;
+			frameTuple.resetByOffset(buf, tupleOff);
+			
+            int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount()-1) + frameTuple.getFieldLength(frameTuple.getFieldCount()-1);
+            int tupleLength = tupleEndOff - tupleOff;
+            System.arraycopy(buf.array(), tupleOff, buf.array(), freeSpace, tupleLength);
+						
+			slotManager.setSlot(sortedTupleOffs.get(i).slotOff, freeSpace);
+			freeSpace += tupleLength;
 		}
 		
 		buf.putInt(freeSpaceOff, freeSpace);
-		buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - numRecords * slotManager.getSlotSize());				
+		buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());				
 	}
 
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {		
-		int slotOff = slotManager.findSlot(tuple, cmp, true);
+		frameTuple.setFieldCount(cmp.getFields().length);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
 		if(slotOff < 0) {
 			throw new BTreeException("Key to be deleted does not exist.");
 		}
 		else {
 			if(exactDelete) {
 				// check the non-key columns for equality by byte-by-byte comparison
-				int storedRecOff = slotManager.getRecOff(slotOff);			
-				pageTuple.setFields(cmp.getFields());
-				pageTuple.reset(buf, storedRecOff);
+				int tupleOff = slotManager.getTupleOff(slotOff);
+				frameTuple.resetByOffset(buf, tupleOff);
 				
-				int comparison = cmp.fieldRangeCompare(tuple, pageTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
+				int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
                 if(comparison != 0) {
-                	throw new BTreeException("Cannot delete record. Byte-by-byte comparison failed to prove equality.");
+                	throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }										
 			}
 			
-			int recOff = slotManager.getRecOff(slotOff);
-			int recSize = cmp.getRecordSize(buf.array(), recOff);
+			int tupleOff = slotManager.getTupleOff(slotOff);
+			frameTuple.resetByOffset(buf, tupleOff);
+			int tupleSize = tupleWriter.bytesRequired(frameTuple);
 			
 			// perform deletion (we just do a memcpy to overwrite the slot)
 			int slotStartOff = slotManager.getSlotEndOff();
@@ -171,16 +176,16 @@ public abstract class NSMFrame implements IBTreeFrame {
 			System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
 						
 			// maintain space information
-			buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) - 1);
-			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + recSize + slotManager.getSlotSize());			
+			buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
+			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());			
 		}
 	}
 	
 	@Override
 	public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {				
-		int tupleSpace = spaceNeededForTuple(tuple);		
-		if(tupleSpace + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) - (buf.getInt(numRecordsOff) * slotManager.getSlotSize()) ) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-		else if(tupleSpace + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
+		int bytesRequired = tupleWriter.bytesRequired(tuple);		
+		if(bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()) ) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+		else if(bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
 		else return SpaceStatus.INSUFFICIENT_SPACE;
 	}
 	
@@ -197,33 +202,16 @@ public abstract class NSMFrame implements IBTreeFrame {
 	
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-		int slotOff = slotManager.findSlot(tuple, cmp, false);		
+		frameTuple.setFieldCount(cmp.getFields().length);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);		
 		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));				
-		int bytesWritten = writeTupleFields(tuple, tuple.getFieldCount(), buf, buf.getInt(freeSpaceOff));
+		int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
 		
-		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
+		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
 		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());				
 	}
-	
-	// TODO: need to change these methods
-	protected int writeTupleFields(ITupleReference src, int numFields, ByteBuffer targetBuf, int targetOff) {
-		int runner = targetOff;		
-		for(int i = 0; i < numFields; i++) {
-			System.arraycopy(src.getFieldData(i), src.getFieldStart(i), targetBuf.array(), runner, src.getFieldLength(i));
-			runner += src.getFieldLength(i);
-		}
-		return runner - targetOff;
-	}
-	
-	protected int spaceNeededForTuple(ITupleReference src) {
-		int space = 0;
-		for(int i = 0; i < src.getFieldCount(); i++) {
-			space += src.getFieldLength(i);
-		}
-		return space;
-	}
-	
+		
 	@Override
 	public void update(int rid, ITupleReference tuple) throws Exception {
 		// TODO Auto-generated method stub
@@ -237,8 +225,8 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}		
 		
 	@Override
-	public int getNumRecords() {
-		return buf.getInt(numRecordsOff);
+	public int getTupleCount() {
+		return buf.getInt(tupleCountOff);
 	}
 
 	public ISlotManager getSlotManager() {
@@ -246,14 +234,15 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 	
 	@Override
-	public String printKeys(MultiComparator cmp) {		
+	public String printKeys(MultiComparator cmp, int fieldCount) {		
 		StringBuilder strBuilder = new StringBuilder();		
-		int numRecords = buf.getInt(numRecordsOff);
-		for(int i = 0; i < numRecords; i++) {			
-			int recOff = slotManager.getRecOff(slotManager.getSlotOff(i));
-			for(int j = 0; j < cmp.size(); j++) {				
-				strBuilder.append(cmp.getFields()[j].print(buf.array(), recOff) + " ");
-				recOff += cmp.getFields()[j].getLength(buf.array(), recOff);
+		frameTuple.setFieldCount(fieldCount);
+		int tupleCount = buf.getInt(tupleCountOff);
+		for(int i = 0; i < tupleCount; i++) {			
+			int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));			
+			frameTuple.resetByOffset(buf, tupleOff);			
+			for(int j = 0; j < cmp.getKeyLength(); j++) {
+				strBuilder.append(cmp.getFields()[j].print(buf.array(), frameTuple.getFieldStart(j)) + " ");				
 			}
 			strBuilder.append(" | ");				
 		}
@@ -262,8 +251,8 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 	
 	@Override
-	public int getRecordOffset(int slotNum) {
-		return slotManager.getRecOff(slotManager.getSlotStartOff() - slotNum * slotManager.getSlotSize());
+	public int getTupleOffset(int slotNum) {
+		return slotManager.getTupleOff(slotManager.getSlotStartOff() - slotNum * slotManager.getSlotSize());
 	}
 
 	@Override
@@ -292,12 +281,12 @@ public abstract class NSMFrame implements IBTreeFrame {
     }
     
     @Override
-    public IFieldIterator createFieldIterator() {
-    	return new NSMFieldIterator();
+    public IBTreeTupleReference createTupleReference() {
+    	return new SimpleTupleReference();
     }
     
     @Override
-	public void setPageTupleFields(IFieldAccessor[] fields) {
-		pageTuple.setFields(fields);
+	public void setPageTupleFieldCount(int fieldCount) {
+		frameTuple.setFieldCount(fieldCount);
 	}
 }

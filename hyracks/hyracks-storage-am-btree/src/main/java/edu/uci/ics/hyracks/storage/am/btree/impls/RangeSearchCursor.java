@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -27,20 +27,17 @@ import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 public class RangeSearchCursor implements IBTreeCursor {
 
 	private ISearchPredicate searchPred = null;	
-	private int recordNum = 0;
-	private int recordOffset = -1;
+	private int tupleIndex = 0;
 	private int fileId = -1;
 	private ICachedPage page = null;
 	private IBTreeLeafFrame frame = null;
 	private IBufferCache bufferCache = null;
 	
-	private IFieldIterator fieldIter;
-	
-	
+	private IBTreeTupleReference frameTuple;
+			
 	public RangeSearchCursor(IBTreeLeafFrame frame) {
 		this.frame = frame;
-		this.fieldIter = frame.createFieldIterator();
-		this.fieldIter.setFrame(frame);
+		this.frameTuple = frame.createTupleReference();
 	}
 	
 	@Override
@@ -50,9 +47,8 @@ public class RangeSearchCursor implements IBTreeCursor {
 		page = null;
 	}
 	
-	public IFieldIterator getFieldIterator() {
-		fieldIter.reset();
-		return fieldIter;
+	public ITupleReference getTuple() {
+		return frameTuple;
 	}
 	
 	@Override
@@ -62,7 +58,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 		
 	@Override
 	public boolean hasNext() throws Exception {
-		if(recordNum >= frame.getNumRecords()) {
+		if(tupleIndex >= frame.getTupleCount()) {
 			int nextLeafPage = -1;
 			if(searchPred.isForward()) {
 				nextLeafPage = frame.getNextLeaf();
@@ -81,7 +77,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 				page = nextLeaf;
 				frame.setPage(page);
 				
-				recordNum = 0;
+				tupleIndex = 0;
 			}
 			else {
 				return false;
@@ -93,12 +89,10 @@ public class RangeSearchCursor implements IBTreeCursor {
 		MultiComparator cmp = pred.getComparator();
 		if(searchPred.isForward()) {
 			ITupleReference highKey = pred.getHighKey();		
-			fieldIter.openRecSlotNum(recordNum);
-			//recordOffset = frame.getRecordOffset(recordNum);
+			frameTuple.resetByTupleIndex(frame, tupleIndex);
 									
-			if(highKey == null) return true;									
-			//if(cmp.compare(highKeys, 0, page.getBuffer().array(), recordOffset) < 0) {
-			if(cmp.compare(highKey, fieldIter) < 0) {
+			if(highKey == null) return true;
+			if(cmp.compare(highKey, frameTuple) < 0) {
 				return false;
 			}
 			else {
@@ -107,11 +101,10 @@ public class RangeSearchCursor implements IBTreeCursor {
 		}
 		else {
 			ITupleReference lowKey = pred.getLowKey();						
-			fieldIter.openRecSlotNum(frame.getNumRecords() - recordNum - 1);
-			//recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
+			frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
 			if(lowKey == null) return true;
 			
-			if(cmp.compare(lowKey, fieldIter) > 0) {
+			if(cmp.compare(lowKey, frameTuple) > 0) {
 				return false;
 			}
 			else {
@@ -121,8 +114,8 @@ public class RangeSearchCursor implements IBTreeCursor {
 	}
 
 	@Override
-	public void next() throws Exception {				
-		recordNum++;
+	public void next() throws Exception {		
+		tupleIndex++;
 	}
 	
 	@Override
@@ -137,43 +130,38 @@ public class RangeSearchCursor implements IBTreeCursor {
 		this.page = page;
 		frame.setPage(page);					
 		
-		// position recordNum to the first appropriate key
+		// position tupleIndex to the first appropriate key
 		// TODO: can be done more efficiently with binary search but this needs some thinking/refactoring
 		RangePredicate pred = (RangePredicate)searchPred;
 		MultiComparator cmp = pred.getComparator();
-		this.fieldIter.setFields(cmp.getFields());
+		frameTuple.setFieldCount(cmp.getFields().length);
 		if(searchPred.isForward()) {
-			ITupleReference lowKey = pred.getLowKey();
-						
-			//recordOffset = frame.getRecordOffset(recordNum);			
-			fieldIter.openRecSlotNum(recordNum);
+			ITupleReference lowKey = pred.getLowKey();			
+			
+			frameTuple.resetByTupleIndex(frame, tupleIndex);
 			if(lowKey == null) return; // null means -infinity
 						
-			while(cmp.compare(lowKey, fieldIter) > 0 && recordNum < frame.getNumRecords()) {
-			//while(cmp.compare(lowKeys, 0, page.getBuffer().array(), recordOffset) > 0 && recordNum < frame.getNumRecords()) {
-			    recordNum++;
-			    fieldIter.openRecSlotNum(recordNum);
+			while(cmp.compare(lowKey, frameTuple) > 0 && tupleIndex < frame.getTupleCount()) {
+			    tupleIndex++;
+			    frameTuple.resetByTupleIndex(frame, tupleIndex);
 			}						
 		}
 		else {
 			ITupleReference highKey = pred.getHighKey();
 			
-			//recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);
-			fieldIter.openRecSlotNum(frame.getNumRecords() - recordNum - 1);
-			if(highKey != null) return; // null means +infinity
+			frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
+			if(highKey == null) return; // null means +infinity
 			    
-			while(cmp.compare(highKey, fieldIter) < 0 && recordNum < frame.getNumRecords()) {				
-			    recordNum++;
-			    fieldIter.openRecSlotNum(recordNum);
-			    //recordOffset = frame.getRecordOffset(frame.getNumRecords() - recordNum - 1);			
+			while(cmp.compare(highKey, frameTuple) < 0 && tupleIndex < frame.getTupleCount()) {				
+			    tupleIndex++;
+			    frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
 			}						
 		}
 	}
 	
 	@Override
 	public void reset() {
-		recordNum = 0;
-		recordOffset = 0;
+		tupleIndex = 0;
 		page = null;	
 		searchPred = null;
 	}

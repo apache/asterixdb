@@ -61,7 +61,7 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
             try {
-                btreeOpHelper.getBTree().bulkLoadAddRecord(bulkLoadCtx, tuple);
+                btreeOpHelper.getBTree().bulkLoadAddTuple(bulkLoadCtx, tuple);
             } catch (Exception e) {
                 e.printStackTrace();
             }

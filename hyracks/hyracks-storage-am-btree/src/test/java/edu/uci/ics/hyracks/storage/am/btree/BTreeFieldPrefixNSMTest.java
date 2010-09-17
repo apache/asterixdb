@@ -153,7 +153,7 @@ public class BTreeFieldPrefixNSMTest {
             frame.setPage(page);            
             frame.initBuffer((byte)0);
             slotManager.setFrame(frame);          
-            frame.setNumPrefixRecords(0);
+            frame.setPrefixTupleCount(0);
             
             String before = new String();
             String after = new String();
@@ -190,16 +190,16 @@ public class BTreeFieldPrefixNSMTest {
         		savedFields[i][2] = c;
         		            
         		if(rnd.nextInt() % compactFreq == 0) {
-        			before = frame.printKeys(cmp);
+        			before = frame.printKeys(cmp, fields.length);
         			frame.compact(cmp);
-        			after = frame.printKeys(cmp);
+        			after = frame.printKeys(cmp, fields.length);
         			Assert.assertEquals(before, after);
         		}
         		
         		if(rnd.nextInt() % compressFreq == 0) {
-        			before = frame.printKeys(cmp);
+        			before = frame.printKeys(cmp, fields.length);
         			frame.compress(cmp);
-        			after = frame.printKeys(cmp);
+        			after = frame.printKeys(cmp, fields.length);
         			Assert.assertEquals(before, after);
         		}
         	}
@@ -217,16 +217,16 @@ public class BTreeFieldPrefixNSMTest {
         		}
         		
         		if(rnd.nextInt() % compactFreq == 0) {
-        			before = frame.printKeys(cmp);
+        			before = frame.printKeys(cmp, fields.length);
         			frame.compact(cmp);
-        			after = frame.printKeys(cmp);
+        			after = frame.printKeys(cmp, fields.length);
         			Assert.assertEquals(before, after);
         		}
         		
         		if(rnd.nextInt() % compressFreq == 0) {
-        			before = frame.printKeys(cmp);
+        			before = frame.printKeys(cmp, fields.length);
         			frame.compress(cmp);
-        			after = frame.printKeys(cmp);
+        			after = frame.printKeys(cmp, fields.length);
         			Assert.assertEquals(before, after);
         		}  
         	}

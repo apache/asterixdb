@@ -15,8 +15,10 @@
 
 package edu.uci.ics.hyracks.tests.btree;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
@@ -24,12 +26,17 @@ import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
@@ -40,17 +47,18 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BufferCacheProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
@@ -62,6 +70,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.types.Int32AccessorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.types.UTF8StringAccessorFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
@@ -150,8 +160,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         try {
         	while (scanCursor.hasNext()) {
         		scanCursor.next();
-        		IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+        		ITupleReference frameTuple = scanCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, ordersDesc.getFields());
                 System.out.println(rec);
         	}
         } catch (Exception e) {
@@ -160,7 +170,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         	scanCursor.close();
         }                        
 	}
-		
+	
 	/*
 	@Test
 	public void btreeSearchTest() throws Exception {
@@ -175,10 +185,23 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		IFieldAccessorFactory[] fieldAccessorFactories = new IFieldAccessorFactory[2];
 		fieldAccessorFactories[0] = new Int32AccessorFactory(); // key
 		fieldAccessorFactories[1] = new Int32AccessorFactory(); // value
-		
+						
 		int keyLen = 1;
 		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyLen];
 		comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;	
+		
+		// construct a multicomparator from the factories (only for printing purposes)                
+        IFieldAccessor[] fields = new IFieldAccessor[fieldAccessorFactories.length];
+    	for(int i = 0; i < fieldAccessorFactories.length; i++) {
+    		fields[i] = fieldAccessorFactories[i].getFieldAccessor();
+    	}
+    	
+    	IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
+    	for(int i = 0; i < comparatorFactories.length; i++) {
+    		comparators[i] = comparatorFactories[i].createBinaryComparator();
+    	}
+    	
+        MultiComparator cmp = new MultiComparator(comparators, fields);
 		
 		ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
 		DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
@@ -188,8 +211,15 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
 		IntegerSerializerDeserializer.INSTANCE.serialize(1000, hkdos);
 				
-		byte[] lowKey = lkbaaos.toByteArray();
-		byte[] highKey = hkbaaos.toByteArray();
+		byte[] lowKeyBytes = lkbaaos.toByteArray();
+        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
+        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
+        lowKey.reset(lowKeyBuf, 0);
+        
+        byte[] highKeyBytes = hkbaaos.toByteArray();
+        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
+        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
+        highKey.reset(highKeyBuf, 0);
 		
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
@@ -214,7 +244,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         spec.addRoot(printer);
         runTest(spec);
     }
-    */
+	*/
 	
 	@Test
 	public void insertTest() throws Exception {
@@ -379,9 +409,9 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         try {
         	while (scanCursorA.hasNext()) {
         		scanCursorA.next();
-        		IFieldIterator fieldIter = scanCursorA.getFieldIterator();                                
-                String rec = primaryCmp.printRecord(fieldIter);
-                System.out.println(rec);
+        		ITupleReference frameTuple = scanCursorA.getTuple();                                
+                String rec = primaryCmp.printTuple(frameTuple, ordersDesc.getFields());
+                System.out.println(rec);        		
         	}
         } catch (Exception e) {
         	e.printStackTrace();
@@ -398,9 +428,9 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         try {
         	while (scanCursorB.hasNext()) {
         		scanCursorB.next();
-        		IFieldIterator fieldIter = scanCursorB.getFieldIterator();                                
-                String rec = secondaryCmp.printRecord(fieldIter);
-                System.out.println(rec);
+        		ITupleReference frameTuple = scanCursorB.getTuple();                                
+                String rec = secondaryCmp.printTuple(frameTuple, ordersDesc.getFields());
+                System.out.println(rec);   
         	}
         } catch (Exception e) {
         	e.printStackTrace();
@@ -417,8 +447,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         try {
         	while (scanCursorC.hasNext()) {
         		scanCursorC.next();
-        		IFieldIterator fieldIter = scanCursorC.getFieldIterator();                                
-                String rec = secondaryCmp.printRecord(fieldIter);
+        		ITupleReference frameTuple = scanCursorC.getTuple();                                
+                String rec = secondaryCmp.printTuple(frameTuple, ordersDesc.getFields());
                 System.out.println(rec);
         	}
         } catch (Exception e) {

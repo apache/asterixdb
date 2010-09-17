@@ -37,13 +37,13 @@ public interface IBTreeFrame {
 	
 	public void initBuffer(byte level);
 	
-	public int getNumRecords();
+	public int getTupleCount();
 		
 	// assumption: page must be write-latched at this point
 	public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
 	public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
 	
-	public int getRecordOffset(int slotNum);
+	public int getTupleOffset(int slotNum);
 	
 	public int getTotalFreeSpace();	
 	
@@ -52,10 +52,10 @@ public interface IBTreeFrame {
 	
 	// for debugging
 	public void printHeader();
-	public String printKeys(MultiComparator cmp);
+	public String printKeys(MultiComparator cmp, int fieldCount);
 	
 	
-	// TODO; what if records more than half-page size?
+	// TODO; what if tuples more than half-page size?
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception;		
 	
 	// TODO: check if we do something nicer than returning object
@@ -73,10 +73,10 @@ public interface IBTreeFrame {
 	
 	public int getSlotSize();
 	
-	public IFieldIterator createFieldIterator();
+	public IBTreeTupleReference createTupleReference();
 	
-	// TODO: should be removed after new record format		
-	public void setPageTupleFields(IFieldAccessor[] fields);
+	// TODO: should be removed after new tuple format		
+	public void setPageTupleFieldCount(int fieldCount);
 	
 	// for debugging
 	public int getFreeSpaceOff();

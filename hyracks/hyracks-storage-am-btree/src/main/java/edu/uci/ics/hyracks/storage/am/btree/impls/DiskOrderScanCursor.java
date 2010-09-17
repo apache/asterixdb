@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -25,9 +25,9 @@ import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 
 public class DiskOrderScanCursor implements IBTreeCursor {
     
-    // TODO: might want to return records in physical order, not logical order to speed up access
+    // TODO: might want to return tuples in physical order, not logical order to speed up access
     
-    private int recordNum = 0;
+    private int tupleIndex = 0;
     private int fileId = -1;    
     int currentPageId = -1;
     int maxPageId = -1; // TODO: figure out how to scan to the end of file, this is dirty and may not with concurrent updates
@@ -35,12 +35,11 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     private IBTreeLeafFrame frame = null;
     private IBufferCache bufferCache = null;
     
-    private IFieldIterator fieldIter;
+    private IBTreeTupleReference frameTuple;
     
     public DiskOrderScanCursor(IBTreeLeafFrame frame) {
-        this.frame = frame;
-        this.fieldIter = frame.createFieldIterator();
-		this.fieldIter.setFrame(frame);
+    	this.frame = frame;
+		this.frameTuple = frame.createTupleReference();
     }
     
     @Override
@@ -51,9 +50,8 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     }
     
     @Override
-    public IFieldIterator getFieldIterator() {
-		fieldIter.reset();
-		return fieldIter;
+    public IBTreeTupleReference getTuple() {		
+		return frameTuple;
 	}
     
     @Override
@@ -62,7 +60,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     }
     
     private boolean positionToNextLeaf(boolean skipCurrent) throws Exception {
-        while( (frame.getLevel() != 0 || skipCurrent) && currentPageId <= maxPageId) {            
+        while( (frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId) || (frame.getTupleCount() == 0) ) {            
             currentPageId++;
             
             ICachedPage nextPage = bufferCache.pin(FileInfo.getDiskPageId(fileId, currentPageId), false);
@@ -73,7 +71,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
             
             page = nextPage;
             frame.setPage(page);
-            recordNum = 0;
+            tupleIndex = 0;
             skipCurrent = false;
         }   
         if(currentPageId <= maxPageId) return true;
@@ -81,11 +79,11 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     }
     
     @Override
-    public boolean hasNext() throws Exception {        
-        if(recordNum >= frame.getNumRecords()) {
+    public boolean hasNext() throws Exception {            	
+    	if(tupleIndex >= frame.getTupleCount()) {
             boolean nextLeafExists = positionToNextLeaf(true);
             if(nextLeafExists) {
-            	fieldIter.openRecSlotNum(recordNum);
+            	frameTuple.resetByTupleIndex(frame, tupleIndex);
                 return true;
             }
             else {
@@ -93,13 +91,13 @@ public class DiskOrderScanCursor implements IBTreeCursor {
             }
         }        
         
-        fieldIter.openRecSlotNum(recordNum);        
+        frameTuple.resetByTupleIndex(frame, tupleIndex); 
         return true;
     }
 
     @Override
-    public void next() throws Exception {        
-        recordNum++;
+    public void next() throws Exception {       
+    	tupleIndex++;
     }
     
     @Override
@@ -111,11 +109,11 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         }
         
         this.page = page;
-        recordNum = 0;
+        tupleIndex = 0;
         frame.setPage(page);
         RangePredicate pred = (RangePredicate)searchPred;
 		MultiComparator cmp = pred.getComparator();
-		this.fieldIter.setFields(cmp.getFields());
+		frameTuple.setFieldCount(cmp.getFields().length);
         boolean leafExists = positionToNextLeaf(false);
         if(!leafExists) {
             throw new Exception("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
@@ -124,7 +122,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     
     @Override
     public void reset() {
-        recordNum = 0;
+        tupleIndex = 0;
         currentPageId = -1;
         maxPageId = -1;
         page = null;     

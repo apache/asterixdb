@@ -22,19 +22,18 @@ import java.util.Collections;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixFieldIterator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTuple;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTuple;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffRecOff;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SimpleTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -42,15 +41,15 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	
     protected static final int pageLsnOff = 0;                              // 0
-    protected static final int numRecordsOff = pageLsnOff + 4;              // 4    
-    protected static final int freeSpaceOff = numRecordsOff + 4;      		// 8
+    protected static final int tupleCountOff = pageLsnOff + 4;              // 4    
+    protected static final int freeSpaceOff = tupleCountOff + 4;      		// 8
     protected static final int totalFreeSpaceOff = freeSpaceOff + 4;        // 12	
 	protected static final int levelOff = totalFreeSpaceOff + 4;         	// 16
 	protected static final int smFlagOff = levelOff + 1;                   	// 17
-	protected static final int numUncompressedRecordsOff = smFlagOff + 1;				// 18
-	protected static final int numPrefixRecordsOff = numUncompressedRecordsOff + 4; 		// 21
+	protected static final int uncompressedTupleCountOff = smFlagOff + 1;				// 18
+	protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; 		// 21
 	
-	protected static final int prevLeafOff = numPrefixRecordsOff + 4;		// 22
+	protected static final int prevLeafOff = prefixTupleCountOff + 4;		// 22
 	protected static final int nextLeafOff = prevLeafOff + 4;				// 26
 	
 	protected ICachedPage page = null;
@@ -58,9 +57,11 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public IFrameCompressor compressor;
     public IPrefixSlotManager slotManager; // TODO: should be protected, but will trigger some refactoring
     
-    private FieldPrefixTuple pageTuple = new FieldPrefixTuple();
-    private FieldPrefixPrefixTuple pagePrefixTuple = new FieldPrefixPrefixTuple(); 
+    private SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
     
+    private FieldPrefixTupleReference frameTuple = new FieldPrefixTupleReference();            
+    private FieldPrefixPrefixTupleReference framePrefixTuple = new FieldPrefixPrefixTupleReference();
+          
     public FieldPrefixNSMLeafFrame() {
         this.slotManager = new FieldPrefixSlotManager();
         this.compressor = new FieldPrefixCompressor(0.001f, 2);        
@@ -89,176 +90,137 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     // assumptions: 
-    // 1. prefix records are stored contiguously
-    // 2. prefix records are located before records (physically on the page)
-    // this procedure will not move prefix records
+    // 1. prefix tuple are stored contiguously
+    // 2. prefix tuple are located before tuples (physically on the page)
+    // 3. prefix tuple are sorted (last prefix tuple is at highest offset)
+    // this procedure will not move prefix tuples
     @Override
     public void compact(MultiComparator cmp) {
         resetSpaceParams();
-                        
-        int numRecords = buf.getInt(numRecordsOff);
-        byte[] data = buf.array();
+        
+        frameTuple.setFieldCount(cmp.getFields().length);
+        
+        int tupleCount = buf.getInt(tupleCountOff);
         
         // determine start of target free space (depends on assumptions stated above)
         int freeSpace = buf.getInt(freeSpaceOff);        
-        int numPrefixRecords = buf.getInt(numPrefixRecordsOff);
-        if(numPrefixRecords > 0) {
-        	int prefixFields = 0;
-        	for(int i = 0; i < numPrefixRecords; i++) {
-        		int prefixSlotOff = slotManager.getPrefixSlotOff(i);
-        		int prefixSlot = buf.getInt(prefixSlotOff);
-        		int prefixRecOff = slotManager.decodeSecondSlotField(prefixSlot);
-        		if(prefixRecOff >= freeSpace) {
-        			freeSpace = prefixRecOff;
-        			prefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-        		}
+        int prefixTupleCount = buf.getInt(prefixTupleCountOff);
+        if(prefixTupleCount > 0) {        	
+        	
+        	// debug
+        	int max = 0;
+        	for(int i = 0; i < prefixTupleCount; i++) {
+        		framePrefixTuple.resetByTupleIndex(this, i);
+        		int end = framePrefixTuple.getFieldStart(framePrefixTuple.getFieldCount()-1) + framePrefixTuple.getFieldLength(framePrefixTuple.getFieldCount()-1);
+        		if(end > max) max = end;
         	}
-        	for(int i = 0; i < prefixFields; i++) {
-        		freeSpace += cmp.getFields()[i].getLength(data, freeSpace);
-        	}
+        	        	
+        	framePrefixTuple.resetByTupleIndex(this, prefixTupleCount - 1);
+        	freeSpace = framePrefixTuple.getFieldStart(framePrefixTuple.getFieldCount()-1) + framePrefixTuple.getFieldLength(framePrefixTuple.getFieldCount()-1);        	
         }
-        
-        ArrayList<SlotOffRecOff> sortedRecOffs = new ArrayList<SlotOffRecOff>();
-        sortedRecOffs.ensureCapacity(numRecords);
-        for(int i = 0; i < numRecords; i++) {           
-            int recSlotOff = slotManager.getRecSlotOff(i);
-            int recSlot = buf.getInt(recSlotOff);
-            int recOff = slotManager.decodeSecondSlotField(recSlot);
-            sortedRecOffs.add(new SlotOffRecOff(recSlotOff, recOff));
+
+        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
+        sortedTupleOffs.ensureCapacity(tupleCount);
+        for(int i = 0; i < tupleCount; i++) {           
+            int tupleSlotOff = slotManager.getTupleSlotOff(i);
+            int tupleSlot = buf.getInt(tupleSlotOff);
+            int tupleOff = slotManager.decodeSecondSlotField(tupleSlot);
+            sortedTupleOffs.add(new SlotOffTupleOff(i, tupleSlotOff, tupleOff));                        
+            
         }
-        Collections.sort(sortedRecOffs);
-        
-        for(int i = 0; i < sortedRecOffs.size(); i++) {                    	
-        	int recOff = sortedRecOffs.get(i).recOff;
-            int recSlot = buf.getInt(sortedRecOffs.get(i).slotOff);
-            int prefixSlotNum = slotManager.decodeFirstSlotField(recSlot);            
-            
-            int fieldStart = 0;
-            if(prefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
-            	int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
-                int prefixSlot = buf.getInt(prefixSlotOff);
-                fieldStart = slotManager.decodeFirstSlotField(prefixSlot);                                
-            }
-            
-            int recRunner = recOff;
-            for(int j = fieldStart; j < cmp.getFields().length; j++) {
-            	recRunner += cmp.getFields()[j].getLength(data, recRunner);
-            }
-            int recSize = recRunner - recOff;
+        Collections.sort(sortedTupleOffs);
+               
+        for(int i = 0; i < sortedTupleOffs.size(); i++) {                    	
+        	int tupleOff = sortedTupleOffs.get(i).tupleOff;
+        	int tupleSlot = buf.getInt(sortedTupleOffs.get(i).slotOff);
+            int prefixSlotNum = slotManager.decodeFirstSlotField(tupleSlot);            
                         
-            System.arraycopy(data, recOff, data, freeSpace, recSize);
-            slotManager.setSlot(sortedRecOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
-            freeSpace += recSize;
+            frameTuple.resetByTupleIndex(this, sortedTupleOffs.get(i).tupleIndex);
+            int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount()-1) + frameTuple.getFieldLength(frameTuple.getFieldCount()-1);
+            int tupleLength = tupleEndOff - tupleOff;
+            System.arraycopy(buf.array(), tupleOff, buf.array(), freeSpace, tupleLength);
+                                    
+            slotManager.setSlot(sortedTupleOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
+            freeSpace += tupleLength;
         }
         
         buf.putInt(freeSpaceOff, freeSpace);
-        int totalFreeSpace = buf.capacity() - buf.getInt(freeSpaceOff) - ((buf.getInt(numRecordsOff) + buf.getInt(numPrefixRecordsOff)) * slotManager.getSlotSize());        
+        int totalFreeSpace = buf.capacity() - buf.getInt(freeSpaceOff) - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());        
         buf.putInt(totalFreeSpaceOff, totalFreeSpace);
     }
     
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {        
-        int slot = slotManager.findSlot(tuple, cmp, true);
-        int recSlotNum = slotManager.decodeSecondSlotField(slot);
-        if(recSlotNum == FieldPrefixSlotManager.GREATEST_SLOT) {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, true);
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        if(tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
             throw new BTreeException("Key to be deleted does not exist.");   
         }
         else {
             int prefixSlotNum = slotManager.decodeFirstSlotField(slot);            
-            int recSlotOff = slotManager.getRecSlotOff(recSlotNum);
+            int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
             
-            if(exactDelete) {                                    
-                pageTuple.setFields(cmp.getFields());
-                pageTuple.setFrame(this);
-                pageTuple.openRecSlotNum(recSlotNum);
+            if(exactDelete) {                
+                frameTuple.setFieldCount(cmp.getFields().length);
+                frameTuple.resetByTupleIndex(this, tupleIndex);
                 
-                int comparison = cmp.fieldRangeCompare(tuple, pageTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
+                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
                 if(comparison != 0) {
-                	throw new BTreeException("Cannot delete record. Byte-by-byte comparison failed to prove equality.");
+                	throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }                                  
             }
             
             // perform deletion (we just do a memcpy to overwrite the slot)
-            int slotEndOff = slotManager.getRecSlotEndOff();
-            int length = recSlotOff - slotEndOff;
+            int slotEndOff = slotManager.getTupleSlotEndOff();
+            int length = tupleSlotOff - slotEndOff;
             System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
             
-            // maintain space information, get size of record suffix (suffix could be entire record)
-            int recSize = 0;                        
+            // maintain space information, get size of tuple suffix (suffix could be entire tuple)
+            int tupleSize = 0;                        
             int suffixFieldStart = 0;
-            FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(cmp.getFields(), this);                 
-            fieldIter.openRecSlotOff(recSlotOff);
-            if(prefixSlotNum == FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
+            if(prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
                 suffixFieldStart = 0;
-                buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) - 1);
+                buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
             }
             else {                
                 int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
                 suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot); 
             }
             
-            for(int i = 0; i < suffixFieldStart; i++) {
-                fieldIter.nextField();
-            }
-            for(int i = suffixFieldStart; i < cmp.getFields().length; i++) {
-                recSize += cmp.getFields()[i].getLength(buf.array(), fieldIter.getFieldOff());
-                fieldIter.nextField();
-            }
+            frameTuple.resetByTupleIndex(this, tupleIndex);
+            tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount() - suffixFieldStart);
             
-            buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) - 1);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + recSize + slotManager.getSlotSize());            
+            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
+            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());            
         }    
     }
     
     @Override
     public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {                    	
-    	int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff) - ((buf.getInt(numRecordsOff) + buf.getInt(numPrefixRecordsOff)) * slotManager.getSlotSize());     	    	                        
+    	int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff) - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());     	    	                        
         
-    	int tupleSpace = spaceNeededForTuple(tuple);
+    	int bytesRequired = tupleWriter.bytesRequired(tuple);
     	
-        // see if the record would fit uncompressed
-        if(tupleSpace + slotManager.getSlotSize() <= freeContiguous) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        // see if the tuple would fit uncompressed
+        if(bytesRequired + slotManager.getSlotSize() <= freeContiguous) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         
-        // see if record would fit into remaining space after compaction
-        if(tupleSpace + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
+        // see if tuple would fit into remaining space after compaction
+        if(bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) return SpaceStatus.SUFFICIENT_SPACE;
         
-        // see if the record matches a prefix and will fit after truncating the prefix
-        int prefixSlotNum = slotManager.findPrefix(tuple, cmp);
-        if(prefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
+        // see if the tuple matches a prefix and will fit after truncating the prefix
+        int prefixSlotNum = slotManager.findPrefix(tuple, framePrefixTuple, cmp);
+        if(prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
         	int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
         	int prefixSlot = buf.getInt(prefixSlotOff);
         	int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
         	
-        	// TODO relies on length being stored in serialized field
-        	int recRunner = 0;
-        	for(int i = 0; i < numPrefixFields; i++) {
-        		recRunner += cmp.getFields()[i].getLength(tuple.getFieldData(i), recRunner);
-        	}
-        	int compressedSize = tupleSpace - recRunner;
+        	int compressedSize = tupleWriter.bytesRequired(tuple, numPrefixFields, tuple.getFieldCount() - numPrefixFields);        	        	
         	if(compressedSize + slotManager.getSlotSize() <= freeContiguous) return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;        	
         }
         
         return SpaceStatus.INSUFFICIENT_SPACE;
     }
-    
-    // TODO: need to change these methods
-	protected int writeTupleFields(ITupleReference src, int numFields, ByteBuffer targetBuf, int targetOff) {
-		int runner = targetOff;		
-		for(int i = 0; i < numFields; i++) {
-			System.arraycopy(src.getFieldData(i), src.getFieldStart(i), targetBuf.array(), runner, src.getFieldLength(i));
-			runner += src.getFieldLength(i);
-		}
-		return runner - targetOff;
-	}
-	
-	protected int spaceNeededForTuple(ITupleReference src) {
-		int space = 0;
-		for(int i = 0; i < src.getFieldCount(); i++) {
-			space += src.getFieldLength(i);
-		}
-		return space;
-	}
-    
+        
     @Override
     public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
         // TODO Auto-generated method stub
@@ -273,10 +235,10 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     @Override
     public void initBuffer(byte level) {        
         buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn during creation
-        buf.putInt(numRecordsOff, 0);   
+        buf.putInt(tupleCountOff, 0);   
         resetSpaceParams();
-        buf.putInt(numUncompressedRecordsOff, 0);
-        buf.putInt(numPrefixRecordsOff, 0);
+        buf.putInt(uncompressedTupleCountOff, 0);
+        buf.putInt(prefixTupleCountOff, 0);
         buf.put(levelOff, level);
         buf.put(smFlagOff, (byte)0);
         buf.putInt(prevLeafOff, -1);
@@ -293,64 +255,45 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {    	
-    	int slot = slotManager.findSlot(tuple, cmp, false);        
-        slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));
+    	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, false);        
         
-        int suffixSize = spaceNeededForTuple(tuple);
-        int suffixStartOff = tuple.getFieldStart(0);
-        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
+    	slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));                
         
-        if(prefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
-        	
-        	// TODO relies on length being stored in serialized field
-        	
+        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);        
+        int numPrefixFields = 0;
+        if(prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {        	        	
             int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);            
             int prefixSlot = buf.getInt(prefixSlotOff);
-            int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-                                    
-            // skip prefix fields
-            for(int i = 0; i < numPrefixFields; i++) {
-                suffixStartOff += cmp.getFields()[i].getLength(tuple.getFieldData(i), suffixStartOff);
-            }
-            
-            // compute suffix size
-            suffixSize = suffixStartOff; 
-            for(int i = numPrefixFields; i < cmp.getFields().length; i++) {
-                suffixSize += cmp.getFields()[i].getLength(tuple.getFieldData(i), suffixSize);
-            }
-            suffixSize -= suffixStartOff;                  
+            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);                                                                 
         }
         else {
-        	buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) + 1);
+        	buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
         }
         
-    	// TODO relies on length being stored in serialized field        
         int freeSpace = buf.getInt(freeSpaceOff);
-        System.arraycopy(tuple.getFieldData(0), suffixStartOff, buf.array(), freeSpace, suffixSize);                    
-        buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + suffixSize);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - suffixSize - slotManager.getSlotSize());
-               
-        //System.out.println(buf.getInt(totalFreeSpaceOff) + " " + buf.getInt(freeSpaceOff) + " " + buf.getInt(numRecordsOff));        
-        //System.out.println("COPIED: " + suffixSize + " / " + data.length);      
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields, tuple.getFieldCount() - numPrefixFields, buf, freeSpace);
+        
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());       
     }
     
     public void verifyPrefixes(MultiComparator cmp) {
-    	int numPrefixes = buf.getInt(numPrefixRecordsOff);
+    	int numPrefixes = buf.getInt(prefixTupleCountOff);
     	int totalPrefixBytes = 0;
     	for(int i = 0; i < numPrefixes; i++) {
     		int prefixSlotOff = slotManager.getPrefixSlotOff(i);
     		int prefixSlot = buf.getInt(prefixSlotOff);
     		
     		int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-    		int prefixRecOff = slotManager.decodeSecondSlotField(prefixSlot);
+    		int prefixTupleOff = slotManager.decodeSecondSlotField(prefixSlot);
     		
-    		System.out.print("VERIFYING " + i + " : " + numPrefixFields + " " + prefixRecOff + " ");
-    		int recOffRunner = prefixRecOff;
+    		System.out.print("VERIFYING " + i + " : " + numPrefixFields + " " + prefixTupleOff + " ");
+    		int tupleOffRunner = prefixTupleOff;
     		for(int j = 0; j < numPrefixFields; j++) {
-    			System.out.print(buf.getInt(prefixRecOff+j*4) + " ");
-    			int length = cmp.getFields()[j].getLength(buf.array(), recOffRunner);
-    			recOffRunner += length;
+    			System.out.print(buf.getInt(prefixTupleOff+j*4) + " ");
+    			int length = cmp.getFields()[j].getLength(buf.array(), tupleOffRunner);
+    			tupleOffRunner += length;
     			totalPrefixBytes += length;    			
     		}
     		System.out.println();
@@ -371,8 +314,8 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }       
         
     @Override
-    public int getNumRecords() {
-        return buf.getInt(numRecordsOff);
+    public int getTupleCount() {
+        return buf.getInt(tupleCountOff);
     }
     
     public ISlotManager getSlotManager() {
@@ -380,28 +323,25 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
-    public String printKeys(MultiComparator cmp) {      
-        StringBuilder strBuilder = new StringBuilder();
-        FieldPrefixFieldIterator rec = new FieldPrefixFieldIterator(cmp.getFields(), this);      
-        int numRecords = buf.getInt(numRecordsOff);
-        for(int i = 0; i < numRecords; i++) {                               	
-        	rec.openRecSlotNum(i);        	
-        	//strBuilder.append(String.format("RECORD %5d: ", i));
-        	for(int j = 0; j < cmp.size(); j++) {               
-                strBuilder.append(cmp.getFields()[j].print(buf.array(), rec.getFieldOff()) + " ");
-                rec.nextField();
-            }
-            strBuilder.append(" | ");        	        	                           
-        }
-        strBuilder.append("\n");
-        return strBuilder.toString();
+    public String printKeys(MultiComparator cmp, int fieldCount) {      
+    	StringBuilder strBuilder = new StringBuilder();		
+		int tupleCount = buf.getInt(tupleCountOff);
+		for(int i = 0; i < tupleCount; i++) {						
+			frameTuple.resetByTupleIndex(this, i);			
+			for(int j = 0; j < cmp.getKeyLength(); j++) {
+				strBuilder.append(cmp.getFields()[j].print(buf.array(), frameTuple.getFieldStart(j)) + " ");	
+			}
+			strBuilder.append(" | ");				
+		}
+		strBuilder.append("\n");
+		return strBuilder.toString();
     }
     
     @Override
-    public int getRecordOffset(int slotNum) {        
-    	int recSlotOff = slotManager.getRecSlotOff(slotNum);
-    	int recSlot = buf.getInt(recSlotOff);
-    	return slotManager.decodeSecondSlotField(recSlot);    	
+    public int getTupleOffset(int slotNum) {        
+    	int tupleSlotOff = slotManager.getTupleSlotOff(slotNum);
+    	int tupleSlot = buf.getInt(tupleSlotOff);
+    	return slotManager.decodeSecondSlotField(tupleSlot);    	
     }
     
     @Override
@@ -447,58 +387,40 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 			buf.put(smFlagOff, (byte)0);			
 	}		
 	
-	public int getNumPrefixRecords() {
-		return buf.getInt(numPrefixRecordsOff);
+	public int getPrefixTupleCount() {
+		return buf.getInt(prefixTupleCountOff);
 	}
 	
-	public void setNumPrefixRecords(int numPrefixRecords) {
-		buf.putInt(numPrefixRecordsOff, numPrefixRecords);
+	public void setPrefixTupleCount(int prefixTupleCount) {
+		buf.putInt(prefixTupleCountOff, prefixTupleCount);
 	}
-
+	
     @Override
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {    	
     	int freeSpace = buf.getInt(freeSpaceOff);				
 		int fieldsToTruncate = 0;
 		
-		pageTuple.setFrame(this);
-		pageTuple.setFields(cmp.getFields());
-		
-		if(buf.getInt(numPrefixRecordsOff) > 0) {
-			// check if record matches last prefix record
-			int prefixSlotOff = slotManager.getPrefixSlotOff(buf.getInt(numPrefixRecordsOff)-1);
-			int prefixSlot = buf.getInt(prefixSlotOff);
-			int numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-			
-			pagePrefixTuple.setFrame(this);
-			pagePrefixTuple.setFields(cmp.getFields());
-			pagePrefixTuple.openPrefixSlotOff(prefixSlotOff);
-			
-			if(cmp.fieldRangeCompare(tuple, pagePrefixTuple, 0, numPrefixFields) == 0) {
-				fieldsToTruncate = numPrefixFields;													
+		// check if tuple matches last prefix tuple
+		if(buf.getInt(prefixTupleCountOff) > 0) {
+			framePrefixTuple.resetByTupleIndex(this, buf.getInt(prefixTupleCountOff)-1);						
+			if(cmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount()) == 0) {
+				fieldsToTruncate = framePrefixTuple.getFieldCount();													
 			}			
 		}
-				
-		// copy truncated record
-    	// TODO relies on length being stored in serialized field   
-		int tupleSpace = spaceNeededForTuple(tuple); 
-		int recStart = tuple.getFieldStart(0);
-		for(int i = 0; i < fieldsToTruncate; i++) {
-			recStart += cmp.getFields()[i].getLength(tuple.getFieldData(0), recStart);
-		}
-		int recLen = tupleSpace - recStart - tuple.getFieldStart(0);
-		System.arraycopy(tuple.getFieldData(0), recStart, buf.array(), freeSpace, recLen);
 		
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, fieldsToTruncate, tuple.getFieldCount() - fieldsToTruncate, buf, freeSpace);
+                
 		// insert slot
-		int prefixSlotNum = FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
-		if(fieldsToTruncate > 0) prefixSlotNum = buf.getInt(numPrefixRecordsOff)-1;					
-		else buf.putInt(numUncompressedRecordsOff, buf.getInt(numUncompressedRecordsOff) + 1);					
+		int prefixSlotNum = FieldPrefixSlotManager.TUPLE_UNCOMPRESSED;
+		if(fieldsToTruncate > 0) prefixSlotNum = buf.getInt(prefixTupleCountOff)-1;					
+		else buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);					
 		int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_SLOT);				
 		slotManager.insertSlot(insSlot, freeSpace);
 		
 		// update page metadata
-		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
-		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + recLen);
-		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - recLen - slotManager.getSlotSize());			
+		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());		
     }
     
     @Override
@@ -506,150 +428,128 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     	
     	FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame)rightFrame;
     	
-    	pageTuple.setFrame(this);
-		pageTuple.setFields(cmp.getFields());
+    	frameTuple.setFieldCount(cmp.getFields().length);
     	
     	// before doing anything check if key already exists
-		int slot = slotManager.findSlot(tuple, cmp, true);
-		int recSlotNum = slotManager.decodeSecondSlotField(slot);		
-		if(recSlotNum != FieldPrefixSlotManager.GREATEST_SLOT) {				
-			pageTuple.openRecSlotNum(recSlotNum);
-			if(cmp.compare(tuple, (ITupleReference)pageTuple) == 0) {			
+		int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, true);
+		int tupleSlotNum = slotManager.decodeSecondSlotField(slot);		
+		if(tupleSlotNum != FieldPrefixSlotManager.GREATEST_SLOT) {				
+			frameTuple.resetByTupleIndex(this, tupleSlotNum);
+			if(cmp.compare(tuple, frameTuple) == 0) {			
 				throw new BTreeException("Inserting duplicate key into unique index");
 			}
 		}
 		
 		ByteBuffer right = rf.getBuffer();
-		int numRecords = getNumRecords();
-		int numPrefixRecords = getNumPrefixRecords();
+		int tupleCount = getTupleCount();
+		int prefixTupleCount = getPrefixTupleCount();
 		
-		int recordsToLeft;
-		int midSlotNum = numRecords / 2;
-		IBTreeFrame targetFrame = null;
-		int midSlotOff = slotManager.getRecSlotOff(midSlotNum);
-		int midSlot = buf.getInt(midSlotOff);
-		int midPrefixSlotNum = slotManager.decodeFirstSlotField(midSlot);
-		int midRecOff = slotManager.decodeSecondSlotField(midSlot);		
-		pageTuple.openRecSlotNum(midSlotNum);
-		int comparison = cmp.compare(tuple, (ITupleReference)pageTuple);		
+		int tuplesToLeft;
+		int midSlotNum = tupleCount / 2;
+		IBTreeFrame targetFrame = null;		
+		frameTuple.resetByTupleIndex(this, midSlotNum);
+		int comparison = cmp.compare(tuple, frameTuple);		
 		if (comparison >= 0) {
-			recordsToLeft = midSlotNum + (numRecords % 2);
+			tuplesToLeft = midSlotNum + (tupleCount % 2);
 			targetFrame = rf;
 		} else {
-			recordsToLeft = midSlotNum;
+			tuplesToLeft = midSlotNum;
 			targetFrame = this;
 		}
-		int recordsToRight = numRecords - recordsToLeft;
+		int tuplesToRight = tupleCount - tuplesToLeft;
 				
 		// copy entire page
 		System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
 				
 		// determine how many slots go on left and right page
-		int prefixesToLeft = numPrefixRecords;		
-		for(int i = recordsToLeft; i < numRecords; i++) {			
-			int recSlotOff = rf.slotManager.getRecSlotOff(i);						
-			int recSlot = right.getInt(recSlotOff);
-			int prefixSlotNum = rf.slotManager.decodeFirstSlotField(recSlot);			
-			if(prefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
+		int prefixesToLeft = prefixTupleCount;		
+		for(int i = tuplesToLeft; i < tupleCount; i++) {			
+			int tupleSlotOff = rf.slotManager.getTupleSlotOff(i);						
+			int tupleSlot = right.getInt(tupleSlotOff);
+			int prefixSlotNum = rf.slotManager.decodeFirstSlotField(tupleSlot);			
+			if(prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
 				prefixesToLeft = prefixSlotNum;			
 				break;
 			}
 		}
 		
-		// if we are splitting in the middle of a prefix both pages need to have the prefix slot and record
-		int bounradyRecSlotOff = rf.slotManager.getRecSlotOff(recordsToLeft-1);
-		int boundaryRecSlot = buf.getInt(bounradyRecSlotOff);
-		int boundaryPrefixSlotNum = rf.slotManager.decodeFirstSlotField(boundaryRecSlot);
-		int prefixesToRight = numPrefixRecords - prefixesToLeft;
-		if(boundaryPrefixSlotNum == prefixesToLeft && boundaryPrefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {
-			prefixesToLeft++; // records on both pages share one prefix 
+		// if we are splitting in the middle of a prefix both pages need to have the prefix slot and tuple
+		int boundaryTupleSlotOff = rf.slotManager.getTupleSlotOff(tuplesToLeft-1);
+		int boundaryTupleSlot = buf.getInt(boundaryTupleSlotOff);
+		int boundaryPrefixSlotNum = rf.slotManager.decodeFirstSlotField(boundaryTupleSlot);
+		int prefixesToRight = prefixTupleCount - prefixesToLeft;
+		if(boundaryPrefixSlotNum == prefixesToLeft && boundaryPrefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+			prefixesToLeft++; // tuples on both pages share one prefix 
 		}			
 								
-		// move prefix records on right page to beginning of page and adjust prefix slots
-		if(prefixesToRight > 0 && prefixesToLeft > 0 && numPrefixRecords > 1) {			
+		// move prefix tuples on right page to beginning of page and adjust prefix slots
+		if(prefixesToRight > 0 && prefixesToLeft > 0 && prefixTupleCount > 1) {			
 			
 			int freeSpace = rf.getOrigFreeSpaceOff();
 			int lastPrefixSlotNum = -1;
 			
-			for(int i = recordsToLeft; i < numRecords; i++) {			
-				int recSlotOff = rf.slotManager.getRecSlotOff(i);						
-				int recSlot = right.getInt(recSlotOff);
-				int prefixSlotNum = rf.slotManager.decodeFirstSlotField(recSlot);			
-				if(prefixSlotNum != FieldPrefixSlotManager.RECORD_UNCOMPRESSED) {								
-					int prefixSlotOff = rf.slotManager.getPrefixSlotOff(prefixSlotNum);
-					int prefixSlot = right.getInt(prefixSlotOff);
-					int numPrefixFields = rf.slotManager.decodeFirstSlotField(prefixSlot);
+			for(int i = tuplesToLeft; i < tupleCount; i++) {			
+				int tupleSlotOff = rf.slotManager.getTupleSlotOff(i);						
+				int tupleSlot = right.getInt(tupleSlotOff);
+				int prefixSlotNum = rf.slotManager.decodeFirstSlotField(tupleSlot);			
+				if(prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+					framePrefixTuple.resetByTupleIndex(this, prefixSlotNum);
 					
-					int prefixRecSize = 0;
+					int bytesWritten = 0;
 					if(lastPrefixSlotNum != prefixSlotNum) {
-						int prefixRecOff = rf.slotManager.decodeSecondSlotField(prefixSlot);
-						for(int j = 0; j < numPrefixFields; j++) {
-							prefixRecSize += cmp.getFields()[j].getLength(buf.array(), prefixRecOff + prefixRecSize);						
-						}
-						// copy from left page to make sure not to overwrite anything in right page that we may need later
-						System.arraycopy(buf.array(), prefixRecOff, right.array(), freeSpace, prefixRecSize);
-						
-						int newPrefixSlot = rf.slotManager.encodeSlotFields(numPrefixFields, freeSpace);
-						right.putInt(prefixSlotOff, newPrefixSlot);
-						
+						bytesWritten = tupleWriter.writeTuple(framePrefixTuple, right, freeSpace);												
+						int newPrefixSlot = rf.slotManager.encodeSlotFields(framePrefixTuple.getFieldCount(), freeSpace);
+						int prefixSlotOff = rf.slotManager.getPrefixSlotOff(prefixSlotNum);
+						right.putInt(prefixSlotOff, newPrefixSlot);						
 						lastPrefixSlotNum = prefixSlotNum;
-					}
+					}					
 					
-					int recOff = rf.slotManager.decodeSecondSlotField(recSlot);
-					int newRecSlot = rf.slotManager.encodeSlotFields(prefixSlotNum - (numPrefixRecords - prefixesToRight), recOff);
-					right.putInt(recSlotOff, newRecSlot);
-															
-					freeSpace += prefixRecSize;
+					int tupleOff = rf.slotManager.decodeSecondSlotField(tupleSlot);
+					int newTupleSlot = rf.slotManager.encodeSlotFields(prefixSlotNum - (prefixTupleCount - prefixesToRight), tupleOff);
+					right.putInt(tupleSlotOff, newTupleSlot);		
+					freeSpace += bytesWritten;
 				}
-			}
+			}			
 		}
 				
 		// move the modified prefix slots on the right page
 		int prefixSrc = rf.slotManager.getPrefixSlotEndOff();
-		int prefixDest = rf.slotManager.getPrefixSlotEndOff() + (numPrefixRecords - prefixesToRight) * rf.slotManager.getSlotSize();
+		int prefixDest = rf.slotManager.getPrefixSlotEndOff() + (prefixTupleCount - prefixesToRight) * rf.slotManager.getSlotSize();
 		int prefixLength = rf.slotManager.getSlotSize() * prefixesToRight;
 		System.arraycopy(right.array(), prefixSrc, right.array(), prefixDest, prefixLength);
 		
-		// on right page we need to copy rightmost record slots to left
-		int src = rf.slotManager.getRecSlotEndOff();
-		int dest = rf.slotManager.getRecSlotEndOff() + recordsToLeft * rf.slotManager.getSlotSize() + (numPrefixRecords - prefixesToRight) * rf.slotManager.getSlotSize();
-		int length = rf.slotManager.getSlotSize() * recordsToRight;				
+		// on right page we need to copy rightmost tuple slots to left
+		int src = rf.slotManager.getTupleSlotEndOff();
+		int dest = rf.slotManager.getTupleSlotEndOff() + tuplesToLeft * rf.slotManager.getSlotSize() + (prefixTupleCount - prefixesToRight) * rf.slotManager.getSlotSize();
+		int length = rf.slotManager.getSlotSize() * tuplesToRight;				
 		System.arraycopy(right.array(), src, right.array(), dest, length);
 		
-		right.putInt(numRecordsOff, recordsToRight);
-		right.putInt(numPrefixRecordsOff, prefixesToRight);
+		right.putInt(tupleCountOff, tuplesToRight);
+		right.putInt(prefixTupleCountOff, prefixesToRight);
 		
 		// on left page move slots to reflect possibly removed prefixes
-		src = slotManager.getRecSlotEndOff() + recordsToRight * slotManager.getSlotSize();
-		dest = slotManager.getRecSlotEndOff() + recordsToRight * slotManager.getSlotSize() + (numPrefixRecords - prefixesToLeft) * slotManager.getSlotSize();
-		length = slotManager.getSlotSize() * recordsToLeft;				
+		src = slotManager.getTupleSlotEndOff() + tuplesToRight * slotManager.getSlotSize();
+		dest = slotManager.getTupleSlotEndOff() + tuplesToRight * slotManager.getSlotSize() + (prefixTupleCount - prefixesToLeft) * slotManager.getSlotSize();
+		length = slotManager.getSlotSize() * tuplesToLeft;				
 		System.arraycopy(buf.array(), src, buf.array(), dest, length);
 		
-		buf.putInt(numRecordsOff, recordsToLeft);
-		buf.putInt(numPrefixRecordsOff, prefixesToLeft);		
+		buf.putInt(tupleCountOff, tuplesToLeft);
+		buf.putInt(prefixTupleCountOff, prefixesToLeft);		
 				
 		// compact both pages		
-		compact(cmp);
+		compact(cmp);		
 		rightFrame.compact(cmp);
 		
 		// insert last key
 		targetFrame.insert(tuple, cmp);
-		
-    	// TODO relies on length being stored in serialized field  
-		
+				
 		// set split key to be highest value in left page		
-		int splitKeyRecSlotOff = slotManager.getRecSlotEndOff();		
+		frameTuple.resetByTupleIndex(this, getTupleCount()-1);
 		
-		int keySize = 0;
-		FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(cmp.getFields(), this);
-		fieldIter.openRecSlotOff(splitKeyRecSlotOff);		
-		for(int i = 0; i < cmp.getKeyLength(); i++) {
-			keySize += fieldIter.getFieldSize();
-			fieldIter.nextField();
-		}									
-		splitKey.initData(keySize);
-		fieldIter.copyFields(0, cmp.getKeyLength()-1, splitKey.getBuffer().array(), 0);
-		
+		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+		splitKey.initData(splitKeySize);
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyLength(), splitKey.getBuffer(), 0);
+				
 		return 0;
     }
     
@@ -687,12 +587,12 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		return buf.getInt(prevLeafOff);
 	}
 	
-	public int getNumUncompressedRecords() {
-		return buf.getInt(numUncompressedRecordsOff);
+	public int getUncompressedTupleCount() {
+		return buf.getInt(uncompressedTupleCountOff);
 	}
 	
-	public void setNumUncompressedRecords(int numUncompressedRecords) {
-		buf.putInt(numUncompressedRecordsOff, numUncompressedRecords);
+	public void setUncompressedTupleCount(int uncompressedTupleCount) {
+		buf.putInt(uncompressedTupleCountOff, uncompressedTupleCount);
 	}
 	
 	@Override
@@ -701,12 +601,12 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	}
 	
 	@Override
-    public IFieldIterator createFieldIterator() {
-    	return new FieldPrefixFieldIterator();
+    public IBTreeTupleReference createTupleReference() {
+    	return new FieldPrefixTupleReference();
     }
 		
 	@Override
-	public void setPageTupleFields(IFieldAccessor[] fields) {
-		pageTuple.setFields(fields);
-	}		
+	public void setPageTupleFieldCount(int fieldCount) {
+		frameTuple.setFieldCount(fieldCount);
+	}	
 }

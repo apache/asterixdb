@@ -20,23 +20,23 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 // a slot consists of two fields:
-// first field is 1 byte, it indicates the slot number of a prefix record
+// first field is 1 byte, it indicates the slot number of a prefix tuple
 // we call the first field prefixSlotOff
-// second field is 3 bytes, it points to the start offset of a record
-// we call the second field recOff
+// second field is 3 bytes, it points to the start offset of a tuple
+// we call the second field tupleOff
 
 // we distinguish between two slot types:
-// prefix slots that point to prefix records, 
-// a frame is assumed to have a field numPrefixRecords
-// record slots that point to data records
-// a frame is assumed to have a field numRecords
-// a record slot contains a record pointer and a pointer to a prefix slot (prefix slot number) 
+// prefix slots that point to prefix tuples, 
+// a frame is assumed to have a field numPrefixTuples
+// tuple slots that point to data tuples
+// a frame is assumed to have a field numTuples
+// a tuple slot contains a tuple pointer and a pointer to a prefix slot (prefix slot number) 
 
 // INSERT procedure
-// a record insertion may use an existing prefix record 
-// a record insertion may never create a new prefix record
+// a tuple insertion may use an existing prefix tuple 
+// a tuple insertion may never create a new prefix tuple
 // modifying the prefix slots would be extremely expensive because: 
-// potentially all records slots would have to change their prefix slot pointers
+// potentially all tuples slots would have to change their prefix slot pointers
 // all prefixes are recomputed during a reorg or compaction
 
 public interface IPrefixSlotManager {
@@ -46,19 +46,19 @@ public interface IPrefixSlotManager {
 	public int decodeSecondSlotField(int slot);		
 	public int encodeSlotFields(int firstField, int secondField);
 	
-	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact);
-	public int insertSlot(int slot, int recOff);
-					
-	// returns prefix slot number, returns RECORD_UNCOMPRESSED if none found
-	public int findPrefix(ITupleReference tuple, MultiComparator multiCmp);
+	public int findSlot(ITupleReference tuple, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, boolean exact);
+	public int insertSlot(int slot, int tupleOff);
 	
-	public int getRecSlotStartOff();
-	public int getRecSlotEndOff();
+	// returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
+	public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp);
+	
+	public int getTupleSlotStartOff();
+	public int getTupleSlotEndOff();
 	
 	public int getPrefixSlotStartOff();
 	public int getPrefixSlotEndOff();
 	
-	public int getRecSlotOff(int slotNum);
+	public int getTupleSlotOff(int slotNum);
 	public int getPrefixSlotOff(int slotNum);	
 		
 	public int getSlotSize();		
