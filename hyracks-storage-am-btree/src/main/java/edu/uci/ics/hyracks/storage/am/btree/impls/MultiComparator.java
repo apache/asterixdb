@@ -15,13 +15,19 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 
+@SuppressWarnings("unchecked")
 public class MultiComparator {
-    	
+	
 	private static final long serialVersionUID = 1L;
 	
 	private IBinaryComparator[] cmps = null;
@@ -55,21 +61,6 @@ public class MultiComparator {
 	public IFieldAccessor[] getFields() {
 		return fields;
 	}
-		
-	public int compare(byte[] dataA, int recOffA, byte[] dataB, int recOffB) {
-		int lenA;
-		int lenB;
-		for(int i = 0; i < cmps.length; i++) {
-			lenA = fields[i].getLength(dataA, recOffA);
-			lenB = fields[i].getLength(dataB, recOffB);			
-			int cmp = cmps[i].compare(dataA, recOffA, lenA, dataB, recOffB, lenB);	
-    		if(cmp < 0) return -1;
-    		else if(cmp > 0) return 1;
-    		recOffA += lenA; 
-   			recOffB += lenB;    			
-    	}
-    	return 0;
-	}
 	
 	public int compare(ITupleReference tupleA, ITupleReference tupleB) {			
 		for(int i = 0; i < cmps.length; i++) {						
@@ -84,40 +75,7 @@ public class MultiComparator {
     	}
     	return 0;
 	}
-	
-	public int compare(ITupleReference tuple, IFieldIterator fieldIter) {
-		fieldIter.reset();
-        
-        int cmp = 0;
-        for(int i = 0; i < cmps.length; i++) {       	
-       	 cmp = cmps[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i), fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());          
-            if(cmp < 0) return -1;
-            else if(cmp > 0) return 1;             
-            fieldIter.nextField();
-        }
-        
-        fieldIter.reset();
-        return 0;
-	}
-	
-	public int compare(byte[] data, int recOff, IFieldIterator fieldIter) {
-		 fieldIter.reset();
-         
-         int recRunner = 0;
-         int cmp = 0;
-         for(int i = 0; i < cmps.length; i++) {
-        	 int recFieldLen = fields[i].getLength(data, recRunner);
-        	 cmp = cmps[i].compare(data, recRunner, recFieldLen, fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldIter.getFieldSize());          
-             if(cmp < 0) return -1;
-             else if(cmp > 0) return 1;             
-             fieldIter.nextField();
-             recRunner += recFieldLen;
-         }
-         
-         fieldIter.reset();
-         return 0;
-	}
-	
+		
 	public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
 		for(int i = startFieldIndex; i < startFieldIndex + numFields; i++) {						
 			int cmp = cmps[i].compare(
@@ -133,49 +91,14 @@ public class MultiComparator {
     	return 0;
 	}
 	
-	public int getRecordSize(byte[] data, int recOff) {
-		int runner = recOff;
-		for(int i = 0; i < fields.length; i++) {
-			runner += fields[i].getLength(data, runner);
-		}
-		return runner - recOff;
-	}
-	
-	public int getKeySize(byte[] data, int recOff) {
-		int runner = recOff;
-		for(int i = 0; i < cmps.length; i++) {
-			runner += fields[i].getLength(data, runner);
-		}
-		return runner - recOff;
-	}		
-	
-	public String printRecord(IFieldIterator fieldIter) {
-		StringBuilder strBuilder = new StringBuilder();	    
-		fieldIter.reset();
-		for(int i = 0; i < fields.length; i++) {
-			strBuilder.append(fields[i].print(fieldIter.getBuffer().array(), fieldIter.getFieldOff()) + " ");						
-			fieldIter.nextField();
-		}
-		return strBuilder.toString();
-	}
-		
-	public String printRecord(byte[] data, int recOff) {
+	public String printTuple(ITupleReference tuple, ISerializerDeserializer[] fields) throws HyracksDataException {										
 		StringBuilder strBuilder = new StringBuilder();
-	    int runner = recOff;
-		for(int i = 0; i < fields.length; i++) {
-			strBuilder.append(fields[i].print(data, runner) + " ");
-			runner += fields[i].getLength(data, runner);
+		for(int i = 0; i < tuple.getFieldCount(); i++) {
+			ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+			DataInput dataIn = new DataInputStream(inStream);
+			Object o = fields[i].deserialize(dataIn);
+			strBuilder.append(o.toString() + " ");
 		}
 		return strBuilder.toString();
-	}
-		
-	public String printKey(byte[] data, int recOff) {
-		StringBuilder strBuilder = new StringBuilder();		
-		int runner = recOff;
-		for(int i = 0; i < cmps.length; i++) {
-			strBuilder.append(fields[i].print(data, runner) + " ");			
-			runner += fields[i].getLength(data, runner);
-		}
-		return strBuilder.toString();
-	}		
+	}			
 }

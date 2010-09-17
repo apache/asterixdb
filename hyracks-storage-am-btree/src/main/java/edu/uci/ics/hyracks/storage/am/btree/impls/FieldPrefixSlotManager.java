@@ -18,21 +18,19 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
 public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	
 	private static final int slotSize = 4;		
-	public static final int RECORD_UNCOMPRESSED = 0xFF;
+	public static final int TUPLE_UNCOMPRESSED = 0xFF;
 	public static final int MAX_PREFIX_SLOTS = 0xFE;
 	public static final int GREATEST_SLOT = 0x00FFFFFF;
 	
 	private ByteBuffer buf;
-	private FieldPrefixNSMLeafFrame frame;
-	//private FieldPrefixFieldIterator fieldIter = new FieldPrefixFieldIterator(null, null);
-	private FieldPrefixTuple pageTuple = new FieldPrefixTuple();
-	private FieldPrefixPrefixTuple pagePrefixTuple = new FieldPrefixPrefixTuple();
+	private FieldPrefixNSMLeafFrame frame;	
 	
 	public int decodeFirstSlotField(int slot) {
 		return (slot & 0xFF000000) >>> 24;
@@ -43,119 +41,107 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	}
 	
 	public int encodeSlotFields(int firstField, int secondField) {
-		return ((firstField & 0x000000FF) << 24) | (secondField & 0x00FFFFFF);		
+		return ((firstField & 0x000000FF) << 24) | (secondField & 0x00FFFFFF);
 	}
 	
-	// returns prefix slot number, or RECORD_UNCOMPRESSED of no match was found
-	public int findPrefix(ITupleReference tuple, MultiComparator multiCmp) {
+	// returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
+	public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp) {
 		int prefixMid;
 	    int prefixBegin = 0;
-	    int prefixEnd = frame.getNumPrefixRecords() - 1;
-	     
-	    pagePrefixTuple.setFrame(frame);
-	    pagePrefixTuple.setFields(multiCmp.getFields());
+	    int prefixEnd = frame.getPrefixTupleCount() - 1;
 	    
-	    if(frame.getNumPrefixRecords() > 0) {
+	    if(frame.getPrefixTupleCount() > 0) {
 	    	while(prefixBegin <= prefixEnd) {
 	    		prefixMid = (prefixBegin + prefixEnd) / 2;	    			    		
-	    		int prefixSlotOff = getPrefixSlotOff(prefixMid);
-	    		int prefixSlot = buf.getInt(prefixSlotOff);    		
-	    		int numPrefixFields = decodeFirstSlotField(prefixSlot);
-	    		pagePrefixTuple.openPrefixSlotNum(prefixMid);
-	    		int cmp = multiCmp.fieldRangeCompare(tuple, pagePrefixTuple, 0, numPrefixFields);
+	    		framePrefixTuple.resetByTupleIndex(frame, prefixMid);
+	    		int cmp = multiCmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
 	    		if(cmp < 0) prefixEnd = prefixMid - 1;				    		
 	    		else if(cmp > 0) prefixBegin = prefixMid + 1;	    		
 	    		else return prefixMid;
 	    	}
 	    }
 	    
-	    return FieldPrefixSlotManager.RECORD_UNCOMPRESSED;
+	    return FieldPrefixSlotManager.TUPLE_UNCOMPRESSED;
 	}
 	
-	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact) {				
-		if(frame.getNumRecords() <= 0) encodeSlotFields(RECORD_UNCOMPRESSED, GREATEST_SLOT);
+	public int findSlot(ITupleReference tuple, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, boolean exact) {				
+		if(frame.getTupleCount() <= 0) encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_SLOT);
 								
-		pageTuple.setFrame(frame);
-		pageTuple.setFields(multiCmp.getFields());		
-		pagePrefixTuple.setFrame(frame);
-		pagePrefixTuple.setFields(multiCmp.getFields());
+		frameTuple.setFieldCount(multiCmp.getFields().length);
 		
 	    int prefixMid;
 	    int prefixBegin = 0;
-	    int prefixEnd = frame.getNumPrefixRecords() - 1;
-	    int prefixMatch = RECORD_UNCOMPRESSED;
+	    int prefixEnd = frame.getPrefixTupleCount() - 1;
+	    int prefixMatch = TUPLE_UNCOMPRESSED;
 	    
 	    // bounds are inclusive on both ends
-	    int recPrefixSlotNumLbound = prefixBegin;
-	    int recPrefixSlotNumUbound = prefixEnd;
+	    int tuplePrefixSlotNumLbound = prefixBegin;
+	    int tuplePrefixSlotNumUbound = prefixEnd;
 	    
-	    // binary search on the prefix slots to determine upper and lower bounds for the prefixSlotNums in record slots 
+	    // binary search on the prefix slots to determine upper and lower bounds for the prefixSlotNums in tuple slots 
 	    while(prefixBegin <= prefixEnd) {
 	    	prefixMid = (prefixBegin + prefixEnd) / 2;	    			    		
-	    	int prefixSlotOff = getPrefixSlotOff(prefixMid);
-	    	int prefixSlot = buf.getInt(prefixSlotOff);    		
-	    	int numPrefixFields = decodeFirstSlotField(prefixSlot);
-	    	pagePrefixTuple.openPrefixSlotNum(prefixMid);
-	    	int cmp = multiCmp.fieldRangeCompare(tuple, pagePrefixTuple, 0, numPrefixFields);
+	    	framePrefixTuple.resetByTupleIndex(frame, prefixMid);	    		    	
+	    	int cmp = multiCmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
 	    	if(cmp < 0) {	    			
 	    		prefixEnd = prefixMid - 1;
-	    		recPrefixSlotNumLbound = prefixMid - 1;	    				    		
+	    		tuplePrefixSlotNumLbound = prefixMid - 1;	    				    		
 	    	}
 	    	else if(cmp > 0) {	    			
 	    		prefixBegin = prefixMid + 1;
-	    		recPrefixSlotNumUbound = prefixMid + 1;
+	    		tuplePrefixSlotNumUbound = prefixMid + 1;
 	    	}
 	    	else {
-	    		recPrefixSlotNumLbound = prefixMid;
-	    		recPrefixSlotNumUbound = prefixMid;
+	    		tuplePrefixSlotNumLbound = prefixMid;
+	    		tuplePrefixSlotNumUbound = prefixMid;
 	    		prefixMatch = prefixMid;	    			
 	    		break;
 	    	}
 	    }
 	    
-	    //System.out.println("SLOTLBOUND: " + recPrefixSlotNumLbound);
-	    //System.out.println("SLOTUBOUND: " + recPrefixSlotNumUbound);
+	    //System.out.println("SLOTLBOUND: " + tuplePrefixSlotNumLbound);
+	    //System.out.println("SLOTUBOUND: " + tuplePrefixSlotNumUbound);
 	    
-	    int recMid = -1;
-	    int recBegin = 0;
-	    int recEnd = frame.getNumRecords() - 1;
+	    int tupleMid = -1;
+	    int tupleBegin = 0;
+	    int tupleEnd = frame.getTupleCount() - 1;
 	    
-	    // binary search on records, guided by the lower and upper bounds on prefixSlotNum
-	    while(recBegin <= recEnd) {
-            recMid = (recBegin + recEnd) / 2;      
-            int recSlotOff = getRecSlotOff(recMid);
-            int recSlot = buf.getInt(recSlotOff);              
-            int prefixSlotNum = decodeFirstSlotField(recSlot);
+	    // binary search on tuples, guided by the lower and upper bounds on prefixSlotNum
+	    while(tupleBegin <= tupleEnd) {
+            tupleMid = (tupleBegin + tupleEnd) / 2;      
+            int tupleSlotOff = getTupleSlotOff(tupleMid);
+            int tupleSlot = buf.getInt(tupleSlotOff);              
+            int prefixSlotNum = decodeFirstSlotField(tupleSlot);
             
             //System.out.println("RECS: " + recBegin + " " + recMid + " " + recEnd);
             int cmp = 0;            
-            if(prefixSlotNum == RECORD_UNCOMPRESSED) {            	            	
-            	pageTuple.openRecSlotNum(recMid);
-            	cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);      
+            if(prefixSlotNum == TUPLE_UNCOMPRESSED) {            	            	
+            	frameTuple.resetByTupleIndex(frame, tupleMid);
+            	cmp = multiCmp.compare(tuple, frameTuple);      
             }
             else {             	
-            	if(prefixSlotNum < recPrefixSlotNumLbound) cmp = 1;
-            	else if(prefixSlotNum > recPrefixSlotNumUbound) cmp = -1;
+            	if(prefixSlotNum < tuplePrefixSlotNumLbound) cmp = 1;
+            	else if(prefixSlotNum > tuplePrefixSlotNumUbound) cmp = -1;
             	else {
-            		pageTuple.openRecSlotNum(recMid);
-            		cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);            	            	            	
+            		frameTuple.resetByTupleIndex(frame, tupleMid);
+            		cmp = multiCmp.compare(tuple, frameTuple);            	            	            	
             	}
             }    
             
-            if(cmp < 0) recEnd = recMid - 1;
-            else if(cmp > 0) recBegin = recMid + 1;
-            else return encodeSlotFields(prefixMatch, recMid);
+            if(cmp < 0) tupleEnd = tupleMid - 1;
+            else if(cmp > 0) tupleBegin = tupleMid + 1;
+            else return encodeSlotFields(prefixMatch, tupleMid);
         }
 	    
 	    //System.out.println("RECS: " + recBegin + " " + recMid + " " + recEnd);
 	    
         if(exact) return encodeSlotFields(prefixMatch, GREATEST_SLOT);                       
-        if(recBegin > (frame.getNumRecords() - 1)) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+        if(tupleBegin > (frame.getTupleCount() - 1)) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
         
-        // do final comparison to determine whether the search key is greater than all keys or in between some existing keys        
-        pageTuple.openRecSlotNum(recBegin);
-        int cmp = multiCmp.compare(tuple, (ITupleReference)pageTuple);        
-        if(cmp < 0) return encodeSlotFields(prefixMatch, recBegin);
+        // do final comparison to determine whether the search key is greater than all keys or in between some existing keys
+        frameTuple.resetByTupleIndex(frame, tupleBegin);
+        int cmp = multiCmp.compare(tuple, (ITupleReference)frameTuple);        
+        if(cmp < 0) return encodeSlotFields(prefixMatch, tupleBegin);
         else return encodeSlotFields(prefixMatch, GREATEST_SLOT);
 	}	
 	
@@ -164,15 +150,15 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	}
 	
 	public int getPrefixSlotEndOff() {
-	    return buf.capacity() - slotSize * frame.getNumPrefixRecords();
+	    return buf.capacity() - slotSize * frame.getPrefixTupleCount();
 	}
 	
-	public int getRecSlotStartOff() {
+	public int getTupleSlotStartOff() {
 	    return getPrefixSlotEndOff() - slotSize;
 	}
 	
-	public int getRecSlotEndOff() {		
-		return buf.capacity() - slotSize * (frame.getNumPrefixRecords() + frame.getNumRecords());	    
+	public int getTupleSlotEndOff() {		
+		return buf.capacity() - slotSize * (frame.getPrefixTupleCount() + frame.getTupleCount());	    
 	}	
 	
 	public int getSlotSize() {
@@ -183,25 +169,22 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 		frame.getBuffer().putInt(offset, value);
 	}
 	
-	public int insertSlot(int slot, int recOff) {
+	public int insertSlot(int slot, int tupleOff) {
 		int slotNum = decodeSecondSlotField(slot);
 		if(slotNum == GREATEST_SLOT) {			
-			int slotOff = getRecSlotEndOff() - slotSize;
-			int newSlot = encodeSlotFields(decodeFirstSlotField(slot), recOff);
-			setSlot(slotOff, newSlot);
-			//System.out.println("SETTING A: " + slotOff + " " + recOff);
+			int slotOff = getTupleSlotEndOff() - slotSize;
+			int newSlot = encodeSlotFields(decodeFirstSlotField(slot), tupleOff);
+			setSlot(slotOff, newSlot);			
 			return newSlot;
 		}
 		else {
-			int slotEndOff = getRecSlotEndOff();
-			int slotOff = getRecSlotOff(slotNum);
+			int slotEndOff = getTupleSlotEndOff();
+			int slotOff = getTupleSlotOff(slotNum);
 			int length = (slotOff - slotEndOff) + slotSize;			
-			System.arraycopy(frame.getBuffer().array(), slotEndOff, frame.getBuffer().array(), slotEndOff - slotSize, length);
-			//System.out.println("MOVING SLOTS: " + length + " " + (frame.getNumRecords()*4));
+			System.arraycopy(frame.getBuffer().array(), slotEndOff, frame.getBuffer().array(), slotEndOff - slotSize, length);			
 			
-			int newSlot = encodeSlotFields(decodeFirstSlotField(slot), recOff);
-			setSlot(slotOff, newSlot);			
-			//System.out.println("SETTING B: " + slotOff + " " + recOff);
+			int newSlot = encodeSlotFields(decodeFirstSlotField(slot), tupleOff);
+			setSlot(slotOff, newSlot);
 			return newSlot;
 		}
 	}
@@ -215,8 +198,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 		return getPrefixSlotStartOff() - slotNum * slotSize;
 	}
 	
-	public int getRecSlotOff(int slotNum) {
-		return getRecSlotStartOff() - slotNum * slotSize;
+	public int getTupleSlotOff(int slotNum) {
+		return getTupleSlotStartOff() - slotNum * slotSize;
 	}
 	
 	public void setPrefixSlot(int slotNum, int slot) {

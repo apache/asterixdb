@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStre
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -47,7 +48,6 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -73,7 +73,8 @@ import edu.uci.ics.hyracks.storage.common.file.FileManager;
 public class BTreeTest {    
 	
     //private static final int PAGE_SIZE = 128;
-    private static final int PAGE_SIZE = 8192;
+    //private static final int PAGE_SIZE = 8192;
+	private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
     
@@ -96,7 +97,7 @@ public class BTreeTest {
             return buffers;
         }
     }
-    
+        
     // FIXED-LENGTH KEY TEST
     // create a B-tree with one fixed-length "key" field and one fixed-length "value" field
     // fill B-tree with random values using insertions (not bulk load)
@@ -128,7 +129,7 @@ public class BTreeTest {
         IFieldAccessor[] fields = new IFieldAccessor[2];
         fields[0] = new Int32Accessor(); // key field
         fields[1] = new Int32Accessor(); // value field
-
+        
         int keyLen = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -158,10 +159,11 @@ public class BTreeTest {
 		FrameTupleReference tuple = new FrameTupleReference();
 		
 		// 10000
-        for (int i = 0; i < 10000; i++) {        	
+        for (int i = 0; i < 10000; i++) {        	        	
+        	
         	int f0 = rnd.nextInt() % 10000;
         	int f1 = 5;
-        	
+        	        	
         	tb.reset();
         	IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
         	tb.addFieldEndOffset();
@@ -191,6 +193,7 @@ public class BTreeTest {
             //System.out.println();
         }
         //btree.printTree(leafFrame, interiorFrame);
+        //System.out.println();
         
         print("TOTALSPACE: " + f.length() + "\n");
         
@@ -200,24 +203,26 @@ public class BTreeTest {
         long end = System.currentTimeMillis();
         long duration = end - start;
         print("DURATION: " + duration + "\n");
-        
+                
         // ordered scan
+        
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         try {
             while (scanCursor.hasNext()) {
-                scanCursor.next();
-                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+                scanCursor.next();                
+                ITupleReference frameTuple = scanCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
                 print(rec + "\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             scanCursor.close();
-        }                
+        }
+                       
         
         // disk-order scan
         print("DISK-ORDER SCAN:\n");        
@@ -226,8 +231,8 @@ public class BTreeTest {
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
-                IFieldIterator fieldIter = diskOrderCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+                ITupleReference frameTuple = diskOrderCursor.getTuple();                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -235,7 +240,8 @@ public class BTreeTest {
         } finally {
             diskOrderCursor.close();
         }
-               
+         
+        
         // range search in [-1000, 1000]
         print("RANGE SEARCH:\n");        
  
@@ -269,22 +275,23 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
-                print(rec + "\n"); 
+                ITupleReference frameTuple = rangeCursor.getTuple();                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             rangeCursor.close();
-        }
+        }  
                 
         btree.close();
 
         bufferCache.close();
         fileManager.close();
         print("\n");
-    }    
+    }
+    
     
     // COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
     // create a B-tree with one two fixed-length "key" fields and one fixed-length "value" field
@@ -317,8 +324,8 @@ public class BTreeTest {
         IFieldAccessor[] fields = new IFieldAccessor[3];
         fields[0] = new Int32Accessor(); // key field 1
         fields[1] = new Int32Accessor(); // key field 2
-        fields[2] = new Int32Accessor(); // value field
-
+        fields[2] = new Int32Accessor(); // value field        
+        
         int keyLen = 2;
         IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -391,9 +398,9 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
-                print(rec + "\n");         
+                ITupleReference frameTuple = scanCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -433,9 +440,9 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
-                print(rec + "\n");         
+                ITupleReference frameTuple = rangeCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n"); 
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -449,7 +456,8 @@ public class BTreeTest {
         fileManager.close();
         
         print("\n");
-    }
+    }    
+    
     
     // VARIABLE-LENGTH TEST
     // create a B-tree with one variable-length "key" field and one variable-length "value" field
@@ -482,7 +490,7 @@ public class BTreeTest {
     	IFieldAccessor[] fields = new IFieldAccessor[2];
     	fields[0] = new UTF8StringAccessor(); // key        
     	fields[1] = new UTF8StringAccessor(); // value
-
+    	
     	int keyLen = 1;
     	IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
     	cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -531,7 +539,9 @@ public class BTreeTest {
     		try {
     			btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
     		} catch (Exception e) {
+    			//e.printStackTrace();
     		}
+    		    		
     	}     
     	// btree.printTree();
 
@@ -544,9 +554,9 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
-                print(rec + "\n");          
+                ITupleReference frameTuple = scanCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n");  
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -587,9 +597,9 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
-                print(rec + "\n");    
+                ITupleReference frameTuple = rangeCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n");  
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -604,6 +614,7 @@ public class BTreeTest {
         
         print("\n");
     }
+        
     
     // DELETION TEST
     // create a B-tree with one variable-length "key" field and one variable-length "value" field
@@ -760,6 +771,7 @@ public class BTreeTest {
         
         print("\n");
     }
+        
     
     // BULK LOAD TEST
     // insert 100,000 records in bulk
@@ -788,14 +800,13 @@ public class BTreeTest {
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();          
-
-        int keyLen = 2;
-
+        
         IFieldAccessor[] fields = new IFieldAccessor[3];
         fields[0] = new Int32Accessor();
         fields[1] = new Int32Accessor();
         fields[2] = new Int32Accessor();
-
+        
+        int keyLen = 2;
         IBinaryComparator[] cmps = new IBinaryComparator[keyLen];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -836,17 +847,18 @@ public class BTreeTest {
         	tb.addFieldEndOffset();        	
         	IntegerSerializerDeserializer.INSTANCE.serialize(5, dos);
         	tb.addFieldEndOffset();
-        	
+        	        	
         	appender.reset(frame, true);
         	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         	
         	tuple.reset(accessor, 0);
         	
-        	btree.bulkLoadAddRecord(bulkLoadCtx, tuple);
-        	
+        	btree.bulkLoadAddTuple(bulkLoadCtx, tuple);        	
         }
 
         btree.endBulkLoad(bulkLoadCtx);
+        
+        //btree.printTree(leafFrame, interiorFrame);
         
         long end = System.currentTimeMillis();
         long duration = end - start;
@@ -881,12 +893,12 @@ public class BTreeTest {
         // TODO: check when searching backwards
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
-
+        
         try {
             while (rangeCursor.hasNext()) {
-                rangeCursor.next();
-                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+            	rangeCursor.next();
+                ITupleReference frameTuple = rangeCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -902,7 +914,7 @@ public class BTreeTest {
         
         print("\n");
     }    
-    
+        
     // TIME-INTERVAL INTERSECTION DEMO FOR EVENT PEOPLE
     // demo for Arjun to show easy support of intersection queries on time-intervals
     @Test
@@ -1040,8 +1052,8 @@ public class BTreeTest {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                IFieldIterator fieldIter = scanCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+                ITupleReference frameTuple = scanCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -1087,8 +1099,8 @@ public class BTreeTest {
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
-                IFieldIterator fieldIter = rangeCursor.getFieldIterator();                                
-                String rec = cmp.printRecord(fieldIter);
+                ITupleReference frameTuple = rangeCursor.getTuple();                                
+                String rec = cmp.printTuple(frameTuple, recDescSers);
                 print(rec + "\n");
             }
         } catch (Exception e) {
@@ -1112,5 +1124,5 @@ public class BTreeTest {
             strBuilder.append(s.charAt(Math.abs(random.nextInt()) % s.length()));
         }
         return strBuilder.toString();
-    }
+    }    
 }

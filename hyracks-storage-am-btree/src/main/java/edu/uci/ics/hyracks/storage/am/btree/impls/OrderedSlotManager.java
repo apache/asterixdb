@@ -17,31 +17,29 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 
 public class OrderedSlotManager implements ISlotManager {
 	
 	private static final int slotSize = 4;
 	private IBTreeFrame frame;
-		
-	private SelfDescTupleReference pageTuple = new SelfDescTupleReference();
-		
+	
 	// TODO: mix in interpolation search
 	@Override
-	public int findSlot(ITupleReference tuple, MultiComparator multiCmp, boolean exact) {
-		if(frame.getNumRecords() <= 0) return -1;
-		
-		pageTuple.setFields(multiCmp.getFields());
-		
+	public int findSlot(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, boolean exact) {
+		if(frame.getTupleCount() <= 0) return -1;
+				
 		int mid;
 		int begin = 0;
-		int end = frame.getNumRecords() - 1;
-		
+		int end = frame.getTupleCount() - 1;
+				
         while(begin <= end) {
             mid = (begin + end) / 2;
         	int slotOff = getSlotOff(mid);        	
-        	int recOff = getRecOff(slotOff);
-        	pageTuple.reset(frame.getBuffer(), recOff);
+        	int tupleOff = getTupleOff(slotOff);
+        	pageTuple.resetByOffset(frame.getBuffer(), tupleOff);
+        	
         	int cmp = multiCmp.compare(tuple, pageTuple);
         	if(cmp < 0)
         		end = mid - 1;
@@ -52,11 +50,11 @@ public class OrderedSlotManager implements ISlotManager {
         }
                         
         if(exact) return -1;             
-        if(begin > frame.getNumRecords() - 1) return -1;   
+        if(begin > frame.getTupleCount() - 1) return -1;   
         
         int slotOff = getSlotOff(begin);
-        int recOff = getRecOff(slotOff);
-        pageTuple.reset(frame.getBuffer(), recOff);
+        int tupleOff = getTupleOff(slotOff);
+        pageTuple.resetByOffset(frame.getBuffer(), tupleOff);
         if(multiCmp.compare(tuple, pageTuple)  < 0)
         	return slotOff;
         else
@@ -64,7 +62,7 @@ public class OrderedSlotManager implements ISlotManager {
 	}
 	
 	@Override
-	public int getRecOff(int offset) {		
+	public int getTupleOff(int offset) {		
 		return frame.getBuffer().getInt(offset);
 	}
 	
@@ -75,7 +73,7 @@ public class OrderedSlotManager implements ISlotManager {
 	
 	@Override
 	public int getSlotEndOff() {
-		return frame.getBuffer().capacity() - (frame.getNumRecords() * slotSize);
+		return frame.getBuffer().capacity() - (frame.getTupleCount() * slotSize);
 	}
 	
 	@Override
@@ -89,17 +87,17 @@ public class OrderedSlotManager implements ISlotManager {
 	}
 	
 	@Override
-	public int insertSlot(int slotOff, int recOff) {
+	public int insertSlot(int slotOff, int tupleOff) {
 		if(slotOff < 0) {
 			slotOff = getSlotEndOff() - slotSize;
-			setSlot(slotOff, recOff);
+			setSlot(slotOff, tupleOff);
 			return slotOff;
 		}
 		else {
 			int slotEndOff = getSlotEndOff();
 			int length = (slotOff - slotEndOff) + slotSize;			
 			System.arraycopy(frame.getBuffer().array(), slotEndOff, frame.getBuffer().array(), slotEndOff - slotSize, length);
-			setSlot(slotOff, recOff);
+			setSlot(slotOff, tupleOff);
 			return slotOff;
 		}		
 	}

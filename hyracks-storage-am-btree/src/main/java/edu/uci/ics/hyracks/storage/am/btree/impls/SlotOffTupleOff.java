@@ -15,18 +15,20 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-public class SlotOffRecOff implements Comparable<SlotOffRecOff> {
+public class SlotOffTupleOff implements Comparable<SlotOffTupleOff> {
+	public int tupleIndex;
 	public int slotOff;
-	public int recOff;
+	public int tupleOff;	
 	
-	public SlotOffRecOff(int slotOff, int recOff) {
+	public SlotOffTupleOff(int tupleIndex, int slotOff, int recOff) {
+		this.tupleIndex = tupleIndex;
 		this.slotOff = slotOff;
-		this.recOff = recOff;
+		this.tupleOff = recOff;
 	}
 	
 	@Override
-	public int compareTo(SlotOffRecOff o) {			
-		return recOff - o.recOff;
+	public int compareTo(SlotOffTupleOff o) {			
+		return tupleOff - o.tupleOff;
 	}
 }
 

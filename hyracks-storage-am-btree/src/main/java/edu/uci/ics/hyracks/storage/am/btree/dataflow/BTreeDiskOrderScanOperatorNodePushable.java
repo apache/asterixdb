@@ -23,10 +23,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
@@ -67,10 +67,9 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
                 tb.reset();
                 cursor.next();
 
-                IFieldIterator fieldIter = cursor.getFieldIterator();
-                for (int i = 0; i < cmp.getFields().length; i++) {
-                    int fieldLen = fieldIter.getFieldSize();
-                    dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
+                ITupleReference frameTuple = cursor.getTuple();                
+                for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+                    dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
                     tb.addFieldEndOffset();
                 }
 

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -27,5 +28,5 @@ public interface IBTreeCursor {
 	public void close() throws Exception;
 	public void setBufferCache(IBufferCache bufferCache);
 	public void setFileId(int fileId);
-	public IFieldIterator getFieldIterator();
+	public ITupleReference getTuple();
 }

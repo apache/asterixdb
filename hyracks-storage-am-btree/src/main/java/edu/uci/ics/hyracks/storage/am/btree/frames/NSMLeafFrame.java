@@ -61,14 +61,14 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
-		int slotOff = slotManager.findSlot(tuple, cmp, false);
+		frameTuple.setFieldCount(cmp.getFields().length);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
 		boolean isDuplicate = true;
 				
 		if (slotOff < 0) isDuplicate = false; // greater than all existing keys
 		else {
-			pageTuple.setFields(cmp.getFields());
-			pageTuple.reset(buf, slotManager.getRecOff(slotOff));					
-			if (cmp.compare(tuple, pageTuple) != 0) isDuplicate = false;
+			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));				
+			if (cmp.compare(tuple, frameTuple) != 0) isDuplicate = false;
 		}
 				
 		if (isDuplicate) {
@@ -77,10 +77,10 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		else {
 			slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));
 			
-			int freeSpace = buf.getInt(freeSpaceOff);
-			int bytesWritten = writeTupleFields(tuple, tuple.getFieldCount(), buf, freeSpace);			
+			int freeSpace = buf.getInt(freeSpaceOff);			
+			int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);			
 			
-			buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
+			buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 			buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
 			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
 		}	
@@ -89,70 +89,71 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	@Override
 	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		int freeSpace = buf.getInt(freeSpaceOff);
-		slotManager.insertSlot(-1, freeSpace);
-		int bytesWritten = writeTupleFields(tuple, tuple.getFieldCount(), buf, freeSpace);		
-		buf.putInt(numRecordsOff, buf.getInt(numRecordsOff) + 1);
+		slotManager.insertSlot(-1, freeSpace);		
+		int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);			
+		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
 		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
 	}
 	
 	@Override
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception {
-		
-		pageTuple.setFields(cmp.getFields());
+				
+		frameTuple.setFieldCount(cmp.getFields().length);
 		
 		// before doing anything check if key already exists
-		int slotOff = slotManager.findSlot(tuple, cmp, true);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
 		if (slotOff >= 0) {						
-			pageTuple.reset(buf, slotManager.getRecOff(slotOff));		
-			if (cmp.compare(tuple, pageTuple) == 0) {
+			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));		
+			if (cmp.compare(tuple, frameTuple) == 0) {
 				throw new BTreeException("Inserting duplicate key into unique index");
 			}
 		}
 		
 		ByteBuffer right = rightFrame.getBuffer();
-		int numRecords = getNumRecords();
+		int tupleCount = getTupleCount();
 
-		int recordsToLeft;
-		int mid = numRecords / 2;
+		int tuplesToLeft;
+		int mid = tupleCount / 2;
 		IBTreeFrame targetFrame = null;
-		int recOff = slotManager.getRecOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
-		pageTuple.reset(buf, recOff);		
-		if (cmp.compare(tuple, pageTuple) >= 0) {
-			recordsToLeft = mid + (numRecords % 2);
+		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
+		frameTuple.resetByOffset(buf, tupleOff);	
+		if (cmp.compare(tuple, frameTuple) >= 0) {
+			tuplesToLeft = mid + (tupleCount % 2);
 			targetFrame = rightFrame;
 		} else {
-			recordsToLeft = mid;
+			tuplesToLeft = mid;
 			targetFrame = this;
 		}
-		int recordsToRight = numRecords - recordsToLeft;
+		int tuplesToRight = tupleCount - tuplesToLeft;
 				
 		// copy entire page
 		System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
 		
 		// on right page we need to copy rightmost slots to left
 		int src = rightFrame.getSlotManager().getSlotEndOff();
-		int dest = rightFrame.getSlotManager().getSlotEndOff() + recordsToLeft * rightFrame.getSlotManager().getSlotSize();
-		int length = rightFrame.getSlotManager().getSlotSize() * recordsToRight; 
+		int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft * rightFrame.getSlotManager().getSlotSize();
+		int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight; 
 		System.arraycopy(right.array(), src, right.array(), dest, length);
-		right.putInt(numRecordsOff, recordsToRight);
+		right.putInt(tupleCountOff, tuplesToRight);
 		
-		// on left page only change the numRecords indicator
-		buf.putInt(numRecordsOff, recordsToLeft);
+		// on left page only change the tupleCount indicator
+		buf.putInt(tupleCountOff, tuplesToLeft);				
 			
 		// compact both pages
-		rightFrame.compact(cmp);
+		rightFrame.compact(cmp);		
 		compact(cmp);
 		
 		// insert last key
 		targetFrame.insert(tuple, cmp);	
 		
 		// set split key to be highest value in left page
-		recOff = slotManager.getRecOff(slotManager.getSlotEndOff());
-		int keySize = cmp.getKeySize(buf.array(), recOff);		
-		splitKey.initData(keySize);
-		pageTuple.reset(buf, recOff);
-		writeTupleFields((ITupleReference)pageTuple, cmp.getKeyLength(), splitKey.getBuffer(), 0);
+		tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
+		frameTuple.resetByOffset(buf, tupleOff);
+		
+		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+		splitKey.initData(splitKeySize);				
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyLength(), splitKey.getBuffer(), 0);
 		
 		return 0;
 	}

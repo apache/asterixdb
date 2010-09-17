@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldIterator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -93,11 +92,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
             while (cursor.hasNext()) {
                 tb.reset();
                 cursor.next();
-
-                IFieldIterator fieldIter = cursor.getFieldIterator();
-                for (int i = 0; i < cmp.getFields().length; i++) {
-                    int fieldLen = fieldIter.getFieldSize();
-                    dos.write(fieldIter.getBuffer().array(), fieldIter.getFieldOff(), fieldLen);
+                
+                ITupleReference frameTuple = cursor.getTuple();                
+                for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+                    dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
                     tb.addFieldEndOffset();
                 }
 
