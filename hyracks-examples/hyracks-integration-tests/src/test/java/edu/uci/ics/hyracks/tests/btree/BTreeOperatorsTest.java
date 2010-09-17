@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.tests.btree;
 
-import java.io.DataOutputStream;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -26,13 +26,16 @@ import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
@@ -52,16 +55,16 @@ import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BufferCacheProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.FrameTupleReferenceFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.ITupleReferenceFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -70,16 +73,13 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SelfDescTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.types.Int32AccessorFactory;
-import edu.uci.ics.hyracks.storage.am.btree.types.UTF8StringAccessorFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class BTreeOperatorsTest extends AbstractIntegrationTest {
-	
+		
 	@Test
 	public void bulkLoadTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
@@ -115,20 +115,16 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();		
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
-        
-		IFieldAccessorFactory[] fieldAccessorFactories = new IFieldAccessorFactory[3];
-		fieldAccessorFactories[0] = new UTF8StringAccessorFactory(); // key
-		fieldAccessorFactories[1] = new UTF8StringAccessorFactory(); // payload
-		fieldAccessorFactories[2] = new UTF8StringAccessorFactory(); // payload
-
-		int keyLen = 1;
-		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyLen];
+        		
+		int fieldCount = 3;
+		int keyFieldCount = 1;
+		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyFieldCount];
 		comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;		
 				
 		int[] fieldPermutation = { 0, 4, 5 };  
         int btreeFileId = 0;
         
-		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldAccessorFactories, comparatorFactories, fieldPermutation, 0.7f);		
+		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);		
 		PartitionConstraint btreePartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
 		btreeBulkLoad.setPartitionConstraint(btreePartitionConstraintA);
 				
@@ -139,18 +135,13 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         spec.addRoot(btreeBulkLoad);
         runTest(spec);
         
-        // construct a multicomparator from the factories (only for printing purposes)                
-        IFieldAccessor[] fields = new IFieldAccessor[fieldAccessorFactories.length];
-    	for(int i = 0; i < fieldAccessorFactories.length; i++) {
-    		fields[i] = fieldAccessorFactories[i].getFieldAccessor();
-    	}
-    	
+        // construct a multicomparator from the factories (only for printing purposes)        
     	IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
     	for(int i = 0; i < comparatorFactories.length; i++) {
     		comparators[i] = comparatorFactories[i].createBinaryComparator();
     	}
     	
-        MultiComparator cmp = new MultiComparator(comparators, fields);
+        MultiComparator cmp = new MultiComparator(fieldCount, comparators);
 
         // try an ordered scan on the bulk-loaded btree
         BTree btreeA = btreeRegistryProvider.getBTreeRegistry().get(btreeFileId);
@@ -169,9 +160,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         } finally {
         	scanCursor.close();
         }                        
-	}
+	}	
 	
-	/*
 	@Test
 	public void btreeSearchTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
@@ -181,46 +171,49 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		
 		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();        
-		
-		IFieldAccessorFactory[] fieldAccessorFactories = new IFieldAccessorFactory[2];
-		fieldAccessorFactories[0] = new Int32AccessorFactory(); // key
-		fieldAccessorFactories[1] = new Int32AccessorFactory(); // value
-						
-		int keyLen = 1;
-		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyLen];
+				
+		int fieldCount = 2;
+		int keyFieldCount = 1;
+		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyFieldCount];
 		comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;	
 		
-		// construct a multicomparator from the factories (only for printing purposes)                
-        IFieldAccessor[] fields = new IFieldAccessor[fieldAccessorFactories.length];
-    	for(int i = 0; i < fieldAccessorFactories.length; i++) {
-    		fields[i] = fieldAccessorFactories[i].getFieldAccessor();
-    	}
-    	
+		// construct a multicomparator from the factories (only for printing purposes)        
     	IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
     	for(int i = 0; i < comparatorFactories.length; i++) {
     		comparators[i] = comparatorFactories[i].createBinaryComparator();
     	}
-    	
-        MultiComparator cmp = new MultiComparator(comparators, fields);
+    	    	    	    	
+        MultiComparator cmp = new MultiComparator(fieldCount, comparators);
 		
-		ByteArrayAccessibleOutputStream lkbaaos = new ByteArrayAccessibleOutputStream();
-		DataOutputStream lkdos = new DataOutputStream(lkbaaos);    	    	    	
-		IntegerSerializerDeserializer.INSTANCE.serialize(-1000, lkdos);
-
-		ByteArrayAccessibleOutputStream hkbaaos = new ByteArrayAccessibleOutputStream();
-		DataOutputStream hkdos = new DataOutputStream(hkbaaos);    	    	    	
-		IntegerSerializerDeserializer.INSTANCE.serialize(1000, hkdos);
-				
-		byte[] lowKeyBytes = lkbaaos.toByteArray();
-        ByteBuffer lowKeyBuf = ByteBuffer.wrap(lowKeyBytes);
-        SelfDescTupleReference lowKey = new SelfDescTupleReference(cmp.getFields());
-        lowKey.reset(lowKeyBuf, 0);
         
-        byte[] highKeyBytes = hkbaaos.toByteArray();
-        ByteBuffer highKeyBuf = ByteBuffer.wrap(highKeyBytes);
-        SelfDescTupleReference highKey = new SelfDescTupleReference(cmp.getFields());
-        highKey.reset(highKeyBuf, 0);
+        // put search keys into frame and create tuplereference factories
+        IHyracksContext ctx = new HyracksContext(32768); // WARNING: make sure frame size is same as on NCs
+        ByteBuffer keyFrame = ctx.getResourceManager().allocateFrame();
+		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
+		appender.reset(keyFrame, true);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		DataOutput dos = tb.getDataOutput();
 		
+		ISerializerDeserializer[] keyRecDescSers = { IntegerSerializerDeserializer.INSTANCE};
+		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+		
+		// build low key
+		tb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(-1000, dos);
+    	tb.addFieldEndOffset();    	  
+    	        	    	
+    	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+    	    	
+    	// build high key
+    	tb.reset();
+    	IntegerSerializerDeserializer.INSTANCE.serialize(1000, dos);
+    	tb.addFieldEndOffset();
+    	
+    	// build search key factories
+    	ITupleReferenceFactory[] searchKeys = new ITupleReferenceFactory[2]; 
+    	searchKeys[0] = new FrameTupleReferenceFactory(keyFrame.array(), 0, keyRecDesc);
+    	searchKeys[1] = new FrameTupleReferenceFactory(keyFrame.array(), 1, keyRecDesc);
+    	    	    	
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
 		
@@ -228,7 +221,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
 		
 		int btreeFileId = 2;		
-		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldAccessorFactories, comparatorFactories, true, lowKey, highKey, comparatorFactories.length);
+		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length);
 		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
 		
 		PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
@@ -244,7 +237,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         spec.addRoot(printer);
         runTest(spec);
     }
-	*/
+	
 	
 	@Test
 	public void insertTest() throws Exception {
@@ -277,55 +270,35 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
 		
 		// we will create a primary index and 2 secondary indexes
-		// first create fieldaccessors and comparators for primary index
-		IFieldAccessorFactory[] primaryFieldAccessorFactories = new IFieldAccessorFactory[6];
-		primaryFieldAccessorFactories[0] = new UTF8StringAccessorFactory(); // key
-		primaryFieldAccessorFactories[1] = new UTF8StringAccessorFactory(); // payload
-		primaryFieldAccessorFactories[2] = new UTF8StringAccessorFactory(); // payload
-		primaryFieldAccessorFactories[3] = new UTF8StringAccessorFactory(); // payload
-		primaryFieldAccessorFactories[4] = new UTF8StringAccessorFactory(); // payload
-		primaryFieldAccessorFactories[5] = new UTF8StringAccessorFactory(); // payload		
-		
-		int primaryKeyLen = 1;
-		IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyLen];
+		// first create comparators for primary index		
+		int primaryFieldCount = 6;
+		int primaryKeyFieldCount = 1;
+		IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
 		primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;		
 		
-		// construct a multicomparator for the primary index                
-        IFieldAccessor[] primaryFields = new IFieldAccessor[primaryFieldAccessorFactories.length];
-    	for(int i = 0; i < primaryFieldAccessorFactories.length; i++) {
-    		primaryFields[i] = primaryFieldAccessorFactories[i].getFieldAccessor();
-    	}
-    	
+		// construct a multicomparator for the primary index       
     	IBinaryComparator[] primaryComparators = new IBinaryComparator[primaryComparatorFactories.length];
     	for(int i = 0; i < primaryComparatorFactories.length; i++) {
     		primaryComparators[i] = primaryComparatorFactories[i].createBinaryComparator();
     	}
     	
-        MultiComparator primaryCmp = new MultiComparator(primaryComparators, primaryFields);
+        MultiComparator primaryCmp = new MultiComparator(primaryFieldCount, primaryComparators);
         
         
-        // now create fieldaccessors and comparators for secondary indexes
-		IFieldAccessorFactory[] secondaryFieldAccessorFactories = new IFieldAccessorFactory[2];
-		secondaryFieldAccessorFactories[0] = new UTF8StringAccessorFactory(); // key
-		secondaryFieldAccessorFactories[1] = new UTF8StringAccessorFactory(); // key (key in primary index)
-		
-		int secondaryKeyLen = 2;
-		IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyLen];
+        // now create comparators for secondary indexes		
+		int secondaryFieldCount = 2;
+		int secondaryKeyFieldCount = 2;
+		IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyFieldCount];
 		secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 		secondaryComparatorFactories[1] = UTF8StringBinaryComparatorFactory.INSTANCE;		
 		
-		// construct a multicomparator for the secondary indexes                
-        IFieldAccessor[] secondaryFields = new IFieldAccessor[secondaryFieldAccessorFactories.length];
-    	for(int i = 0; i < secondaryFieldAccessorFactories.length; i++) {
-    		secondaryFields[i] = secondaryFieldAccessorFactories[i].getFieldAccessor();
-    	}
-    	
+		// construct a multicomparator for the secondary indexes        
     	IBinaryComparator[] secondaryComparators = new IBinaryComparator[secondaryComparatorFactories.length];
     	for(int i = 0; i < secondaryComparatorFactories.length; i++) {
     		secondaryComparators[i] = secondaryComparatorFactories[i].createBinaryComparator();
     	}
     	
-        MultiComparator secondaryCmp = new MultiComparator(secondaryComparators, secondaryFields);
+        MultiComparator secondaryCmp = new MultiComparator(secondaryFieldCount, secondaryComparators);
         
         // we create and register 3 btrees for in an insert pipeline being fed from a filescan op        
         IBufferCache bufferCache = bufferCacheProvider.getBufferCache();
@@ -370,19 +343,19 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         
         // primary index
         int[] fieldPermutationA = { 0,1,2,3,4,5 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdA, "/tmp/btreetestA.ix", interiorFrameFactory, leafFrameFactory, primaryFieldAccessorFactories, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdA, "/tmp/btreetestA.ix", interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpA.setPartitionConstraint(insertPartitionConstraintA);
         
         // first secondary index
         int[] fieldPermutationB = { 3, 0 };                    
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdB, "/tmp/btreetestB.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldAccessorFactories, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdB, "/tmp/btreetestB.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintB = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpB.setPartitionConstraint(insertPartitionConstraintB);
 		
         // second secondary index
         int[] fieldPermutationC = { 4, 0 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdC, "/tmp/btreetestC.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldAccessorFactories, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdC, "/tmp/btreetestC.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintC = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpC.setPartitionConstraint(insertPartitionConstraintC);
                 
@@ -457,5 +430,5 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         	scanCursorC.close();
         }        
         System.out.println();
-	}
+	}	
 }

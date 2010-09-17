@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
 
 public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 	
@@ -31,7 +30,7 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	protected String btreeFileName;
 	protected int btreeFileId;
 		
-	protected IFieldAccessorFactory[] fieldAccessorFactories;
+	protected int fieldCount;
 	protected IBinaryComparatorFactory[] comparatorFactories;	
 	
 	protected IBTreeInteriorFrameFactory interiorFrameFactory;
@@ -40,7 +39,7 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	protected IBufferCacheProvider bufferCacheProvider;
 	protected IBTreeRegistryProvider btreeRegistryProvider;
 	
-	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, IFieldAccessorFactory[] fieldAccessorFactories, IBinaryComparatorFactory[] comparatorFactories) {
+	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
         this.btreeFileId = btreeFileId;
         this.btreeFileName = btreeFileName;
@@ -48,7 +47,7 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
         this.btreeRegistryProvider = btreeRegistryProvider;        
         this.interiorFrameFactory = interiorFactory;
         this.leafFrameFactory = leafFactory;
-        this.fieldAccessorFactories = fieldAccessorFactories;
+        this.fieldCount = fieldCount;
         this.comparatorFactories = comparatorFactories;        
         if(outputArity > 0) recordDescriptors[0] = recDesc;   
     }
@@ -65,8 +64,8 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 		return comparatorFactories;
 	}
 	
-	public IFieldAccessorFactory[] getFieldAccessorFactories() {
-		return fieldAccessorFactories;
+	public int getFieldCount() {
+		return fieldCount;
 	}
 		
 	public IBTreeInteriorFrameFactory getInteriorFactory() {

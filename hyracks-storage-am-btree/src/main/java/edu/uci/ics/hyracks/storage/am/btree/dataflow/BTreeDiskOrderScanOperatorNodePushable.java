@@ -59,7 +59,7 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         ByteBuffer frame = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());
         appender.reset(frame, true);
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFields().length);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
 
         try {

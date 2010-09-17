@@ -20,6 +20,7 @@ import java.util.Stack;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
@@ -29,7 +30,6 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -53,7 +53,6 @@ public class BTree {
     private final MultiComparator cmp;
     private final ReadWriteLock treeLatch;    
     private final RangePredicate diskOrderScanPredicate;
-    private final MultiComparator interiorCmp;
     
     public int rootSplits = 0;
     public int[] splitsByLevel = new int[500];
@@ -98,13 +97,7 @@ public class BTree {
         this.leafFrameFactory = leafFrameFactory;       
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new RangePredicate(true, null, null, cmp);
-        
-        IFieldAccessor[] interiorFields = new IFieldAccessor[cmp.getKeyLength()];
-        for(int i = 0; i < cmp.getKeyLength(); i++) {
-        	interiorFields[i] = cmp.getFields()[i];
-        }               
-        this.interiorCmp = new MultiComparator(cmp.getComparators(), interiorFields);        
+        this.diskOrderScanPredicate = new RangePredicate(true, null, null, cmp);                
     }
     
     public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
@@ -317,12 +310,12 @@ public class BTree {
 		return maxPage;
     }
     
-    public void printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame) throws Exception {
-        printTree(rootPage, null, false, leafFrame, interiorFrame);
+    public void printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
+        printTree(rootPage, null, false, leafFrame, interiorFrame, fields);
     }
 
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
-            IBTreeInteriorFrame interiorFrame) throws Exception {
+            IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
         
         ICachedPage node = bufferCache.pin(FileInfo.getDiskPageId(fileId, pageId), false);
         pins++;
@@ -369,12 +362,12 @@ public class BTree {
             String keyString;
             if(interiorFrame.isLeaf()) {
             	leafFrame.setPage(node);
-            	keyString = leafFrame.printKeys(cmp, cmp.getFields().length);
+            	keyString = leafFrame.printKeys(cmp, fields);
             }
             else {
-            	keyString = interiorFrame.printKeys(interiorCmp, cmp.getKeyLength());
+            	keyString = interiorFrame.printKeys(cmp, fields);
             }
-
+            
             System.out.format(keyString);
             if (!interiorFrame.isLeaf()) {
             	ArrayList<Integer> children = ((NSMInteriorFrame) (interiorFrame)).getChildren(cmp);
@@ -387,7 +380,7 @@ public class BTree {
             	System.out.println();
             	            	
                 for (int i = 0; i < children.size(); i++) {
-                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame);
+                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, fields);
                 }
             } else {
                 node.releaseReadLatch();
@@ -563,7 +556,7 @@ public class BTree {
         ctx.metaFrame = metaFrame;
         ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
         ctx.splitKey = new SplitKey();
-        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyLength());
+        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
         ctx.pageLsns = new Stack<Integer>();
 
@@ -595,7 +588,7 @@ public class BTree {
     
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
     	ctx.leafFrame.setPage(node);
-    	ctx.leafFrame.setPageTupleFieldCount(cmp.getFields().length);
+    	ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
     	SpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
     	switch (spaceStatus) {
     	
@@ -655,7 +648,7 @@ public class BTree {
     					IBTreeLeafFrame rightFrame = leafFrameFactory.getFrame();
     					rightFrame.setPage(rightNode);
     					rightFrame.initBuffer((byte) 0);
-    					rightFrame.setPageTupleFieldCount(cmp.getFields().length);
+    					rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
     					
     					int ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
 
@@ -726,7 +719,7 @@ public class BTree {
 
     private void insertInterior(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.interiorFrame.setPage(node);
-        ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyLength());
+        ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
         SpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
             case INSUFFICIENT_SPACE: {
@@ -740,7 +733,7 @@ public class BTree {
                     IBTreeFrame rightFrame = interiorFrameFactory.getFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
-                    rightFrame.setPageTupleFieldCount(cmp.getKeyLength());
+                    rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
                     // instead of creating a new split key, use the existing
                     // splitKey
                     int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), cmp, ctx.splitKey);
@@ -800,7 +793,7 @@ public class BTree {
         ctx.metaFrame = metaFrame;
         ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
         ctx.splitKey = new SplitKey();
-        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyLength());
+        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
         ctx.pageLsns = new Stack<Integer>();
         ctx.freePages = new ArrayList<Integer>();
@@ -1244,7 +1237,7 @@ public class BTree {
             frontier.pageId = getFreePage(metaFrame);
             frontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
             frontier.page.acquireWriteLatch();
-            frontier.lastTuple.setFieldCount(cmp.getKeyLength());
+            frontier.lastTuple.setFieldCount(cmp.getKeyFieldCount());
             interiorFrame.setPage(frontier.page);
             interiorFrame.initBuffer((byte) nodeFrontiers.size());
             nodeFrontiers.add(frontier);
@@ -1263,7 +1256,7 @@ public class BTree {
         ctx.interiorFrame.setPage(frontier.page);
         
         ITupleReference tuple = ctx.splitKey.getTuple();        
-        int spaceNeeded = ctx.tupleWriter.bytesRequired(tuple, 0, cmp.getKeyLength()) + ctx.slotSize + 4;                
+        int spaceNeeded = ctx.tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount()) + ctx.slotSize + 4;                
         int spaceUsed = ctx.interiorFrame.getBuffer().capacity() - ctx.interiorFrame.getTotalFreeSpace();
         if (spaceUsed + spaceNeeded > ctx.interiorMaxBytes) {
             //ctx.interiorFrame.deleteGreatest(cmp);
@@ -1272,9 +1265,9 @@ public class BTree {
         	tuple = copyKey.getTuple();
         	
             frontier.lastTuple.resetByOffset(frontier.page.getBuffer(), ctx.interiorFrame.getTupleOffset(ctx.interiorFrame.getTupleCount()-1));            
-            int splitKeySize = ctx.tupleWriter.bytesRequired(frontier.lastTuple, 0, cmp.getKeyLength());
+            int splitKeySize = ctx.tupleWriter.bytesRequired(frontier.lastTuple, 0, cmp.getKeyFieldCount());
             ctx.splitKey.initData(splitKeySize);
-            ctx.tupleWriter.writeTupleFields(frontier.lastTuple, 0, cmp.getKeyLength(), ctx.splitKey.getBuffer(), 0);                  
+            ctx.tupleWriter.writeTupleFields(frontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);                  
             ctx.splitKey.setLeftPage(frontier.pageId);
             
             ctx.interiorFrame.deleteGreatest(cmp);
@@ -1297,8 +1290,8 @@ public class BTree {
     // assumes btree has been created and opened
     public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);
-        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFields().length);
-        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyLength());
+        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFieldCount());
+        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
     }
     
@@ -1317,9 +1310,9 @@ public class BTree {
         
         if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {        	
         	leafFrontier.lastTuple.resetByOffset(leafFrontier.page.getBuffer(), leafFrame.getTupleOffset(leafFrame.getTupleCount()-1));        	
-        	int splitKeySize = ctx.tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyLength());        	
+        	int splitKeySize = ctx.tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());        	
             ctx.splitKey.initData(splitKeySize);
-            ctx.tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyLength(), ctx.splitKey.getBuffer(), 0);
+            ctx.tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);
             ctx.splitKey.setLeftPage(leafFrontier.pageId);
             int prevPageId = leafFrontier.pageId;
             leafFrontier.pageId = getFreePage(ctx.metaFrame);

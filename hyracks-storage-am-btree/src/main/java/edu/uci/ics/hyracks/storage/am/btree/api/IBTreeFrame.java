@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
@@ -52,7 +54,7 @@ public interface IBTreeFrame {
 	
 	// for debugging
 	public void printHeader();
-	public String printKeys(MultiComparator cmp, int fieldCount);
+	public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
 	
 	
 	// TODO; what if tuples more than half-page size?

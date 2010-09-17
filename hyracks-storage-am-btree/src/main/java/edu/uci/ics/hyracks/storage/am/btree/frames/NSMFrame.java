@@ -15,10 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
@@ -117,7 +122,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 	@Override
 	public void compact(MultiComparator cmp) {		
 		resetSpaceParams();
-		frameTuple.setFieldCount(cmp.getFields().length);	
+		frameTuple.setFieldCount(cmp.getFieldCount());	
 		
 		int tupleCount = buf.getInt(tupleCountOff);
 		int freeSpace = buf.getInt(freeSpaceOff);		
@@ -149,7 +154,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {		
-		frameTuple.setFieldCount(cmp.getFields().length);
+		frameTuple.setFieldCount(cmp.getFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
 		if(slotOff < 0) {
 			throw new BTreeException("Key to be deleted does not exist.");
@@ -160,7 +165,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 				int tupleOff = slotManager.getTupleOff(slotOff);
 				frameTuple.resetByOffset(buf, tupleOff);
 				
-				int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyLength()-1, cmp.getFields().length - cmp.getKeyLength());
+				int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount()-1, cmp.getFieldCount() - cmp.getKeyFieldCount());
                 if(comparison != 0) {
                 	throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }										
@@ -202,7 +207,7 @@ public abstract class NSMFrame implements IBTreeFrame {
 	
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-		frameTuple.setFieldCount(cmp.getFields().length);
+		frameTuple.setFieldCount(cmp.getFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);		
 		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));				
 		int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
@@ -234,15 +239,17 @@ public abstract class NSMFrame implements IBTreeFrame {
 	}
 	
 	@Override
-	public String printKeys(MultiComparator cmp, int fieldCount) {		
+	public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException {		
 		StringBuilder strBuilder = new StringBuilder();		
-		frameTuple.setFieldCount(fieldCount);
 		int tupleCount = buf.getInt(tupleCountOff);
-		for(int i = 0; i < tupleCount; i++) {			
-			int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));			
-			frameTuple.resetByOffset(buf, tupleOff);			
-			for(int j = 0; j < cmp.getKeyLength(); j++) {
-				strBuilder.append(cmp.getFields()[j].print(buf.array(), frameTuple.getFieldStart(j)) + " ");				
+		frameTuple.setFieldCount(fields.length);
+		for(int i = 0; i < tupleCount; i++) {						
+			frameTuple.resetByTupleIndex(this, i);												
+			for(int j = 0; j < cmp.getKeyFieldCount(); j++) {
+				ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
+				DataInput dataIn = new DataInputStream(inStream);
+				Object o = fields[j].deserialize(dataIn);
+				strBuilder.append(o.toString() + " ");				
 			}
 			strBuilder.append(" | ");				
 		}

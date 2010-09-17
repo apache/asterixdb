@@ -43,7 +43,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	}
 	
 	private int getLeftChildPageOff(ITupleReference tuple, MultiComparator cmp) {		
-		return tuple.getFieldStart(cmp.getKeyLength()-1) + tuple.getFieldLength(cmp.getKeyLength()-1);		
+		return tuple.getFieldStart(cmp.getKeyFieldCount()-1) + tuple.getFieldLength(cmp.getKeyFieldCount()-1);		
 	}	
 	
 	@Override
@@ -62,7 +62,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
 		boolean isDuplicate = true;				
 		
@@ -79,8 +79,8 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 			slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));			
 			
 			int freeSpace = buf.getInt(freeSpaceOff);			
-			int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyLength(), buf, freeSpace);
-			System.arraycopy(tuple.getFieldData(cmp.getKeyLength()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);
+			int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
+			System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);
 			int tupleSize = bytesWritten + childPtrSize;	
 			
 			buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
@@ -89,7 +89,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 			
 			// did insert into the rightmost slot?
 			if(slotOff == slotManager.getSlotEndOff()) { 
-				System.arraycopy(tuple.getFieldData(cmp.getKeyLength()-1), getLeftChildPageOff(tuple, cmp) + childPtrSize, buf.array(), rightLeafOff, childPtrSize);
+				System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount()-1), getLeftChildPageOff(tuple, cmp) + childPtrSize, buf.array(), rightLeafOff, childPtrSize);
 			}
 			else {
 				// if slotOff has a right (slot-)neighbor then update its child pointer
@@ -108,8 +108,8 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {
 		int freeSpace = buf.getInt(freeSpaceOff);
 		slotManager.insertSlot(-1, freeSpace);
-		int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyLength(), buf, freeSpace);
-		System.arraycopy(tuple.getFieldData(cmp.getKeyLength()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);
+		int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
+		System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);
 		int tupleSize = bytesWritten + childPtrSize;
 		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + tupleSize);
@@ -120,7 +120,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	@Override
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception {		
 		// before doing anything check if key already exists
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
 		if(slotOff >= 0) {			
 			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));			
@@ -162,9 +162,9 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		// set split key to be highest value in left page	
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByOffset(buf, tupleOff);
-		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 		splitKey.initData(splitKeySize);
-		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyLength(), splitKey.getBuffer(), 0);			
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);			
 		
 		int deleteTupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByOffset(buf, deleteTupleOff);
@@ -185,7 +185,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	public void compact(MultiComparator cmp) {		
 		resetSpaceParams();
 		
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		
 		int tupleCount = buf.getInt(tupleCountOff);
 		int freeSpace = buf.getInt(freeSpaceOff);
@@ -222,8 +222,8 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 			return buf.getInt(rightLeafOff);
 		}
 				
-		cmpFrameTuple.setFieldCount(srcCmp.getKeyLength());		
-		frameTuple.setFieldCount(srcCmp.getKeyLength());
+		cmpFrameTuple.setFieldCount(srcCmp.getKeyFieldCount());		
+		frameTuple.setFieldCount(srcCmp.getKeyFieldCount());
 		
 		// check for trivial cases where no low key or high key exists (e.g. during an index scan)
 		ITupleReference tuple = null;
@@ -280,7 +280,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
 		int tupleOff;
 		int keySize;
@@ -288,7 +288,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		if(slotOff < 0) {						
 			tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 			frameTuple.resetByOffset(buf, tupleOff);			
-			keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());
+			keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 			
 			// copy new rightmost pointer
 			System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);						
@@ -296,7 +296,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		else {						
 			tupleOff = slotManager.getTupleOff(slotOff);
 			frameTuple.resetByOffset(buf, tupleOff);
-			keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());	
+			keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());	
 			// perform deletion (we just do a memcpy to overwrite the slot)
 			int slotStartOff = slotManager.getSlotEndOff();
 			int length = slotOff - slotStartOff;
@@ -317,7 +317,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	@Override
 	public int getLeftmostChildPageId(MultiComparator cmp) {						
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotStartOff());		
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		frameTuple.resetByOffset(buf, tupleOff);
 		int childPageOff = getLeftChildPageOff(frameTuple, cmp);
 		return buf.getInt(childPageOff);
@@ -338,7 +338,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		System.out.println(page);
 		
 		ArrayList<Integer> ret = new ArrayList<Integer>();		
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int tupleCount = buf.getInt(tupleCountOff);
 		for(int i = 0; i < tupleCount; i++) {
 			int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
@@ -357,9 +357,9 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	public void deleteGreatest(MultiComparator cmp) {
 		int slotOff = slotManager.getSlotEndOff();
 		int tupleOff = slotManager.getTupleOff(slotOff);
-		frameTuple.setFieldCount(cmp.getKeyLength());
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		frameTuple.resetByOffset(buf, tupleOff);
-		int keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyLength());		 
+		int keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());		 
 		System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);
 		
 		// maintain space information

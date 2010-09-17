@@ -22,32 +22,28 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessorFactory;
 
 public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
 
 	private boolean isForward;
-	private ITupleReference lowKey;
-	private ITupleReference highKey;
-	private int searchKeyFields;
+	private ITupleReferenceFactory[] searchKeys; // create tuples for low and high keys	
+	private int searchKeyFieldCount;
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, IFieldAccessorFactory[] fieldAccessorFactories, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReference lowKey, ITupleReference highKey, int searchKeyFields) {
-		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory, leafFactory, fieldAccessorFactories, comparatorFactories);
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
+		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory, leafFactory, fieldCount, comparatorFactories);
 		this.isForward = isForward;
-		this.lowKey = lowKey;
-		this.highKey = highKey;
-		this.searchKeyFields = searchKeyFields;
+		this.searchKeys = searchKeys;
+		this.searchKeyFieldCount = searchKeyFields;
 	}
 	
 	@Override
 	public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-		return new BTreeSearchOperatorNodePushable(this, ctx, isForward, lowKey, highKey, searchKeyFields);
+		return new BTreeSearchOperatorNodePushable(this, ctx, isForward, searchKeys, searchKeyFieldCount);
 	}
 }

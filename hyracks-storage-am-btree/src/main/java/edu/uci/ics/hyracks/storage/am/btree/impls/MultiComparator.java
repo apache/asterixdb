@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFieldAccessor;
 
 @SuppressWarnings("unchecked")
 public class MultiComparator {
@@ -31,37 +30,13 @@ public class MultiComparator {
 	private static final long serialVersionUID = 1L;
 	
 	private IBinaryComparator[] cmps = null;
-	private IFieldAccessor[] fields = null;
+	private int fieldCount;
 	
-	public MultiComparator(IBinaryComparator[] cmps, IFieldAccessor[] fields) {
-		this.cmps = cmps;
-		this.fields = fields;
-	}
-	
-	public IBinaryComparator[] getComparators() {
-	    return cmps;
-	}
-	
-	public int getKeyLength() {
-	    return cmps.length;
-	}
-	
-	public void setComparators(IBinaryComparator[] cmps) {
+	public MultiComparator(int fieldCount, IBinaryComparator[] cmps) {
+		this.fieldCount = fieldCount;
 		this.cmps = cmps;
 	}
-	
-	public int size() {
-		return cmps.length;
-	}
-	
-	public void setFields(IFieldAccessor[] fields) {
-		this.fields = fields;
-	}	
-	
-	public IFieldAccessor[] getFields() {
-		return fields;
-	}
-	
+		
 	public int compare(ITupleReference tupleA, ITupleReference tupleB) {			
 		for(int i = 0; i < cmps.length; i++) {						
 			int cmp = cmps[i].compare(tupleA.getFieldData(i), 
@@ -100,5 +75,25 @@ public class MultiComparator {
 			strBuilder.append(o.toString() + " ");
 		}
 		return strBuilder.toString();
-	}			
+	}		
+	
+	public IBinaryComparator[] getComparators() {
+	    return cmps;
+	}
+	
+	public int getKeyFieldCount() {
+	    return cmps.length;
+	}
+	
+	public void setComparators(IBinaryComparator[] cmps) {
+		this.cmps = cmps;
+	}
+	
+	public int size() {
+		return cmps.length;
+	}
+	
+	public int getFieldCount() {
+		return fieldCount;
+	}
 }
