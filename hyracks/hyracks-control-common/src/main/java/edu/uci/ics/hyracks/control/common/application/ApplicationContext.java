@@ -107,7 +107,7 @@ public class ApplicationContext implements IApplicationContext {
     }
 
     private Properties parseDeploymentDescriptor() throws IOException {
-        InputStream in = classLoader.getResourceAsStream("/hyracks-deployment.properties");
+        InputStream in = classLoader.getResourceAsStream("hyracks-deployment.properties");
         Properties props = new Properties();
         if (in != null) {
             try {
