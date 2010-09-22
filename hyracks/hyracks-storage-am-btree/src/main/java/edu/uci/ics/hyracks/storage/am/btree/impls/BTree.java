@@ -44,8 +44,9 @@ public class BTree {
                                         // maxPage
     private final int rootPage = 1; // the root page never changes
     
-    private boolean created = false;
-            
+    private boolean created = false;        
+    private boolean loaded = false;
+    
     private final IBufferCache bufferCache;
     private int fileId;
     private final IBTreeInteriorFrameFactory interiorFrameFactory;
@@ -1289,7 +1290,10 @@ public class BTree {
     
     // assumes btree has been created and opened
     public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);
+        
+    	if(loaded) throw new BTreeException("Trying to bulk-load BTree but has BTree already been loaded.");
+    	
+    	BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);
         ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFieldCount());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
@@ -1354,6 +1358,8 @@ public class BTree {
         }
         // debug
         currentLevel = (byte) ctx.nodeFrontiers.size();
+        
+        loaded = true;
     }
         
     public IBTreeInteriorFrameFactory getInteriorFrameFactory() {

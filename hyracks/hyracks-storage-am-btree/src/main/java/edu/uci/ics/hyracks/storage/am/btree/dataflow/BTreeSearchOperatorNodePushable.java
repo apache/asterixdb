@@ -59,7 +59,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
         BTree btree = null;        
         try {
         	btreeOpHelper.init();
-            btreeOpHelper.fill();
+            //btreeOpHelper.fill();
             btree = btreeOpHelper.getBTree();
 
             IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
