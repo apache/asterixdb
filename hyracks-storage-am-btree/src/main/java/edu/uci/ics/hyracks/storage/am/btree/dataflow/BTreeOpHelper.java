@@ -60,8 +60,14 @@ final class BTreeOpHelper {
     	
     	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
-
-        File f = new File(opDesc.getBtreeFileName());
+        
+        // hack for testing
+        //String s = bufferCache.toString();
+        //String[] splits = s.split("\\.");
+        //System.out.println(splits[splits.length-1]);
+        //File f = new File("/tmp/" + splits[splits.length-1]);
+        
+        File f = new File(opDesc.getBtreeFileName());        
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
         
         if (!f.exists() && !createBTree) {
