@@ -39,10 +39,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private boolean isForward;
     private ITupleReferenceFactory[] searchKeys;    
     private int searchKeyFieldCount;
-
+    
     public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
+            boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields, boolean isLocalCluster) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false, isLocalCluster);
         this.isForward = isForward;
         this.searchKeys = searchKeys;
         this.searchKeyFieldCount = searchKeyFields;

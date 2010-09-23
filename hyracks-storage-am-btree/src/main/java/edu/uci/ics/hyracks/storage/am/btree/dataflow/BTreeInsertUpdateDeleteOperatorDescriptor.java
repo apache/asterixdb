@@ -35,6 +35,8 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 	
 	private BTreeOp op;
 	
+	private boolean isLocalCluster;
+	
 	public BTreeInsertUpdateDeleteOperatorDescriptor(JobSpecification spec,
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
@@ -42,10 +44,10 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] fieldPermutation, BTreeOp op) {
+			int[] fieldPermutation, BTreeOp op, boolean isLocalCluster) {
 		super(spec, 1, 1, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories);
+				leafFactory, fieldCount, comparatorFactories, isLocalCluster);
 		this.fieldPermutation = fieldPermutation;		
 		this.op = op;
 	}
@@ -55,6 +57,6 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, fieldPermutation, recordDescProvider, op);
+		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, fieldPermutation, recordDescProvider, op, isLocalCluster);
 	}	
 }

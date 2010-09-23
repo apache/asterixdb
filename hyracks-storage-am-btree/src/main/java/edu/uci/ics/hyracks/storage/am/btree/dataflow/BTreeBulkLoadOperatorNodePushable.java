@@ -37,8 +37,8 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true);
+            int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider, boolean isLocalCluster) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true, isLocalCluster);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);

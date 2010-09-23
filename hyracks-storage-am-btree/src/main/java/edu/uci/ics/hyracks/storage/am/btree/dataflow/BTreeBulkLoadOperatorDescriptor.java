@@ -32,7 +32,7 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 	
 	private int[] fieldPermutation;	
     private float fillFactor;
-	
+    
 	public BTreeBulkLoadOperatorDescriptor(JobSpecification spec,
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
@@ -40,10 +40,10 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] fieldPermutation, float fillFactor) {
+			int[] fieldPermutation, float fillFactor, boolean isLocalCluster) {
 		super(spec, 1, 0, fileSplitProvider, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories);
+				leafFactory, fieldCount, comparatorFactories, isLocalCluster);
 		this.fieldPermutation = fieldPermutation;
 		this.fillFactor = fillFactor;
 	}
@@ -53,6 +53,6 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeBulkLoadOperatorNodePushable(this, ctx, fieldPermutation, fillFactor, recordDescProvider);
+		return new BTreeBulkLoadOperatorNodePushable(this, ctx, fieldPermutation, fillFactor, recordDescProvider, isLocalCluster);
 	}	
 }

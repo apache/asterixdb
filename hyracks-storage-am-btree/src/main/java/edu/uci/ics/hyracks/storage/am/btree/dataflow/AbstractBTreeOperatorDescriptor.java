@@ -39,7 +39,9 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	protected IBufferCacheProvider bufferCacheProvider;
 	protected IBTreeRegistryProvider btreeRegistryProvider;
 	
-	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
+	protected boolean isLocalCluster;
+	
+	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isLocalCluster) {
         super(spec, inputArity, outputArity);
         this.btreeFileId = btreeFileId;
         this.btreeFileName = btreeFileName;
@@ -48,7 +50,8 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
         this.interiorFrameFactory = interiorFactory;
         this.leafFrameFactory = leafFactory;
         this.fieldCount = fieldCount;
-        this.comparatorFactories = comparatorFactories;        
+        this.comparatorFactories = comparatorFactories;       
+        this.isLocalCluster = isLocalCluster;
         if(outputArity > 0) recordDescriptors[0] = recDesc;   
     }
 
