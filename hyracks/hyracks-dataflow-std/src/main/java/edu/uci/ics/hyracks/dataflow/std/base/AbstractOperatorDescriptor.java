@@ -86,6 +86,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
         jop.put("java-class", getClass().getName());
         jop.put("in-arity", getInputArity());
         jop.put("out-arity", getOutputArity());
+        jop.put("partition-constraint", String.valueOf(partitionConstraint));
         return jop;
     }
 }

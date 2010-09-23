@@ -31,4 +31,9 @@ public class PartitionCountConstraint extends PartitionConstraint {
     public PartitionConstraintType getPartitionConstraintType() {
         return PartitionConstraintType.COUNT;
     }
+
+    @Override
+    public String toString() {
+        return "count(" + count + ")";
+    }
 }
