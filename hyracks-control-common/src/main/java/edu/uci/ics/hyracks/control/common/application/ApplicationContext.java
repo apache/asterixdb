@@ -80,9 +80,11 @@ public class ApplicationContext implements IApplicationContext {
             switch (serverCtx.getServerType()) {
                 case CLUSTER_CONTROLLER: {
                     bootstrapClass = deploymentDescriptor.getProperty(CLUSTER_CONTROLLER_BOOTSTRAP_CLASS_KEY);
+                    break;
                 }
                 case NODE_CONTROLLER: {
                     bootstrapClass = deploymentDescriptor.getProperty(NODE_CONTROLLER_BOOTSTRAP_CLASS_KEY);
+                    break;
                 }
             }
             if (bootstrapClass != null) {
