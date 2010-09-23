@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.constraints;
 
+import java.util.Arrays;
+
 public class ChoiceLocationConstraint extends LocationConstraint {
     private static final long serialVersionUID = 1L;
 
@@ -25,6 +27,11 @@ public class ChoiceLocationConstraint extends LocationConstraint {
 
     public LocationConstraint[] getChoices() {
         return choices;
+    }
+
+    @Override
+    public String toString() {
+        return "choice(" + Arrays.deepToString(choices) + ")";
     }
 
     @Override
