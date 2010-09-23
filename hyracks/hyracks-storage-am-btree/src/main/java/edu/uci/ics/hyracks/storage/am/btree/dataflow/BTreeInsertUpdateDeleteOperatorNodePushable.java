@@ -44,8 +44,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
+            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op, boolean isLocalCluster) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false, isLocalCluster);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);

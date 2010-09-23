@@ -44,7 +44,11 @@ public class BTreeRegistry {
     }
     
     public void unregister(int fileId) {
-        map.remove(fileId);
+        try {
+        	map.remove(fileId);
+        } 
+        catch (Exception e) {        	
+        }
     }        
     
     public int size() {

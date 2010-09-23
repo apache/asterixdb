@@ -34,8 +34,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	private ITupleReferenceFactory[] searchKeys; // create tuples for low and high keys	
 	private int searchKeyFieldCount;
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
-		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory, leafFactory, fieldCount, comparatorFactories);
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields, boolean isLocalCluster) {
+		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory, leafFactory, fieldCount, comparatorFactories, isLocalCluster);
 		this.isForward = isForward;
 		this.searchKeys = searchKeys;
 		this.searchKeyFieldCount = searchKeyFields;
@@ -44,6 +44,6 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	@Override
 	public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-		return new BTreeSearchOperatorNodePushable(this, ctx, isForward, searchKeys, searchKeyFieldCount);
+		return new BTreeSearchOperatorNodePushable(this, ctx, isForward, searchKeys, searchKeyFieldCount, isLocalCluster);
 	}
 }

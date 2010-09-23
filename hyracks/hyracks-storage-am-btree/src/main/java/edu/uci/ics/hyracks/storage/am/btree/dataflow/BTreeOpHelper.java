@@ -50,24 +50,29 @@ final class BTreeOpHelper {
 
     private boolean createBTree;
 
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree) {
+    private boolean isLocalCluster;
+    
+    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree, boolean isLocalCluster) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.createBTree = createBTree;
-    }
-
+        this.isLocalCluster = isLocalCluster;
+    }  
+    
     void init() throws Exception {
     	
     	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
+                                
+        String fileName = opDesc.getBtreeFileName();
+        if(isLocalCluster) {
+        	String s = bufferCache.toString();
+            String[] splits = s.split("\\.");
+        	String bufferCacheAddr = splits[splits.length-1].replaceAll("BufferCache@", "");
+        	fileName = fileName + bufferCacheAddr;
+        }
         
-        // hack for testing
-        //String s = bufferCache.toString();
-        //String[] splits = s.split("\\.");
-        //System.out.println(splits[splits.length-1]);
-        //File f = new File("/tmp/" + splits[splits.length-1]);
-        
-        File f = new File(opDesc.getBtreeFileName());        
+        File f = new File(fileName);        
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
         
         if (!f.exists() && !createBTree) {
