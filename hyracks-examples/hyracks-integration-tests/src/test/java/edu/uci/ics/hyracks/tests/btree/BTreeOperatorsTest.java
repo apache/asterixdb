@@ -124,7 +124,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		int[] fieldPermutation = { 0, 4, 5 };  
         int btreeFileId = 0;
         
-		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f, true);		
+		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f, false);		
 		PartitionConstraint btreePartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
 		btreeBulkLoad.setPartitionConstraint(btreePartitionConstraintA);
 				
@@ -221,7 +221,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
 		
 		int btreeFileId = 2;		
-		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length, true);
+		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length, false);
 		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
 		
 		PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
