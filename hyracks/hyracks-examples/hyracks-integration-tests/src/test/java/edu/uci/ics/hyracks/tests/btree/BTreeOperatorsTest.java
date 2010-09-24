@@ -37,9 +37,7 @@ import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
@@ -61,6 +59,7 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BufferCacheProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.FileMappingProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.FrameTupleReferenceFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
@@ -76,12 +75,16 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class BTreeOperatorsTest extends AbstractIntegrationTest {
-		
+	
 	@Test
-	public void bulkLoadTest() throws Exception {
+	public void bulkLoadTest() throws Exception {		
+		// relies on the fact that NCs are run from same process
+		System.setProperty("NodeControllerDataPath", "/tmp/");
+		
 		JobSpecification spec = new JobSpecification();
 		
         FileSplit[] ordersSplits = new FileSplit[] {
@@ -115,16 +118,16 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();		
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
-        		
+		IFileMappingProvider fileMappingProvider = new FileMappingProvider();
+				
 		int fieldCount = 3;
 		int keyFieldCount = 1;
 		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyFieldCount];
 		comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;		
 				
-		int[] fieldPermutation = { 0, 4, 5 };  
-        int btreeFileId = 0;
+		int[] fieldPermutation = { 0, 4, 5 };
         
-		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f, false);		
+		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);		
 		PartitionConstraint btreePartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
 		btreeBulkLoad.setPartitionConstraint(btreePartitionConstraintA);
 				
@@ -142,12 +145,14 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
     	}
     	
         MultiComparator cmp = new MultiComparator(fieldCount, comparators);
-
+         
+        
         // try an ordered scan on the bulk-loaded btree
-        BTree btreeA = btreeRegistryProvider.getBTreeRegistry().get(btreeFileId);
+        int btreeFileId = 0; // TODO: this relies on the way FileMappingProvider assignds ids (in sequence starting from 0)
+        BTree btree = btreeRegistryProvider.getBTreeRegistry().get(btreeFileId);
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrameFactory.getFrame());
         RangePredicate nullPred = new RangePredicate(true, null, null, null);
-        btreeA.search(scanCursor, nullPred, leafFrameFactory.getFrame(), interiorFrameFactory.getFrame());
+        btree.search(scanCursor, nullPred, leafFrameFactory.getFrame(), interiorFrameFactory.getFrame());
         try {
         	while (scanCursor.hasNext()) {
         		scanCursor.next();
@@ -164,6 +169,9 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	
 	@Test
 	public void btreeSearchTest() throws Exception {
+		// relies on the fact that NCs are run from same process
+		System.setProperty("NodeControllerDataPath", "/tmp/");
+		
 		JobSpecification spec = new JobSpecification();
 		
 		IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
@@ -172,17 +180,16 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();        
 				
-		int fieldCount = 2;
+		int fieldCount = 3;
 		int keyFieldCount = 1;
 		IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keyFieldCount];
-		comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;	
+		comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;		
 		
 		// construct a multicomparator from the factories (only for printing purposes)        
     	IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
     	for(int i = 0; i < comparatorFactories.length; i++) {
     		comparators[i] = comparatorFactories[i].createBinaryComparator();
-    	}
-    	    	    	    	
+    	}    	
         MultiComparator cmp = new MultiComparator(fieldCount, comparators);
 		
         
@@ -194,20 +201,22 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
 		DataOutput dos = tb.getDataOutput();
 		
-		ISerializerDeserializer[] keyRecDescSers = { IntegerSerializerDeserializer.INSTANCE};
+		ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE};
 		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 		
 		// build low key
 		tb.reset();
-    	IntegerSerializerDeserializer.INSTANCE.serialize(-1000, dos);
+		UTF8StringSerializerDeserializer.INSTANCE.serialize("100", dos);
     	tb.addFieldEndOffset();    	  
     	        	    	
     	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
     	    	
     	// build high key
     	tb.reset();
-    	IntegerSerializerDeserializer.INSTANCE.serialize(1000, dos);
+    	UTF8StringSerializerDeserializer.INSTANCE.serialize("200", dos);
     	tb.addFieldEndOffset();
+    	
+    	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
     	
     	// build search key factories
     	ITupleReferenceFactory[] searchKeys = new ITupleReferenceFactory[2]; 
@@ -215,14 +224,20 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
     	searchKeys[1] = new FrameTupleReferenceFactory(keyFrame.array(), 1, keyRecDesc);
     	    	    	
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();
-		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
+		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();		
+		IFileMappingProvider fileMappingProvider = new FileMappingProvider();
 		
 		RecordDescriptor recDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 		
-		int btreeFileId = 2;		
-		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileId, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length, false);
-		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "/tmp/btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
+		// TODO: hacky, manually adding file
+		String ncDataPath = System.getProperty("NodeControllerDataPath");
+        String fileName = ncDataPath + "btreetest.bin";		
+		int blubb = fileMappingProvider.mapNameToFileId(fileName, true);
+		System.out.println("BLUBB: " + blubb + " " + fileName);
+		
+		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length);
+		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
 		
 		PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
 		btreeSearchOp.setPartitionConstraint(btreePartitionConstraint);
@@ -238,9 +253,11 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         runTest(spec);
     }
 	
-	
 	@Test
 	public void insertTest() throws Exception {
+		// relies on the fact that NCs are run from same process
+		System.setProperty("NodeControllerDataPath", "/tmp/");
+		
 		JobSpecification spec = new JobSpecification();
 		
         FileSplit[] ordersSplits = new FileSplit[] {
@@ -267,7 +284,11 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();
 		
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();		
-		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();
+		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();		
+		
+		// trick to clear pages of old fileids
+		BufferCacheProvider tmp = (BufferCacheProvider)bufferCacheProvider;
+		tmp.reset();
 		
 		// we will create a primary index and 2 secondary indexes
 		// first create comparators for primary index		
@@ -304,9 +325,10 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         IBufferCache bufferCache = bufferCacheProvider.getBufferCache();
         BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry();        
         FileManager fileManager = bufferCacheProvider.getFileManager();
+        IFileMappingProvider fileMappingProvider = new FileMappingProvider();
         
         // primary index
-        int fileIdA = 3;
+        int fileIdA = fileMappingProvider.mapNameToFileId("/tmp/btreetestA.ix", true);
         File fA = new File("/tmp/btreetestA.ix");
         RandomAccessFile rafA = new RandomAccessFile(fA, "rw");                
         FileInfo fiA = new FileInfo(fileIdA, rafA);
@@ -317,7 +339,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         btreeRegistry.register(fileIdA, btreeA);
         
         // first secondary index
-        int fileIdB = 4;
+        int fileIdB = fileMappingProvider.mapNameToFileId("/tmp/btreetestB.ix", true);
         File fB = new File("/tmp/btreetestB.ix");
         RandomAccessFile rafB = new RandomAccessFile(fB, "rw");   
         FileInfo fiB = new FileInfo(fileIdB, rafB);
@@ -328,7 +350,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         btreeRegistry.register(fileIdB, btreeB);
         
         // second secondary index
-        int fileIdC = 5;
+        int fileIdC = fileMappingProvider.mapNameToFileId("/tmp/btreetestC.ix", true);
         File fC = new File("/tmp/btreetestC.ix");
         RandomAccessFile rafC = new RandomAccessFile(fC, "rw");                
         FileInfo fiC = new FileInfo(fileIdC, rafC);
@@ -337,25 +359,24 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		btreeC.create(fileIdC, leafFrameFactory.getFrame(), new MetaDataFrame());
         btreeC.open(fileIdC);
         btreeRegistry.register(fileIdC, btreeC);
-        
-                
+                        
         // create insert operators
         
         // primary index
         int[] fieldPermutationA = { 0,1,2,3,4,5 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdA, "/tmp/btreetestA.ix", interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT, true);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestA.ix", fileMappingProvider, interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpA.setPartitionConstraint(insertPartitionConstraintA);
         
         // first secondary index
         int[] fieldPermutationB = { 3, 0 };                    
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdB, "/tmp/btreetestB.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT, true);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestB.ix", fileMappingProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintB = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpB.setPartitionConstraint(insertPartitionConstraintB);
 		
         // second secondary index
         int[] fieldPermutationC = { 4, 0 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, fileIdC, "/tmp/btreetestC.ix", interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT, true);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersSplitProvider, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestC.ix", fileMappingProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintC = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpC.setPartitionConstraint(insertPartitionConstraintC);
                 
@@ -372,7 +393,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         spec.connect(new OneToOneConnectorDescriptor(spec), insertOpC, 0, nullSink, 0);               
         
         spec.addRoot(nullSink);
-        runTest(spec);               
+        runTest(spec);
         
         // scan primary index         
         System.out.println("PRINTING PRIMARY INDEX");

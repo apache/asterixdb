@@ -34,8 +34,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
 
-    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, boolean isLocalCluster) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false, isLocalCluster);
+    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
     }
 
     @Override

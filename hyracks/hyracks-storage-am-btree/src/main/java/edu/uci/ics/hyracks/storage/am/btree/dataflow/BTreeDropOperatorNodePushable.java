@@ -6,29 +6,27 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
-
+	
 	private String btreeFileName;
 	private IBTreeRegistryProvider btreeRegistryProvider;
 	private IBufferCacheProvider bufferCacheProvider;
-	private int btreeFileId;
-	private boolean isLocalCluster;
+	private IFileMappingProvider fileMappingProvider;
 	
-	public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId, String btreeFileName, boolean isLocalCluster) {
+	public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProvider fileMappingProvider) {
 		this.btreeFileName = btreeFileName;
-		this.btreeFileId = btreeFileId;
+		this.fileMappingProvider = fileMappingProvider;
 		this.bufferCacheProvider = bufferCacheProvider;
 		this.btreeRegistryProvider = btreeRegistryProvider;
-		this.isLocalCluster = isLocalCluster;
 	}
 
 	@Override
 	public void deinitialize() throws HyracksDataException {		
 	}
-
+	
 	@Override
 	public int getInputArity() {
 		return 0;
@@ -43,9 +41,13 @@ public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
 	public void initialize() throws HyracksDataException {
 		
 		BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry();		
-		FileManager fileManager = bufferCacheProvider.getFileManager();
-		IBufferCache bufferCache = bufferCacheProvider.getBufferCache();			
+		FileManager fileManager = bufferCacheProvider.getFileManager();	
 		
+		String ncDataPath = System.getProperty("NodeControllerDataPath");       
+        String fileName = ncDataPath + btreeFileName;
+		
+        int btreeFileId = fileMappingProvider.mapNameToFileId(fileName, false);        
+        
 		// unregister btree instance            
 		btreeRegistry.lock();
 		try {
@@ -55,17 +57,8 @@ public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
 		}
 
 		// unregister file
-		fileManager.unregisterFile(btreeFileId);
-		
-		
-		String fileName = btreeFileName;
-        if(isLocalCluster) {
-        	String s = bufferCache.toString();
-            String[] splits = s.split("\\.");
-        	String bufferCacheAddr = splits[splits.length-1].replaceAll("BufferCache@", "");
-        	fileName = fileName + bufferCacheAddr;
-        }
-					        
+		fileManager.unregisterFile(btreeFileId);				
+                        
         File f = new File(fileName);
         if (f.exists()) {
 			f.delete();

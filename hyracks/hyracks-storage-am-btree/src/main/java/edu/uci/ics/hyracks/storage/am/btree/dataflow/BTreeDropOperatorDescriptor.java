@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 	
@@ -29,19 +30,17 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 	private String btreeFileName;
 	private IBufferCacheProvider bufferCacheProvider;
 	private IBTreeRegistryProvider btreeRegistryProvider;	
-	private int btreeFileId;
-	private boolean isLocalCluster;
+	private IFileMappingProvider fileMappingProvider;
 	
 	public BTreeDropOperatorDescriptor(JobSpecification spec,			
 			IBufferCacheProvider bufferCacheProvider,
-			IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId,
-			String btreeFileName, boolean isLocalCluster) {
+			IBTreeRegistryProvider btreeRegistryProvider,
+			String btreeFileName, IFileMappingProvider fileMappingProvider) {
 		super(spec, 0, 0);
 		this.btreeFileName = btreeFileName;
-		this.btreeFileId = btreeFileId;
+		this.fileMappingProvider = fileMappingProvider;
 		this.bufferCacheProvider = bufferCacheProvider;
 		this.btreeRegistryProvider = btreeRegistryProvider;
-		this.isLocalCluster = isLocalCluster;
 	}
 	
 	@Override
@@ -49,6 +48,6 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, btreeFileId, btreeFileName, isLocalCluster);
+		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProvider);
 	}	
 }
