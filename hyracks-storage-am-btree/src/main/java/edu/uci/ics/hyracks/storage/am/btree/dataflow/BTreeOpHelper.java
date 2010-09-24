@@ -66,10 +66,14 @@ final class BTreeOpHelper {
                 
         String ncDataPath = System.getProperty("NodeControllerDataPath");
         String fileName = ncDataPath + opDesc.getBtreeFileName();
-                
+        
         btreeFileId = fileMappingProvider.mapNameToFileId(fileName, createBTree);        
         
-        File f = new File(fileName);        
+        File f = new File(fileName);
+        if(!f.exists()) {
+        	File dir = new File(f.getParent());        	
+        	dir.mkdirs();
+        }
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
         
         if (!f.exists() && !createBTree) {
