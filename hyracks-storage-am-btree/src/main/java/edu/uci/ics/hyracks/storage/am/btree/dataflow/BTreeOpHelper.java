@@ -38,39 +38,36 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 final class BTreeOpHelper {
     private IBTreeInteriorFrame interiorFrame;
     private IBTreeLeafFrame leafFrame;
 
     private BTree btree;
-
+    private int btreeFileId = -1;
+    
     private AbstractBTreeOperatorDescriptor opDesc;
     private IHyracksContext ctx;
 
     private boolean createBTree;
-
-    private boolean isLocalCluster;
     
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree, boolean isLocalCluster) {
+    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.createBTree = createBTree;
-        this.isLocalCluster = isLocalCluster;
     }  
     
     void init() throws Exception {
     	
     	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
-                                
-        String fileName = opDesc.getBtreeFileName();
-        if(isLocalCluster) {
-        	String s = bufferCache.toString();
-            String[] splits = s.split("\\.");
-        	String bufferCacheAddr = splits[splits.length-1].replaceAll("BufferCache@", "");
-        	fileName = fileName + bufferCacheAddr;
-        }
+        IFileMappingProvider fileMappingProvider = opDesc.getFileMappingProvider();
+                
+        String ncDataPath = System.getProperty("NodeControllerDataPath");
+        String fileName = ncDataPath + opDesc.getBtreeFileName();
+                
+        btreeFileId = fileMappingProvider.mapNameToFileId(fileName, createBTree);        
         
         File f = new File(fileName);        
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
@@ -80,7 +77,7 @@ final class BTreeOpHelper {
         }
         
         try {
-            FileInfo fi = new FileInfo(opDesc.getBtreeFileId(), raf);
+            FileInfo fi = new FileInfo(btreeFileId, raf);
             fileManager.registerFile(fi);
         } catch (Exception e) {
         }
@@ -89,14 +86,14 @@ final class BTreeOpHelper {
         leafFrame = opDesc.getLeafFactory().getFrame();
 
         BTreeRegistry btreeRegistry = opDesc.getBtreeRegistryProvider().getBTreeRegistry();
-        btree = btreeRegistry.get(opDesc.getBtreeFileId());
+        btree = btreeRegistry.get(btreeFileId);
         if (btree == null) {
         	
             // create new btree and register it            
             btreeRegistry.lock();
             try {
                 // check if btree has already been registered by another thread
-                btree = btreeRegistry.get(opDesc.getBtreeFileId());
+                btree = btreeRegistry.get(btreeFileId);
                 if (btree == null) {
                     // this thread should create and register the btee
                 	                   
@@ -110,10 +107,10 @@ final class BTreeOpHelper {
                     btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
                     if (createBTree) {
                         MetaDataFrame metaFrame = new MetaDataFrame();
-                        btree.create(opDesc.getBtreeFileId(), leafFrame, metaFrame);
+                        btree.create(btreeFileId, leafFrame, metaFrame);
                     }
-                    btree.open(opDesc.getBtreeFileId());
-                    btreeRegistry.register(opDesc.getBtreeFileId(), btree);
+                    btree.open(btreeFileId);
+                    btreeRegistry.register(btreeFileId, btree);
                 }
             } finally {
                 btreeRegistry.unlock();
@@ -126,7 +123,7 @@ final class BTreeOpHelper {
 
         // TODO: uncomment and fix
         MetaDataFrame metaFrame = new MetaDataFrame();
-        btree.create(opDesc.getBtreeFileId(), leafFrame, metaFrame);
+        btree.create(btreeFileId, leafFrame, metaFrame);
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -229,5 +226,9 @@ final class BTreeOpHelper {
 
     public IBTreeInteriorFrame getInteriorFrame() {
         return interiorFrame;
+    }
+    
+    public int getBTreeFileId() {
+    	return btreeFileId;
     }
 }

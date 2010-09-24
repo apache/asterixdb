@@ -22,14 +22,15 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
 	
 	protected String btreeFileName;
-	protected int btreeFileId;
-		
+	protected IFileMappingProvider fileMappingProvider;
+	
 	protected int fieldCount;
 	protected IBinaryComparatorFactory[] comparatorFactories;	
 	
@@ -38,29 +39,26 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	
 	protected IBufferCacheProvider bufferCacheProvider;
 	protected IBTreeRegistryProvider btreeRegistryProvider;
-	
-	protected boolean isLocalCluster;
-	
-	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  int btreeFileId, String btreeFileName, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isLocalCluster) {
+		
+	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
-        this.btreeFileId = btreeFileId;
         this.btreeFileName = btreeFileName;
+        this.fileMappingProvider = fileMappingProvider;
         this.bufferCacheProvider = bufferCacheProvider;
         this.btreeRegistryProvider = btreeRegistryProvider;        
         this.interiorFrameFactory = interiorFactory;
         this.leafFrameFactory = leafFactory;
         this.fieldCount = fieldCount;
-        this.comparatorFactories = comparatorFactories;       
-        this.isLocalCluster = isLocalCluster;
-        if(outputArity > 0) recordDescriptors[0] = recDesc;   
+        this.comparatorFactories = comparatorFactories;
+        if(outputArity > 0) recordDescriptors[0] = recDesc;           
     }
 
 	public String getBtreeFileName() {
 		return btreeFileName;
 	}
 
-	public int getBtreeFileId() {
-		return btreeFileId;
+	public IFileMappingProvider getFileMappingProvider() {
+		return fileMappingProvider;
 	}
 
 	public IBinaryComparatorFactory[] getComparatorFactories() {

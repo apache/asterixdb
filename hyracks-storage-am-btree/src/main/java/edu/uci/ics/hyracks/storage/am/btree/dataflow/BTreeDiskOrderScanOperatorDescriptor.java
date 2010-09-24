@@ -25,22 +25,22 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
-	private boolean isLocalCluster;
 	
 	public BTreeDiskOrderScanOperatorDescriptor(JobSpecification spec,
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
-			IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId,
-			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
+			IBTreeRegistryProvider btreeRegistryProvider,
+			String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, 
-			int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isLocalCluster) {
+			int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
 		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories, isLocalCluster);
+				btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory,
+				leafFactory, fieldCount, comparatorFactories);
 	}
 	
 	@Override
@@ -48,6 +48,6 @@ public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorD
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeDiskOrderScanOperatorNodePushable(this, ctx, isLocalCluster);
+		return new BTreeDiskOrderScanOperatorNodePushable(this, ctx);
 	}	
 }

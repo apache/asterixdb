@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
@@ -35,19 +36,17 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 	
 	private BTreeOp op;
 	
-	private boolean isLocalCluster;
-	
 	public BTreeInsertUpdateDeleteOperatorDescriptor(JobSpecification spec,
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
-			IBTreeRegistryProvider btreeRegistryProvider, int btreeFileId,
-			String btreeFileName, IBTreeInteriorFrameFactory interiorFactory,
+			IBTreeRegistryProvider btreeRegistryProvider,
+			String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] fieldPermutation, BTreeOp op, boolean isLocalCluster) {
+			int[] fieldPermutation, BTreeOp op) {
 		super(spec, 1, 1, fileSplitProvider, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileId, btreeFileName, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories, isLocalCluster);
+				btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory,
+				leafFactory, fieldCount, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;		
 		this.op = op;
 	}
@@ -57,6 +56,6 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, fieldPermutation, recordDescProvider, op, isLocalCluster);
+		return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, fieldPermutation, recordDescProvider, op);
 	}	
 }

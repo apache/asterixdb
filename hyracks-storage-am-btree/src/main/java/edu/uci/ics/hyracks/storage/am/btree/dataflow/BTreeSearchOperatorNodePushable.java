@@ -41,8 +41,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private int searchKeyFieldCount;
     
     public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields, boolean isLocalCluster) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false, isLocalCluster);
+            boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
         this.isForward = isForward;
         this.searchKeys = searchKeys;
         this.searchKeyFieldCount = searchKeyFields;
@@ -61,7 +61,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
         	btreeOpHelper.init();
             //btreeOpHelper.fill();
             btree = btreeOpHelper.getBTree();
-
+            
             IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
             IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
             
@@ -91,10 +91,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
         appender.reset(frame, true);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
-
+        
         try {
             while (cursor.hasNext()) {
-                tb.reset();
+            	tb.reset();
                 cursor.next();
                 
                 ITupleReference frameTuple = cursor.getTuple();                
@@ -123,6 +123,6 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }        
     }
 }

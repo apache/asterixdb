@@ -44,8 +44,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op, boolean isLocalCluster) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false, isLocalCluster);
+            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -64,6 +64,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
         accessor.reset(buffer);
 
+        System.out.println("TUPLECOUNT: " + accessor.getTupleCount());
+        
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
@@ -82,8 +84,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                         break;
 
                     default: {
-                        throw new HyracksDataException("Unsupported operation " + op
-                                + " in BTree InsertUpdateDelete operator");
+                        throw new HyracksDataException("Unsupported operation " + op + " in BTree InsertUpdateDelete operator");
                     }
 
                 }
@@ -104,7 +105,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
         try {
             btreeOpHelper.init();
-            btreeOpHelper.getBTree().open(opDesc.getBtreeFileId());
+            btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
             metaFrame = new MetaDataFrame();
         } catch (Exception e) {
             e.printStackTrace();

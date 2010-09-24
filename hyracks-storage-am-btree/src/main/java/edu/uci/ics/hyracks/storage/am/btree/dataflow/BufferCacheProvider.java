@@ -33,6 +33,11 @@ public class BufferCacheProvider implements IBufferCacheProvider {
 	private static final int PAGE_SIZE = 8192;
     private static final int NUM_PAGES = 40;
 	
+    public void reset() {
+    	bufferCache = null;
+    	fileManager = null;
+    }
+    
 	@Override
 	public synchronized IBufferCache getBufferCache() {
 		

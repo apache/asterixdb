@@ -37,8 +37,8 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider, boolean isLocalCluster) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true, isLocalCluster);
+            int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -71,14 +71,13 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     @Override
     public void open() throws HyracksDataException {
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);        
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
         IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
         try {
             btreeOpHelper.init();
-            btreeOpHelper.getBTree().open(opDesc.getBtreeFileId());
-            bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(),
-                    btreeOpHelper.getInteriorFrame(), metaFrame);
+            btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
+            bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), metaFrame);
         } catch (Exception e) {
             e.printStackTrace();
         }
