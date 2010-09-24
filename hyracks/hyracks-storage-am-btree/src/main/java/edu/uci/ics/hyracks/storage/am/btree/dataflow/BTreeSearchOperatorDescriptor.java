@@ -35,8 +35,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	private ITupleReferenceFactory[] searchKeys; // create tuples for low and high keys	
 	private int searchKeyFieldCount;
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
-		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory, leafFactory, fieldCount, comparatorFactories);
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
+		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory, leafFactory, fieldCount, comparatorFactories);
 		this.isForward = isForward;
 		this.searchKeys = searchKeys;
 		this.searchKeyFieldCount = searchKeyFields;

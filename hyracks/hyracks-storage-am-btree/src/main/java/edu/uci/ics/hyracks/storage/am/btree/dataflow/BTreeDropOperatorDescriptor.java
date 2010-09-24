@@ -30,15 +30,15 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 	private String btreeFileName;
 	private IBufferCacheProvider bufferCacheProvider;
 	private IBTreeRegistryProvider btreeRegistryProvider;	
-	private IFileMappingProvider fileMappingProvider;
+	private IFileMappingProviderProvider fileMappingProviderProvider;
 	
 	public BTreeDropOperatorDescriptor(JobSpecification spec,			
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProvider fileMappingProvider) {
+			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider) {
 		super(spec, 0, 0);
 		this.btreeFileName = btreeFileName;
-		this.fileMappingProvider = fileMappingProvider;
+		this.fileMappingProviderProvider = fileMappingProviderProvider;
 		this.bufferCacheProvider = bufferCacheProvider;
 		this.btreeRegistryProvider = btreeRegistryProvider;
 	}
@@ -48,6 +48,6 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProvider);
+		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProviderProvider);
 	}	
 }

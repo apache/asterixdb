@@ -40,12 +40,13 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory,
+			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, 
+			IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
 			int[] fieldPermutation, BTreeOp op) {
 		super(spec, 1, 1, fileSplitProvider, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory,
+				btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory,
 				leafFactory, fieldCount, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;		
 		this.op = op;

@@ -29,7 +29,7 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	private static final long serialVersionUID = 1L;
 	
 	protected String btreeFileName;
-	protected IFileMappingProvider fileMappingProvider;
+	protected IFileMappingProviderProvider fileMappingProviderProvider;
 	
 	protected int fieldCount;
 	protected IBinaryComparatorFactory[] comparatorFactories;	
@@ -40,10 +40,10 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	protected IBufferCacheProvider bufferCacheProvider;
 	protected IBTreeRegistryProvider btreeRegistryProvider;
 		
-	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
+	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
         this.btreeFileName = btreeFileName;
-        this.fileMappingProvider = fileMappingProvider;
+        this.fileMappingProviderProvider = fileMappingProviderProvider;
         this.bufferCacheProvider = bufferCacheProvider;
         this.btreeRegistryProvider = btreeRegistryProvider;        
         this.interiorFrameFactory = interiorFactory;
@@ -57,8 +57,8 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 		return btreeFileName;
 	}
 
-	public IFileMappingProvider getFileMappingProvider() {
-		return fileMappingProvider;
+	public IFileMappingProviderProvider getFileMappingProviderProvider() {
+		return fileMappingProviderProvider;
 	}
 
 	public IBinaryComparatorFactory[] getComparatorFactories() {

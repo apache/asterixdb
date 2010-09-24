@@ -7,18 +7,17 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
 	
 	private String btreeFileName;
 	private IBTreeRegistryProvider btreeRegistryProvider;
 	private IBufferCacheProvider bufferCacheProvider;
-	private IFileMappingProvider fileMappingProvider;
+	private IFileMappingProviderProvider fileMappingProviderProvider;
 	
-	public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProvider fileMappingProvider) {
+	public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider) {
 		this.btreeFileName = btreeFileName;
-		this.fileMappingProvider = fileMappingProvider;
+		this.fileMappingProviderProvider = fileMappingProviderProvider;
 		this.bufferCacheProvider = bufferCacheProvider;
 		this.btreeRegistryProvider = btreeRegistryProvider;
 	}
@@ -46,7 +45,7 @@ public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
 		String ncDataPath = System.getProperty("NodeControllerDataPath");       
         String fileName = ncDataPath + btreeFileName;
 		
-        int btreeFileId = fileMappingProvider.mapNameToFileId(fileName, false);        
+        int btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, false);        
         
 		// unregister btree instance            
 		btreeRegistry.lock();
@@ -63,6 +62,9 @@ public class BTreeDropOperatorNodePushable implements IOperatorNodePushable {
         if (f.exists()) {
 			f.delete();
 		}       
+        
+        // remove name to id mapping
+        fileMappingProviderProvider.getFileMappingProvider().unmapName(fileName);
 	}
 
 	@Override

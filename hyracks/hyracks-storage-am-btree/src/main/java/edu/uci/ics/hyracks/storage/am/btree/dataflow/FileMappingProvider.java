@@ -28,4 +28,9 @@ public class FileMappingProvider implements IFileMappingProvider {
 			return val; // just return value
 		}			
 	}
+
+	@Override
+	public void unmapName(String name) {
+		map.remove(name);
+	}
 }
