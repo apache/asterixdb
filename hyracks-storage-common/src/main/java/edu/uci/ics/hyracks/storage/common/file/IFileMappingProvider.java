@@ -27,4 +27,14 @@ public interface IFileMappingProvider extends Serializable {
      * @return The file id on a successful lookup, null if unsuccessful.
      */
     public Integer mapNameToFileId(String name, boolean create);
+           
+    /**
+     * Remove the mapping from a file name to an integer id.
+     * 
+     * @param name
+     *            - Name of the file
+     * 
+     * @return void
+     */
+    public void unmapName(String name);
 }
