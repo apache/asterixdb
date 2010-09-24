@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
@@ -38,12 +37,12 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory,
+			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
 			int[] fieldPermutation, float fillFactor) {
 		super(spec, 1, 0, fileSplitProvider, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory,
+				btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory,
 				leafFactory, fieldCount, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;
 		this.fillFactor = fillFactor;

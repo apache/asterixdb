@@ -38,7 +38,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 final class BTreeOpHelper {
     private IBTreeInteriorFrame interiorFrame;
@@ -62,12 +61,12 @@ final class BTreeOpHelper {
     	
     	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
-        IFileMappingProvider fileMappingProvider = opDesc.getFileMappingProvider();
+        IFileMappingProviderProvider fileMappingProviderProvider = opDesc.getFileMappingProviderProvider();
                 
         String ncDataPath = System.getProperty("NodeControllerDataPath");
         String fileName = ncDataPath + opDesc.getBtreeFileName();
         
-        btreeFileId = fileMappingProvider.mapNameToFileId(fileName, createBTree);        
+        btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, createBTree);     
         
         File f = new File(fileName);
         if(!f.exists()) {

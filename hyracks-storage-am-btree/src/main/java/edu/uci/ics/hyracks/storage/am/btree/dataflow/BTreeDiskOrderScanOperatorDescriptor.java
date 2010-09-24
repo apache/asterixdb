@@ -35,11 +35,11 @@ public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorD
 			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProvider fileMappingProvider, IBTreeInteriorFrameFactory interiorFactory,
+			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, 
 			int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
 		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileName, fileMappingProvider, interiorFactory,
+				btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory,
 				leafFactory, fieldCount, comparatorFactories);
 	}
 	
