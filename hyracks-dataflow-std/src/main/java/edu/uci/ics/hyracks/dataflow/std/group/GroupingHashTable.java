@@ -80,8 +80,8 @@ class GroupingHashTable {
     private final FrameTupleAccessor storedKeysAccessor;
 
     GroupingHashTable(IHyracksContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
-        ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
-        RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
+            ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
         this.ctx = ctx;
         appender = new FrameTupleAppender(ctx);
         buffers = new ArrayList<ByteBuffer>();
@@ -160,7 +160,7 @@ class GroupingHashTable {
             }
             int saIndex = accumulatorSize++;
             aggregator = accumulators[saIndex] = aggregatorFactory.createAggregator(inRecordDescriptor,
-                outRecordDescriptor);
+                    outRecordDescriptor);
             aggregator.init(accessor, tIndex);
             link.add(sbIndex, stIndex, saIndex);
         }
@@ -180,7 +180,7 @@ class GroupingHashTable {
                     ByteBuffer keyBuffer = buffers.get(bIndex);
                     storedKeysAccessor.reset(keyBuffer);
                     IAccumulatingAggregator aggregator = accumulators[aIndex];
-                    while (!aggregator.output(appender, storedKeysAccessor, tIndex)) {
+                    while (!aggregator.output(appender, storedKeysAccessor, tIndex, storedKeys)) {
                         flushFrame(appender, writer);
                     }
                 }

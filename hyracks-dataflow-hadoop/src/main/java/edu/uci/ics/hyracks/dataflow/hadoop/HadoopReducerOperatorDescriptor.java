@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
-import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperator;
+import edu.uci.ics.hyracks.dataflow.std.group.DeserializedPreclusteredGroupOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHadoopOperatorDescriptor {
@@ -226,7 +226,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
                     this.comparatorFactory = new WritableComparingComparatorFactory(rawComparator.getClass());
                 }
             }
-            IOpenableDataWriterOperator op = new PreclusteredGroupOperator(new int[] { 0 },
+            IOpenableDataWriterOperator op = new DeserializedPreclusteredGroupOperator(new int[] { 0 },
                     new IComparator[] { comparatorFactory.createComparator() }, new ReducerAggregator(createReducer()));
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
                     getOperatorId(), 0));
