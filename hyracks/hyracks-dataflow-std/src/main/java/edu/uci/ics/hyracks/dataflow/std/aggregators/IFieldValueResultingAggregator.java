@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package edu.uci.ics.hyracks.dataflow.std.aggregators;
+
+import java.io.DataOutput;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
-public interface IAccumulatingAggregator {
+public interface IFieldValueResultingAggregator {
     /**
      * Called once per aggregator before calling accumulate for the first time.
      * 
@@ -42,21 +43,11 @@ public interface IAccumulatingAggregator {
     public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
 
     /**
-     * Called finally to emit output. This method is called until it returns true. The method is free to
-     * write out output to the provided appender until there is no more space and return false. It is the
-     * caller's responsibility to flush and make room in the appender before this method is called again.
+     * Called finally to emit output.
      * 
-     * @param appender
-     *            - Appender to write output to.
-     * @param accessor
-     *            - Accessor to access the key.
-     * @param tIndex
-     *            - Tuple index of the key in the accessor.
-     * @param keyFieldIndexes
-     *            - Field indexes of the key field.
-     * @return true if all output is written, false if the appender is full.
+     * @param resultAcceptor
+     *            - Interface to write the result to.
      * @throws HyracksDataException
      */
-    public boolean output(FrameTupleAppender appender, IFrameTupleAccessor accessor, int tIndex, int[] keyFieldIndexes)
-            throws HyracksDataException;
+    public void output(DataOutput resultAcceptor) throws HyracksDataException;
 }

@@ -12,7 +12,6 @@
   </parent>
 
   <modules>
-    <module>tpchhelper</module>
     <module>tpchclient</module>
     <module>tpchapp</module>
   </modules>
