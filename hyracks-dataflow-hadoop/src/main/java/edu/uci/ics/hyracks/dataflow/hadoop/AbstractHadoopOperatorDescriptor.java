@@ -22,6 +22,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.Text;
@@ -66,7 +67,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     public static String MAPRED_CACHE_LOCALFILES = "mapred.cache.localFiles";
 
     private static final long serialVersionUID = 1L;
-    private final HashMap<String, String> jobConfMap;
+    private final Map<String, String> jobConfMap;
     private IHadoopClassFactory hadoopClassFactory;
     
     public abstract RecordDescriptor getRecordDescriptor(JobConf jobConf);
@@ -74,7 +75,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     public AbstractHadoopOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor, JobConf jobConf,
             IHadoopClassFactory hadoopOperatorFactory) {
         super(spec, 1, 1);
-        jobConfMap = DatatypeHelper.jobConf2HashMap(jobConf);
+        jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         this.hadoopClassFactory = hadoopOperatorFactory;
         if(recordDescriptor != null){
         	recordDescriptors[0]= recordDescriptor;
@@ -84,7 +85,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     }
 
      
-    public HashMap<String, String> getJobConfMap() {
+    public Map<String, String> getJobConfMap() {
 		return jobConfMap;
 	}
 
@@ -140,7 +141,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     }
 
     public JobConf getJobConf() {
-        return DatatypeHelper.hashMap2JobConf(jobConfMap);
+        return DatatypeHelper.map2JobConf(jobConfMap);
     }
     
     public void populateCache(JobConf jobConf) {

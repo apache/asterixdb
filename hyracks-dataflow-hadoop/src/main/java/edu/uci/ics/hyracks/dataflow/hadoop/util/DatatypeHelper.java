@@ -18,6 +18,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
@@ -96,7 +97,7 @@ public class DatatypeHelper {
         return new RecordDescriptor(fields);
     }
 
-    public static JobConf hashMap2JobConf(HashMap<String, String> jobConfMap) {
+    public static JobConf map2JobConf(Map<String, String> jobConfMap) {
         JobConf jobConf;
         synchronized (Configuration.class) {
             jobConf = new JobConf();
@@ -107,8 +108,8 @@ public class DatatypeHelper {
         return jobConf;
     }
 
-    public static HashMap<String, String> jobConf2HashMap(JobConf jobConf) {
-        HashMap<String, String> jobConfMap = new HashMap<String, String>();
+    public static Map<String, String> jobConf2Map(JobConf jobConf) {
+        Map<String, String> jobConfMap = new HashMap<String, String>();
         for (Entry<String, String> entry : jobConf) {
             jobConfMap.put(entry.getKey(), entry.getValue());
         }
