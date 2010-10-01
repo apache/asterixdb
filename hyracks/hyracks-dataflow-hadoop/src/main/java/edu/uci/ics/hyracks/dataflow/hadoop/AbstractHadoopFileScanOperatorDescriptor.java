@@ -143,7 +143,6 @@ public abstract class AbstractHadoopFileScanOperatorDescriptor extends AbstractS
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), null);
     }
 }
