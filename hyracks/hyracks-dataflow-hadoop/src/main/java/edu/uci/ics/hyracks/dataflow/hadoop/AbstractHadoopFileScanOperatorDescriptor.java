@@ -14,93 +14,28 @@
  */
 package edu.uci.ics.hyracks.dataflow.hadoop;
 
-import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.Counters.Counter;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
-import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.HadoopFileSplit;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.file.IRecordReader;
-import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public abstract class AbstractHadoopFileScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-    protected HadoopFileSplit[] splits;
-
-    public AbstractHadoopFileScanOperatorDescriptor(JobSpecification spec, HadoopFileSplit[] splits,
+    
+    public AbstractHadoopFileScanOperatorDescriptor(JobSpecification spec,
             RecordDescriptor recordDescriptor) {
         super(spec, 0, 1);
         recordDescriptors[0] = recordDescriptor;
-        this.splits = splits;
     }
 
-    protected abstract IRecordReader createRecordReader(HadoopFileSplit fileSplit, RecordDescriptor desc)
+    protected abstract IRecordReader createRecordReader(InputSplit fileSplit, RecordDescriptor desc)
             throws Exception;
 
-    protected class FileScanOperator implements IOpenableDataWriterOperator {
-        private IOpenableDataWriter<Object[]> writer;
-        private int index;
-
-        FileScanOperator(int index) {
-            this.index = index;
-        }
-
-        @Override
-        public void setDataWriter(int index, IOpenableDataWriter<Object[]> writer) {
-            if (index != 0) {
-                throw new IndexOutOfBoundsException("Invalid index: " + index);
-            }
-            this.writer = writer;
-        }
-
-        @Override
-        public void open() throws HyracksDataException {
-            HadoopFileSplit split = splits[index];
-            RecordDescriptor desc = recordDescriptors[0];
-            try {
-                IRecordReader reader = createRecordReader(split, desc);
-                if (desc == null) {
-                    desc = recordDescriptors[0];
-                }
-                writer.open();
-                try {
-                    while (true) {
-                        Object[] record = new Object[desc.getFields().length];
-                        if (!reader.read(record)) {
-                            break;
-                        }
-                        writer.writeData(record);
-                    }
-                } finally {
-                    reader.close();
-                    writer.close();
-                }
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
-
-        }
-
-        @Override
-        public void close() throws HyracksDataException {
-            // do nothing
-        }
-
-        @Override
-        public void writeData(Object[] data) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-    }
-
+    
     protected Reporter createReporter() {
         return new Reporter() {
             @Override
@@ -140,9 +75,5 @@ public abstract class AbstractHadoopFileScanOperatorDescriptor extends AbstractS
         };
     }
 
-    @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileScanOperator(partition), null);
-    }
+ 
 }
