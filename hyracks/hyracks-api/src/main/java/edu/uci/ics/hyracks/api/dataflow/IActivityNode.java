@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 
 public interface IActivityNode extends Serializable {
@@ -26,5 +27,5 @@ public interface IActivityNode extends Serializable {
     public IOperatorDescriptor getOwner();
 
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions);
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException;
 }
