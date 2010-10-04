@@ -56,9 +56,9 @@ public class BTreeFieldPrefixNSMTest {
 	
     //private static final int PAGE_SIZE = 8192;
     //private static final int PAGE_SIZE = 8192;
-	//private static final int PAGE_SIZE = 32768; // 32K
+	private static final int PAGE_SIZE = 32768; // 32K
 	//private static final int PAGE_SIZE = 65536; // 64K
-	private static final int PAGE_SIZE = 131072; // 128K
+	//private static final int PAGE_SIZE = 131072; // 128K
     private static final int NUM_PAGES = 40;
     private static final int HYRACKS_FRAME_SIZE = 128;
     
@@ -156,8 +156,8 @@ public class BTreeFieldPrefixNSMTest {
             
             int compactFreq = 5;
         	int compressFreq = 5;
-        	int smallMax = 10;        	
-        	int numRecords = 5000;
+        	int smallMax = 10;        	        	
+        	int numRecords = 1000;
         	
         	int[][] savedFields = new int[numRecords][3];   	
         	
