@@ -119,10 +119,12 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryOutputSourceOp
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(frame, writer);
             }
-            writer.close();
+            
+            cursor.close();
+            writer.close();                        
 
         } catch (Exception e) {
             e.printStackTrace();
-        }        
+        }
     }
 }

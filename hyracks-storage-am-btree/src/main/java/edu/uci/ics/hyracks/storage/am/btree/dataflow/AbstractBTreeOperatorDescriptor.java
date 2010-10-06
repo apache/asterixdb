@@ -40,7 +40,7 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
 	protected IBufferCacheProvider bufferCacheProvider;
 	protected IBTreeRegistryProvider btreeRegistryProvider;
 		
-	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
+	public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider,  String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
         this.btreeFileName = btreeFileName;
         this.fileMappingProviderProvider = fileMappingProviderProvider;
