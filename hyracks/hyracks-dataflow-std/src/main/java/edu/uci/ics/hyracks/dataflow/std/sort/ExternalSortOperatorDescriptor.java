@@ -121,7 +121,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                         try {
                             createRunFromInFrames(inFrames.size());
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            throw new HyracksDataException(e);
                         }
                     }
                     ByteBuffer copy;
@@ -324,7 +324,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                                 try {
                                     doPass(runs, passCount);
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    throw new HyracksDataException(e);
                                 }
                             }
                         }
@@ -336,7 +336,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 // creates a new run from runs that can fit in memory.
-                private void doPass(LinkedList<File> runs, int passCount) throws ClassNotFoundException, Exception {
+                private void doPass(LinkedList<File> runs, int passCount) throws HyracksDataException, IOException {
                     File newRun = null;
                     IFrameWriter writer = this.writer;
                     boolean finalPass = false;
@@ -349,51 +349,58 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                         newRun = ctx.getResourceManager().createFile(
                                 ExternalSortOperatorDescriptor.class.getSimpleName(), ".run");
                         writer = new RunFileWriter(newRun);
+                        writer.open();
                     }
-                    RunFileReader[] runCursors = new RunFileReader[inFrames.size()];
-                    FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
-                    Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-                    ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx, recordDescriptors[0],
-                            inFrames.size(), comparator);
-                    int[] tupleIndexes = new int[inFrames.size()];
-                    for (int i = 0; i < inFrames.size(); i++) {
-                        tupleIndexes[i] = 0;
-                        int runIndex = topTuples.peek().getRunid();
-                        runCursors[runIndex] = new RunFileReader(runs.get(runIndex));
-                        runCursors[runIndex].open();
-                        if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
-                            tupleAccessors[runIndex] = new FrameTupleAccessor(ctx, recordDescriptors[0]);
-                            tupleAccessors[runIndex].reset(inFrames.get(runIndex));
-                            setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
-                        } else {
-                            closeRun(runIndex, runCursors, tupleAccessors);
-                        }
-                    }
-
-                    while (!topTuples.areRunsExhausted()) {
-                        ReferenceEntry top = topTuples.peek();
-                        int runIndex = top.getRunid();
-                        FrameTupleAccessor fta = top.getAccessor();
-                        int tupleIndex = top.getTupleIndex();
-
-                        if (!outFrameAppender.append(fta, tupleIndex)) {
-                            flushFrame(outFrame, writer);
-                            outFrameAppender.reset(outFrame, true);
-                            if (!outFrameAppender.append(fta, tupleIndex)) {
-                                throw new IllegalStateException();
+                    try {
+                        RunFileReader[] runCursors = new RunFileReader[inFrames.size()];
+                        FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
+                        Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
+                        ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx, recordDescriptors[0],
+                                inFrames.size(), comparator);
+                        int[] tupleIndexes = new int[inFrames.size()];
+                        for (int i = 0; i < inFrames.size(); i++) {
+                            tupleIndexes[i] = 0;
+                            int runIndex = topTuples.peek().getRunid();
+                            runCursors[runIndex] = new RunFileReader(runs.get(runIndex));
+                            runCursors[runIndex].open();
+                            if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
+                                tupleAccessors[runIndex] = new FrameTupleAccessor(ctx, recordDescriptors[0]);
+                                tupleAccessors[runIndex].reset(inFrames.get(runIndex));
+                                setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
+                            } else {
+                                closeRun(runIndex, runCursors, tupleAccessors);
                             }
                         }
 
-                        ++tupleIndexes[runIndex];
-                        setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
-                    }
-                    if (outFrameAppender.getTupleCount() > 0) {
-                        flushFrame(outFrame, writer);
-                        outFrameAppender.reset(outFrame, true);
-                    }
-                    runs.subList(0, inFrames.size()).clear();
-                    if (!finalPass) {
-                        runs.add(0, newRun);
+                        while (!topTuples.areRunsExhausted()) {
+                            ReferenceEntry top = topTuples.peek();
+                            int runIndex = top.getRunid();
+                            FrameTupleAccessor fta = top.getAccessor();
+                            int tupleIndex = top.getTupleIndex();
+
+                            if (!outFrameAppender.append(fta, tupleIndex)) {
+                                flushFrame(outFrame, writer);
+                                outFrameAppender.reset(outFrame, true);
+                                if (!outFrameAppender.append(fta, tupleIndex)) {
+                                    throw new IllegalStateException();
+                                }
+                            }
+
+                            ++tupleIndexes[runIndex];
+                            setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
+                        }
+                        if (outFrameAppender.getTupleCount() > 0) {
+                            flushFrame(outFrame, writer);
+                            outFrameAppender.reset(outFrame, true);
+                        }
+                        runs.subList(0, inFrames.size()).clear();
+                        if (!finalPass) {
+                            runs.add(0, newRun);
+                        }
+                    } finally {
+                        if (!finalPass) {
+                            writer.close();
+                        }
                     }
                 }
 
@@ -425,7 +432,9 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     }
                 }
 
-                private void closeRun(int index, RunFileReader[] runCursors, IFrameTupleAccessor[] tupleAccessor) {
+                private void closeRun(int index, RunFileReader[] runCursors, IFrameTupleAccessor[] tupleAccessor)
+                        throws HyracksDataException {
+                    runCursors[index].close();
                     runCursors[index] = null;
                     tupleAccessor[index] = null;
                 }
@@ -535,10 +544,12 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public void close() throws HyracksDataException {
-            try {
-                channel.close();
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
+            if (channel != null) {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
             }
         }
 
