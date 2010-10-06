@@ -17,30 +17,27 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
 
 public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
 	
 	public BTreeDiskOrderScanOperatorDescriptor(JobSpecification spec,
-			IFileSplitProvider fileSplitProvider, RecordDescriptor recDesc,
+			RecordDescriptor recDesc,
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
 			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, 
-			int fieldCount, IBinaryComparatorFactory[] comparatorFactories) {
-		super(spec, 0, 1, fileSplitProvider, recDesc, bufferCacheProvider,
+			int fieldCount) {
+		super(spec, 0, 1, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories);
+				leafFactory, fieldCount, null);
 	}
 	
 	@Override

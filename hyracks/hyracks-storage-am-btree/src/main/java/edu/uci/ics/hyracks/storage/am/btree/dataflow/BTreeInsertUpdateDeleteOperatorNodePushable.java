@@ -63,8 +63,6 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         final IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
 
         accessor.reset(buffer);
-
-        System.out.println("TUPLECOUNT: " + accessor.getTupleCount());
         
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {

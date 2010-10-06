@@ -35,7 +35,7 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private IRecordDescriptorProvider recordDescProvider;
 
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-
+    
     public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
             int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, true);
@@ -67,7 +67,7 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
             }
         }
     }
-
+    
     @Override
     public void open() throws HyracksDataException {
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();

@@ -40,14 +40,14 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
 
     @Override
     public void initialize() throws HyracksDataException {
-
+    	
         IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
         DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
         IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
-
+        
         try {
             btreeOpHelper.init();
-            btreeOpHelper.fill();
+            //btreeOpHelper.fill();
             btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
@@ -61,7 +61,7 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         appender.reset(frame, true);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
-
+        
         try {
             while (cursor.hasNext()) {
                 tb.reset();
@@ -80,15 +80,13 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
                         throw new IllegalStateException();
                     }
                 }
-
-                //int recOffset = cursor.getOffset();                
-                //String rec = cmp.printRecord(array, recOffset);
-                //System.out.println(rec);
             }
 
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(frame, writer);
             }
+            
+            cursor.close();
             writer.close();
 
         } catch (Exception e) {
