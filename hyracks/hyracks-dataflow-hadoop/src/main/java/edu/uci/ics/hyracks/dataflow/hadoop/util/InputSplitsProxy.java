@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.util.ReflectionUtils;
 
 public class InputSplitsProxy implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -41,11 +43,12 @@ public class InputSplitsProxy implements Serializable {
         bytes = baos.toByteArray();
     }
 
-    public InputSplit[] toInputSplits() throws InstantiationException, IllegalAccessException, IOException {
+    public InputSplit[] toInputSplits(JobConf jobConf) throws InstantiationException, IllegalAccessException,
+            IOException {
         InputSplit[] splits = new InputSplit[isClasses.length];
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
         for (int i = 0; i < splits.length; ++i) {
-            splits[i] = isClasses[i].newInstance();
+            splits[i] = ReflectionUtils.newInstance(isClasses[i], jobConf);
             splits[i].readFields(dis);
         }
         return splits;

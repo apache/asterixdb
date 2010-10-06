@@ -117,7 +117,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                     RecordReader hadoopRecordReader;
                     Writable key;
                     Writable value;
-                    InputSplit[] splits = inputSplitsProxy.toInputSplits();
+                    InputSplit[] splits = inputSplitsProxy.toInputSplits(conf);
                     InputSplit inputSplit = splits[partition];
                     Class inputFormatClass = Class.forName(inputFormatClassName);
                     InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
