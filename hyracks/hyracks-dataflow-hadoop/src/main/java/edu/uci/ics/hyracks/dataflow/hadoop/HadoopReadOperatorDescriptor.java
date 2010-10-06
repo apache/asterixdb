@@ -156,6 +156,9 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                             }
                         }
                     }
+                    if (appender.getTupleCount() > 0) {
+                        FrameUtils.flushFrame(outBuffer, writer);
+                    }
                     hadoopRecordReader.close();
                 } catch (InstantiationException e) {
                     throw new HyracksDataException(e);
