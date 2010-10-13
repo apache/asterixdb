@@ -20,13 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
@@ -52,11 +52,10 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
     private Map<String, String> jobConfMap;
     private InputSplitsProxy inputSplitsProxy;
 
-    public HadoopReadOperatorDescriptor(JobConf jobConf, JobSpecification spec) throws IOException {
+    public HadoopReadOperatorDescriptor(JobConf jobConf, JobSpecification spec, InputSplit[] splits) throws IOException {
         super(spec, 0, 1);
         this.jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         InputFormat inputFormat = jobConf.getInputFormat();
-        InputSplit[] splits = inputFormat.getSplits(jobConf, jobConf.getNumMapTasks());
         RecordReader recordReader = inputFormat.getRecordReader(splits[0], jobConf, createReporter());
         recordDescriptors[0] = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) recordReader
                 .createKey().getClass(), (Class<? extends Writable>) recordReader.createValue().getClass());
@@ -114,6 +113,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
             public void initialize() throws HyracksDataException {
                 try {
                     JobConf conf = DatatypeHelper.map2JobConf((HashMap) jobConfMap);
+                    conf.setClassLoader(this.getClass().getClassLoader());
                     RecordReader hadoopRecordReader;
                     Writable key;
                     Writable value;

@@ -22,11 +22,11 @@ import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataReader;
@@ -41,12 +41,11 @@ import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.WritableComparingComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.ClasspathBasedHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
-import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
 import edu.uci.ics.hyracks.dataflow.std.group.DeserializedPreclusteredGroupOperator;
+import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHadoopOperatorDescriptor {
@@ -179,26 +178,19 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
     private static final long serialVersionUID = 1L;
     private Class<? extends Reducer> reducerClass;
-    private static final String reducerClassKey = "mapred.reducer.class";
-    private static final String comparatorClassKey = "mapred.output.value.groupfn.class";
     private IComparatorFactory comparatorFactory;
 
-    public HadoopReducerOperatorDescriptor(JobSpecification spec, IComparatorFactory comparatorFactory,
-            Class<? extends Reducer> reducerClass, RecordDescriptor recordDescriptor, JobConf jobConf) {
-        super(spec, recordDescriptor, jobConf, new ClasspathBasedHadoopClassFactory());
+    public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IComparatorFactory comparatorFactory,
+            IHadoopClassFactory classFactory) {
+        super(spec, getRecordDescriptor(conf, classFactory), conf, classFactory);
         this.comparatorFactory = comparatorFactory;
-        this.reducerClass = reducerClass;
-    }
-
-    public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IHadoopClassFactory classFactory) {
-        super(spec, null, conf, classFactory);
     }
 
     private Reducer<K2, V2, K3, V3> createReducer() throws Exception {
         if (reducerClass != null) {
             return reducerClass.newInstance();
         } else {
-            Object reducer = getHadoopClassFactory().createReducer(getJobConfMap().get(reducerClassKey));
+            Object reducer = getHadoopClassFactory().createReducer(getJobConf().getReducerClass().getName());
             reducerClass = (Class<? extends Reducer>) reducer.getClass();
             return (Reducer) reducer;
         }
@@ -209,14 +201,14 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         try {
             if (this.comparatorFactory == null) {
-                String comparatorClassName = getJobConfMap().get(comparatorClassKey);
+                String comparatorClassName = getJobConf().getOutputValueGroupingComparator().getClass().getName();
                 RawComparator rawComparator = null;
                 if (comparatorClassName != null) {
                     Class comparatorClazz = getHadoopClassFactory().loadClass(comparatorClassName);
                     this.comparatorFactory = new KeyComparatorFactory(comparatorClazz);
 
                 } else {
-                    String mapOutputKeyClass = getJobConfMap().get("mapred.mapoutput.key.class");
+                    String mapOutputKeyClass = getJobConf().getMapOutputKeyClass().getName();
                     if (getHadoopClassFactory() != null) {
                         rawComparator = WritableComparator.get(getHadoopClassFactory().loadClass(mapOutputKeyClass));
                     } else {
@@ -235,28 +227,18 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
         }
     }
 
-    public Class<? extends Reducer> getReducerClass() {
-        return reducerClass;
-    }
-
-    public void setReducerClass(Class<? extends Reducer> reducerClass) {
-        this.reducerClass = reducerClass;
-    }
-
-    @Override
-    public RecordDescriptor getRecordDescriptor(JobConf conf) {
-        String outputKeyClassName = conf.get("mapred.output.key.class");
-        String outputValueClassName = conf.get("mapred.output.value.class");
+    public static RecordDescriptor getRecordDescriptor(JobConf conf, IHadoopClassFactory classFactory) {
+        String outputKeyClassName = conf.getOutputKeyClass().getName();
+        String outputValueClassName = conf.getOutputValueClass().getName();
         RecordDescriptor recordDescriptor = null;
         try {
-            if (getHadoopClassFactory() == null) {
-                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) Class.forName(outputKeyClassName),
-                        (Class<? extends Writable>) Class.forName(outputValueClassName));
+            if (classFactory == null) {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
+                        .forName(outputKeyClassName), (Class<? extends Writable>) Class.forName(outputValueClassName));
             } else {
                 recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(outputKeyClassName),
-                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(outputValueClassName));
+                        (Class<? extends Writable>) classFactory.loadClass(outputKeyClassName),
+                        (Class<? extends Writable>) classFactory.loadClass(outputValueClassName));
             }
         } catch (Exception e) {
             e.printStackTrace();
