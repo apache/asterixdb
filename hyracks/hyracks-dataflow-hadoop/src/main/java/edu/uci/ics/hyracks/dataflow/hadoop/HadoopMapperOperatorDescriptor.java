@@ -17,6 +17,9 @@ package edu.uci.ics.hyracks.dataflow.hadoop;
 import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -32,6 +35,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.InputSplitsProxy;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
@@ -41,6 +45,11 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         private Reporter reporter;
         private Mapper<K1, V1, K2, V2> mapper;
         private IOpenableDataWriter<Object[]> writer;
+        private int partition;
+
+        public MapperOperator(int partition) {
+            this.partition = partition;
+        };
 
         @Override
         public void close() throws HyracksDataException {
@@ -54,18 +63,37 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
 
         @Override
         public void open() throws HyracksDataException {
-            JobConf jobConf = getJobConf();
+            jobConf = getJobConf();
             populateCache(jobConf);
             try {
                 mapper = createMapper();
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
-            // -- - configure - --
+            if (inputSplitsProxy != null) {
+                updateConfWithSplit();
+            }
             mapper.configure(jobConf);
             writer.open();
             output = new DataWritingOutputCollector<K2, V2>(writer);
             reporter = createReporter();
+        }
+
+        private void updateConfWithSplit() {
+            try {
+                InputSplit[] splits = inputSplitsProxy.toInputSplits(jobConf);
+                InputSplit splitRead = splits[partition];
+                if (splitRead instanceof FileSplit) {
+                    jobConf.set("map.input.file", ((FileSplit) splitRead).getPath().toString());
+                    jobConf.setLong("map.input.start", ((FileSplit) splitRead).getStart());
+                    jobConf.setLong("map.input.length", ((FileSplit) splitRead).getLength());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                // we do not throw the exception here as we are setting additional parameters that may not be 
+                // required by the mapper. If they are  indeed required,  the configure method invoked on the mapper
+                // shall report an exception because of the missing parameters. 
+            }
         }
 
         @Override
@@ -87,32 +115,36 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
     }
 
     private static final long serialVersionUID = 1L;
-    private static final String mapClassNameKey = "mapred.mapper.class";
     private Class<? extends Mapper> mapperClass;
+    private InputSplitsProxy inputSplitsProxy;
 
-    public HadoopMapperOperatorDescriptor(JobSpecification spec, Class<? extends Mapper> mapperClass,
-            RecordDescriptor recordDescriptor, JobConf jobConf) {
-        super(spec, recordDescriptor, jobConf, null);
-        this.mapperClass = mapperClass;
+    private void initializeSplitInfo(InputSplit[] splits) throws IOException {
+        jobConf = super.getJobConf();
+        InputFormat inputFormat = jobConf.getInputFormat();
+        inputSplitsProxy = new InputSplitsProxy(splits);
     }
 
-    public HadoopMapperOperatorDescriptor(JobSpecification spec, JobConf jobConf, IHadoopClassFactory hadoopClassFactory) {
-        super(spec, null, jobConf, hadoopClassFactory);
+    public HadoopMapperOperatorDescriptor(JobSpecification spec, JobConf jobConf, InputSplit[] splits,
+            IHadoopClassFactory hadoopClassFactory) throws IOException {
+        super(spec, getRecordDescriptor(jobConf, hadoopClassFactory), jobConf, hadoopClassFactory);
+        if (splits != null) {
+            initializeSplitInfo(splits);
+        }
     }
 
-    public RecordDescriptor getRecordDescriptor(JobConf conf) {
+    public static RecordDescriptor getRecordDescriptor(JobConf conf, IHadoopClassFactory hadoopClassFactory) {
         RecordDescriptor recordDescriptor = null;
         String mapOutputKeyClassName = conf.getMapOutputKeyClass().getName();
         String mapOutputValueClassName = conf.getMapOutputValueClass().getName();
         try {
-            if (getHadoopClassFactory() == null) {
-                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) Class.forName(mapOutputKeyClassName),
-                        (Class<? extends Writable>) Class.forName(mapOutputValueClassName));
+            if (hadoopClassFactory == null) {
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
+                        .forName(mapOutputKeyClassName), (Class<? extends Writable>) Class
+                        .forName(mapOutputValueClassName));
             } else {
                 recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(mapOutputKeyClassName),
-                        (Class<? extends Writable>) getHadoopClassFactory().loadClass(mapOutputValueClassName));
+                        (Class<? extends Writable>) hadoopClassFactory.loadClass(mapOutputKeyClassName),
+                        (Class<? extends Writable>) hadoopClassFactory.loadClass(mapOutputValueClassName));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -124,7 +156,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         if (mapperClass != null) {
             return mapperClass.newInstance();
         } else {
-            String mapperClassName = super.getJobConfMap().get(mapClassNameKey);
+            String mapperClassName = super.getJobConf().getMapperClass().getName();
             Object mapper = getHadoopClassFactory().createMapper(mapperClassName);
             mapperClass = (Class<? extends Mapper>) mapper.getClass();
             return (Mapper) mapper;
@@ -134,8 +166,8 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new MapperOperator(),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+        return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition), recordDescProvider
+                .getInputRecordDescriptor(getOperatorId(), 0));
     }
 
     public Class<? extends Mapper> getMapperClass() {

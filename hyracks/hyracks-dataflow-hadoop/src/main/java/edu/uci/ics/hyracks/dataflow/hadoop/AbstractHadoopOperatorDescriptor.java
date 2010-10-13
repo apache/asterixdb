@@ -14,18 +14,10 @@
  */
 package edu.uci.ics.hyracks.dataflow.hadoop;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -42,8 +34,9 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 
 public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-	
-	protected static class DataWritingOutputCollector<K, V> implements OutputCollector<K, V> {
+    protected transient JobConf jobConf;
+
+    protected static class DataWritingOutputCollector<K, V> implements OutputCollector<K, V> {
         private IDataWriter<Object[]> writer;
 
         public DataWritingOutputCollector() {
@@ -55,7 +48,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
 
         @Override
         public void collect(Object key, Object value) throws IOException {
-           	writer.writeData(new Object[] { key, value });
+            writer.writeData(new Object[] { key, value });
         }
 
         public void setWriter(IDataWriter<Object[]> writer) {
@@ -69,38 +62,28 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     private static final long serialVersionUID = 1L;
     private final Map<String, String> jobConfMap;
     private IHadoopClassFactory hadoopClassFactory;
-    
-    public abstract RecordDescriptor getRecordDescriptor(JobConf jobConf);
-    	
+
     public AbstractHadoopOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor, JobConf jobConf,
             IHadoopClassFactory hadoopOperatorFactory) {
         super(spec, 1, 1);
         jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         this.hadoopClassFactory = hadoopOperatorFactory;
-        if(recordDescriptor != null){
-        	recordDescriptors[0]= recordDescriptor;
-        }else{
-        	recordDescriptors[0] = getRecordDescriptor(jobConf);
-        }
+        recordDescriptors[0] = recordDescriptor;
     }
 
-     
     public Map<String, String> getJobConfMap() {
-		return jobConfMap;
-	}
+        return jobConfMap;
+    }
 
+    public IHadoopClassFactory getHadoopClassFactory() {
+        return hadoopClassFactory;
+    }
 
-	public IHadoopClassFactory getHadoopClassFactory() {
-		return hadoopClassFactory;
-	}
+    public void setHadoopClassFactory(IHadoopClassFactory hadoopClassFactory) {
+        this.hadoopClassFactory = hadoopClassFactory;
+    }
 
-
-	public void setHadoopClassFactory(IHadoopClassFactory hadoopClassFactory) {
-		this.hadoopClassFactory = hadoopClassFactory;
-	}
-
-
-	protected Reporter createReporter() {
+    protected Reporter createReporter() {
         return new Reporter() {
             @Override
             public Counter getCounter(Enum<?> name) {
@@ -110,8 +93,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
             @Override
             public Counter getCounter(String group, String name) {
                 return null;
-            }    
-              
+            }
 
             @Override
             public InputSplit getInputSplit() throws UnsupportedOperationException {
@@ -141,9 +123,13 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     }
 
     public JobConf getJobConf() {
-        return DatatypeHelper.map2JobConf(jobConfMap);
+        if (jobConf == null) {
+            jobConf = DatatypeHelper.map2JobConf(jobConfMap);
+            jobConf.setClassLoader(this.getClass().getClassLoader());
+        }
+        return jobConf;
     }
-    
+
     public void populateCache(JobConf jobConf) {
         String cache = jobConf.get(MAPRED_CACHE_FILES);
         System.out.println("cache:" + cache);
