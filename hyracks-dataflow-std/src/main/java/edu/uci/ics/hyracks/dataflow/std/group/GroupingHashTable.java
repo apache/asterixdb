@@ -159,7 +159,7 @@ class GroupingHashTable {
                 accumulators = Arrays.copyOf(accumulators, accumulators.length * 2);
             }
             int saIndex = accumulatorSize++;
-            aggregator = accumulators[saIndex] = aggregatorFactory.createAggregator(inRecordDescriptor,
+            aggregator = accumulators[saIndex] = aggregatorFactory.createAggregator(ctx, inRecordDescriptor,
                     outRecordDescriptor);
             aggregator.init(accessor, tIndex);
             link.add(sbIndex, stIndex, saIndex);

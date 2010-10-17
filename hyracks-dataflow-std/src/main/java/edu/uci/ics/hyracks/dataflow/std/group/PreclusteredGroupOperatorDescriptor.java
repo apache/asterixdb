@@ -56,7 +56,7 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-        final IAccumulatingAggregator aggregator = aggregatorFactory.createAggregator(inRecordDesc,
+        final IAccumulatingAggregator aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
                 recordDescriptors[0]);
         final ByteBuffer copyFrame = ctx.getResourceManager().allocateFrame();
         final FrameTupleAccessor inFrameAccessor = new FrameTupleAccessor(ctx, inRecordDesc);
