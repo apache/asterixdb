@@ -18,8 +18,9 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IAccumulatingAggregatorFactory extends Serializable {
     IAccumulatingAggregator createAggregator(IHyracksContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor);
+            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
 }
