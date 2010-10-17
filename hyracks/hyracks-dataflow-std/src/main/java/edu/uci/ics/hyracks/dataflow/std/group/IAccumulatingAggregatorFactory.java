@@ -16,8 +16,10 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IAccumulatingAggregatorFactory extends Serializable {
-    IAccumulatingAggregator createAggregator(RecordDescriptor inRecordDesc, RecordDescriptor outRecordDescriptor);
+    IAccumulatingAggregator createAggregator(IHyracksContext ctx, RecordDescriptor inRecordDesc,
+            RecordDescriptor outRecordDescriptor);
 }
