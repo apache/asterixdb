@@ -100,7 +100,7 @@ public class FrameSorter {
 
     public void sortFrames() {
         FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptor);
-        int nBuffers = buffers.size();
+        int nBuffers = dataFrameCount;
         int totalTCount = 0;
         for (int i = 0; i < nBuffers; ++i) {
             accessor.reset(buffers.get(i));

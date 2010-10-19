@@ -147,7 +147,8 @@ public class WordCountMain {
             IBinaryComparatorFactory[] cfs = new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE };
             IOperatorDescriptor sorter = "memsort".equalsIgnoreCase(algo) ? new InMemorySortOperatorDescriptor(spec,
                     keys, new UTF8StringNormalizedKeyComputerFactory(), cfs, wordDesc)
-                    : new ExternalSortOperatorDescriptor(spec, sbSize, keys, cfs, wordDesc);
+                    : new ExternalSortOperatorDescriptor(spec, sbSize, keys,
+                            new UTF8StringNormalizedKeyComputerFactory(), cfs, wordDesc);
             sorter.setPartitionConstraint(createPartitionConstraint(outSplits));
 
             IConnectorDescriptor scanSortConn = new MToNHashPartitioningConnectorDescriptor(spec,
