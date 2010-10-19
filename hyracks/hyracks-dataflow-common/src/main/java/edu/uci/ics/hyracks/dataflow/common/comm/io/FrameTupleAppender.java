@@ -59,13 +59,11 @@ public class FrameTupleAppender {
         return false;
     }
 
-    public boolean append(FrameTupleAccessor tupleAccessor, int tIndex) {
-        int startOffset = tupleAccessor.getTupleStartOffset(tIndex);
-        int endOffset = tupleAccessor.getTupleEndOffset(tIndex);
-        int length = endOffset - startOffset;
+    public boolean append(FrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
+        int length = tEndOffset - tStartOffset;
         if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= ctx.getFrameSize()) {
             ByteBuffer src = tupleAccessor.getBuffer();
-            System.arraycopy(src.array(), startOffset, buffer.array(), tupleDataEndOffset, length);
+            System.arraycopy(src.array(), tStartOffset, buffer.array(), tupleDataEndOffset, length);
             tupleDataEndOffset += length;
             buffer.putInt(FrameHelper.getTupleCountOffset(ctx) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
@@ -73,6 +71,12 @@ public class FrameTupleAppender {
             return true;
         }
         return false;
+    }
+
+    public boolean append(FrameTupleAccessor tupleAccessor, int tIndex) {
+        int tStartOffset = tupleAccessor.getTupleStartOffset(tIndex);
+        int tEndOffset = tupleAccessor.getTupleEndOffset(tIndex);
+        return append(tupleAccessor, tStartOffset, tEndOffset);
     }
 
     public boolean appendConcat(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1) {

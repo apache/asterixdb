@@ -15,40 +15,42 @@
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String BUFFERS = "buffers";
-    private static final String TPOINTERS = "tpointers";
+    private static final String FRAMESORTER = "framesorter";
 
     private static final long serialVersionUID = 1L;
     private final int[] sortFields;
+    private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
     private IBinaryComparatorFactory[] comparatorFactories;
 
     public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+        this(spec, sortFields, null, comparatorFactories, recordDescriptor);
+    }
+
+    public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
+            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.sortFields = sortFields;
+        this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
         this.comparatorFactories = comparatorFactories;
         recordDescriptors[0] = recordDescriptor;
     }
@@ -78,131 +80,23 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-            for (int i = 0; i < comparatorFactories.length; ++i) {
-                comparators[i] = comparatorFactories[i].createBinaryComparator();
-            }
+            final FrameSorter frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory,
+                    comparatorFactories, recordDescriptors[0]);
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
-                private List<ByteBuffer> buffers;
-
-                private final FrameTupleAccessor fta1 = new FrameTupleAccessor(ctx, recordDescriptors[0]);
-                private final FrameTupleAccessor fta2 = new FrameTupleAccessor(ctx, recordDescriptors[0]);
-
                 @Override
                 public void open() throws HyracksDataException {
-                    buffers = new ArrayList<ByteBuffer>();
-                    env.set(BUFFERS, buffers);
+                    frameSorter.reset();
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ByteBuffer copy = ctx.getResourceManager().allocateFrame();
-                    FrameUtils.copy(buffer, copy);
-                    buffers.add(copy);
+                    frameSorter.insertFrame(buffer);
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptors[0]);
-                    int nBuffers = buffers.size();
-                    int totalTCount = 0;
-                    for (int i = 0; i < nBuffers; ++i) {
-                        accessor.reset(buffers.get(i));
-                        totalTCount += accessor.getTupleCount();
-                    }
-                    long[] tPointers = new long[totalTCount];
-                    int ptr = 0;
-                    for (int i = 0; i < nBuffers; ++i) {
-                        accessor.reset(buffers.get(i));
-                        int tCount = accessor.getTupleCount();
-                        for (int j = 0; j < tCount; ++j) {
-                            tPointers[ptr++] = (((long) i) << 32) + j;
-                        }
-                    }
-                    if (tPointers.length > 0) {
-                        sort(tPointers, 0, tPointers.length);
-                    }
-                    env.set(TPOINTERS, tPointers);
-                }
-
-                private void sort(long[] tPointers, int offset, int length) {
-                    int m = offset + (length >> 1);
-                    long v = tPointers[m];
-
-                    int a = offset;
-                    int b = a;
-                    int c = offset + length - 1;
-                    int d = c;
-                    while (true) {
-                        while (b <= c && compare(tPointers[b], v) <= 0) {
-                            if (compare(tPointers[b], v) == 0) {
-                                swap(tPointers, a++, b);
-                            }
-                            ++b;
-                        }
-                        while (c >= b && compare(tPointers[c], v) >= 0) {
-                            if (compare(tPointers[c], v) == 0) {
-                                swap(tPointers, c, d--);
-                            }
-                            --c;
-                        }
-                        if (b > c)
-                            break;
-                        swap(tPointers, b++, c--);
-                    }
-
-                    int s;
-                    int n = offset + length;
-                    s = Math.min(a - offset, b - a);
-                    vecswap(tPointers, offset, b - s, s);
-                    s = Math.min(d - c, n - d - 1);
-                    vecswap(tPointers, b, n - s, s);
-
-                    if ((s = b - a) > 1) {
-                        sort(tPointers, offset, s);
-                    }
-                    if ((s = d - c) > 1) {
-                        sort(tPointers, n - s, s);
-                    }
-                }
-
-                private void swap(long x[], int a, int b) {
-                    long t = x[a];
-                    x[a] = x[b];
-                    x[b] = t;
-                }
-
-                private void vecswap(long x[], int a, int b, int n) {
-                    for (int i = 0; i < n; i++, a++, b++) {
-                        swap(x, a, b);
-                    }
-                }
-
-                private int compare(long tp1, long tp2) {
-                    int i1 = (int) ((tp1 >> 32) & 0xffffffff);
-                    int j1 = (int) (tp1 & 0xffffffff);
-                    int i2 = (int) ((tp2 >> 32) & 0xffffffff);
-                    int j2 = (int) (tp2 & 0xffffffff);
-                    ByteBuffer buf1 = buffers.get(i1);
-                    ByteBuffer buf2 = buffers.get(i2);
-                    byte[] b1 = buf1.array();
-                    byte[] b2 = buf2.array();
-                    fta1.reset(buf1);
-                    fta2.reset(buf2);
-                    for (int f = 0; f < sortFields.length; ++f) {
-                        int fIdx = sortFields[f];
-                        int s1 = fta1.getTupleStartOffset(j1) + fta1.getFieldSlotsLength()
-                                + fta1.getFieldStartOffset(j1, fIdx);
-                        int l1 = fta1.getFieldEndOffset(j1, fIdx) - fta1.getFieldStartOffset(j1, fIdx);
-                        int s2 = fta2.getTupleStartOffset(j2) + fta2.getFieldSlotsLength()
-                                + fta2.getFieldStartOffset(j2, fIdx);
-                        int l2 = fta2.getFieldEndOffset(j2, fIdx) - fta2.getFieldStartOffset(j2, fIdx);
-                        int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
-                        if (c != 0) {
-                            return c;
-                        }
-                    }
-                    return 0;
+                    frameSorter.sortFrames();
+                    env.set(FRAMESORTER, frameSorter);
                 }
 
                 @Override
@@ -227,39 +121,11 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    List<ByteBuffer> buffers = (List<ByteBuffer>) env.get(BUFFERS);
-                    long[] tPointers = (long[]) env.get(TPOINTERS);
-                    FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptors[0]);
-                    FrameTupleAppender appender = new FrameTupleAppender(ctx);
-                    ByteBuffer outFrame = ctx.getResourceManager().allocateFrame();
                     writer.open();
-                    appender.reset(outFrame, true);
-                    for (int ptr = 0; ptr < tPointers.length; ++ptr) {
-                        long tp = tPointers[ptr];
-                        int i = (int) ((tp >> 32) & 0xffffffff);
-                        int j = (int) (tp & 0xffffffff);
-                        ByteBuffer buffer = buffers.get(i);
-                        accessor.reset(buffer);
-                        if (!appender.append(accessor, j)) {
-                            flushFrame(outFrame);
-                            appender.reset(outFrame, true);
-                            if (!appender.append(accessor, j)) {
-                                throw new IllegalStateException();
-                            }
-                        }
-                    }
-                    if (appender.getTupleCount() > 0) {
-                        flushFrame(outFrame);
-                    }
+                    FrameSorter frameSorter = (FrameSorter) env.get(FRAMESORTER);
+                    frameSorter.flushFrames(writer);
                     writer.close();
-                    env.set(BUFFERS, null);
-                    env.set(TPOINTERS, null);
-                }
-
-                private void flushFrame(ByteBuffer frame) throws HyracksDataException {
-                    frame.position(0);
-                    frame.limit(frame.capacity());
-                    writer.nextFrame(frame);
+                    env.set(FRAMESORTER, null);
                 }
             };
             return op;
