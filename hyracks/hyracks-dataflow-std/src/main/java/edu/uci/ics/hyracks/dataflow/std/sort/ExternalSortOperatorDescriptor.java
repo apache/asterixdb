@@ -120,7 +120,6 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     if (frameSorter.getFrameCount() >= maxSortFrames) {
                         flushFramesToRun();
-                        frameSorter.reset();
                     }
                     frameSorter.insertFrame(buffer);
                 }
@@ -139,6 +138,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 private void flushFramesToRun() throws HyracksDataException {
+                    frameSorter.sortFrames();
                     File runFile;
                     try {
                         runFile = ctx.getResourceManager().createFile(
