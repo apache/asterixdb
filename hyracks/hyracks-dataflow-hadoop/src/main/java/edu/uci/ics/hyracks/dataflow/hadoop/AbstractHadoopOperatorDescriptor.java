@@ -131,29 +131,33 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     }
 
     public void populateCache(JobConf jobConf) {
-        String cache = jobConf.get(MAPRED_CACHE_FILES);
-        System.out.println("cache:" + cache);
-        if (cache == null) {
-            return;
-        }
-        String localCache = jobConf.get(MAPRED_CACHE_LOCALFILES);
-        System.out.println("localCache:" + localCache);
-        if (localCache != null) {
-            return;
-        }
-        localCache = "";
-        StringTokenizer cacheTokenizer = new StringTokenizer(cache, ",");
-        while (cacheTokenizer.hasMoreTokens()) {
-            if (!"".equals(localCache)) {
-                localCache += ",";
+        try {
+            String cache = jobConf.get(MAPRED_CACHE_FILES);
+            System.out.println("cache:" + cache);
+            if (cache == null) {
+                return;
             }
-            try {
-                localCache += DCacheClient.get().get(cacheTokenizer.nextToken());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            String localCache = jobConf.get(MAPRED_CACHE_LOCALFILES);
+            System.out.println("localCache:" + localCache);
+            if (localCache != null) {
+                return;
             }
+            localCache = "";
+            StringTokenizer cacheTokenizer = new StringTokenizer(cache, ",");
+            while (cacheTokenizer.hasMoreTokens()) {
+                if (!"".equals(localCache)) {
+                    localCache += ",";
+                }
+                try {
+                    localCache += DCacheClient.get().get(cacheTokenizer.nextToken());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            jobConf.set(MAPRED_CACHE_LOCALFILES, localCache);
+            System.out.println("localCache:" + localCache);
+        } catch (Exception e) {
+
         }
-        jobConf.set(MAPRED_CACHE_LOCALFILES, localCache);
-        System.out.println("localCache:" + localCache);
     }
 }

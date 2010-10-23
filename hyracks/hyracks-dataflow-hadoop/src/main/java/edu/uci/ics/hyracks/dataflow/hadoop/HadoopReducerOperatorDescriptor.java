@@ -56,6 +56,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
         public ReducerAggregator(Reducer<K2, V2, K3, V3> reducer) {
             this.reducer = reducer;
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
             reducer.configure(getJobConf());
             output = new DataWritingOutputCollector<K3, V3>();
             reporter = new Reporter() {

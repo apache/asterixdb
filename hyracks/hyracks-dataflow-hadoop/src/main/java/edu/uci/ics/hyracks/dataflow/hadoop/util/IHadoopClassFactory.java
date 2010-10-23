@@ -19,11 +19,11 @@ import java.io.Serializable;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.Reducer;
 
-public interface IHadoopClassFactory extends Serializable{
+public interface IHadoopClassFactory extends Serializable {
 
-	public Mapper createMapper(String mapClassName) throws Exception;
-	
-	public Reducer createReducer(String reduceClassName) throws Exception;
-	
-	public Class loadClass(String className) throws Exception;
+    public Mapper createMapper(String mapClassName) throws Exception;
+
+    public Reducer createReducer(String reduceClassName) throws Exception;
+
+    public Class loadClass(String className) throws Exception;
 }

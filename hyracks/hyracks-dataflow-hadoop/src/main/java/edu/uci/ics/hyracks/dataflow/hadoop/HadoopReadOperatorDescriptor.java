@@ -51,6 +51,14 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
     private String inputFormatClassName;
     private Map<String, String> jobConfMap;
     private InputSplitsProxy inputSplitsProxy;
+    private transient JobConf jobConf;
+
+    public JobConf getJobConf() {
+        if (jobConf == null) {
+            jobConf = DatatypeHelper.map2JobConf(jobConfMap);
+        }
+        return jobConf;
+    }
 
     public HadoopReadOperatorDescriptor(JobConf jobConf, JobSpecification spec, InputSplit[] splits) throws IOException {
         super(spec, 0, 1);
@@ -59,9 +67,35 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
         RecordReader recordReader = inputFormat.getRecordReader(splits[0], jobConf, createReporter());
         recordDescriptors[0] = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) recordReader
                 .createKey().getClass(), (Class<? extends Writable>) recordReader.createValue().getClass());
+        System.out.println(" READER : KEY : " + recordReader.createKey().getClass().getName());
+        System.out.println(" READER : VALUE : " + recordReader.createValue().getClass().getName());
+        System.out.println(" Record descriptor : " + recordDescriptors[0].getFields()[0].getClass().getName());
+        System.out.println(" Record descriptor : " + recordDescriptors[0].getFields()[1].getClass().getName());
         this.setPartitionConstraint(new PartitionCountConstraint(splits.length));
         inputSplitsProxy = new InputSplitsProxy(splits);
         this.inputFormatClassName = inputFormat.getClass().getName();
+        try {
+            checkSplits(jobConf);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public InputSplit[] getInputSplits() throws InstantiationException, IllegalAccessException, IOException {
+        return inputSplitsProxy.toInputSplits(getJobConf());
+    }
+
+    private void checkSplits(JobConf conf) throws Exception {
+        InputSplit[] splits = inputSplitsProxy.toInputSplits(conf);
+        for (InputSplit inputSplit : splits) {
+            Class inputFormatClass = Class.forName(inputFormatClassName);
+            InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
+            RecordReader hadoopRecordReader = (RecordReader) inputFormat.getRecordReader(inputSplit, conf,
+                    createReporter());
+            System.out.println("split :" + inputSplit);
+            System.out.println(" READER (proxy): KEY : " + hadoopRecordReader.createKey().getClass().getName());
+            System.out.println(" READER (proxy): VALUE : " + hadoopRecordReader.createValue().getClass().getName());
+        }
     }
 
     protected Reporter createReporter() {
@@ -113,10 +147,11 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
             public void initialize() throws HyracksDataException {
                 try {
                     JobConf conf = DatatypeHelper.map2JobConf((HashMap) jobConfMap);
+                    Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                     conf.setClassLoader(this.getClass().getClassLoader());
                     RecordReader hadoopRecordReader;
-                    Writable key;
-                    Writable value;
+                    Object key;
+                    Object value;
                     InputSplit[] splits = inputSplitsProxy.toInputSplits(conf);
                     InputSplit inputSplit = splits[partition];
                     Class inputFormatClass = Class.forName(inputFormatClassName);
@@ -131,13 +166,19 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                         inputKeyClass = hadoopRecordReader.createKey().getClass();
                         inputValueClass = hadoopRecordReader.createValue().getClass();
                     }
-                    key = (Writable) inputKeyClass.newInstance();
-                    value = (Writable) inputValueClass.newInstance();
+
+                    key = hadoopRecordReader.createKey();
+                    value = hadoopRecordReader.createValue();
                     ByteBuffer outBuffer = ctx.getResourceManager().allocateFrame();
                     FrameTupleAppender appender = new FrameTupleAppender(ctx);
                     appender.reset(outBuffer, true);
+                    RecordDescriptor outputRecordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                            (Class<? extends Writable>) hadoopRecordReader.createKey().getClass(),
+                            (Class<? extends Writable>) hadoopRecordReader.createValue().getClass());
+                    /*
                     RecordDescriptor outputRecordDescriptor = recordDescProvider.getOutputRecordDescriptor(
                             getOperatorId(), 0);
+                    */
                     int nFields = outputRecordDescriptor.getFields().length;
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(nFields);
                     while (hadoopRecordReader.next(key, value)) {

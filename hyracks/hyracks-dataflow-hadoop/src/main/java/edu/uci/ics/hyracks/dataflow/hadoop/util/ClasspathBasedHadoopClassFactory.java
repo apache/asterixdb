@@ -19,23 +19,22 @@ import org.apache.hadoop.mapred.Reducer;
 
 public class ClasspathBasedHadoopClassFactory implements IHadoopClassFactory {
 
-	@Override
-	public Mapper createMapper(String mapClassName) throws Exception {
-		Class clazz = loadClass(mapClassName);
-		return (Mapper)clazz.newInstance();
-	}
+    @Override
+    public Mapper createMapper(String mapClassName) throws Exception {
+        Class clazz = loadClass(mapClassName);
+        return (Mapper) clazz.newInstance();
+    }
 
-	@Override
-	public Reducer createReducer(String reduceClassName) throws Exception {
-		Class clazz = loadClass(reduceClassName);
-		return (Reducer)clazz.newInstance();
-	}
+    @Override
+    public Reducer createReducer(String reduceClassName) throws Exception {
+        Class clazz = loadClass(reduceClassName);
+        return (Reducer) clazz.newInstance();
+    }
 
-	@Override
-	public Class loadClass(String className) throws Exception {
-		Class clazz = Class.forName(className);
-		return clazz;
-	}
+    @Override
+    public Class loadClass(String className) throws Exception {
+        Class clazz = Class.forName(className);
+        return clazz;
+    }
 
-	
 }

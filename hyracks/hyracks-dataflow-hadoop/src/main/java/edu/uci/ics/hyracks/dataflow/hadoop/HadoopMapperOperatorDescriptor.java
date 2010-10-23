@@ -23,6 +23,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
@@ -65,6 +66,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         public void open() throws HyracksDataException {
             jobConf = getJobConf();
             populateCache(jobConf);
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
             try {
                 mapper = createMapper();
             } catch (Exception e) {
@@ -117,6 +119,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
     private static final long serialVersionUID = 1L;
     private Class<? extends Mapper> mapperClass;
     private InputSplitsProxy inputSplitsProxy;
+    private transient InputSplit[] inputSplits;
 
     private void initializeSplitInfo(InputSplit[] splits) throws IOException {
         jobConf = super.getJobConf();
@@ -165,9 +168,23 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition), recordDescProvider
-                .getInputRecordDescriptor(getOperatorId(), 0));
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
+        RecordDescriptor recordDescriptor = null;
+        JobConf conf = getJobConf();
+        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+        try {
+            if (inputSplits == null) {
+                inputSplits = inputSplitsProxy.toInputSplits(conf);
+            }
+            RecordReader reader = conf.getInputFormat().getRecordReader(inputSplits[partition], conf,
+                    super.createReporter());
+            recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) reader
+                    .createKey().getClass(), (Class<? extends Writable>) reader.createValue().getClass());
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+
+        return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition), recordDescriptor);
     }
 
     public Class<? extends Mapper> getMapperClass() {

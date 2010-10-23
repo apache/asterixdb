@@ -31,6 +31,7 @@ import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
 
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
@@ -150,16 +151,27 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
 
     private static FileSplit[] getOutputSplits(JobConf conf, int noOfMappers) {
         int numOutputters = conf.getNumReduceTasks() != 0 ? conf.getNumReduceTasks() : noOfMappers;
-        FileSplit[] outputFileSplits = new FileSplit[numOutputters];
-        String absolutePath = FileOutputFormat.getOutputPath(conf).toString();
-        for (int index = 0; index < numOutputters; index++) {
-            String suffix = new String("part-00000");
-            suffix = new String(suffix.substring(0, suffix.length() - ("" + index).length()));
-            suffix = suffix + index;
-            String outputPath = absolutePath + "/" + suffix;
-            outputFileSplits[index] = new FileSplit("localhost", new File(outputPath));
+        if (conf.getOutputFormat() instanceof NullOutputFormat) {
+            FileSplit[] outputFileSplits = new FileSplit[numOutputters];
+            for (int i = 0; i < numOutputters; i++) {
+                String outputPath = "/tmp/" + System.currentTimeMillis() + i;
+                outputFileSplits[i] = new FileSplit("localhost", new File(outputPath));
+            }
+            return outputFileSplits;
+        } else {
+
+            FileSplit[] outputFileSplits = new FileSplit[numOutputters];
+            String absolutePath = FileOutputFormat.getOutputPath(conf).toString();
+            for (int index = 0; index < numOutputters; index++) {
+                String suffix = new String("part-00000");
+                suffix = new String(suffix.substring(0, suffix.length() - ("" + index).length()));
+                suffix = suffix + index;
+                String outputPath = absolutePath + "/" + suffix;
+                outputFileSplits[index] = new FileSplit("localhost", new File(outputPath));
+            }
+            return outputFileSplits;
         }
-        return outputFileSplits;
+
     }
 
     public HadoopWriteOperatorDescriptor(JobSpecification jobSpec, JobConf jobConf, int numMapTasks) throws Exception {
