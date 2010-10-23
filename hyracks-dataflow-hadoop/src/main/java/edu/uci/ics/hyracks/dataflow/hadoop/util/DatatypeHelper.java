@@ -63,7 +63,7 @@ public class DatatypeHelper {
                 o.readFields(in);
             } catch (IOException e) {
                 e.printStackTrace();
-                // throw new HyracksDataException(e);
+                throw new HyracksDataException(e);
             }
             return o;
         }
