@@ -92,9 +92,6 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
             InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
             RecordReader hadoopRecordReader = (RecordReader) inputFormat.getRecordReader(inputSplit, conf,
                     createReporter());
-            System.out.println("split :" + inputSplit);
-            System.out.println(" READER (proxy): KEY : " + hadoopRecordReader.createKey().getClass().getName());
-            System.out.println(" READER (proxy): VALUE : " + hadoopRecordReader.createValue().getClass().getName());
         }
     }
 
@@ -175,10 +172,6 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                     RecordDescriptor outputRecordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                             (Class<? extends Writable>) hadoopRecordReader.createKey().getClass(),
                             (Class<? extends Writable>) hadoopRecordReader.createValue().getClass());
-                    /*
-                    RecordDescriptor outputRecordDescriptor = recordDescProvider.getOutputRecordDescriptor(
-                            getOperatorId(), 0);
-                    */
                     int nFields = outputRecordDescriptor.getFields().length;
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(nFields);
                     while (hadoopRecordReader.next(key, value)) {
