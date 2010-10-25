@@ -193,7 +193,9 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     try {
                         if (runs.size() <= 0) {
                             FrameSorter frameSorter = (FrameSorter) env.get(FRAMESORTER);
-                            frameSorter.flushFrames(writer);
+                            if (frameSorter != null) {
+                                frameSorter.flushFrames(writer);
+                            }
                             env.set(FRAMESORTER, null);
                         } else {
                             inFrames = new ArrayList<ByteBuffer>();
