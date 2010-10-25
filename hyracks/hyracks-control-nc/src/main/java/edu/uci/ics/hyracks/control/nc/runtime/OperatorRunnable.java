@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class OperatorRunnable implements Runnable {
     private IOperatorNodePushable opNode;
@@ -53,7 +54,7 @@ public class OperatorRunnable implements Runnable {
                 IFrameWriter writer = opNode.getInputFrameWriter(0);
                 writer.open();
                 reader.open();
-                while (reader.nextFrame(buffer)) {
+                while (readFrame()) {
                     if (abort) {
                         break;
                     }
@@ -68,5 +69,14 @@ public class OperatorRunnable implements Runnable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected boolean readFrame() throws HyracksDataException {
+        return reader.nextFrame(buffer);
+    }
+
+    @Override
+    public String toString() {
+        return "OperatorRunnable[" + opNode.getClass().getName() + "]";
     }
 }
