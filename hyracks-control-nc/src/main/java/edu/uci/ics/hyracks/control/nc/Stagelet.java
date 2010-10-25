@@ -114,23 +114,18 @@ public class Stagelet {
                 }
                 try {
                     LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                            + opIId.getPartition() + ": STARTING");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    // notifyOperatorFailure(opIId);
-                }
-                try {
+                            + opIId.getPartition() + "(" + hon + ")" + ": STARTING");
                     hon.run();
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + "(" + hon + ")" + ": TERMINATED");
                     notifyOperatorCompletion(opIId);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    // notifyOperatorFailure(opIId);
-                }
-                try {
-                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                            + opIId.getPartition() + ": TERMINATED");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    // DO NOT UNCOMMENT THE FOLLOWING LINE.
+                    // The failure of an operator triggers a re-attempt of the job at the CC. If the failure was non-transient,
+                    // this will lead to an infinite number of attempts since there is no upper bount yet on how many times
+                    // a job is retried.
+
                     // notifyOperatorFailure(opIId);
                 }
             }
