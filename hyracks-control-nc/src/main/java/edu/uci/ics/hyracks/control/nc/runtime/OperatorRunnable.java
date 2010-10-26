@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class OperatorRunnable implements Runnable {
-    private IOperatorNodePushable opNode;
+    private final IOperatorNodePushable opNode;
     private IFrameReader reader;
     private ByteBuffer buffer;
     private volatile boolean abort;

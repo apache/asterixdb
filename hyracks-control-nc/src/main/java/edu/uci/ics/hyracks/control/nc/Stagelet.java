@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorInstanceId;
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
+import edu.uci.ics.hyracks.control.nc.job.profiling.CounterContext;
 import edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable;
 
 public class Stagelet {
@@ -43,6 +44,8 @@ public class Stagelet {
     private final int attempt;
 
     private final Map<OperatorInstanceId, OperatorRunnable> honMap;
+
+    private final CounterContext stageletCounterContext;
 
     private List<Endpoint> endpointList;
 
@@ -61,6 +64,7 @@ public class Stagelet {
         pendingOperators = new HashSet<OperatorInstanceId>();
         started = false;
         honMap = new HashMap<OperatorInstanceId, OperatorRunnable>();
+        stageletCounterContext = new CounterContext(joblet.getJobId() + "." + stageId + "." + nodeId);
         stats = new StageletStatistics();
         stats.setNodeId(nodeId);
     }
@@ -71,6 +75,10 @@ public class Stagelet {
 
     public Map<OperatorInstanceId, OperatorRunnable> getOperatorMap() {
         return honMap;
+    }
+
+    public CounterContext getStageletCounterContext() {
+        return stageletCounterContext;
     }
 
     public void setEndpointList(List<Endpoint> endpointList) {

@@ -12,15 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package edu.uci.ics.hyracks.control.nc.runtime;
 
+import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IResourceManager;
 
-public interface IHyracksContext {
-    public IResourceManager getResourceManager();
+public class RootHyracksContext implements IHyracksContext {
+    private final IResourceManager resourceManager;
+    private final int frameSize;
 
-    public int getFrameSize();
+    public RootHyracksContext(int frameSize) {
+        resourceManager = new ResourceManager(this);
+        this.frameSize = frameSize;
+    }
 
-    public ICounterContext getCounterContext();
+    @Override
+    public IResourceManager getResourceManager() {
+        return resourceManager;
+    }
+
+    @Override
+    public int getFrameSize() {
+        return frameSize;
+    }
+
+    @Override
+    public ICounterContext getCounterContext() {
+        throw new UnsupportedOperationException();
+    }
 }

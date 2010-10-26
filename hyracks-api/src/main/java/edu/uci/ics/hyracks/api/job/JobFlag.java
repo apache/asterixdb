@@ -15,5 +15,5 @@
 package edu.uci.ics.hyracks.api.job;
 
 public enum JobFlag {
-    COLLECT_FRAME_COUNTS
+    PROFILE_RUNTIME
 }
