@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
+import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -194,7 +194,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		
         
         // put search keys into frame and create tuplereference factories
-        IHyracksContext ctx = new HyracksContext(32768); // WARNING: make sure frame size is same as on NCs
+        IHyracksContext ctx = new RootHyracksContext(32768); // WARNING: make sure frame size is same as on NCs
         ByteBuffer keyFrame = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
 		appender.reset(keyFrame, true);

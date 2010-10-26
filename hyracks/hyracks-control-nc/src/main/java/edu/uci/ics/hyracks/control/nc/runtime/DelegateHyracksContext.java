@@ -15,24 +15,31 @@
 package edu.uci.ics.hyracks.control.nc.runtime;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IResourceManager;
 
-public class HyracksContext implements IHyracksContext {
-    private final IResourceManager resourceManager;
-    private final int frameSize;
+public class DelegateHyracksContext implements IHyracksContext {
+    private final IHyracksContext delegate;
 
-    public HyracksContext(int frameSize) {
-        resourceManager = new ResourceManager(this);
-        this.frameSize = frameSize;
+    private final ICounterContext counterContext;
+
+    public DelegateHyracksContext(IHyracksContext delegate, ICounterContext counterContext) {
+        this.delegate = delegate;
+        this.counterContext = counterContext;
     }
 
     @Override
     public IResourceManager getResourceManager() {
-        return resourceManager;
+        return delegate.getResourceManager();
     }
 
     @Override
     public int getFrameSize() {
-        return frameSize;
+        return delegate.getFrameSize();
+    }
+
+    @Override
+    public ICounterContext getCounterContext() {
+        return counterContext;
     }
 }

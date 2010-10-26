@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.control.nc.runtime.HyracksContext;
+import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -85,7 +85,7 @@ public class BTreeFieldPrefixNSMTest {
     private ITupleReference createTuple(int f0, int f1, int f2, boolean print) throws HyracksDataException {
     	if(print) System.out.println("CREATING: " + f0 + " " + f1 + " " + f2);
     	
-    	IHyracksContext ctx = new HyracksContext(HYRACKS_FRAME_SIZE);        
+    	IHyracksContext ctx = new RootHyracksContext(HYRACKS_FRAME_SIZE);        
         ByteBuffer buf = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(3);

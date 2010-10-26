@@ -74,7 +74,7 @@ public abstract class AbstractIntegrationTest {
     }
     
     protected void runTest(JobSpecification spec) throws Exception {
-        UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.COLLECT_FRAME_COUNTS));
+        UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         System.err.println(spec.toJSON());
         hcc.start(jobId);
         System.err.print(jobId);
