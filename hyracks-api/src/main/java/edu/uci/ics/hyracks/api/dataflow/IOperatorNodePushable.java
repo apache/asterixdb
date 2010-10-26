@@ -28,4 +28,6 @@ public interface IOperatorNodePushable {
     public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
 
     public IFrameWriter getInputFrameWriter(int index);
+
+    public String getDisplayName();
 }

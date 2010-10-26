@@ -114,12 +114,14 @@ public class Stagelet {
                 }
                 try {
                     LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                            + opIId.getPartition() + "(" + hon + ")" + ": STARTING");
+                            + opIId.getPartition() + "(" + hon + ")" + ": STARTED");
                     hon.run();
                     LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                            + opIId.getPartition() + "(" + hon + ")" + ": TERMINATED");
+                            + opIId.getPartition() + "(" + hon + ")" + ": FINISHED");
                     notifyOperatorCompletion(opIId);
                 } catch (Exception e) {
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + "(" + hon + ")" + ": ABORTED");
                     e.printStackTrace();
                     // DO NOT UNCOMMENT THE FOLLOWING LINE.
                     // The failure of an operator triggers a re-attempt of the job at the CC. If the failure was non-transient,
