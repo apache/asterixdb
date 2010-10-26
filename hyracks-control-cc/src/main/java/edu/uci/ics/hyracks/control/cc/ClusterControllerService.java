@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -356,15 +357,30 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void startApplication(String appName) throws Exception {
+    public void startApplication(final String appName) throws Exception {
         ApplicationContext appCtx = applications.get(appName);
         appCtx.initialize();
-        boolean deployHar = appCtx.containsHar();
+        final boolean deployHar = appCtx.containsHar();
+        RemoteOp<Void>[] ops;
         synchronized (this) {
-            for (NodeControllerState ncs : nodeRegistry.values()) {
-                ncs.getNodeController().createApplication(appName, deployHar);
+            List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
+            for (final String nodeId : nodeRegistry.keySet()) {
+                opList.add(new RemoteOp<Void>() {
+                    @Override
+                    public String getNodeId() {
+                        return nodeId;
+                    }
+
+                    @Override
+                    public Void execute(INodeController node) throws Exception {
+                        node.createApplication(appName, deployHar);
+                        return null;
+                    }
+                });
             }
+            ops = opList.toArray(new RemoteOp[opList.size()]);
         }
+        runRemote(ops, null);
     }
 
     @Override

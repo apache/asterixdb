@@ -26,6 +26,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -73,6 +75,12 @@ public class ApplicationContext implements IApplicationContext {
             File expandedFolder = getExpandedFolder();
             List<URL> urls = new ArrayList<URL>();
             findJarFiles(expandedFolder, urls);
+            Collections.sort(urls, new Comparator<URL>() {
+                @Override
+                public int compare(URL o1, URL o2) {
+                    return o1.getFile().compareTo(o2.getFile());
+                }
+            });
             classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
             deploymentDescriptor = parseDeploymentDescriptor();
 
