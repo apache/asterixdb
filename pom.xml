@@ -62,6 +62,5 @@
     <module>hyracks-storage-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-examples</module>
-    <module>hyracks-documentation</module>
   </modules>
 </project>
