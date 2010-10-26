@@ -77,6 +77,6 @@ public class OperatorRunnable implements Runnable {
 
     @Override
     public String toString() {
-        return "OperatorRunnable[" + opNode.getClass().getName() + "]";
+        return "OperatorRunnable[" + opNode.getDisplayName() + "]";
     }
 }

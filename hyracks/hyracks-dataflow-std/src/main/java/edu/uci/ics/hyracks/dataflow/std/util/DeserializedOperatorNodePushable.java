@@ -65,4 +65,9 @@ public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOp
     @Override
     public void flush() throws HyracksDataException {
     }
+
+    @Override
+    public String getDisplayName() {
+        return "Deserialized(" + delegate + ")";
+    }
 }

@@ -15,11 +15,11 @@
 package edu.uci.ics.hyracks.dataflow.std.base;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractUnaryInputOperatorNodePushable implements IOperatorNodePushable, IFrameWriter {
+public abstract class AbstractUnaryInputOperatorNodePushable extends AbstractOperatorNodePushable implements
+        IFrameWriter {
     protected IFrameWriter writer;
     protected RecordDescriptor recordDesc;
 
