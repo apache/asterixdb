@@ -67,10 +67,6 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
         RecordReader recordReader = inputFormat.getRecordReader(splits[0], jobConf, createReporter());
         recordDescriptors[0] = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) recordReader
                 .createKey().getClass(), (Class<? extends Writable>) recordReader.createValue().getClass());
-        System.out.println(" READER : KEY : " + recordReader.createKey().getClass().getName());
-        System.out.println(" READER : VALUE : " + recordReader.createValue().getClass().getName());
-        System.out.println(" Record descriptor : " + recordDescriptors[0].getFields()[0].getClass().getName());
-        System.out.println(" Record descriptor : " + recordDescriptors[0].getFields()[1].getClass().getName());
         this.setPartitionConstraint(new PartitionCountConstraint(splits.length));
         inputSplitsProxy = new InputSplitsProxy(splits);
         this.inputFormatClassName = inputFormat.getClass().getName();
