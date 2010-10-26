@@ -272,7 +272,7 @@ public class BufferCache implements IBufferCacheInternal {
         FileInfo fInfo = fileManager.getFileInfo(FileInfo.getFileId(cPage.dpid));
         try {
             cPage.buffer.clear();
-            fInfo.getFileChannel().read(cPage.buffer, FileInfo.getPageId(cPage.dpid) * pageSize);
+            fInfo.getFileChannel().read(cPage.buffer, (long) FileInfo.getPageId(cPage.dpid) * pageSize);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -283,7 +283,7 @@ public class BufferCache implements IBufferCacheInternal {
         try {
             cPage.buffer.position(0);
             cPage.buffer.limit(pageSize);
-            fInfo.getFileChannel().write(cPage.buffer, FileInfo.getPageId(cPage.dpid) * pageSize);
+            fInfo.getFileChannel().write(cPage.buffer, (long) FileInfo.getPageId(cPage.dpid) * pageSize);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
