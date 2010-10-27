@@ -59,6 +59,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.comm.Endpoint;
+import edu.uci.ics.hyracks.api.control.CCConfig;
 import edu.uci.ics.hyracks.api.control.IClusterController;
 import edu.uci.ics.hyracks.api.control.INodeController;
 import edu.uci.ics.hyracks.api.control.NodeParameters;
@@ -165,6 +166,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         NodeParameters params = new NodeParameters();
         params.setClusterControllerInfo(info);
         params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
+        params.setProfileDumpPeriod(ccConfig.profileDumpPeriod);
         return params;
     }
 
@@ -224,6 +226,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public JobStatistics waitForCompletion(UUID jobId) throws Exception {
         return jobManager.waitForCompletion(jobId);
+    }
+
+    @Override
+    public void reportProfile(String id, Map<String, Long> counterDump) throws Exception {
+        if (LOGGER.isLoggable(Level.INFO))
+            LOGGER.info("Profile: " + id + ": " + counterDump);
     }
 
     private Handler getAdminConsoleHandler() {

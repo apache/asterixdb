@@ -14,11 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.job.profiling.counters;
 
-import java.io.Serializable;
-
-public interface ICounter extends Serializable {
+public interface ICounter {
     /**
-     * Get the name of the counter.
+     * Get the fully-qualified name of the counter.
      * 
      * @return Name of the counter.
      */

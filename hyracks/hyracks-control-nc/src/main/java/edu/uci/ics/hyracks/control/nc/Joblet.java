@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
@@ -100,5 +102,21 @@ public class Joblet {
 
     public NodeControllerService getNodeController() {
         return nodeController;
+    }
+
+    public void dumpProfile(Map<String, Long> counterDump) {
+        Set<UUID> stageIds;
+        synchronized (this) {
+            stageIds = new HashSet<UUID>(stageletMap.keySet());
+        }
+        for (UUID stageId : stageIds) {
+            Stagelet si;
+            synchronized (this) {
+                si = stageletMap.get(stageId);
+            }
+            if (si != null) {
+                si.dumpProfile(counterDump);
+            }
+        }
     }
 }

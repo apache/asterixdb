@@ -29,6 +29,9 @@ public class CCConfig {
     @Option(name = "-max-heartbeat-lapse-periods", usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
     public int maxHeartbeatLapsePeriods = 5;
 
+    @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node controller in milliseconds. 0 to disable. (default: 0)")
+    public int profileDumpPeriod = 0;
+
     @Option(name = "-use-jol", usage = "Forces Hyracks to use the JOL based scheduler (default: false)")
     public boolean useJOL = false;
 }

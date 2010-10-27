@@ -24,12 +24,15 @@ import java.rmi.registry.Registry;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -138,6 +141,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
         // Schedule heartbeat generator.
         timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod());
+
+        if (nodeParameters.getProfileDumpPeriod() > 0) {
+            // Schedule profile dump generator.
+            timer.schedule(new ProfileDumpTask(cc), 0, nodeParameters.getProfileDumpPeriod());
+        }
 
         LOGGER.log(Level.INFO, "Started NodeControllerService");
     }
@@ -495,6 +503,37 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         public void run() {
             try {
                 cc.nodeHeartbeat(id);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class ProfileDumpTask extends TimerTask {
+        private IClusterController cc;
+
+        public ProfileDumpTask(IClusterController cc) {
+            this.cc = cc;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Map<String, Long> counterDump = new TreeMap<String, Long>();
+                Set<UUID> jobIds;
+                synchronized (NodeControllerService.this) {
+                    jobIds = new HashSet<UUID>(jobletMap.keySet());
+                }
+                for(UUID jobId : jobIds) {
+                    Joblet ji;
+                    synchronized (NodeControllerService.this) {
+                        ji = jobletMap.get(jobId);
+                    }
+                    if (ji != null) {
+                        ji.dumpProfile(counterDump);
+                    }
+                }
+                cc.reportProfile(id, counterDump);
             } catch (Exception e) {
                 e.printStackTrace();
             }

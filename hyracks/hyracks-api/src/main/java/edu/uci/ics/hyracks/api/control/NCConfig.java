@@ -18,7 +18,9 @@ import java.io.Serializable;
 
 import org.kohsuke.args4j.Option;
 
-public class NCConfig implements Serializable{
+public class NCConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Option(name = "-cc-host", usage = "Cluster Controller host name")
     public String ccHost;
 
