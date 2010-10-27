@@ -205,23 +205,19 @@ public class JobSpecification implements Serializable {
 
         JSONArray jcArray = new JSONArray();
         for (Map.Entry<ConnectorDescriptorId, IConnectorDescriptor> e : connMap.entrySet()) {
-            jcArray.put(e.getValue().toJSON());
+            JSONObject conn = new JSONObject();
+            Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connection = connectorOpMap
+                    .get(e.getKey());
+            conn.put("type", "connector-info");
+            if (connection != null) {
+                conn.put("in-operator-id", connection.first.first.getOperatorId().toString());
+                conn.put("in-operator-port", connection.first.second.intValue());
+                conn.put("out-operator-id", connection.second.first.getOperatorId().toString());
+                conn.put("out-operator-port", connection.second.second.intValue());
+            }
+            conn.put("connector", e.getValue().toJSON());
         }
         jjob.put("connectors", jcArray);
-
-        JSONArray jconnectionsArray = new JSONArray();
-        for (Map.Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> e : connectorOpMap
-                .entrySet()) {
-            JSONObject conn = new JSONObject();
-            conn.put("type", "connection");
-            conn.put("connector-id", e.getValue().toString());
-            conn.put("in-operator-id", e.getValue().first.first.getOperatorId().toString());
-            conn.put("in-operator-port", e.getValue().first.second.intValue());
-            conn.put("out-operator-id", e.getValue().second.first.getOperatorId().toString());
-            conn.put("out-operator-port", e.getValue().second.second.intValue());
-            jconnectionsArray.put(conn);
-        }
-        jjob.put("connections", jconnectionsArray);
 
         return jjob;
     }
