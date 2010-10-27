@@ -19,8 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 
 public class Counter implements ICounter {
-    private static final long serialVersionUID = 1L;
-
     private final String name;
     private final AtomicLong counter;
 

@@ -172,4 +172,8 @@ public class Stagelet {
     public StageletStatistics getStatistics() {
         return stats;
     }
+
+    public void dumpProfile(Map<String, Long> counterDump) {
+        stageletCounterContext.dump(counterDump);
+    }
 }

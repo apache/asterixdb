@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.control;
 
 import java.rmi.Remote;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
@@ -30,4 +31,6 @@ public interface IClusterController extends Remote {
     public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 
     public void nodeHeartbeat(String id) throws Exception;
+
+    public void reportProfile(String id, Map<String, Long> counterDump) throws Exception;
 }

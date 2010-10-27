@@ -22,26 +22,32 @@ import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 
 public class CounterContext implements ICounterContext {
-    private final String name;
+    private final String contextName;
     private final Map<String, Counter> counterMap;
 
     public CounterContext(String name) {
-        this.name = name;
+        this.contextName = name;
         counterMap = new HashMap<String, Counter>();
     }
 
     @Override
-    public synchronized ICounter getCounter(String name, boolean create) {
-        Counter counter = counterMap.get(name);
+    public synchronized ICounter getCounter(String counterName, boolean create) {
+        Counter counter = counterMap.get(counterName);
         if (counter == null && create) {
-            counter = new Counter(name);
-            counterMap.put(name, counter);
+            counter = new Counter(contextName + "." + counterName);
+            counterMap.put(counterName, counter);
         }
         return counter;
     }
 
     @Override
     public String getContextName() {
-        return name;
+        return contextName;
+    }
+
+    public synchronized void dump(Map<String, Long> dumpMap) {
+        for (Counter c : counterMap.values()) {
+            dumpMap.put(c.getName(), c.get());
+        }
     }
 }
