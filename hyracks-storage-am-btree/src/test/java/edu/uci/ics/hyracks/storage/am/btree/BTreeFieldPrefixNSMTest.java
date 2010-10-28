@@ -62,6 +62,8 @@ public class BTreeFieldPrefixNSMTest {
     private static final int NUM_PAGES = 40;
     private static final int HYRACKS_FRAME_SIZE = 128;
     
+    private String tmpDir = System.getProperty("java.io.tmpdir");
+    
     // to help with the logger madness
     private void print(String str) {
     	System.out.print(str);
@@ -121,7 +123,7 @@ public class BTreeFieldPrefixNSMTest {
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
         
-        File f = new File("/tmp/btreetest.bin");
+        File f = new File(tmpDir + "/" + "btreetest.bin");
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
         int fileId = 0;
         FileInfo fi = new FileInfo(fileId, raf);

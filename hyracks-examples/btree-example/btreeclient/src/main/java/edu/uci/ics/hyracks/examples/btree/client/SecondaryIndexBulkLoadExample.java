@@ -68,7 +68,7 @@ public class SecondaryIndexBulkLoadExample {
         @Option(name = "-primary-btreename", usage = "Name of primary-index B-Tree to load from", required = true)
         public String primaryBtreeName;
         
-        @Option(name = "-btreename", usage = "B-Tree file name for secondary index to be built", required = true)
+        @Option(name = "-secondary-btreename", usage = "B-Tree file name for secondary index to be built", required = true)
         public String btreeName;
         
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 32768)", required = false)

@@ -30,19 +30,19 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	private static final long serialVersionUID = 1L;
 
 	private boolean isForward;
-	private ITupleReferenceFactory[] searchKeys; // create tuples for low and high keys	
-	private int searchKeyFieldCount;
+	private int[] lowKeyFields; // fields in input tuple to be used as low keys
+	private int[] highKeyFields; // fields in input tuple to be used as high keys
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, ITupleReferenceFactory[] searchKeys, int searchKeyFields) {
-		super(spec, 0, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory, leafFactory, fieldCount, comparatorFactories);
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {		
+		super(spec, 1, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory, leafFactory, fieldCount, comparatorFactories);
 		this.isForward = isForward;
-		this.searchKeys = searchKeys;
-		this.searchKeyFieldCount = searchKeyFields;
+		this.lowKeyFields = lowKeyFields;
+		this.highKeyFields = highKeyFields;
 	}
 	
 	@Override
 	public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-		return new BTreeSearchOperatorNodePushable(this, ctx, isForward, searchKeys, searchKeyFieldCount);
+		return new BTreeSearchOperatorNodePushable(this, ctx, recordDescProvider, isForward, lowKeyFields, highKeyFields);
 	}
 }
