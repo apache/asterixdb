@@ -59,4 +59,12 @@ public class RangePredicate implements ISearchPredicate {
 	public ITupleReference getHighKey() {
 		return highKey;
 	}
+	
+	public void setLowKey(ITupleReference lowKey) {
+		this.lowKey = lowKey;
+	}
+	
+	public void setHighKey(ITupleReference highKey) {
+		this.highKey = highKey;
+	}
 }

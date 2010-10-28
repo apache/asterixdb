@@ -43,6 +43,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
+    private ByteBuffer writeBuffer;
+    
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
             int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
@@ -93,7 +95,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         }
 
         // pass a copy of the frame to next op
-        FrameUtils.flushFrame(buffer.duplicate(), writer);
+        System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());
+        FrameUtils.flushFrame(writeBuffer, writer);
     }
 
     @Override
@@ -101,6 +104,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
         try {
             btreeOpHelper.init();
             btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());

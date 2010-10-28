@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.tests.btree;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
@@ -26,16 +25,12 @@ import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
 import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -59,12 +54,11 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BufferCacheProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.FileMappingProviderProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.FrameTupleReferenceFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.ITupleReferenceFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -83,7 +77,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	@Test
 	public void bulkLoadTest() throws Exception {		
 		// relies on the fact that NCs are run from same process
-		System.setProperty("NodeControllerDataPath", "/tmp/");
+		System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
 		
 		JobSpecification spec = new JobSpecification();
 		
@@ -170,7 +164,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	@Test
 	public void btreeSearchTest() throws Exception {
 		// relies on the fact that NCs are run from same process
-		System.setProperty("NodeControllerDataPath", "/tmp/");
+		System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
 		
 		JobSpecification spec = new JobSpecification();
 		
@@ -191,51 +185,32 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
     		comparators[i] = comparatorFactories[i].createBinaryComparator();
     	}    	
         MultiComparator cmp = new MultiComparator(fieldCount, comparators);
-		
-        
-        // put search keys into frame and create tuplereference factories
-        IHyracksContext ctx = new RootHyracksContext(32768); // WARNING: make sure frame size is same as on NCs
-        ByteBuffer keyFrame = ctx.getResourceManager().allocateFrame();
-		FrameTupleAppender appender = new FrameTupleAppender(ctx);				
-		appender.reset(keyFrame, true);
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+		        
+        // build tuple containing low and high search key
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getKeyFieldCount()*2); // high key and low key
 		DataOutput dos = tb.getDataOutput();
 		
-		ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE};
+		tb.reset();		
+		UTF8StringSerializerDeserializer.INSTANCE.serialize("100", dos); // low key
+		tb.addFieldEndOffset();		
+		UTF8StringSerializerDeserializer.INSTANCE.serialize("200", dos); // high key
+		tb.addFieldEndOffset();		
+    	
+		ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
 		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 		
-		// build low key
-		tb.reset();
-		UTF8StringSerializerDeserializer.INSTANCE.serialize("100", dos);
-    	tb.addFieldEndOffset();    	  
-    	        	    	
-    	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-    	    	
-    	// build high key
-    	tb.reset();
-    	UTF8StringSerializerDeserializer.INSTANCE.serialize("200", dos);
-    	tb.addFieldEndOffset();
-    	
-    	appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-    	
-    	// build search key factories
-    	ITupleReferenceFactory[] searchKeys = new ITupleReferenceFactory[2]; 
-    	searchKeys[0] = new FrameTupleReferenceFactory(keyFrame.array(), 0, keyRecDesc);
-    	searchKeys[1] = new FrameTupleReferenceFactory(keyFrame.array(), 1, keyRecDesc);
+    	ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
+		PartitionConstraint keyProviderPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
+		keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
     	    	    	
 		IBufferCacheProvider bufferCacheProvider = new BufferCacheProvider();
 		IBTreeRegistryProvider btreeRegistryProvider = new BTreeRegistryProvider();		
 		IFileMappingProviderProvider fileMappingProviderProvider = new FileMappingProviderProvider();
 		
 		RecordDescriptor recDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
-		
-		// TODO: hacky, manually adding file
-		//String ncDataPath = System.getProperty("NodeControllerDataPath");
-        //String fileName = ncDataPath + "btreetest.bin";		
-		//int blubb = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, true);
-		
-		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, searchKeys, comparatorFactories.length);
+                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });		
+				
+		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, new int[]{0}, new int[]{1});
 		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
 		
 		PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
@@ -244,9 +219,9 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
 		PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         printer.setPartitionConstraint(printerPartitionConstraint);
-        
-        IConnectorDescriptor conn = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn, btreeSearchOp, 0, printer, 0);
+                
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, btreeSearchOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), btreeSearchOp, 0, printer, 0);
         
         spec.addRoot(printer);
         runTest(spec);
@@ -255,7 +230,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	@Test
 	public void insertTest() throws Exception {
 		// relies on the fact that NCs are run from same process
-		System.setProperty("NodeControllerDataPath", "/tmp/");
+		System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
 		
 		JobSpecification spec = new JobSpecification();
 		
@@ -450,5 +425,5 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         	scanCursorC.close();
         }        
         System.out.println();
-	}	
+	}
 }

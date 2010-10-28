@@ -61,7 +61,7 @@ public class PrimaryIndexBulkLoadExample {
 
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
         public int port = 1099;
-
+        
         @Option(name = "-app", usage = "Hyracks Application name", required = true)
         public String app;
         
