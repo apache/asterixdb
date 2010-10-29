@@ -216,6 +216,7 @@ public class JobSpecification implements Serializable {
                 conn.put("out-operator-port", connection.second.second.intValue());
             }
             conn.put("connector", e.getValue().toJSON());
+            jcArray.put(conn);
         }
         jjob.put("connectors", jcArray);
 
