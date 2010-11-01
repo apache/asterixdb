@@ -15,13 +15,12 @@
 package edu.uci.ics.hyracks.control.cc;
 
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
 public interface IJobManager {
     public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
@@ -29,15 +28,19 @@ public interface IJobManager {
     public void start(UUID jobId) throws Exception;
 
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-            StageletStatistics statistics) throws Exception;
+            Map<String, Long> statistics) throws Exception;
 
     public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 
     public JobStatus getJobStatus(UUID jobId);
 
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception;
+    public void waitForCompletion(UUID jobId) throws Exception;
 
     public void notifyNodeFailure(String nodeId) throws Exception;
 
     public void registerNode(String nodeId) throws Exception;
+
+    public void reportProfile(String id, Map<UUID, Map<String, Long>> counterDump) throws Exception;
+
+    public IJobManagerQueryInterface getQueryInterface();
 }

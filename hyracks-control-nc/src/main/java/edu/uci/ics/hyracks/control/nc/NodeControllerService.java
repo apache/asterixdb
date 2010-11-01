@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -75,7 +73,6 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -464,7 +461,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, StageletStatistics stats) throws Exception {
+    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, Map<String, Long> stats) throws Exception {
         try {
             ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
         } catch (Exception e) {
@@ -519,21 +516,25 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         @Override
         public void run() {
             try {
-                Map<String, Long> counterDump = new TreeMap<String, Long>();
+                Map<UUID, Map<String, Long>> counterDump = new HashMap<UUID, Map<String, Long>>();
                 Set<UUID> jobIds;
                 synchronized (NodeControllerService.this) {
                     jobIds = new HashSet<UUID>(jobletMap.keySet());
                 }
-                for(UUID jobId : jobIds) {
+                for (UUID jobId : jobIds) {
                     Joblet ji;
                     synchronized (NodeControllerService.this) {
                         ji = jobletMap.get(jobId);
                     }
                     if (ji != null) {
-                        ji.dumpProfile(counterDump);
+                        Map<String, Long> jobletCounterDump = new HashMap<String, Long>();
+                        ji.dumpProfile(jobletCounterDump);
+                        counterDump.put(jobId, jobletCounterDump);
                     }
                 }
-                cc.reportProfile(id, counterDump);
+                if (!counterDump.isEmpty()) {
+                    cc.reportProfile(id, counterDump);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

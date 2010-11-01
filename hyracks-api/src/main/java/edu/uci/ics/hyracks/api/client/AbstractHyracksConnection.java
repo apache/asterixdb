@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     private final String ccHost;
@@ -95,7 +94,7 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception {
-        return hci.waitForCompletion(jobId);
+    public void waitForCompletion(UUID jobId) throws Exception {
+        hci.waitForCompletion(jobId);
     }
 }

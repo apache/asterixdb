@@ -24,7 +24,6 @@ import java.util.concurrent.Executor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
 public class Joblet {
     private static final long serialVersionUID = 1L;
@@ -89,7 +88,7 @@ public class Joblet {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletStatistics stats)
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, Map<String, Long> stats)
             throws Exception {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
