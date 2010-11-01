@@ -14,33 +14,17 @@
  */
 package edu.uci.ics.hyracks.control.cc;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
-public class StageProgress {
-    private final UUID stageId;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-    private final Set<String> pendingNodes;
+public interface IJobManagerQueryInterface {
+    public JSONArray getAllJobSummaries() throws Exception;
 
-    public StageProgress(UUID stageId) {
-        this.stageId = stageId;
-        pendingNodes = new HashSet<String>();
-    }
+    public JSONObject getJobSpecification(UUID jobId) throws Exception;
 
-    public UUID getStageId() {
-        return stageId;
-    }
+    public JSONObject getJobPlan(UUID jobId) throws Exception;
 
-    public void addPendingNodes(Set<String> nodes) {
-        pendingNodes.addAll(nodes);
-    }
-
-    public void markNodeComplete(String nodeId) {
-        pendingNodes.remove(nodeId);
-    }
-
-    public boolean stageComplete() {
-        return pendingNodes.isEmpty();
-    }
+    public JSONObject getJobProfile(UUID jobId) throws Exception;
 }

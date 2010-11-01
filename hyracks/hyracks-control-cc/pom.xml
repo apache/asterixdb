@@ -32,13 +32,6 @@
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>org.apache.wicket</groupId>
-  		<artifactId>wicket</artifactId>
-  		<version>1.4.7</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
   		<groupId>jol</groupId>
   		<artifactId>jol</artifactId>
   		<version>1.0.0</version>

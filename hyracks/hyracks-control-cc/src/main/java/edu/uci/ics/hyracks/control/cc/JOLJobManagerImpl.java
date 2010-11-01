@@ -36,6 +36,10 @@ import jol.types.table.EventTable;
 import jol.types.table.Function;
 import jol.types.table.Key;
 import jol.types.table.TableName;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.ChoiceLocationConstraint;
@@ -56,9 +60,6 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
-import edu.uci.ics.hyracks.api.job.statistics.StageStatistics;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 
 public class JOLJobManagerImpl implements IJobManager {
     private static final Logger LOGGER = Logger.getLogger(JOLJobManagerImpl.class.getName());
@@ -113,7 +114,11 @@ public class JOLJobManagerImpl implements IJobManager {
 
     private final ExpandPartitionCountConstraintTableFunction expandPartitionCountConstraintFunction;
 
+    private final ProfileUpdateTable puTable;
+
     private final List<String> rankedAvailableNodes;
+
+    private final IJobManagerQueryInterface qi;
 
     public JOLJobManagerImpl(final ClusterControllerService ccs, final Runtime jolRuntime) throws Exception {
         this.jolRuntime = jolRuntime;
@@ -141,6 +146,7 @@ public class JOLJobManagerImpl implements IJobManager {
         this.abortMessageTable = new AbortMessageTable(jolRuntime);
         this.abortNotifyTable = new AbortNotifyTable(jolRuntime);
         this.expandPartitionCountConstraintFunction = new ExpandPartitionCountConstraintTableFunction();
+        this.puTable = new ProfileUpdateTable();
         this.rankedAvailableNodes = new ArrayList<String>();
 
         jolRuntime.catalog().register(jobTable);
@@ -163,6 +169,7 @@ public class JOLJobManagerImpl implements IJobManager {
         jolRuntime.catalog().register(abortMessageTable);
         jolRuntime.catalog().register(abortNotifyTable);
         jolRuntime.catalog().register(expandPartitionCountConstraintFunction);
+        jolRuntime.catalog().register(puTable);
 
         jobTable.register(new JobTable.Callback() {
             @Override
@@ -366,6 +373,8 @@ public class JOLJobManagerImpl implements IJobManager {
 
         jolRuntime.install(JOL_SCOPE, ClassLoader.getSystemResource(SCHEDULER_OLG_FILE));
         jolRuntime.evaluate();
+
+        qi = new QueryInterfaceImpl();
     }
 
     @Override
@@ -476,6 +485,15 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
+    public void reportProfile(String id, Map<UUID, Map<String, Long>> counterDump) throws Exception {
+        BasicTupleSet puTuples = new BasicTupleSet();
+        for (Map.Entry<UUID, Map<String, Long>> e : counterDump.entrySet()) {
+            puTuples.add(ProfileUpdateTable.createTuple(e.getKey(), id, e.getValue()));
+        }
+        jolRuntime.schedule(JOL_SCOPE, ProfileUpdateTable.TABLE_NAME, puTuples, null);
+    }
+
+    @Override
     public JobStatus getJobStatus(UUID jobId) {
         synchronized (jobTable) {
             try {
@@ -530,7 +548,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
     @Override
     public synchronized void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-            StageletStatistics statistics) throws Exception {
+            Map<String, Long> statistics) throws Exception {
         BasicTupleSet scTuples = new BasicTupleSet();
         scTuples.add(StageletCompleteTable.createTuple(jobId, stageId, nodeId, attempt, statistics));
 
@@ -582,14 +600,31 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception {
+    public void waitForCompletion(UUID jobId) throws Exception {
         synchronized (jobTable) {
             Tuple jobTuple = null;
             while ((jobTuple = jobTable.lookupJob(jobId)) != null
                     && jobTuple.value(JobTable.JOBSTATUS_FIELD_INDEX) != JobStatus.TERMINATED) {
                 jobTable.wait();
             }
-            return jobTuple == null ? null : jobTable.buildJobStatistics(jobTuple);
+        }
+    }
+
+    @Override
+    public IJobManagerQueryInterface getQueryInterface() {
+        return qi;
+    }
+
+    public void visitJobs(ITupleProcessor processor) throws Exception {
+        for (Tuple t : jobTable.tuples()) {
+            processor.process(t);
+        }
+    }
+
+    public void visitJob(UUID jobId, ITupleProcessor processor) throws Exception {
+        Tuple job = jobTable.lookupJob(jobId);
+        if (job != null) {
+            processor.process(job);
         }
     }
 
@@ -603,7 +638,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] { UUID.class, String.class, JobStatus.class,
-                JobSpecification.class, JobPlan.class, Set.class };
+                JobSpecification.class, JobPlan.class, Map.class };
 
         public static final int JOBID_FIELD_INDEX = 0;
         public static final int APPNAME_FIELD_INDEX = 1;
@@ -618,24 +653,7 @@ public class JOLJobManagerImpl implements IJobManager {
 
         @SuppressWarnings("unchecked")
         static Tuple createInitialJobTuple(UUID jobId, String appName, JobSpecification jobSpec, JobPlan plan) {
-            return new Tuple(jobId, appName, JobStatus.INITIALIZED, jobSpec, plan, new HashSet());
-        }
-
-        @SuppressWarnings("unchecked")
-        JobStatistics buildJobStatistics(Tuple jobTuple) {
-            Set<Set<StageletStatistics>> statsSet = (Set<Set<StageletStatistics>>) jobTuple
-                    .value(JobTable.STATISTICS_FIELD_INDEX);
-            JobStatistics stats = new JobStatistics();
-            if (statsSet != null) {
-                for (Set<StageletStatistics> stageStatsSet : statsSet) {
-                    StageStatistics stageStats = new StageStatistics();
-                    for (StageletStatistics stageletStats : stageStatsSet) {
-                        stageStats.addStageletStatistics(stageletStats);
-                    }
-                    stats.addStageStatistics(stageStats);
-                }
-            }
-            return stats;
+            return new Tuple(jobId, appName, JobStatus.INITIALIZED, jobSpec, plan, new HashMap());
         }
 
         Tuple lookupJob(UUID jobId) throws BadKeyException {
@@ -876,7 +894,7 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     /*
-     * declare(stageletcomplete, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt, StageletStatistics})
+     * declare(stageletcomplete, keys(0, 1, 2, 3), {JobId, StageId, NodeId, Attempt})
      */
     private static class StageletCompleteTable extends BasicTable {
         private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "stageletcomplete");
@@ -885,14 +903,14 @@ public class JOLJobManagerImpl implements IJobManager {
 
         @SuppressWarnings("unchecked")
         private static final Class[] SCHEMA = new Class[] { UUID.class, UUID.class, String.class, Integer.class,
-                StageletStatistics.class };
+                Map.class };
 
         public StageletCompleteTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);
         }
 
         public static Tuple createTuple(UUID jobId, UUID stageId, String nodeId, int attempt,
-                StageletStatistics statistics) {
+                Map<String, Long> statistics) {
             return new Tuple(jobId, stageId, nodeId, attempt, statistics);
         }
     }
@@ -1044,6 +1062,24 @@ public class JOLJobManagerImpl implements IJobManager {
         }
     }
 
+    /*
+     * declare(profileupdate, keys(0, 1), {JobId, NodeId, Map})
+     */
+    private static class ProfileUpdateTable extends EventTable {
+        private static TableName TABLE_NAME = new TableName(JOL_SCOPE, "profileupdate");
+
+        @SuppressWarnings("unchecked")
+        private static final Class[] SCHEMA = new Class[] { UUID.class, String.class, Map.class };
+
+        public ProfileUpdateTable() {
+            super(TABLE_NAME, SCHEMA);
+        }
+
+        public static Tuple createTuple(UUID jobId, String nodeId, Map<String, Long> statistics) {
+            return new Tuple(jobId, nodeId, statistics);
+        }
+    }
+
     private class JobQueueThread extends Thread {
         public JobQueueThread() {
             setDaemon(true);
@@ -1063,6 +1099,80 @@ public class JOLJobManagerImpl implements IJobManager {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public interface ITupleProcessor {
+        public void process(Tuple t) throws Exception;
+    }
+
+    private class QueryInterfaceImpl implements IJobManagerQueryInterface {
+        @Override
+        public JSONArray getAllJobSummaries() throws Exception {
+            final JSONArray jobs = new JSONArray();
+            JOLJobManagerImpl.ITupleProcessor tp = new JOLJobManagerImpl.ITupleProcessor() {
+                @Override
+                public void process(Tuple t) throws Exception {
+                    JSONObject jo = new JSONObject();
+                    jo.put("type", "job-summary");
+                    jo.put("id", t.value(JobTable.JOBID_FIELD_INDEX).toString());
+                    jo.put("status", t.value(JobTable.JOBSTATUS_FIELD_INDEX).toString());
+                    jobs.put(jo);
+                }
+            };
+            visitJobs(tp);
+            return jobs;
+        }
+
+        @Override
+        public JSONObject getJobSpecification(UUID jobId) throws Exception {
+            final JSONArray jobs = new JSONArray();
+            JOLJobManagerImpl.ITupleProcessor tp = new JOLJobManagerImpl.ITupleProcessor() {
+                @Override
+                public void process(Tuple t) throws Exception {
+                    JobSpecification js = (JobSpecification) t.value(JobTable.JOBSPEC_FIELD_INDEX);
+                    jobs.put(js.toJSON());
+                }
+            };
+            visitJob(jobId, tp);
+            return (JSONObject) (jobs.length() == 0 ? new JSONObject() : jobs.get(0));
+        }
+
+        @Override
+        public JSONObject getJobPlan(UUID jobId) throws Exception {
+            final JSONArray jobs = new JSONArray();
+            JOLJobManagerImpl.ITupleProcessor tp = new JOLJobManagerImpl.ITupleProcessor() {
+                @Override
+                public void process(Tuple t) throws Exception {
+                }
+            };
+            visitJob(jobId, tp);
+            return (JSONObject) (jobs.length() == 0 ? new JSONObject() : jobs.get(0));
+        }
+
+        @Override
+        public JSONObject getJobProfile(UUID jobId) throws Exception {
+            final JSONArray jobs = new JSONArray();
+            JOLJobManagerImpl.ITupleProcessor tp = new JOLJobManagerImpl.ITupleProcessor() {
+                @Override
+                public void process(Tuple t) throws Exception {
+                    JSONObject jo = new JSONObject();
+                    jo.put("type", "profile");
+                    jo.put("id", t.value(JobTable.JOBID_FIELD_INDEX).toString());
+                    Map<String, Long> profile = (Map<String, Long>) t.value(JobTable.STATISTICS_FIELD_INDEX);
+                    if (profile != null) {
+                        for (Map.Entry<String, Long> e : profile.entrySet()) {
+                            JSONObject jpe = new JSONObject();
+                            jpe.put("name", e.getKey());
+                            jpe.put("value", e.getValue());
+                            jo.accumulate("counters", jpe);
+                        }
+                    }
+                    jobs.put(jo);
+                }
+            };
+            visitJob(jobId, tp);
+            return (JSONObject) (jobs.length() == 0 ? new JSONObject() : jobs.get(0));
         }
     }
 }

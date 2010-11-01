@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +56,8 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
@@ -71,9 +74,10 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
+import edu.uci.ics.hyracks.control.cc.web.handlers.util.IJSONOutputFunction;
+import edu.uci.ics.hyracks.control.cc.web.handlers.util.JSONOutputRequestHandler;
+import edu.uci.ics.hyracks.control.cc.web.handlers.util.RoutingHandler;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -117,6 +121,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         webServer = new WebServer();
         webServer.addHandler(getAdminConsoleHandler());
         webServer.addHandler(getApplicationInstallationHandler());
+        webServer.addHandler(getRestAPIHandler());
         this.timer = new Timer(true);
     }
 
@@ -197,14 +202,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                     } catch (Exception e) {
                     }
                 }
-
             });
         }
     }
 
     @Override
     public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-            StageletStatistics statistics) throws Exception {
+            Map<String, Long> statistics) throws Exception {
         jobManager.notifyStageletComplete(jobId, stageId, attempt, nodeId, statistics);
     }
 
@@ -224,14 +228,48 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception {
-        return jobManager.waitForCompletion(jobId);
+    public void waitForCompletion(UUID jobId) throws Exception {
+        jobManager.waitForCompletion(jobId);
     }
 
     @Override
-    public void reportProfile(String id, Map<String, Long> counterDump) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO))
+    public void reportProfile(String id, Map<UUID, Map<String, Long>> counterDump) throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Profile: " + id + ": " + counterDump);
+        }
+        jobManager.reportProfile(id, counterDump);
+    }
+
+    private Handler getRestAPIHandler() {
+        ContextHandler handler = new ContextHandler("/state");
+        RoutingHandler rh = new RoutingHandler();
+        rh.addHandler("jobs", new JSONOutputRequestHandler(new IJSONOutputFunction() {
+            @Override
+            public JSONObject invoke(String[] arguments) throws Exception {
+                JSONObject result = new JSONObject();
+                switch (arguments.length) {
+                    case 1:
+                        if (!"".equals(arguments[0])) {
+                            break;
+                        }
+                    case 0:
+                        result.put("result", jobManager.getQueryInterface().getAllJobSummaries());
+                        break;
+
+                    case 2:
+                        UUID jobId = UUID.fromString(arguments[0]);
+
+                        if ("spec".equalsIgnoreCase(arguments[1])) {
+                            result.put("result", jobManager.getQueryInterface().getJobSpecification(jobId));
+                        } else if ("profile".equalsIgnoreCase(arguments[1])) {
+                            result.put("result", jobManager.getQueryInterface().getJobProfile(jobId));
+                        }
+                }
+                return result;
+            }
+        }));
+        handler.setHandler(rh);
+        return handler;
     }
 
     private Handler getAdminConsoleHandler() {

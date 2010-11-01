@@ -15,12 +15,12 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.rmi.RemoteException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +28,6 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.Endpoint;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorInstanceId;
-import edu.uci.ics.hyracks.api.job.statistics.StageletStatistics;
 import edu.uci.ics.hyracks.control.nc.job.profiling.CounterContext;
 import edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable;
 
@@ -55,8 +54,6 @@ public class Stagelet {
 
     private final Set<OperatorInstanceId> pendingOperators;
 
-    private final StageletStatistics stats;
-
     public Stagelet(Joblet joblet, UUID stageId, int attempt, String nodeId) throws RemoteException {
         this.joblet = joblet;
         this.stageId = stageId;
@@ -65,8 +62,6 @@ public class Stagelet {
         started = false;
         honMap = new HashMap<OperatorInstanceId, OperatorRunnable>();
         stageletCounterContext = new CounterContext(joblet.getJobId() + "." + stageId + "." + nodeId);
-        stats = new StageletStatistics();
-        stats.setNodeId(nodeId);
     }
 
     public void setOperator(OperatorDescriptorId odId, int partition, OperatorRunnable hon) {
@@ -94,7 +89,6 @@ public class Stagelet {
             throw new Exception("Joblet already started");
         }
         started = true;
-        stats.setStartTime(new Date());
         notifyAll();
     }
 
@@ -145,8 +139,9 @@ public class Stagelet {
     protected synchronized void notifyOperatorCompletion(OperatorInstanceId opIId) {
         pendingOperators.remove(opIId);
         if (pendingOperators.isEmpty()) {
-            stats.setEndTime(new Date());
             try {
+                Map<String, Long> stats = new TreeMap<String, Long>();
+                dumpProfile(stats);
                 joblet.notifyStageletComplete(stageId, attempt, stats);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -167,10 +162,6 @@ public class Stagelet {
         while (!started && !abort) {
             wait();
         }
-    }
-
-    public StageletStatistics getStatistics() {
-        return stats;
     }
 
     public void dumpProfile(Map<String, Long> counterDump) {

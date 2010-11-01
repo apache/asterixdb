@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 public interface IHyracksClientInterface extends Remote {
     public ClusterControllerInfo getClusterControllerInfo() throws Exception;
@@ -37,5 +36,5 @@ public interface IHyracksClientInterface extends Remote {
 
     public void start(UUID jobId) throws Exception;
 
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception;
+    public void waitForCompletion(UUID jobId) throws Exception;
 }

@@ -21,7 +21,6 @@ import java.util.UUID;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.statistics.JobStatistics;
 
 public interface IHyracksClientConnection {
     public void createApplication(String appName, File harFile) throws Exception;
@@ -36,5 +35,5 @@ public interface IHyracksClientConnection {
 
     public void start(UUID jobId) throws Exception;
 
-    public JobStatistics waitForCompletion(UUID jobId) throws Exception;
+    public void waitForCompletion(UUID jobId) throws Exception;
 }

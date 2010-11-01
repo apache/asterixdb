@@ -2,6 +2,8 @@ program hyrackscc;
 
 import java.util.UUID;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import jol.types.basic.Tuple;
 import jol.types.basic.TupleSet;
@@ -95,16 +97,23 @@ jobattempt(JobId, NextAttempt) :-
         NextAttempt := Attempt + 1;
     };
 
+job(JobId, AppName, Status, JobSpec, JobPlan, Stats) :-
+    job(JobId, AppName, Status, JobSpec, JobPlan, Stats),
+    profileupdate(JobId, _, JobletStats)
+    {
+        Stats.putAll(JobletStats);
+    };
+
 define(stagestart, keys(), {UUID, Integer, Integer});
-define(stagefinish, keys(0, 1, 2), {UUID, Integer, Integer, Set});
+define(stagefinish, keys(0, 1, 2), {UUID, Integer, Integer, Map});
 
 watch(jobstart, i);
 
 stagestart_INITIAL stagestart(JobId, 0, Attempt) :-
     jobattempt#insert(JobId, Attempt);
 
-update_job_status_RUNNING job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, null) :-
-    job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan, _),
+update_job_status_RUNNING job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, Stats) :-
+    job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.INITIALIZED, JobSpec, JobPlan, Stats),
     jobstart(JobId, _);
 
 stagestart_NEXT stagestart(JobId, NextStageNumber, Attempt) :-
@@ -287,22 +296,33 @@ abortcomplete(JobId, StageId, Attempt) :-
     stageabort(JobId, StageId, Attempt, NodeIdSet2),
     NodeIdSet1.size() == NodeIdSet2.size();
 
-define(stageletcomplete_agg, keys(0, 1, 2), {UUID, UUID, Integer, Set});
+define(stageletcompletecount, keys(0, 1, 2), {UUID, UUID, Integer, Integer});
 
-stageletcomplete_agg(JobId, StageId, Attempt, set<Statistics>) :-
+stageletcompletecount(JobId, StageId, Attempt, count<NodeId>) :-
+    stageletcomplete(JobId, StageId, NodeId, Attempt, _);
+
+define(stageletcomplete_agg, keys(0, 1, 2), {UUID, UUID, Integer, Map});
+
+stageletcomplete_agg(JobId, StageId, Attempt, generic<(new HashMap()).putAll(Statistics)>) :-
     stageletcomplete(JobId, StageId, NodeId, Attempt, Statistics);
 
-stagefinish(JobId, StageNumber, Attempt, SSet) :-
+stagefinish(JobId, StageNumber, Attempt, SMap) :-
     startmessage_agg(JobId, StageId, Attempt, _, _, TSet),
-    stageletcomplete_agg(JobId, StageId, Attempt, SSet),
+    stageletcompletecount(JobId, StageId, Attempt, Count),
+    stageletcomplete_agg(JobId, StageId, Attempt, SMap),
     jobstage(JobId, StageNumber, StageId),
-    TSet.size() == SSet.size();
+    TSet.size() == Count;
 
-update_job_status_TERMINATED job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.TERMINATED, JobSpec, JobPlan, null) :-
-    job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, _),
+update_job_status_TERMINATED job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.TERMINATED, JobSpec, JobPlan, NewStats) :-
+    job(JobId, AppName, edu.uci.ics.hyracks.api.job.JobStatus.RUNNING, JobSpec, JobPlan, Stats),
     stagestart#insert(JobId, StageNumber, Attempt),
-    stagefinish(JobId, _, Attempt, SSet),
-    notin jobstage(JobId, StageNumber);
+    stagefinish(JobId, _, Attempt, SMap),
+    notin jobstage(JobId, StageNumber)
+    {
+        NewStats := new HashMap();
+        NewStats.putAll(Stats);
+        NewStats.putAll(SMap);
+    };
 
 define(jobcleanup_agg, {UUID, Set});
 

@@ -42,6 +42,7 @@ public abstract class AbstractIntegrationTest {
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
+        ccConfig.profileDumpPeriod = 1000;
         ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
@@ -72,12 +73,12 @@ public abstract class AbstractIntegrationTest {
         nc1.stop();
         cc.stop();
     }
-    
+
     protected void runTest(JobSpecification spec) throws Exception {
         UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         System.err.println(spec.toJSON());
         hcc.start(jobId);
         System.err.print(jobId);
-        System.err.println(cc.waitForCompletion(jobId));
+        cc.waitForCompletion(jobId);
     }
 }
