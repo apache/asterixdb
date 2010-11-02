@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 
@@ -28,18 +29,18 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 	
 	private static final long serialVersionUID = 1L;
 	
-	private int[] fieldPermutation;	
-    private float fillFactor;
-    
+	private final int[] fieldPermutation;	
+    private final float fillFactor;
+        
 	public BTreeBulkLoadOperatorDescriptor(JobSpecification spec,			
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
+			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
 			IBinaryComparatorFactory[] comparatorFactories,			
 			int[] fieldPermutation, float fillFactor) {
 		super(spec, 1, 0, null, bufferCacheProvider,
-				btreeRegistryProvider, btreeFileName, fileMappingProviderProvider, interiorFactory,
+				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory,
 				leafFactory, fieldCount, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;
 		this.fillFactor = fillFactor;
@@ -49,7 +50,7 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 	public IOperatorNodePushable createPushRuntime(IHyracksContext ctx,
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
-		return new BTreeBulkLoadOperatorNodePushable(this, ctx, fieldPermutation, fillFactor, recordDescProvider);
+			int nPartitions) {		
+		return new BTreeBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor, recordDescProvider);
 	}	
 }

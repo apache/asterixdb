@@ -46,8 +46,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     private ByteBuffer writeBuffer;
     
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, false);
+    		int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, false);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);

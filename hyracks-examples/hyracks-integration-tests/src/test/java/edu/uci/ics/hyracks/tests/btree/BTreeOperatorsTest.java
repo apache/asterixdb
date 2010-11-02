@@ -77,7 +77,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	@Test
 	public void bulkLoadTest() throws Exception {		
 		// relies on the fact that NCs are run from same process
-		System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
+		//System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
 		
 		JobSpecification spec = new JobSpecification();
 		
@@ -121,7 +121,12 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 				
 		int[] fieldPermutation = { 0, 4, 5 };
         
-		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);		
+		String btreeName = "btree.bin";
+		String nc1FileName = System.getProperty("java.io.tmpdir") + "/nc1/" + btreeName;
+		IFileSplitProvider btreeSplitProvider = new ConstantFileSplitProvider(
+				new FileSplit[] { new FileSplit(NC1_ID, new File(nc1FileName)) } );
+		
+		BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);		
 		PartitionConstraint btreePartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
 		btreeBulkLoad.setPartitionConstraint(btreePartitionConstraintA);
 				
@@ -139,7 +144,6 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
     	}
     	
         MultiComparator cmp = new MultiComparator(fieldCount, comparators);
-         
         
         // try an ordered scan on the bulk-loaded btree
         int btreeFileId = 0; // TODO: this relies on the way FileMappingProvider assignds ids (in sequence starting from 0)
@@ -158,19 +162,16 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         	e.printStackTrace();
         } finally {
         	scanCursor.close();
-        }                        
+        }                
 	}	
-	
+		
 	@Test
 	public void btreeSearchTest() throws Exception {
 		// relies on the fact that NCs are run from same process
 		System.setProperty("NodeControllerDataPath", System.getProperty("java.io.tmpdir") + "/");
 		
 		JobSpecification spec = new JobSpecification();
-		
-		IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
-				new FileSplit(NC2_ID, new File("data/words.txt")), new FileSplit(NC1_ID, new File("data/words.txt")) });
-		
+				
 		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();        
 				
@@ -210,7 +211,12 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		RecordDescriptor recDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });		
 				
-		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, "btreetest.bin", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, new int[]{0}, new int[]{1});
+		String btreeName = "btree.bin";
+		String nc1FileName = System.getProperty("java.io.tmpdir") + "/nc1/" + btreeName;
+		IFileSplitProvider btreeSplitProvider = new ConstantFileSplitProvider(
+				new FileSplit[] { new FileSplit(NC1_ID, new File(nc1FileName)) } );
+		
+		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, fieldCount, comparatorFactories, true, new int[]{0}, new int[]{1});
 		//BTreeDiskOrderScanOperatorDescriptor btreeSearchOp = new BTreeDiskOrderScanOperatorDescriptor(spec, splitProvider, recDesc, bufferCacheProvider, btreeRegistryProvider, 0, "btreetest.bin", interiorFrameFactory, leafFrameFactory, cmp);
 		
 		PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
@@ -336,21 +342,27 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                         
         // create insert operators
         
-        // primary index
+        // primary index               
+		IFileSplitProvider btreeSplitProviderA = new ConstantFileSplitProvider(
+				new FileSplit[] { new FileSplit(NC1_ID, new File("/tmp/btreetestA.ix")) } );        
         int[] fieldPermutationA = { 0,1,2,3,4,5 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestA.ix", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpA = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProviderA, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, fieldPermutationA, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintA = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpA.setPartitionConstraint(insertPartitionConstraintA);
         
         // first secondary index
+        IFileSplitProvider btreeSplitProviderB = new ConstantFileSplitProvider(
+				new FileSplit[] { new FileSplit(NC1_ID, new File("/tmp/btreetestB.ix")) } );   
         int[] fieldPermutationB = { 3, 0 };                    
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestB.ix", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpB = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProviderB, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationB, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintB = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpB.setPartitionConstraint(insertPartitionConstraintB);
 		
         // second secondary index
+        IFileSplitProvider btreeSplitProviderC = new ConstantFileSplitProvider(
+				new FileSplit[] { new FileSplit(NC1_ID, new File("/tmp/btreetestC.ix")) } );   
         int[] fieldPermutationC = { 4, 0 };                       
-        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, "btreetestC.ix", fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor insertOpC = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProviderC, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, fieldPermutationC, BTreeOp.BTO_INSERT);
         PartitionConstraint insertPartitionConstraintC = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
         insertOpC.setPartitionConstraint(insertPartitionConstraintC);
                 

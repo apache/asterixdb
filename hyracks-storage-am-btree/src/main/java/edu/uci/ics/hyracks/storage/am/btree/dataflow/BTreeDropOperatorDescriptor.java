@@ -21,26 +21,26 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private String btreeFileName;
 	private IBufferCacheProvider bufferCacheProvider;
 	private IBTreeRegistryProvider btreeRegistryProvider;	
 	private IFileMappingProviderProvider fileMappingProviderProvider;
+	private IFileSplitProvider fileSplitProvider;
 	
 	public BTreeDropOperatorDescriptor(JobSpecification spec,			
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
-			String btreeFileName, IFileMappingProviderProvider fileMappingProviderProvider) {
+			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider) {
 		super(spec, 0, 0);
-		this.btreeFileName = btreeFileName;
 		this.fileMappingProviderProvider = fileMappingProviderProvider;
 		this.bufferCacheProvider = bufferCacheProvider;
 		this.btreeRegistryProvider = btreeRegistryProvider;
+		this.fileSplitProvider = fileSplitProvider;
 	}
 	
 	@Override
@@ -48,6 +48,6 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 			IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition,
 			int nPartitions) {
-		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, btreeFileName, fileMappingProviderProvider);
+		return new BTreeDropOperatorNodePushable(bufferCacheProvider, btreeRegistryProvider, fileSplitProvider, partition, fileMappingProviderProvider);
 	}	
 }

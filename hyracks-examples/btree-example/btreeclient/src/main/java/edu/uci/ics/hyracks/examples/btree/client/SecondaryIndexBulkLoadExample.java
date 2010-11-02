@@ -21,9 +21,6 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -34,6 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComp
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
@@ -114,8 +112,9 @@ public class SecondaryIndexBulkLoadExample {
         IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;
     	        
         // use a disk-order scan to read primary index    	
-        BTreeDiskOrderScanOperatorDescriptor btreeScanOp = new BTreeDiskOrderScanOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, options.primaryBtreeName, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, recDesc.getFields().length);		
-		PartitionConstraint scanPartitionConstraint = createPartitionConstraint(splitNCs);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBtreeName);
+        BTreeDiskOrderScanOperatorDescriptor btreeScanOp = new BTreeDiskOrderScanOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, recDesc.getFields().length);		
+		PartitionConstraint scanPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
 		btreeScanOp.setPartitionConstraint(scanPartitionConstraint);
 		
         // sort the tuples as preparation for bulk load into secondary index
@@ -126,17 +125,18 @@ public class SecondaryIndexBulkLoadExample {
         comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
         comparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields, comparatorFactories, recDesc);
-        PartitionConstraint sorterConstraint = createPartitionConstraint(splitNCs);
+        PartitionConstraint sorterConstraint = JobHelper.createPartitionConstraint(splitNCs);
         sorter.setPartitionConstraint(sorterConstraint);
         
         // tuples to be put into B-Tree shall have 2 fields
         int fieldCount = 2;
         // the B-Tree expects its keyfields to be at the front of its input tuple 
         int[] fieldPermutation = { 1, 0 };
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, 
-        		bufferCacheProvider, btreeRegistryProvider, options.btreeName, fileMappingProviderProvider, interiorFrameFactory,
+        		bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory,
                 leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);
-        PartitionConstraint bulkLoadConstraint = createPartitionConstraint(splitNCs);
+        PartitionConstraint bulkLoadConstraint = JobHelper.createPartitionConstraint(splitNCs);
         btreeBulkLoad.setPartitionConstraint(bulkLoadConstraint);        
         
         // connect the ops
@@ -149,13 +149,5 @@ public class SecondaryIndexBulkLoadExample {
         spec.addRoot(btreeBulkLoad);
     	    	
     	return spec;
-    }
-    
-    private static PartitionConstraint createPartitionConstraint(String[] splitNCs) {
-    	LocationConstraint[] lConstraints = new LocationConstraint[splitNCs.length];
-        for (int i = 0; i < splitNCs.length; ++i) {
-            lConstraints[i] = new AbsoluteLocationConstraint(splitNCs[i]);
-        }
-        return new ExplicitPartitionConstraint(lConstraints);
-    }
+    }        
 }
