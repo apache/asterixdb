@@ -6,6 +6,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable {
@@ -14,14 +15,17 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
     private IBTreeRegistryProvider btreeRegistryProvider;
     private IBufferCacheProvider bufferCacheProvider;
     private IFileMappingProviderProvider fileMappingProviderProvider;
-
+    private IFileSplitProvider fileSplitProvider;
+    private int partition;
+    
     public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider,
-            IBTreeRegistryProvider btreeRegistryProvider, String btreeFileName,
+            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition,
             IFileMappingProviderProvider fileMappingProviderProvider) {
-        this.btreeFileName = btreeFileName;
         this.fileMappingProviderProvider = fileMappingProviderProvider;
         this.bufferCacheProvider = bufferCacheProvider;
         this.btreeRegistryProvider = btreeRegistryProvider;
+        this.fileSplitProvider = fileSplitProvider;
+        this.partition = partition;
     }
 
     @Override
@@ -43,10 +47,10 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
         BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry();
         FileManager fileManager = bufferCacheProvider.getFileManager();
-
-        String ncDataPath = System.getProperty("NodeControllerDataPath");
-        String fileName = ncDataPath + btreeFileName;
-
+        
+        File f = fileSplitProvider.getFileSplits()[partition].getLocalFile();        
+        String fileName = f.getAbsolutePath();            
+        
         int btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, false);
 
         // unregister btree instance            
@@ -59,8 +63,7 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
         // unregister file
         fileManager.unregisterFile(btreeFileId);
-
-        File f = new File(fileName);
+        
         if (f.exists()) {
             f.delete();
         }

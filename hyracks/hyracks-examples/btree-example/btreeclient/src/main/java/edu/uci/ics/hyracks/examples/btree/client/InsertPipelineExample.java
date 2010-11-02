@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
@@ -120,9 +121,10 @@ public class InsertPipelineExample {
         // comparator factories for primary index
         IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
 		primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+		IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBtreeName);
 		// create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor primaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, options.primaryBtreeName, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, primaryFieldPermutation, BTreeOp.BTO_INSERT);
-        PartitionConstraint primaryInsertConstraint = createPartitionConstraint(splitNCs);
+        BTreeInsertUpdateDeleteOperatorDescriptor primaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, primaryFieldCount, primaryComparatorFactories, primaryFieldPermutation, BTreeOp.BTO_INSERT);
+        PartitionConstraint primaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
         primaryInsert.setPartitionConstraint(primaryInsertConstraint);
         
         // prepare insertion into secondary index
@@ -134,14 +136,15 @@ public class InsertPipelineExample {
         IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
 		secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 		secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+		IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBtreeName);
 		// create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor secondaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, options.secondaryBtreeName, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, secondaryFieldPermutation, BTreeOp.BTO_INSERT);
-        PartitionConstraint secondaryInsertConstraint = createPartitionConstraint(splitNCs);
+        BTreeInsertUpdateDeleteOperatorDescriptor secondaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryFieldCount, secondaryComparatorFactories, secondaryFieldPermutation, BTreeOp.BTO_INSERT);
+        PartitionConstraint secondaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
         secondaryInsert.setPartitionConstraint(secondaryInsertConstraint);
         
         // end the insert pipeline at this sink operator
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint nullSinkPartitionConstraint = createPartitionConstraint(splitNCs);
+        PartitionConstraint nullSinkPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
         nullSink.setPartitionConstraint(nullSinkPartitionConstraint);
                 
         // distribute the records from the datagen via hashing to the bulk load ops
@@ -161,13 +164,5 @@ public class InsertPipelineExample {
         spec.addRoot(nullSink);
     	    	
     	return spec;
-    }
-    
-    private static PartitionConstraint createPartitionConstraint(String[] splitNCs) {
-    	LocationConstraint[] lConstraints = new LocationConstraint[splitNCs.length];
-        for (int i = 0; i < splitNCs.length; ++i) {
-            lConstraints[i] = new AbsoluteLocationConstraint(splitNCs[i]);
-        }
-        return new ExplicitPartitionConstraint(lConstraints);
-    }
+    }    
 }

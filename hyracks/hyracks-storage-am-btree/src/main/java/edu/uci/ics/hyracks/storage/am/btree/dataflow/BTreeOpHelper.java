@@ -19,6 +19,7 @@ import java.io.RandomAccessFile;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
@@ -34,38 +35,40 @@ final class BTreeOpHelper {
 
     private BTree btree;
     private int btreeFileId = -1;
+    private int partition;
     
     private AbstractBTreeOperatorDescriptor opDesc;
     private IHyracksContext ctx;
 
     private boolean createBTree;
     
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, boolean createBTree) {
+    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, int partition, boolean createBTree) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.createBTree = createBTree;
+        this.partition = partition;
     }  
     
     void init() throws Exception {
     	
     	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
         FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
-        IFileMappingProviderProvider fileMappingProviderProvider = opDesc.getFileMappingProviderProvider();
-                
-        String ncDataPath = System.getProperty("NodeControllerDataPath");
-        String fileName = ncDataPath + opDesc.getBtreeFileName();
+        IFileMappingProviderProvider fileMappingProviderProvider = opDesc.getFileMappingProviderProvider();               
+        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
         
-        btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, createBTree);     
-        
-        File f = new File(fileName);
+        //String ncDataPath = System.getProperty("NodeControllerDataPath");
+        File f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         if(!f.exists()) {
         	File dir = new File(f.getParent());        	
         	dir.mkdirs();
         }
         RandomAccessFile raf = new RandomAccessFile(f, "rw");
         
+        String fileName = f.getAbsolutePath();
+        btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, createBTree);     
+        
         if (!f.exists() && !createBTree) {
-            throw new Exception("Trying to open btree from file " + opDesc.getBtreeFileName() + " but file doesn't exist.");
+            throw new Exception("Trying to open btree from file " + fileName + " but file doesn't exist.");
         }
         
         try {

@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
@@ -124,7 +125,7 @@ public class PrimaryIndexBulkLoadExample {
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;        
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields, comparatorFactories, recDesc);
-        PartitionConstraint sorterConstraint = createPartitionConstraint(splitNCs);
+        PartitionConstraint sorterConstraint = JobHelper.createPartitionConstraint(splitNCs);
         sorter.setPartitionConstraint(sorterConstraint);
         
         // create factories and providers for B-Tree
@@ -138,10 +139,11 @@ public class PrimaryIndexBulkLoadExample {
         int fieldCount = 4;
         // the B-Tree expects its keyfields to be at the front of its input tuple 
         int[] fieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input tuple to field 0 of B-Tree tuple, etc.
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, 
-        		bufferCacheProvider, btreeRegistryProvider, options.btreeName, fileMappingProviderProvider, interiorFrameFactory,
+        		bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory,
                 leafFrameFactory, fieldCount, comparatorFactories, fieldPermutation, 0.7f);
-        PartitionConstraint bulkLoadConstraint = createPartitionConstraint(splitNCs);
+        PartitionConstraint bulkLoadConstraint = JobHelper.createPartitionConstraint(splitNCs);
         btreeBulkLoad.setPartitionConstraint(bulkLoadConstraint);
         
         // distribute the records from the datagen via hashing to the bulk load ops
@@ -157,13 +159,5 @@ public class PrimaryIndexBulkLoadExample {
         spec.addRoot(btreeBulkLoad);
     	    	
     	return spec;
-    }
-    
-    private static PartitionConstraint createPartitionConstraint(String[] splitNCs) {
-    	LocationConstraint[] lConstraints = new LocationConstraint[splitNCs.length];
-        for (int i = 0; i < splitNCs.length; ++i) {
-            lConstraints[i] = new AbsoluteLocationConstraint(splitNCs[i]);
-        }
-        return new ExplicitPartitionConstraint(lConstraints);
-    }
+    }    
 }
