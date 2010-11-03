@@ -63,9 +63,9 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     private final Map<String, String> jobConfMap;
     private IHadoopClassFactory hadoopClassFactory;
 
-    public AbstractHadoopOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor, JobConf jobConf,
-            IHadoopClassFactory hadoopOperatorFactory) {
-        super(spec, 1, 1);
+    public AbstractHadoopOperatorDescriptor(JobSpecification spec, int inputArity, RecordDescriptor recordDescriptor,
+            JobConf jobConf, IHadoopClassFactory hadoopOperatorFactory) {
+        super(spec, inputArity, 1);
         jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         this.hadoopClassFactory = hadoopOperatorFactory;
         recordDescriptors[0] = recordDescriptor;
