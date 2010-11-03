@@ -1,31 +1,20 @@
-/*
- * Copyright 2009-2010 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package edu.uci.ics.hyracks.hadoop.compat.client;
 
+import java.io.File;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.hadoop.compat.util.ConfigurationConstants;
 import edu.uci.ics.hyracks.hadoop.compat.util.HadoopAdapter;
 import edu.uci.ics.hyracks.hadoop.compat.util.Utilities;
+import edu.uci.ics.hyracks.hadoop.compat.client.HyracksRunningJob;
+import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
+import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 
 public class HyracksClient {
 
@@ -50,25 +39,41 @@ public class HyracksClient {
         hadoopAdapter = new HadoopAdapter(namenodeUrl);
     }
 
-    public HyracksRunningJob submitJobs(List<JobConf> confs, String[] requiredLibs) throws Exception {
+    public HyracksRunningJob submitJobs(List<JobConf> confs, Set<String> requiredLibs) throws Exception {
         JobSpecification spec = hadoopAdapter.getJobSpecification(confs);
-        return submitJob(spec, requiredLibs);
+        String appName  = getApplicationNameHadoopJob(confs.get(0));
+        return submitJob(appName,spec, requiredLibs);
     }
 
-    public HyracksRunningJob submitJob(JobConf conf, String[] requiredLibs) throws Exception {
+    private String getApplicationNameHadoopJob(JobConf jobConf) {
+        String jar = jobConf.getJar();
+        if( jar != null){
+            return jar.substring(jar.lastIndexOf("/") >=0 ? jar.lastIndexOf("/") +1 : 0);
+        }else {
+            return "" + System.currentTimeMillis();
+        }
+    }
+    
+    public HyracksRunningJob submitJob(JobConf conf, Set<String> requiredLibs) throws Exception {
         JobSpecification spec = hadoopAdapter.getJobSpecification(conf);
-        return submitJob(spec, requiredLibs);
+        String appName  = getApplicationNameHadoopJob(conf);
+        return submitJob(appName, spec, requiredLibs);
     }
 
     public JobStatus getJobStatus(UUID jobId) throws Exception {
         return connection.getJobStatus(jobId);
     }
 
-    public HyracksRunningJob submitJob(JobSpecification spec, String[] requiredLibs) throws Exception {
-        String applicationName = "" + spec.toString().hashCode();
-        connection.createApplication(applicationName, Utilities.getHyracksArchive(applicationName, requiredLibs));
-        System.out.println(" created application :" + applicationName);
-        UUID jobId = connection.createJob(applicationName, spec);
+    public HyracksRunningJob submitJob(String applicationName, JobSpecification spec, Set<String> requiredLibs) throws Exception {
+        UUID jobId = null;
+        try {
+            jobId = connection.createJob(applicationName, spec);
+        } catch (Exception e){
+            System.out.println(" application not found, creating application");
+            connection.createApplication(applicationName, Utilities.getHyracksArchive(applicationName, requiredLibs));
+            System.out.println(" created application :" + applicationName);
+            jobId = connection.createJob(applicationName, spec);
+        }
         connection.start(jobId);
         HyracksRunningJob runningJob = new HyracksRunningJob(jobId, spec, this);
         return runningJob;
