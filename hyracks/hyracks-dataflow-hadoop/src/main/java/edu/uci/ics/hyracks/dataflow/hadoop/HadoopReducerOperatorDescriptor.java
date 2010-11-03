@@ -183,7 +183,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
     public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IComparatorFactory comparatorFactory,
             IHadoopClassFactory classFactory) {
-        super(spec, getRecordDescriptor(conf, classFactory), conf, classFactory);
+        super(spec, 1, getRecordDescriptor(conf, classFactory), conf, classFactory);
         this.comparatorFactory = comparatorFactory;
     }
 
