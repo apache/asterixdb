@@ -10,8 +10,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable {
-
-    private String btreeFileName;
+	
     private IBTreeRegistryProvider btreeRegistryProvider;
     private IBufferCacheProvider bufferCacheProvider;
     private IFileMappingProviderProvider fileMappingProviderProvider;
