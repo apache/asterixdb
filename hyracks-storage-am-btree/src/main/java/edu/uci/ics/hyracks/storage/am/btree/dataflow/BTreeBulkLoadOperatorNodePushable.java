@@ -43,16 +43,22 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
-
+    
     @Override
-    public void close() throws HyracksDataException {
+    public void open() throws HyracksDataException {
+        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
+        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);        
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        IBTreeMetaDataFrame metaFrame = new MetaDataFrame();        
+        btreeOpHelper.init();
+        btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());        
         try {
-            btreeOpHelper.getBTree().endBulkLoad(bulkLoadCtx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+			bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), metaFrame);
+		} catch (Exception e) {
+			throw new HyracksDataException(e.getMessage());
+		}
     }
-
+    
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
@@ -69,20 +75,14 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     }
     
     @Override
-    public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);        
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
-        IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+    public void close() throws HyracksDataException {
         try {
-            btreeOpHelper.init();
-            btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-            bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), metaFrame);
+            btreeOpHelper.getBTree().endBulkLoad(bulkLoadCtx);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
+    
     @Override
     public void flush() throws HyracksDataException {
     }

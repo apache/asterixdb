@@ -29,7 +29,7 @@ public class FileManager {
 
     public void registerFile(FileInfo fInfo) throws HyracksDataException {
         if (fileRegistry.containsKey(fInfo.getFileId())) {
-            throw new HyracksDataException("File with id " + fInfo.getFileId() + " is already registered");
+            throw new HyracksDataException("File " + fInfo.getFile().toString() + " with id " + fInfo.getFileId() + " is already registered");
         }
         fileRegistry.put(fInfo.getFileId(), fInfo);
     }
