@@ -59,7 +59,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private RecordDescriptor recDesc;       
         
     public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, false);
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
         this.isForward = isForward;        
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);        
         if(lowKeyFields != null && lowKeyFields.length > 0) {

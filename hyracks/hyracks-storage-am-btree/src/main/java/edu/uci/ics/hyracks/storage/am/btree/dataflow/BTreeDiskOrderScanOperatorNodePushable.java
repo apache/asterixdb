@@ -35,7 +35,7 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
     private final BTreeOpHelper btreeOpHelper;
 
     public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, false);
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
     }
 
     @Override
