@@ -37,4 +37,14 @@ public interface IFileMappingProvider extends Serializable {
      * @return void
      */
     public void unmapName(String name);
+    
+    /**
+     * Get file id of an already mapped file
+     * 
+     * @param name
+     *            - Name of the file
+     * 
+     * @return The file id on a successful lookup, null if unsuccessful.
+     */
+    public Integer getFileId(String name);
 }

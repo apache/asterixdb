@@ -30,7 +30,8 @@ public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutput
 		ByteBuffer writeBuffer = ctx.getResourceManager().allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx);
 		appender.reset(writeBuffer, true);
-		appender.append(fieldSlots, tupleData, 0, tupleSize);		
+		if(fieldSlots != null && tupleData != null && tupleSize > 0)
+			appender.append(fieldSlots, tupleData, 0, tupleSize);
 		FrameUtils.flushFrame(writeBuffer, writer);
 		writer.close();
 	}

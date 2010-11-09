@@ -49,9 +49,13 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
         
         File f = fileSplitProvider.getFileSplits()[partition].getLocalFile();        
         String fileName = f.getAbsolutePath();            
+                
+        Integer fileId = fileMappingProviderProvider.getFileMappingProvider().getFileId(fileName);
+        if(fileId == null) {
+        	throw new HyracksDataException("Cannot drop B-Tree with name " + fileName + ". No file mapping exists.");
+        }
+        int btreeFileId = fileId; 
         
-        int btreeFileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, false);
-
         // unregister btree instance            
         btreeRegistry.lock();
         try {
@@ -59,16 +63,16 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
         } finally {
             btreeRegistry.unlock();
         }
-
+        
+        // remove name to id mapping
+        fileMappingProviderProvider.getFileMappingProvider().unmapName(fileName);
+                
         // unregister file
         fileManager.unregisterFile(btreeFileId);
         
         if (f.exists()) {
             f.delete();
         }
-
-        // remove name to id mapping
-        fileMappingProviderProvider.getFileMappingProvider().unmapName(fileName);
     }
 
     @Override

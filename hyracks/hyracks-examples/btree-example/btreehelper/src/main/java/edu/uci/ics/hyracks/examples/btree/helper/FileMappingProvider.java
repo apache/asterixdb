@@ -33,4 +33,9 @@ public class FileMappingProvider implements IFileMappingProvider {
 	public void unmapName(String name) {
 		map.remove(name);
 	}
+	
+	@Override
+	public Integer getFileId(String name) {
+		return map.get(name);
+	}
 }
