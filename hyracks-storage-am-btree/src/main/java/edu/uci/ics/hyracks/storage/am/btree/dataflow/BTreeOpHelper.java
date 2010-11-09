@@ -32,7 +32,14 @@ import edu.uci.ics.hyracks.storage.common.file.FileInfo;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 final class BTreeOpHelper {
-    private IBTreeInteriorFrame interiorFrame;
+    
+	public enum BTreeMode {
+		OPEN_BTREE,
+		CREATE_BTREE,
+		ENLIST_BTREE
+	}
+	
+	private IBTreeInteriorFrame interiorFrame;
     private IBTreeLeafFrame leafFrame;
 
     private BTree btree;
@@ -42,12 +49,12 @@ final class BTreeOpHelper {
     private AbstractBTreeOperatorDescriptor opDesc;
     private IHyracksContext ctx;
 
-    private boolean createBTree;
+    private BTreeMode mode;
     
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, int partition, boolean createBTree) {
+    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksContext ctx, int partition, BTreeMode mode) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.createBTree = createBTree;
+        this.mode = mode;
         this.partition = partition;
     }  
     
@@ -72,26 +79,43 @@ final class BTreeOpHelper {
         
         String fileName = f.getAbsolutePath();
         Integer fileId = fileMappingProviderProvider.getFileMappingProvider().getFileId(fileName);        
-        if(fileId == null) {
-        	if(createBTree) {
-        		fileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, createBTree);        		
-        	}
-        	else {
-        		throw new HyracksDataException("Cannot get id for file " + fileName + ". File name has not been mapped.");
-        	}
-        }
-        else {
-        	if(createBTree) {
-        		throw new HyracksDataException("Cannot map file " + fileName + " to an id. File name has already been mapped.");
-        	}        	     
-        }        
-        btreeFileId = fileId;  
         
-        if (!f.exists() && !createBTree) {
-            throw new HyracksDataException("Trying to open btree from file " + fileName + " but file doesn't exist.");
-        }
+        switch(mode) {
+    	
+    	case OPEN_BTREE: {
+    		if(fileId == null) {
+    			throw new HyracksDataException("Cannot get id for file " + fileName + ". File name has not been mapped.");
+    		}
+    		if(!f.exists()) {
+    			throw new HyracksDataException("Trying to open btree from file " + fileName + " but file doesn't exist.");
+    		}
+    	} break;
         
-        if(createBTree) {
+    	case CREATE_BTREE: {
+    		if(fileId == null) {
+    			fileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, true);
+    		}
+    		else {
+    			throw new HyracksDataException("Cannot map file " + fileName + " to an id. File name has already been mapped.");
+    		}    		
+    	} break;
+        
+    	case ENLIST_BTREE: {
+    		if(fileId == null) {
+    			fileId = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId(fileName, true);
+    		}
+    		else {
+    			throw new HyracksDataException("Cannot map file " + fileName + " to an id. File name has already been mapped.");
+    		}    		
+    		if(!f.exists()) {
+    			throw new HyracksDataException("Trying to enlist btree from file " + fileName + " but file doesn't exist.");
+    		}
+    	} break;
+        }
+    	
+    	btreeFileId = fileId;  
+    	
+        if(mode == BTreeMode.CREATE_BTREE || mode == BTreeMode.ENLIST_BTREE) {
         	FileInfo fi = new FileInfo(btreeFileId, raf);
         	fileManager.registerFile(fi);
         }
@@ -119,7 +143,7 @@ final class BTreeOpHelper {
                     MultiComparator cmp = new MultiComparator(opDesc.getFieldCount(), comparators);
                     
                     btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
-                    if (createBTree) {
+                    if (mode == BTreeMode.CREATE_BTREE) {
                         MetaDataFrame metaFrame = new MetaDataFrame();
                         try {
 							btree.create(btreeFileId, leafFrame, metaFrame);
