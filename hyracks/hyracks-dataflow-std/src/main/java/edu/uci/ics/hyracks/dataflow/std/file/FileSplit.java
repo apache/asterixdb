@@ -23,17 +23,30 @@ public class FileSplit implements Serializable {
     private final String nodeName;
 
     private final File file;
+    
+    private final String path;
 
     public FileSplit(String nodeName, File file) {
         this.nodeName = nodeName;
         this.file = file;
+        this.path = file.getAbsolutePath();
     }
 
+    public FileSplit(String nodeName, String path) {
+    	this.nodeName = nodeName;
+    	this.path = path;
+    	this.file = new File(path);
+    }
+    
     public String getNodeName() {
         return nodeName;
     }
 
     public File getLocalFile() {
         return file;
+    }
+    
+    public String getPath(){
+    	return path;
     }
 }

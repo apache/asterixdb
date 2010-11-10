@@ -65,7 +65,7 @@ public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDe
 	
 	
     @Override
-    protected IRecordWriter createRecordWriter(File file,int index) throws Exception {
-        return new LineWriterImpl(file,columns,separator);
+    protected IRecordWriter createRecordWriter(FileSplit fileSplit,int index) throws Exception {
+        return new LineWriterImpl(fileSplit.getLocalFile(),columns,separator);
     }
 }

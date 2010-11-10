@@ -45,7 +45,7 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
         public void open() throws HyracksDataException {
             FileSplit split = splits[index];
             try {
-                writer = createRecordWriter(split.getLocalFile(), index);
+                writer = createRecordWriter(split, index);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
@@ -84,7 +84,7 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
         this.splits = splits;
     }
 
-    protected abstract IRecordWriter createRecordWriter(File file, int index) throws Exception;
+    protected abstract IRecordWriter createRecordWriter(FileSplit fileSplit, int index) throws Exception;
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
