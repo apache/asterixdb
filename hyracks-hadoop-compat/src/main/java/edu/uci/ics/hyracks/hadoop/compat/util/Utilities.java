@@ -40,7 +40,7 @@ public class Utilities {
     }
 
     public static File getHyracksArchive(String applicationName, Set<String> libJars) {
-        String target = applicationName + ".zip";
+       String target = applicationName + ".zip";
         // Create a buffer for reading the files
         byte[] buf = new byte[1024];
         Set<String> fileNames = new HashSet<String>();
