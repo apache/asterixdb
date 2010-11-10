@@ -69,9 +69,8 @@ public class HyracksClient {
         try {
             jobId = connection.createJob(applicationName, spec);
         } catch (Exception e){
-            System.out.println(" application not found, creating application");
+            System.out.println(" application not found, creating application" + applicationName);
             connection.createApplication(applicationName, Utilities.getHyracksArchive(applicationName, requiredLibs));
-            System.out.println(" created application :" + applicationName);
             jobId = connection.createJob(applicationName, spec);
         }
         connection.start(jobId);
