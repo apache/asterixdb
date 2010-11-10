@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -28,28 +29,40 @@ import org.apache.hadoop.util.ReflectionUtils;
 public class InputSplitsProxy implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final Class<? extends InputSplit>[] isClasses;
+    private final Class[] isClasses;
     private final byte[] bytes;
 
-    public InputSplitsProxy(InputSplit[] inputSplits) throws IOException {
+    public InputSplitsProxy(JobConf conf, Object[] inputSplits) throws IOException {
         isClasses = new Class[inputSplits.length];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        for (int i = 0; i < inputSplits.length; ++i) {
-            isClasses[i] = inputSplits[i].getClass();
-            inputSplits[i].write(dos);
+        if(conf.getUseNewMapper()){
+            for (int i = 0; i < inputSplits.length; ++i) {
+                isClasses[i] = ((org.apache.hadoop.mapreduce.InputSplit)inputSplits[i]).getClass();
+                ((Writable)inputSplits[i]).write(dos);
+            }
+        } else {
+            for (int i = 0; i < inputSplits.length; ++i) {
+                isClasses[i] = ((org.apache.hadoop.mapred.InputSplit)inputSplits[i]).getClass();
+                ((Writable)inputSplits[i]).write(dos);
+            }
         }
         dos.close();
         bytes = baos.toByteArray();
+
     }
 
-    public InputSplit[] toInputSplits(JobConf jobConf) throws InstantiationException, IllegalAccessException,
+    public Object[] toInputSplits(JobConf jobConf) throws InstantiationException, IllegalAccessException,
             IOException {
-        InputSplit[] splits = new InputSplit[isClasses.length];
+        Object[] splits = new Object[isClasses.length];
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
         for (int i = 0; i < splits.length; ++i) {
             splits[i] = ReflectionUtils.newInstance(isClasses[i], jobConf);
-            splits[i].readFields(dis);
+            if(jobConf.getUseNewMapper()){
+                ((Writable)splits[i]).readFields(dis);
+            }else {
+                ((Writable)splits[i]).readFields(dis);
+            }    
         }
         return splits;
     }

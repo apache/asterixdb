@@ -27,6 +27,8 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.apache.hadoop.mapred.Counters.Counter;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
@@ -60,35 +62,40 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
         return jobConf;
     }
 
-    public HadoopReadOperatorDescriptor(JobConf jobConf, JobSpecification spec, InputSplit[] splits) throws IOException {
+    public HadoopReadOperatorDescriptor(JobConf jobConf, JobSpecification spec, Object[] splits) throws IOException {
         super(spec, 0, 1);
         this.jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         InputFormat inputFormat = jobConf.getInputFormat();
-        RecordReader recordReader = inputFormat.getRecordReader(splits[0], jobConf, createReporter());
+        RecordReader recordReader;
+        try {
+            recordReader = getRecordReader(DatatypeHelper.map2JobConf(jobConfMap), splits[0]);
+        } catch (Exception e) {
+            throw new IOException(e);
+        } 
         recordDescriptors[0] = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) recordReader
                 .createKey().getClass(), (Class<? extends Writable>) recordReader.createValue().getClass());
         this.setPartitionConstraint(new PartitionCountConstraint(splits.length));
-        inputSplitsProxy = new InputSplitsProxy(splits);
+        inputSplitsProxy = new InputSplitsProxy(jobConf,splits);
         this.inputFormatClassName = inputFormat.getClass().getName();
-        try {
-            checkSplits(jobConf);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
-    public InputSplit[] getInputSplits() throws InstantiationException, IllegalAccessException, IOException {
-        return inputSplitsProxy.toInputSplits(getJobConf());
-    }
-
-    private void checkSplits(JobConf conf) throws Exception {
-        InputSplit[] splits = inputSplitsProxy.toInputSplits(conf);
-        for (InputSplit inputSplit : splits) {
-            Class inputFormatClass = Class.forName(inputFormatClassName);
+    private RecordReader getRecordReader(JobConf conf, Object inputSplit) throws ClassNotFoundException, IOException, InterruptedException {
+        RecordReader hadoopRecordReader = null;
+        if(conf.getUseNewMapper()){
+            JobContext context = new JobContext(conf,null);
+            org.apache.hadoop.mapreduce.InputFormat inputFormat = (org.apache.hadoop.mapreduce.InputFormat) ReflectionUtils.newInstance(context.getInputFormatClass(), conf);
+            TaskAttemptContext taskAttemptContext = new org.apache.hadoop.mapreduce.TaskAttemptContext(jobConf, null);
+            hadoopRecordReader = (RecordReader) inputFormat.createRecordReader((org.apache.hadoop.mapreduce.InputSplit)inputSplit,taskAttemptContext);
+        } else {
+            Class inputFormatClass = conf.getInputFormat().getClass();
             InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
-            RecordReader hadoopRecordReader = (RecordReader) inputFormat.getRecordReader(inputSplit, conf,
-                    createReporter());
+            hadoopRecordReader = (RecordReader)inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit)inputSplit, conf, createReporter());
         }
+        return hadoopRecordReader;
+    }
+    
+    public Object[] getInputSplits() throws InstantiationException, IllegalAccessException, IOException {
+        return inputSplitsProxy.toInputSplits(getJobConf());
     }
 
     protected Reporter createReporter() {
@@ -145,11 +152,20 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                     RecordReader hadoopRecordReader;
                     Object key;
                     Object value;
-                    InputSplit[] splits = inputSplitsProxy.toInputSplits(conf);
-                    InputSplit inputSplit = splits[partition];
-                    Class inputFormatClass = Class.forName(inputFormatClassName);
-                    InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
-                    hadoopRecordReader = (RecordReader) inputFormat.getRecordReader(inputSplit, conf, createReporter());
+                    Object[] splits = inputSplitsProxy.toInputSplits(conf);
+                    Object inputSplit = splits[partition];
+                    
+                    if(conf.getUseNewMapper()){
+                        JobContext context = new JobContext(conf,null);
+                        org.apache.hadoop.mapreduce.InputFormat inputFormat = (org.apache.hadoop.mapreduce.InputFormat) ReflectionUtils.newInstance(context.getInputFormatClass(), conf);
+                        TaskAttemptContext taskAttemptContext = new org.apache.hadoop.mapreduce.TaskAttemptContext(jobConf, null);
+                        hadoopRecordReader = (RecordReader) inputFormat.createRecordReader((org.apache.hadoop.mapreduce.InputSplit)inputSplit,taskAttemptContext);
+                    } else {
+                        Class inputFormatClass = conf.getInputFormat().getClass();
+                        InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
+                        hadoopRecordReader = (RecordReader)inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit)inputSplit, conf, createReporter());
+                    }
+                    
                     Class inputKeyClass;
                     Class inputValueClass;
                     if (hadoopRecordReader instanceof SequenceFileRecordReader) {
@@ -196,6 +212,8 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                 } catch (IllegalAccessException e) {
                     throw new HyracksDataException(e);
                 } catch (ClassNotFoundException e) {
+                    throw new HyracksDataException(e);
+                } catch (InterruptedException e){
                     throw new HyracksDataException(e);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
