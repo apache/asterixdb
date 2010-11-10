@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.Counters.Counter;
+import org.apache.hadoop.mapreduce.JobContext;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataReader;
@@ -229,8 +230,18 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
     }
 
     public static RecordDescriptor getRecordDescriptor(JobConf conf, IHadoopClassFactory classFactory) {
-        String outputKeyClassName = conf.getOutputKeyClass().getName();
-        String outputValueClassName = conf.getOutputValueClass().getName();
+        String outputKeyClassName =null; 
+        String outputValueClassName = null;
+        
+        if(conf.getUseNewMapper()) {
+            JobContext context = new JobContext(conf,null);
+            outputKeyClassName = context.getOutputKeyClass().getName();
+            outputValueClassName = context.getOutputValueClass().getName();
+        } else {
+            outputKeyClassName = conf.getOutputKeyClass().getName();
+            outputValueClassName = conf.getOutputValueClass().getName();
+        }
+        
         RecordDescriptor recordDescriptor = null;
         try {
             if (classFactory == null) {
