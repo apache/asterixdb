@@ -16,14 +16,13 @@ package edu.uci.ics.hyracks.dataflow.hadoop.util;
 
 import java.io.Serializable;
 
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.JobConf;
 
 public interface IHadoopClassFactory extends Serializable {
 
-    public Mapper createMapper(String mapClassName) throws Exception;
+    public Object createMapper(String mapClassName,JobConf conf) throws Exception;
 
-    public Reducer createReducer(String reduceClassName) throws Exception;
+    public Object createReducer(String reduceClassName,JobConf conf) throws Exception;
 
     public Class loadClass(String className) throws Exception;
 }

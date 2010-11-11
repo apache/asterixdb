@@ -14,21 +14,22 @@
  */
 package edu.uci.ics.hyracks.dataflow.hadoop.util;
 
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.util.ReflectionUtils;
+
 
 public class ClasspathBasedHadoopClassFactory implements IHadoopClassFactory {
 
     @Override
-    public Mapper createMapper(String mapClassName) throws Exception {
+    public Object createMapper(String mapClassName,JobConf conf) throws Exception {
         Class clazz = loadClass(mapClassName);
-        return (Mapper) clazz.newInstance();
+        return ReflectionUtils.newInstance(clazz, conf);
     }
 
     @Override
-    public Reducer createReducer(String reduceClassName) throws Exception {
+    public Object createReducer(String reduceClassName,JobConf conf) throws Exception {
         Class clazz = loadClass(reduceClassName);
-        return (Reducer) clazz.newInstance();
+        return  ReflectionUtils.newInstance(clazz, conf);
     }
 
     @Override
