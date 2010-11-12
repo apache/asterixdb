@@ -33,6 +33,7 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.Progress;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataReader;
@@ -318,7 +319,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
     private Object createReducer() throws Exception {
         if (reducerClass != null) {
-            return reducerClass.newInstance();
+            return ReflectionUtils.newInstance(reducerClass, jobConf);
         } else {
             Object reducer;
             if(jobConf.getUseNewReducer()){
