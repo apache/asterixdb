@@ -76,11 +76,11 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
+            conf = new JobConf(jobConf);
+            conf.setClassLoader(jobConf.getClassLoader());
             if (!jobConf.getUseNewMapper()) {
                 ((org.apache.hadoop.mapred.Mapper) mapper).configure(conf);
             }
-            conf = new JobConf(jobConf);
-            conf.setClassLoader(jobConf.getClassLoader());
             reporter = createReporter();
         }
 
@@ -315,7 +315,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
     private Object createMapper() throws Exception {
         Object mapper;
         if (mapperClass != null) {
-            return mapperClass.newInstance();
+            return ReflectionUtils.newInstance(mapperClass, jobConf);
         } else {
             String mapperClassName = null;
             if (jobConf.getUseNewMapper()) {
