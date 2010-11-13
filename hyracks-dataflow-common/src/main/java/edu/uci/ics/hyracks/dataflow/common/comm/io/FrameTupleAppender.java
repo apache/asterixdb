@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 
 public class FrameTupleAppender {
@@ -59,7 +60,7 @@ public class FrameTupleAppender {
         return false;
     }
 
-    public boolean append(FrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
+    public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
         int length = tEndOffset - tStartOffset;
         if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= ctx.getFrameSize()) {
             ByteBuffer src = tupleAccessor.getBuffer();
@@ -73,13 +74,13 @@ public class FrameTupleAppender {
         return false;
     }
 
-    public boolean append(FrameTupleAccessor tupleAccessor, int tIndex) {
+    public boolean append(IFrameTupleAccessor tupleAccessor, int tIndex) {
         int tStartOffset = tupleAccessor.getTupleStartOffset(tIndex);
         int tEndOffset = tupleAccessor.getTupleEndOffset(tIndex);
         return append(tupleAccessor, tStartOffset, tEndOffset);
     }
 
-    public boolean appendConcat(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1) {
+    public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1, int tIndex1) {
         int startOffset0 = accessor0.getTupleStartOffset(tIndex0);
         int endOffset0 = accessor0.getTupleEndOffset(tIndex0);
         int length0 = endOffset0 - startOffset0;
@@ -117,7 +118,7 @@ public class FrameTupleAppender {
         return false;
     }
 
-    public boolean appendProjection(FrameTupleAccessor accessor, int tIndex, int[] fields) {
+    public boolean appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields) {
         int fTargetSlotsLength = fields.length * 2;
         int length = fTargetSlotsLength;
         for (int i = 0; i < fields.length; ++i) {

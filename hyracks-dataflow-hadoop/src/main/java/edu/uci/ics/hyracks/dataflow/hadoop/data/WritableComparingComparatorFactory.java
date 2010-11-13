@@ -16,16 +16,15 @@ package edu.uci.ics.hyracks.dataflow.hadoop.data;
 
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class WritableComparingComparatorFactory<T> implements IComparatorFactory<WritableComparable<T>> {
-    private Class<? extends RawComparator> klass;
+    private Class<? extends RawComparator<? super WritableComparable<T>>> klass;
 
-    public WritableComparingComparatorFactory(Class<? extends WritableComparator> klass) {
+    public WritableComparingComparatorFactory(Class<? extends RawComparator<? super WritableComparable<T>>> klass) {
         this.klass = klass;
     }
 
@@ -33,7 +32,7 @@ public class WritableComparingComparatorFactory<T> implements IComparatorFactory
 
     @Override
     public IComparator<WritableComparable<T>> createComparator() {
-        final RawComparator<WritableComparable<T>> instance = ReflectionUtils.createInstance(klass);
+        final RawComparator<? super WritableComparable<T>> instance = ReflectionUtils.createInstance(klass);
         return new IComparator<WritableComparable<T>>() {
             @Override
             public int compare(WritableComparable<T> o1, WritableComparable<T> o2) {
