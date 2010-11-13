@@ -319,16 +319,16 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
 
     private Object createReducer() throws Exception {
         if (reducerClass != null) {
-            return ReflectionUtils.newInstance(reducerClass, jobConf);
+            return ReflectionUtils.newInstance(reducerClass, getJobConf());
         } else {
             Object reducer;
-            if(jobConf.getUseNewReducer()){
-                JobContext jobContext = new JobContext(jobConf, null);
+            if(getJobConf().getUseNewReducer()){
+                JobContext jobContext = new JobContext(getJobConf(), null);
                 reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?,?,?,?>> )jobContext.getReducerClass();
             } else {
-                reducerClass = (Class<? extends Reducer>) jobConf.getReducerClass();
+                reducerClass = (Class<? extends Reducer>) getJobConf().getReducerClass();
             }
-            reducer = getHadoopClassFactory().createReducer(reducerClass.getName(),jobConf);
+            reducer = getHadoopClassFactory().createReducer(reducerClass.getName(),getJobConf());
             return reducer;
         }
     }
