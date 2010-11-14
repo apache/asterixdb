@@ -53,14 +53,20 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
 
     private static String nullWritableClassName = NullWritable.class.getName();
 
-    private static class HadoopFileWriter implements IRecordWriter {
+    private  class HadoopFileWriter implements IRecordWriter {
 
         Object recordWriter;
         JobConf conf;
         final boolean useNewMapReduceLib;
-        HadoopFileWriter(Object recordWriter,JobConf conf) {
+        Path finalOutputFile;
+        Path tempOutputFile;
+      
+        
+        HadoopFileWriter(Object recordWriter,Path tempOutputFile,Path outputFile,JobConf conf) {
             this.recordWriter = recordWriter;
             this.conf = conf;
+            this.finalOutputFile = outputFile;
+            this.tempOutputFile = tempOutputFile;
             useNewMapReduceLib = conf.getUseNewMapper();
         }
 
@@ -80,6 +86,7 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
                    ((org.apache.hadoop.mapreduce.RecordWriter)recordWriter).close(new TaskAttemptContext(conf, new TaskAttemptID()));
                 } else {
                     ((org.apache.hadoop.mapred.RecordWriter)recordWriter).close(null);
+                    FileSystem.get(conf).rename( tempOutputFile, finalOutputFile);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -126,6 +133,8 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
             ioe.printStackTrace();
         }
         Path path = new Path(fileSplit.getPath());
+        Path tempOutputFile = null;
+        Path finalOutputFile = null;
         checkIfCanWriteToHDFS(new FileSplit[] { fileSplit });
         Object recordWriter  = null;
         boolean sequenceFileOutput = false;
@@ -141,14 +150,26 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
             if(conf.getOutputFormat() instanceof SequenceFileOutputFormat) {
                 sequenceFileOutput = true;
             } else {
-                recordWriter = conf.getOutputFormat().getRecordWriter(fileSystem, conf, "" + System.currentTimeMillis(), new Progressable() {
+                String taskAttempId = new TaskAttemptID().toString();
+                conf.set("mapred.task.id",taskAttempId);
+                outputPath = new Path(conf.get("mapred.output.dir"));
+                outputTempPath = new Path(outputPath,"_temporary");
+                if(outputPath != null && !fileSystem.exists(outputPath)) {
+                    fileSystem.mkdirs(outputTempPath);
+                }
+                String suffix = new String("part-00000");
+                suffix = new String(suffix.substring(0, suffix.length() - ("" + index).length()));
+                suffix = suffix + index;
+                tempOutputFile = new Path(outputTempPath,"_" + taskAttempId + "/" + suffix);
+                finalOutputFile = new Path(outputPath,suffix);
+                recordWriter = conf.getOutputFormat().getRecordWriter(fileSystem, conf,suffix, new Progressable() {
                 @Override
                 public void progress() {}
                 });
             }
         }
         if(!sequenceFileOutput) {
-            return new HadoopFileWriter(recordWriter,conf);
+            return new HadoopFileWriter(recordWriter,tempOutputFile,finalOutputFile,conf);
         } else { 
             Class keyClass = Class.forName(conf.getOutputKeyClass().getName());
             Class valueClass = Class.forName(conf.getOutputValueClass().getName());
@@ -159,7 +180,9 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
     }
     
 
-
+    Path outputPath;
+    Path outputTempPath;
+   
     protected Reporter createReporter() {
     return new Reporter() {
         @Override
