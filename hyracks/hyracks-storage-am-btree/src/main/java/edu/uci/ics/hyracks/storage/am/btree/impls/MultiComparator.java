@@ -21,6 +21,7 @@ import java.io.DataInputStream;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -30,10 +31,10 @@ public class MultiComparator {
 	private static final long serialVersionUID = 1L;
 	
 	private IBinaryComparator[] cmps = null;
-	private int fieldCount;
+	private ITypeTrait[] typeTraits;
 	
-	public MultiComparator(int fieldCount, IBinaryComparator[] cmps) {
-		this.fieldCount = fieldCount;
+	public MultiComparator(ITypeTrait[] typeTraits, IBinaryComparator[] cmps) {
+		this.typeTraits = typeTraits;
 		this.cmps = cmps;
 	}
 		
@@ -94,6 +95,10 @@ public class MultiComparator {
 	}
 	
 	public int getFieldCount() {
-		return fieldCount;
+		return typeTraits.length;
+	}
+	
+	public ITypeTrait[] getTypeTraits() {
+		return typeTraits;
 	}
 }

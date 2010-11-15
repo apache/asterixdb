@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -34,8 +35,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	private int[] lowKeyFields; // fields in input tuple to be used as low keys
 	private int[] highKeyFields; // fields in input tuple to be used as high keys
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, int fieldCount, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {		
-		super(spec, 1, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory, leafFactory, fieldCount, comparatorFactories);
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {		
+		super(spec, 1, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory, leafFactory, typeTraits, comparatorFactories);
 		this.isForward = isForward;
 		this.lowKeyFields = lowKeyFields;
 		this.highKeyFields = highKeyFields;

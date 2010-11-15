@@ -25,7 +25,9 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -47,6 +49,7 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
 
 // This example will perform range search on the secondary index
 // and then retrieve the corresponding source records from the primary index
@@ -95,18 +98,25 @@ public class SecondaryIndexSearchExample {
 
     	String[] splitNCs = options.ncs.split(",");
     	
-        // create factories and providers for B-Tree
-        IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory();
-        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory();        
-        IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
+    	IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;
+        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;    	              
     	
     	// schema of tuples coming out of secondary index
         RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {                
         		UTF8StringSerializerDeserializer.INSTANCE,
         		IntegerSerializerDeserializer.INSTANCE                
                 });
+        
+        int secondaryFieldCount = 2;       
+        ITypeTrait[] secondaryTypeTraits = new ITypeTrait[secondaryFieldCount];
+        secondaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+        secondaryTypeTraits[1] = new TypeTrait(4); 
+        
+        // create factories and providers for secondary B-Tree
+        TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
+        IBTreeInteriorFrameFactory secondaryInteriorFrameFactory = new NSMInteriorFrameFactory(secondaryTupleWriterFactory);
+        IBTreeLeafFrameFactory secondaryLeafFrameFactory = new NSMLeafFrameFactory(secondaryTupleWriterFactory);
         
         // schema of tuples coming out of primary index
         RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {                
@@ -115,6 +125,18 @@ public class SecondaryIndexSearchExample {
                 IntegerSerializerDeserializer.INSTANCE,                           
                 UTF8StringSerializerDeserializer.INSTANCE,
                 });
+        
+        int primaryFieldCount = 4;
+        ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
+        primaryTypeTraits[0] = new TypeTrait(4);
+        primaryTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+        primaryTypeTraits[2] = new TypeTrait(4);
+        primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+        
+        // create factories and providers for secondary B-Tree
+        TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
+        IBTreeInteriorFrameFactory primaryInteriorFrameFactory = new NSMInteriorFrameFactory(primaryTupleWriterFactory);
+        IBTreeLeafFrameFactory primaryLeafFrameFactory = new NSMLeafFrameFactory(primaryTupleWriterFactory);
         
         // comparators for btree, note that we only need a comparator for the non-unique key
         // i.e. we will have a range condition on the first field only (implying [-infinity, +infinity] for the second field)
@@ -142,7 +164,7 @@ public class SecondaryIndexSearchExample {
         int[] secondaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into secondary index search op
 		
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
-        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, secondaryRecDesc.getFields().length, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields);
+        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields);
         PartitionConstraint secondarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         secondarySearchOp.setPartitionConstraint(secondarySearchConstraint);
         
@@ -152,7 +174,7 @@ public class SecondaryIndexSearchExample {
         int[] primaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into primary index search op
 		
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, primaryRecDesc.getFields().length, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields);
+        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields);
         PartitionConstraint primarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         primarySearchOp.setPartitionConstraint(primarySearchConstraint);
         

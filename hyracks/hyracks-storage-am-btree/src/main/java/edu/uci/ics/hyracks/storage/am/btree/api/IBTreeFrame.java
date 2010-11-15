@@ -74,9 +74,7 @@ public interface IBTreeFrame {
 	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception;
 	
 	public int getSlotSize();
-	
-	public IBTreeTupleReference createTupleReference();
-	
+		
 	// TODO: should be removed after new tuple format		
 	public void setPageTupleFieldCount(int fieldCount);
 	
@@ -84,5 +82,6 @@ public interface IBTreeFrame {
 	public int getFreeSpaceOff();
 	public void setFreeSpaceOff(int freeSpace);
 	
+	public IBTreeTupleWriter getTupleWriter();
 	
 }

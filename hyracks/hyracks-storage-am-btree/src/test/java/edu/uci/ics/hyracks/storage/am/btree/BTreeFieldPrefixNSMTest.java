@@ -28,7 +28,9 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -38,11 +40,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -129,13 +133,20 @@ public class BTreeFieldPrefixNSMTest {
         FileInfo fi = new FileInfo(fileId, raf);
         fileManager.registerFile(fi);
         
+        // declare fields
         int fieldCount = 3;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(4);
+        typeTraits[1] = new TypeTrait(4);
+        typeTraits[2] = new TypeTrait(4);
+        
+        // declare keys
         int keyFieldCount = 3;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator cmp = new MultiComparator(fieldCount, cmps);
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
         
         // just for printing
         ISerializerDeserializer[] sers = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -147,7 +158,8 @@ public class BTreeFieldPrefixNSMTest {
         try {
         	        	        	        	
             IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
-            FieldPrefixNSMLeafFrame frame = new FieldPrefixNSMLeafFrame();                                    
+            IBTreeTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
+            FieldPrefixNSMLeafFrame frame = new FieldPrefixNSMLeafFrame(tupleWriter);                               
             frame.setPage(page);            
             frame.initBuffer((byte)0);
             slotManager.setFrame(frame);          
@@ -165,7 +177,7 @@ public class BTreeFieldPrefixNSMTest {
         	
         	// insert records with random calls to compact and compress
         	for(int i = 0; i < numRecords; i++) {
-        		
+        		        		
         		if((i+1) % 100 == 0) print("INSERTING " + (i+1) + " / " + numRecords + "\n");        		
         		
         		int a = rnd.nextInt() % smallMax;
@@ -186,13 +198,13 @@ public class BTreeFieldPrefixNSMTest {
         		savedFields[i][0] = a;
         		savedFields[i][1] = b;
         		savedFields[i][2] = c;
-        		            
+        		        		
         		if(rnd.nextInt() % compactFreq == 0) {
         			before = frame.printKeys(cmp, sers);
         			frame.compact(cmp);
         			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
-        		}
+        		}        		
         		
         		if(rnd.nextInt() % compressFreq == 0) {
         			before = frame.printKeys(cmp, sers);
@@ -200,11 +212,12 @@ public class BTreeFieldPrefixNSMTest {
         			after = frame.printKeys(cmp, sers);
         			Assert.assertEquals(before, after);
         		}
-        	}
+        		
+        	}        	
         	
         	// delete records with random calls to compact and compress        	
         	for(int i = 0; i < numRecords; i++) {        	            	    
-        		
+        		        		
         		if((i+1) % 100 == 0) print("DELETING " + (i+1) + " / " + numRecords + "\n");
         		
         		ITupleReference tuple = createTuple(savedFields[i][0], savedFields[i][1], savedFields[i][2], false);

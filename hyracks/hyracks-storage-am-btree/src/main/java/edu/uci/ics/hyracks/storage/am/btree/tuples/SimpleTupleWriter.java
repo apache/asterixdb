@@ -1,11 +1,12 @@
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 
-public class SimpleTupleWriter implements ITupleWriter {
+public class SimpleTupleWriter implements IBTreeTupleWriter {
 
 	@Override
 	public int bytesRequired(ITupleReference tuple) {
@@ -26,9 +27,8 @@ public class SimpleTupleWriter implements ITupleWriter {
 	}
 
 	@Override
-	public ITupleReference createTupleReference() {
-		// TODO Auto-generated method stub
-		return null;
+	public IBTreeTupleReference createTupleReference() {
+		return new SimpleTupleReference();
 	}
 	
 	@Override
@@ -73,7 +73,7 @@ public class SimpleTupleWriter implements ITupleWriter {
 		
 		return runner - targetOff;				
 	}
-	
+		
 	private int getNullFlagsBytes(ITupleReference tuple) {
 		return (int)Math.ceil((double)tuple.getFieldCount() / 8.0);
 	}

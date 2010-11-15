@@ -98,7 +98,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         for (int i = 0; i < numSearchFields; i++) {
         	searchComparators[i] = btree.getMultiComparator().getComparators()[i];
         }
-        searchCmp = new MultiComparator(btree.getMultiComparator().getFieldCount(), searchComparators);
+        searchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(), searchComparators);
         
         rangePred = new RangePredicate(isForward, null, null, searchCmp);
                 

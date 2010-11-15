@@ -15,17 +15,24 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SimpleTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
@@ -36,10 +43,13 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	
 	private static final int childPtrSize = 4;
 	
-	private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
+	//private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
+	private IBTreeTupleReference cmpFrameTuple;
 	
-	public NSMInteriorFrame() {
-		super();
+	public NSMInteriorFrame(IBTreeTupleWriter tupleWriter) {
+		super(tupleWriter);
+		cmpFrameTuple = tupleWriter.createTupleReference();
+		
 	}
 	
 	private int getLeftChildPageOff(ITupleReference tuple, MultiComparator cmp) {		
@@ -61,7 +71,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	}
 	
 	@Override
-	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
+	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
 		boolean isDuplicate = true;				
@@ -80,7 +90,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 			
 			int freeSpace = buf.getInt(freeSpaceOff);			
 			int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
-			System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);
+			System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount()-1), getLeftChildPageOff(tuple, cmp), buf.array(), freeSpace + bytesWritten, childPtrSize);								
 			int tupleSize = bytesWritten + childPtrSize;	
 			
 			buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
@@ -101,7 +111,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 					System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize, buf.array(), getLeftChildPageOff(frameTuple, cmp), childPtrSize);
 				}				
 			}			
-		}		
+		}				
 	}
 	
 	@Override
@@ -157,7 +167,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		buf.putInt(tupleCountOff, tuplesToLeft);
 				
 		// copy data to be inserted, we need this because creating the splitkey will overwrite the data param (data points to same memory as splitKey.getData())
-		SplitKey savedSplitKey = splitKey.duplicate();		
+		SplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
 		
 		// set split key to be highest value in left page	
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -165,6 +175,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 		splitKey.initData(splitKeySize);
 		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);			
+		splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);
 		
 		int deleteTupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByOffset(buf, deleteTupleOff);
@@ -176,7 +187,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		compact(cmp);
 		
 		// insert key
-		targetFrame.insert(savedSplitKey.getTuple(), cmp);					
+		targetFrame.insert(savedSplitKey.getTuple(), cmp);
 		
 		return 0;
 	}	
@@ -374,5 +385,24 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	
 	private int getInt(byte[] bytes, int offset) {
 		return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8) + ((bytes[offset + 3] & 0xff) << 0);
+	}
+	
+	@Override
+	public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException {		
+		StringBuilder strBuilder = new StringBuilder();		
+		int tupleCount = buf.getInt(tupleCountOff);
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());	
+		for(int i = 0; i < tupleCount; i++) {						
+			frameTuple.resetByTupleIndex(this, i);												
+			for(int j = 0; j < cmp.getKeyFieldCount(); j++) {				
+				ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
+				DataInput dataIn = new DataInputStream(inStream);
+				Object o = fields[j].deserialize(dataIn);
+				strBuilder.append(o.toString() + " ");				
+			}
+			strBuilder.append(" | ");				
+		}
+		strBuilder.append("\n");
+		return strBuilder.toString();
 	}
 }

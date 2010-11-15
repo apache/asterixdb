@@ -4,6 +4,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
@@ -28,11 +29,11 @@ public class BTreeFileEnlistmentOperatorDescriptor extends AbstractBTreeOperator
 			IFileSplitProvider fileSplitProvider,
 			IFileMappingProviderProvider fileMappingProviderProvider,
 			IBTreeInteriorFrameFactory interiorFactory,
-			IBTreeLeafFrameFactory leafFactory, int fieldCount,
+			IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories) {
 		super(spec, 0, 0, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider,
-				interiorFactory, leafFactory, fieldCount, comparatorFactories);		
+				interiorFactory, leafFactory, typeTraits, comparatorFactories);		
 	}
 	
 	@Override

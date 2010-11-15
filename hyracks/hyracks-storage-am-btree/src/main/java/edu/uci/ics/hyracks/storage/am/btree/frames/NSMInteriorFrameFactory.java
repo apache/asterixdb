@@ -17,13 +17,19 @@ package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
 
 public class NSMInteriorFrameFactory implements IBTreeInteriorFrameFactory {
 	
-	private static final long serialVersionUID = 1L;
-
+	private static final long serialVersionUID = 1L;	
+	private IBTreeTupleWriterFactory tupleWriterFactory;
+	
+	public NSMInteriorFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
+		this.tupleWriterFactory = tupleWriterFactory;
+	}
+	
 	@Override
 	public IBTreeInteriorFrame getFrame() {		
-		return new NSMInteriorFrame();
+		return new NSMInteriorFrame(tupleWriterFactory.createTupleWriter());
 	}	
 }

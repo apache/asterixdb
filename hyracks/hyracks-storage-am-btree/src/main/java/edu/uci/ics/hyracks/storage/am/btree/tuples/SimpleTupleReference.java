@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import java.nio.ByteBuffer;
 
@@ -13,11 +13,18 @@ public class SimpleTupleReference implements IBTreeTupleReference {
 	protected int nullFlagsBytes;
 	protected int fieldSlotsBytes;
 	
+	@Override
 	public void resetByOffset(ByteBuffer buf, int tupleStartOff) {
 		this.buf = buf;
 		this.tupleStartOff = tupleStartOff;
 	}
 	
+	@Override
+	public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
+		resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));		
+	}	
+	
+	@Override
 	public void setFieldCount(int fieldCount) {
 		this.fieldCount = fieldCount;
 		nullFlagsBytes = getNullFlagsBytes();
@@ -60,10 +67,5 @@ public class SimpleTupleReference implements IBTreeTupleReference {
 	
 	protected int getFieldSlotsBytes() {
 		return fieldCount * 2;
-	}
-
-	@Override
-	public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
-		resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));		
 	}	
 }

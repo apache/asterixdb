@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -40,8 +41,7 @@ public class BTree {
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
     
-    private final int metaDataPage = 0; // page containing meta data, e.g.,
-                                        // maxPage
+    private final int metaDataPage = 0; // page containing meta data, e.g., maxPage
     private final int rootPage = 1; // the root page never changes
     
     private boolean created = false;        
@@ -335,26 +335,6 @@ public class BTree {
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
             
-            
-//            if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINEST)) {
-//                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%1d ", level));
-//                GlobalConfig.ASTERIX_LOGGER.finest(String.format("%3d ", pageId));
-//                for (int i = 0; i < currentLevel - level; i++)
-//                    GlobalConfig.ASTERIX_LOGGER.finest("    ");
-//                
-//                String keyString;
-//                if(interiorFrame.isLeaf()) {
-//                	leafFrame.setPage(node);
-//                	keyString = leafFrame.printKeys(cmp);
-//                }
-//                else {
-//                	keyString = interiorFrame.printKeys(cmp);
-//                }
-//                
-//                GlobalConfig.ASTERIX_LOGGER.finest(keyString);
-//            }
-
-
             System.out.format("%1d ", level);
             System.out.format("%3d ", pageId);
             for (int i = 0; i < currentLevel - level; i++)
@@ -372,13 +352,6 @@ public class BTree {
             System.out.format(keyString);
             if (!interiorFrame.isLeaf()) {
             	ArrayList<Integer> children = ((NSMInteriorFrame) (interiorFrame)).getChildren(cmp);
-            	
-            	// debug
-            	System.out.println("CHILDREN OF PAGE: " + interiorFrame.isLeaf() + " " + pageId);
-            	for (int i = 0; i < children.size(); i++) {
-                    System.out.print(children.get(i) + " ");
-                }
-            	System.out.println();
             	            	
                 for (int i = 0; i < children.size(); i++) {
                     printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, fields);
@@ -396,6 +369,7 @@ public class BTree {
             
             bufferCache.unpin(node);
             unpins++;
+            e.printStackTrace();
         }
     }
 
@@ -556,7 +530,7 @@ public class BTree {
         ctx.interiorFrame = interiorFrame;
         ctx.metaFrame = metaFrame;
         ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
-        ctx.splitKey = new SplitKey();
+        ctx.splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
         ctx.pageLsns = new Stack<Integer>();
@@ -793,7 +767,7 @@ public class BTree {
         ctx.interiorFrame = interiorFrame;
         ctx.metaFrame = metaFrame;
         ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
-        ctx.splitKey = new SplitKey();
+        ctx.splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
         ctx.pageLsns = new Stack<Integer>();
@@ -1190,28 +1164,25 @@ public class BTree {
     private boolean bulkNewPage = false;
 
     public final class BulkLoadContext {               
-        public int slotSize;
-        public int leafMaxBytes;
-        public int interiorMaxBytes;
-        public SplitKey splitKey = new SplitKey();
-        ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<NodeFrontier>(); // we
-        // maintain
-        // a
-        // frontier
-        // of
-        // nodes
-        // for
-        // each
-        // level
-        IBTreeLeafFrame leafFrame;
-        IBTreeInteriorFrame interiorFrame;
-        IBTreeMetaDataFrame metaFrame;
-
-        SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
+        public final int slotSize;
+        public final int leafMaxBytes;
+        public final int interiorMaxBytes;
+        public final SplitKey splitKey;
+        // we maintain a frontier of nodes for each level
+        private final ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<NodeFrontier>();         
+        private final IBTreeLeafFrame leafFrame;
+        private final IBTreeInteriorFrame interiorFrame;
+        private final IBTreeMetaDataFrame metaFrame;
+        
+        private final IBTreeTupleWriter tupleWriter;
         
         public BulkLoadContext(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
                 IBTreeMetaDataFrame metaFrame) throws Exception {
-            NodeFrontier leafFrontier = new NodeFrontier();
+
+        	splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
+        	tupleWriter = leafFrame.getTupleWriter();
+        	
+        	NodeFrontier leafFrontier = new NodeFrontier(tupleWriter.createTupleReference());
             leafFrontier.pageId = getFreePage(metaFrame);
             leafFrontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
             leafFrontier.page.acquireWriteLatch();
@@ -1234,7 +1205,7 @@ public class BTree {
         }
 
         private void addLevel() throws Exception {
-            NodeFrontier frontier = new NodeFrontier();
+            NodeFrontier frontier = new NodeFrontier(tupleWriter.createTupleReference());
             frontier.pageId = getFreePage(metaFrame);
             frontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
             frontier.page.acquireWriteLatch();
@@ -1262,13 +1233,14 @@ public class BTree {
         if (spaceUsed + spaceNeeded > ctx.interiorMaxBytes) {
             //ctx.interiorFrame.deleteGreatest(cmp);
         	
-        	SplitKey copyKey = ctx.splitKey.duplicate();
+        	SplitKey copyKey = ctx.splitKey.duplicate(ctx.leafFrame.getTupleWriter().createTupleReference());
         	tuple = copyKey.getTuple();
         	
             frontier.lastTuple.resetByOffset(frontier.page.getBuffer(), ctx.interiorFrame.getTupleOffset(ctx.interiorFrame.getTupleCount()-1));            
             int splitKeySize = ctx.tupleWriter.bytesRequired(frontier.lastTuple, 0, cmp.getKeyFieldCount());
             ctx.splitKey.initData(splitKeySize);
-            ctx.tupleWriter.writeTupleFields(frontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);                  
+            ctx.tupleWriter.writeTupleFields(frontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);
+            ctx.splitKey.getTuple().resetByOffset(ctx.splitKey.getBuffer(), 0);
             ctx.splitKey.setLeftPage(frontier.pageId);
             
             ctx.interiorFrame.deleteGreatest(cmp);
@@ -1317,6 +1289,7 @@ public class BTree {
         	int splitKeySize = ctx.tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());        	
             ctx.splitKey.initData(splitKeySize);
             ctx.tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);
+            ctx.splitKey.getTuple().resetByOffset(ctx.splitKey.getBuffer(), 0);
             ctx.splitKey.setLeftPage(leafFrontier.pageId);
             int prevPageId = leafFrontier.pageId;
             leafFrontier.pageId = getFreePage(ctx.metaFrame);

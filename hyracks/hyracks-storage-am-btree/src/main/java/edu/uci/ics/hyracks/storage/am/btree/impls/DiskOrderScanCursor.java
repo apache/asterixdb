@@ -39,7 +39,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     
     public DiskOrderScanCursor(IBTreeLeafFrame frame) {
     	this.frame = frame;
-		this.frameTuple = frame.createTupleReference();
+		this.frameTuple = frame.getTupleWriter().createTupleReference();
     }
     
     @Override

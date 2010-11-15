@@ -17,11 +17,17 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+
 public class SplitKey {		
 	public byte[] data = null;	
 	public ByteBuffer buf = null;
-	public SimpleTupleReference tuple = new SimpleTupleReference();
+	public IBTreeTupleReference tuple;
 	public int keySize = 0;
+	
+	public SplitKey(IBTreeTupleReference tuple) {
+		this.tuple = tuple;
+	}
 	
 	public void initData(int keySize) {
 		// try to reuse existing memory from a lower-level split if possible				
@@ -49,7 +55,7 @@ public class SplitKey {
 		return buf;
 	}
 	
-	public SimpleTupleReference getTuple() {
+	public IBTreeTupleReference getTuple() {
 		return tuple;
 	}
 	
@@ -74,13 +80,12 @@ public class SplitKey {
 		buf.putInt(keySize + 4, rightPage);
 	}
 	
-	public SplitKey duplicate() {
-		SplitKey copy = new SplitKey();
+	public SplitKey duplicate(IBTreeTupleReference copyTuple) {
+		SplitKey copy = new SplitKey(copyTuple);
 		copy.data = data.clone();		
 		copy.buf = ByteBuffer.wrap(copy.data);
-		copy.tuple = new SimpleTupleReference();
 		copy.tuple.setFieldCount(tuple.getFieldCount());
-		copy.tuple.resetByOffset(copy.buf, 0);	
+		copy.tuple.resetByOffset(copy.buf, 0);
 		return copy;
 	}
 }

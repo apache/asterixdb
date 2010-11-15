@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -41,12 +42,12 @@ public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOper
 			IBTreeRegistryProvider btreeRegistryProvider,
 			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, 
 			IBTreeInteriorFrameFactory interiorFactory,
-			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
+			IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, 
 			IBinaryComparatorFactory[] comparatorFactories,			
 			int[] fieldPermutation, BTreeOp op) {
 		super(spec, 1, 1, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories);
+				leafFactory, typeTraits, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;		
 		this.op = op;
 	}
