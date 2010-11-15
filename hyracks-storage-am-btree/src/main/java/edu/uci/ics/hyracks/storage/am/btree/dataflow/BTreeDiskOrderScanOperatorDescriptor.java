@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -35,10 +36,10 @@ public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorD
 			IBTreeRegistryProvider btreeRegistryProvider,
 			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
 			IBTreeLeafFrameFactory leafFactory, 
-			int fieldCount) {
+			ITypeTrait[] typeTraits) {
 		super(spec, 0, 1, recDesc, bufferCacheProvider,
 				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory,
-				leafFactory, fieldCount, null);
+				leafFactory, typeTraits, null);
 	}
 	
 	@Override

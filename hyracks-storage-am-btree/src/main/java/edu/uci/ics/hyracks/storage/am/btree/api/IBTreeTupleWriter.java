@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public interface ITupleWriter {	
+public interface IBTreeTupleWriter {	
 	public int writeTuple(ITupleReference tuple, ByteBuffer targetBuf, int targetOff);
 	public int bytesRequired(ITupleReference tuple);
 	
@@ -13,5 +13,5 @@ public interface ITupleWriter {
 	
 	// return a tuplereference instance that can read the tuple written by this writer
 	// the main idea is that the format of the written tuple may not be the same as the format written by this writer
-	public ITupleReference createTupleReference();
+	public IBTreeTupleReference createTupleReference();
 }

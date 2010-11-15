@@ -12,7 +12,7 @@ public class FileMappingProvider implements IFileMappingProvider {
 	private Map<String, Integer> map = new Hashtable<String, Integer>();
 		
 	@Override
-	public Integer mapNameToFileId(String name, boolean create) {		
+	public synchronized Integer mapNameToFileId(String name, boolean create) {		
 		Integer val = map.get(name);			
 		if(create) {
 			if(val == null) {

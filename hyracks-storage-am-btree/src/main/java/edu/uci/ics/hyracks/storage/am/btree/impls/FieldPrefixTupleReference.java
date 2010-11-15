@@ -13,7 +13,11 @@ public class FieldPrefixTupleReference implements IBTreeTupleReference {
 	private int suffixTupleStartOff;
 	private int numPrefixFields;
 	private int fieldCount;
-	private SimpleTupleReference helperTuple = new SimpleTupleReference();	
+	private IBTreeTupleReference helperTuple;
+	
+	public FieldPrefixTupleReference(IBTreeTupleReference helperTuple) {
+		this.helperTuple = helperTuple;
+	}
 	
 	@Override
 	public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {

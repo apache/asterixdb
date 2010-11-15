@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -36,12 +37,12 @@ public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescri
 			IBufferCacheProvider bufferCacheProvider,
 			IBTreeRegistryProvider btreeRegistryProvider,
 			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
-			IBTreeLeafFrameFactory leafFactory, int fieldCount, 
+			IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, 
 			IBinaryComparatorFactory[] comparatorFactories,			
 			int[] fieldPermutation, float fillFactor) {
 		super(spec, 1, 0, null, bufferCacheProvider,
 				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory,
-				leafFactory, fieldCount, comparatorFactories);
+				leafFactory, typeTraits, comparatorFactories);
 		this.fieldPermutation = fieldPermutation;
 		this.fillFactor = fillFactor;
 	}

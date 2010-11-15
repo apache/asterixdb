@@ -20,6 +20,8 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
@@ -28,8 +30,8 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	protected static final int prevLeafOff = smFlagOff + 1;
 	protected static final int nextLeafOff = prevLeafOff + 4;
 	
-	public NSMLeafFrame() {
-		super();
+	public NSMLeafFrame(IBTreeTupleWriter tupleWriter) {
+		super(tupleWriter);
 	}
 	
 	@Override
@@ -82,7 +84,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 			
 			buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 			buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+			buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());			
 		}	
 	}
 	
@@ -90,7 +92,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		int freeSpace = buf.getInt(freeSpaceOff);
 		slotManager.insertSlot(-1, freeSpace);		
-		int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);			
+		int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);	
 		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
 		buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
 		buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
@@ -142,8 +144,8 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 			
 		// compact both pages
 		rightFrame.compact(cmp);		
-		compact(cmp);
-		
+		compact(cmp);		
+						
 		// insert last key
 		targetFrame.insert(tuple, cmp);	
 		
@@ -155,6 +157,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		splitKey.initData(splitKeySize);				
 		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
 		
+		splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);				
 		return 0;
 	}
 

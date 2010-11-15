@@ -113,7 +113,7 @@ final class BTreeOpHelper {
     	} break;
         }
     	
-    	btreeFileId = fileId;  
+    	btreeFileId = fileId;
     	
         if(mode == BTreeMode.CREATE_BTREE || mode == BTreeMode.ENLIST_BTREE) {
         	FileInfo fi = new FileInfo(btreeFileId, raf);
@@ -139,8 +139,8 @@ final class BTreeOpHelper {
                     for (int i = 0; i < opDesc.getComparatorFactories().length; i++) {
                         comparators[i] = opDesc.getComparatorFactories()[i].createBinaryComparator();
                     }
-
-                    MultiComparator cmp = new MultiComparator(opDesc.getFieldCount(), comparators);
+                    
+                    MultiComparator cmp = new MultiComparator(opDesc.getTypeTraits(), comparators);
                     
                     btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
                     if (mode == BTreeMode.CREATE_BTREE) {

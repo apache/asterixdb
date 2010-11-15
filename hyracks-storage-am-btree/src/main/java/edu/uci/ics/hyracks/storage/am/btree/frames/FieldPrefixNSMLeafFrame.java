@@ -23,11 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
@@ -37,11 +38,13 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReferenc
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SimpleTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+
+// WARNING: only works when tupleWriter is an instance of TypeAwareTupleWriter
 
 public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	
@@ -62,14 +65,18 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public IFrameCompressor compressor;
     public IPrefixSlotManager slotManager; // TODO: should be protected, but will trigger some refactoring
     
-    private SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
+    private IBTreeTupleWriter tupleWriter;
     
-    private FieldPrefixTupleReference frameTuple = new FieldPrefixTupleReference();            
-    private FieldPrefixPrefixTupleReference framePrefixTuple = new FieldPrefixPrefixTupleReference();
-          
-    public FieldPrefixNSMLeafFrame() {
-        this.slotManager = new FieldPrefixSlotManager();
-        this.compressor = new FieldPrefixCompressor(0.001f, 2);        
+    private FieldPrefixTupleReference frameTuple;            
+    private FieldPrefixPrefixTupleReference framePrefixTuple;
+    
+    public FieldPrefixNSMLeafFrame(IBTreeTupleWriter tupleWriter) {
+    	this.tupleWriter = tupleWriter;
+    	this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());    	
+    	ITypeTrait[] typeTraits = ((TypeAwareTupleWriter)tupleWriter).getTypeTraits();
+    	this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits); 
+    	this.slotManager = new FieldPrefixSlotManager();
+        this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);        
     }
     
     @Override
@@ -135,16 +142,16 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         }
         Collections.sort(sortedTupleOffs);
                
-        for(int i = 0; i < sortedTupleOffs.size(); i++) {                    	
+        for(int i = 0; i < sortedTupleOffs.size(); i++) {        	
         	int tupleOff = sortedTupleOffs.get(i).tupleOff;
         	int tupleSlot = buf.getInt(sortedTupleOffs.get(i).slotOff);
             int prefixSlotNum = slotManager.decodeFirstSlotField(tupleSlot);            
-                        
+            
             frameTuple.resetByTupleIndex(this, sortedTupleOffs.get(i).tupleIndex);
             int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount()-1) + frameTuple.getFieldLength(frameTuple.getFieldCount()-1);
             int tupleLength = tupleEndOff - tupleOff;
             System.arraycopy(buf.array(), tupleOff, buf.array(), freeSpace, tupleLength);
-                                    
+            
             slotManager.setSlot(sortedTupleOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
             freeSpace += tupleLength;
         }
@@ -585,14 +592,13 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	public int getSlotSize() {
 		return slotManager.getSlotSize();
 	}
-	
-	@Override
-    public IBTreeTupleReference createTupleReference() {
-    	return new FieldPrefixTupleReference();
-    }
 		
 	@Override
 	public void setPageTupleFieldCount(int fieldCount) {
 		frameTuple.setFieldCount(fieldCount);
 	}	
+	
+	public IBTreeTupleWriter getTupleWriter() {
+    	return tupleWriter;
+    }
 }
