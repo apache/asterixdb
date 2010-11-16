@@ -20,6 +20,10 @@ public class BTreeException extends Exception {
 	private static final long serialVersionUID = 1L;
 	private boolean handled = false;
 		
+	public BTreeException(Exception e) {
+        super(e);
+    }
+	
 	public BTreeException(String message) {
         super(message);
     }

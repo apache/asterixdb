@@ -55,7 +55,7 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         try {
 			bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), metaFrame);
 		} catch (Exception e) {
-			throw new HyracksDataException(e.getMessage());
+			throw new HyracksDataException(e);
 		}
     }
     
