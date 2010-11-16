@@ -74,7 +74,7 @@ final class BTreeOpHelper {
 		try {
 			raf = new RandomAccessFile(f, "rw");
 		} catch (FileNotFoundException e) {
-			throw new HyracksDataException(e.getMessage());
+			throw new HyracksDataException(e);
 		}
         
         String fileName = f.getAbsolutePath();
@@ -148,7 +148,7 @@ final class BTreeOpHelper {
                         try {
 							btree.create(btreeFileId, leafFrame, metaFrame);
 						} catch (Exception e) {
-							throw new HyracksDataException(e.getMessage());
+							throw new HyracksDataException(e);
 						}
                     }
                     btree.open(btreeFileId);

@@ -1152,7 +1152,7 @@ public class BTree {
             releaseLatch(node, ctx.op, isLeaf);
             bufferCache.unpin(node);
             unpins++;
-            BTreeException propException = new BTreeException(e.getMessage());
+            BTreeException propException = new BTreeException(e);
             propException.setHandled(true); // propagate a BTreeException,
             // indicating that the parent node
             // must not be unlatched and

@@ -83,7 +83,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         try {
 			btreeOpHelper.init();
 		} catch (Exception e) {
-			throw new HyracksDataException(e.getMessage());
+			throw new HyracksDataException(e);
 		}
         btree = btreeOpHelper.getBTree();
 
@@ -154,7 +154,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     		}
         	
         } catch (Exception e) {
-        	throw new HyracksDataException(e.getMessage());
+        	throw new HyracksDataException(e);
         }
 	}	
 	
@@ -164,7 +164,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 		try {
 			cursor.close();
 		} catch (Exception e) {
-			throw new HyracksDataException(e.getMessage());
+			throw new HyracksDataException(e);
 		}    	
 	}
 
