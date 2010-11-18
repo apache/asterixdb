@@ -107,7 +107,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
         tb = new ArrayTupleBuilder(btree.getMultiComparator().getFieldCount());
         dos = tb.getDataOutput();
-        appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());                
+        appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());    
+        appender.reset(writeBuffer, true);
     }
     	
     private void writeSearchResults() throws Exception {
@@ -144,15 +145,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 rangePred.setHighKey(highKey);
                 
                 cursor.reset();
-                btree.search(cursor, rangePred, leafFrame, interiorFrame);
-                appender.reset(writeBuffer, true);
-                writeSearchResults();                                                         
-            }
-        	
-        	if (appender.getTupleCount() > 0) {
-    			FrameUtils.flushFrame(writeBuffer, writer);
-    		}
-        	
+                btree.search(cursor, rangePred, leafFrame, interiorFrame);                
+                writeSearchResults();    
+            }       	        	
         } catch (Exception e) {
         	throw new HyracksDataException(e);
         }
@@ -160,6 +155,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 	
 	@Override
 	public void close() throws HyracksDataException {
+		if (appender.getTupleCount() > 0) {
+			FrameUtils.flushFrame(writeBuffer, writer);
+		}
+    			
 		writer.close();
 		try {
 			cursor.close();
@@ -169,6 +168,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 	}
 
 	@Override
-	public void flush() throws HyracksDataException {		
+	public void flush() throws HyracksDataException {	
+		if (appender.getTupleCount() > 0) {
+			FrameUtils.flushFrame(writeBuffer, writer);
+		}
 	}	
 }
