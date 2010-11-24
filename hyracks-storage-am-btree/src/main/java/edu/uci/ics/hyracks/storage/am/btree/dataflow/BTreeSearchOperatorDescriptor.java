@@ -31,11 +31,13 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	
 	private static final long serialVersionUID = 1L;
 
-	private boolean isForward;
+	private boolean isForward;	
 	private int[] lowKeyFields; // fields in input tuple to be used as low keys
 	private int[] highKeyFields; // fields in input tuple to be used as high keys
+	private boolean lowKeyInclusive;
+    private boolean highKeyInclusive;
 	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {		
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {		
 		super(spec, 1, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory, leafFactory, typeTraits, comparatorFactories);
 		this.isForward = isForward;
 		this.lowKeyFields = lowKeyFields;
@@ -45,6 +47,6 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 	@Override
 	public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-		return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, isForward, lowKeyFields, highKeyFields);
+		return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, isForward, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive);
 	}
 }

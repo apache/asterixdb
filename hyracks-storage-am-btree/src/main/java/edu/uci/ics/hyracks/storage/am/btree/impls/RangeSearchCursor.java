@@ -92,24 +92,35 @@ public class RangeSearchCursor implements IBTreeCursor {
 			frameTuple.resetByTupleIndex(frame, tupleIndex);
 									
 			if(highKey == null) return true;
-			if(cmp.compare(highKey, frameTuple) < 0) {
-				return false;
+			
+			if(pred.isHighKeyInclusive()) {
+				if(cmp.compare(highKey, frameTuple) < 0) {
+					return false;
+				}				
 			}
 			else {
-				return true;
+				if(cmp.compare(highKey, frameTuple) <= 0) {
+					return false;
+				}				
 			}
+			return true;
 		}
 		else {
 			ITupleReference lowKey = pred.getLowKey();						
 			frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
 			if(lowKey == null) return true;
 			
-			if(cmp.compare(lowKey, frameTuple) > 0) {
-				return false;
+			if(pred.isLowKeyInclusive()) {
+				if(cmp.compare(lowKey, frameTuple) > 0) {
+					return false;
+				}
 			}
 			else {
-				return true;
-			}
+				if(cmp.compare(lowKey, frameTuple) >= 0) {
+					return false;
+				}
+			}						
+			return true;
 		}		
 	}
 
@@ -136,15 +147,25 @@ public class RangeSearchCursor implements IBTreeCursor {
 		MultiComparator cmp = pred.getComparator();
 		frameTuple.setFieldCount(cmp.getFieldCount());
 		if(searchPred.isForward()) {
-			ITupleReference lowKey = pred.getLowKey();			
+			ITupleReference lowKey = pred.getLowKey();
 			
 			frameTuple.resetByTupleIndex(frame, tupleIndex);
 			if(lowKey == null) return; // null means -infinity
-						
-			while(cmp.compare(lowKey, frameTuple) > 0 && tupleIndex < frame.getTupleCount()) {
-			    tupleIndex++;
-			    frameTuple.resetByTupleIndex(frame, tupleIndex);
-			}						
+			
+			if(pred.isLowKeyInclusive()) {
+				while(cmp.compare(lowKey, frameTuple) > 0) {
+					tupleIndex++;
+					if(tupleIndex >= frame.getTupleCount()) break;
+					frameTuple.resetByTupleIndex(frame, tupleIndex);
+				}				
+			}
+			else {
+				while(cmp.compare(lowKey, frameTuple) >= 0) {
+					tupleIndex++;
+					if(tupleIndex >= frame.getTupleCount()) break;
+					frameTuple.resetByTupleIndex(frame, tupleIndex);
+				}
+			}
 		}
 		else {
 			ITupleReference highKey = pred.getHighKey();
@@ -152,10 +173,20 @@ public class RangeSearchCursor implements IBTreeCursor {
 			frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
 			if(highKey == null) return; // null means +infinity
 			    
-			while(cmp.compare(highKey, frameTuple) < 0 && tupleIndex < frame.getTupleCount()) {				
-			    tupleIndex++;
-			    frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
-			}						
+			if(pred.isHighKeyInclusive()) {				
+				while(cmp.compare(highKey, frameTuple) < 0) {					
+					tupleIndex++;
+					if(tupleIndex >= frame.getTupleCount()) break;
+					frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);					
+				}				
+			}
+			else {
+				while(cmp.compare(highKey, frameTuple) <= 0) {				
+					tupleIndex++;
+					if(tupleIndex >= frame.getTupleCount()) break;
+					frameTuple.resetByTupleIndex(frame, frame.getTupleCount() - tupleIndex - 1);
+				}
+			}
 		}
 	}
 	

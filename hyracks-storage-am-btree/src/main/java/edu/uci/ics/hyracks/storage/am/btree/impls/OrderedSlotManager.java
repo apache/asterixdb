@@ -25,15 +25,14 @@ public class OrderedSlotManager implements ISlotManager {
 	private static final int slotSize = 4;
 	private IBTreeFrame frame;
 	
-	// TODO: mix in interpolation search
 	@Override
-	public int findSlot(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, boolean exact) {
+	public int findSlot(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode) {
 		if(frame.getTupleCount() <= 0) return -1;
 				
 		int mid;
 		int begin = 0;
 		int end = frame.getTupleCount() - 1;
-				
+		
         while(begin <= end) {
             mid = (begin + end) / 2;
         	int slotOff = getSlotOff(mid);        	
@@ -41,16 +40,24 @@ public class OrderedSlotManager implements ISlotManager {
         	pageTuple.resetByOffset(frame.getBuffer(), tupleOff);
         	
         	int cmp = multiCmp.compare(tuple, pageTuple);
-        	if(cmp < 0)
+        	if(cmp < 0) {
         		end = mid - 1;
-        	else if(cmp > 0)
+        	}
+        	else if(cmp > 0) {
         		begin = mid + 1;
-        	else
-        		return slotOff;
+        	}
+        	else {
+        		if(mode == FindSlotMode.FSM_EXCLUSIVE) {
+        			begin = mid + 1;
+        		}
+        		else {        			
+        			return slotOff;
+        		}        		        		
+        	}
         }
                         
-        if(exact) return -1;             
-        if(begin > frame.getTupleCount() - 1) return -1;   
+        if(mode == FindSlotMode.FSM_EXACT) return -1;             
+        if(begin > frame.getTupleCount() - 1) return -1;
         
         int slotOff = getSlotOff(begin);
         int tupleOff = getTupleOff(slotOff);
@@ -58,7 +65,7 @@ public class OrderedSlotManager implements ISlotManager {
         if(multiCmp.compare(tuple, pageTuple)  < 0)
         	return slotOff;
         else
-        	return -1;		
+        	return -1;
 	}
 	
 	@Override

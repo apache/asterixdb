@@ -215,7 +215,7 @@ public class BTreeTest {
         
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         try {
             while (scanCursor.hasNext()) {
@@ -289,7 +289,7 @@ public class BTreeTest {
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
         try {
@@ -418,7 +418,7 @@ public class BTreeTest {
         // try a simple index scan
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         
         try {
@@ -474,7 +474,7 @@ public class BTreeTest {
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps); // use only a single comparator for searching
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
         
         try {
@@ -595,7 +595,7 @@ public class BTreeTest {
     	// ordered scan
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
         
         try {
@@ -651,7 +651,7 @@ public class BTreeTest {
         searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
 
         try {
@@ -973,7 +973,7 @@ public class BTreeTest {
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
         // TODO: check when searching backwards
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
         
         try {
@@ -1132,7 +1132,7 @@ public class BTreeTest {
 
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
         btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
 
         try {
@@ -1194,7 +1194,7 @@ public class BTreeTest {
                 
         //print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
         btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
         
         try {

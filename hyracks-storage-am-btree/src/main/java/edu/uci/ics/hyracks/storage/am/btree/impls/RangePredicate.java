@@ -25,18 +25,20 @@ public class RangePredicate implements ISearchPredicate {
 	protected boolean isForward = true;
 	protected ITupleReference lowKey = null;
 	protected ITupleReference highKey = null;
+	protected boolean lowKeyInclusive = true;
+	protected boolean highKeyInclusive = true;
 	protected MultiComparator cmp;
 	
 	public RangePredicate() {
 	}
 	
-	// TODO: for now range is [lowKey, highKey] but depending on user predicate the range could be exclusive on any end
-	// need to model this somehow	
-	// for point queries just use same value for low and high key
-	public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, MultiComparator cmp) {
+	public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, 
+			boolean lowKeyInclusive, boolean highKeyInclusive, MultiComparator cmp) {
 		this.isForward = isForward;
 		this.lowKey = lowKey;
 		this.highKey = highKey;
+		this.lowKeyInclusive = lowKeyInclusive;
+		this.highKeyInclusive = highKeyInclusive;
 		this.cmp = cmp;
 	}
 	
@@ -60,11 +62,23 @@ public class RangePredicate implements ISearchPredicate {
 		return highKey;
 	}
 	
-	public void setLowKey(ITupleReference lowKey) {
+	public void setLowKey(ITupleReference lowKey, boolean lowKeyInclusive) {
 		this.lowKey = lowKey;
+		this.lowKeyInclusive = lowKeyInclusive;
 	}
 	
-	public void setHighKey(ITupleReference highKey) {
+	public void setHighKey(ITupleReference highKey, boolean highKeyInclusive) {
 		this.highKey = highKey;
+		this.highKeyInclusive = highKeyInclusive;
+	}
+	
+	public boolean isLowKeyInclusive() {
+		return lowKeyInclusive;
+	}
+	
+	public boolean isHighKeyInclusive() {
+		return highKeyInclusive;
 	}
 }
+
+
