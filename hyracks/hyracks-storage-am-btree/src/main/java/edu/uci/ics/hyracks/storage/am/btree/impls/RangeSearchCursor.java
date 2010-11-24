@@ -42,9 +42,11 @@ public class RangeSearchCursor implements IBTreeCursor {
 	
 	@Override
 	public void close() throws Exception {
-		page.releaseReadLatch();
-		bufferCache.unpin(page);
-		page = null;
+		if(page != null) {
+			page.releaseReadLatch();
+			bufferCache.unpin(page);
+			page = null;
+		}
 	}
 	
 	public ITupleReference getTuple() {
