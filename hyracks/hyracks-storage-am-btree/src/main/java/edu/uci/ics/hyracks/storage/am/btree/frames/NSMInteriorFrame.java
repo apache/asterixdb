@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindSlotMode;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
@@ -72,7 +73,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
 		boolean isDuplicate = true;				
 		
 		if(slotOff < 0) isDuplicate = false; // greater than all existing keys
@@ -130,7 +131,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception {		
 		// before doing anything check if key already exists
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
 		if(slotOff >= 0) {			
 			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));			
 			if(cmp.compare(tuple, frameTuple) == 0) {				
@@ -237,22 +238,26 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		
 		// check for trivial cases where no low key or high key exists (e.g. during an index scan)
 		ITupleReference tuple = null;
+		FindSlotMode fsm = null;
 		if(pred.isForward()) {						
 			tuple = pred.getLowKey();
 			if(tuple == null) {
 				return getLeftmostChildPageId(srcCmp);
-			}			
+			}
+			if(pred.isLowKeyInclusive()) fsm = FindSlotMode.FSM_INCLUSIVE;
+			else fsm = FindSlotMode.FSM_EXCLUSIVE;
 		}
 		else {
 			tuple = pred.getHighKey();
 			if(tuple == null) {
 				return getRightmostChildPageId(srcCmp);				
-			}								
+			}
+			fsm = FindSlotMode.FSM_INCLUSIVE;		
 		}
 		
 		MultiComparator targetCmp = pred.getComparator();		
-		int slotOff = slotManager.findSlot(tuple, frameTuple, targetCmp, false);
-		if(slotOff < 0) {
+		int slotOff = slotManager.findSlot(tuple, frameTuple, targetCmp, fsm);			
+		if(slotOff < 0) {			
 			return buf.getInt(rightLeafOff);
 		}
 		else {
@@ -291,7 +296,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
 		int tupleOff;
 		int keySize;
 		
@@ -344,9 +349,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	}		
 	
 	// for debugging
-	public ArrayList<Integer> getChildren(MultiComparator cmp) {		
-		System.out.println(page);
-		
+	public ArrayList<Integer> getChildren(MultiComparator cmp) {				
 		ArrayList<Integer> ret = new ArrayList<Integer>();		
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
 		int tupleCount = buf.getInt(tupleCountOff);

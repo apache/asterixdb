@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindSlotMode;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
@@ -63,7 +64,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		frameTuple.setFieldCount(cmp.getFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, false);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
 		boolean isDuplicate = true;
 				
 		if (slotOff < 0) isDuplicate = false; // greater than all existing keys
@@ -103,7 +104,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		frameTuple.setFieldCount(cmp.getFieldCount());
 		
 		// before doing anything check if key already exists
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, true);
+		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
 		if (slotOff >= 0) {						
 			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));		
 			if (cmp.compare(tuple, frameTuple) == 0) {

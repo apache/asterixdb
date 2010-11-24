@@ -102,8 +102,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     @Override
     public void open() throws HyracksDataException {
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), inputRecDesc);
         writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
         try {
             btreeOpHelper.init();

@@ -37,8 +37,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 
 public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-	private BTreeOpHelper btreeOpHelper;
-    private boolean isForward;    
+	private BTreeOpHelper btreeOpHelper;    
 	private FrameTupleAccessor accessor;
         
     private ByteBuffer writeBuffer;
@@ -47,20 +46,25 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private DataOutput dos;
     
     private BTree btree;    
+    private boolean isForward;
     private PermutingFrameTupleReference lowKey; 
-    private PermutingFrameTupleReference highKey;
+    private PermutingFrameTupleReference highKey;    
+    private boolean lowKeyInclusive;
+    private boolean highKeyInclusive;
     private RangePredicate rangePred;
     private MultiComparator searchCmp;
     private IBTreeCursor cursor;
     private IBTreeLeafFrame leafFrame;
     private IBTreeLeafFrame cursorFrame;
-    private IBTreeInteriorFrame interiorFrame;        
+    private IBTreeInteriorFrame interiorFrame;    
     
     private RecordDescriptor recDesc;       
         
-    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields, int[] highKeyFields) {
+    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
-        this.isForward = isForward;        
+        this.isForward = isForward;
+        this.lowKeyInclusive = lowKeyInclusive;
+        this.highKeyInclusive = highKeyInclusive;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);        
         if(lowKeyFields != null && lowKeyFields.length > 0) {
         	lowKey = new PermutingFrameTupleReference();
@@ -100,7 +104,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         }
         searchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(), searchComparators);
         
-        rangePred = new RangePredicate(isForward, null, null, searchCmp);
+        rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, searchCmp);
                 
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
         
@@ -141,8 +145,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         	for (int i = 0; i < tupleCount; i++) {
                 if(lowKey != null) lowKey.reset(accessor, i);
                 if(highKey != null) highKey.reset(accessor, i);
-                rangePred.setLowKey(lowKey);
-                rangePred.setHighKey(highKey);
+                rangePred.setLowKey(lowKey, lowKeyInclusive);
+                rangePred.setHighKey(highKey, highKeyInclusive);
                 
                 cursor.reset();
                 btree.search(cursor, rangePred, leafFrame, interiorFrame);                
@@ -151,14 +155,13 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         } catch (Exception e) {
         	throw new HyracksDataException(e);
         }
-	}	
+	}
 	
 	@Override
 	public void close() throws HyracksDataException {
 		if (appender.getTupleCount() > 0) {
 			FrameUtils.flushFrame(writeBuffer, writer);
-		}
-    			
+		}		
 		writer.close();
 		try {
 			cursor.close();

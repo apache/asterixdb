@@ -44,7 +44,7 @@ public class BTree {
     private final int metaDataPage = 0; // page containing meta data, e.g., maxPage
     private final int rootPage = 1; // the root page never changes
     
-    private boolean created = false;        
+    private boolean created = false;
     private boolean loaded = false;
     
     private final IBufferCache bufferCache;
@@ -98,7 +98,7 @@ public class BTree {
         this.leafFrameFactory = leafFrameFactory;       
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new RangePredicate(true, null, null, cmp);                
+        this.diskOrderScanPredicate = new RangePredicate(true, null, null, true, true, cmp);             
     }
     
     public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
@@ -529,7 +529,7 @@ public class BTree {
         ctx.leafFrame = leafFrame;
         ctx.interiorFrame = interiorFrame;
         ctx.metaFrame = metaFrame;
-        ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
+        ctx.pred = new RangePredicate(true, tuple, tuple, true, true, cmp);
         ctx.splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
@@ -766,13 +766,13 @@ public class BTree {
         ctx.leafFrame = leafFrame;
         ctx.interiorFrame = interiorFrame;
         ctx.metaFrame = metaFrame;
-        ctx.pred = new RangePredicate(true, tuple, tuple, cmp);
+        ctx.pred = new RangePredicate(true, tuple, tuple, true, true, cmp);
         ctx.splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.smPages = new ArrayList<Integer>();
         ctx.pageLsns = new Stack<Integer>();
         ctx.freePages = new ArrayList<Integer>();
-
+        
         boolean repeatOp = true;
         // we use this loop to deal with possibly multiple operation restarts
         // due to ongoing structure modifications during the descent
@@ -1145,8 +1145,7 @@ public class BTree {
             }
             throw e;
         } catch (Exception e) { // this could be caused, e.g. by a
-            // failure to pin a new node during a
-            // split
+            // failure to pin a new node during a split
             System.out.println("ASTERIX EXCEPTION");
             e.printStackTrace();
             releaseLatch(node, ctx.op, isLeaf);

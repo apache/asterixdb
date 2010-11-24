@@ -52,7 +52,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 	private final IBTreeInteriorFrame interiorFrame;
 	private final IBTreeCursor btreeCursor;
 	private final FrameTupleReference searchKey = new FrameTupleReference();
-	private final RangePredicate pred = new RangePredicate(true, null, null, null);	
+	private final RangePredicate pred = new RangePredicate(true, null, null, true, true, null);	
 	
 	private final IBinaryTokenizer queryTokenizer;
 	
@@ -85,8 +85,8 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 		
 		MultiComparator searchCmp = new MultiComparator(btreeCmp.getTypeTraits(), keyCmps);
 		pred.setComparator(searchCmp);
-		pred.setLowKey(searchKey);
-		pred.setHighKey(searchKey);
+		pred.setLowKey(searchKey, true);
+		pred.setHighKey(searchKey, true);
 				
 		ISerializerDeserializer[] valueSerde = new ISerializerDeserializer[numValueFields];
 		for(int i = 0; i < numValueFields; i++) {
