@@ -143,7 +143,7 @@ public class PrimaryIndexSearchExample {
         int[] highKeyFields = { 1 }; // low key is in field 1 of tuples going into search op
         		
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories, true, lowKeyFields, highKeyFields);
+        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories, true, lowKeyFields, highKeyFields, true, true);
         PartitionConstraint btreeSearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         btreeSearchOp.setPartitionConstraint(btreeSearchConstraint);
         

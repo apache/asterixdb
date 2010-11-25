@@ -164,7 +164,7 @@ public class SecondaryIndexSearchExample {
         int[] secondaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into secondary index search op
 		
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
-        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields);
+        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields, true, true);
         PartitionConstraint secondarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         secondarySearchOp.setPartitionConstraint(secondarySearchConstraint);
         
@@ -174,7 +174,7 @@ public class SecondaryIndexSearchExample {
         int[] primaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into primary index search op
 		
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields);
+        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields, true, true);
         PartitionConstraint primarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         primarySearchOp.setPartitionConstraint(primarySearchConstraint);
         
