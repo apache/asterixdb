@@ -42,6 +42,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
 		this.isForward = isForward;
 		this.lowKeyFields = lowKeyFields;
 		this.highKeyFields = highKeyFields;
+		this.lowKeyInclusive = lowKeyInclusive;
+		this.highKeyInclusive = highKeyInclusive;
 	}
 	
 	@Override
