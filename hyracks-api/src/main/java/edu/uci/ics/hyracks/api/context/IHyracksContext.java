@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
+import java.util.UUID;
+
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IResourceManager;
 
@@ -23,4 +25,6 @@ public interface IHyracksContext {
     public int getFrameSize();
 
     public ICounterContext getCounterContext();
+
+    public UUID getJobId();
 }

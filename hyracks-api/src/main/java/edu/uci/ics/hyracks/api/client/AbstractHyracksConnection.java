@@ -14,10 +14,7 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.EnumSet;
 import java.util.UUID;
 
@@ -31,6 +28,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 
 abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     private final String ccHost;
@@ -73,14 +71,7 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
 
     @Override
     public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.createJob(appName, serialize(jobSpec), jobFlags);
-    }
-
-    private byte[] serialize(JobSpecification jobSpec) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(jobSpec);
-        return baos.toByteArray();
+        return hci.createJob(appName, JavaSerializationUtils.serialize(jobSpec), jobFlags);
     }
 
     @Override

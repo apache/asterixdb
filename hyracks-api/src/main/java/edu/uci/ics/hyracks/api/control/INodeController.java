@@ -49,7 +49,7 @@ public interface INodeController extends Remote {
 
     public void notifyRegistration(IClusterController ccs) throws Exception;
 
-    public void createApplication(String appName, boolean deployHar) throws Exception;
+    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState) throws Exception;
 
     public void destroyApplication(String appName) throws Exception;
 }

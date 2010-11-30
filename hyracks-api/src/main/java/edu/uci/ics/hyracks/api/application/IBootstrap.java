@@ -18,6 +18,4 @@ public interface IBootstrap {
     public void start() throws Exception;
 
     public void stop() throws Exception;
-
-    public void setApplicationContext(IApplicationContext appCtx);
 }

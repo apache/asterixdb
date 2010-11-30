@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package edu.uci.ics.hyracks.api.job;
 
-import java.io.Serializable;
+import java.util.UUID;
 
-public interface IApplicationContext {
-    public ClassLoader getClassLoader();
+public interface IJobLifecycleListener {
+    public void notifyJobCreation(UUID jobId, JobSpecification jobSpec);
 
-    public Serializable getDestributedState();
+    public void notifyJobStart(UUID jobId);
+
+    public void notifyJobFinish(UUID jobId);
 }

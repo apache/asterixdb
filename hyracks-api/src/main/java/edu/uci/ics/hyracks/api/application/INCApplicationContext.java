@@ -16,8 +16,6 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
-public interface IApplicationContext {
-    public ClassLoader getClassLoader();
-
-    public Serializable getDestributedState();
+public interface INCApplicationContext extends IApplicationContext {
+    public void setDistributedState(Serializable state);
 }

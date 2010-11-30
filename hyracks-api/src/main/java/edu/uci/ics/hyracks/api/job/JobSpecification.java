@@ -46,6 +46,8 @@ public class JobSpecification implements Serializable {
 
     private final Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> connectorOpMap;
 
+    private final Map<String, Serializable> properties;
+
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
@@ -53,6 +55,7 @@ public class JobSpecification implements Serializable {
         opInputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         opOutputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
+        properties = new HashMap<String, Serializable>();
     }
 
     public void addRoot(IOperatorDescriptor op) {
@@ -67,6 +70,14 @@ public class JobSpecification implements Serializable {
                 new Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>(
                         new Pair<IOperatorDescriptor, Integer>(producerOp, producerPort),
                         new Pair<IOperatorDescriptor, Integer>(consumerOp, consumerPort)));
+    }
+    
+    public void setProperty(String name, Serializable value) {
+        properties.put(name, value);
+    }
+    
+    public Serializable getProperty(String name) {
+        return properties.get(name);
     }
 
     private <T> void extend(List<T> list, int index) {
