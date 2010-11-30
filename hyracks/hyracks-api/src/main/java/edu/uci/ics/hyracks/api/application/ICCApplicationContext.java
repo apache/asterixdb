@@ -16,8 +16,13 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
-public interface IApplicationContext {
-    public ClassLoader getClassLoader();
+import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
+import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
 
-    public Serializable getDestributedState();
+public interface ICCApplicationContext extends IApplicationContext {
+    public void setDistributedState(Serializable state);
+
+    public void setJobSpecificationFactory(IJobSpecificationFactory jobSpecFactory);
+
+    public void addJobLifecycleListener(IJobLifecycleListener jobLifecycleListener);
 }

@@ -324,13 +324,14 @@ update_job_status_TERMINATED job(JobId, AppName, edu.uci.ics.hyracks.api.job.Job
         NewStats.putAll(SMap);
     };
 
-define(jobcleanup_agg, {UUID, Set});
+define(jobcleanup_agg, {UUID, String, Set});
 
-jobcleanup_agg(JobId, set<NodeId>) :-
+jobcleanup_agg(JobId, AppName, set<NodeId>) :-
     stagestart#insert(JobId, StageNumber, Attempt),
     stagefinish(JobId, _, Attempt, _),
     attemptoperatorlocationdecision(JobId, _, NodeId, _, Attempt),
+    job(JobId, AppName, _, _, _, _),
     notin jobstage(JobId, StageNumber);
 
-jobcleanup(JobId, NodeIdSet) :-
-    jobcleanup_agg(JobId, NodeIdSet);
+jobcleanup(JobId, AppName, NodeIdSet) :-
+    jobcleanup_agg(JobId, AppName, NodeIdSet);

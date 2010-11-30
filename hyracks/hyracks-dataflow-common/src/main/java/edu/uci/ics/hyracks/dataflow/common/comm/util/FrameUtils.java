@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.common.comm.util;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,5 +38,10 @@ public class FrameUtils {
         writer.nextFrame(buffer);
         buffer.position(0);
         buffer.limit(buffer.capacity());
+    }
+
+    public static int getAbsoluteFieldStartOffset(IFrameTupleAccessor accessor, int tuple, int field) {
+        return accessor.getTupleStartOffset(tuple) + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(tuple, field);
     }
 }

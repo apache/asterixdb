@@ -60,6 +60,7 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 
 public class JOLJobManagerImpl implements IJobManager {
     private static final Logger LOGGER = Logger.getLogger(JOLJobManagerImpl.class.getName());
@@ -302,7 +303,8 @@ public class JOLJobManagerImpl implements IJobManager {
                             try {
                                 Object[] data = t.toArray();
                                 UUID jobId = (UUID) data[0];
-                                Set<String> ts = (Set<String>) data[1];
+                                String appName = (String) data[1];
+                                Set<String> ts = (Set<String>) data[2];
                                 ClusterControllerService.JobCompleteNotifier[] jcns = new ClusterControllerService.JobCompleteNotifier[ts
                                         .size()];
                                 int i = 0;
@@ -316,6 +318,10 @@ public class JOLJobManagerImpl implements IJobManager {
                                             .createTuple(jobId));
                                     jolRuntime.schedule(JOL_SCOPE, JobCleanUpCompleteTable.TABLE_NAME, jccTuples, null);
                                     jolRuntime.evaluate();
+                                }
+                                CCApplicationContext appCtx = ccs.getApplicationContext(appName);
+                                if (appCtx != null) {
+                                    appCtx.notifyJobFinish(jobId);
                                 }
                             } catch (Exception e) {
                             }
@@ -378,9 +384,8 @@ public class JOLJobManagerImpl implements IJobManager {
     }
 
     @Override
-    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        final UUID jobId = UUID.randomUUID();
-
+    public void createJob(final UUID jobId, String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags)
+            throws Exception {
         final JobPlanBuilder builder = new JobPlanBuilder();
         builder.init(jobSpec, jobFlags);
 
@@ -443,8 +448,6 @@ public class JOLJobManagerImpl implements IJobManager {
         jolRuntime.schedule(JOL_SCOPE, ActivityBlockedTable.TABLE_NAME, abTuples, null);
 
         jolRuntime.evaluate();
-
-        return jobId;
     }
 
     private int addPartitionConstraintTuples(UUID jobId, IOperatorDescriptor od, BasicTupleSet olTuples,
@@ -868,7 +871,7 @@ public class JOLJobManagerImpl implements IJobManager {
         private static Key PRIMARY_KEY = new Key(0);
 
         @SuppressWarnings("unchecked")
-        private static final Class[] SCHEMA = new Class[] { UUID.class, Set.class };
+        private static final Class[] SCHEMA = new Class[] { UUID.class, String.class, Set.class };
 
         public JobCleanUpTable(Runtime context) {
             super(context, TABLE_NAME, PRIMARY_KEY, SCHEMA);

@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.nc.runtime;
 
+import java.util.UUID;
+
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IResourceManager;
@@ -39,6 +41,11 @@ public class RootHyracksContext implements IHyracksContext {
 
     @Override
     public ICounterContext getCounterContext() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getJobId() {
         throw new UnsupportedOperationException();
     }
 }

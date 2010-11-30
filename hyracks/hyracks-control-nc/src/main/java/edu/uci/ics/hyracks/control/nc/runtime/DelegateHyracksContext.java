@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.nc.runtime;
 
+import java.util.UUID;
+
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IResourceManager;
@@ -23,9 +25,12 @@ public class DelegateHyracksContext implements IHyracksContext {
 
     private final ICounterContext counterContext;
 
-    public DelegateHyracksContext(IHyracksContext delegate, ICounterContext counterContext) {
+    private final UUID jobId;
+
+    public DelegateHyracksContext(IHyracksContext delegate, UUID jobId, ICounterContext counterContext) {
         this.delegate = delegate;
         this.counterContext = counterContext;
+        this.jobId = jobId;
     }
 
     @Override
@@ -36,6 +41,11 @@ public class DelegateHyracksContext implements IHyracksContext {
     @Override
     public int getFrameSize() {
         return delegate.getFrameSize();
+    }
+
+    @Override
+    public UUID getJobId() {
+        return jobId;
     }
 
     @Override

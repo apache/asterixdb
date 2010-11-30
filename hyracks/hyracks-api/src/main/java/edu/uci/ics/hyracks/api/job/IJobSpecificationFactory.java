@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package edu.uci.ics.hyracks.api.job;
 
-import java.io.Serializable;
+import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.application.ICCBootstrap;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
-public interface IApplicationContext {
-    public ClassLoader getClassLoader();
-
-    public Serializable getDestributedState();
+public interface IJobSpecificationFactory {
+    public JobSpecification createJobSpecification(byte[] bytes, ICCBootstrap bootstrap, ICCApplicationContext appCtx)
+            throws HyracksException;
 }

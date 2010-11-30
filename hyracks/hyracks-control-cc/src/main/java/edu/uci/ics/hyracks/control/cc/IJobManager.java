@@ -23,7 +23,8 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 
 public interface IJobManager {
-    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public void createJob(UUID jobId, String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags)
+            throws Exception;
 
     public void start(UUID jobId) throws Exception;
 
