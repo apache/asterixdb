@@ -90,7 +90,7 @@ public abstract class ApplicationContext implements IApplicationContext {
         if (status != ApplicationStatus.CREATED) {
             throw new IllegalStateException();
         }
-        if (expandArchive()) {
+        if (deploymentDescriptor != null) {
             String bootstrapClass = null;
             switch (serverCtx.getServerType()) {
                 case CLUSTER_CONTROLLER: {
