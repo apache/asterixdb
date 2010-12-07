@@ -69,7 +69,7 @@ public class ExternalSortRunMerger {
         }
         try {
             if (runs.size() <= 0) {
-                if (frameSorter != null) {
+                if (frameSorter != null && frameSorter.getFrameCount() > 0) {
                     frameSorter.flushFrames(writer);
                 }
             } else {
