@@ -15,24 +15,49 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import java.util.ArrayList;
-import java.util.Stack;
-
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 
 public final class BTreeOpContext {
-	public BTreeOp op;
-	public IBTreeLeafFrame leafFrame;
-	public IBTreeInteriorFrame interiorFrame;
-	public IBTreeMetaDataFrame metaFrame;
+	public final BTreeOp op;
+	public final IBTreeLeafFrame leafFrame;
+	public final IBTreeInteriorFrame interiorFrame;
+	public final IBTreeMetaDataFrame metaFrame;
 	public IBTreeCursor cursor;
 	public RangePredicate pred;	
-	public SplitKey splitKey;
+	public final SplitKey splitKey;
 	public int opRestarts = 0;
-	public ArrayList<Integer> smPages;	
-	public Stack<Integer> pageLsns;
-	public ArrayList<Integer> freePages;
+	public final IntArrayList pageLsns; // used like a stack
+	public final IntArrayList smPages;	
+	public final IntArrayList freePages;
+
+	public BTreeOpContext(BTreeOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+			IBTreeMetaDataFrame metaFrame, int treeHeightHint) {
+		this.op = op;
+		this.leafFrame = leafFrame;
+		this.interiorFrame = interiorFrame;
+		this.metaFrame = metaFrame;
+		
+		pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);	
+		if(op != BTreeOp.BTO_SEARCH) {			
+			smPages = new IntArrayList(treeHeightHint, treeHeightHint);
+			freePages = new IntArrayList(treeHeightHint, treeHeightHint);
+			pred = new RangePredicate(true, null, null, true, true, null);
+			splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
+		}
+		else {			
+			smPages = null;
+			freePages = null;	
+			splitKey = null;
+		}		
+	}
+	
+	public void reset() {
+		if(pageLsns != null) pageLsns.clear();
+		if(freePages != null) freePages.clear();
+		if(smPages != null) smPages.clear();
+		opRestarts = 0;
+	}
 }

@@ -39,8 +39,10 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.SimpleTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
@@ -62,7 +64,7 @@ public class SimpleConjunctiveSearcherTest {
 
 	// realistic params
 	//private static final int PAGE_SIZE = 32768;
-    //private static final int NUM_PAGES = 1000;
+    //private static final int NUM_PAGES = 100;
     //private static final int HYRACKS_FRAME_SIZE = 32768;
     
 	private String tmpDir = System.getProperty("java.io.tmpdir");
@@ -106,9 +108,10 @@ public class SimpleConjunctiveSearcherTest {
     	
     	MultiComparator cmp = new MultiComparator(typeTraits, cmps);
     	    	
-    	//TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-    	SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
+    	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+    	//SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
         IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
+    	//IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
         IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
@@ -147,6 +150,8 @@ public class SimpleConjunctiveSearcherTest {
 		int addProb = 0;
 		int addProbStep = 2;
 		
+		BTreeOpContext opCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+		
     	for (int i = 0; i < tokens.size(); i++) {
     		
     		addProb += addProbStep;
@@ -164,7 +169,7 @@ public class SimpleConjunctiveSearcherTest {
     				tuple.reset(accessor, 0);
 
     				try {
-    					btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+    					btree.insert(tuple, opCtx);
     				} catch (Exception e) {
     					e.printStackTrace();
     				}    	

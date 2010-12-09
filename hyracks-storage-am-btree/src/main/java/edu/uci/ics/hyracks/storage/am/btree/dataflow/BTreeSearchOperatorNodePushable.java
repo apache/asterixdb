@@ -29,9 +29,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
@@ -53,10 +54,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private boolean highKeyInclusive;
     private RangePredicate rangePred;
     private MultiComparator searchCmp;
-    private IBTreeCursor cursor;
-    private IBTreeLeafFrame leafFrame;
-    private IBTreeLeafFrame cursorFrame;
-    private IBTreeInteriorFrame interiorFrame;    
+    private IBTreeCursor cursor;    
+    private IBTreeLeafFrame cursorFrame;    
+    private BTreeOpContext opCtx;
     
     private RecordDescriptor recDesc;       
         
@@ -90,9 +90,6 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 			throw new HyracksDataException(e);
 		}
         btree = btreeOpHelper.getBTree();
-
-        leafFrame = btreeOpHelper.getLeafFrame();
-        interiorFrame = btreeOpHelper.getInteriorFrame();
         
         // construct range predicate
         
@@ -113,6 +110,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         dos = tb.getDataOutput();
         appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());    
         appender.reset(writeBuffer, true);
+        
+        opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), null);
     }
     	
     private void writeSearchResults() throws Exception {
@@ -149,7 +148,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 rangePred.setHighKey(highKey, highKeyInclusive);
                 
                 cursor.reset();
-                btree.search(cursor, rangePred, leafFrame, interiorFrame);                
+                btree.search(cursor, rangePred, opCtx);                
                 writeSearchResults();    
             }       	        	
         } catch (Exception e) {

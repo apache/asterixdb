@@ -21,6 +21,8 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
@@ -130,11 +132,13 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 		
 		maxResultBufIdx = 0;
 				
+		BTreeOpContext opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+		
 		resultTupleAppender.reset(newResultBuffers.get(0), true);
 		try {			
 			// append first inverted list to temporary results
 			searchKey.reset(queryTokenAccessor, 0);
-			btree.search(btreeCursor, pred, leafFrame, interiorFrame);
+			btree.search(btreeCursor, pred, opCtx);
 			while(btreeCursor.hasNext()) {
 				btreeCursor.next();
 				maxResultBufIdx = appendTupleToNewResults(btreeCursor, maxResultBufIdx);
@@ -153,7 +157,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 			newResultBuffers = swap;
 			try {
 				searchKey.reset(queryTokenAccessor, i);
-				btree.search(btreeCursor, pred, leafFrame, interiorFrame);
+				btree.search(btreeCursor, pred, opCtx);
 				maxResultBufIdx = intersectList(btreeCursor, prevResultBuffers, maxResultBufIdx, newResultBuffers);			
 			} catch (Exception e) {
 				throw new HyracksDataException(e);
