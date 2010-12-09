@@ -23,27 +23,19 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 
 public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
-
     private FrameTupleAccessor accessor;
-
-    private IRecordDescriptorProvider recordDescProvider;
-
-    private IBTreeMetaDataFrame metaFrame;
-
-    private BTreeOp op;
-
-    private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-
+    private final IRecordDescriptorProvider recordDescProvider;
+    private final BTreeOp op;
+    private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private ByteBuffer writeBuffer;
+    private BTreeOpContext opCtx;
     
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
     		int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
@@ -60,10 +52,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        final BTree btree = btreeOpHelper.getBTree();
-        final IBTreeLeafFrame leafFrame = btreeOpHelper.getLeafFrame();
-        final IBTreeInteriorFrame interiorFrame = btreeOpHelper.getInteriorFrame();
-
+        final BTree btree = btreeOpHelper.getBTree();       
         accessor.reset(buffer);
         
         int tupleCount = accessor.getTupleCount();
@@ -74,12 +63,12 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                 switch (op) {
 
                     case BTO_INSERT: {
-                        btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+                        btree.insert(tuple, opCtx);
                     }
                         break;
 
                     case BTO_DELETE: {
-                        btree.delete(tuple, leafFrame, interiorFrame, metaFrame);
+                        btree.delete(tuple, opCtx);
                     }
                         break;
 
@@ -104,14 +93,14 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), inputRecDesc);
-        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
+        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();        
         try {
             btreeOpHelper.init();
             btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-            metaFrame = new MetaDataFrame();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
     }
 
     @Override

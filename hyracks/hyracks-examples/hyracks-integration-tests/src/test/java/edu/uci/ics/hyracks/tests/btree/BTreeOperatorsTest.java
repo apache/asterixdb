@@ -66,6 +66,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
@@ -160,7 +161,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         BTree btree = btreeRegistryProvider.getBTreeRegistry().get(btreeFileId);
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrameFactory.getFrame());
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
-        btree.search(scanCursor, nullPred, leafFrameFactory.getFrame(), interiorFrameFactory.getFrame());
+        BTreeOpContext opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrameFactory.getFrame(), interiorFrameFactory.getFrame(), null);
+        btree.search(scanCursor, nullPred, opCtx);
         try {
         	while (scanCursor.hasNext()) {
         		scanCursor.next();
@@ -422,7 +424,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         System.out.println("PRINTING PRIMARY INDEX");
         IBTreeCursor scanCursorA = new RangeSearchCursor(primaryLeafFrameFactory.getFrame());
         RangePredicate nullPredA = new RangePredicate(true, null, null, true, true, null);
-        btreeA.search(scanCursorA, nullPredA, primaryLeafFrameFactory.getFrame(), primaryInteriorFrameFactory.getFrame());
+        BTreeOpContext opCtxA = btreeA.createOpContext(BTreeOp.BTO_SEARCH, primaryLeafFrameFactory.getFrame(), primaryInteriorFrameFactory.getFrame(), null);
+        btreeA.search(scanCursorA, nullPredA, opCtxA);
         try {
         	while (scanCursorA.hasNext()) {
         		scanCursorA.next();
@@ -441,7 +444,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         System.out.println("PRINTING FIRST SECONDARY INDEX");
         IBTreeCursor scanCursorB = new RangeSearchCursor(secondaryLeafFrameFactory.getFrame());
         RangePredicate nullPredB = new RangePredicate(true, null, null, true, true, null);
-        btreeB.search(scanCursorB, nullPredB, secondaryLeafFrameFactory.getFrame(), secondaryInteriorFrameFactory.getFrame());
+        BTreeOpContext opCtxB = btreeB.createOpContext(BTreeOp.BTO_SEARCH, secondaryLeafFrameFactory.getFrame(), secondaryInteriorFrameFactory.getFrame(), null);
+        btreeB.search(scanCursorB, nullPredB, opCtxB);
         try {
         	while (scanCursorB.hasNext()) {
         		scanCursorB.next();
@@ -460,7 +464,8 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         System.out.println("PRINTING SECOND SECONDARY INDEX");
         IBTreeCursor scanCursorC = new RangeSearchCursor(secondaryLeafFrameFactory.getFrame());
         RangePredicate nullPredC = new RangePredicate(true, null, null, true, true, null);
-        btreeC.search(scanCursorC, nullPredC, secondaryLeafFrameFactory.getFrame(), secondaryInteriorFrameFactory.getFrame());
+        BTreeOpContext opCtxC = btreeC.createOpContext(BTreeOp.BTO_SEARCH, secondaryLeafFrameFactory.getFrame(), secondaryInteriorFrameFactory.getFrame(), null);
+        btreeC.search(scanCursorC, nullPredC, opCtxC);
         try {
         	while (scanCursorC.hasNext()) {
         		scanCursorC.next();

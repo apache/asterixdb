@@ -52,6 +52,8 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -164,6 +166,8 @@ public class BTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 		
+		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+		
 		// 10000
         for (int i = 0; i < 10000; i++) {        	        	
         	        	
@@ -189,7 +193,7 @@ public class BTreeTest {
             }
             
             try {                                
-                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, insertOpCtx);
             } catch (BTreeException e) {            	
             } catch (Exception e) {
             	e.printStackTrace();
@@ -216,7 +220,8 @@ public class BTreeTest {
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
-        btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        btree.search(scanCursor, nullPred, searchOpCtx);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();                
@@ -290,8 +295,8 @@ public class BTreeTest {
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
-        btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
-
+        btree.search(rangeCursor, rangePred, searchOpCtx);
+        
         try {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
@@ -382,6 +387,8 @@ public class BTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
         
+		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+		
         for (int i = 0; i < 10000; i++) {        	
         	int f0 = rnd.nextInt() % 2000;
         	int f1 = rnd.nextInt() % 1000;
@@ -405,7 +412,7 @@ public class BTreeTest {
             }
             
             try {
-                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, insertOpCtx);
             } catch (Exception e) {
             }
         }
@@ -419,7 +426,8 @@ public class BTreeTest {
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
-        btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        btree.search(scanCursor, nullPred, searchOpCtx);
         
         try {
             while (scanCursor.hasNext()) {
@@ -475,7 +483,7 @@ public class BTreeTest {
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps); // use only a single comparator for searching
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
-        btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
+        btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {
             while (rangeCursor.hasNext()) {
@@ -560,6 +568,7 @@ public class BTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
     	
+		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
     	int maxLength = 10; // max string length to be generated
     	for (int i = 0; i < 10000; i++) {
     		    		
@@ -583,7 +592,7 @@ public class BTreeTest {
     		}
 
     		try {
-    			btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+    			btree.insert(tuple, insertOpCtx);
     		} catch (Exception e) {
     			//e.printStackTrace();
     		}    		    	    		
@@ -596,7 +605,8 @@ public class BTreeTest {
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
-        btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        btree.search(scanCursor, nullPred, searchOpCtx);
         
         try {
             while (scanCursor.hasNext()) {
@@ -652,7 +662,7 @@ public class BTreeTest {
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
-        btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
+        btree.search(rangeCursor, rangePred, searchOpCtx);
 
         try {
             while (rangeCursor.hasNext()) {
@@ -738,6 +748,9 @@ public class BTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
         
+		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+		BTreeOpContext deleteOpCtx = btree.createOpContext(BTreeOp.BTO_DELETE, leafFrame, interiorFrame, metaFrame);
+		
         int runs = 3;
         for (int run = 0; run < runs; run++) {
         	
@@ -772,11 +785,12 @@ public class BTreeTest {
                 	print("INSERTING " + i + "\n");
                 	//print("INSERTING " + i + ": " + cmp.printRecord(record, 0) + "\n");                                       
                 }
-
+                
                 try {
-                    btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+                    btree.insert(tuple, insertOpCtx);
                     insDone++;
-                } catch (BTreeException e) {                	
+                } catch (BTreeException e) {     
+                	//e.printStackTrace();
                 } catch (Exception e) {
                 	e.printStackTrace();
                 }
@@ -807,13 +821,14 @@ public class BTreeTest {
                 }
 
                 try {
-                    btree.delete(tuple, leafFrame, interiorFrame, metaFrame);
+                    btree.delete(tuple, deleteOpCtx);
                     delDone++;
-                } catch (BTreeException e) {                	
+                } catch (BTreeException e) {     
+                	//e.printStackTrace();
                 } catch (Exception e) {
                 	e.printStackTrace();
                 }
-
+                
                 if (insDoneCmp[i] != delDone) {
                     print("INCONSISTENT STATE, ERROR IN DELETION TEST\n");
                     print("INSDONECMP: " + insDoneCmp[i] + " " + delDone + "\n"); 
@@ -974,7 +989,8 @@ public class BTreeTest {
         
         // TODO: check when searching backwards
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
-        btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {
             while (rangeCursor.hasNext()) {
@@ -1093,6 +1109,8 @@ public class BTreeTest {
         intervals[9][0] = 20;
         intervals[9][1] = 35;
 
+        BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+        
         // int exceptionCount = 0;
         for (int i = 0; i < intervalCount; i++) {        	
         	int f0 = intervals[i][0];
@@ -1116,7 +1134,7 @@ public class BTreeTest {
         	print("INSERTING " + i + "\n");
 
             try {
-                btree.insert(tuple, leafFrame, interiorFrame, metaFrame);
+                btree.insert(tuple, insertOpCtx);
             } catch (Exception e) {
                 // e.printStackTrace();
             }
@@ -1133,7 +1151,8 @@ public class BTreeTest {
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
-        btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        btree.search(scanCursor, nullPred, searchOpCtx);
 
         try {
             while (scanCursor.hasNext()) {
@@ -1195,7 +1214,7 @@ public class BTreeTest {
         //print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
-        btree.search(rangeCursor, rangePred, leafFrame, interiorFrame);
+        btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {
             while (rangeCursor.hasNext()) {
