@@ -37,7 +37,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 			
 	public RangeSearchCursor(IBTreeLeafFrame frame) {
 		this.frame = frame;
-		this.frameTuple = frame.getTupleWriter().createTupleReference();
+		this.frameTuple = frame.createTupleReference();
 	}
 	
 	@Override

@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
@@ -318,7 +319,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		frameTuple.setFieldCount(fields.length);
 		for(int i = 0; i < tupleCount; i++) {						
 			frameTuple.resetByTupleIndex(this, i);												
-			for(int j = 0; j < cmp.getKeyFieldCount(); j++) {
+			for(int j = 0; j < cmp.getKeyFieldCount(); j++) {								
 				ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
 				DataInput dataIn = new DataInputStream(inStream);
 				Object o = fields[j].deserialize(dataIn);
@@ -532,7 +533,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		// compact both pages		
 		compact(cmp);		
 		rightFrame.compact(cmp);
-		
+				
 		// insert last key
 		targetFrame.insert(tuple, cmp);
 				
@@ -540,9 +541,10 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 		frameTuple.resetByTupleIndex(this, getTupleCount()-1);
 		
 		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
-		splitKey.initData(splitKeySize);
+		splitKey.initData(splitKeySize);		
 		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
-				
+		splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);	
+		
 		return 0;
     }
     
@@ -601,4 +603,9 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	public IBTreeTupleWriter getTupleWriter() {
     	return tupleWriter;
     }
+	
+	@Override
+	public IBTreeTupleReference createTupleReference() {
+		return new FieldPrefixTupleReference(tupleWriter.createTupleReference());
+	}
 }

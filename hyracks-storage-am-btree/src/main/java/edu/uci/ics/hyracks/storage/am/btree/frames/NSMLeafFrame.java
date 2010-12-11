@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FindSlotMode;
@@ -155,9 +156,9 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		
 		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 		splitKey.initData(splitKeySize);				
-		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
+		tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);		
+		splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);
 		
-		splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);				
 		return 0;
 	}
 
@@ -165,5 +166,10 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	protected void resetSpaceParams() {
 		buf.putInt(freeSpaceOff, nextLeafOff + 4);
 		buf.putInt(totalFreeSpaceOff, buf.capacity() - (nextLeafOff + 4));
+	}
+	
+	@Override
+	public IBTreeTupleReference createTupleReference() {
+		return tupleWriter.createTupleReference();
 	}
 }

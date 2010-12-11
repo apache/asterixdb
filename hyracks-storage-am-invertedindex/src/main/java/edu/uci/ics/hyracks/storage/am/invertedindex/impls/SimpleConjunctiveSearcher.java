@@ -141,7 +141,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 			btree.search(btreeCursor, pred, opCtx);
 			while(btreeCursor.hasNext()) {
 				btreeCursor.next();
-				maxResultBufIdx = appendTupleToNewResults(btreeCursor, maxResultBufIdx);
+				maxResultBufIdx = appendTupleToNewResults(btreeCursor, maxResultBufIdx);				
 			}
 			btreeCursor.reset();
 		} catch (Exception e) {
@@ -194,7 +194,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 	}
 	
 	private int intersectList(IBTreeCursor btreeCursor, List<ByteBuffer> prevResultBuffers, int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws IOException, Exception {
-		
+				
 		int newBufIdx = 0;
 		ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
 		
