@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 public class SimpleTupleReference implements IBTreeTupleReference {
 	
 	protected ByteBuffer buf;
+	protected int fieldStartIndex;
 	protected int fieldCount;	
 	protected int tupleStartOff;
 	protected int nullFlagsBytes;
@@ -29,6 +30,13 @@ public class SimpleTupleReference implements IBTreeTupleReference {
 		this.fieldCount = fieldCount;
 		nullFlagsBytes = getNullFlagsBytes();
 		fieldSlotsBytes = getFieldSlotsBytes();
+		fieldStartIndex = 0;
+	}
+	
+	@Override
+	public void setFieldCount(int fieldStartIndex, int fieldCount) {
+		this.fieldCount = fieldCount;
+		this.fieldStartIndex = fieldStartIndex;
 	}
 	
 	@Override

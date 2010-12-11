@@ -123,4 +123,8 @@ public class TypeAwareTupleWriter implements IBTreeTupleWriter {
 	public ITypeTrait[] getTypeTraits() {
 		return typeTraits;
 	}
+	
+	public void setTypeTraits(ITypeTrait[] typeTraits) {
+		this.typeTraits = typeTraits;
+	}
 }

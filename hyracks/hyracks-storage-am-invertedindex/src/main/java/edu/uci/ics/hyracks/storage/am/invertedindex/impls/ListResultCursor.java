@@ -9,7 +9,7 @@ public class ListResultCursor implements IInvertedIndexResultCursor {
 
 	private List<ByteBuffer> resultBuffers;
 	private int numResultBuffers;
-	private int currentPos = -1;
+	private int currentPos = 0;
 	
 	public void setResults(List<ByteBuffer> resultBuffers, int numResultBuffers) {
 		this.resultBuffers = resultBuffers;
@@ -19,8 +19,8 @@ public class ListResultCursor implements IInvertedIndexResultCursor {
 		
 	@Override
 	public boolean hasNext() {
-		if(currentPos < numResultBuffers) return true;
-		else return false;		
+		if(currentPos+1 < numResultBuffers) return true;
+		else return false;
 	}
 
 	@Override
@@ -36,5 +36,5 @@ public class ListResultCursor implements IInvertedIndexResultCursor {
 	@Override
 	public void reset() {
 		currentPos = -1;		
-	}
+	}	
 }

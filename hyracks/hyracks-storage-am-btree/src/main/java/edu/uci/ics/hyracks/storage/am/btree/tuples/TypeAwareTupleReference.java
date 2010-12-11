@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 
 public class TypeAwareTupleReference implements IBTreeTupleReference {
 	protected ByteBuffer buf;
+	protected int fieldStartIndex;
 	protected int fieldCount;	
 	protected int tupleStartOff;
 	protected int nullFlagsBytes;
@@ -19,6 +20,7 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
 	
 	public TypeAwareTupleReference(ITypeTrait[] typeTraits) {
 		this.typeTraits = typeTraits;
+		this.fieldStartIndex = 0;
 	}
 	
 	@Override
@@ -29,8 +31,9 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
 		// decode field slots
 		int field = 0;
 		int cumul = 0;
+		int end = fieldStartIndex + fieldCount;
 		encDec.reset(buf.array(), tupleStartOff + nullFlagsBytes);
-		for(int i = 0; i < fieldCount; i++) {
+		for(int i = fieldStartIndex; i < end; i++) {
 			int staticDataLen = typeTraits[i].getStaticallyKnownDataLength();
 			if(staticDataLen == ITypeTrait.VARIABLE_LENGTH) {
 				cumul += encDec.decode();
@@ -49,6 +52,7 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
 		resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));		
 	}
 	
+	@Override
 	public void setFieldCount(int fieldCount) {
 		this.fieldCount = fieldCount;
 		if(decodedFieldSlots == null) {
@@ -60,6 +64,13 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
 			}
 		}		
 		nullFlagsBytes = getNullFlagsBytes();
+		this.fieldStartIndex = 0;
+	}
+	
+	@Override
+	public void setFieldCount(int fieldStartIndex, int fieldCount) {
+		setFieldCount(fieldCount);
+		this.fieldStartIndex = fieldStartIndex;		
 	}
 	
 	@Override

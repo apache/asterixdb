@@ -585,6 +585,7 @@ public class BTree {
     			usefulCompression++;    			
     		}
     		else {
+    			
     			uselessCompressionTime += (end - start);    			    			    			
     			uselessCompression++;
     			

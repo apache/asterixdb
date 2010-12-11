@@ -21,4 +21,6 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
 	
 	public void setPrevLeaf(int prevPage);
 	public int getPrevLeaf();
+	
+	public IBTreeTupleReference createTupleReference();
 }
