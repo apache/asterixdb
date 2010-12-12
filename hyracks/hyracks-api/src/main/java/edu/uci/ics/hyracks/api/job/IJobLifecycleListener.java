@@ -16,10 +16,12 @@ package edu.uci.ics.hyracks.api.job;
 
 import java.util.UUID;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+
 public interface IJobLifecycleListener {
-    public void notifyJobCreation(UUID jobId, JobSpecification jobSpec);
+    public void notifyJobCreation(UUID jobId, JobSpecification jobSpec) throws HyracksException;
 
-    public void notifyJobStart(UUID jobId);
+    public void notifyJobStart(UUID jobId) throws HyracksException;
 
-    public void notifyJobFinish(UUID jobId);
+    public void notifyJobFinish(UUID jobId) throws HyracksException;
 }
