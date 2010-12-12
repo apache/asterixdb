@@ -59,19 +59,19 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         jobLifecycleListeners.add(jobLifecycleListener);
     }
 
-    public synchronized void notifyJobStart(UUID jobId) {
+    public synchronized void notifyJobStart(UUID jobId) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobStart(jobId);
         }
     }
 
-    public synchronized void notifyJobFinish(UUID jobId) {
+    public synchronized void notifyJobFinish(UUID jobId) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobFinish(jobId);
         }
     }
 
-    public synchronized void notifyJobCreation(UUID jobId, JobSpecification specification) {
+    public synchronized void notifyJobCreation(UUID jobId, JobSpecification specification) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, specification);
         }
