@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 public interface ISlotManager {
 	public void setFrame(IBTreeFrame frame);
 	
-	public int findSlot(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode);
-	public int insertSlot(int slotOff, int tupleOff);
+	public int findTupleIndex(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode);
+	public int insertSlot(int tupleIndex, int tupleOff);
 	
 	public int getSlotStartOff();
 	public int getSlotEndOff();
@@ -31,7 +31,7 @@ public interface ISlotManager {
 	public int getTupleOff(int slotOff);		
 	public void setSlot(int slotOff, int value);	
 	
-	public int getSlotOff(int slotNum);
+	public int getSlotOff(int tupleIndex);
 	
 	public int getSlotSize();
 }

@@ -26,7 +26,7 @@ public class OrderedSlotManager implements ISlotManager {
 	private IBTreeFrame frame;
 	
 	@Override
-	public int findSlot(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode) {
+	public int findTupleIndex(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode) {
 		if(frame.getTupleCount() <= 0) return -1;
 				
 		int mid;
@@ -34,10 +34,8 @@ public class OrderedSlotManager implements ISlotManager {
 		int end = frame.getTupleCount() - 1;
 		
         while(begin <= end) {
-            mid = (begin + end) / 2;
-        	int slotOff = getSlotOff(mid);        	
-        	int tupleOff = getTupleOff(slotOff);
-        	pageTuple.resetByOffset(frame.getBuffer(), tupleOff);
+            mid = (begin + end) / 2;        	
+        	pageTuple.resetByTupleIndex(frame, mid);
         	
         	int cmp = multiCmp.compare(tuple, pageTuple);
         	if(cmp < 0) {
@@ -51,19 +49,17 @@ public class OrderedSlotManager implements ISlotManager {
         			begin = mid + 1;
         		}
         		else {        			
-        			return slotOff;
+        			return mid;
         		}        		        		
         	}
         }
                         
         if(mode == FindSlotMode.FSM_EXACT) return -1;             
         if(begin > frame.getTupleCount() - 1) return -1;
-        
-        int slotOff = getSlotOff(begin);
-        int tupleOff = getTupleOff(slotOff);
-        pageTuple.resetByOffset(frame.getBuffer(), tupleOff);
+                
+        pageTuple.resetByTupleIndex(frame, begin);
         if(multiCmp.compare(tuple, pageTuple)  < 0)
-        	return slotOff;
+        	return begin;
         else
         	return -1;
 	}
@@ -94,8 +90,9 @@ public class OrderedSlotManager implements ISlotManager {
 	}
 	
 	@Override
-	public int insertSlot(int slotOff, int tupleOff) {
-		if(slotOff < 0) {
+	public int insertSlot(int tupleIndex, int tupleOff) {				
+		int slotOff = getSlotOff(tupleIndex);
+		if(tupleIndex < 0) {
 			slotOff = getSlotEndOff() - slotSize;
 			setSlot(slotOff, tupleOff);
 			return slotOff;
@@ -115,7 +112,7 @@ public class OrderedSlotManager implements ISlotManager {
 	}
 	
 	@Override
-	public int getSlotOff(int slotNum) {
-		return getSlotStartOff() - slotNum * slotSize;
+	public int getSlotOff(int tupleIndex) {
+		return getSlotStartOff() - tupleIndex * slotSize;
 	}	
 }

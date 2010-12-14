@@ -157,8 +157,9 @@ public abstract class NSMFrame implements IBTreeFrame {
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {		
 		frameTuple.setFieldCount(cmp.getFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
-		if(slotOff < 0) {
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
+		int slotOff = slotManager.getSlotOff(tupleIndex);
+		if(tupleIndex < 0) {
 			throw new BTreeException("Key to be deleted does not exist.");
 		}
 		else {
@@ -210,8 +211,8 @@ public abstract class NSMFrame implements IBTreeFrame {
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
 		frameTuple.setFieldCount(cmp.getFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
-		slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));				
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));				
 		int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
 		
 		buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
