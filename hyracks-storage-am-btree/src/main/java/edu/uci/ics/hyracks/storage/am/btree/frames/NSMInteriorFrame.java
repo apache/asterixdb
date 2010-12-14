@@ -72,11 +72,12 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
-		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		frameTuple.setFieldCount(cmp.getKeyFieldCount());		
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		int slotOff = slotManager.getSlotOff(tupleIndex);
 		boolean isDuplicate = true;				
 		
-		if(slotOff < 0) isDuplicate = false; // greater than all existing keys
+		if(tupleIndex < 0) isDuplicate = false; // greater than all existing keys
 		else {
 			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));
 			if(cmp.compare(tuple, frameTuple) != 0) isDuplicate = false;
@@ -86,7 +87,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 			throw new BTreeException("Trying to insert duplicate value into interior node.");
 		}
 		else {			
-			slotOff = slotManager.insertSlot(slotOff, buf.getInt(freeSpaceOff));			
+			slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
 			
 			int freeSpace = buf.getInt(freeSpaceOff);			
 			int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
@@ -131,8 +132,9 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception {		
 		// before doing anything check if key already exists
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
-		if(slotOff >= 0) {			
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
+		int slotOff = slotManager.getSlotOff(tupleIndex);
+		if(tupleIndex >= 0) {			
 			frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));			
 			if(cmp.compare(tuple, frameTuple) == 0) {				
 				throw new BTreeException("Inserting duplicate key in interior node during split");				
@@ -256,8 +258,9 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 		}
 		
 		MultiComparator targetCmp = pred.getComparator();		
-		int slotOff = slotManager.findSlot(tuple, frameTuple, targetCmp, fsm);			
-		if(slotOff < 0) {			
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm);
+		int slotOff = slotManager.getSlotOff(tupleIndex);
+		if(tupleIndex < 0) {			
 			return buf.getInt(rightLeafOff);
 		}
 		else {
@@ -296,11 +299,12 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	@Override
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
 		frameTuple.setFieldCount(cmp.getKeyFieldCount());
-		int slotOff = slotManager.findSlot(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		int slotOff = slotManager.getSlotOff(tupleIndex);
 		int tupleOff;
 		int keySize;
 		
-		if(slotOff < 0) {						
+		if(tupleIndex < 0) {						
 			tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 			frameTuple.resetByOffset(buf, tupleOff);			
 			keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
