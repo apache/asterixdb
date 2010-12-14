@@ -22,6 +22,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -1164,8 +1166,8 @@ public class BTree {
 
         	splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         	tupleWriter = leafFrame.getTupleWriter();
-        	
-        	NodeFrontier leafFrontier = new NodeFrontier(tupleWriter.createTupleReference());
+        	        	
+        	NodeFrontier leafFrontier = new NodeFrontier(leafFrame.createTupleReference());
             leafFrontier.pageId = getFreePage(metaFrame);
             leafFrontier.page = bufferCache.pin(FileInfo.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
             leafFrontier.page.acquireWriteLatch();
@@ -1206,15 +1208,14 @@ public class BTree {
         
         if (level >= ctx.nodeFrontiers.size())
             ctx.addLevel();
-
+        
         NodeFrontier frontier = ctx.nodeFrontiers.get(level);
         ctx.interiorFrame.setPage(frontier.page);
         
-        ITupleReference tuple = ctx.splitKey.getTuple();        
+        ITupleReference tuple = ctx.splitKey.getTuple();   
         int spaceNeeded = ctx.tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount()) + ctx.slotSize + 4;                
         int spaceUsed = ctx.interiorFrame.getBuffer().capacity() - ctx.interiorFrame.getTotalFreeSpace();
         if (spaceUsed + spaceNeeded > ctx.interiorMaxBytes) {
-            //ctx.interiorFrame.deleteGreatest(cmp);
         	
         	SplitKey copyKey = ctx.splitKey.duplicate(ctx.leafFrame.getTupleWriter().createTupleReference());
         	tuple = copyKey.getTuple();
@@ -1241,6 +1242,11 @@ public class BTree {
             ctx.interiorFrame.initBuffer((byte) level);
         }
         ctx.interiorFrame.insertSorted(tuple, cmp);
+        
+        // debug print
+        //ISerializerDeserializer[] btreeSerde = { UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        //String s = ctx.interiorFrame.printKeys(cmp, btreeSerde);
+        //System.out.println(s);
     }
     
     // assumes btree has been created and opened
@@ -1262,13 +1268,13 @@ public class BTree {
         int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
         
         // try to free space by compression
-        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {
+        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {        	
         	leafFrame.compress(cmp);
         	spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
         }
         
-        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {        	
-        	leafFrontier.lastTuple.resetByOffset(leafFrontier.page.getBuffer(), leafFrame.getTupleOffset(leafFrame.getTupleCount()-1));        	
+        if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {        	        	
+        	leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount()-1);        	
         	int splitKeySize = ctx.tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());        	
             ctx.splitKey.initData(splitKeySize);
             ctx.tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), ctx.splitKey.getBuffer(), 0);
@@ -1293,6 +1299,11 @@ public class BTree {
         
         leafFrame.setPage(leafFrontier.page);
         leafFrame.insertSorted(tuple, cmp);
+        
+        // debug print
+        //ISerializerDeserializer[] btreeSerde = { UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        //String s = leafFrame.printKeys(cmp, btreeSerde);
+        //System.out.println(s);        
     }
     
     public void endBulkLoad(BulkLoadContext ctx) throws Exception {                
