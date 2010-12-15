@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 final class BTreeOpHelper {
     
@@ -60,9 +60,7 @@ final class BTreeOpHelper {
     
     void init() throws HyracksDataException {
     	
-    	IBufferCache bufferCache = opDesc.getBufferCacheProvider().getBufferCache();
-        FileManager fileManager = opDesc.getBufferCacheProvider().getFileManager();
-        IFileMappingProviderProvider fileMappingProviderProvider = opDesc.getFileMappingProviderProvider();               
+    	IBufferCache bufferCache = opDesc.getSMI().getBufferCache();
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
         
         File f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
@@ -78,7 +76,7 @@ final class BTreeOpHelper {
 		}
         
         String fileName = f.getAbsolutePath();
-        Integer fileId = fileMappingProviderProvider.getFileMappingProvider().getFileId(fileName);        
+        Integer fileId = opDesc.getSMI().getFileMapProvider().lookupFileId(fileName);        
         
         switch(mode) {
     	
@@ -116,7 +114,7 @@ final class BTreeOpHelper {
     	btreeFileId = fileId;
     	
         if(mode == BTreeMode.CREATE_BTREE || mode == BTreeMode.ENLIST_BTREE) {
-        	FileInfo fi = new FileInfo(btreeFileId, raf);
+        	FileHandle fi = new FileHandle(btreeFileId, raf);
         	fileManager.registerFile(fi);
         }
         

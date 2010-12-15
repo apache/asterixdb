@@ -72,7 +72,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
@@ -350,7 +350,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         int fileIdA = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId("/tmp/btreetestA.ix", true);
         File fA = new File("/tmp/btreetestA.ix");
         RandomAccessFile rafA = new RandomAccessFile(fA, "rw");                
-        FileInfo fiA = new FileInfo(fileIdA, rafA);
+        FileHandle fiA = new FileHandle(fileIdA, rafA);
         fileManager.registerFile(fiA);
         BTree btreeA = new BTree(bufferCache, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryCmp);		
 		btreeA.create(fileIdA, primaryLeafFrameFactory.getFrame(), new MetaDataFrame());
@@ -361,7 +361,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         int fileIdB = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId("/tmp/btreetestB.ix", true);
         File fB = new File("/tmp/btreetestB.ix");
         RandomAccessFile rafB = new RandomAccessFile(fB, "rw");   
-        FileInfo fiB = new FileInfo(fileIdB, rafB);
+        FileHandle fiB = new FileHandle(fileIdB, rafB);
         fileManager.registerFile(fiB);
         BTree btreeB = new BTree(bufferCache, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryCmp);		
 		btreeB.create(fileIdB, secondaryLeafFrameFactory.getFrame(), new MetaDataFrame());
@@ -372,7 +372,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         int fileIdC = fileMappingProviderProvider.getFileMappingProvider().mapNameToFileId("/tmp/btreetestC.ix", true);
         File fC = new File("/tmp/btreetestC.ix");
         RandomAccessFile rafC = new RandomAccessFile(fC, "rw");                
-        FileInfo fiC = new FileInfo(fileIdC, rafC);
+        FileHandle fiC = new FileHandle(fileIdC, rafC);
         fileManager.registerFile(fiC);
         BTree btreeC = new BTree(bufferCache, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryCmp);	
 		btreeC.create(fileIdC, secondaryLeafFrameFactory.getFrame(), new MetaDataFrame());

@@ -52,7 +52,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrate
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
 
 public class SimpleConjunctiveSearcherTest {
@@ -91,7 +91,7 @@ public class SimpleConjunctiveSearcherTest {
     	File f = new File(tmpDir + "/" + "btreetest.bin");
     	RandomAccessFile raf = new RandomAccessFile(f, "rw");
     	int fileId = 0;
-    	FileInfo fi = new FileInfo(fileId, raf);
+    	FileHandle fi = new FileHandle(fileId, raf);
     	fileManager.registerFile(fi);
     	
     	// declare fields

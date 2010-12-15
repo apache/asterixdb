@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.common;
 
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public interface IBufferCacheProvider extends Serializable {
-	public IBufferCache getBufferCache();
-	public FileManager getFileManager();
+public interface IStorageManagerInterface extends Serializable {
+    public IBufferCache getBufferCache();
+
+    public IFileMapProvider getFileMapProvider();
 }

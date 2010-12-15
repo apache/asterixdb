@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
 
 public class DiskOrderScanCursor implements IBTreeCursor {
     
@@ -63,7 +63,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         while( (frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId) || (frame.getTupleCount() == 0) ) {            
             currentPageId++;
             
-            ICachedPage nextPage = bufferCache.pin(FileInfo.getDiskPageId(fileId, currentPageId), false);
+            ICachedPage nextPage = bufferCache.pin(FileHandle.getDiskPageId(fileId, currentPageId), false);
             nextPage.acquireReadLatch();
             
             page.releaseReadLatch();

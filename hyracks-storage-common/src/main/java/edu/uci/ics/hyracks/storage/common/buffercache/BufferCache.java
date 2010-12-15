@@ -15,19 +15,24 @@
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
 public class BufferCache implements IBufferCacheInternal {
+    private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 2;
 
     private static final int MAX_VICTIMIZATION_TRY_COUNT = 3;
@@ -37,13 +42,14 @@ public class BufferCache implements IBufferCacheInternal {
     private final CachedPage[] cachedPages;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
-    private final FileManager fileManager;
+    private final IFileMapManager fileMapManager;
     private final CleanerThread cleanerThread;
+    private final Map<Integer, FileHandle> fileInfoMap;
 
     private boolean closed;
 
     public BufferCache(ICacheMemoryAllocator allocator, IPageReplacementStrategy pageReplacementStrategy,
-            FileManager fileManager, int pageSize, int numPages) {
+            IFileMapManager fileMapManager, int pageSize, int numPages) {
         this.pageSize = pageSize;
         this.numPages = numPages;
         pageReplacementStrategy.setBufferCache(this);
@@ -57,7 +63,8 @@ public class BufferCache implements IBufferCacheInternal {
             pageMap[i] = new CacheBucket();
         }
         this.pageReplacementStrategy = pageReplacementStrategy;
-        this.fileManager = fileManager;
+        this.fileMapManager = fileMapManager;
+        fileInfoMap = new HashMap<Integer, FileHandle>();
         cleanerThread = new CleanerThread();
         cleanerThread.start();
         closed = false;
@@ -269,21 +276,31 @@ public class BufferCache implements IBufferCacheInternal {
     }
 
     private void read(CachedPage cPage) throws HyracksDataException {
-        FileInfo fInfo = fileManager.getFileInfo(FileInfo.getFileId(cPage.dpid));
+        FileHandle fInfo = getFileInfo(cPage);
         try {
             cPage.buffer.clear();
-            fInfo.getFileChannel().read(cPage.buffer, (long) FileInfo.getPageId(cPage.dpid) * pageSize);
+            fInfo.getFileChannel().read(cPage.buffer, (long) FileHandle.getPageId(cPage.dpid) * pageSize);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
     }
 
+    private FileHandle getFileInfo(CachedPage cPage) throws HyracksDataException {
+        synchronized (fileInfoMap) {
+            FileHandle fInfo = fileInfoMap.get(FileHandle.getFileId(cPage.dpid));
+            if (fInfo == null) {
+                throw new HyracksDataException("No such file mapped");
+            }
+            return fInfo;
+        }
+    }
+
     private void write(CachedPage cPage) throws HyracksDataException {
-        FileInfo fInfo = fileManager.getFileInfo(FileInfo.getFileId(cPage.dpid));
+        FileHandle fInfo = getFileInfo(cPage);
         try {
             cPage.buffer.position(0);
             cPage.buffer.limit(pageSize);
-            fInfo.getFileChannel().write(cPage.buffer, (long) FileInfo.getPageId(cPage.dpid) * pageSize);
+            fInfo.getFileChannel().write(cPage.buffer, (long) FileHandle.getPageId(cPage.dpid) * pageSize);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -465,6 +482,110 @@ public class BufferCache implements IBufferCacheInternal {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    @Override
+    public void createFile(String fileName) throws HyracksDataException {
+        LOGGER.info("Deleting file: " + fileName + " in cache: " + this);
+        synchronized (fileInfoMap) {
+            fileMapManager.registerFile(fileName);
+        }
+    }
+
+    @Override
+    public void openFile(int fileId) throws HyracksDataException {
+        LOGGER.info("Opening file: " + fileId + " in cache: " + this);
+        synchronized (fileInfoMap) {
+            FileHandle fInfo;
+            fInfo = fileInfoMap.get(fileId);
+            if (fInfo == null) {
+                String fileName = fileMapManager.lookupFileName(fileId);
+                try {
+                    fInfo = new FileHandle(fileId, new RandomAccessFile(fileName, "rw"));
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+                fileInfoMap.put(fileId, fInfo);
+            }
+            fInfo.incReferenceCount();
+        }
+    }
+
+    private void sweepAndFlush(int fileId) throws HyracksDataException {
+        for (int i = 0; i < pageMap.length; ++i) {
+            CacheBucket bucket = pageMap[i];
+            bucket.bucketLock.lock();
+            try {
+                CachedPage prev = bucket.cachedPage;
+                while (prev != null) {
+                    CachedPage cPage = prev.next;
+                    if (cPage == null) {
+                        break;
+                    }
+                    if (invalidateIfFileIdMatch(fileId, cPage)) {
+                        prev.next = cPage.next;
+                        cPage.next = null;
+                    } else {
+                        prev = cPage;
+                    }
+                }
+                // Take care of the head of the chain.
+                if (bucket.cachedPage != null) {
+                    if (invalidateIfFileIdMatch(fileId, bucket.cachedPage)) {
+                        CachedPage cPage = bucket.cachedPage;
+                        bucket.cachedPage = bucket.cachedPage.next;
+                        cPage.next = null;
+                    }
+                }
+            } finally {
+                bucket.bucketLock.unlock();
+            }
+        }
+    }
+
+    private boolean invalidateIfFileIdMatch(int fileId, CachedPage cPage) throws HyracksDataException {
+        if (FileHandle.getFileId(cPage.dpid) == fileId) {
+            if (cPage.dirty.get()) {
+                write(cPage);
+                cPage.dirty.set(false);
+                cPage.pinCount.decrementAndGet();
+            }
+            System.err.println("PinCount: " + cPage.pinCount.get());
+            if (cPage.pinCount.get() != 0) {
+                throw new IllegalStateException("Page is pinned and file is being closed");
+            }
+            cPage.valid = false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void closeFile(int fileId) throws HyracksDataException {
+        LOGGER.info("Closing file: " + fileId + " in cache: " + this);
+        synchronized (fileInfoMap) {
+            FileHandle fInfo = fileInfoMap.get(fileId);
+            if (fInfo == null) {
+                throw new HyracksDataException("Closing unopened file");
+            }
+            if (fInfo.decReferenceCount() <= 0) {
+                sweepAndFlush(fileId);
+                fileInfoMap.remove(fileId);
+                fInfo.close();
+            }
+        }
+    }
+
+    @Override
+    public synchronized void deleteFile(int fileId) throws HyracksDataException {
+        LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
+        synchronized (fileInfoMap) {
+            FileHandle fInfo = fileInfoMap.get(fileId);
+            if (fInfo != null) {
+                throw new HyracksDataException("Deleting open file");
+            }
+            fileMapManager.unregisterFile(fileId);
         }
     }
 }

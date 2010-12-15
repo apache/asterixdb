@@ -1,7 +1,7 @@
 package edu.uci.ics.hyracks.examples.btree.helper;
 
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class FileMappingProviderProvider implements IFileMappingProviderProvider {
 	private static final long serialVersionUID = 1L;
@@ -9,7 +9,7 @@ public class FileMappingProviderProvider implements IFileMappingProviderProvider
 	public static final IFileMappingProviderProvider INSTANCE = new FileMappingProviderProvider();
 	
 	@Override
-	public IFileMappingProvider getFileMappingProvider() {
+	public IFileMapProvider getFileMappingProvider() {
 		return RuntimeContext.getInstance().getFileMappingProvider();
 	}
 }

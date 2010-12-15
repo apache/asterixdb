@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
+import edu.uci.ics.hyracks.storage.common.file.FileHandle;
 
 public class RangeSearchCursor implements IBTreeCursor {
 
@@ -70,7 +70,7 @@ public class RangeSearchCursor implements IBTreeCursor {
 			}
 						
 			if(nextLeafPage >= 0) {			
-				ICachedPage nextLeaf = bufferCache.pin(FileInfo.getDiskPageId(fileId, nextLeafPage), false);
+				ICachedPage nextLeaf = bufferCache.pin(FileHandle.getDiskPageId(fileId, nextLeafPage), false);
 				nextLeaf.acquireReadLatch();
 								
 				page.releaseReadLatch();

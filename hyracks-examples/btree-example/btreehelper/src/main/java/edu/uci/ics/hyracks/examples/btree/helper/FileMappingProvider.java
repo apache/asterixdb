@@ -3,9 +3,9 @@ package edu.uci.ics.hyracks.examples.btree.helper;
 import java.util.Hashtable;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class FileMappingProvider implements IFileMappingProvider {				
+public class FileMappingProvider implements IFileMapProvider {				
 	
 	private static final long serialVersionUID = 1L;
 	private int nextFileId = 0;

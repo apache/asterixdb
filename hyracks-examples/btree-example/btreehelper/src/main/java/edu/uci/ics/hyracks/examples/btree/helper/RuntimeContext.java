@@ -7,7 +7,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrate
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.FileManager;
-import edu.uci.ics.hyracks.storage.common.file.IFileMappingProvider;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class RuntimeContext {
     private static RuntimeContext INSTANCE;
@@ -15,7 +15,7 @@ public class RuntimeContext {
     private FileManager fileManager;
     private IBufferCache bufferCache;
     private BTreeRegistry btreeRegistry;
-    private IFileMappingProvider fileMappingProvider;
+    private IFileMapProvider fileMappingProvider;
     
     private RuntimeContext() {
     }
@@ -64,7 +64,7 @@ public class RuntimeContext {
         return btreeRegistry;
     }
     
-    public IFileMappingProvider getFileMappingProvider() {
+    public IFileMapProvider getFileMappingProvider() {
     	return fileMappingProvider;
     }
 }
