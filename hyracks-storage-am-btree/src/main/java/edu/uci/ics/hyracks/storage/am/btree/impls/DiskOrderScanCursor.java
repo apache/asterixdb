@@ -112,8 +112,8 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         tupleIndex = 0;
         frame.setPage(page);
         RangePredicate pred = (RangePredicate)searchPred;
-		MultiComparator cmp = pred.getComparator();
-		frameTuple.setFieldCount(cmp.getFieldCount());
+		MultiComparator lowKeyCmp = pred.getLowKeyComparator();
+		frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
         boolean leafExists = positionToNextLeaf(false);
         if(!leafExists) {
             throw new Exception("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");

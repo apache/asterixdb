@@ -38,6 +38,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
@@ -164,7 +166,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {        
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, true);
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         if(tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
             throw new BTreeException("Key to be deleted does not exist.");   
@@ -268,7 +270,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {    	
-    	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, false);        
+    	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);        
         
     	slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));                
         
@@ -425,7 +427,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     	frameTuple.setFieldCount(cmp.getFieldCount());
     	
     	// before doing anything check if key already exists
-		int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, true);
+		int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
 		int tupleSlotNum = slotManager.decodeSecondSlotField(slot);		
 		if(tupleSlotNum != FieldPrefixSlotManager.GREATEST_SLOT) {				
 			frameTuple.resetByTupleIndex(this, tupleSlotNum);
@@ -608,4 +610,13 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	public IBTreeTupleReference createTupleReference() {
 		return new FieldPrefixTupleReference(tupleWriter.createTupleReference());
 	}
+	
+	@Override
+	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference pageTuple, MultiComparator cmp, FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
+		int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
+		int tupleIndex = slotManager.decodeSecondSlotField(slot);
+		if(tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) return -1;
+		else return tupleIndex;		
+	}
+		
 }

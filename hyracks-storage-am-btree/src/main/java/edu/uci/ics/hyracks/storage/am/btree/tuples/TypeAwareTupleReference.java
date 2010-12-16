@@ -86,7 +86,7 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
 	@Override
 	public int getFieldLength(int fIdx) {
 		if(fIdx == 0) {
-			return decodedFieldSlots[0];			
+			return decodedFieldSlots[0];		
 		}
 		else {
 			return decodedFieldSlots[fIdx] - decodedFieldSlots[fIdx-1];

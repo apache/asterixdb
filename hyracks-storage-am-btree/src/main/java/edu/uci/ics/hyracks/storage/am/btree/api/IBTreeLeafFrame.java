@@ -15,6 +15,11 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
+import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+
 public interface IBTreeLeafFrame extends IBTreeFrame {	
 	public void setNextLeaf(int nextPage);
 	public int getNextLeaf();
@@ -23,4 +28,6 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
 	public int getPrevLeaf();
 	
 	public IBTreeTupleReference createTupleReference();
+	
+	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference pageTuple, MultiComparator cmp, FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp);
 }
