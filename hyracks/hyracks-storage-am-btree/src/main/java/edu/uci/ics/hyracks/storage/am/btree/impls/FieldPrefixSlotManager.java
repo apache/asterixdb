@@ -64,9 +64,10 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    return FieldPrefixSlotManager.TUPLE_UNCOMPRESSED;
 	}
 	
-	public int findSlot(ITupleReference tuple, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, boolean exact) {				
+	@Override
+	public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {				
 		if(frame.getTupleCount() <= 0) encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_SLOT);
-								
+		
 		frameTuple.setFieldCount(multiCmp.getFieldCount());
 		
 	    int prefixMid;
@@ -82,7 +83,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    while(prefixBegin <= prefixEnd) {
 	    	prefixMid = (prefixBegin + prefixEnd) / 2;	    			    		
 	    	framePrefixTuple.resetByTupleIndex(frame, prefixMid);	    		    	
-	    	int cmp = multiCmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
+	    	int cmp = multiCmp.fieldRangeCompare(searchKey, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
 	    	if(cmp < 0) {	    			
 	    		prefixEnd = prefixMid - 1;
 	    		tuplePrefixSlotNumLbound = prefixMid - 1;	    				    		
@@ -92,9 +93,16 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	    		tuplePrefixSlotNumUbound = prefixMid + 1;
 	    	}
 	    	else {
-	    		tuplePrefixSlotNumLbound = prefixMid;
-	    		tuplePrefixSlotNumUbound = prefixMid;
-	    		prefixMatch = prefixMid;	    			
+	    		if(mode == FindTupleMode.FTM_EXCLUSIVE) {
+        			if(matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) prefixBegin = prefixMid + 1;
+        			else prefixEnd = prefixMid - 1;
+        		}
+        		else {        			
+        			tuplePrefixSlotNumLbound = prefixMid;
+    	    		tuplePrefixSlotNumUbound = prefixMid;
+    	    		prefixMatch = prefixMid;
+        		}
+	    			    			
 	    		break;
 	    	}
 	    }
@@ -117,32 +125,47 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
             int cmp = 0;            
             if(prefixSlotNum == TUPLE_UNCOMPRESSED) {            	            	
             	frameTuple.resetByTupleIndex(frame, tupleMid);
-            	cmp = multiCmp.compare(tuple, frameTuple);      
+            	cmp = multiCmp.compare(searchKey, frameTuple);      
             }
             else {             	
             	if(prefixSlotNum < tuplePrefixSlotNumLbound) cmp = 1;
             	else if(prefixSlotNum > tuplePrefixSlotNumUbound) cmp = -1;
             	else {
             		frameTuple.resetByTupleIndex(frame, tupleMid);
-            		cmp = multiCmp.compare(tuple, frameTuple);            	            	            	
+            		cmp = multiCmp.compare(searchKey, frameTuple);            	            	            	
             	}
             }    
             
             if(cmp < 0) tupleEnd = tupleMid - 1;
             else if(cmp > 0) tupleBegin = tupleMid + 1;
-            else return encodeSlotFields(prefixMatch, tupleMid);
+            else {
+            	if(mode == FindTupleMode.FTM_EXCLUSIVE) {
+        			if(matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) tupleBegin = tupleMid + 1;
+        			else tupleEnd = tupleMid - 1;
+        		}
+        		else {
+        			return encodeSlotFields(prefixMatch, tupleMid);
+        		}            	
+            }
         }
 	    
 	    //System.out.println("RECS: " + recBegin + " " + recMid + " " + recEnd);
 	    
-        if(exact) return encodeSlotFields(prefixMatch, GREATEST_SLOT);                       
-        if(tupleBegin > (frame.getTupleCount() - 1)) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
-        
+	    if(mode == FindTupleMode.FTM_EXACT) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+	    
         // do final comparison to determine whether the search key is greater than all keys or in between some existing keys
-        frameTuple.resetByTupleIndex(frame, tupleBegin);
-        int cmp = multiCmp.compare(tuple, (ITupleReference)frameTuple);        
-        if(cmp < 0) return encodeSlotFields(prefixMatch, tupleBegin);
-        else return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+	    if(matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) {
+        	if(tupleBegin > frame.getTupleCount() - 1) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+        	frameTuple.resetByTupleIndex(frame, tupleBegin);
+        	if(multiCmp.compare(searchKey, frameTuple) < 0) return encodeSlotFields(prefixMatch, tupleBegin);
+            else return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+        }
+        else {
+        	if(tupleEnd < 0) return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+        	frameTuple.resetByTupleIndex(frame, tupleEnd);
+        	if(multiCmp.compare(searchKey, frameTuple) > 0) return encodeSlotFields(prefixMatch, tupleEnd);
+            else return encodeSlotFields(prefixMatch, GREATEST_SLOT);
+        }	            
 	}	
 	
 	public int getPrefixSlotStartOff() {		
@@ -194,15 +217,15 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 		this.buf = frame.getBuffer();
 	}
 	
-	public int getPrefixSlotOff(int slotNum) {
-		return getPrefixSlotStartOff() - slotNum * slotSize;
+	public int getPrefixSlotOff(int tupleIndex) {
+		return getPrefixSlotStartOff() - tupleIndex * slotSize;
 	}
 	
-	public int getTupleSlotOff(int slotNum) {
-		return getTupleSlotStartOff() - slotNum * slotSize;
+	public int getTupleSlotOff(int tupleIndex) {
+		return getTupleSlotStartOff() - tupleIndex * slotSize;
 	}
 	
-	public void setPrefixSlot(int slotNum, int slot) {
-		buf.putInt(getPrefixSlotOff(slotNum), slot);
+	public void setPrefixSlot(int tupleIndex, int slot) {
+		buf.putInt(getPrefixSlotOff(tupleIndex), slot);
 	}
 }

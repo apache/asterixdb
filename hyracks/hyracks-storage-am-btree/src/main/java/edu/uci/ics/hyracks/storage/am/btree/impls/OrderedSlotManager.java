@@ -26,7 +26,7 @@ public class OrderedSlotManager implements ISlotManager {
 	private IBTreeFrame frame;
 	
 	@Override
-	public int findTupleIndex(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode) {
+	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference frameTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
 		if(frame.getTupleCount() <= 0) return -1;
 				
 		int mid;
@@ -35,9 +35,9 @@ public class OrderedSlotManager implements ISlotManager {
 		
         while(begin <= end) {
             mid = (begin + end) / 2;        	
-        	pageTuple.resetByTupleIndex(frame, mid);
+        	frameTuple.resetByTupleIndex(frame, mid);
         	
-        	int cmp = multiCmp.compare(tuple, pageTuple);
+        	int cmp = multiCmp.compare(searchKey, frameTuple);
         	if(cmp < 0) {
         		end = mid - 1;
         	}
@@ -45,8 +45,9 @@ public class OrderedSlotManager implements ISlotManager {
         		begin = mid + 1;
         	}
         	else {
-        		if(mode == FindSlotMode.FSM_EXCLUSIVE) {
-        			begin = mid + 1;
+        		if(mode == FindTupleMode.FTM_EXCLUSIVE) {
+        			if(matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) begin = mid + 1;
+        			else end = mid - 1;
         		}
         		else {        			
         			return mid;
@@ -54,14 +55,20 @@ public class OrderedSlotManager implements ISlotManager {
         	}
         }
                         
-        if(mode == FindSlotMode.FSM_EXACT) return -1;             
-        if(begin > frame.getTupleCount() - 1) return -1;
-                
-        pageTuple.resetByTupleIndex(frame, begin);
-        if(multiCmp.compare(tuple, pageTuple)  < 0)
-        	return begin;
-        else
-        	return -1;
+        if(mode == FindTupleMode.FTM_EXACT) return -1;            
+        
+        if(matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) {
+        	if(begin > frame.getTupleCount() - 1) return -1;
+        	frameTuple.resetByTupleIndex(frame, begin);
+        	if(multiCmp.compare(searchKey, frameTuple) < 0) return begin;
+            else return -1;
+        }
+        else {
+        	if(end < 0) return -1;
+        	frameTuple.resetByTupleIndex(frame, end);
+        	if(multiCmp.compare(searchKey, frameTuple) > 0) return end;
+            else return -1;
+        }               
 	}
 	
 	@Override

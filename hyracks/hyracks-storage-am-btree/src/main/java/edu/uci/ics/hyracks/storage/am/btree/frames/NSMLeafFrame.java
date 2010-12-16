@@ -23,7 +23,8 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindSlotMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 
@@ -65,7 +66,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	@Override
 	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {		
 		frameTuple.setFieldCount(cmp.getFieldCount());
-		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_INCLUSIVE);
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
 		int slotOff = slotManager.getSlotOff(tupleIndex);
 		boolean isDuplicate = true;
 		
@@ -106,7 +107,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 		frameTuple.setFieldCount(cmp.getFieldCount());
 		
 		// before doing anything check if key already exists
-		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindSlotMode.FSM_EXACT);
+		int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
 		if (tupleIndex >= 0) {						
 			frameTuple.resetByTupleIndex(this, tupleIndex);		
 			if (cmp.compare(tuple, frameTuple) == 0) {
@@ -172,5 +173,10 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	@Override
 	public IBTreeTupleReference createTupleReference() {
 		return tupleWriter.createTupleReference();
+	}
+	
+	@Override
+	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference pageTuple, MultiComparator cmp, FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {		
+		return slotManager.findTupleIndex(searchKey, pageTuple, cmp, ftm, ftp);
 	}
 }

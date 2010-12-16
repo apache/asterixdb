@@ -27,27 +27,37 @@ public class RangePredicate implements ISearchPredicate {
 	protected ITupleReference highKey = null;
 	protected boolean lowKeyInclusive = true;
 	protected boolean highKeyInclusive = true;
-	protected MultiComparator cmp;
+	protected MultiComparator lowKeyCmp;
+	protected MultiComparator highKeyCmp;
 	
 	public RangePredicate() {
 	}
 	
 	public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, 
-			boolean lowKeyInclusive, boolean highKeyInclusive, MultiComparator cmp) {
+			boolean lowKeyInclusive, boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp) {
 		this.isForward = isForward;
 		this.lowKey = lowKey;
 		this.highKey = highKey;
 		this.lowKeyInclusive = lowKeyInclusive;
 		this.highKeyInclusive = highKeyInclusive;
-		this.cmp = cmp;
+		this.lowKeyCmp = lowKeyCmp;
+		this.highKeyCmp = highKeyCmp;
 	}
 	
-	public MultiComparator getComparator() {
-		return cmp;
+	public MultiComparator getLowKeyComparator() {
+		return lowKeyCmp;
 	}
 	
-	public void setComparator(MultiComparator cmp) {
-		this.cmp = cmp;
+	public MultiComparator getHighKeyComparator() {
+		return highKeyCmp;
+	}
+	
+	public void setLowKeyComparator(MultiComparator lowKeyCmp) {
+		this.lowKeyCmp = lowKeyCmp;
+	}
+	
+	public void setHighKeyComparator(MultiComparator highKeyCmp) {
+		this.highKeyCmp = highKeyCmp;
 	}
 	
 	public boolean isForward() {

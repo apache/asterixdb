@@ -54,7 +54,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 	private final IBTreeInteriorFrame interiorFrame;
 	private final IBTreeCursor btreeCursor;
 	private final FrameTupleReference searchKey = new FrameTupleReference();
-	private final RangePredicate pred = new RangePredicate(true, null, null, true, true, null);	
+	private final RangePredicate pred = new RangePredicate(true, null, null, true, true, null, null);	
 	
 	private final IBinaryTokenizer queryTokenizer;
 	
@@ -86,7 +86,8 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 		}
 		
 		MultiComparator searchCmp = new MultiComparator(btreeCmp.getTypeTraits(), keyCmps);
-		pred.setComparator(searchCmp);
+		pred.setLowKeyComparator(searchCmp);
+		pred.setHighKeyComparator(searchCmp);
 		pred.setLowKey(searchKey, true);
 		pred.setHighKey(searchKey, true);
 				
@@ -139,7 +140,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 			// append first inverted list to temporary results
 			searchKey.reset(queryTokenAccessor, 0);
 			btree.search(btreeCursor, pred, opCtx);
-			while(btreeCursor.hasNext()) {
+			while(btreeCursor.hasNext()) {				
 				btreeCursor.next();
 				maxResultBufIdx = appendTupleToNewResults(btreeCursor, maxResultBufIdx);				
 			}
