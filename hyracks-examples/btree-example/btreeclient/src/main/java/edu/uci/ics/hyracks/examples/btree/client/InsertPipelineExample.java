@@ -30,19 +30,17 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
-import edu.uci.ics.hyracks.examples.btree.helper.FileMappingProviderProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.SimpleStorageManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will insert tuples into the primary and secondary index using an insert pipeline
 
@@ -108,10 +106,9 @@ public class InsertPipelineExample {
         // run data generator on first nodecontroller given
         PartitionConstraint dataGenConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(splitNCs[0]) });
         dataGen.setPartitionConstraint(dataGenConstraint);
-                
-        IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
-        IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;
+        
+        IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;        
+        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;
         
         // prepare insertion into primary index
         // tuples to be put into B-Tree shall have 4 fields
@@ -132,9 +129,10 @@ public class InsertPipelineExample {
         // comparator factories for primary index
         IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
 		primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
-		IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
+		IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);		
+		
 		// create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor primaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor primaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, storageManager, btreeRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation, BTreeOp.BTO_INSERT);
         PartitionConstraint primaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
         primaryInsert.setPartitionConstraint(primaryInsertConstraint);
         
@@ -158,7 +156,7 @@ public class InsertPipelineExample {
 		secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 		IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
 		// create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor secondaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, secondaryFieldPermutation, BTreeOp.BTO_INSERT);
+        BTreeInsertUpdateDeleteOperatorDescriptor secondaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec, recDesc, storageManager, btreeRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, secondaryFieldPermutation, BTreeOp.BTO_INSERT);
         PartitionConstraint secondaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
         secondaryInsert.setPartitionConstraint(secondaryInsertConstraint);
         

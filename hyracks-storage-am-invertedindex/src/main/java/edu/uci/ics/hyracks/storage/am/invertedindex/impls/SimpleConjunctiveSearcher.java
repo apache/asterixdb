@@ -100,7 +100,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 		resultFrameAccessor = new FrameTupleAccessor(ctx, valueRecDesc);
 	}
 	
-	public void search(ITupleReference queryTuple, int queryFieldIndex) throws HyracksDataException {
+	public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception {
 		
 		// parse query, TODO: this parsing is too simple
 		RecordDescriptor queryTokenRecDesc = new RecordDescriptor(new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE } );
@@ -144,6 +144,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 				btreeCursor.next();
 				maxResultBufIdx = appendTupleToNewResults(btreeCursor, maxResultBufIdx);				
 			}
+			btreeCursor.close();
 			btreeCursor.reset();
 		} catch (Exception e) {
 			throw new HyracksDataException(e);
@@ -163,6 +164,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 			} catch (Exception e) {
 				throw new HyracksDataException(e);
 			}		
+			btreeCursor.close();
 			btreeCursor.reset();			
 		}				
 	}	

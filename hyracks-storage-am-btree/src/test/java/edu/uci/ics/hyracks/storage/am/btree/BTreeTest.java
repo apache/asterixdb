@@ -16,8 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -40,6 +38,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.DummySMI;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
@@ -60,20 +59,14 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.file.FileHandle;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 @SuppressWarnings("unchecked")
 
 public class BTreeTest {    
 	
-    //private static final int PAGE_SIZE = 128;
-    //private static final int PAGE_SIZE = 8192;
 	private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
@@ -108,18 +101,15 @@ public class BTreeTest {
     public void test01() throws Exception {
     	
     	print("FIXED-LENGTH KEY TEST\n");
+
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-        
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);
-        
         // declare fields
         int fieldCount = 2;
         ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
@@ -311,13 +301,12 @@ public class BTreeTest {
         }  
                 
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
+        
         print("\n");
     }
-    
-    
+            
     // COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
     // create a B-tree with one two fixed-length "key" fields and one fixed-length "value" field
     // fill B-tree with random values using insertions (not bulk load)
@@ -327,16 +316,13 @@ public class BTreeTest {
 
     	print("COMPOSITE KEY TEST\n");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);    	        
                 
         // declare fields
         int fieldCount = 3;
@@ -499,9 +485,8 @@ public class BTreeTest {
         }
 
         btree.close();
-        
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
         
         print("\n");
     }
@@ -515,16 +500,13 @@ public class BTreeTest {
 
     	print("VARIABLE-LENGTH KEY TEST\n");
     	
-    	FileManager fileManager = new FileManager();
-    	ICacheMemoryAllocator allocator = new BufferAllocator();
-    	IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-    	IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-    	File f = new File(tmpDir + "/" + "btreetest.bin");
-    	RandomAccessFile raf = new RandomAccessFile(f, "rw");
-    	int fileId = 0;
-    	FileHandle fi = new FileHandle(fileId, raf);
-    	fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
     	
     	// declare fields
     	int fieldCount = 2;
@@ -678,9 +660,8 @@ public class BTreeTest {
         }
     	
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
         
         print("\n");
     }
@@ -695,16 +676,13 @@ public class BTreeTest {
 
     	print("DELETION TEST\n");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
                 
         // declare fields
         int fieldCount = 2;
@@ -845,9 +823,8 @@ public class BTreeTest {
         }
         
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
         
         print("\n");
     }
@@ -861,16 +838,13 @@ public class BTreeTest {
 
     	print("BULK LOAD TEST\n");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
         
         // declare fields
         int fieldCount = 3;
@@ -1006,9 +980,8 @@ public class BTreeTest {
         }
 
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
         
         print("\n");
     }    
@@ -1020,16 +993,13 @@ public class BTreeTest {
 
     	print("TIME-INTERVAL INTERSECTION DEMO\n");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);       
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId); 
         
         // declare fields
         int fieldCount = 3;
@@ -1230,13 +1200,12 @@ public class BTreeTest {
         }
 
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
         
         print("\n");
     }
-        
+    
     public static String randomString(int length, Random random) {
         String s = Long.toHexString(Double.doubleToLongBits(random.nextDouble()));
         StringBuilder strBuilder = new StringBuilder();

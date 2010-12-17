@@ -30,7 +30,8 @@ public class BTreeFileEnlistmentOperatorNodePushable extends AbstractOperatorNod
 
 	@Override
 	public void initialize() throws HyracksDataException {
-		btreeOpHelper.init();		
+		btreeOpHelper.init();
+		btreeOpHelper.deinit();
 	}
 
 	@Override

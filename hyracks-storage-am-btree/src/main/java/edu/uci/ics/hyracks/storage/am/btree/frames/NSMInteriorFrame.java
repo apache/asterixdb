@@ -117,7 +117,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
 	}
 	
 	@Override
-	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {
+	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
 		int freeSpace = buf.getInt(freeSpaceOff);
 		slotManager.insertSlot(-1, freeSpace);
 		int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);

@@ -36,18 +36,18 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
     protected final IBTreeInteriorFrameFactory interiorFrameFactory;
     protected final IBTreeLeafFrameFactory leafFrameFactory;
 
-    protected final IStorageManagerInterface smi;
+    protected final IStorageManagerInterface storageManager;
     protected final IBTreeRegistryProvider btreeRegistryProvider;
 
     protected final ITypeTrait[] typeTraits;
 
     public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
-            RecordDescriptor recDesc, IStorageManagerInterface smi, IBTreeRegistryProvider btreeRegistryProvider,
+            RecordDescriptor recDesc, IStorageManagerInterface storageManager, IBTreeRegistryProvider btreeRegistryProvider,
             IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
             IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
-        this.smi = smi;
+        this.storageManager = storageManager;
         this.btreeRegistryProvider = btreeRegistryProvider;
         this.interiorFrameFactory = interiorFactory;
         this.leafFrameFactory = leafFactory;
@@ -77,8 +77,8 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
         return leafFrameFactory;
     }
 
-    public IStorageManagerInterface getSMI() {
-        return smi;
+    public IStorageManagerInterface getStorageManager() {
+        return storageManager;
     }
 
     public IBTreeRegistryProvider getBtreeRegistryProvider() {

@@ -16,8 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -40,6 +38,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.DummySMI;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
@@ -47,22 +46,15 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
-import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.FileHandle;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeFieldPrefixNSMTest {
 	
-    //private static final int PAGE_SIZE = 8192;
-    //private static final int PAGE_SIZE = 8192;
 	private static final int PAGE_SIZE = 32768; // 32K
-	//private static final int PAGE_SIZE = 65536; // 64K
-	//private static final int PAGE_SIZE = 131072; // 128K
     private static final int NUM_PAGES = 40;
     private static final int HYRACKS_FRAME_SIZE = 128;
     
@@ -122,16 +114,13 @@ public class BTreeFieldPrefixNSMTest {
     @Test
     public void test01() throws Exception {
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-        
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileHandle fi = new FileHandle(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
         
         // declare fields
         int fieldCount = 3;
@@ -245,8 +234,8 @@ public class BTreeFieldPrefixNSMTest {
         } finally {            
             bufferCache.unpin(page);
         }              
-        
+                
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
     }
 }

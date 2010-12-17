@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.DataOutput;
-import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
@@ -44,17 +43,10 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
         DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
         IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+                
+        btreeOpHelper.init();
+        btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
         
-        try {
-            btreeOpHelper.init();
-            //btreeOpHelper.fill();
-            btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
         ByteBuffer frame = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());
@@ -91,6 +83,11 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }                              
+    }
+    
+    @Override
+    public void deinitialize() throws HyracksDataException {
+    	btreeOpHelper.deinit();
     }
 }

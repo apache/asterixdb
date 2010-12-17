@@ -100,8 +100,12 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
         
     @Override
-    public boolean compress(MultiComparator cmp) throws Exception {
-        return compressor.compress(this, cmp);
+    public boolean compress(MultiComparator cmp) throws HyracksDataException {
+        try {
+			return compressor.compress(this, cmp);
+		} catch (Exception e) {
+			throw new HyracksDataException(e);
+		}
     }
     
     // assumptions: 
@@ -392,7 +396,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 	}
 	
     @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {    	
+    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {    	
     	int freeSpace = buf.getInt(freeSpaceOff);				
 		int fieldsToTruncate = 0;
 		

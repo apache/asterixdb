@@ -7,28 +7,27 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable {
 	
     private IBTreeRegistryProvider btreeRegistryProvider;
-    private IBufferCacheProvider bufferCacheProvider;
-    private IFileMappingProviderProvider fileMappingProviderProvider;
+    private IStorageManagerInterface storageManager;    
     private IFileSplitProvider fileSplitProvider;
     private int partition;
     
-    public BTreeDropOperatorNodePushable(IBufferCacheProvider bufferCacheProvider,
-            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition,
-            IFileMappingProviderProvider fileMappingProviderProvider) {
-        this.fileMappingProviderProvider = fileMappingProviderProvider;
-        this.bufferCacheProvider = bufferCacheProvider;
+    public BTreeDropOperatorNodePushable(IStorageManagerInterface storageManager,
+            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
+        this.storageManager = storageManager;
         this.btreeRegistryProvider = btreeRegistryProvider;
         this.fileSplitProvider = fileSplitProvider;
         this.partition = partition;
     }
 
     @Override
-    public void deinitialize() throws HyracksDataException {
+    public void deinitialize() throws HyracksDataException {    	
     }
 
     @Override
@@ -45,17 +44,19 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
     public void initialize() throws HyracksDataException {
 
         BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry();
-        FileManager fileManager = bufferCacheProvider.getFileManager();
-        
+        IBufferCache bufferCache = storageManager.getBufferCache();
+        IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(); 
+                        
         File f = fileSplitProvider.getFileSplits()[partition].getLocalFile();        
         String fileName = f.getAbsolutePath();            
                 
-        Integer fileId = fileMappingProviderProvider.getFileMappingProvider().getFileId(fileName);
-        if(fileId == null) {
+        boolean fileIsMapped = fileMapProvider.isMapped(fileName);
+        if(!fileIsMapped) {
         	throw new HyracksDataException("Cannot drop B-Tree with name " + fileName + ". No file mapping exists.");
         }
-        int btreeFileId = fileId; 
         
+        int btreeFileId = fileMapProvider.lookupFileId(fileName);
+                
         // unregister btree instance            
         btreeRegistry.lock();
         try {
@@ -65,11 +66,9 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
         }
         
         // remove name to id mapping
-        fileMappingProviderProvider.getFileMappingProvider().unmapName(fileName);
-                
-        // unregister file
-        fileManager.unregisterFile(btreeFileId);
+        bufferCache.deleteFile(btreeFileId);
         
+        // TODO: should this be handled through the BufferCache or FileMapProvider?
         if (f.exists()) {
             f.delete();
         }

@@ -22,8 +22,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -161,7 +159,7 @@ public class BTree {
         fileId = -1;
     }
 
-    private int getFreePage(IBTreeMetaDataFrame metaFrame) throws Exception {
+    private int getFreePage(IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
         ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
         pins++;
         
@@ -374,7 +372,7 @@ public class BTree {
         }
     }
 
-    public void diskOrderScan(DiskOrderScanCursor cursor, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
+    public void diskOrderScan(DiskOrderScanCursor cursor, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
         int currentPageId = rootPage + 1;
         int maxPageId = -1;
         
@@ -434,7 +432,7 @@ public class BTree {
         cursor.setFileId(fileId);
     }
 
-    private void unsetSmPages(BTreeOpContext ctx) throws Exception {
+    private void unsetSmPages(BTreeOpContext ctx) throws HyracksDataException {
         ICachedPage originalPage = ctx.interiorFrame.getPage();
         for(int i = 0; i < ctx.smPages.size(); i++) {
             int pageId = ctx.smPages.get(i);
@@ -980,7 +978,7 @@ public class BTree {
     }
 
     private void performOp(int pageId, ICachedPage parent, BTreeOpContext ctx) throws Exception {
-        ICachedPage node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+    	ICachedPage node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);        
         pins++;
 
         ctx.interiorFrame.setPage(node);
@@ -1167,7 +1165,7 @@ public class BTree {
         private final IBTreeTupleWriter tupleWriter;
         
         public BulkLoadContext(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-                IBTreeMetaDataFrame metaFrame) throws Exception {
+                IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
 
         	splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
         	tupleWriter = leafFrame.getTupleWriter();
@@ -1194,7 +1192,7 @@ public class BTree {
             nodeFrontiers.add(leafFrontier);
         }
 
-        private void addLevel() throws Exception {
+        private void addLevel() throws HyracksDataException {
             NodeFrontier frontier = new NodeFrontier(tupleWriter.createTupleReference());
             frontier.pageId = getFreePage(metaFrame);
             frontier.page = bufferCache.pin(FileHandle.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
@@ -1206,7 +1204,7 @@ public class BTree {
         }
     }
 
-    private void propagateBulk(BulkLoadContext ctx, int level) throws Exception {
+    private void propagateBulk(BulkLoadContext ctx, int level) throws HyracksDataException {
 
         if (ctx.splitKey.getBuffer() == null)
             return;
@@ -1255,9 +1253,9 @@ public class BTree {
     }
     
     // assumes btree has been created and opened
-    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
+    public BulkLoadContext beginBulkLoad(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
         
-    	if(loaded) throw new BTreeException("Trying to bulk-load BTree but has BTree already been loaded.");
+    	if(loaded) throw new HyracksDataException("Trying to bulk-load BTree but has BTree already been loaded.");
     	
     	BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame, interiorFrame, metaFrame);
         ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFieldCount());
@@ -1265,7 +1263,7 @@ public class BTree {
         return ctx;
     }
     
-    public void bulkLoadAddTuple(BulkLoadContext ctx, ITupleReference tuple) throws Exception {                        
+    public void bulkLoadAddTuple(BulkLoadContext ctx, ITupleReference tuple) throws HyracksDataException {                        
         NodeFrontier leafFrontier = ctx.nodeFrontiers.get(0);
         IBTreeLeafFrame leafFrame = ctx.leafFrame;
         
@@ -1311,7 +1309,7 @@ public class BTree {
         //System.out.println(s);        
     }
     
-    public void endBulkLoad(BulkLoadContext ctx) throws Exception {                
+    public void endBulkLoad(BulkLoadContext ctx) throws HyracksDataException {                
         // copy root
         ICachedPage rootNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rootPage), bulkNewPage);
         rootNode.acquireWriteLatch();

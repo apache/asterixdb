@@ -4,8 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.DummySMI;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -47,13 +46,9 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.file.FileHandle;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class SimpleConjunctiveSearcherTest {
 	
@@ -84,16 +79,13 @@ public class SimpleConjunctiveSearcherTest {
 	@Test	
 	public void test01() throws Exception { 
 		
-    	FileManager fileManager = new FileManager();
-    	ICacheMemoryAllocator allocator = new BufferAllocator();
-    	IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-    	IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-
-    	File f = new File(tmpDir + "/" + "btreetest.bin");
-    	RandomAccessFile raf = new RandomAccessFile(f, "rw");
-    	int fileId = 0;
-    	FileHandle fi = new FileHandle(fileId, raf);
-    	fileManager.registerFile(fi);
+		DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
     	
     	// declare fields
     	int fieldCount = 2;
@@ -147,7 +139,7 @@ public class SimpleConjunctiveSearcherTest {
 		tokens.add("science");		
 		tokens.add("major");				
 		
-		int maxId = 1000000;
+		int maxId = 10000;
 		int addProb = 0;
 		int addProbStep = 2;
 		
@@ -233,9 +225,9 @@ public class SimpleConjunctiveSearcherTest {
 					ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j), resultTuple.getFieldStart(j), resultTuple.getFieldLength(j));
 					DataInput dataIn = new DataInputStream(inStream);
 					Object o = resultSerde[j].deserialize(dataIn);		
-					//System.out.print(o + " ");
+					System.out.print(o + " ");
 				}
-				//System.out.println();
+				System.out.println();
 			}
     	}
     	    	    	
@@ -263,11 +255,9 @@ public class SimpleConjunctiveSearcherTest {
             scanCursor.close();
         }
         */
-        
-                
-        btree.close();
-
+                        
+    	btree.close();
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
 	}		
 }

@@ -85,11 +85,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         cursorFrame = opDesc.getLeafFactory().getFrame();
         cursor = new RangeSearchCursor(cursorFrame);
         
-        try {
-			btreeOpHelper.init();
-		} catch (Exception e) {
-			throw new HyracksDataException(e);
-		}
+        btreeOpHelper.init();		
         btree = btreeOpHelper.getBTree();
         
         // construct range predicate
@@ -174,15 +170,20 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 	
 	@Override
 	public void close() throws HyracksDataException {
-		if (appender.getTupleCount() > 0) {
-			FrameUtils.flushFrame(writeBuffer, writer);
-		}		
-		writer.close();
 		try {
-			cursor.close();
-		} catch (Exception e) {
-			throw new HyracksDataException(e);
-		}    	
+			if (appender.getTupleCount() > 0) {
+				FrameUtils.flushFrame(writeBuffer, writer);
+			}		
+			writer.close();
+			try {
+				cursor.close();
+			} catch (Exception e) {
+				throw new HyracksDataException(e);
+			}		
+		}
+		finally {
+			btreeOpHelper.deinit();
+		}
 	}
 
 	@Override

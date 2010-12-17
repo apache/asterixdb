@@ -35,7 +35,7 @@ public interface IBTreeFrame {
 	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
 	
 	public void compact(MultiComparator cmp);
-	public boolean compress(MultiComparator cmp) throws Exception;
+	public boolean compress(MultiComparator cmp) throws HyracksDataException;
 	
 	public void initBuffer(byte level);
 	
@@ -71,7 +71,7 @@ public interface IBTreeFrame {
 	public boolean getSmFlag(); // structure modification flag
 	public void setSmFlag(boolean smFlag);	
 	
-	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception;
+	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
 	
 	public int getSlotSize();
 		

@@ -38,18 +38,16 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.FileMappingProviderProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.SimpleStorageManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will perform range search on the secondary index
 // and then retrieve the corresponding source records from the primary index
@@ -97,10 +95,9 @@ public class SecondaryIndexSearchExample {
     	JobSpecification spec = new JobSpecification();
 
     	String[] splitNCs = options.ncs.split(",");
-    	
-    	IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
+    	    	
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;    	              
+        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;    	              
     	
     	// schema of tuples coming out of secondary index
         RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {                
@@ -164,7 +161,7 @@ public class SecondaryIndexSearchExample {
         int[] secondaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into secondary index search op
 		
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
-        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, bufferCacheProvider, btreeRegistryProvider, secondarySplitProvider, fileMappingProviderProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields, true, true);
+        BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc, storageManager, btreeRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields, true, true);
         PartitionConstraint secondarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         secondarySearchOp.setPartitionConstraint(secondarySearchConstraint);
         
@@ -174,7 +171,7 @@ public class SecondaryIndexSearchExample {
         int[] primaryHighKeyFields = { 1 }; // high key is in field 1 of tuples going into primary index search op
 		
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, bufferCacheProvider, btreeRegistryProvider, primarySplitProvider, fileMappingProviderProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields, true, true);
+        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, storageManager, btreeRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields, primaryHighKeyFields, true, true);
         PartitionConstraint primarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         primarySearchOp.setPartitionConstraint(primarySearchConstraint);
         

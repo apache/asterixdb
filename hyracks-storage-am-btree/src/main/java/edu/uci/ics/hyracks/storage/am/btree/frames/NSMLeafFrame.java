@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -92,7 +93,7 @@ public class NSMLeafFrame extends NSMFrame implements IBTreeLeafFrame {
 	}
 	
 	@Override
-	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception {		
+	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {		
 		int freeSpace = buf.getInt(freeSpaceOff);
 		slotManager.insertSlot(-1, freeSpace);		
 		int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);	

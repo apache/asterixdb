@@ -4,8 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +30,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.DummySMI;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
@@ -51,13 +50,9 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.file.FileInfo;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class RangeSearchCursorTest {
 	private static final int PAGE_SIZE = 256;
@@ -65,10 +60,6 @@ public class RangeSearchCursorTest {
     private static final int HYRACKS_FRAME_SIZE = 128;
     
     private String tmpDir = System.getProperty("java.io.tmpdir");
-    
-    private void print(String str) {
-    	System.out.print(str);
-    }       
     
     public class BufferAllocator implements ICacheMemoryAllocator {
         @Override
@@ -117,16 +108,13 @@ public class RangeSearchCursorTest {
     	    	
     	System.out.println("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-        
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileInfo fi = new FileInfo(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
                 
         // declare keys
         int keyFieldCount = 1;
@@ -199,9 +187,8 @@ public class RangeSearchCursorTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
         
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
     }    
     
     @Test
@@ -209,16 +196,13 @@ public class RangeSearchCursorTest {
     	    	
     	System.out.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-        
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileInfo fi = new FileInfo(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
                 
         // declare keys
         int keyFieldCount = 2;
@@ -289,9 +273,8 @@ public class RangeSearchCursorTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
         
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
     }    
     
     @Test
@@ -302,16 +285,13 @@ public class RangeSearchCursorTest {
     	IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
     	IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
     	
-        FileManager fileManager = new FileManager();
-        ICacheMemoryAllocator allocator = new BufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IBufferCache bufferCache = new BufferCache(allocator, prs, fileManager, PAGE_SIZE, NUM_PAGES);
-        
-        File f = new File(tmpDir + "/" + "btreetest.bin");
-        RandomAccessFile raf = new RandomAccessFile(f, "rw");
-        int fileId = 0;
-        FileInfo fi = new FileInfo(fileId, raf);
-        fileManager.registerFile(fi);
+    	DummySMI smi = new DummySMI(PAGE_SIZE, NUM_PAGES);    	
+    	IBufferCache bufferCache = smi.getBufferCache();
+    	IFileMapProvider fmp = smi.getFileMapProvider();
+    	String fileName = tmpDir + "/" + "btreetest.bin";
+    	bufferCache.createFile(fileName);    	
+    	int fileId = fmp.lookupFileId(fileName);
+    	bufferCache.openFile(fileId);
                 
         // declare keys
         int keyFieldCount = 2;
@@ -382,9 +362,8 @@ public class RangeSearchCursorTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
         
         btree.close();
-
+        bufferCache.closeFile(fileId);
         bufferCache.close();
-        fileManager.close();
     }    
     
     public RangePredicate createRangePredicate(int lk, int hk, boolean isForward, boolean lowKeyInclusive, boolean highKeyInclusive, MultiComparator cmp, ITypeTrait[] typeTraits) throws HyracksDataException {        

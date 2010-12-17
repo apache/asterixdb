@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
@@ -59,7 +60,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
         return page;
     }
     
-    private boolean positionToNextLeaf(boolean skipCurrent) throws Exception {
+    private boolean positionToNextLeaf(boolean skipCurrent) throws HyracksDataException {
         while( (frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId) || (frame.getTupleCount() == 0) ) {            
             currentPageId++;
             
@@ -101,7 +102,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     }
     
     @Override
-    public void open(ICachedPage page, ISearchPredicate searchPred) throws Exception {       
+    public void open(ICachedPage page, ISearchPredicate searchPred) throws HyracksDataException {       
         // in case open is called multiple times without closing
         if(this.page != null) {
             this.page.releaseReadLatch();
@@ -116,7 +117,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
 		frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
         boolean leafExists = positionToNextLeaf(false);
         if(!leafExists) {
-            throw new Exception("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
+            throw new HyracksDataException("Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
         }
     }
     

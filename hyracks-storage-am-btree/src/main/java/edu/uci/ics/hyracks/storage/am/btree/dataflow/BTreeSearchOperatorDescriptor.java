@@ -26,26 +26,38 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	private boolean isForward;	
 	private int[] lowKeyFields; // fields in input tuple to be used as low keys
 	private int[] highKeyFields; // fields in input tuple to be used as high keys
 	private boolean lowKeyInclusive;
-    private boolean highKeyInclusive;
-	
-	public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, IBufferCacheProvider bufferCacheProvider, IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {		
-		super(spec, 1, 1, recDesc, bufferCacheProvider, btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory, leafFactory, typeTraits, comparatorFactories);
+	private boolean highKeyInclusive;
+
+	public BTreeSearchOperatorDescriptor(JobSpecification spec, 
+			RecordDescriptor recDesc, 
+			IStorageManagerInterface storageManager, 
+			IBTreeRegistryProvider btreeRegistryProvider, 
+			IFileSplitProvider fileSplitProvider, 
+			IBTreeInteriorFrameFactory interiorFactory, 
+			IBTreeLeafFrameFactory leafFactory, 
+			ITypeTrait[] typeTraits, 
+			IBinaryComparatorFactory[] comparatorFactories, 
+			boolean isForward, 
+			int[] lowKeyFields, int[] highKeyFields, 
+			boolean lowKeyInclusive, boolean highKeyInclusive) {		
+		super(spec, 1, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory, leafFactory, typeTraits, comparatorFactories);
 		this.isForward = isForward;
 		this.lowKeyFields = lowKeyFields;
 		this.highKeyFields = highKeyFields;
 		this.lowKeyInclusive = lowKeyInclusive;
 		this.highKeyInclusive = highKeyInclusive;
 	}
-	
+
 	@Override
 	public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
 			IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
