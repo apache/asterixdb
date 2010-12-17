@@ -99,7 +99,7 @@ public class BTree {
         this.leafFrameFactory = leafFrameFactory;       
         this.cmp = cmp;
         this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new RangePredicate(true, null, null, true, true, cmp);             
+        this.diskOrderScanPredicate = new RangePredicate(true, null, null, true, true, cmp, cmp);             
     }
     
     public void create(int fileId, IBTreeLeafFrame leafFrame, IBTreeMetaDataFrame metaFrame) throws Exception {
@@ -407,9 +407,12 @@ public class BTree {
     public void search(IBTreeCursor cursor, RangePredicate pred, BTreeOpContext ctx) throws Exception {        
     	ctx.reset();
     	ctx.pred = pred;
-        ctx.cursor = cursor;        
-        if (ctx.pred.getComparator() == null)
-            ctx.pred.setComparator(cmp); // simple index scan
+        ctx.cursor = cursor;       
+        // simple index scan
+        if (ctx.pred.getLowKeyComparator() == null)
+            ctx.pred.setLowKeyComparator(cmp);
+        if (ctx.pred.getHighKeyComparator() == null)
+            ctx.pred.setHighKeyComparator(cmp);
         
         boolean repeatOp = true;
         // we use this loop to deal with possibly multiple operation restarts
@@ -520,7 +523,8 @@ public class BTree {
 
     public void insert(ITupleReference tuple, BTreeOpContext ctx) throws Exception {       
     	ctx.reset();
-    	ctx.pred.setComparator(cmp);
+    	ctx.pred.setLowKeyComparator(cmp);
+    	ctx.pred.setHighKeyComparator(cmp);
         ctx.pred.setLowKey(tuple, true);
         ctx.pred.setHighKey(tuple, true);
         ctx.splitKey.reset();
@@ -753,7 +757,8 @@ public class BTree {
     
     public void delete(ITupleReference tuple, BTreeOpContext ctx) throws Exception {       
     	ctx.reset();
-    	ctx.pred.setComparator(cmp);
+    	ctx.pred.setLowKeyComparator(cmp);
+    	ctx.pred.setHighKeyComparator(cmp);
         ctx.pred.setLowKey(tuple, true);
         ctx.pred.setHighKey(tuple, true);        
         ctx.splitKey.reset();
@@ -1005,7 +1010,7 @@ public class BTree {
                     // the descent
                     boolean repeatOp = true;
                     while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
-                        int childPageId = ctx.interiorFrame.getChildPageId(ctx.pred, cmp);                                                
+                        int childPageId = ctx.interiorFrame.getChildPageId(ctx.pred, cmp);
                         performOp(childPageId, node, ctx);
 
                         if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {

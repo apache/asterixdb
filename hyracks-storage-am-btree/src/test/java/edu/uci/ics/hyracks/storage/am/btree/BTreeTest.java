@@ -219,7 +219,7 @@ public class BTreeTest {
         
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
         btree.search(scanCursor, nullPred, searchOpCtx);
         try {
@@ -294,7 +294,7 @@ public class BTreeTest {
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {
@@ -425,7 +425,7 @@ public class BTreeTest {
         // try a simple index scan
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
         btree.search(scanCursor, nullPred, searchOpCtx);
         
@@ -482,7 +482,7 @@ public class BTreeTest {
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();       
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps); // use only a single comparator for searching
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {
@@ -604,7 +604,7 @@ public class BTreeTest {
     	// ordered scan
         print("ORDERED SCAN:\n");        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
         btree.search(scanCursor, nullPred, searchOpCtx);
         
@@ -661,7 +661,7 @@ public class BTreeTest {
         searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
 
         try {
@@ -988,7 +988,7 @@ public class BTreeTest {
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
         
         // TODO: check when searching backwards
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
         btree.search(rangeCursor, rangePred, searchOpCtx);
         
@@ -1150,7 +1150,7 @@ public class BTreeTest {
 
         print("ORDERED SCAN:\n");
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
         btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -1213,7 +1213,7 @@ public class BTreeTest {
                 
         //print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " + cmp.printKey(highKey, 0) + "\n");                
         
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp);
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
         
         try {

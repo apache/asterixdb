@@ -44,7 +44,7 @@ public final class BTreeOpContext {
 		if(op != BTreeOp.BTO_SEARCH) {			
 			smPages = new IntArrayList(treeHeightHint, treeHeightHint);
 			freePages = new IntArrayList(treeHeightHint, treeHeightHint);
-			pred = new RangePredicate(true, null, null, true, true, null);
+			pred = new RangePredicate(true, null, null, true, true, null, null);
 			splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
 		}
 		else {			

@@ -35,9 +35,9 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
@@ -58,14 +58,15 @@ import edu.uci.ics.hyracks.storage.common.file.FileManager;
 public class SimpleConjunctiveSearcherTest {
 	
 	// testing params
-	private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 256;
+	//private static final int PAGE_SIZE = 256;
+    //private static final int NUM_PAGES = 10;
+    //private static final int HYRACKS_FRAME_SIZE = 256;
 
 	// realistic params
-	//private static final int PAGE_SIZE = 32768;
-    //private static final int NUM_PAGES = 100;
-    //private static final int HYRACKS_FRAME_SIZE = 32768;
+	//private static final int PAGE_SIZE = 65536;
+	private static final int PAGE_SIZE = 32768;
+    private static final int NUM_PAGES = 10;
+    private static final int HYRACKS_FRAME_SIZE = 32768;
     
 	private String tmpDir = System.getProperty("java.io.tmpdir");
 	
@@ -82,7 +83,7 @@ public class SimpleConjunctiveSearcherTest {
     
 	@Test	
 	public void test01() throws Exception { 
-		    	
+		
     	FileManager fileManager = new FileManager();
     	ICacheMemoryAllocator allocator = new BufferAllocator();
     	IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -110,8 +111,8 @@ public class SimpleConjunctiveSearcherTest {
     	    	
     	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
     	//SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
-        //IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-    	IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
+    	//IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
         IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
         
@@ -146,7 +147,7 @@ public class SimpleConjunctiveSearcherTest {
 		tokens.add("science");		
 		tokens.add("major");				
 		
-		int maxId = 1000;
+		int maxId = 1000000;
 		int addProb = 0;
 		int addProbStep = 2;
 		
@@ -176,6 +177,9 @@ public class SimpleConjunctiveSearcherTest {
     			}
     		}
     	}     
+    	
+    	int numPages = btree.getMaxPage(metaFrame);
+    	System.out.println("NUMPAGES: " + numPages);
     	
     	// build query as tuple reference
     	ISerializerDeserializer[] querySerde = { UTF8StringSerializerDeserializer.INSTANCE };
@@ -218,7 +222,7 @@ public class SimpleConjunctiveSearcherTest {
     	long timeEnd = System.currentTimeMillis();    	
     	System.out.println("SEARCH TIME: " + (timeEnd - timeStart) + "ms");
     	    	    	
-    	System.out.println("INTERSECTION RESULTS");
+    	//System.out.println("INTERSECTION RESULTS");
     	IInvertedIndexResultCursor resultCursor = searcher.getResultCursor();
     	while(resultCursor.hasNext()) {
     		resultCursor.next();
@@ -229,9 +233,9 @@ public class SimpleConjunctiveSearcherTest {
 					ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j), resultTuple.getFieldStart(j), resultTuple.getFieldLength(j));
 					DataInput dataIn = new DataInputStream(inStream);
 					Object o = resultSerde[j].deserialize(dataIn);		
-					System.out.print(o + " ");
+					//System.out.print(o + " ");
 				}
-				System.out.println();
+				//System.out.println();
 			}
     	}
     	    	    	
@@ -242,14 +246,15 @@ public class SimpleConjunctiveSearcherTest {
 		
     	// ordered scan        
         IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-        RangePredicate nullPred = new RangePredicate(true, null, null, null);
-        btree.search(scanCursor, nullPred, leafFrame, interiorFrame);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, metaFrame);
+        btree.search(scanCursor, nullPred, searchOpCtx);
         
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();                
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = cmp.printTuple(frameTuple, btreeSerde);
                 System.out.println(rec);
             }
         } catch (Exception e) {
@@ -258,6 +263,7 @@ public class SimpleConjunctiveSearcherTest {
             scanCursor.close();
         }
         */
+        
                 
         btree.close();
 

@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 // a slot consists of two fields:
@@ -46,7 +48,7 @@ public interface IPrefixSlotManager {
 	public int decodeSecondSlotField(int slot);		
 	public int encodeSlotFields(int firstField, int secondField);
 	
-	public int findSlot(ITupleReference tuple, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, boolean exact);
+	public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
 	public int insertSlot(int slot, int tupleOff);
 	
 	// returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
@@ -58,13 +60,13 @@ public interface IPrefixSlotManager {
 	public int getPrefixSlotStartOff();
 	public int getPrefixSlotEndOff();
 	
-	public int getTupleSlotOff(int slotNum);
-	public int getPrefixSlotOff(int slotNum);	
+	public int getTupleSlotOff(int tupleIndex);
+	public int getPrefixSlotOff(int tupleIndex);
 		
 	public int getSlotSize();		
 	
 	public void setSlot(int offset, int value);
 		
 	// functions for testing
-	public void setPrefixSlot(int slotNum, int slot);
+	public void setPrefixSlot(int tupleIndex, int slot);
 }

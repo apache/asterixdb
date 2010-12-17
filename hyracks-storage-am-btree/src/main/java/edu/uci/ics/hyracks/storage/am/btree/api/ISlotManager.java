@@ -16,13 +16,14 @@
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindSlotMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 public interface ISlotManager {
 	public void setFrame(IBTreeFrame frame);
 	
-	public int findTupleIndex(ITupleReference tuple, IBTreeTupleReference pageTuple, MultiComparator multiCmp, FindSlotMode mode);
+	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference frameTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
 	public int insertSlot(int tupleIndex, int tupleOff);
 	
 	public int getSlotStartOff();
