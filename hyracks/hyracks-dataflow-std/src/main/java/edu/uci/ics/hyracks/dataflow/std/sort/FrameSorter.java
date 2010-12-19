@@ -237,7 +237,7 @@ public class FrameSorter {
         byte[] b2 = buf2.array();
         fta1.reset(buf1);
         fta2.reset(buf2);
-        for (int f = 0; f < sortFields.length; ++f) {
+        for (int f = 0; f < comparators.length; ++f) {
             int fIdx = sortFields[f];
             int f1Start = fIdx == 0 ? 0 : buf1.getShort(j1 + (fIdx - 1) * 2);
             int f1End = buf1.getShort(j1 + fIdx * 2);
