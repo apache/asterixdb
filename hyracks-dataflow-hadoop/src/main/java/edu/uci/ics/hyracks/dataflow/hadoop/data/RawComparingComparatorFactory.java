@@ -21,10 +21,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
 
-public class WritableComparingComparatorFactory<T> implements IComparatorFactory<WritableComparable<T>> {
-    private Class<? extends RawComparator<? super WritableComparable<T>>> klass;
+public class RawComparingComparatorFactory<T> implements IComparatorFactory<WritableComparable<T>> {
+    private Class<? extends RawComparator> klass;
 
-    public WritableComparingComparatorFactory(Class<? extends RawComparator<? super WritableComparable<T>>> klass) {
+    public RawComparingComparatorFactory(Class<? extends RawComparator> klass) {
         this.klass = klass;
     }
 
@@ -32,7 +32,7 @@ public class WritableComparingComparatorFactory<T> implements IComparatorFactory
 
     @Override
     public IComparator<WritableComparable<T>> createComparator() {
-        final RawComparator<? super WritableComparable<T>> instance = ReflectionUtils.createInstance(klass);
+        final RawComparator instance = ReflectionUtils.createInstance(klass);
         return new IComparator<WritableComparable<T>>() {
             @Override
             public int compare(WritableComparable<T> o1, WritableComparable<T> o2) {
