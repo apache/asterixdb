@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -502,7 +503,12 @@ public class BufferCache implements IBufferCacheInternal {
             if (fInfo == null) {
                 String fileName = fileMapManager.lookupFileName(fileId);
                 try {
-                    fInfo = new FileHandle(fileId, new RandomAccessFile(fileName, "rw"));
+                	File f = new File(fileName);
+                    if(!f.exists()) {
+                    	File dir = new File(f.getParent());        	
+                    	dir.mkdirs();
+                    }
+                	fInfo = new FileHandle(fileId, new RandomAccessFile(f, "rw"));
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
