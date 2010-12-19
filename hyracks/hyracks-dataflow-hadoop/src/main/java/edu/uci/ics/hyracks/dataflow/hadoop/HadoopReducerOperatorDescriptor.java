@@ -47,7 +47,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.hadoop.data.WritableComparingComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.data.RawComparingComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
@@ -353,7 +353,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
                         rawComparator = WritableComparator.get((Class<? extends WritableComparable>) Class
                                 .forName(mapOutputKeyClass));
                     }
-                    this.comparatorFactory = new WritableComparingComparatorFactory(rawComparator.getClass());
+                    this.comparatorFactory = new RawComparingComparatorFactory(rawComparator.getClass());
                 }
             }
             IOpenableDataWriterOperator op = new DeserializedPreclusteredGroupOperator(new int[] { 0 },
