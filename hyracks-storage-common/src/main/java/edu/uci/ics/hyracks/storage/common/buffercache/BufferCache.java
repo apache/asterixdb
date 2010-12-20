@@ -26,6 +26,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -492,7 +493,9 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public void createFile(String fileName) throws HyracksDataException {
-        LOGGER.info("Deleting file: " + fileName + " in cache: " + this);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Creating file: " + fileName + " in cache: " + this);
+        }
         synchronized (fileInfoMap) {
             fileMapManager.registerFile(fileName);
         }
@@ -500,7 +503,9 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public void openFile(int fileId) throws HyracksDataException {
-        LOGGER.info("Opening file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Opening file: " + fileId + " in cache: " + this);
+        }
         synchronized (fileInfoMap) {
             FileHandle fInfo;
             fInfo = fileInfoMap.get(fileId);
@@ -572,7 +577,9 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public void closeFile(int fileId) throws HyracksDataException {
-        LOGGER.info("Closing file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Closing file: " + fileId + " in cache: " + this);
+        }
         synchronized (fileInfoMap) {
             FileHandle fInfo = fileInfoMap.get(fileId);
             if (fInfo == null) {
@@ -588,7 +595,9 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public synchronized void deleteFile(int fileId) throws HyracksDataException {
-        LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
+        }
         synchronized (fileInfoMap) {
             FileHandle fInfo = fileInfoMap.get(fileId);
             if (fInfo != null) {
