@@ -357,6 +357,10 @@ public class BufferCache implements IBufferCacheInternal {
             pageReplacementStrategy.notifyCachePageReset(this);
         }
 
+        public void invalidate() {
+            reset(-1);
+        }
+
         @Override
         public ByteBuffer getBuffer() {
             return buffer;
@@ -503,12 +507,12 @@ public class BufferCache implements IBufferCacheInternal {
             if (fInfo == null) {
                 String fileName = fileMapManager.lookupFileName(fileId);
                 try {
-                	File f = new File(fileName);
-                    if(!f.exists()) {
-                    	File dir = new File(f.getParent());        	
-                    	dir.mkdirs();
+                    File f = new File(fileName);
+                    if (!f.exists()) {
+                        File dir = new File(f.getParent());
+                        dir.mkdirs();
                     }
-                	fInfo = new FileHandle(fileId, new RandomAccessFile(f, "rw"));
+                    fInfo = new FileHandle(fileId, new RandomAccessFile(f, "rw"));
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
@@ -557,11 +561,10 @@ public class BufferCache implements IBufferCacheInternal {
                 cPage.dirty.set(false);
                 cPage.pinCount.decrementAndGet();
             }
-            System.err.println("PinCount: " + cPage.pinCount.get());
             if (cPage.pinCount.get() != 0) {
                 throw new IllegalStateException("Page is pinned and file is being closed");
             }
-            cPage.valid = false;
+            cPage.invalidate();
             return true;
         }
         return false;
