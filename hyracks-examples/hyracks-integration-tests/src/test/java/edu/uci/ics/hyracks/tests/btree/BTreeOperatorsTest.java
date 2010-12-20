@@ -73,8 +73,7 @@ import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	
-	// TODO: fix bug when given fewer pages in buffer cache, talk to Vinayak
-	private static HyracksSimpleStorageManagerInterface storageManager = new HyracksSimpleStorageManagerInterface(8192, 100);
+	private static HyracksSimpleStorageManagerInterface storageManager = new HyracksSimpleStorageManagerInterface(8192, 20);	
 	
 	@Test
 	public void bulkLoadTest() throws Exception {		

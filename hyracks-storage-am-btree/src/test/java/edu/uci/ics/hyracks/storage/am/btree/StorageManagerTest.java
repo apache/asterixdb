@@ -118,8 +118,7 @@ public class StorageManagerTest {
 		private void unpinRandomPage() {
 			int index = Math.abs(rnd.nextInt() % pinnedPages.size());
 			try {
-				PinnedLatchedPage plPage = pinnedPages.get(index);
-				System.out.println(workerId + " UNPINNING PAGE: " + plPage.pageId);
+				PinnedLatchedPage plPage = pinnedPages.get(index);				
 				
 				if(plPage.latch != null) {
 					if(plPage.latch == LatchType.LATCH_S) {
@@ -131,6 +130,8 @@ public class StorageManagerTest {
 						plPage.page.releaseWriteLatch();
 					}
 				}								
+				System.out.println(workerId + " UNPINNING PAGE: " + plPage.pageId);
+				
 				bufferCache.unpin(plPage.page);				
 				pinnedPages.remove(index);				
 			} catch (HyracksDataException e) {
@@ -226,9 +227,9 @@ public class StorageManagerTest {
 		bufferCache.createFile(fileName);    	
 		int fileId = fmp.lookupFileId(fileName);
 		
-		Thread worker = new Thread(new FileAccessWorker(0, bufferCache, FileAccessType.FTA_READONLY, fileId, 10, 10, 100, 10, 0));		
+		Thread worker = new Thread(new FileAccessWorker(0, bufferCache, FileAccessType.FTA_UNLATCHED, fileId, 10, 10, 100, 10, 0));		
 		
-		worker.start();		
+		worker.start();
 
 		worker.join();
 		
