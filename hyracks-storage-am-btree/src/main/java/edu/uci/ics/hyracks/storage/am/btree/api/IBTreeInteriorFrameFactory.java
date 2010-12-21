@@ -17,6 +17,6 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import java.io.Serializable;
 
-public interface IBTreeInteriorFrameFactory extends Serializable {	
-	public IBTreeInteriorFrame getFrame();
+public interface IBTreeInteriorFrameFactory extends Serializable {
+    public IBTreeInteriorFrame getFrame();
 }

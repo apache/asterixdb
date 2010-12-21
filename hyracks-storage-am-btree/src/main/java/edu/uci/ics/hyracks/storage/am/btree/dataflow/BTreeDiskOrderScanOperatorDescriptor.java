@@ -25,28 +25,23 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
-	
-	private static final long serialVersionUID = 1L;
-	
-	public BTreeDiskOrderScanOperatorDescriptor(JobSpecification spec,
-			RecordDescriptor recDesc,
-			IBufferCacheProvider bufferCacheProvider,
-			IBTreeRegistryProvider btreeRegistryProvider,
-			IFileSplitProvider fileSplitProvider, IFileMappingProviderProvider fileMappingProviderProvider, IBTreeInteriorFrameFactory interiorFactory,
-			IBTreeLeafFrameFactory leafFactory, 
-			ITypeTrait[] typeTraits) {
-		super(spec, 0, 1, recDesc, bufferCacheProvider,
-				btreeRegistryProvider, fileSplitProvider, fileMappingProviderProvider, interiorFactory,
-				leafFactory, typeTraits, null);
-	}
-	
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksContext ctx,
-			IOperatorEnvironment env,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
-		return new BTreeDiskOrderScanOperatorNodePushable(this, ctx, partition);
-	}	
+
+    private static final long serialVersionUID = 1L;
+
+    public BTreeDiskOrderScanOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IBTreeRegistryProvider btreeRegistryProvider,
+            IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
+            IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits) {
+        super(spec, 0, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory,
+                leafFactory, typeTraits, null);
+    }
+
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new BTreeDiskOrderScanOperatorNodePushable(this, ctx, partition);
+    }
 }

@@ -36,9 +36,9 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private ByteBuffer writeBuffer;
     private BTreeOpContext opCtx;
-    
+
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
-    		int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
@@ -46,20 +46,26 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        writer.close();
+    public void open() throws HyracksDataException {
+        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), inputRecDesc);
+        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
+        btreeOpHelper.init();
+        btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
+        opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(),
+                btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        final BTree btree = btreeOpHelper.getBTree();       
+        final BTree btree = btreeOpHelper.getBTree();
         accessor.reset(buffer);
-        
+
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
             try {
-
                 switch (op) {
 
                     case BTO_INSERT: {
@@ -73,7 +79,8 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                         break;
 
                     default: {
-                        throw new HyracksDataException("Unsupported operation " + op + " in BTree InsertUpdateDelete operator");
+                        throw new HyracksDataException("Unsupported operation " + op
+                                + " in BTree InsertUpdateDelete operator");
                     }
 
                 }
@@ -89,18 +96,12 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     }
 
     @Override
-    public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), inputRecDesc);
-        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();        
+    public void close() throws HyracksDataException {
         try {
-            btreeOpHelper.init();
-            btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-        } catch (Exception e) {
-            e.printStackTrace();
+            writer.close();
+        } finally {
+            btreeOpHelper.deinit();
         }
-        opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(), btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
     }
 
     @Override

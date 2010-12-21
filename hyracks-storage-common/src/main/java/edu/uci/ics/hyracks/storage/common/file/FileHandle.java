@@ -14,17 +14,23 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class FileInfo {
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
+public class FileHandle {
     private final int fileId;
     private final RandomAccessFile file;
+    private final AtomicInteger refCount;
     private FileChannel channel;
 
-    public FileInfo(int fileId, RandomAccessFile file) {
+    public FileHandle(int fileId, RandomAccessFile file) {
         this.fileId = fileId;
         this.file = file;
+        refCount = new AtomicInteger();
         channel = file.getChannel();
     }
 
@@ -38,6 +44,23 @@ public class FileInfo {
 
     public FileChannel getFileChannel() {
         return channel;
+    }
+
+    public void close() throws HyracksDataException {
+        try {
+            channel.close();
+            file.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public int incReferenceCount() {
+        return refCount.incrementAndGet();
+    }
+
+    public int decReferenceCount() {
+        return refCount.decrementAndGet();
     }
 
     public long getDiskPageId(int pageId) {

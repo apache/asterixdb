@@ -38,18 +38,16 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.FileMappingProviderProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.SimpleStorageManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will perform an ordered scan on the primary index
 // i.e. a range-search for [-infinity, +infinity]
@@ -64,19 +62,19 @@ public class PrimaryIndexSearchExample {
 
         @Option(name = "-app", usage = "Hyracks Application name", required = true)
         public String app;
-        
+
         @Option(name = "-target-ncs", usage = "Comma separated list of node-controller names to use", required = true)
         public String ncs;
-                
+
         @Option(name = "-btreename", usage = "B-Tree file name to search", required = true)
-        public String btreeName;               
+        public String btreeName;
     }
 
     public static void main(String[] args) throws Exception {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        
+
         IHyracksClientConnection hcc = new HyracksRMIConnection(options.host, options.port);
 
         JobSpecification job = createJob(options);
@@ -88,76 +86,83 @@ public class PrimaryIndexSearchExample {
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));
     }
-    
-    private static JobSpecification createJob(Options options) throws HyracksDataException {
-    	
-    	JobSpecification spec = new JobSpecification();
 
-    	String[] splitNCs = options.ncs.split(",");
-    	
-    	int fieldCount = 4;
+    private static JobSpecification createJob(Options options) throws HyracksDataException {
+
+        JobSpecification spec = new JobSpecification();
+
+        String[] splitNCs = options.ncs.split(",");
+
+        int fieldCount = 4;
         ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
         typeTraits[0] = new TypeTrait(4);
         typeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
         typeTraits[2] = new TypeTrait(4);
         typeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-    	
+
         // create factories and providers for B-Tree
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
-        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);        
-        IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;
-    	
-    	// schema of tuples coming out of primary index
-        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {                
-        		IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE,    
-                IntegerSerializerDeserializer.INSTANCE,                           
-                UTF8StringSerializerDeserializer.INSTANCE,
-                });
-        
+        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;
+
+        // schema of tuples coming out of primary index
+        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, });
+
         // comparators for btree
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
-        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;     
-        
+        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+
         // build tuple containing low and high search keys
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(comparatorFactories.length*2); // high key and low key
-		DataOutput dos = tb.getDataOutput();
-				
-		tb.reset();				
-		IntegerSerializerDeserializer.INSTANCE.serialize(100, dos); // low key
-		tb.addFieldEndOffset();		
-		IntegerSerializerDeserializer.INSTANCE.serialize(200, dos); // build high key
-		tb.addFieldEndOffset();
-		
-		ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
-		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-		
-		ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-		PartitionConstraint keyProviderPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
-		keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
-				
-        int[] lowKeyFields = { 0 }; // low key is in field 0 of tuples going into search op 
-        int[] highKeyFields = { 1 }; // low key is in field 1 of tuples going into search op
-        		
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(comparatorFactories.length * 2); // high
+                                                                                      // key
+                                                                                      // and
+                                                                                      // low
+                                                                                      // key
+        DataOutput dos = tb.getDataOutput();
+
+        tb.reset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(100, dos); // low key
+        tb.addFieldEndOffset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(200, dos); // build
+                                                                    // high key
+        tb.addFieldEndOffset();
+
+        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE };
+        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
+        PartitionConstraint keyProviderPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
+        keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
+
+        int[] lowKeyFields = { 0 }; // low key is in field 0 of tuples going
+                                    // into search op
+        int[] highKeyFields = { 1 }; // low key is in field 1 of tuples going
+                                     // into search op
+
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories, true, lowKeyFields, highKeyFields, true, true);
+        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
+                btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory, typeTraits,
+                comparatorFactories, true, lowKeyFields, highKeyFields, true, true);
         PartitionConstraint btreeSearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
         btreeSearchOp.setPartitionConstraint(btreeSearchConstraint);
-        
+
         // have each node print the results of its respective B-Tree
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
         PartitionConstraint printerConstraint = JobHelper.createPartitionConstraint(splitNCs);
         printer.setPartitionConstraint(printerConstraint);
-        
+
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, btreeSearchOp, 0);
-        
+
         spec.connect(new OneToOneConnectorDescriptor(spec), btreeSearchOp, 0, printer, 0);
-        
+
         spec.addRoot(printer);
-    	    	
-    	return spec;
-    }        
+
+        return spec;
+    }
 }

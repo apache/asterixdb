@@ -13,14 +13,26 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.examples.btree.helper;
 
-import java.io.Serializable;
-
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.FileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public interface IBufferCacheProvider extends Serializable {
-	public IBufferCache getBufferCache();
-	public FileManager getFileManager();
+public class SimpleStorageManager implements IStorageManagerInterface {
+
+    private static final long serialVersionUID = 1L;
+
+    public static SimpleStorageManager INSTANCE = new SimpleStorageManager();
+
+    @Override
+    public IBufferCache getBufferCache() {
+        return RuntimeContext.getInstance().getBufferCache();
+    }
+
+    @Override
+    public IFileMapProvider getFileMapProvider() {
+        return RuntimeContext.getInstance().getFileMapManager();
+    }
+
 }

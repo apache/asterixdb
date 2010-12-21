@@ -20,16 +20,16 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
 
 public class NSMInteriorFrameFactory implements IBTreeInteriorFrameFactory {
-	
-	private static final long serialVersionUID = 1L;	
-	private IBTreeTupleWriterFactory tupleWriterFactory;
-	
-	public NSMInteriorFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
-		this.tupleWriterFactory = tupleWriterFactory;
-	}
-	
-	@Override
-	public IBTreeInteriorFrame getFrame() {		
-		return new NSMInteriorFrame(tupleWriterFactory.createTupleWriter());
-	}	
+
+    private static final long serialVersionUID = 1L;
+    private IBTreeTupleWriterFactory tupleWriterFactory;
+
+    public NSMInteriorFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
+        this.tupleWriterFactory = tupleWriterFactory;
+    }
+
+    @Override
+    public IBTreeInteriorFrame getFrame() {
+        return new NSMInteriorFrame(tupleWriterFactory.createTupleWriter());
+    }
 }

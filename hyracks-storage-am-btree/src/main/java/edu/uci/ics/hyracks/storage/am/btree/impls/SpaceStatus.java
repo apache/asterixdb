@@ -16,7 +16,5 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 public enum SpaceStatus {
-	INSUFFICIENT_SPACE,
-	SUFFICIENT_CONTIGUOUS_SPACE,
-	SUFFICIENT_SPACE
+    INSUFFICIENT_SPACE, SUFFICIENT_CONTIGUOUS_SPACE, SUFFICIENT_SPACE
 }
