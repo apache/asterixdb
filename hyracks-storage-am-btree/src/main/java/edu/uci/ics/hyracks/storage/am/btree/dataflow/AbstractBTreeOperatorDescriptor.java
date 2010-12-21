@@ -42,9 +42,10 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
     protected final ITypeTrait[] typeTraits;
 
     public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
-            RecordDescriptor recDesc, IStorageManagerInterface storageManager, IBTreeRegistryProvider btreeRegistryProvider,
-            IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
-            IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories) {
+            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
+            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider,
+            IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;

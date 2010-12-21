@@ -25,28 +25,24 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
-	
-	private static final long serialVersionUID = 1L;
-	
-	private IStorageManagerInterface storageManager;	
-	private IBTreeRegistryProvider btreeRegistryProvider;
-	private IFileSplitProvider fileSplitProvider;
-	
-	public BTreeDropOperatorDescriptor(JobSpecification spec,			
-			IStorageManagerInterface storageManager,
-			IBTreeRegistryProvider btreeRegistryProvider,
-			IFileSplitProvider fileSplitProvider) {
-		super(spec, 0, 0);		
-		this.storageManager = storageManager;
-		this.btreeRegistryProvider = btreeRegistryProvider;
-		this.fileSplitProvider = fileSplitProvider;
-	}
-	
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksContext ctx,
-			IOperatorEnvironment env,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
-		return new BTreeDropOperatorNodePushable(storageManager, btreeRegistryProvider, fileSplitProvider, partition);
-	}	
+
+    private static final long serialVersionUID = 1L;
+
+    private IStorageManagerInterface storageManager;
+    private IBTreeRegistryProvider btreeRegistryProvider;
+    private IFileSplitProvider fileSplitProvider;
+
+    public BTreeDropOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
+            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider) {
+        super(spec, 0, 0);
+        this.storageManager = storageManager;
+        this.btreeRegistryProvider = btreeRegistryProvider;
+        this.fileSplitProvider = fileSplitProvider;
+    }
+
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new BTreeDropOperatorNodePushable(storageManager, btreeRegistryProvider, fileSplitProvider, partition);
+    }
 }

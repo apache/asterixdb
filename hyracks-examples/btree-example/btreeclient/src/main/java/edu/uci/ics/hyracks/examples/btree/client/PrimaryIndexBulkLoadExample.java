@@ -63,19 +63,19 @@ public class PrimaryIndexBulkLoadExample {
 
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
         public int port = 1099;
-        
+
         @Option(name = "-app", usage = "Hyracks Application name", required = true)
         public String app;
-        
+
         @Option(name = "-target-ncs", usage = "Comma separated list of node-controller names to use", required = true)
         public String ncs;
-        
+
         @Option(name = "-num-tuples", usage = "Total number of tuples to to be generated for loading", required = true)
         public int numTuples;
-                
+
         @Option(name = "-btreename", usage = "B-Tree file name", required = true)
         public String btreeName;
-        
+
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 32768)", required = false)
         public int sbSize = 32768;
     }
@@ -96,39 +96,50 @@ public class PrimaryIndexBulkLoadExample {
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));
     }
-    
-    private static JobSpecification createJob(Options options) {
-    	
-    	JobSpecification spec = new JobSpecification();
 
-    	String[] splitNCs = options.ncs.split(",");
-    	
-    	// schema of tuples to be generated: 5 fields with string, string, int, int, string
-    	// we will use field-index 2 as primary key to fill a clustered index
-        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {                
-                UTF8StringSerializerDeserializer.INSTANCE, // this field will not go into B-Tree
-                UTF8StringSerializerDeserializer.INSTANCE, // we will use this as payload    
-                IntegerSerializerDeserializer.INSTANCE, // we will use this field as key                           
-                IntegerSerializerDeserializer.INSTANCE, // we will use this as payload
-                UTF8StringSerializerDeserializer.INSTANCE // we will use this as payload
+    private static JobSpecification createJob(Options options) {
+
+        JobSpecification spec = new JobSpecification();
+
+        String[] splitNCs = options.ncs.split(",");
+
+        // schema of tuples to be generated: 5 fields with string, string, int,
+        // int, string
+        // we will use field-index 2 as primary key to fill a clustered index
+        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                UTF8StringSerializerDeserializer.INSTANCE, // this field will
+                                                           // not go into B-Tree
+                UTF8StringSerializerDeserializer.INSTANCE, // we will use this
+                                                           // as payload
+                IntegerSerializerDeserializer.INSTANCE, // we will use this
+                                                        // field as key
+                IntegerSerializerDeserializer.INSTANCE, // we will use this as
+                                                        // payload
+                UTF8StringSerializerDeserializer.INSTANCE // we will use this as
+                                                          // payload
                 });
-        
-        // generate numRecords records with field 2 being unique, integer values in [0, 100000], and strings with max length of 10 characters, and random seed 50
-        DataGenOperatorDescriptor dataGen = new DataGenOperatorDescriptor(spec, recDesc, options.numTuples, 2, 0, 100000, 10, 50);
+
+        // generate numRecords records with field 2 being unique, integer values
+        // in [0, 100000], and strings with max length of 10 characters, and
+        // random seed 50
+        DataGenOperatorDescriptor dataGen = new DataGenOperatorDescriptor(spec, recDesc, options.numTuples, 2, 0,
+                100000, 10, 50);
         // run data generator on first nodecontroller given
-        PartitionConstraint dataGenConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] { new AbsoluteLocationConstraint(splitNCs[0]) });
+        PartitionConstraint dataGenConstraint = new ExplicitPartitionConstraint(
+                new LocationConstraint[] { new AbsoluteLocationConstraint(splitNCs[0]) });
         dataGen.setPartitionConstraint(dataGenConstraint);
-                
+
         // sort the tuples as preparation for bulk load
         // fields to sort on
         int[] sortFields = { 2 };
         // comparators for sort fields
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
-        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;        
-        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields, comparatorFactories, recDesc);
+        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields,
+                comparatorFactories, recDesc);
         PartitionConstraint sorterConstraint = JobHelper.createPartitionConstraint(splitNCs);
         sorter.setPartitionConstraint(sorterConstraint);
-        
+
         // tuples to be put into B-Tree shall have 4 fields
         int fieldCount = 4;
         ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
@@ -136,35 +147,39 @@ public class PrimaryIndexBulkLoadExample {
         typeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
         typeTraits[2] = new TypeTrait(4);
         typeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        
+
         // create factories and providers for B-Tree
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
-        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);        
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;               
-        
-        // the B-Tree expects its keyfields to be at the front of its input tuple 
-        int[] fieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input tuple to field 0 of B-Tree tuple, etc.
+        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;
+
+        // the B-Tree expects its keyfields to be at the front of its input
+        // tuple
+        int[] fieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input tuple
+                                                 // to field 0 of B-Tree tuple,
+                                                 // etc.
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, 
-        		storageManager, btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, fieldPermutation, 0.7f);
+        BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, storageManager,
+                btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory, typeTraits,
+                comparatorFactories, fieldPermutation, 0.7f);
         PartitionConstraint bulkLoadConstraint = JobHelper.createPartitionConstraint(splitNCs);
         btreeBulkLoad.setPartitionConstraint(bulkLoadConstraint);
-        
-        // distribute the records from the datagen via hashing to the bulk load ops
+
+        // distribute the records from the datagen via hashing to the bulk load
+        // ops
         IBinaryHashFunctionFactory[] hashFactories = new IBinaryHashFunctionFactory[1];
-        hashFactories[0] = UTF8StringBinaryHashFunctionFactory.INSTANCE;        
+        hashFactories[0] = UTF8StringBinaryHashFunctionFactory.INSTANCE;
         IConnectorDescriptor hashConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 0 }, hashFactories));
-        
+
         spec.connect(hashConn, dataGen, 0, sorter, 0);
-                      
+
         spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0, btreeBulkLoad, 0);
-        
+
         spec.addRoot(btreeBulkLoad);
-    	    	
-    	return spec;
-    }    
+
+        return spec;
+    }
 }

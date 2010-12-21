@@ -21,18 +21,22 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 
 public interface ISlotManager {
-	public void setFrame(IBTreeFrame frame);
-	
-	public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference frameTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
-	public int insertSlot(int tupleIndex, int tupleOff);
-	
-	public int getSlotStartOff();
-	public int getSlotEndOff();
-	
-	public int getTupleOff(int slotOff);		
-	public void setSlot(int slotOff, int value);	
-	
-	public int getSlotOff(int tupleIndex);
-	
-	public int getSlotSize();
+    public void setFrame(IBTreeFrame frame);
+
+    public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference frameTuple, MultiComparator multiCmp,
+            FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
+
+    public int insertSlot(int tupleIndex, int tupleOff);
+
+    public int getSlotStartOff();
+
+    public int getSlotEndOff();
+
+    public int getTupleOff(int slotOff);
+
+    public void setSlot(int slotOff, int value);
+
+    public int getSlotOff(int tupleIndex);
+
+    public int getSlotSize();
 }

@@ -37,15 +37,15 @@ public class DummySMI implements IStorageManagerInterface {
     private transient IFileMapManager fmManager;
     private int PAGE_SIZE = 8192;
     private int NUM_PAGES = 40;
-    
-    public DummySMI() {    
+
+    public DummySMI() {
     }
-    
+
     public DummySMI(int pageSize, int numPages) {
-    	PAGE_SIZE = pageSize;
-    	NUM_PAGES = numPages;
+        PAGE_SIZE = pageSize;
+        NUM_PAGES = numPages;
     }
-    
+
     @Override
     public synchronized IBufferCache getBufferCache() {
         if (bufferCache == null) {

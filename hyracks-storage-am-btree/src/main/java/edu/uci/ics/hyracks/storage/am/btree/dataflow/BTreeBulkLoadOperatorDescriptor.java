@@ -28,31 +28,26 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeBulkLoadOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
-	
-	private static final long serialVersionUID = 1L;
-	
-	private final int[] fieldPermutation;	
+
+    private static final long serialVersionUID = 1L;
+
+    private final int[] fieldPermutation;
     private final float fillFactor;
-        
-	public BTreeBulkLoadOperatorDescriptor(JobSpecification spec,			
-			IStorageManagerInterface storageManager,
-			IBTreeRegistryProvider btreeRegistryProvider,
-			IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
-			IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, 
-			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] fieldPermutation, float fillFactor) {
-		super(spec, 1, 0, null, storageManager,
-				btreeRegistryProvider, fileSplitProvider, interiorFactory,
-				leafFactory, typeTraits, comparatorFactories);
-		this.fieldPermutation = fieldPermutation;
-		this.fillFactor = fillFactor;
-	}
-		
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksContext ctx,
-			IOperatorEnvironment env,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {		
-		return new BTreeBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor, recordDescProvider);
-	}	
+
+    public BTreeBulkLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
+            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider,
+            IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, float fillFactor) {
+        super(spec, 1, 0, null, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory, leafFactory,
+                typeTraits, comparatorFactories);
+        this.fieldPermutation = fieldPermutation;
+        this.fillFactor = fillFactor;
+    }
+
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new BTreeBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
+                recordDescProvider);
+    }
 }

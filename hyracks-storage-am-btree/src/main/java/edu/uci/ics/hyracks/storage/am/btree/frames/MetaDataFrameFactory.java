@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 
 public class MetaDataFrameFactory implements IBTreeMetaDataFrameFactory {
     @Override
-    public IBTreeMetaDataFrame getFrame() {     
+    public IBTreeMetaDataFrame getFrame() {
         return new MetaDataFrame();
-    }   
+    }
 }

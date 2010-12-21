@@ -15,6 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public interface IBTreeMetaDataFrameFactory {   
+public interface IBTreeMetaDataFrameFactory {
     public IBTreeMetaDataFrame getFrame();
 }
