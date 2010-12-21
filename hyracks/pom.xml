@@ -12,7 +12,7 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>2.0</version>
         <configuration>
-            <goals>sources:jar javadoc:jar deploy</goals>
+            <goals>source:jar javadoc:jar deploy:deploy</goals>
         </configuration>
       </plugin>
     </plugins>
