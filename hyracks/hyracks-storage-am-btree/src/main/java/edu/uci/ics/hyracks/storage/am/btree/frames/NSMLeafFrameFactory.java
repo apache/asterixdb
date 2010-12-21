@@ -20,16 +20,16 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
 
 public class NSMLeafFrameFactory implements IBTreeLeafFrameFactory {
-			
-	private static final long serialVersionUID = 1L;
-	private IBTreeTupleWriterFactory tupleWriterFactory;
-	
-	public NSMLeafFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
-		this.tupleWriterFactory = tupleWriterFactory;
-	}
-	
-	@Override
-	public IBTreeLeafFrame getFrame() {		
-		return new NSMLeafFrame(tupleWriterFactory.createTupleWriter());
-	}
+
+    private static final long serialVersionUID = 1L;
+    private IBTreeTupleWriterFactory tupleWriterFactory;
+
+    public NSMLeafFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
+        this.tupleWriterFactory = tupleWriterFactory;
+    }
+
+    @Override
+    public IBTreeLeafFrame getFrame() {
+        return new NSMLeafFrame(tupleWriterFactory.createTupleWriter());
+    }
 }

@@ -17,6 +17,14 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IBufferCache {
+    public void createFile(String fileName) throws HyracksDataException;
+
+    public void openFile(int fileId) throws HyracksDataException;
+
+    public void closeFile(int fileId) throws HyracksDataException;
+
+    public void deleteFile(int fileId) throws HyracksDataException;
+
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
     public void unpin(ICachedPage page) throws HyracksDataException;

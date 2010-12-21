@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.DataOutput;
-import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksContext;
@@ -34,26 +33,20 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
 
-    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition) {
+    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
+            int partition) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-    	
+
         IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
         DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
         IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
-        
-        try {
-            btreeOpHelper.init();
-            //btreeOpHelper.fill();
-            btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        btreeOpHelper.init();
+        btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
 
         MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
         ByteBuffer frame = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
@@ -61,13 +54,13 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         appender.reset(frame, true);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
-        
+
         try {
             while (cursor.hasNext()) {
                 tb.reset();
                 cursor.next();
 
-                ITupleReference frameTuple = cursor.getTuple();                
+                ITupleReference frameTuple = cursor.getTuple();
                 for (int i = 0; i < frameTuple.getFieldCount(); i++) {
                     dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
                     tb.addFieldEndOffset();
@@ -85,12 +78,17 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(frame, writer);
             }
-            
+
             cursor.close();
             writer.close();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void deinitialize() throws HyracksDataException {
+        btreeOpHelper.deinit();
     }
 }

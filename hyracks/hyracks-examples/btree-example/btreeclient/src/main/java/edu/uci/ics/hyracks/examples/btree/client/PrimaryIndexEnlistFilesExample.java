@@ -33,17 +33,15 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.BufferCacheProvider;
-import edu.uci.ics.hyracks.examples.btree.helper.FileMappingProviderProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.SimpleStorageManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeFileEnlistmentOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBufferCacheProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IFileMappingProviderProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will enlist existing files as primary index
 
@@ -54,15 +52,15 @@ public class PrimaryIndexEnlistFilesExample {
 
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
         public int port = 1099;
-        
+
         @Option(name = "-app", usage = "Hyracks Application name", required = true)
         public String app;
-        
+
         @Option(name = "-target-ncs", usage = "Comma separated list of node-controller names to use", required = true)
         public String ncs;
-        
+
         @Option(name = "-btreename", usage = "B-Tree file name", required = true)
-        public String btreeName;               
+        public String btreeName;
     }
 
     public static void main(String[] args) throws Exception {
@@ -81,46 +79,44 @@ public class PrimaryIndexEnlistFilesExample {
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));
     }
-    
-    private static JobSpecification createJob(Options options) {
-    	
-    	JobSpecification spec = new JobSpecification();
 
-    	String[] splitNCs = options.ncs.split(",");
-    	
-    	// schema of tuples in existing files (see PrimaryIndexBulkLoadExample)
-        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {                                    
-                IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE
-                });
-        
+    private static JobSpecification createJob(Options options) {
+
+        JobSpecification spec = new JobSpecification();
+
+        String[] splitNCs = options.ncs.split(",");
+
+        // schema of tuples in existing files (see PrimaryIndexBulkLoadExample)
+        RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+
         int fieldCount = 4;
         ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
         typeTraits[0] = new TypeTrait(4);
         typeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
         typeTraits[2] = new TypeTrait(4);
         typeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        
+
         // create factories and providers for B-Tree
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
-        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);        
-        IBufferCacheProvider bufferCacheProvider = BufferCacheProvider.INSTANCE;
+        IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
-        IFileMappingProviderProvider fileMappingProviderProvider = FileMappingProviderProvider.INSTANCE;
-        
+        IStorageManagerInterface storageManager = SimpleStorageManager.INSTANCE;
+
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
-        
+
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        BTreeFileEnlistmentOperatorDescriptor fileEnlistmentOp = new BTreeFileEnlistmentOperatorDescriptor(spec, recDesc, bufferCacheProvider, btreeRegistryProvider, btreeSplitProvider, fileMappingProviderProvider, interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories);
+        BTreeFileEnlistmentOperatorDescriptor fileEnlistmentOp = new BTreeFileEnlistmentOperatorDescriptor(spec,
+                recDesc, storageManager, btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories);
         PartitionConstraint fileEnlistmentConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        fileEnlistmentOp.setPartitionConstraint(fileEnlistmentConstraint);                                            
-        
+        fileEnlistmentOp.setPartitionConstraint(fileEnlistmentConstraint);
+
         spec.addRoot(fileEnlistmentOp);
-        
-    	return spec;
-    }    
+
+        return spec;
+    }
 }

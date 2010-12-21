@@ -42,31 +42,39 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 // all prefixes are recomputed during a reorg or compaction
 
 public interface IPrefixSlotManager {
-	public void setFrame(FieldPrefixNSMLeafFrame frame);
-	
-	public int decodeFirstSlotField(int slot);
-	public int decodeSecondSlotField(int slot);		
-	public int encodeSlotFields(int firstField, int secondField);
-	
-	public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
-	public int insertSlot(int slot, int tupleOff);
-	
-	// returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
-	public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp);
-	
-	public int getTupleSlotStartOff();
-	public int getTupleSlotEndOff();
-	
-	public int getPrefixSlotStartOff();
-	public int getPrefixSlotEndOff();
-	
-	public int getTupleSlotOff(int tupleIndex);
-	public int getPrefixSlotOff(int tupleIndex);
-		
-	public int getSlotSize();		
-	
-	public void setSlot(int offset, int value);
-		
-	// functions for testing
-	public void setPrefixSlot(int tupleIndex, int slot);
+    public void setFrame(FieldPrefixNSMLeafFrame frame);
+
+    public int decodeFirstSlotField(int slot);
+
+    public int decodeSecondSlotField(int slot);
+
+    public int encodeSlotFields(int firstField, int secondField);
+
+    public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple,
+            IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
+            FindTupleNoExactMatchPolicy matchPolicy);
+
+    public int insertSlot(int slot, int tupleOff);
+
+    // returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
+    public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp);
+
+    public int getTupleSlotStartOff();
+
+    public int getTupleSlotEndOff();
+
+    public int getPrefixSlotStartOff();
+
+    public int getPrefixSlotEndOff();
+
+    public int getTupleSlotOff(int tupleIndex);
+
+    public int getPrefixSlotOff(int tupleIndex);
+
+    public int getSlotSize();
+
+    public void setSlot(int offset, int value);
+
+    // functions for testing
+    public void setPrefixSlot(int tupleIndex, int slot);
 }

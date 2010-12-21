@@ -12,9 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.storage.common;
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+import java.io.Serializable;
 
-public enum FindTupleNoExactMatchPolicy {
-    FTP_LOWER_KEY, FTP_HIGHER_KEY
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+
+public interface IStorageManagerInterface extends Serializable {
+    public IBufferCache getBufferCache();
+
+    public IFileMapProvider getFileMapProvider();
 }

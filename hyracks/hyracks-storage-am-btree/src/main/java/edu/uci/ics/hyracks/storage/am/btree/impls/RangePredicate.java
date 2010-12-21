@@ -19,76 +19,74 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 
 public class RangePredicate implements ISearchPredicate {
-		
-	private static final long serialVersionUID = 1L;
-	
-	protected boolean isForward = true;
-	protected ITupleReference lowKey = null;
-	protected ITupleReference highKey = null;
-	protected boolean lowKeyInclusive = true;
-	protected boolean highKeyInclusive = true;
-	protected MultiComparator lowKeyCmp;
-	protected MultiComparator highKeyCmp;
-	
-	public RangePredicate() {
-	}
-	
-	public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, 
-			boolean lowKeyInclusive, boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp) {
-		this.isForward = isForward;
-		this.lowKey = lowKey;
-		this.highKey = highKey;
-		this.lowKeyInclusive = lowKeyInclusive;
-		this.highKeyInclusive = highKeyInclusive;
-		this.lowKeyCmp = lowKeyCmp;
-		this.highKeyCmp = highKeyCmp;
-	}
-	
-	public MultiComparator getLowKeyComparator() {
-		return lowKeyCmp;
-	}
-	
-	public MultiComparator getHighKeyComparator() {
-		return highKeyCmp;
-	}
-	
-	public void setLowKeyComparator(MultiComparator lowKeyCmp) {
-		this.lowKeyCmp = lowKeyCmp;
-	}
-	
-	public void setHighKeyComparator(MultiComparator highKeyCmp) {
-		this.highKeyCmp = highKeyCmp;
-	}
-	
-	public boolean isForward() {
-		return isForward;
-	}	
-	
-	public ITupleReference getLowKey() {
-		return lowKey;
-	}
-	
-	public ITupleReference getHighKey() {
-		return highKey;
-	}
-	
-	public void setLowKey(ITupleReference lowKey, boolean lowKeyInclusive) {
-		this.lowKey = lowKey;
-		this.lowKeyInclusive = lowKeyInclusive;
-	}
-	
-	public void setHighKey(ITupleReference highKey, boolean highKeyInclusive) {
-		this.highKey = highKey;
-		this.highKeyInclusive = highKeyInclusive;
-	}
-	
-	public boolean isLowKeyInclusive() {
-		return lowKeyInclusive;
-	}
-	
-	public boolean isHighKeyInclusive() {
-		return highKeyInclusive;
-	}
+
+    private static final long serialVersionUID = 1L;
+
+    protected boolean isForward = true;
+    protected ITupleReference lowKey = null;
+    protected ITupleReference highKey = null;
+    protected boolean lowKeyInclusive = true;
+    protected boolean highKeyInclusive = true;
+    protected MultiComparator lowKeyCmp;
+    protected MultiComparator highKeyCmp;
+
+    public RangePredicate() {
+    }
+
+    public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive,
+            boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp) {
+        this.isForward = isForward;
+        this.lowKey = lowKey;
+        this.highKey = highKey;
+        this.lowKeyInclusive = lowKeyInclusive;
+        this.highKeyInclusive = highKeyInclusive;
+        this.lowKeyCmp = lowKeyCmp;
+        this.highKeyCmp = highKeyCmp;
+    }
+
+    public MultiComparator getLowKeyComparator() {
+        return lowKeyCmp;
+    }
+
+    public MultiComparator getHighKeyComparator() {
+        return highKeyCmp;
+    }
+
+    public void setLowKeyComparator(MultiComparator lowKeyCmp) {
+        this.lowKeyCmp = lowKeyCmp;
+    }
+
+    public void setHighKeyComparator(MultiComparator highKeyCmp) {
+        this.highKeyCmp = highKeyCmp;
+    }
+
+    public boolean isForward() {
+        return isForward;
+    }
+
+    public ITupleReference getLowKey() {
+        return lowKey;
+    }
+
+    public ITupleReference getHighKey() {
+        return highKey;
+    }
+
+    public void setLowKey(ITupleReference lowKey, boolean lowKeyInclusive) {
+        this.lowKey = lowKey;
+        this.lowKeyInclusive = lowKeyInclusive;
+    }
+
+    public void setHighKey(ITupleReference highKey, boolean highKeyInclusive) {
+        this.highKey = highKey;
+        this.highKeyInclusive = highKeyInclusive;
+    }
+
+    public boolean isLowKeyInclusive() {
+        return lowKeyInclusive;
+    }
+
+    public boolean isHighKeyInclusive() {
+        return highKeyInclusive;
+    }
 }
-
-

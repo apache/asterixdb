@@ -19,73 +19,72 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
 
-public class SplitKey {		
-	public byte[] data = null;	
-	public ByteBuffer buf = null;
-	public IBTreeTupleReference tuple;
-	public int keySize = 0;
-	
-	public SplitKey(IBTreeTupleReference tuple) {
-		this.tuple = tuple;
-	}
-	
-	public void initData(int keySize) {
-		// try to reuse existing memory from a lower-level split if possible				
-		this.keySize = keySize;
-		if(data != null) {
-			if(data.length < keySize + 8) {
-				data = new byte[keySize + 8]; // add 8 for left and right page
-				buf = ByteBuffer.wrap(data);
-			}				
-		}
-		else { 
-			data = new byte[keySize + 8]; // add 8 for left and right page
-			buf = ByteBuffer.wrap(data);
-		}		
-				
-		tuple.resetByOffset(buf, 0);
-	}
-	
-	public void reset() {
-		data = null;
-		buf = null;
-	}
-	
-	public ByteBuffer getBuffer() {
-		return buf;
-	}
-	
-	public IBTreeTupleReference getTuple() {
-		return tuple;
-	}
-	
-	public int getLeftPage() {
-		return buf.getInt(keySize);
-	}
-	
-	public int getRightPage() {
-		return buf.getInt(keySize + 4);
-	}
-		
-	public void setLeftPage(int leftPage) {
-		buf.putInt(keySize, leftPage);
-	}
-	
-	public void setRightPage(int rightPage) {
-		buf.putInt(keySize + 4, rightPage);
-	}
-	
-	public void setPages(int leftPage, int rightPage) {		
-		buf.putInt(keySize, leftPage);
-		buf.putInt(keySize + 4, rightPage);
-	}
-	
-	public SplitKey duplicate(IBTreeTupleReference copyTuple) {
-		SplitKey copy = new SplitKey(copyTuple);
-		copy.data = data.clone();		
-		copy.buf = ByteBuffer.wrap(copy.data);
-		copy.tuple.setFieldCount(tuple.getFieldCount());
-		copy.tuple.resetByOffset(copy.buf, 0);
-		return copy;
-	}
+public class SplitKey {
+    public byte[] data = null;
+    public ByteBuffer buf = null;
+    public IBTreeTupleReference tuple;
+    public int keySize = 0;
+
+    public SplitKey(IBTreeTupleReference tuple) {
+        this.tuple = tuple;
+    }
+
+    public void initData(int keySize) {
+        // try to reuse existing memory from a lower-level split if possible
+        this.keySize = keySize;
+        if (data != null) {
+            if (data.length < keySize + 8) {
+                data = new byte[keySize + 8]; // add 8 for left and right page
+                buf = ByteBuffer.wrap(data);
+            }
+        } else {
+            data = new byte[keySize + 8]; // add 8 for left and right page
+            buf = ByteBuffer.wrap(data);
+        }
+
+        tuple.resetByOffset(buf, 0);
+    }
+
+    public void reset() {
+        data = null;
+        buf = null;
+    }
+
+    public ByteBuffer getBuffer() {
+        return buf;
+    }
+
+    public IBTreeTupleReference getTuple() {
+        return tuple;
+    }
+
+    public int getLeftPage() {
+        return buf.getInt(keySize);
+    }
+
+    public int getRightPage() {
+        return buf.getInt(keySize + 4);
+    }
+
+    public void setLeftPage(int leftPage) {
+        buf.putInt(keySize, leftPage);
+    }
+
+    public void setRightPage(int rightPage) {
+        buf.putInt(keySize + 4, rightPage);
+    }
+
+    public void setPages(int leftPage, int rightPage) {
+        buf.putInt(keySize, leftPage);
+        buf.putInt(keySize + 4, rightPage);
+    }
+
+    public SplitKey duplicate(IBTreeTupleReference copyTuple) {
+        SplitKey copy = new SplitKey(copyTuple);
+        copy.data = data.clone();
+        copy.buf = ByteBuffer.wrap(copy.data);
+        copy.tuple.setFieldCount(tuple.getFieldCount());
+        copy.tuple.resetByOffset(copy.buf, 0);
+        return copy;
+    }
 }

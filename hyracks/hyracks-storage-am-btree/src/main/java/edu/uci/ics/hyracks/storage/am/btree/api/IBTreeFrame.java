@@ -26,62 +26,77 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface IBTreeFrame {
-	public void setPage(ICachedPage page);
-	public ICachedPage getPage();
-	public ByteBuffer getBuffer();
-	
-	public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception;
-	public void update(int rid, ITupleReference tuple) throws Exception;
-	public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
-	
-	public void compact(MultiComparator cmp);
-	public boolean compress(MultiComparator cmp) throws Exception;
-	
-	public void initBuffer(byte level);
-	
-	public int getTupleCount();
-		
-	// assumption: page must be write-latched at this point
-	public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
-	public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
-	
-	public int getTupleOffset(int slotNum);
-	
-	public int getTotalFreeSpace();	
-	
-	public void setPageLsn(int pageLsn);
-	public int getPageLsn();
-	
-	// for debugging
-	public void printHeader();
-	public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
-	
-	
-	// TODO; what if tuples more than half-page size?
-	public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey) throws Exception;		
-	
-	// TODO: check if we do something nicer than returning object
-	public ISlotManager getSlotManager();
-	
-	// ATTENTION: in b-tree operations it may not always be possible to determine whether an ICachedPage is a leaf or interior node
-	// a compatible interior and leaf implementation MUST return identical values when given the same ByteBuffer for the functions below	
-	public boolean isLeaf();
-	public byte getLevel();
-	public void setLevel(byte level);	
-	public boolean getSmFlag(); // structure modification flag
-	public void setSmFlag(boolean smFlag);	
-	
-	public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws Exception;
-	
-	public int getSlotSize();
-		
-	// TODO: should be removed after new tuple format		
-	public void setPageTupleFieldCount(int fieldCount);
-	
-	// for debugging
-	public int getFreeSpaceOff();
-	public void setFreeSpaceOff(int freeSpace);
-	
-	public IBTreeTupleWriter getTupleWriter();
-	
+    public void setPage(ICachedPage page);
+
+    public ICachedPage getPage();
+
+    public ByteBuffer getBuffer();
+
+    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception;
+
+    public void update(int rid, ITupleReference tuple) throws Exception;
+
+    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
+
+    public void compact(MultiComparator cmp);
+
+    public boolean compress(MultiComparator cmp) throws HyracksDataException;
+
+    public void initBuffer(byte level);
+
+    public int getTupleCount();
+
+    // assumption: page must be write-latched at this point
+    public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
+
+    public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
+
+    public int getTupleOffset(int slotNum);
+
+    public int getTotalFreeSpace();
+
+    public void setPageLsn(int pageLsn);
+
+    public int getPageLsn();
+
+    // for debugging
+    public void printHeader();
+
+    public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
+
+    // TODO; what if tuples more than half-page size?
+    public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey)
+            throws Exception;
+
+    // TODO: check if we do something nicer than returning object
+    public ISlotManager getSlotManager();
+
+    // ATTENTION: in b-tree operations it may not always be possible to
+    // determine whether an ICachedPage is a leaf or interior node
+    // a compatible interior and leaf implementation MUST return identical
+    // values when given the same ByteBuffer for the functions below
+    public boolean isLeaf();
+
+    public byte getLevel();
+
+    public void setLevel(byte level);
+
+    public boolean getSmFlag(); // structure modification flag
+
+    public void setSmFlag(boolean smFlag);
+
+    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
+
+    public int getSlotSize();
+
+    // TODO: should be removed after new tuple format
+    public void setPageTupleFieldCount(int fieldCount);
+
+    // for debugging
+    public int getFreeSpaceOff();
+
+    public void setFreeSpaceOff(int freeSpace);
+
+    public IBTreeTupleWriter getTupleWriter();
+
 }
