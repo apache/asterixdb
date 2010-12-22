@@ -1,0 +1,19 @@
+<book xmlns="http://maven.apache.org/BOOK/1.0.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://maven.apache.org/BOOK/1.0.0 ../../../doxia/doxia-book/target/generated-site/xsd/book-1.0.0.xsd">
+  <id>user-guide</id>
+  <title>Hyracks User Guide</title>
+  <chapters>
+    <chapter>
+      <id>introduction</id>
+      <title>Introduction</title>
+      <sections>
+        <section>
+          <id>intro-whatis</id>
+          <title>What is Hyracks?</title>
+          <file>intro-whatis.apt</file>
+        </section>
+      </sections>
+    </chapter>
+  </chapters>
+</book>
