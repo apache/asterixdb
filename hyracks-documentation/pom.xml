@@ -33,6 +33,9 @@
     		        <format>
     		          <id>pdf</id>
     		        </format>
+    		        <format>
+    		          <id>xhtml</id>
+    		        </format>
     		      </formats>
     		    </book>
     		  </books>

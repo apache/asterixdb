@@ -1,0 +1,27 @@
+Hyracks Applications
+
+  The Hyracks platform provides users the ability to execute jobs on a cluster. Jobs in Hyracks are expressed as a DAG of Operators and Connectors. Prior to being able to execute jobs on a Hyracks cluster, the code that implements the operators and connectors used in the jobs must be installed on the nodes of the cluster. The unit of deployment of code onto the cluster is called an application. Once an application containing the required code is created, multiple jobs can be executed against it until it is destroyed. A Hyracks cluster can have multiple applications installed simultaneously.
+
+* Hyracks Application Archive
+
+  A Hyracks application must be packaged into a Hyracks Application Archive (HAR) file before it can be installed on a Hyracks Cluster. A HAR file is a Zip file that contains all the code that will be executed on the cluster when jobs are issued and any deployment descriptors (discussed below) that are necessary to set up the application correctly.
+
+* HAR File Contents
+
+  A HAR file is a zip file that contains one or more JAR files. The JAR files are appened to the classpath of the application.
+
+* Hyracks Application Startup and Shutdown
+
+  Hyracks provides applications to run code at startup and shutdown. An application can provide the code to be executed at the ClusterController by providing an implementation of the edu.uci.ics.hyracks.api.application.ICCBootstrap interface. Similarly, the code to be executed at the NodeControllers can be specified by providing and implementation of the edu.uci.ics.hyracks.api.application.INCBootstrap interface. The bootstrap classes implementations of the above interfaces are specified in a deployment descriptor file.
+
+* Hyracks deployment descriptor
+
+  A Hyracks deployment descriptor is a file called hyracks-deployment.properties. This file is made available to Hyracks in the application classpath by packaging it in a JAR file inside the Hyracks Application Archive.
+
+  The Hyracks deployment descriptor currently allows two properties.
+
+  * cc.bootstrap.class: Name of the Bootstrap class to be executed at the Cluster Controller.
+
+  * nc.bootstrap.class: Name of the Bootstrap class to be executed at the Node Controller.
+
+  

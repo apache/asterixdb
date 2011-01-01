@@ -1,8 +1,4 @@
-What is Hyracks?
-
-  Hyracks is a partitioned-parallel platform for running data-intensive computation on a shared-nothing cluster of commodity machines.
-
-Hyracks Concepts
+Hyracks Overview
 
   Hyracks employs a client-server architecture. On the server side, the software module that is responsible for interacting with clients, keeping track of and dispatching work
   to other machines in the cluster is called the Hyracks Cluster Controller (CC). There is one CC per logical Hyracks cluster. The module that executes on the worker machine
@@ -13,4 +9,4 @@ Hyracks Concepts
 
   Hyracks clients interact solely with the CC when submitting their jobs. A Hyracks Job is the unit of work that a client can execute on the Hyracks cluster. A job is expressed
   as a directed acyclic graph (DAG) of Operators connected to each other by means of Connectors. A more detailed description of jobs, operators, and connectors follows in
-  chapter "Hyracks Jobs".
+  chapter "Hyracks Concepts".
