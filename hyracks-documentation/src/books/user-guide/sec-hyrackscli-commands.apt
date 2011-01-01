@@ -1,0 +1,13 @@
+Hyracks CLI Commands
+
+  * Connecting to a Hyracks Cluster Controller
+
+    connect to "<hostname>[:<port>]";
+
+  * Creating an application
+
+    create application <application name> "<absolute path to HAR file>";
+
+  * Destroying an application
+
+    destroy application <application name>;
