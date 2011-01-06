@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.common.file;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 
 public interface IFileMapProvider extends Serializable {
     /**
@@ -30,30 +31,30 @@ public interface IFileMapProvider extends Serializable {
     /**
      * Indicates if a given file name is mapped.
      * 
-     * @param fileName
+     * @param fileRef
      * @return <code>true</code> if the given file name is mapped, <code>false</code> otherwise.
      */
-    public boolean isMapped(String fileName);
+    public boolean isMapped(FileReference fileRef);
 
     /**
      * Lookup the file id for a file name
      * 
-     * @param fileName
+     * @param fileRef
      *            - The file name whose id should be looked up.
      * @return The file id
      * @throws HyracksDataException
      *             - If the file name is not currently mapped in this manager.
      */
-    public int lookupFileId(String fileName) throws HyracksDataException;
+    public int lookupFileId(FileReference fileRef) throws HyracksDataException;
 
     /**
      * Lookup the file name for a file id
      * 
      * @param fileId
      *            - The file id whose name should be looked up.
-     * @return The file name
+     * @return The file reference
      * @throws HyracksDataException
      *             - If the file id is not mapped currently in this manager.
      */
-    public String lookupFileName(int fileId) throws HyracksDataException;
+    public FileReference lookupFileName(int fileId) throws HyracksDataException;
 }

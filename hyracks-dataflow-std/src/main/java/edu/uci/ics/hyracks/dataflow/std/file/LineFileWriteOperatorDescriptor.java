@@ -14,58 +14,47 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.file;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDescriptor {
-   
-	private static class LineWriterImpl extends RecordWriter {
-		
-		File file;
-		
-        LineWriterImpl(File file,int []columns, char separator) throws Exception {
-        	super(columns,separator, new Object[]{file});
-        	this.file=file;    
+    private static final long serialVersionUID = 1L;
+
+    private static class LineWriterImpl extends RecordWriter {
+        LineWriterImpl(File file, int[] columns, char separator) throws Exception {
+            super(columns, separator, new Object[] { file });
         }
 
-	    private static final long serialVersionUID = 1L;
-	
-		@Override
-		public OutputStream createOutputStream(Object[] args) throws Exception {
-			return new FileOutputStream((File)args[0]);
-		}
-	}
-    
-    private int[]columns ;
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public OutputStream createOutputStream(Object[] args) throws Exception {
+            return new FileOutputStream((File) args[0]);
+        }
+    }
+
+    private int[] columns;
     private char separator;
-    
-    
-	public LineFileWriteOperatorDescriptor(JobSpecification spec,
-            FileSplit[] splits) {
+
+    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits) {
         this(spec, splits, null, RecordWriter.COMMA);
     }
 
-    public LineFileWriteOperatorDescriptor(JobSpecification spec,
-            FileSplit[] splits, int[] columns) {
+    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits, int[] columns) {
         this(spec, splits, columns, RecordWriter.COMMA);
     }
 
-    public LineFileWriteOperatorDescriptor(JobSpecification spec,
-            FileSplit[] splits, int[] columns, char separator) {
+    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits, int[] columns, char separator) {
         super(spec, splits);
         this.columns = columns;
         this.separator = separator;
     }
-	
-	
+
     @Override
-    protected IRecordWriter createRecordWriter(FileSplit fileSplit,int index) throws Exception {
-        return new LineWriterImpl(fileSplit.getLocalFile(),columns,separator);
+    protected IRecordWriter createRecordWriter(FileSplit fileSplit, int index) throws Exception {
+        return new LineWriterImpl(fileSplit.getLocalFile().getFile(), columns, separator);
     }
 }

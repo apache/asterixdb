@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.dataflow.std.file;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 
 public interface ITupleParserFactory extends Serializable {
-    public ITupleParser createTupleParser(IHyracksContext ctx);
+    public ITupleParser createTupleParser(IHyracksStageletContext ctx);
 }

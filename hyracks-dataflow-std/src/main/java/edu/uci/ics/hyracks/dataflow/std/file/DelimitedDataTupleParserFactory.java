@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -42,7 +42,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     }
 
     @Override
-    public ITupleParser createTupleParser(final IHyracksContext ctx) {
+    public ITupleParser createTupleParser(final IHyracksStageletContext ctx) {
         return new ITupleParser() {
             @Override
             public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
@@ -51,8 +51,8 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     for (int i = 0; i < valueParserFactories.length; ++i) {
                         valueParsers[i] = valueParserFactories[i].createValueParser();
                     }
-                    ByteBuffer frame = ctx.getResourceManager().allocateFrame();
-                    FrameTupleAppender appender = new FrameTupleAppender(ctx);
+                    ByteBuffer frame = ctx.allocateFrame();
+                    FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
                     appender.reset(frame, true);
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(valueParsers.length);
                     DataOutput dos = tb.getDataOutput();

@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,21 +21,24 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
 public class ExternalSortRunMerger {
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final FrameSorter frameSorter;
-    private final List<File> runs;
+    private final List<RunFileReader> runs;
     private final int[] sortFields;
     private final IBinaryComparator[] comparators;
     private final RecordDescriptor recordDesc;
@@ -47,9 +48,9 @@ public class ExternalSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    public ExternalSortRunMerger(IHyracksContext ctx, FrameSorter frameSorter, List<File> runs, int[] sortFields,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDesc, int framesLimit,
-            IFrameWriter writer) {
+    public ExternalSortRunMerger(IHyracksStageletContext ctx, FrameSorter frameSorter, List<RunFileReader> runs,
+            int[] sortFields, IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDesc,
+            int framesLimit, IFrameWriter writer) {
         this.ctx = ctx;
         this.frameSorter = frameSorter;
         this.runs = runs;
@@ -74,11 +75,11 @@ public class ExternalSortRunMerger {
                 }
             } else {
                 inFrames = new ArrayList<ByteBuffer>();
-                outFrame = ctx.getResourceManager().allocateFrame();
-                outFrameAppender = new FrameTupleAppender(ctx);
+                outFrame = ctx.allocateFrame();
+                outFrameAppender = new FrameTupleAppender(ctx.getFrameSize());
                 outFrameAppender.reset(outFrame, true);
                 for (int i = 0; i < framesLimit - 1; ++i) {
-                    inFrames.add(ctx.getResourceManager().allocateFrame());
+                    inFrames.add(ctx.allocateFrame());
                 }
                 int passCount = 0;
                 while (runs.size() > 0) {
@@ -102,8 +103,8 @@ public class ExternalSortRunMerger {
     }
 
     // creates a new run from runs that can fit in memory.
-    private void doPass(List<File> runs, int passCount, boolean doFinalPass) throws HyracksDataException, IOException {
-        File newRun = null;
+    private void doPass(List<RunFileReader> runs, int passCount, boolean doFinalPass) throws HyracksDataException {
+        FileReference newRun = null;
         IFrameWriter writer = this.writer;
         boolean finalPass = false;
         if (runs.size() + 1 <= framesLimit) { // + 1 outFrame
@@ -115,24 +116,24 @@ public class ExternalSortRunMerger {
                 inFrames.remove(i);
             }
         } else {
-            newRun = ctx.getResourceManager().createFile(ExternalSortOperatorDescriptor.class.getSimpleName(), ".run");
-            writer = new RunFileWriter(newRun);
+            newRun = ctx.createWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
+            writer = new RunFileWriter(newRun, ctx.getIOManager());
             writer.open();
         }
         try {
             RunFileReader[] runCursors = new RunFileReader[inFrames.size()];
             FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
             Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-            ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx, recordDesc, inFrames.size(),
-                    comparator);
+            ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), recordDesc,
+                    inFrames.size(), comparator);
             int[] tupleIndexes = new int[inFrames.size()];
             for (int i = 0; i < inFrames.size(); i++) {
                 tupleIndexes[i] = 0;
                 int runIndex = topTuples.peek().getRunid();
-                runCursors[runIndex] = new RunFileReader(runs.get(runIndex));
+                runCursors[runIndex] = runs.get(runIndex);
                 runCursors[runIndex].open();
                 if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
-                    tupleAccessors[runIndex] = new FrameTupleAccessor(ctx, recordDesc);
+                    tupleAccessors[runIndex] = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
                     tupleAccessors[runIndex].reset(inFrames.get(runIndex));
                     setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
                 } else {
@@ -163,7 +164,7 @@ public class ExternalSortRunMerger {
             }
             runs.subList(0, inFrames.size()).clear();
             if (!finalPass) {
-                runs.add(0, newRun);
+                runs.add(0, ((RunFileWriter) writer).createReader());
             }
         } finally {
             if (!finalPass) {
@@ -173,7 +174,7 @@ public class ExternalSortRunMerger {
     }
 
     private void setNextTopTuple(int runIndex, int[] tupleIndexes, RunFileReader[] runCursors,
-            FrameTupleAccessor[] tupleAccessors, ReferencedPriorityQueue topTuples) throws IOException {
+            FrameTupleAccessor[] tupleAccessors, ReferencedPriorityQueue topTuples) throws HyracksDataException {
         boolean exists = hasNextTuple(runIndex, tupleIndexes, runCursors, tupleAccessors);
         if (exists) {
             topTuples.popAndReplace(tupleAccessors[runIndex], tupleIndexes[runIndex]);
@@ -184,7 +185,7 @@ public class ExternalSortRunMerger {
     }
 
     private boolean hasNextTuple(int runIndex, int[] tupleIndexes, RunFileReader[] runCursors,
-            FrameTupleAccessor[] tupleAccessors) throws IOException {
+            FrameTupleAccessor[] tupleAccessors) throws HyracksDataException {
         if (tupleAccessors[runIndex] == null || runCursors[runIndex] == null) {
             return false;
         } else if (tupleIndexes[runIndex] >= tupleAccessors[runIndex].getTupleCount()) {

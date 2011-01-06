@@ -22,18 +22,18 @@ import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class NonDeterministicFrameReader implements IFrameReader {
     private static final Logger LOGGER = Logger.getLogger(NonDeterministicFrameReader.class.getName());
 
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final IConnectionDemultiplexer demux;
     private int lastReadSender;
     private boolean eos;
 
-    public NonDeterministicFrameReader(IHyracksContext ctx, IConnectionDemultiplexer demux) {
+    public NonDeterministicFrameReader(IHyracksStageletContext ctx, IConnectionDemultiplexer demux) {
         this.ctx = ctx;
         this.demux = demux;
     }
@@ -61,7 +61,7 @@ public class NonDeterministicFrameReader implements IFrameReader {
             }
             lastReadSender = (Integer) entry.getAttachment();
             ByteBuffer netBuffer = entry.getReadBuffer();
-            int tupleCount = netBuffer.getInt(FrameHelper.getTupleCountOffset(ctx));
+            int tupleCount = netBuffer.getInt(FrameHelper.getTupleCountOffset(ctx.getFrameSize()));
             if (LOGGER.isLoggable(Level.FINER)) {
                 LOGGER.finer("Frame Tuple Count: " + tupleCount);
             }

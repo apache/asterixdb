@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class ConnectionManager {
@@ -54,7 +54,7 @@ public class ConnectionManager {
 
     private ServerSocketChannel serverSocketChannel;
 
-    private final IHyracksContext ctx;
+    private final IHyracksRootContext ctx;
 
     private final Map<UUID, IDataReceiveListenerFactory> pendingConnectionReceivers;
 
@@ -70,7 +70,7 @@ public class ConnectionManager {
 
     private ByteBuffer emptyFrame;
 
-    public ConnectionManager(IHyracksContext ctx, InetAddress address) throws IOException {
+    public ConnectionManager(IHyracksRootContext ctx, InetAddress address) throws IOException {
         this.ctx = ctx;
         serverSocketChannel = ServerSocketChannel.open();
         ServerSocket serverSocket = serverSocketChannel.socket();
@@ -87,8 +87,8 @@ public class ConnectionManager {
         dataListenerThread = new DataListenerThread();
         connectionListenerThread = new ConnectionListenerThread();
         initialDataReceiveListener = new InitialDataReceiveListener();
-        emptyFrame = ctx.getResourceManager().allocateFrame();
-        emptyFrame.putInt(FrameHelper.getTupleCountOffset(ctx), 0);
+        emptyFrame = ctx.allocateFrame();
+        emptyFrame.putInt(FrameHelper.getTupleCountOffset(ctx.getFrameSize()), 0);
         connections = new HashSet<IConnectionEntry>();
     }
 

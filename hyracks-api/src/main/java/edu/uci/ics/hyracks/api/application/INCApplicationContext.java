@@ -16,6 +16,14 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+
 public interface INCApplicationContext extends IApplicationContext {
+    public IHyracksRootContext getRootContext();
+
     public void setDistributedState(Serializable state);
+
+    public void setApplicationObject(Object object);
+
+    public Object getApplicationObject();
 }

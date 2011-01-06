@@ -14,21 +14,20 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.misc;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
@@ -37,7 +36,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     protected static final String MATERIALIZED_FILE = "materialized-file";
-    protected static final String FRAME_COUNT = "frame-count";
 
     public MaterializingOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
@@ -62,49 +60,29 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
+                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
+                int nPartitions) {
             return new AbstractUnaryInputSinkOperatorNodePushable() {
-                private FileChannel out;
-                private int frameCount;
+                private RunFileWriter out;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    File outFile;
-                    try {
-                        outFile = ctx.getResourceManager().createFile("mat", ".dat");
-                        out = new RandomAccessFile(outFile, "rw").getChannel();
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    }
-                    env.set(MATERIALIZED_FILE, outFile.getAbsolutePath());
+                    FileReference file = ctx.getJobletContext().createWorkspaceFile(
+                            MaterializingOperatorDescriptor.class.getSimpleName());
+                    out = new RunFileWriter(file, ctx.getIOManager());
+                    out.open();
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ++frameCount;
-                    buffer.position(0);
-                    buffer.limit(buffer.capacity());
-                    int rem = buffer.capacity();
-                    while (rem > 0) {
-                        int c;
-                        try {
-                            c = out.write(buffer);
-                        } catch (IOException e) {
-                            throw new HyracksDataException(e);
-                        }
-                        rem -= c;
-                    }
+                    out.nextFrame(buffer);
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    try {
-                        env.set(FRAME_COUNT, frameCount);
-                        out.close();
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    out.close();
+                    env.set(MATERIALIZED_FILE, out);
                 }
 
                 @Override
@@ -123,32 +101,24 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
+                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
+                int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    try {
-                        File inFile = new File((String) env.get(MATERIALIZED_FILE));
-                        int frameCount = (Integer) env.get(FRAME_COUNT);
-                        FileChannel in = new RandomAccessFile(inFile, "r").getChannel();
-                        ByteBuffer frame = ctx.getResourceManager().allocateFrame();
-                        writer.open();
-                        for (int i = 0; i < frameCount; ++i) {
-                            frame.clear();
-                            int rem = frame.capacity();
-                            while (rem > 0) {
-                                int c = in.read(frame);
-                                rem -= c;
-                            }
-                            frame.flip();
-                            writer.nextFrame(frame);
-                        }
-                        writer.close();
-                        in.close();
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
+                    ByteBuffer frame = ctx.allocateFrame();
+                    RunFileWriter out = (RunFileWriter) env.get(MATERIALIZED_FILE);
+                    RunFileReader in = out.createReader();
+                    writer.open();
+                    in.open();
+                    while (in.nextFrame(frame)) {
+                        frame.flip();
+                        writer.nextFrame(frame);
+                        frame.clear();
                     }
+                    in.close();
+                    writer.close();
                 }
 
                 @Override

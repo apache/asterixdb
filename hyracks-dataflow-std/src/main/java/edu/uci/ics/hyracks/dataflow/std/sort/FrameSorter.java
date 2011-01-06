@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class FrameSorter {
-    private final IHyracksContext ctx;
+    private final IHyracksCommonContext ctx;
     private final int[] sortFields;
     private final INormalizedKeyComputer nkc;
     private final IBinaryComparator[] comparators;
@@ -44,8 +44,9 @@ public class FrameSorter {
     private int dataFrameCount;
     private int[] tPointers;
 
-    public FrameSorter(IHyracksContext ctx, int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+    public FrameSorter(IHyracksCommonContext ctx, int[] sortFields,
+            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor) {
         this.ctx = ctx;
         this.sortFields = sortFields;
         nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
@@ -55,8 +56,8 @@ public class FrameSorter {
         }
         this.recordDescriptor = recordDescriptor;
         buffers = new ArrayList<ByteBuffer>();
-        fta1 = new FrameTupleAccessor(ctx, recordDescriptor);
-        fta2 = new FrameTupleAccessor(ctx, recordDescriptor);
+        fta1 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
+        fta2 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
 
         dataFrameCount = 0;
     }
@@ -89,7 +90,7 @@ public class FrameSorter {
     public void insertFrame(ByteBuffer buffer) {
         ByteBuffer copyFrame;
         if (dataFrameCount == buffers.size()) {
-            copyFrame = ctx.getResourceManager().allocateFrame();
+            copyFrame = ctx.allocateFrame();
             buffers.add(copyFrame);
         } else {
             copyFrame = buffers.get(dataFrameCount);
@@ -99,7 +100,7 @@ public class FrameSorter {
     }
 
     public void sortFrames() {
-        FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptor);
+        FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         int nBuffers = dataFrameCount;
         int totalTCount = 0;
         for (int i = 0; i < nBuffers; ++i) {
@@ -132,9 +133,9 @@ public class FrameSorter {
     }
 
     public void flushFrames(IFrameWriter writer) throws HyracksDataException {
-        FrameTupleAccessor accessor = new FrameTupleAccessor(ctx, recordDescriptor);
-        FrameTupleAppender appender = new FrameTupleAppender(ctx);
-        ByteBuffer outFrame = ctx.getResourceManager().allocateFrame();
+        FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        ByteBuffer outFrame = ctx.allocateFrame();
         writer.open();
         appender.reset(outFrame, true);
         int n = tPointers.length / 4;

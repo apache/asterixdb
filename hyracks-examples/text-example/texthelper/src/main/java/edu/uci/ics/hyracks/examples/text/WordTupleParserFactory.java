@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -23,13 +23,13 @@ public class WordTupleParserFactory implements ITupleParserFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ITupleParser createTupleParser(final IHyracksContext ctx) {
+    public ITupleParser createTupleParser(final IHyracksStageletContext ctx) {
         return new ITupleParser() {
             @Override
             public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
                 try {
-                    ByteBuffer frame = ctx.getResourceManager().allocateFrame();
-                    FrameTupleAppender appender = new FrameTupleAppender(ctx);
+                    ByteBuffer frame = ctx.allocateFrame();
+                    FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
                     appender.reset(frame, true);
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
                     DataOutput dos = tb.getDataOutput();

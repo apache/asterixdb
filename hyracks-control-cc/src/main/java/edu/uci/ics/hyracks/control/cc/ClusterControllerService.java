@@ -547,7 +547,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
         @Override
         public Map<PortInstanceId, Endpoint> execute(INodeController node) throws Exception {
-            return node.initializeJobletPhase1(appName, jobId, serialize(plan), stageId, attempt, tasks, opPartitions);
+            return node.initializeJobletPhase1(appName, jobId, attempt, serialize(plan), stageId, tasks, opPartitions);
         }
 
         @Override

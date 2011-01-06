@@ -20,7 +20,6 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -42,11 +41,11 @@ public class FrameDeserializer {
 
     private ByteBuffer buffer;
 
-    public FrameDeserializer(IHyracksContext ctx, RecordDescriptor recordDescriptor) {
+    public FrameDeserializer(int frameSize, RecordDescriptor recordDescriptor) {
         this.bbis = new ByteBufferInputStream();
         this.di = new DataInputStream(bbis);
         this.recordDescriptor = recordDescriptor;
-        frameTupleAccessor = new FrameTupleAccessor(ctx, recordDescriptor);
+        frameTupleAccessor = new FrameTupleAccessor(frameSize, recordDescriptor);
     }
 
     public void reset(ByteBuffer buffer) {

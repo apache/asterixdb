@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.dataflow.common.comm.io;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -34,13 +34,13 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
  * @author vinayakb
  */
 public final class FrameTupleAccessor implements IFrameTupleAccessor {
-    private final IHyracksContext ctx;
+    private final int frameSize;
     private final RecordDescriptor recordDescriptor;
 
     private ByteBuffer buffer;
 
-    public FrameTupleAccessor(IHyracksContext ctx, RecordDescriptor recordDescriptor) {
-        this.ctx = ctx;
+    public FrameTupleAccessor(int frameSize, RecordDescriptor recordDescriptor) {
+        this.frameSize = frameSize;
         this.recordDescriptor = recordDescriptor;
     }
 
@@ -56,17 +56,17 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getTupleCount() {
-        return buffer.getInt(FrameHelper.getTupleCountOffset(ctx));
+        return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize));
     }
 
     @Override
     public int getTupleStartOffset(int tupleIndex) {
-        return tupleIndex == 0 ? 0 : buffer.getInt(FrameHelper.getTupleCountOffset(ctx) - 4 * tupleIndex);
+        return tupleIndex == 0 ? 0 : buffer.getInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * tupleIndex);
     }
 
     @Override
     public int getTupleEndOffset(int tupleIndex) {
-        return buffer.getInt(FrameHelper.getTupleCountOffset(ctx) - 4 * (tupleIndex + 1));
+        return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleIndex + 1));
     }
 
     @Override

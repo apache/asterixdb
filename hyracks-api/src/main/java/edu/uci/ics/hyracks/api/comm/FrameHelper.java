@@ -14,10 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.comm;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
-
 public class FrameHelper {
-    public static int getTupleCountOffset(IHyracksContext ctx) {
-        return ctx.getFrameSize() - 4;
+    public static int getTupleCountOffset(int frameSize) {
+        return frameSize - 4;
     }
 }

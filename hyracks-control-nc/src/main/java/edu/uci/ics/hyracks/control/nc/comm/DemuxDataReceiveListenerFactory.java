@@ -27,22 +27,22 @@ import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFactory, IConnectionDemultiplexer,
         IDataReceiveListener {
     private static final Logger LOGGER = Logger.getLogger(DemuxDataReceiveListenerFactory.class.getName());
 
-    private final IHyracksContext ctx;
     private final BitSet readyBits;
+    private final int frameSize;
     private IConnectionEntry senders[];
     private int openSenderCount;
     private UUID jobId;
     private UUID stageId;
 
-    public DemuxDataReceiveListenerFactory(IHyracksContext ctx, UUID jobId, UUID stageId) {
-        this.ctx = ctx;
+    public DemuxDataReceiveListenerFactory(IHyracksStageletContext ctx, UUID jobId, UUID stageId) {
+        frameSize = ctx.getFrameSize();
         this.jobId = jobId;
         this.stageId = stageId;
         readyBits = new BitSet();
@@ -63,7 +63,7 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
         ByteBuffer buffer = entry.getReadBuffer();
         buffer.flip();
         int dataLen = buffer.remaining();
-        if (dataLen >= ctx.getFrameSize() || entry.aborted()) {
+        if (dataLen >= frameSize || entry.aborted()) {
             if (LOGGER.isLoggable(Level.FINEST)) {
                 LOGGER.finest("NonDeterministicDataReceiveListener: frame received: sender = " + senderIndex);
             }

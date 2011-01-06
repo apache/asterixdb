@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.file.FileHandle;
+import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BTree {
 
@@ -113,7 +113,7 @@ public class BTree {
                 return;
 
             // initialize meta data page
-            ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
+            ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaDataPage), false);
             pins++;
 
             metaNode.acquireWriteLatch();
@@ -130,7 +130,7 @@ public class BTree {
             }
 
             // initialize root page
-            ICachedPage rootNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rootPage), true);
+            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
             pins++;
 
             rootNode.acquireWriteLatch();
@@ -161,7 +161,7 @@ public class BTree {
     }
 
     private int getFreePage(IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
-        ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
+        ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaDataPage), false);
         pins++;
 
         metaNode.acquireWriteLatch();
@@ -174,7 +174,7 @@ public class BTree {
             if (freePage < 0) { // no free page entry on this page
                 int nextPage = metaFrame.getNextPage();
                 if (nextPage > 0) { // sibling may have free pages
-                    ICachedPage nextNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, nextPage), false);
+                    ICachedPage nextNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextPage), false);
                     pins++;
 
                     nextNode.acquireWriteLatch();
@@ -238,7 +238,7 @@ public class BTree {
         if (freePage == rootPage)
             return;
 
-        ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
+        ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaDataPage), false);
         pins++;
 
         metaNode.acquireWriteLatch();
@@ -256,7 +256,7 @@ public class BTree {
                     throw new Exception("Inconsistent Meta Page State. It has no space, but it also has no entries.");
                 }
 
-                ICachedPage newNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, newPage), false);
+                ICachedPage newNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newPage), false);
                 pins++;
 
                 newNode.acquireWriteLatch();
@@ -293,7 +293,7 @@ public class BTree {
     }
 
     public int getMaxPage(IBTreeMetaDataFrame metaFrame) throws HyracksDataException {
-        ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
+        ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaDataPage), false);
         pins++;
 
         metaNode.acquireWriteLatch();
@@ -320,7 +320,7 @@ public class BTree {
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
             IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
 
-        ICachedPage node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         pins++;
         node.acquireReadLatch();
         readLatchesAcquired++;
@@ -379,7 +379,7 @@ public class BTree {
         int currentPageId = rootPage + 1;
         int maxPageId = -1;
 
-        ICachedPage metaNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, metaDataPage), false);
+        ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaDataPage), false);
         pins++;
 
         metaNode.acquireReadLatch();
@@ -396,7 +396,7 @@ public class BTree {
             unpins++;
         }
 
-        ICachedPage page = bufferCache.pin(FileHandle.getDiskPageId(fileId, currentPageId), false);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(fileId);
@@ -439,7 +439,7 @@ public class BTree {
         ICachedPage originalPage = ctx.interiorFrame.getPage();
         for (int i = 0; i < ctx.smPages.size(); i++) {
             int pageId = ctx.smPages.get(i);
-            ICachedPage smPage = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+            ICachedPage smPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             pins++;
             smPage.acquireWriteLatch(); // TODO: would like to set page dirty
             // without latching
@@ -468,13 +468,13 @@ public class BTree {
         currentLevel++;
 
         // make sure the root is always at the same level
-        ICachedPage leftNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()), false);
+        ICachedPage leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()), false);
         pins++;
         leftNode.acquireWriteLatch(); // TODO: think about whether latching is
         // really required
         writeLatchesAcquired++;
         try {
-            ICachedPage rightNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, ctx.splitKey.getRightPage()),
+            ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getRightPage()),
                     false);
             pins++;
             rightNode.acquireWriteLatch(); // TODO: think about whether latching
@@ -482,7 +482,7 @@ public class BTree {
             writeLatchesAcquired++;
             try {
                 int newLeftId = getFreePage(ctx.metaFrame);
-                ICachedPage newLeftNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, newLeftId), true);
+                ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId), true);
                 pins++;
                 newLeftNode.acquireWriteLatch(); // TODO: think about whether
                 // latching is really
@@ -610,7 +610,7 @@ public class BTree {
                     int rightSiblingPageId = ctx.leafFrame.getNextLeaf();
                     ICachedPage rightSibling = null;
                     if (rightSiblingPageId > 0) {
-                        rightSibling = bufferCache.pin(FileHandle.getDiskPageId(fileId, rightSiblingPageId), false);
+                        rightSibling = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightSiblingPageId), false);
                         pins++;
                     }
 
@@ -621,7 +621,7 @@ public class BTree {
                     try {
 
                         int rightPageId = getFreePage(ctx.metaFrame);
-                        ICachedPage rightNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rightPageId), true);
+                        ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
                         pins++;
                         rightNode.acquireWriteLatch();
                         writeLatchesAcquired++;
@@ -709,7 +709,7 @@ public class BTree {
             case INSUFFICIENT_SPACE: {
                 splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
                 int rightPageId = getFreePage(ctx.metaFrame);
-                ICachedPage rightNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rightPageId), true);
+                ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
                 pins++;
                 rightNode.acquireWriteLatch();
                 writeLatchesAcquired++;
@@ -792,7 +792,7 @@ public class BTree {
 
             // tree is empty, reset level to zero
             if (ctx.splitKey.getBuffer() != null) {
-                ICachedPage rootNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rootPage), false);
+                ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
                 pins++;
                 rootNode.acquireWriteLatch();
                 writeLatchesAcquired++;
@@ -830,12 +830,12 @@ public class BTree {
             int prevLeaf = ctx.leafFrame.getPrevLeaf();
 
             if (prevLeaf > 0)
-                leftNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, prevLeaf), false);
+                leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, prevLeaf), false);
 
             try {
 
                 if (nextLeaf > 0)
-                    rightNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, nextLeaf), false);
+                    rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), false);
 
                 try {
                     treeLatch.writeLock().lock();
@@ -976,7 +976,7 @@ public class BTree {
     }
 
     private boolean isConsistent(int pageId, BTreeOpContext ctx) throws Exception {
-        ICachedPage node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         pins++;
         node.acquireReadLatch();
         readLatchesAcquired++;
@@ -994,7 +994,7 @@ public class BTree {
     }
 
     private void performOp(int pageId, ICachedPage parent, BTreeOpContext ctx) throws Exception {
-        ICachedPage node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         pins++;
 
         ctx.interiorFrame.setPage(node);
@@ -1055,7 +1055,7 @@ public class BTree {
 
                             case BTO_INSERT: {
                                 if (ctx.splitKey.getBuffer() != null) {
-                                    node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+                                    node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     pins++;
                                     node.acquireWriteLatch();
                                     writeLatchesAcquired++;
@@ -1075,7 +1075,7 @@ public class BTree {
 
                             case BTO_DELETE: {
                                 if (ctx.splitKey.getBuffer() != null) {
-                                    node = bufferCache.pin(FileHandle.getDiskPageId(fileId, pageId), false);
+                                    node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     pins++;
                                     node.acquireWriteLatch();
                                     writeLatchesAcquired++;
@@ -1194,7 +1194,7 @@ public class BTree {
 
             NodeFrontier leafFrontier = new NodeFrontier(leafFrame.createTupleReference());
             leafFrontier.pageId = getFreePage(metaFrame);
-            leafFrontier.page = bufferCache.pin(FileHandle.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
+            leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
             leafFrontier.page.acquireWriteLatch();
 
             interiorFrame.setPage(leafFrontier.page);
@@ -1217,7 +1217,7 @@ public class BTree {
         private void addLevel() throws HyracksDataException {
             NodeFrontier frontier = new NodeFrontier(tupleWriter.createTupleReference());
             frontier.pageId = getFreePage(metaFrame);
-            frontier.page = bufferCache.pin(FileHandle.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
+            frontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
             frontier.page.acquireWriteLatch();
             frontier.lastTuple.setFieldCount(cmp.getKeyFieldCount());
             interiorFrame.setPage(frontier.page);
@@ -1263,7 +1263,7 @@ public class BTree {
             ctx.splitKey.setRightPage(frontier.pageId);
             propagateBulk(ctx, level + 1);
 
-            frontier.page = bufferCache.pin(FileHandle.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
+            frontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, frontier.pageId), bulkNewPage);
             frontier.page.acquireWriteLatch();
             ctx.interiorFrame.setPage(frontier.page);
             ctx.interiorFrame.initBuffer((byte) level);
@@ -1322,7 +1322,7 @@ public class BTree {
             ctx.splitKey.setRightPage(leafFrontier.pageId);
             propagateBulk(ctx, 1);
 
-            leafFrontier.page = bufferCache.pin(FileHandle.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
+            leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId), bulkNewPage);
             leafFrontier.page.acquireWriteLatch();
             leafFrame.setPage(leafFrontier.page);
             leafFrame.initBuffer((byte) 0);
@@ -1342,7 +1342,7 @@ public class BTree {
 
     public void endBulkLoad(BulkLoadContext ctx) throws HyracksDataException {
         // copy root
-        ICachedPage rootNode = bufferCache.pin(FileHandle.getDiskPageId(fileId, rootPage), bulkNewPage);
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), bulkNewPage);
         rootNode.acquireWriteLatch();
         try {
             ICachedPage toBeRoot = ctx.nodeFrontiers.get(ctx.nodeFrontiers.size() - 1).page;

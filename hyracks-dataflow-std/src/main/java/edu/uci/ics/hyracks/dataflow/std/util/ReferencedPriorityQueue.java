@@ -18,12 +18,11 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Comparator;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ReferencedPriorityQueue {
-    private final IHyracksContext ctx;
+    private final int frameSize;
     private final RecordDescriptor recordDescriptor;
     private final ReferenceEntry entries[];
     private final int size;
@@ -32,9 +31,9 @@ public class ReferencedPriorityQueue {
 
     private final Comparator<ReferenceEntry> comparator;
 
-    public ReferencedPriorityQueue(IHyracksContext ctx, RecordDescriptor recordDescriptor, int initSize,
-            Comparator<ReferenceEntry> comparator) throws IOException {
-        this.ctx = ctx;
+    public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
+            Comparator<ReferenceEntry> comparator) {
+        this.frameSize = frameSize;
         this.recordDescriptor = recordDescriptor;
         if (initSize < 1)
             throw new IllegalArgumentException();
@@ -66,10 +65,10 @@ public class ReferencedPriorityQueue {
      * @return runid of this entry
      * @throws IOException
      */
-    public int popAndReplace(FrameTupleAccessor fta, int tIndex) throws IOException {
+    public int popAndReplace(FrameTupleAccessor fta, int tIndex) {
         ReferenceEntry entry = entries[0];
         if (entry.getAccessor() == null) {
-            entry.setAccessor(new FrameTupleAccessor(ctx, recordDescriptor));
+            entry.setAccessor(new FrameTupleAccessor(frameSize, recordDescriptor));
         }
         entry.getAccessor().reset(fta.getBuffer());
         entry.setTupleIndex(tIndex);

@@ -19,7 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 
 public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final IBinaryTokenizer tokenizer;
     private final int[] tokenFields;
     private final int[] projFields;
@@ -44,7 +44,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     private FrameTupleAppender appender;
     private ByteBuffer writeBuffer;
 
-    public BinaryTokenizerOperatorNodePushable(IHyracksContext ctx, RecordDescriptor inputRecDesc,
+    public BinaryTokenizerOperatorNodePushable(IHyracksStageletContext ctx, RecordDescriptor inputRecDesc,
             RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int[] tokenFields, int[] projFields) {
         this.ctx = ctx;
         this.tokenizer = tokenizer;
@@ -56,11 +56,11 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     @Override
     public void open() throws HyracksDataException {
-        accessor = new FrameTupleAccessor(ctx, inputRecDesc);
-        writeBuffer = ctx.getResourceManager().allocateFrame();
+        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
+        writeBuffer = ctx.allocateFrame();
         builder = new ArrayTupleBuilder(outputRecDesc.getFields().length);
         builderDos = builder.getDataOutput();
-        appender = new FrameTupleAppender(ctx);
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(writeBuffer, true);
     }
 
@@ -73,9 +73,11 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
             for (int j = 0; j < tokenFields.length; j++) {
 
-                tokenizer.reset(accessor.getBuffer().array(), accessor.getTupleStartOffset(i)
-                        + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(i, tokenFields[j]), accessor
-                        .getFieldLength(i, tokenFields[j]));
+                tokenizer.reset(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
+                                + accessor.getFieldStartOffset(i, tokenFields[j]),
+                        accessor.getFieldLength(i, tokenFields[j]));
 
                 while (tokenizer.hasNext()) {
                     tokenizer.next();

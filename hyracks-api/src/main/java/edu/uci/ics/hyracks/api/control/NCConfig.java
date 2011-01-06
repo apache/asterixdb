@@ -36,6 +36,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-frame-size", usage = "Frame Size to use for data communication (default: 32768)")
     public int frameSize = 32768;
 
+    @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
+    public String ioDevices = System.getProperty("java.io.tmpdir");
+
     @Option(name = "-dcache-client-servers", usage = "Sets the list of DCache servers in the format host1:port1,host2:port2,... (default localhost:54583)")
     public String dcacheClientServers = "localhost:54583";
 
