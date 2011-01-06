@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -38,11 +38,11 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
         private final FrameTupleAppender[] appenders;
         private final FrameTupleAccessor tupleAccessor;
 
-        public RangeDataWriter(IHyracksContext ctx, int consumerPartitionCount, IFrameWriter[] epWriters,
+        public RangeDataWriter(IHyracksStageletContext ctx, int consumerPartitionCount, IFrameWriter[] epWriters,
                 FrameTupleAppender[] appenders, RecordDescriptor recordDescriptor) {
             this.epWriters = epWriters;
             this.appenders = appenders;
-            tupleAccessor = new FrameTupleAccessor(ctx, recordDescriptor);
+            tupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         }
 
         @Override
@@ -116,7 +116,7 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
     }
 
     @Override
-    public IFrameWriter createSendSideWriter(IHyracksContext ctx, RecordDescriptor recordDesc,
+    public IFrameWriter createSendSideWriter(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
             IEndpointDataWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
@@ -124,8 +124,8 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
         for (int i = 0; i < nConsumerPartitions; ++i) {
             try {
                 epWriters[i] = edwFactory.createFrameWriter(i);
-                appenders[i] = new FrameTupleAppender(ctx);
-                appenders[i].reset(ctx.getResourceManager().allocateFrame(), true);
+                appenders[i] = new FrameTupleAppender(ctx.getFrameSize());
+                appenders[i].reset(ctx.allocateFrame(), true);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -136,7 +136,7 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractConnectorD
     }
 
     @Override
-    public IFrameReader createReceiveSideReader(IHyracksContext ctx, RecordDescriptor recordDesc,
+    public IFrameReader createReceiveSideReader(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
             IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);

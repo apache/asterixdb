@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -54,7 +54,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
     private final IBinaryComparator[] valueCmps;
 
     private final BTree btree;
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final ArrayTupleBuilder resultTupleBuilder;
     private final FrameTupleAppender resultTupleAppender;
     private final FrameTupleAccessor resultFrameAccessor;
@@ -73,7 +73,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
     private final IBinaryTokenizer queryTokenizer;
 
-    public SimpleConjunctiveSearcher(IHyracksContext ctx, BTree btree, RecordDescriptor btreeRecDesc,
+    public SimpleConjunctiveSearcher(IHyracksStageletContext ctx, BTree btree, RecordDescriptor btreeRecDesc,
             IBinaryTokenizer queryTokenizer, int numKeyFields, int numValueFields) {
         this.ctx = ctx;
         this.btree = btree;
@@ -84,10 +84,10 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
         leafFrame = btree.getLeafFrameFactory().getFrame();
         interiorFrame = btree.getInteriorFrameFactory().getFrame();
         btreeCursor = new RangeSearchCursor(leafFrame);
-        resultTupleAppender = new FrameTupleAppender(ctx);
+        resultTupleAppender = new FrameTupleAppender(ctx.getFrameSize());
         resultTupleBuilder = new ArrayTupleBuilder(numValueFields);
-        newResultBuffers.add(ctx.getResourceManager().allocateFrame());
-        prevResultBuffers.add(ctx.getResourceManager().allocateFrame());
+        newResultBuffers.add(ctx.allocateFrame());
+        prevResultBuffers.add(ctx.allocateFrame());
 
         MultiComparator btreeCmp = btree.getMultiComparator();
 
@@ -113,7 +113,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         }
         RecordDescriptor valueRecDesc = new RecordDescriptor(valueSerde);
-        resultFrameAccessor = new FrameTupleAccessor(ctx, valueRecDesc);
+        resultFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), valueRecDesc);
     }
 
     public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception {
@@ -124,8 +124,8 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFields().length);
         DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
-        FrameTupleAppender queryTokenAppender = new FrameTupleAppender(ctx);
-        ByteBuffer queryTokenFrame = ctx.getResourceManager().allocateFrame();
+        FrameTupleAppender queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
+        ByteBuffer queryTokenFrame = ctx.allocateFrame();
         queryTokenAppender.reset(queryTokenFrame, true);
 
         queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
@@ -146,7 +146,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
                     queryTokenBuilder.getSize());
         }
 
-        FrameTupleAccessor queryTokenAccessor = new FrameTupleAccessor(ctx, queryTokenRecDesc);
+        FrameTupleAccessor queryTokenAccessor = new FrameTupleAccessor(ctx.getFrameSize(), queryTokenRecDesc);
         queryTokenAccessor.reset(queryTokenFrame);
         int numQueryTokens = queryTokenAccessor.getTupleCount();
 
@@ -204,7 +204,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
                 resultTupleBuilder.getSize())) {
             newBufIdx++;
             if (newBufIdx >= newResultBuffers.size()) {
-                newResultBuffers.add(ctx.getResourceManager().allocateFrame());
+                newResultBuffers.add(ctx.allocateFrame());
             }
             newCurrentBuffer = newResultBuffers.get(newBufIdx);
             resultTupleAppender.reset(newCurrentBuffer, true);
@@ -245,12 +245,11 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
             int cmp = 0;
             for (int i = 0; i < valueCmps.length; i++) {
                 int tupleFidx = numKeyFields + i;
-                cmp = valueCmps[i].compare(tuple.getFieldData(tupleFidx), tuple.getFieldStart(tupleFidx), tuple
-                        .getFieldLength(tupleFidx), resultFrameAccessor.getBuffer().array(), resultFrameAccessor
-                        .getTupleStartOffset(resultTidx)
-                        + resultFrameAccessor.getFieldSlotsLength()
-                        + resultFrameAccessor.getFieldStartOffset(resultTidx, i), resultFrameAccessor.getFieldLength(
-                        resultTidx, i));
+                cmp = valueCmps[i].compare(tuple.getFieldData(tupleFidx), tuple.getFieldStart(tupleFidx),
+                        tuple.getFieldLength(tupleFidx), resultFrameAccessor.getBuffer().array(),
+                        resultFrameAccessor.getTupleStartOffset(resultTidx) + resultFrameAccessor.getFieldSlotsLength()
+                                + resultFrameAccessor.getFieldStartOffset(resultTidx, i),
+                        resultFrameAccessor.getFieldLength(resultTidx, i));
                 if (cmp != 0)
                     break;
             }

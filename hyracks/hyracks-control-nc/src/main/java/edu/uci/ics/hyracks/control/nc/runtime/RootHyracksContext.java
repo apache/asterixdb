@@ -14,24 +14,19 @@
  */
 package edu.uci.ics.hyracks.control.nc.runtime;
 
-import java.util.UUID;
+import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.resources.IResourceManager;
+import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 
-public class RootHyracksContext implements IHyracksContext {
-    private final IResourceManager resourceManager;
+public class RootHyracksContext implements IHyracksRootContext {
     private final int frameSize;
 
-    public RootHyracksContext(int frameSize) {
-        resourceManager = new ResourceManager(this);
-        this.frameSize = frameSize;
-    }
+    private final IIOManager ioManager;
 
-    @Override
-    public IResourceManager getResourceManager() {
-        return resourceManager;
+    public RootHyracksContext(int frameSize, IIOManager ioManager) {
+        this.frameSize = frameSize;
+        this.ioManager = ioManager;
     }
 
     @Override
@@ -40,12 +35,12 @@ public class RootHyracksContext implements IHyracksContext {
     }
 
     @Override
-    public ICounterContext getCounterContext() {
-        throw new UnsupportedOperationException();
+    public IIOManager getIOManager() {
+        return ioManager;
     }
 
     @Override
-    public UUID getJobId() {
-        throw new UnsupportedOperationException();
+    public ByteBuffer allocateFrame() {
+        return ByteBuffer.allocate(frameSize);
     }
 }

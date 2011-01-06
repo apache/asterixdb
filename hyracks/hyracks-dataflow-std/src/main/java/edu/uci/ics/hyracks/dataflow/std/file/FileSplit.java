@@ -17,36 +17,30 @@ package edu.uci.ics.hyracks.dataflow.std.file;
 import java.io.File;
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.io.FileReference;
+
 public class FileSplit implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String nodeName;
 
-    private final File file;
-    
-    private final String path;
+    private final FileReference file;
 
-    public FileSplit(String nodeName, File file) {
+    public FileSplit(String nodeName, FileReference file) {
         this.nodeName = nodeName;
         this.file = file;
-        this.path = file.getAbsolutePath();
     }
 
     public FileSplit(String nodeName, String path) {
-    	this.nodeName = nodeName;
-    	this.path = path;
-    	this.file = new File(path);
+        this.nodeName = nodeName;
+        this.file = new FileReference(new File(path));
     }
-    
+
     public String getNodeName() {
         return nodeName;
     }
 
-    public File getLocalFile() {
+    public FileReference getLocalFile() {
         return file;
-    }
-    
-    public String getPath(){
-    	return path;
     }
 }

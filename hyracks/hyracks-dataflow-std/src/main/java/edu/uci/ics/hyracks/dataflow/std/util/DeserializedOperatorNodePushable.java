@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.util;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializer;
@@ -26,17 +26,17 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePusha
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 
 public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
 
     private final IOpenableDataWriterOperator delegate;
 
     private final FrameDeserializer deserializer;
 
-    public DeserializedOperatorNodePushable(IHyracksContext ctx, IOpenableDataWriterOperator delegate,
+    public DeserializedOperatorNodePushable(IHyracksStageletContext ctx, IOpenableDataWriterOperator delegate,
             RecordDescriptor inRecordDesc) {
         this.ctx = ctx;
         this.delegate = delegate;
-        deserializer = inRecordDesc == null ? null : new FrameDeserializer(ctx, inRecordDesc);
+        deserializer = inRecordDesc == null ? null : new FrameDeserializer(ctx.getFrameSize(), inRecordDesc);
     }
 
     @Override

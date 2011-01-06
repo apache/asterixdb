@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,12 +27,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.Endpoint;
+import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorInstanceId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.job.profiling.CounterContext;
+import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable;
 
-public class Stagelet {
+public class Stagelet implements IHyracksStageletContext {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(Stagelet.class.getName());
@@ -46,6 +58,8 @@ public class Stagelet {
 
     private final CounterContext stageletCounterContext;
 
+    private final IWorkspaceFileFactory fileFactory;
+
     private List<Endpoint> endpointList;
 
     private boolean started;
@@ -53,6 +67,8 @@ public class Stagelet {
     private volatile boolean abort;
 
     private final Set<OperatorInstanceId> pendingOperators;
+
+    private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     public Stagelet(Joblet joblet, UUID stageId, int attempt, String nodeId) throws RemoteException {
         this.joblet = joblet;
@@ -62,6 +78,8 @@ public class Stagelet {
         started = false;
         honMap = new HashMap<OperatorInstanceId, OperatorRunnable>();
         stageletCounterContext = new CounterContext(joblet.getJobId() + "." + stageId + "." + nodeId);
+        deallocatableRegistry = new DefaultDeallocatableRegistry();
+        fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
     }
 
     public void setOperator(OperatorDescriptorId odId, int partition, OperatorRunnable hon) {
@@ -142,6 +160,7 @@ public class Stagelet {
             try {
                 Map<String, Long> stats = new TreeMap<String, Long>();
                 dumpProfile(stats);
+                close();
                 joblet.notifyStageletComplete(stageId, attempt, stats);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -166,5 +185,49 @@ public class Stagelet {
 
     public void dumpProfile(Map<String, Long> counterDump) {
         stageletCounterContext.dump(counterDump);
+    }
+
+    @Override
+    public IHyracksJobletContext getJobletContext() {
+        return joblet;
+    }
+
+    @Override
+    public UUID getStageId() {
+        return stageId;
+    }
+
+    @Override
+    public ICounterContext getCounterContext() {
+        return stageletCounterContext;
+    }
+
+    @Override
+    public void registerDeallocatable(IDeallocatable deallocatable) {
+        deallocatableRegistry.registerDeallocatable(deallocatable);
+    }
+
+    public void close() {
+        deallocatableRegistry.close();
+    }
+
+    @Override
+    public ByteBuffer allocateFrame() {
+        return joblet.allocateFrame();
+    }
+
+    @Override
+    public int getFrameSize() {
+        return joblet.getFrameSize();
+    }
+
+    @Override
+    public IIOManager getIOManager() {
+        return joblet.getIOManager();
+    }
+
+    @Override
+    public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
+        return fileFactory.createWorkspaceFile(prefix);
     }
 }

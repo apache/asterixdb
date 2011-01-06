@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -60,7 +60,7 @@ class GroupingHashTable {
     }
 
     private static final int INIT_ACCUMULATORS_SIZE = 8;
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final FrameTupleAppender appender;
     private final List<ByteBuffer> buffers;
     private final Link[] table;
@@ -79,11 +79,11 @@ class GroupingHashTable {
 
     private final FrameTupleAccessor storedKeysAccessor;
 
-    GroupingHashTable(IHyracksContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
+    GroupingHashTable(IHyracksStageletContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
             ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
         this.ctx = ctx;
-        appender = new FrameTupleAppender(ctx);
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         buffers = new ArrayList<ByteBuffer>();
         table = new Link[tableSize];
         accumulators = new IAccumulatingAggregator[INIT_ACCUMULATORS_SIZE];
@@ -105,13 +105,13 @@ class GroupingHashTable {
         this.inRecordDescriptor = inRecordDescriptor;
         this.outRecordDescriptor = outRecordDescriptor;
         RecordDescriptor storedKeysRecordDescriptor = new RecordDescriptor(storedKeySerDeser);
-        storedKeysAccessor = new FrameTupleAccessor(ctx, storedKeysRecordDescriptor);
+        storedKeysAccessor = new FrameTupleAccessor(ctx.getFrameSize(), storedKeysRecordDescriptor);
         lastBIndex = -1;
         addNewBuffer();
     }
 
     private void addNewBuffer() {
-        ByteBuffer buffer = ctx.getResourceManager().allocateFrame();
+        ByteBuffer buffer = ctx.allocateFrame();
         buffer.position(0);
         buffer.limit(buffer.capacity());
         buffers.add(buffer);
@@ -168,7 +168,7 @@ class GroupingHashTable {
     }
 
     void write(IFrameWriter writer) throws HyracksDataException {
-        ByteBuffer buffer = ctx.getResourceManager().allocateFrame();
+        ByteBuffer buffer = ctx.allocateFrame();
         appender.reset(buffer, true);
         for (int i = 0; i < table.length; ++i) {
             Link link = table[i];

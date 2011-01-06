@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+
 public interface IBTreeRegistryProvider extends Serializable {
-    public BTreeRegistry getBTreeRegistry();
+    public BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx);
 }

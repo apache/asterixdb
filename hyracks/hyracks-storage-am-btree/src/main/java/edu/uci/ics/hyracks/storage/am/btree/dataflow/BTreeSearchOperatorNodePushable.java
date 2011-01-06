@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -61,9 +61,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     private RecordDescriptor recDesc;
 
-    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx, int partition,
-            IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive) {
+    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+            int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
+            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
         this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
@@ -82,7 +82,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     @Override
     public void open() throws HyracksDataException {
         AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
         cursorFrame = opDesc.getLeafFactory().getFrame();
         cursor = new RangeSearchCursor(cursorFrame);
@@ -119,16 +119,16 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                 highKeySearchCmp);
 
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksContext(), recDesc);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
-        writeBuffer = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
+        writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
         tb = new ArrayTupleBuilder(btree.getMultiComparator().getFieldCount());
         dos = tb.getDataOutput();
-        appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());
+        appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
         appender.reset(writeBuffer, true);
 
-        opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper.getLeafFrame(), btreeOpHelper
-                .getInteriorFrame(), null);
+        opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper.getLeafFrame(),
+                btreeOpHelper.getInteriorFrame(), null);
     }
 
     private void writeSearchResults() throws Exception {

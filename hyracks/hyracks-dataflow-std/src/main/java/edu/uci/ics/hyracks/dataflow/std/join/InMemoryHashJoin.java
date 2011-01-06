@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -38,7 +38,7 @@ public class InMemoryHashJoin {
     private final FrameTuplePairComparator tpComparator;
     private final ByteBuffer outBuffer;
 
-    public InMemoryHashJoin(IHyracksContext ctx, int tableSize, FrameTupleAccessor accessor0,
+    public InMemoryHashJoin(IHyracksStageletContext ctx, int tableSize, FrameTupleAccessor accessor0,
             ITuplePartitionComputer tpc0, FrameTupleAccessor accessor1, ITuplePartitionComputer tpc1,
             FrameTuplePairComparator comparator) {
         table = new Link[tableSize];
@@ -47,9 +47,9 @@ public class InMemoryHashJoin {
         this.tpc0 = tpc0;
         this.accessor1 = accessor1;
         this.tpc1 = tpc1;
-        appender = new FrameTupleAppender(ctx);
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         tpComparator = comparator;
-        outBuffer = ctx.getResourceManager().allocateFrame();
+        outBuffer = ctx.allocateFrame();
         appender.reset(outBuffer, true);
     }
 

@@ -28,14 +28,16 @@ public class NCBootstrap implements INCBootstrap {
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting NC Bootstrap");
-        RuntimeContext.initialize();
-        LOGGER.info("Initialized RuntimeContext: " + RuntimeContext.getInstance());
+        RuntimeContext rCtx = new RuntimeContext(appCtx);
+        appCtx.setApplicationObject(rCtx);
+        LOGGER.info("Initialized RuntimeContext: " + rCtx);
     }
 
     @Override
     public void stop() throws Exception {
         LOGGER.info("Stopping Asterix NC Bootstrap");
-        RuntimeContext.deinitialize();
+        RuntimeContext rCtx = (RuntimeContext) appCtx.getApplicationObject();
+        rCtx.close();
     }
 
     @Override

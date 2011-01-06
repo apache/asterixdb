@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -37,18 +37,18 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private final FrameTupleAppender appender;
     private boolean first;
 
-    public PreclusteredGroupWriter(IHyracksContext ctx, int[] groupFields, IBinaryComparator[] comparators,
+    public PreclusteredGroupWriter(IHyracksStageletContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAccumulatingAggregator aggregator, RecordDescriptor inRecordDesc, IFrameWriter writer) {
         this.groupFields = groupFields;
         this.comparators = comparators;
         this.aggregator = aggregator;
         this.writer = writer;
-        copyFrame = ctx.getResourceManager().allocateFrame();
-        inFrameAccessor = new FrameTupleAccessor(ctx, inRecordDesc);
-        copyFrameAccessor = new FrameTupleAccessor(ctx, inRecordDesc);
+        copyFrame = ctx.allocateFrame();
+        inFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
+        copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
         copyFrameAccessor.reset(copyFrame);
-        outFrame = ctx.getResourceManager().allocateFrame();
-        appender = new FrameTupleAppender(ctx);
+        outFrame = ctx.allocateFrame();
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(outFrame, true);
     }
 

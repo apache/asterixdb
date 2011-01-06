@@ -14,24 +14,23 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.comm;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameHelper;
+import edu.uci.ics.hyracks.api.io.FileHandle;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
@@ -39,7 +38,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 public class SortMergeFrameReader implements IFrameReader {
     private static final Logger LOGGER = Logger.getLogger(SortMergeFrameReader.class.getName());
 
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final IConnectionDemultiplexer demux;
     private final FrameTuplePairComparator tpc;
     private final FrameTupleAppender appender;
@@ -50,12 +49,12 @@ public class SortMergeFrameReader implements IFrameReader {
     private int lastReadSender;
     private boolean first;
 
-    public SortMergeFrameReader(IHyracksContext ctx, IConnectionDemultiplexer demux, int[] sortFields,
+    public SortMergeFrameReader(IHyracksStageletContext ctx, IConnectionDemultiplexer demux, int[] sortFields,
             IBinaryComparator[] comparators, RecordDescriptor recordDescriptor) {
         this.ctx = ctx;
         this.demux = demux;
         tpc = new FrameTuplePairComparator(sortFields, sortFields, comparators);
-        appender = new FrameTupleAppender(ctx);
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         this.recordDescriptor = recordDescriptor;
     }
 
@@ -66,7 +65,7 @@ public class SortMergeFrameReader implements IFrameReader {
         frames = new ByteBuffer[nSenders];
         for (int i = 0; i < runs.length; ++i) {
             runs[i] = new Run(i);
-            frames[i] = ctx.getResourceManager().allocateFrame();
+            frames[i] = ctx.allocateFrame();
         }
         pQueue = new PriorityQueue<Integer>(nSenders, new Comparator<Integer>() {
             @Override
@@ -122,8 +121,8 @@ public class SortMergeFrameReader implements IFrameReader {
 
     private class Run {
         private final int runId;
-        private final File file;
-        private final FileChannel channel;
+        private final FileReference fRef;
+        private final FileHandle fHandle;
         private final ByteBuffer frame;
         private final FrameTupleAccessor accessor;
         private int tIndex;
@@ -133,43 +132,23 @@ public class SortMergeFrameReader implements IFrameReader {
 
         public Run(int runId) throws HyracksDataException {
             this.runId = runId;
-            try {
-                file = ctx.getResourceManager().createFile(SortMergeFrameReader.class.getSimpleName(), ".run");
-                RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                channel = raf.getChannel();
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
-            frame = ctx.getResourceManager().allocateFrame();
-            accessor = new FrameTupleAccessor(ctx, recordDescriptor);
+            fRef = ctx.createWorkspaceFile(SortMergeFrameReader.class.getName());
+            fHandle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+            frame = ctx.allocateFrame();
+            accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
             readFP = 0;
             writeFP = 0;
             eof = false;
         }
 
         public void close() throws HyracksDataException {
-            try {
-                channel.close();
-                file.delete();
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
+            ctx.getIOManager().close(fHandle);
         }
 
         private void write(ByteBuffer frame) throws HyracksDataException {
-            try {
-                int len = frame.capacity();
-                while (len > 0) {
-                    int sz = channel.write(frame, writeFP);
-                    if (sz < 0) {
-                        throw new HyracksDataException("Error writing to run");
-                    }
-                    len -= sz;
-                    writeFP += sz;
-                }
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
+            int sz = ctx.getIOManager().syncWrite(fHandle, writeFP, frame);
+            writeFP += sz;
         }
 
         private boolean next() throws HyracksDataException {
@@ -185,28 +164,16 @@ public class SortMergeFrameReader implements IFrameReader {
         }
 
         private boolean read(ByteBuffer frame) throws HyracksDataException {
+            frame.clear();
             while (!eof && readFP >= writeFP) {
                 spoolRuns(runId);
             }
             if (eof && readFP >= writeFP) {
                 return false;
             }
-            try {
-                channel.position(readFP);
-                frame.clear();
-                int len = frame.capacity();
-                while (len > 0) {
-                    int sz = channel.read(frame, readFP);
-                    if (sz < 0) {
-                        throw new HyracksDataException("Error reading file");
-                    }
-                    len -= sz;
-                    readFP += sz;
-                }
-                return true;
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
+            int sz = ctx.getIOManager().syncRead(fHandle, readFP, frame);
+            readFP += sz;
+            return true;
         }
 
         private void eof() {
@@ -219,7 +186,7 @@ public class SortMergeFrameReader implements IFrameReader {
             IConnectionEntry entry = demux.findNextReadyEntry(lastReadSender);
             lastReadSender = (Integer) entry.getAttachment();
             ByteBuffer netBuffer = entry.getReadBuffer();
-            int tupleCount = netBuffer.getInt(FrameHelper.getTupleCountOffset(ctx));
+            int tupleCount = netBuffer.getInt(FrameHelper.getTupleCountOffset(ctx.getFrameSize()));
             if (LOGGER.isLoggable(Level.FINER)) {
                 LOGGER.finer("Frame Tuple Count: " + tupleCount);
             }

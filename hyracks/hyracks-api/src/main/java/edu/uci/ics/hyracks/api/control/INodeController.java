@@ -31,8 +31,8 @@ public interface INodeController extends Remote {
 
     public NodeCapability getNodeCapability() throws Exception;
 
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, byte[] plan, UUID stageId,
-            int attempt, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
+    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, int attempt, byte[] plan,
+            UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
             throws Exception;
 
     public void initializeJobletPhase2(String appName, UUID jobId, byte[] plan, UUID stageId,
@@ -49,7 +49,8 @@ public interface INodeController extends Remote {
 
     public void notifyRegistration(IClusterController ccs) throws Exception;
 
-    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState) throws Exception;
+    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
+            throws Exception;
 
     public void destroyApplication(String appName) throws Exception;
 }

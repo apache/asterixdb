@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.storage.common.file;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 
 /**
  * Maintains the mapping between file names and file ids.
@@ -25,12 +26,12 @@ public interface IFileMapManager extends IFileMapProvider {
     /**
      * Register a new file name.
      * 
-     * @param fileName
-     *            - the name of the file to register
+     * @param fileRef
+     *            - file reference to register
      * @throws HyracksDataException
      *             - if a mapping for the file already exists.
      */
-    public void registerFile(String fileName) throws HyracksDataException;
+    public void registerFile(FileReference fileRef) throws HyracksDataException;
 
     /**
      * Unregister a file mapping

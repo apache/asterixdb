@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
 
-    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksContext ctx,
+    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
     }
@@ -49,8 +49,8 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
 
         MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
-        ByteBuffer frame = btreeOpHelper.getHyracksContext().getResourceManager().allocateFrame();
-        FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksContext());
+        ByteBuffer frame = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
         appender.reset(frame, true);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();

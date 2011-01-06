@@ -16,6 +16,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.hash.UTF8StringBinaryHashFunctionFactory;
@@ -159,7 +160,7 @@ public class Main {
     private static FileSplit[] createOrdersFileSplits() {
         FileSplit fss[] = new FileSplit[2];
         for (int i = 0; i < fss.length; ++i) {
-            fss[i] = new FileSplit("foo", new File("data/tpch0.001/orders-part" + (i + 1) + ".tbl"));
+            fss[i] = new FileSplit("foo", new FileReference(new File("data/tpch0.001/orders-part" + (i + 1) + ".tbl")));
         }
         return fss;
     }
@@ -167,7 +168,8 @@ public class Main {
     private static FileSplit[] createCustomerFileSplits() {
         FileSplit fss[] = new FileSplit[2];
         for (int i = 0; i < fss.length; ++i) {
-            fss[i] = new FileSplit("foo", new File("data/tpch0.001/customer-part" + (i + 1) + ".tbl"));
+            fss[i] = new FileSplit("foo",
+                    new FileReference(new File("data/tpch0.001/customer-part" + (i + 1) + ".tbl")));
         }
         return fss;
     }

@@ -14,13 +14,9 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -32,6 +28,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -40,6 +37,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
@@ -60,11 +59,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final int recordsPerFrame;
-
-    private int numReadI1 = 0;
-    private int numWriteI1 = 0;
-    private int numReadI2 = 0;
-    private int numWriteI2 = 0;
 
     /**
      * @param spec
@@ -124,8 +118,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
+                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
+                final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -135,15 +130,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private InMemoryHashJoin joiner0;
-                private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx, rd0);
+                private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx.getFrameSize(), rd0);
                 ITuplePartitionComputer hpc0 = new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)
                         .createPartitioner();
-                private final FrameTupleAppender appender = new FrameTupleAppender(ctx);
-                private final FrameTupleAppender ftappender = new FrameTupleAppender(ctx);
+                private final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+                private final FrameTupleAppender ftappender = new FrameTupleAppender(ctx.getFrameSize());
                 private ByteBuffer[] bufferForPartitions;
-                private final ByteBuffer inBuffer = ctx.getResourceManager().allocateFrame();
-                private File[] files;
-                private FileChannel[] channels;
+                private final ByteBuffer inBuffer = ctx.allocateFrame();
+                private RunFileWriter[] fWriters;
                 private int memoryForHashtable;
                 private int B;
 
@@ -153,24 +147,15 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         build(inBuffer);
 
                     for (int i = 0; i < B; i++) {
-                        try {
-                            ByteBuffer buf = bufferForPartitions[i];
-                            accessor0.reset(buf);
-                            if (accessor0.getTupleCount() > 0) {
-                                FileChannel wChannel = channels[i];
-                                if (wChannel == null) {
-                                    wChannel = new RandomAccessFile(files[i], "rw").getChannel();
-                                    channels[i] = wChannel;
-                                }
-                                wChannel.write(buf);
-                                numWriteI1++;
-                            }
-                        } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                        ByteBuffer buf = bufferForPartitions[i];
+                        accessor0.reset(buf);
+                        if (accessor0.getTupleCount() > 0) {
+                            write(i, buf);
                         }
+                        closeWriter(i);
                     }
 
-                    env.set(relationName, channels);
+                    env.set(relationName, fWriters);
                     env.set(JOINER0, joiner0);
                     env.set(NUM_PARTITION, B);
                     env.set(MEM_HASHTABLE, memoryForHashtable);
@@ -193,19 +178,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                     if (appender.append(accessor0, i)) {
                                         break;
                                     } else {
-                                        try {
-                                            FileChannel wChannel = channels[entry];
-                                            if (wChannel == null) {
-                                                wChannel = new RandomAccessFile(files[entry], "rw").getChannel();
-                                                channels[entry] = wChannel;
-                                            }
-                                            wChannel.write(bufBi);
-                                            numWriteI1++;
-                                            bufBi.clear();
-                                            newBuffer = true;
-                                        } catch (IOException e) {
-                                            throw new HyracksDataException(e);
-                                        }
+                                        write(entry, bufBi);
+                                        bufBi.clear();
+                                        newBuffer = true;
                                     }
                                 }
                             } else {
@@ -228,21 +203,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                         if (appender.append(accessor0, i)) {
                                             break;
                                         } else {
-                                            try {
-                                                FileChannel wChannel;
-                                                if (channels[entry] == null) {
-                                                    wChannel = new RandomAccessFile(files[entry], "rw").getChannel();
-                                                    channels[entry] = wChannel;
-                                                } else {
-                                                    wChannel = channels[entry];
-                                                }
-                                                wChannel.write(bufBi);
-                                                numWriteI1++;
-                                                bufBi.clear();
-                                                newBuffer = true;
-                                            } catch (IOException e) {
-                                                throw new HyracksDataException(e);
-                                            }
+                                            write(entry, bufBi);
+                                            bufBi.clear();
+                                            newBuffer = true;
                                         }
                                     }
                                 }
@@ -256,7 +219,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
 
                 private void build(ByteBuffer inBuffer) throws HyracksDataException {
-                    ByteBuffer copyBuffer = ctx.getResourceManager().allocateFrame();
+                    ByteBuffer copyBuffer = ctx.allocateFrame();
                     FrameUtils.copy(inBuffer, copyBuffer);
                     joiner0.build(copyBuffer);
                 }
@@ -290,19 +253,13 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)
                             .createPartitioner();
                     int tableSize = (int) (memoryForHashtable * recordsPerFrame * factor);
-                    joiner0 = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx, rd0), hpc0,
-                            new FrameTupleAccessor(ctx, rd1), hpc1, new FrameTuplePairComparator(keys0, keys1,
-                                    comparators));
-                    files = new File[B];
-                    channels = new FileChannel[B];
+                    joiner0 = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(), rd0),
+                            hpc0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpc1, new FrameTuplePairComparator(
+                                    keys0, keys1, comparators));
                     bufferForPartitions = new ByteBuffer[B];
+                    fWriters = new RunFileWriter[B];
                     for (int i = 0; i < B; i++) {
-                        try {
-                            files[i] = ctx.getResourceManager().createFile(relationName, null);
-                            bufferForPartitions[i] = ctx.getResourceManager().allocateFrame();
-                        } catch (IOException e) {
-                            throw new HyracksDataException(e);
-                        }
+                        bufferForPartitions[i] = ctx.allocateFrame();
                     }
 
                     ftappender.reset(inBuffer, true);
@@ -310,6 +267,24 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void flush() throws HyracksDataException {
+                }
+
+                private void closeWriter(int i) throws HyracksDataException {
+                    RunFileWriter writer = fWriters[i];
+                    if (writer != null) {
+                        writer.close();
+                    }
+                }
+
+                private void write(int i, ByteBuffer head) throws HyracksDataException {
+                    RunFileWriter writer = fWriters[i];
+                    if (writer == null) {
+                        FileReference file = ctx.getJobletContext().createWorkspaceFile(relationName);
+                        writer = new RunFileWriter(file, ctx.getIOManager());
+                        writer.open();
+                        fWriters[i] = writer;
+                    }
+                    writer.nextFrame(head);
                 }
             };
             return op;
@@ -331,8 +306,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
+                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
+                final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -342,20 +318,19 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private InMemoryHashJoin joiner0;
-                private final FrameTupleAccessor accessor1 = new FrameTupleAccessor(ctx, rd1);
+                private final FrameTupleAccessor accessor1 = new FrameTupleAccessor(ctx.getFrameSize(), rd1);
                 private ITuplePartitionComputerFactory hpcf0 = new FieldHashPartitionComputerFactory(keys0,
                         hashFunctionFactories);
                 private ITuplePartitionComputerFactory hpcf1 = new FieldHashPartitionComputerFactory(keys1,
                         hashFunctionFactories);
                 ITuplePartitionComputer hpc1 = hpcf1.createPartitioner();
 
-                private final FrameTupleAppender appender = new FrameTupleAppender(ctx);
-                private final FrameTupleAppender ftap = new FrameTupleAppender(ctx);
-                private final ByteBuffer inBuffer = ctx.getResourceManager().allocateFrame();
-                private final ByteBuffer outBuffer = ctx.getResourceManager().allocateFrame();
-                private FileChannel[] channelsR;
-                private FileChannel[] channelsS;
-                private File filesS[];
+                private final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+                private final FrameTupleAppender ftap = new FrameTupleAppender(ctx.getFrameSize());
+                private final ByteBuffer inBuffer = ctx.allocateFrame();
+                private final ByteBuffer outBuffer = ctx.allocateFrame();
+                private RunFileWriter[] rWriters;
+                private RunFileWriter[] sWriters;
                 private ByteBuffer[] bufferForPartitions;
                 private int B;
                 private int memoryForHashtable;
@@ -364,19 +339,13 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 public void open() throws HyracksDataException {
                     joiner0 = (InMemoryHashJoin) env.get(JOINER0);
                     writer.open();
-                    channelsR = (FileChannel[]) env.get(SMALLRELATION);
+                    rWriters = (RunFileWriter[]) env.get(SMALLRELATION);
                     B = (Integer) env.get(NUM_PARTITION);
                     memoryForHashtable = (Integer) env.get(MEM_HASHTABLE);
-                    filesS = new File[B];
-                    channelsS = new FileChannel[B];
+                    sWriters = new RunFileWriter[B];
                     bufferForPartitions = new ByteBuffer[B];
                     for (int i = 0; i < B; i++) {
-                        try {
-                            filesS[i] = ctx.getResourceManager().createFile(largeRelation, null);
-                            bufferForPartitions[i] = ctx.getResourceManager().allocateFrame();
-                        } catch (IOException e) {
-                            throw new HyracksDataException(e);
-                        }
+                        bufferForPartitions[i] = ctx.allocateFrame();
                     }
                     appender.reset(outBuffer, true);
                     ftap.reset(inBuffer, true);
@@ -399,20 +368,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                     if (appender.append(accessor1, i)) {
                                         break;
                                     } else {
-                                        try {
-                                            FileChannel wChannel = channelsS[entry];
-                                            if (wChannel == null) {
-                                                wChannel = new RandomAccessFile(filesS[entry], "rw").getChannel();
-                                                channelsS[entry] = wChannel;
-                                            }
-
-                                            wChannel.write(outbuf);
-                                            numWriteI2++;
-                                            outbuf.clear();
-                                            newBuffer = true;
-                                        } catch (IOException e) {
-                                            throw new HyracksDataException(e);
-                                        }
+                                        write(entry, outbuf);
+                                        outbuf.clear();
+                                        newBuffer = true;
                                     }
                                 }
                             } else {
@@ -435,19 +393,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                         if (appender.append(accessor1, i)) {
                                             break;
                                         } else {
-                                            try {
-                                                FileChannel wChannel = channelsS[entry];
-                                                if (wChannel == null) {
-                                                    wChannel = new RandomAccessFile(filesS[entry], "rw").getChannel();
-                                                    channelsS[entry] = wChannel;
-                                                }
-                                                wChannel.write(outbuf);
-                                                numWriteI2++;
-                                                outbuf.clear();
-                                                newBuffer = true;
-                                            } catch (IOException e) {
-                                                throw new HyracksDataException(e);
-                                            }
+                                            write(entry, outbuf);
+                                            outbuf.clear();
+                                            newBuffer = true;
                                         }
                                     }
                                 }
@@ -466,21 +414,12 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(B, hpcf1).createPartitioner();
                     if (memoryForHashtable != memsize - 2) {
                         for (int i = 0; i < B; i++) {
-                            try {
-                                ByteBuffer buf = bufferForPartitions[i];
-                                accessor1.reset(buf);
-                                if (accessor1.getTupleCount() > 0) {
-                                    FileChannel wChannel = channelsS[i];
-                                    if (wChannel == null) {
-                                        wChannel = new RandomAccessFile(filesS[i], "rw").getChannel();
-                                        channelsS[i] = wChannel;
-                                    }
-                                    wChannel.write(buf);
-                                    numWriteI2++;
-                                }
-                            } catch (IOException e) {
-                                throw new HyracksDataException(e);
+                            ByteBuffer buf = bufferForPartitions[i];
+                            accessor1.reset(buf);
+                            if (accessor1.getTupleCount() > 0) {
+                                write(i, buf);
                             }
+                            closeWriter(i);
                         }
 
                         inBuffer.clear();
@@ -491,45 +430,35 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                             tableSize = (int) (memsize * recordsPerFrame * factor);
                         }
                         for (int partitionid = 0; partitionid < B; partitionid++) {
-
-                            int state = 0;
-                            try {
-                                FileChannel inChannel = channelsR[partitionid];
-                                if (inChannel != null) {
-                                    inChannel.position(0);
-                                    InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize,
-                                            new FrameTupleAccessor(ctx, rd0), hpcRep0,
-                                            new FrameTupleAccessor(ctx, rd1), hpcRep1, new FrameTuplePairComparator(
-                                                    keys0, keys1, comparators));
-                                    state = inChannel.read(inBuffer);
-                                    while (state != -1) {
-                                        numReadI1++;
-                                        ByteBuffer copyBuffer = ctx.getResourceManager().allocateFrame();
-                                        FrameUtils.copy(inBuffer, copyBuffer);
-                                        joiner.build(copyBuffer);
-                                        inBuffer.clear();
-                                        state = inChannel.read(inBuffer);
-                                    }
-                                    appender.reset(outBuffer, false);
-
-                                    inBuffer.clear();
-
-                                    FileChannel inChannelS = channelsS[partitionid];
-                                    if (inChannelS != null) {
-                                        inChannelS.position(0);
-                                        while (inChannelS.read(inBuffer) != -1) {
-                                            numReadI2++;
-                                            joiner.join(inBuffer, writer);
-                                            inBuffer.clear();
-                                        }
-                                        inChannelS.close();
-                                        joiner.closeJoin(writer);
-                                    }
-                                    inChannel.close();
-                                }
-                            } catch (IOException e) {
-                                throw new HyracksDataException(e);
+                            RunFileWriter rWriter = rWriters[partitionid];
+                            RunFileWriter sWriter = sWriters[partitionid];
+                            if (rWriter == null || sWriter == null) {
+                                continue;
                             }
+
+                            InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
+                                    ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1),
+                                    hpcRep1, new FrameTuplePairComparator(keys0, keys1, comparators));
+
+                            RunFileReader rReader = rWriter.createReader();
+                            rReader.open();
+                            while (rReader.nextFrame(inBuffer)) {
+                                ByteBuffer copyBuffer = ctx.allocateFrame();
+                                FrameUtils.copy(inBuffer, copyBuffer);
+                                joiner.build(copyBuffer);
+                                inBuffer.clear();
+                            }
+                            rReader.close();
+
+                            // probe
+                            RunFileReader sReader = sWriter.createReader();
+                            sReader.open();
+                            while (sReader.nextFrame(inBuffer)) {
+                                joiner.join(inBuffer, writer);
+                                inBuffer.clear();
+                            }
+                            sReader.close();
+                            joiner.closeJoin(writer);
                         }
                     }
                     writer.close();
@@ -543,6 +472,24 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 @Override
                 public void flush() throws HyracksDataException {
                     writer.flush();
+                }
+
+                private void closeWriter(int i) throws HyracksDataException {
+                    RunFileWriter writer = sWriters[i];
+                    if (writer != null) {
+                        writer.close();
+                    }
+                }
+
+                private void write(int i, ByteBuffer head) throws HyracksDataException {
+                    RunFileWriter writer = sWriters[i];
+                    if (writer == null) {
+                        FileReference file = ctx.createWorkspaceFile(largeRelation);
+                        writer = new RunFileWriter(file, ctx.getIOManager());
+                        writer.open();
+                        sWriters[i] = writer;
+                    }
+                    writer.nextFrame(head);
                 }
             };
             return op;

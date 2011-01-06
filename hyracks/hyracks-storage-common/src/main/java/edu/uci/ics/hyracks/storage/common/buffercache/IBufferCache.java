@@ -15,9 +15,10 @@
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 
 public interface IBufferCache {
-    public void createFile(String fileName) throws HyracksDataException;
+    public void createFile(FileReference fileRef) throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;
 

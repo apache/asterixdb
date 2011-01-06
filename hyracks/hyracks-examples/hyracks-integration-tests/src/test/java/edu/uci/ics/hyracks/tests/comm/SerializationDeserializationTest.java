@@ -19,35 +19,46 @@ import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.test.support.TestJobletContext;
+import edu.uci.ics.hyracks.test.support.TestNCApplicationContext;
+import edu.uci.ics.hyracks.test.support.TestRootContext;
+import edu.uci.ics.hyracks.test.support.TestStageletContext;
 
 public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";
 
     private static class SerDeserRunner {
-        private final IHyracksContext ctx;
+        private final IHyracksStageletContext ctx;
         private static final int FRAME_SIZE = 32768;
         private RecordDescriptor rDes;
         private List<ByteBuffer> buffers;
 
-        public SerDeserRunner(RecordDescriptor rDes) {
-            ctx = new RootHyracksContext(FRAME_SIZE);
+        public SerDeserRunner(RecordDescriptor rDes) throws HyracksException {
+            IHyracksRootContext rootCtx = new TestRootContext(FRAME_SIZE);
+            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
+            IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID(), 0);
+            ctx = new TestStageletContext(jobletCtx, UUID.randomUUID());
             this.rDes = rDes;
             buffers = new ArrayList<ByteBuffer>();
         }
@@ -60,7 +71,7 @@ public class SerializationDeserializationTest {
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ByteBuffer toBuf = ctx.getResourceManager().allocateFrame();
+                    ByteBuffer toBuf = ctx.allocateFrame();
                     toBuf.put(buffer);
                     buffers.add(toBuf);
                 }

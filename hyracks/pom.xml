@@ -65,6 +65,8 @@
     <module>hyracks-storage-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
+    <module>hyracks-test-support</module>
+    <module>hyracks-tests</module>
     <module>hyracks-examples</module>
     <module>hyracks-documentation</module>
   </modules>

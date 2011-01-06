@@ -14,31 +14,32 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 public class ExternalSortRunGenerator implements IFrameWriter {
-    private final IHyracksContext ctx;
+    private final IHyracksStageletContext ctx;
     private final FrameSorter frameSorter;
-    private final List<File> runs;
+    private final List<RunFileReader> runs;
     private final int maxSortFrames;
 
-    public ExternalSortRunGenerator(IHyracksContext ctx, int[] sortFields,
+    public ExternalSortRunGenerator(IHyracksStageletContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, int framesLimit) {
         this.ctx = ctx;
         frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc);
-        runs = new LinkedList<File>();
+        runs = new LinkedList<RunFileReader>();
         maxSortFrames = framesLimit - 1;
     }
 
@@ -69,13 +70,8 @@ public class ExternalSortRunGenerator implements IFrameWriter {
 
     private void flushFramesToRun() throws HyracksDataException {
         frameSorter.sortFrames();
-        File runFile;
-        try {
-            runFile = ctx.getResourceManager().createFile(ExternalSortOperatorDescriptor.class.getSimpleName(), ".run");
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-        RunFileWriter writer = new RunFileWriter(runFile);
+        FileReference file = ctx.getJobletContext().createWorkspaceFile(ExternalSortRunGenerator.class.getSimpleName());
+        RunFileWriter writer = new RunFileWriter(file, ctx.getIOManager());
         writer.open();
         try {
             frameSorter.flushFrames(writer);
@@ -83,7 +79,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
             writer.close();
         }
         frameSorter.reset();
-        runs.add(runFile);
+        runs.add(writer.createReader());
     }
 
     @Override
@@ -94,7 +90,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         return frameSorter;
     }
 
-    public List<File> getRuns() {
+    public List<RunFileReader> getRuns() {
         return runs;
     }
 }

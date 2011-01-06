@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksContext;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -40,7 +40,7 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksContext ctx, IOperatorEnvironment env,
+    public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         return new AbstractUnaryInputSinkOperatorNodePushable() {
@@ -49,7 +49,7 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    out = new FileOutputStream(splits[partition].getLocalFile());
+                    out = new FileOutputStream(splits[partition].getLocalFile().getFile());
                 } catch (FileNotFoundException e) {
                     throw new HyracksDataException(e);
                 }
