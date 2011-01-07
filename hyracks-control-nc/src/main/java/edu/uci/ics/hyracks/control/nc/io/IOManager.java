@@ -45,6 +45,7 @@ public class IOManager implements IIOManager {
         workAreaIODevices = new ArrayList<IODeviceHandle>();
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkAreaPath() != null) {
+                new File(d.getPath(), d.getWorkAreaPath()).mkdirs();
                 workAreaIODevices.add(d);
             }
         }

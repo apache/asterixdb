@@ -37,6 +37,7 @@ public class FileHandle {
                 break;
 
             case READ_WRITE:
+                fileRef.getFile().getAbsoluteFile().getParentFile().mkdirs();
                 switch (syncMode) {
                     case METADATA_ASYNC_DATA_ASYNC:
                         mode = "rw";
