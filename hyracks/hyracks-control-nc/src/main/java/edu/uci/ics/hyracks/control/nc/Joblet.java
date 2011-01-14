@@ -150,7 +150,7 @@ public class Joblet implements IHyracksJobletContext {
 
     @Override
     public INCApplicationContext getApplicationContext() {
-        return null;
+        return appCtx;
     }
 
     @Override
