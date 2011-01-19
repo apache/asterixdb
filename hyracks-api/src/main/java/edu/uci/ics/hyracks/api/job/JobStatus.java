@@ -18,4 +18,5 @@ public enum JobStatus {
     INITIALIZED,
     RUNNING,
     TERMINATED,
+    FAILURE,
 }

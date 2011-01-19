@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +35,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
@@ -158,10 +158,10 @@ public class Stagelet implements IHyracksStageletContext {
         pendingOperators.remove(opIId);
         if (pendingOperators.isEmpty()) {
             try {
-                Map<String, Long> stats = new TreeMap<String, Long>();
-                dumpProfile(stats);
+                StageletProfile sProfile = new StageletProfile(stageId);
+                dumpProfile(sProfile);
                 close();
-                joblet.notifyStageletComplete(stageId, attempt, stats);
+                joblet.notifyStageletComplete(stageId, attempt, sProfile);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -183,8 +183,8 @@ public class Stagelet implements IHyracksStageletContext {
         }
     }
 
-    public void dumpProfile(Map<String, Long> counterDump) {
-        stageletCounterContext.dump(counterDump);
+    public void dumpProfile(StageletProfile sProfile) {
+        stageletCounterContext.dump(sProfile.getCounters());
     }
 
     @Override

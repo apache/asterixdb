@@ -22,10 +22,7 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -128,9 +125,7 @@ public class InsertPipelineExample {
         DataGenOperatorDescriptor dataGen = new DataGenOperatorDescriptor(spec, recDesc, options.numTuples, 2, 0,
                 100000, 10, 100);
         // run data generator on first nodecontroller given
-        PartitionConstraint dataGenConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(splitNCs[0]) });
-        dataGen.setPartitionConstraint(dataGenConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dataGen, splitNCs[0]);
 
         IBTreeRegistryProvider btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
@@ -164,8 +159,7 @@ public class InsertPipelineExample {
                 recDesc, storageManager, btreeRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation,
                 BTreeOp.BTO_INSERT);
-        PartitionConstraint primaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        primaryInsert.setPartitionConstraint(primaryInsertConstraint);
+        JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
         // tuples to be put into B-Tree shall have 2 fields
@@ -194,13 +188,11 @@ public class InsertPipelineExample {
                 recDesc, storageManager, btreeRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
                 secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories,
                 secondaryFieldPermutation, BTreeOp.BTO_INSERT);
-        PartitionConstraint secondaryInsertConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        secondaryInsert.setPartitionConstraint(secondaryInsertConstraint);
+        JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint nullSinkPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        nullSink.setPartitionConstraint(nullSinkPartitionConstraint);
+        JobHelper.createPartitionConstraint(spec, nullSink, splitNCs);
 
         // distribute the records from the datagen via hashing to the bulk load
         // ops

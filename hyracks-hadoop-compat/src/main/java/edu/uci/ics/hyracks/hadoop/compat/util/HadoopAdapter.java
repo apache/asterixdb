@@ -20,9 +20,7 @@ import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -136,15 +134,14 @@ public class HadoopAdapter {
         boolean selfRead = previousOp == null;
         IHadoopClassFactory classFactory = new ClasspathBasedHadoopClassFactory();
         HadoopMapperOperatorDescriptor mapOp = null;
-        PartitionConstraint constraint;
         if(selfRead) {
             Object [] splits = getInputSplits(conf,maxMappers);
             mapOp = new HadoopMapperOperatorDescriptor(spec, conf, splits,classFactory);
-            mapOp.setPartitionConstraint(new PartitionCountConstraint(splits.length));
+            PartitionConstraintHelper.addPartitionCountConstraint(spec, mapOp, splits.length);
             System.out.println("No of  mappers :" + splits.length);
         } else {
-            constraint = previousOp.getPartitionConstraint();
-            mapOp.setPartitionConstraint(constraint);
+            Object [] splits = getInputSplits(conf,maxMappers);
+            PartitionConstraintHelper.addPartitionCountConstraint(spec, mapOp, splits.length);
             mapOp = new HadoopMapperOperatorDescriptor(spec,conf,classFactory);
         }
         return mapOp;
@@ -176,16 +173,12 @@ public class HadoopAdapter {
         return spec;
     }
 
-    private IOperatorDescriptor configureOutput(IOperatorDescriptor previousOperator, JobConf conf,
+    private IOperatorDescriptor configureOutput(int partitionCount, IOperatorDescriptor previousOperator, JobConf conf,
             JobSpecification spec) throws Exception {
-        PartitionConstraint previousOpConstraint = previousOperator.getPartitionConstraint();
-        int noOfInputs = previousOpConstraint instanceof PartitionCountConstraint ? ((PartitionCountConstraint) previousOpConstraint)
-                .getCount()
-                : ((ExplicitPartitionConstraint) previousOpConstraint).getLocationConstraints().length;
-        int numOutputters = conf.getNumReduceTasks() != 0 ? conf.getNumReduceTasks() : noOfInputs;
+        int numOutputters = conf.getNumReduceTasks() != 0 ? conf.getNumReduceTasks() : partitionCount;
         HadoopWriteOperatorDescriptor writer = null;
         writer = new HadoopWriteOperatorDescriptor(spec, conf, numOutputters);
-        writer.setPartitionConstraint(previousOperator.getPartitionConstraint());
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, writer, numOutputters);
         spec.connect(new OneToOneConnectorDescriptor(spec), previousOperator, 0, writer, 0);
         return writer;
     }
@@ -209,17 +202,21 @@ public class HadoopAdapter {
         return mapSideOutputOp;
     }
     
+    private int getNumReduceTasks(JobConf jobConf) {
+        int numReduceTasks = Math.min(maxReducers,jobConf.getNumReduceTasks());
+        return numReduceTasks;
+    }
+    
     private IOperatorDescriptor addReducer(IOperatorDescriptor previousOperator, JobConf jobConf,
             JobSpecification spec) throws Exception {
         IOperatorDescriptor mrOutputOperator = previousOperator;
         if (jobConf.getNumReduceTasks() != 0) {
             IOperatorDescriptor sorter = getExternalSorter(jobConf, spec);
             HadoopReducerOperatorDescriptor reducer = getReducer(jobConf, spec);
-            int numReduceTasks = Math.min(maxReducers,jobConf.getNumReduceTasks());
+            int numReduceTasks = getNumReduceTasks(jobConf);
             System.out.println("No of Reducers :" + numReduceTasks);
-            PartitionConstraint reducerPartitionConstraint = new PartitionCountConstraint(numReduceTasks);
-            sorter.setPartitionConstraint(reducerPartitionConstraint);
-            reducer.setPartitionConstraint(reducerPartitionConstraint);
+            PartitionConstraintHelper.addPartitionCountConstraint(spec, sorter, numReduceTasks);
+            PartitionConstraintHelper.addPartitionCountConstraint(spec, reducer, numReduceTasks);
     
             IConnectorDescriptor mToNConnectorDescriptor = getMtoNHashPartitioningConnector(jobConf, spec);
             spec.connect(mToNConnectorDescriptor, previousOperator, 0, sorter, 0);

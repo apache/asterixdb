@@ -60,14 +60,14 @@
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>
-    <module>hyracks-hadoop-compat</module>
-    <module>hyracks-server</module>
     <module>hyracks-storage-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
     <module>hyracks-test-support</module>
     <module>hyracks-tests</module>
+    <module>hyracks-server</module>
     <module>hyracks-examples</module>
     <module>hyracks-documentation</module>
+    <!--module>hyracks-hadoop-compat</module-->
   </modules>
 </project>

@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
@@ -117,8 +119,7 @@ public class Joblet implements IHyracksJobletContext {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, Map<String, Long> stats)
-            throws Exception {
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletProfile stats) throws Exception {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
@@ -132,9 +133,13 @@ public class Joblet implements IHyracksJobletContext {
         return nodeController;
     }
 
-    public void dumpProfile(Map<String, Long> counterDump) {
+    public void dumpProfile(JobletProfile jProfile) {
         Set<UUID> stageIds;
         synchronized (this) {
+            for (Stagelet si : stageletMap.values()) {
+                StageletProfile sProfile = new StageletProfile(si.getStageId());
+                si.dumpProfile(sProfile);
+            }
             stageIds = new HashSet<UUID>(stageletMap.keySet());
         }
         for (UUID stageId : stageIds) {
@@ -143,7 +148,8 @@ public class Joblet implements IHyracksJobletContext {
                 si = stageletMap.get(stageId);
             }
             if (si != null) {
-                si.dumpProfile(counterDump);
+                StageletProfile sProfile = new StageletProfile(si.getStageId());
+                si.dumpProfile(sProfile);
             }
         }
     }
@@ -190,5 +196,9 @@ public class Joblet implements IHyracksJobletContext {
     @Override
     public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
         return fileFactory.createWorkspaceFile(prefix);
+    }
+
+    public Map<UUID, Stagelet> getStageletMap() {
+        return stageletMap;
     }
 }

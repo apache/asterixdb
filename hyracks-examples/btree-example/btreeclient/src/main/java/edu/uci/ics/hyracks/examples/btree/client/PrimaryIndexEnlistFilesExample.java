@@ -21,7 +21,6 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -112,8 +111,7 @@ public class PrimaryIndexEnlistFilesExample {
         BTreeFileEnlistmentOperatorDescriptor fileEnlistmentOp = new BTreeFileEnlistmentOperatorDescriptor(spec,
                 recDesc, storageManager, btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, comparatorFactories);
-        PartitionConstraint fileEnlistmentConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        fileEnlistmentOp.setPartitionConstraint(fileEnlistmentConstraint);
+        JobHelper.createPartitionConstraint(spec, fileEnlistmentOp, splitNCs);
 
         spec.addRoot(fileEnlistmentOp);
 

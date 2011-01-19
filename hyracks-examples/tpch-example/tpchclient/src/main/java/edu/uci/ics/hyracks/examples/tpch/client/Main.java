@@ -5,13 +5,9 @@ import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ChoiceLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -103,7 +99,7 @@ public class Main {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        ordScanner.setPartitionConstraint(createRRPartitionConstraint(2));
+        createRRPartitionConstraint(spec, ordScanner, 2);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -111,13 +107,13 @@ public class Main {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        custScanner.setPartitionConstraint(createRRPartitionConstraint(2));
+        createRRPartitionConstraint(spec, custScanner, 2);
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 0 },
                 new int[] { 1 }, new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc,
                 6000000);
-        join.setPartitionConstraint(new PartitionCountConstraint(4));
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, join, 4);
 
         RecordDescriptor groupResultDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -130,10 +126,10 @@ public class Main {
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
                 groupResultDesc, 16);
-        gby.setPartitionConstraint(new PartitionCountConstraint(4));
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, gby, 4);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        printer.setPartitionConstraint(new PartitionCountConstraint(4));
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, printer, 4);
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -174,22 +170,21 @@ public class Main {
         return fss;
     }
 
-    private static final LocationConstraint[] LCS = { new AbsoluteLocationConstraint("NC1"),
-            new AbsoluteLocationConstraint("NC2") };
+    private static final String[] NODES = { "NC1", "NC2" };
 
-    private static PartitionConstraint createRRPartitionConstraint(int k) {
-        LocationConstraint[] lcs = new LocationConstraint[2];
-        for (int i = 0; i < lcs.length; ++i) {
-            lcs[i] = createRRSteppedChoiceConstraint(i, k);
+    private static void createRRPartitionConstraint(JobSpecification spec, IOperatorDescriptor op, int nChoices) {
+        String[][] choices = new String[2][];
+        for (int i = 0; i < choices.length; ++i) {
+            choices[i] = createRRSteppedChoiceConstraint(i, nChoices);
         }
-        return new ExplicitPartitionConstraint(lcs);
+        PartitionConstraintHelper.addLocationChoiceConstraint(spec, op, choices);
     }
 
-    private static LocationConstraint createRRSteppedChoiceConstraint(int index, int choices) {
-        LocationConstraint[] lcs = new LocationConstraint[choices];
-        for (int i = 0; i < choices; ++i) {
-            lcs[i] = LCS[(index + i) % LCS.length];
+    private static String[] createRRSteppedChoiceConstraint(int index, int nChoices) {
+        String[] lcs = new String[nChoices];
+        for (int i = 0; i < nChoices; ++i) {
+            lcs[i] = NODES[(index + i) % NODES.length];
         }
-        return new ChoiceLocationConstraint(lcs);
+        return lcs;
     }
 }

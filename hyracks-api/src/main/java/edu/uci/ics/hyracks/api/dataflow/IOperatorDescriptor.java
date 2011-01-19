@@ -19,8 +19,9 @@ import java.io.Serializable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 
 /**
  * Descriptor for operators in Hyracks.
@@ -50,21 +51,6 @@ public interface IOperatorDescriptor extends Serializable {
     public int getOutputArity();
 
     /**
-     * Returns the partition constraint requested for scheduling this operator. This value is set as part of Job creation by the client.
-     * 
-     * @return the partition constraint.
-     */
-    public PartitionConstraint getPartitionConstraint();
-
-    /**
-     * Sets the partition constraint.
-     * 
-     * @param partitionConstraint
-     *            - partition constraint.
-     */
-    public void setPartitionConstraint(PartitionConstraint partitionConstraint);
-
-    /**
      * Gets the output record descriptor
      * 
      * @return Array of RecordDescriptor, one per output.
@@ -78,6 +64,16 @@ public interface IOperatorDescriptor extends Serializable {
      *            - graph builder
      */
     public void contributeTaskGraph(IActivityGraphBuilder builder);
+
+    /**
+     * Contributes any scheduling constraints imposed by this operator.
+     * 
+     * @param constraintAcceptor
+     *            - Constraint Acceptor
+     * @param plan
+     *            - Job Plan
+     */
+    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan);
 
     /**
      * Translates this operator descriptor to JSON.

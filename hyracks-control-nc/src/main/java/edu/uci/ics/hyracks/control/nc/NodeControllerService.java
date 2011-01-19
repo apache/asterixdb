@@ -25,7 +25,6 @@ import java.rmi.registry.Registry;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +77,9 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
+import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.api.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -210,7 +212,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, int attempt,
             byte[] planBytes, UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks,
-            Map<OperatorDescriptorId, Set<Integer>> opPartitions) throws Exception {
+            Map<OperatorDescriptorId, Integer> opNumPartitions) throws Exception {
         try {
             LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
 
@@ -248,7 +250,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 List<IConnectorDescriptor> inputs = plan.getTaskInputs(hanId);
                 for (int i : tasks.get(hanId)) {
                     IOperatorNodePushable hon = han.createPushRuntime(stagelet, joblet.getEnvironment(op, i), rdp, i,
-                            opPartitions.get(op.getOperatorId()).size());
+                            opNumPartitions.get(op.getOperatorId()));
                     OperatorRunnable or = new OperatorRunnable(stagelet, hon);
                     stagelet.setOperator(op.getOperatorId(), i, or);
                     if (inputs != null) {
@@ -272,8 +274,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
                             }
                             portMap.put(piId, endpoint);
-                            IFrameReader reader = createReader(stagelet, conn, drlf, i, plan, stagelet, opPartitions
-                                    .get(producerOpId).size(), opPartitions.get(consumerOpId).size());
+                            IFrameReader reader = createReader(stagelet, conn, drlf, i, plan, stagelet,
+                                    opNumPartitions.get(producerOpId), opNumPartitions.get(consumerOpId));
                             or.setFrameReader(reader);
                         }
                     }
@@ -329,7 +331,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     @Override
     public void initializeJobletPhase2(String appName, UUID jobId, byte[] planBytes, UUID stageId,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions,
             final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
         try {
             LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
@@ -374,8 +376,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                                 }
                             };
                             or.setFrameWriter(j, conn.createSendSideWriter(stagelet, plan.getJobSpecification()
-                                    .getConnectorRecordDescriptor(conn), edwFactory, i, opPartitions.get(producerOpId)
-                                    .size(), opPartitions.get(consumerOpId).size()), spec
+                                    .getConnectorRecordDescriptor(conn), edwFactory, i, opNumPartitions
+                                    .get(producerOpId), opNumPartitions.get(consumerOpId)), spec
                                     .getConnectorRecordDescriptor(conn));
                         }
                     }
@@ -478,7 +480,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, Map<String, Long> stats) throws Exception {
+    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, StageletProfile stats) throws Exception {
         try {
             ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
         } catch (Exception e) {
@@ -533,24 +535,23 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         @Override
         public void run() {
             try {
-                Map<UUID, Map<String, Long>> counterDump = new HashMap<UUID, Map<String, Long>>();
-                Set<UUID> jobIds;
+                List<JobProfile> profiles;
                 synchronized (NodeControllerService.this) {
-                    jobIds = new HashSet<UUID>(jobletMap.keySet());
+                    profiles = new ArrayList<JobProfile>();
                 }
-                for (UUID jobId : jobIds) {
+                for (JobProfile jProfile : profiles) {
                     Joblet ji;
+                    JobletProfile jobletProfile = new JobletProfile(id);
                     synchronized (NodeControllerService.this) {
-                        ji = jobletMap.get(jobId);
+                        ji = jobletMap.get(jProfile.getJobId());
                     }
                     if (ji != null) {
-                        Map<String, Long> jobletCounterDump = new HashMap<String, Long>();
-                        ji.dumpProfile(jobletCounterDump);
-                        counterDump.put(jobId, jobletCounterDump);
+                        ji.dumpProfile(jobletProfile);
+                        jProfile.getJobletProfiles().put(id, jobletProfile);
                     }
                 }
-                if (!counterDump.isEmpty()) {
-                    cc.reportProfile(id, counterDump);
+                if (!profiles.isEmpty()) {
+                    cc.reportProfile(id, profiles);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -559,14 +560,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void abortJoblet(UUID jobId, UUID stageId) throws Exception {
+    public synchronized void abortJoblet(UUID jobId) throws Exception {
         Joblet ji = jobletMap.get(jobId);
         if (ji != null) {
-            Stagelet stagelet = ji.getStagelet(stageId);
-            if (stagelet != null) {
+            for (Stagelet stagelet : ji.getStageletMap().values()) {
                 stagelet.abort();
                 stagelet.close();
-                connectionManager.abortConnections(jobId, stageId);
+                connectionManager.abortConnections(jobId, stagelet.getStageId());
             }
         }
     }
