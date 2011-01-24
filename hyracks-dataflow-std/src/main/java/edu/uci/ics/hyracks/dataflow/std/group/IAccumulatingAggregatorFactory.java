@@ -21,6 +21,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IAccumulatingAggregatorFactory extends Serializable {
-    IAccumulatingAggregator createAggregator(IHyracksStageletContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
+	IAccumulatingAggregator createAggregator(IHyracksStageletContext ctx,
+			RecordDescriptor inRecordDesc, RecordDescriptor outRecordDescriptor)
+			throws HyracksDataException;
+
+	ISpillableAccumulatingAggregator createSpillableAggregator(
+			IHyracksStageletContext ctx, RecordDescriptor inRecordDesc,
+			RecordDescriptor outRecordDescriptor) throws HyracksDataException;
 }

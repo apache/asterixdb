@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class CountAggregatorFactory implements IFieldValueResultingAggregatorFactory {
     private static final long serialVersionUID = 1L;
@@ -48,4 +49,45 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
             }
         };
     }
+
+	@Override
+	public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
+		return new ISpillableFieldValueResultingAggregator() {
+			private int count;
+
+			@Override
+			public void output(DataOutput resultAcceptor)
+					throws HyracksDataException {
+				try {
+					resultAcceptor.writeInt(count);
+				} catch (IOException e) {
+					throw new HyracksDataException(e);
+				}
+			}
+
+			@Override
+			public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+					throws HyracksDataException {
+				count = IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(), accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2 + accessor.getFieldStartOffset(tIndex, fIndex));
+
+			}
+
+			@Override
+			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
+					throws HyracksDataException {
+				count++;
+			}
+
+			@Override
+			public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+				count = 0;
+			}
+
+			@Override
+			public void accumulatePartialResult(IFrameTupleAccessor accessor,
+					int tIndex, int fIndex) throws HyracksDataException {
+				count += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(), accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2 + accessor.getFieldStartOffset(tIndex, fIndex));
+			}
+		};
+	}
 }
