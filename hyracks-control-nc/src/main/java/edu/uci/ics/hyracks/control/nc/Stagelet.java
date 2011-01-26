@@ -140,12 +140,7 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
                     LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
                             + opIId.getPartition() + "(" + hon + ")" + ": ABORTED");
                     e.printStackTrace();
-                    // DO NOT UNCOMMENT THE FOLLOWING LINE.
-                    // The failure of an operator triggers a re-attempt of the job at the CC. If the failure was non-transient,
-                    // this will lead to an infinite number of attempts since there is no upper bount yet on how many times
-                    // a job is retried.
-
-                    // notifyOperatorFailure(opIId);
+                    notifyOperatorFailure(opIId);
                 }
             }
         });
