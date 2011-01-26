@@ -41,7 +41,7 @@ public interface INodeController extends Remote {
 
     public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception;
 
-    public void abortJoblet(UUID jobId) throws Exception;
+    public void abortJoblet(UUID jobId, int attempt) throws Exception;
 
     public void cleanUpJob(UUID jobId) throws Exception;
 

@@ -52,6 +52,11 @@ public class StageletFailureEvent implements Runnable {
         for (String nodeId : targetNodes) {
             nodeMap.get(nodeId).getActiveJobIds().remove(jobId);
         }
-        JobLifecycleHelper.abortJob(ccs, jobId, targetNodes);
+        ccs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
+            }
+        });
     }
 }

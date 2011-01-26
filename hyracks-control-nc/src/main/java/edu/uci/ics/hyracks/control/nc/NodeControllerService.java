@@ -446,7 +446,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     private synchronized Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx)
             throws Exception {
         Joblet ji = jobletMap.get(jobId);
-        if (ji == null) {
+        if (ji == null || ji.getAttempt() != attempt) {
             ji = new Joblet(this, jobId, attempt, appCtx);
             jobletMap.put(jobId, ji);
         }
@@ -538,6 +538,9 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 List<JobProfile> profiles;
                 synchronized (NodeControllerService.this) {
                     profiles = new ArrayList<JobProfile>();
+                    for (Joblet ji : jobletMap.values()) {
+                        profiles.add(new JobProfile(ji.getJobId(), ji.getAttempt()));
+                    }
                 }
                 for (JobProfile jProfile : profiles) {
                     Joblet ji;
@@ -560,9 +563,15 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void abortJoblet(UUID jobId) throws Exception {
-        Joblet ji = jobletMap.remove(jobId);
+    public synchronized void abortJoblet(UUID jobId, int attempt) throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Aborting Job: " + jobId + ":" + attempt);
+        }
+        Joblet ji = jobletMap.get(jobId);
         if (ji != null) {
+            if (ji.getAttempt() == attempt) {
+                jobletMap.remove(jobId);
+            }
             for (Stagelet stagelet : ji.getStageletMap().values()) {
                 stagelet.abort();
                 stagelet.close();

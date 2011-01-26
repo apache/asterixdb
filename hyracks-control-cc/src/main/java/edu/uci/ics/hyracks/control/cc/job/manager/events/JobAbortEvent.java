@@ -31,9 +31,12 @@ public class JobAbortEvent implements Runnable {
 
     private final UUID jobId;
 
-    public JobAbortEvent(ClusterControllerService ccs, UUID jobId) {
+    private final int attempt;
+
+    public JobAbortEvent(ClusterControllerService ccs, UUID jobId, int attempt) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.attempt = attempt;
     }
 
     @Override
@@ -43,9 +46,9 @@ public class JobAbortEvent implements Runnable {
         final JobRun run = runMap.get(jobId);
         final Set<String> targetNodes = new HashSet<String>();
         if (run != null) {
-            List<JobAttempt> attempts = run.getAttempts();
-            JobAttempt attempt = attempts.get(attempts.size() - 1);
-            for (String runningNodeId : attempt.getParticipatingNodeIds()) {
+            List<JobAttempt> jas = run.getAttempts();
+            JobAttempt ja = jas.get(attempt);
+            for (String runningNodeId : ja.getParticipatingNodeIds()) {
                 if (nodeMap.containsKey(runningNodeId)) {
                     targetNodes.add(runningNodeId);
                     nodeMap.get(runningNodeId).getActiveJobIds().remove(jobId);
@@ -53,6 +56,11 @@ public class JobAbortEvent implements Runnable {
             }
         }
 
-        JobLifecycleHelper.abortJob(ccs, jobId, targetNodes);
+        ccs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
+            }
+        });
     }
 }

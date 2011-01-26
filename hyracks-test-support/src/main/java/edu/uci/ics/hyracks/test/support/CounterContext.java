@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.job.profiling;
+package edu.uci.ics.hyracks.test.support;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,11 +38,6 @@ public class CounterContext implements ICounterContext {
             counterMap.put(counterName, counter);
         }
         return counter;
-    }
-
-    @Override
-    public String getContextName() {
-        return contextName;
     }
 
     public synchronized void dump(Map<String, Long> dumpMap) {

@@ -90,7 +90,7 @@ public class ScheduleRunnableStagesEvent implements Runnable {
             ccs.getScheduler().schedule(runnableStageAttempts);
         } catch (HyracksException e) {
             e.printStackTrace();
-            ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jobId));
+            ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jobId, attempt));
             return;
         }
 
@@ -118,8 +118,10 @@ public class ScheduleRunnableStagesEvent implements Runnable {
                 }
             }
 
+            Set<String> participatingNodeIds = ja.getParticipatingNodeIds();
             for (String nid : targetMap.keySet()) {
                 ccs.getNodeMap().get(nid).getActiveJobIds().add(jobId);
+                participatingNodeIds.add(nid);
             }
 
             ccs.getExecutor().execute(new Runnable() {

@@ -22,15 +22,17 @@ import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 public class JobletAborter implements RemoteOp<Void> {
     private String nodeId;
     private UUID jobId;
+    private int attempt;
 
-    public JobletAborter(String nodeId, UUID jobId) {
+    public JobletAborter(String nodeId, UUID jobId, int attempt) {
         this.nodeId = nodeId;
         this.jobId = jobId;
+        this.attempt = attempt;
     }
 
     @Override
     public Void execute(INodeController node) throws Exception {
-        node.abortJoblet(jobId);
+        node.abortJoblet(jobId, attempt);
         return null;
     }
 

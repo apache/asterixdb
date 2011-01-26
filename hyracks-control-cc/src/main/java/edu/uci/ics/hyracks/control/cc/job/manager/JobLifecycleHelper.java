@@ -9,12 +9,12 @@ import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobletAborter;
 
 public class JobLifecycleHelper {
-    public static void abortJob(ClusterControllerService ccs, UUID jobId, Set<String> targetNodes) {
+    public static void abortJob(ClusterControllerService ccs, UUID jobId, int attempt, Set<String> targetNodes) {
         if (!targetNodes.isEmpty()) {
             JobletAborter[] jas = new JobletAborter[targetNodes.size()];
             int i = 0;
             for (String nodeId : targetNodes) {
-                jas[i++] = new JobletAborter(nodeId, jobId);
+                jas[i++] = new JobletAborter(nodeId, jobId, attempt);
             }
             try {
                 RemoteRunner.runRemote(ccs, jas, null);
