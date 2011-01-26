@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobAttempt;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -64,7 +65,7 @@ public class ScheduleRunnableStagesEvent implements Runnable {
                 + scheduledStages);
         if (pendingStages.size() == 1 && scheduledStages.isEmpty()) {
             LOGGER.info(jobId + ":" + attempt + ":No more runnable stages");
-            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobId, attempt));
+            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobId, attempt, JobStatus.TERMINATED));
             return;
         }
 
@@ -90,13 +91,14 @@ public class ScheduleRunnableStagesEvent implements Runnable {
         } catch (HyracksException e) {
             e.printStackTrace();
             ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jobId));
+            return;
         }
 
-        JobPlan plan = run.getJobPlan();
-        for (JobStageAttempt jsa : runnableStageAttempts) {
+        final JobPlan plan = run.getJobPlan();
+        for (final JobStageAttempt jsa : runnableStageAttempts) {
             ISchedule schedule = jsa.getSchedule();
-            Map<OperatorDescriptorId, Integer> partCountMap = new HashMap<OperatorDescriptorId, Integer>();
-            Map<String, Map<ActivityNodeId, Set<Integer>>> targetMap = new HashMap<String, Map<ActivityNodeId, Set<Integer>>>();
+            final Map<OperatorDescriptorId, Integer> partCountMap = new HashMap<OperatorDescriptorId, Integer>();
+            final Map<String, Map<ActivityNodeId, Set<Integer>>> targetMap = new HashMap<String, Map<ActivityNodeId, Set<Integer>>>();
             for (ActivityNodeId aid : jsa.getJobStage().getTasks()) {
                 String[] locations = schedule.getPartitions(aid);
                 partCountMap.put(aid.getOperatorDescriptorId(), locations.length);
@@ -116,40 +118,50 @@ public class ScheduleRunnableStagesEvent implements Runnable {
                 }
             }
 
-            Phase1Installer p1is[] = new Phase1Installer[targetMap.size()];
-            int i = 0;
             for (String nid : targetMap.keySet()) {
-                p1is[i] = new Phase1Installer(nid, plan.getJobId(), plan.getApplicationName(), plan, jsa.getJobStage()
-                        .getId(), jsa.getJobAttempt().getAttempt(), targetMap.get(nid), partCountMap);
-                ++i;
+                ccs.getNodeMap().get(nid).getActiveJobIds().add(jobId);
             }
-            LOGGER.info("Stage start - Phase 1");
-            try {
-                Map<PortInstanceId, Endpoint> globalPortMap = RemoteRunner.runRemote(ccs, p1is,
-                        new PortMapMergingAccumulator());
 
-                Phase2Installer[] p2is = new Phase2Installer[targetMap.size()];
-                Phase3Installer[] p3is = new Phase3Installer[targetMap.size()];
-                StageStarter[] ss = new StageStarter[targetMap.size()];
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    Phase1Installer p1is[] = new Phase1Installer[targetMap.size()];
+                    int i = 0;
+                    for (String nid : targetMap.keySet()) {
+                        p1is[i] = new Phase1Installer(nid, plan.getJobId(), plan.getApplicationName(), plan, jsa
+                                .getJobStage().getId(), jsa.getJobAttempt().getAttempt(), targetMap.get(nid),
+                                partCountMap);
+                        ++i;
+                    }
+                    LOGGER.info("Stage start - Phase 1");
+                    try {
+                        Map<PortInstanceId, Endpoint> globalPortMap = RemoteRunner.runRemote(ccs, p1is,
+                                new PortMapMergingAccumulator());
 
-                i = 0;
-                for (String nid : targetMap.keySet()) {
-                    p2is[i] = new Phase2Installer(nid, plan.getJobId(), plan.getApplicationName(), plan, jsa
-                            .getJobStage().getId(), targetMap.get(nid), partCountMap, globalPortMap);
-                    p3is[i] = new Phase3Installer(nid, plan.getJobId(), jsa.getJobStage().getId());
-                    ss[i] = new StageStarter(nid, plan.getJobId(), jsa.getJobStage().getId());
-                    ++i;
+                        Phase2Installer[] p2is = new Phase2Installer[targetMap.size()];
+                        Phase3Installer[] p3is = new Phase3Installer[targetMap.size()];
+                        StageStarter[] ss = new StageStarter[targetMap.size()];
+
+                        i = 0;
+                        for (String nid : targetMap.keySet()) {
+                            p2is[i] = new Phase2Installer(nid, plan.getJobId(), plan.getApplicationName(), plan, jsa
+                                    .getJobStage().getId(), targetMap.get(nid), partCountMap, globalPortMap);
+                            p3is[i] = new Phase3Installer(nid, plan.getJobId(), jsa.getJobStage().getId());
+                            ss[i] = new StageStarter(nid, plan.getJobId(), jsa.getJobStage().getId());
+                            ++i;
+                        }
+                        LOGGER.info("Stage start - Phase 2");
+                        RemoteRunner.runRemote(ccs, p2is, null);
+                        LOGGER.info("Stage start - Phase 3");
+                        RemoteRunner.runRemote(ccs, p3is, null);
+                        LOGGER.info("Stage start");
+                        RemoteRunner.runRemote(ccs, ss, null);
+                        LOGGER.info("Stage started");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-                LOGGER.info("Stage start - Phase 2");
-                RemoteRunner.runRemote(ccs, p2is, null);
-                LOGGER.info("Stage start - Phase 3");
-                RemoteRunner.runRemote(ccs, p3is, null);
-                LOGGER.info("Stage start");
-                RemoteRunner.runRemote(ccs, ss, null);
-                LOGGER.info("Stage started");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            });
         }
     }
 }

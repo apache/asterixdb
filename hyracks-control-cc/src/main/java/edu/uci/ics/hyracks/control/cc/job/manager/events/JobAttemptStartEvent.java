@@ -33,8 +33,11 @@ public class JobAttemptStartEvent implements Runnable {
     @Override
     public void run() {
         JobRun run = ccs.getRunMap().get(jobId);
-        int maxRetries = run.getJobPlan().getJobSpecification().getMaxRetries();
-        if (run.getAttempts().size() > maxRetries) {
+        int maxAttempts = run.getJobPlan().getJobSpecification().getMaxAttempts();
+        if (maxAttempts == 0) {
+            maxAttempts = ccs.getConfig().defaultMaxJobAttempts;
+        }
+        if (run.getAttempts().size() > maxAttempts) {
             run.setStatus(JobStatus.FAILURE);
             return;
         }

@@ -53,7 +53,7 @@ public class JobSpecification implements Serializable {
 
     private final Set<ConstraintExpression> userConstraints;
 
-    private int maxRetries;
+    private int maxAttempts;
 
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
@@ -173,12 +173,12 @@ public class JobSpecification implements Serializable {
         return roots;
     }
 
-    public void setMaxRetries(int maxRetries) {
-        this.maxRetries = maxRetries;
+    public void setMaxAttempts(int maxAttempts) {
+        this.maxAttempts = maxAttempts;
     }
 
-    public int getMaxRetries() {
-        return maxRetries;
+    public int getMaxAttempts() {
+        return maxAttempts;
     }
 
     public void addUserConstraint(ConstraintExpression constraint) {

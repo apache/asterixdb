@@ -19,33 +19,56 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.ApplicationDestroyer;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 
-public class ApplicationDestroyEvent extends SynchronizableRunnable {
+public class ApplicationDestroyEvent implements Runnable {
     private final ClusterControllerService ccs;
     private final String appName;
+    private FutureValue fv;
 
-    public ApplicationDestroyEvent(ClusterControllerService ccs, String appName) {
+    public ApplicationDestroyEvent(ClusterControllerService ccs, String appName, FutureValue fv) {
         this.ccs = ccs;
         this.appName = appName;
+        this.fv = fv;
     }
 
     @Override
-    protected void doRun() throws Exception {
-        ApplicationContext appCtx = ccs.getApplicationMap().remove(appName);
+    public void run() {
+        final ApplicationContext appCtx = ccs.getApplicationMap().remove(appName);
         if (appCtx == null) {
-            throw new HyracksException("No application with name: " + appName);
+            fv.setException(new HyracksException("No application with name: " + appName));
+            return;
         }
         List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
         for (final String nodeId : ccs.getNodeMap().keySet()) {
             opList.add(new ApplicationDestroyer(nodeId, appName));
         }
-        RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
-        RemoteRunner.runRemote(ccs, ops, null);
-        appCtx.deinitialize();
+        final RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
+        ccs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    RemoteRunner.runRemote(ccs, ops, null);
+                } catch (Exception e) {
+                    fv.setException(e);
+                    return;
+                }
+                ccs.getJobQueue().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            appCtx.deinitialize();
+                        } catch (Exception e) {
+                            fv.setException(e);
+                        }
+                        fv.setValue(null);
+                    }
+                });
+            }
+        });
     }
 }

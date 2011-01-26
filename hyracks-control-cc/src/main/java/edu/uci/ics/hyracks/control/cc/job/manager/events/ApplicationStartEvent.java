@@ -20,36 +20,53 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.ApplicationStarter;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 
-public class ApplicationStartEvent extends SynchronizableRunnable {
+public class ApplicationStartEvent implements Runnable {
     private final ClusterControllerService ccs;
     private final String appName;
+    private final FutureValue fv;
 
-    public ApplicationStartEvent(ClusterControllerService ccs, String appName) {
+    public ApplicationStartEvent(ClusterControllerService ccs, String appName, FutureValue fv) {
         this.ccs = ccs;
         this.appName = appName;
+        this.fv = fv;
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
         ApplicationContext appCtx = ccs.getApplicationMap().get(appName);
         if (appCtx == null) {
-            throw new HyracksException("No application with name: " + appName);
+            fv.setException(new HyracksException("No application with name: " + appName));
+            return;
         }
-        appCtx.initializeClassPath();
-        appCtx.initialize();
-        final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDestributedState());
-        final boolean deployHar = appCtx.containsHar();
-        List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
-        for (final String nodeId : ccs.getNodeMap().keySet()) {
-            opList.add(new ApplicationStarter(nodeId, appName, deployHar, distributedState));
+        try {
+            appCtx.initializeClassPath();
+            appCtx.initialize();
+            final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDestributedState());
+            final boolean deployHar = appCtx.containsHar();
+            List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
+            for (final String nodeId : ccs.getNodeMap().keySet()) {
+                opList.add(new ApplicationStarter(nodeId, appName, deployHar, distributedState));
+            }
+            final RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        RemoteRunner.runRemote(ccs, ops, null);
+                        fv.setValue(null);
+                    } catch (Exception e) {
+                        fv.setException(e);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            fv.setException(e);
         }
-        RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
-        RemoteRunner.runRemote(ccs, ops, null);
     }
 }

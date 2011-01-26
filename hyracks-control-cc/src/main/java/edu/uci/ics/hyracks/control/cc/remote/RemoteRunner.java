@@ -28,8 +28,6 @@ public class RemoteRunner {
         final Semaphore installComplete = new Semaphore(remoteOps.length);
         final List<Exception> errors = new Vector<Exception>();
         for (final RemoteOp<T> remoteOp : remoteOps) {
-            System.err.println(ccs.getNodeMap());
-            System.err.println(remoteOp.getNodeId());
             NodeControllerState nodeState = ccs.getNodeMap().get(remoteOp.getNodeId());
             final INodeController node = nodeState.getNodeController();
 

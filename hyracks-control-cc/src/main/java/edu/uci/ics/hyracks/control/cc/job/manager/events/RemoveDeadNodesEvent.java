@@ -18,11 +18,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 
 public class RemoveDeadNodesEvent implements Runnable {
+    private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesEvent.class.getName());
+
     private final ClusterControllerService ccs;
 
     public RemoveDeadNodesEvent(ClusterControllerService ccs) {
@@ -37,11 +42,13 @@ public class RemoveDeadNodesEvent implements Runnable {
             NodeControllerState state = e.getValue();
             if (state.incrementLastHeartbeatDuration() >= ccs.getConfig().maxHeartbeatLapsePeriods) {
                 deadNodes.add(e.getKey());
+                LOGGER.info(e.getKey() + " considered dead");
             }
         }
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
             for (final UUID jid : state.getActiveJobIds()) {
+                LOGGER.info("Aborting: " + jid);
                 ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jid));
             }
         }

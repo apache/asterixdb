@@ -54,6 +54,9 @@ public class NaiveScheduler implements IScheduler {
 
     private ISchedule computeSchedule(JobStageAttempt jsa, Set<OperatorDescriptorId> operators) throws HyracksException {
         Set<String> nodeSet = ccs.getNodeMap().keySet();
+        if (nodeSet.isEmpty()) {
+            throw new HyracksException("0 usable nodes found");
+        }
         String[] liveNodes = ccs.getNodeMap().keySet().toArray(new String[nodeSet.size()]);
         JobAttempt ja = jsa.getJobAttempt();
         final JobAttemptState jas = (JobAttemptState) ja.getSchedulerState();
@@ -100,6 +103,9 @@ public class NaiveScheduler implements IScheduler {
                                             }
                                         }
                                     }
+                                }
+                                if (unassignedPartsIds.get(part)) {
+                                    throw new HyracksException("Unsatisfiable constraint for operator: " + oid);
                                 }
                             }
                         }

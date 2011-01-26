@@ -561,7 +561,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     @Override
     public synchronized void abortJoblet(UUID jobId) throws Exception {
-        Joblet ji = jobletMap.get(jobId);
+        Joblet ji = jobletMap.remove(jobId);
         if (ji != null) {
             for (Stagelet stagelet : ji.getStageletMap().values()) {
                 stagelet.abort();

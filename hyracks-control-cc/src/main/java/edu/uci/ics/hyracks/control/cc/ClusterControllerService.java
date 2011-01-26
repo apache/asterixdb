@@ -58,6 +58,7 @@ import edu.uci.ics.hyracks.control.cc.job.manager.events.ReportProfilesEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.StageletCompleteEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.StageletFailureEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.UnregisterNodeEvent;
+import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.jobqueue.JobQueue;
 import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
 import edu.uci.ics.hyracks.control.cc.scheduler.naive.NaiveScheduler;
@@ -248,14 +249,16 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        ApplicationDestroyEvent de = new ApplicationDestroyEvent(this, appName);
-        jobQueue.scheduleAndSync(de);
+        FutureValue fv = new FutureValue();
+        jobQueue.schedule(new ApplicationDestroyEvent(this, appName, fv));
+        fv.get();
     }
 
     @Override
     public void startApplication(final String appName) throws Exception {
-        ApplicationStartEvent r = new ApplicationStartEvent(this, appName);
-        jobQueue.scheduleAndSync(r);
+        FutureValue fv = new FutureValue();
+        jobQueue.schedule(new ApplicationStartEvent(this, appName, fv));
+        fv.get();
     }
 
     @Override
