@@ -50,44 +50,48 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
         };
     }
 
-	@Override
-	public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
-		return new ISpillableFieldValueResultingAggregator() {
-			private int count;
+    @Override
+    public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
+        return new ISpillableFieldValueResultingAggregator() {
+            private int count;
 
-			@Override
-			public void output(DataOutput resultAcceptor)
-					throws HyracksDataException {
-				try {
-					resultAcceptor.writeInt(count);
-				} catch (IOException e) {
-					throw new HyracksDataException(e);
-				}
-			}
+            @Override
+            public void output(DataOutput resultAcceptor) throws HyracksDataException {
+                try {
+                    resultAcceptor.writeInt(count);
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
 
-			@Override
-			public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
-					throws HyracksDataException {
-				count = IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(), accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2 + accessor.getFieldStartOffset(tIndex, fIndex));
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                count = IntegerSerializerDeserializer.getInt(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
 
-			}
+            }
 
-			@Override
-			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				count++;
-			}
+            @Override
+            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                count++;
+            }
 
-			@Override
-			public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-				count = 0;
-			}
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                count = 0;
+            }
 
-			@Override
-			public void accumulatePartialResult(IFrameTupleAccessor accessor,
-					int tIndex, int fIndex) throws HyracksDataException {
-				count += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(), accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2 + accessor.getFieldStartOffset(tIndex, fIndex));
-			}
-		};
-	}
+            @Override
+            public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                count += IntegerSerializerDeserializer.getInt(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
+            }
+        };
+    }
 }

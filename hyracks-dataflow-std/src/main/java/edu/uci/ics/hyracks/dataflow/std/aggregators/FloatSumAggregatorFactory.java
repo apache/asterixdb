@@ -25,123 +25,111 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeser
  * SUM aggregator on float type data.
  * 
  * @author jarodwen
- * 
  */
-public class FloatSumAggregatorFactory implements
-		IFieldValueResultingAggregatorFactory {
+public class FloatSumAggregatorFactory implements IFieldValueResultingAggregatorFactory {
 
-	/**
+    /**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
-	private int sumField;
+    private static final long serialVersionUID = 1L;
+    private int sumField;
 
-	public FloatSumAggregatorFactory(int field) {
-		this.sumField = field;
-	}
+    public FloatSumAggregatorFactory(int field) {
+        this.sumField = field;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.uci.ics.hyracks.dataflow.std.aggregators.
-	 * IFieldValueResultingAggregatorFactory
-	 * #createFieldValueResultingAggregator()
-	 */
-	@Override
-	public IFieldValueResultingAggregator createFieldValueResultingAggregator() {
-		return new IFieldValueResultingAggregator() {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.uci.ics.hyracks.dataflow.std.aggregators.
+     * IFieldValueResultingAggregatorFactory
+     * #createFieldValueResultingAggregator()
+     */
+    @Override
+    public IFieldValueResultingAggregator createFieldValueResultingAggregator() {
+        return new IFieldValueResultingAggregator() {
 
-			private float sum;
+            private float sum;
 
-			@Override
-			public void output(DataOutput resultAcceptor)
-					throws HyracksDataException {
-				try {
-					resultAcceptor.writeFloat(sum);
-				} catch (IOException ex) {
-					throw new HyracksDataException(ex);
-				}
-			}
+            @Override
+            public void output(DataOutput resultAcceptor) throws HyracksDataException {
+                try {
+                    resultAcceptor.writeFloat(sum);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
+                }
+            }
 
-			@Override
-			public void init(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				sum = 0;
-			}
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                sum = 0;
+            }
 
-			@Override
-			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldCount = accessor.getFieldCount();
-				int fieldStart = accessor.getFieldStartOffset(tIndex, sumField);
-				sum += FloatSerializerDeserializer.getFloat(accessor
-						.getBuffer().array(), tupleOffset + 2 * fieldCount
-						+ fieldStart);
-			}
-		};
-	}
+            @Override
+            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, sumField);
+                sum += FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2 * fieldCount
+                        + fieldStart);
+            }
+        };
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.uci.ics.hyracks.dataflow.std.aggregators.
-	 * IFieldValueResultingAggregatorFactory
-	 * #createSpillableFieldValueResultingAggregator()
-	 */
-	@Override
-	public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
-		return new ISpillableFieldValueResultingAggregator() {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.uci.ics.hyracks.dataflow.std.aggregators.
+     * IFieldValueResultingAggregatorFactory
+     * #createSpillableFieldValueResultingAggregator()
+     */
+    @Override
+    public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
+        return new ISpillableFieldValueResultingAggregator() {
 
-			private float sum;
+            private float sum;
 
-			@Override
-			public void output(DataOutput resultAcceptor)
-					throws HyracksDataException {
-				try {
-					resultAcceptor.writeFloat(sum);
-				} catch (IOException ex) {
-					throw new HyracksDataException(ex);
-				}
-			}
+            @Override
+            public void output(DataOutput resultAcceptor) throws HyracksDataException {
+                try {
+                    resultAcceptor.writeFloat(sum);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
+                }
+            }
 
-			@Override
-			public void initFromPartial(IFrameTupleAccessor accessor,
-					int tIndex, int fIndex) throws HyracksDataException {
-				sum = FloatSerializerDeserializer.getFloat(
-						accessor.getBuffer().array(),
-						accessor.getTupleStartOffset(tIndex)
-								+ accessor.getFieldCount() * 2
-								+ accessor.getFieldStartOffset(tIndex, fIndex));
-			}
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                sum = FloatSerializerDeserializer.getFloat(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
+            }
 
-			@Override
-			public void init(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				sum = 0;
-			}
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                sum = 0;
+            }
 
-			@Override
-			public void accumulatePartialResult(IFrameTupleAccessor accessor,
-					int tIndex, int fIndex) throws HyracksDataException {
-				sum += FloatSerializerDeserializer.getFloat(
-						accessor.getBuffer().array(),
-						accessor.getTupleStartOffset(tIndex)
-								+ accessor.getFieldCount() * 2
-								+ accessor.getFieldStartOffset(tIndex, fIndex));
-			}
+            @Override
+            public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                sum += FloatSerializerDeserializer.getFloat(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
+            }
 
-			@Override
-			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldCount = accessor.getFieldCount();
-				int fieldStart = accessor.getFieldStartOffset(tIndex, sumField);
-				sum += FloatSerializerDeserializer.getFloat(accessor
-						.getBuffer().array(), tupleOffset + 2 * fieldCount
-						+ fieldStart);
-			}
-		};
-	}
+            @Override
+            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, sumField);
+                sum += FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2 * fieldCount
+                        + fieldStart);
+            }
+        };
+    }
 
 }

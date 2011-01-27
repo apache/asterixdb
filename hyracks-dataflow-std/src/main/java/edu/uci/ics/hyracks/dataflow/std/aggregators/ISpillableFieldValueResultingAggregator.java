@@ -20,32 +20,29 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 /**
  * An extended version of the {@link IFieldValueResultingAggregator} supporting
  * external aggregation.
- * 
  */
-public interface ISpillableFieldValueResultingAggregator extends
-		IFieldValueResultingAggregator {
+public interface ISpillableFieldValueResultingAggregator extends IFieldValueResultingAggregator {
 
-	/**
-	 * Called once per aggregator before calling accumulate for the first time.
-	 * 
-	 * @param accessor
-	 *            - Accessor to the data tuple.
-	 * @param tIndex
-	 *            - Index of the tuple in the accessor.
-	 * @throws HyracksDataException
-	 */
-	public void initFromPartial(IFrameTupleAccessor accessor, int tIndex,
-			int fIndex) throws HyracksDataException;
+    /**
+     * Called once per aggregator before calling accumulate for the first time.
+     * 
+     * @param accessor
+     *            - Accessor to the data tuple.
+     * @param tIndex
+     *            - Index of the tuple in the accessor.
+     * @throws HyracksDataException
+     */
+    public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex) throws HyracksDataException;
 
-	/**
-	 * Aggregate another partial result.
-	 * 
-	 * @param accessor
-	 * @param tIndex
-	 * @param fIndex
-	 * @throws HyracksDataException
-	 */
-	public void accumulatePartialResult(IFrameTupleAccessor accessor,
-			int tIndex, int fIndex) throws HyracksDataException;
+    /**
+     * Aggregate another partial result.
+     * 
+     * @param accessor
+     * @param tIndex
+     * @param fIndex
+     * @throws HyracksDataException
+     */
+    public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+            throws HyracksDataException;
 
 }

@@ -23,127 +23,115 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeser
 
 /**
  * Min/Max aggregator factory
- *
  */
-public class MinMaxAggregatorFactory implements
-		IFieldValueResultingAggregatorFactory {
+public class MinMaxAggregatorFactory implements IFieldValueResultingAggregatorFactory {
 
-	/**
+    /**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * indicate the type of the value: true: max false: min
-	 */
-	private boolean type;
+    /**
+     * indicate the type of the value: true: max false: min
+     */
+    private boolean type;
 
-	/**
-	 * The field to be aggregated.
-	 */
-	private int field;
+    /**
+     * The field to be aggregated.
+     */
+    private int field;
 
-	public MinMaxAggregatorFactory(boolean type, int field) {
-		this.type = type;
-		this.field = field;
-	}
+    public MinMaxAggregatorFactory(boolean type, int field) {
+        this.type = type;
+        this.field = field;
+    }
 
-	@Override
-	public IFieldValueResultingAggregator createFieldValueResultingAggregator() {
-		return new IFieldValueResultingAggregator() {
+    @Override
+    public IFieldValueResultingAggregator createFieldValueResultingAggregator() {
+        return new IFieldValueResultingAggregator() {
 
-			private float minmax;
+            private float minmax;
 
-			@Override
-			public void output(DataOutput resultAcceptor)
-					throws HyracksDataException {
-				try {
-					resultAcceptor.writeFloat(minmax);
-				} catch (IOException ex) {
-					throw new HyracksDataException(ex);
-				}
-			}
+            @Override
+            public void output(DataOutput resultAcceptor) throws HyracksDataException {
+                try {
+                    resultAcceptor.writeFloat(minmax);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
+                }
+            }
 
-			@Override
-			public void init(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				minmax = 0;
-			}
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                minmax = 0;
+            }
 
-			@Override
-			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldCount = accessor.getFieldCount();
-				int fieldStart = accessor.getFieldStartOffset(tIndex, field);
-				float nval = FloatSerializerDeserializer.getFloat(accessor
-						.getBuffer().array(), tupleOffset + 2 * fieldCount
-						+ fieldStart);
-				if ((type ? (nval > minmax) : (nval < minmax))) {
-					minmax = nval;
-				}
-			}
-		};
-	}
+            @Override
+            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, field);
+                float nval = FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2
+                        * fieldCount + fieldStart);
+                if ((type ? (nval > minmax) : (nval < minmax))) {
+                    minmax = nval;
+                }
+            }
+        };
+    }
 
-	@Override
-	public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
-		return new ISpillableFieldValueResultingAggregator() {
+    @Override
+    public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
+        return new ISpillableFieldValueResultingAggregator() {
 
-			private float minmax;
+            private float minmax;
 
-			@Override
-			public void output(DataOutput resultAcceptor)
-					throws HyracksDataException {
-				try {
-					resultAcceptor.writeFloat(minmax);
-				} catch (IOException ex) {
-					throw new HyracksDataException(ex);
-				}
-			}
+            @Override
+            public void output(DataOutput resultAcceptor) throws HyracksDataException {
+                try {
+                    resultAcceptor.writeFloat(minmax);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
+                }
+            }
 
-			@Override
-			public void initFromPartial(IFrameTupleAccessor accessor,
-					int tIndex, int fIndex) throws HyracksDataException {
-				minmax = FloatSerializerDeserializer.getFloat(
-						accessor.getBuffer().array(),
-						accessor.getTupleStartOffset(tIndex)
-								+ accessor.getFieldCount() * 2
-								+ accessor.getFieldStartOffset(tIndex, fIndex));
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                minmax = FloatSerializerDeserializer.getFloat(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
 
-			}
+            }
 
-			@Override
-			public void init(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				minmax = 0;
-			}
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                minmax = 0;
+            }
 
-			@Override
-			public void accumulatePartialResult(IFrameTupleAccessor accessor,
-					int tIndex, int fIndex) throws HyracksDataException {
-				minmax = FloatSerializerDeserializer.getFloat(
-						accessor.getBuffer().array(),
-						accessor.getTupleStartOffset(tIndex)
-								+ accessor.getFieldCount() * 2
-								+ accessor.getFieldStartOffset(tIndex, fIndex));
+            @Override
+            public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                minmax = FloatSerializerDeserializer.getFloat(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
 
-			}
+            }
 
-			@Override
-			public void accumulate(IFrameTupleAccessor accessor, int tIndex)
-					throws HyracksDataException {
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldCount = accessor.getFieldCount();
-				int fieldStart = accessor.getFieldStartOffset(tIndex, field);
-				float nval = FloatSerializerDeserializer.getFloat(accessor
-						.getBuffer().array(), tupleOffset + 2 * fieldCount
-						+ fieldStart);
-				if ((type ? (nval > minmax) : (nval < minmax))) {
-					minmax = nval;
-				}
-			}
-		};
-	}
+            @Override
+            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, field);
+                float nval = FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2
+                        * fieldCount + fieldStart);
+                if ((type ? (nval > minmax) : (nval < minmax))) {
+                    minmax = nval;
+                }
+            }
+        };
+    }
 
 }

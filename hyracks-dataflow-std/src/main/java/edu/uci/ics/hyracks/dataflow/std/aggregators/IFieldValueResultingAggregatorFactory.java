@@ -18,6 +18,6 @@ import java.io.Serializable;
 
 public interface IFieldValueResultingAggregatorFactory extends Serializable {
     public IFieldValueResultingAggregator createFieldValueResultingAggregator();
-    
+
     public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator();
 }

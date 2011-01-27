@@ -65,308 +65,243 @@ import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 /**
  * The application client for the performance tests of the external hash group
  * operator.
- * 
  */
 public class ExternalGroupClient {
-	private static class Options {
-		@Option(name = "-host", usage = "Hyracks Cluster Controller Host name", required = true)
-		public String host;
+    private static class Options {
+        @Option(name = "-host", usage = "Hyracks Cluster Controller Host name", required = true)
+        public String host;
 
-		@Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
-		public int port = 1099;
+        @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
+        public int port = 1099;
 
-		@Option(name = "-app", usage = "Hyracks Application name", required = true)
-		public String app;
+        @Option(name = "-app", usage = "Hyracks Application name", required = true)
+        public String app;
 
-		@Option(name = "-infile-splits", usage = "Comma separated list of file-splits for the input. A file-split is <node-name>:<path>", required = true)
-		public String inFileSplits;
+        @Option(name = "-infile-splits", usage = "Comma separated list of file-splits for the input. A file-split is <node-name>:<path>", required = true)
+        public String inFileSplits;
 
-		@Option(name = "-outfile-splits", usage = "Comma separated list of file-splits for the output", required = true)
-		public String outFileSplits;
+        @Option(name = "-outfile-splits", usage = "Comma separated list of file-splits for the output", required = true)
+        public String outFileSplits;
 
-		@Option(name = "-hashtable-size", usage = "Hash table size (default: 8191)", required = false)
-		public int htSize = 8191;
+        @Option(name = "-hashtable-size", usage = "Hash table size (default: 8191)", required = false)
+        public int htSize = 8191;
 
-		@Option(name = "-frames-limit", usage = "Frame size (default: 32768)", required = false)
-		public int framesLimit = 32768;
+        @Option(name = "-frames-limit", usage = "Frame size (default: 32768)", required = false)
+        public int framesLimit = 32768;
 
-		@Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 512)", required = false)
-		public int sbSize = 512;
+        @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 512)", required = false)
+        public int sbSize = 512;
 
-		@Option(name = "-sort-output", usage = "Whether to sort the output (default: true)", required = false)
-		public boolean sortOutput = false;
+        @Option(name = "-sort-output", usage = "Whether to sort the output (default: true)", required = false)
+        public boolean sortOutput = false;
 
-		@Option(name = "-out-plain", usage = "Whether to output plain text (default: true)", required = false)
-		public boolean outPlain = true;
-	}
+        @Option(name = "-out-plain", usage = "Whether to output plain text (default: true)", required = false)
+        public boolean outPlain = true;
+    }
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		Options options = new Options();
-		CmdLineParser parser = new CmdLineParser(options);
-		parser.parseArgument(args);
+    /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        Options options = new Options();
+        CmdLineParser parser = new CmdLineParser(options);
+        parser.parseArgument(args);
 
-		IHyracksClientConnection hcc = new HyracksRMIConnection(options.host,
-				options.port);
+        IHyracksClientConnection hcc = new HyracksRMIConnection(options.host, options.port);
 
-		JobSpecification job;
+        JobSpecification job;
 
-		for (int i = 0; i < 3; i++) {
-			long start = System.currentTimeMillis();
-			job = createJob(parseFileSplits(options.inFileSplits),
-					parseFileSplits(options.outFileSplits, i % 2),
-					options.htSize, options.sbSize, options.framesLimit,
-					options.sortOutput, i % 2, options.outPlain);
+        for (int i = 0; i < 3; i++) {
+            long start = System.currentTimeMillis();
+            job = createJob(parseFileSplits(options.inFileSplits), parseFileSplits(options.outFileSplits, i % 2),
+                    options.htSize, options.sbSize, options.framesLimit, options.sortOutput, i % 2, options.outPlain);
 
-			System.out.print(i + "\t" + (System.currentTimeMillis() - start));
-			start = System.currentTimeMillis();
-			UUID jobId = hcc.createJob(options.app, job);
-			hcc.start(jobId);
-			hcc.waitForCompletion(jobId);
-			System.out.println("\t" + (System.currentTimeMillis() - start));
-		}
-	}
+            System.out.print(i + "\t" + (System.currentTimeMillis() - start));
+            start = System.currentTimeMillis();
+            UUID jobId = hcc.createJob(options.app, job);
+            hcc.start(jobId);
+            hcc.waitForCompletion(jobId);
+            System.out.println("\t" + (System.currentTimeMillis() - start));
+        }
+    }
 
-	private static FileSplit[] parseFileSplits(String fileSplits) {
-		String[] splits = fileSplits.split(",");
-		FileSplit[] fSplits = new FileSplit[splits.length];
-		for (int i = 0; i < splits.length; ++i) {
-			String s = splits[i].trim();
-			int idx = s.indexOf(':');
-			if (idx < 0) {
-				throw new IllegalArgumentException("File split " + s
-						+ " not well formed");
-			}
-			fSplits[i] = new FileSplit(s.substring(0, idx), new FileReference(
-					new File(s.substring(idx + 1))));
-		}
-		return fSplits;
-	}
+    private static FileSplit[] parseFileSplits(String fileSplits) {
+        String[] splits = fileSplits.split(",");
+        FileSplit[] fSplits = new FileSplit[splits.length];
+        for (int i = 0; i < splits.length; ++i) {
+            String s = splits[i].trim();
+            int idx = s.indexOf(':');
+            if (idx < 0) {
+                throw new IllegalArgumentException("File split " + s + " not well formed");
+            }
+            fSplits[i] = new FileSplit(s.substring(0, idx), new FileReference(new File(s.substring(idx + 1))));
+        }
+        return fSplits;
+    }
 
-	private static FileSplit[] parseFileSplits(String fileSplits, int count) {
-		String[] splits = fileSplits.split(",");
-		FileSplit[] fSplits = new FileSplit[splits.length];
-		for (int i = 0; i < splits.length; ++i) {
-			String s = splits[i].trim();
-			int idx = s.indexOf(':');
-			if (idx < 0) {
-				throw new IllegalArgumentException("File split " + s
-						+ " not well formed");
-			}
-			fSplits[i] = new FileSplit(s.substring(0, idx), new FileReference(
-					new File(s.substring(idx + 1) + "_" + count)));
-		}
-		return fSplits;
-	}
+    private static FileSplit[] parseFileSplits(String fileSplits, int count) {
+        String[] splits = fileSplits.split(",");
+        FileSplit[] fSplits = new FileSplit[splits.length];
+        for (int i = 0; i < splits.length; ++i) {
+            String s = splits[i].trim();
+            int idx = s.indexOf(':');
+            if (idx < 0) {
+                throw new IllegalArgumentException("File split " + s + " not well formed");
+            }
+            fSplits[i] = new FileSplit(s.substring(0, idx), new FileReference(new File(s.substring(idx + 1) + "_"
+                    + count)));
+        }
+        return fSplits;
+    }
 
-	private static JobSpecification createJob(FileSplit[] inSplits,
-			FileSplit[] outSplits, int htSize, int sbSize, int framesLimit,
-			boolean sortOutput, int alg, boolean outPlain) {
-		JobSpecification spec = new JobSpecification();
-		IFileSplitProvider splitsProvider = new ConstantFileSplitProvider(
-				inSplits);
+    private static JobSpecification createJob(FileSplit[] inSplits, FileSplit[] outSplits, int htSize, int sbSize,
+            int framesLimit, boolean sortOutput, int alg, boolean outPlain) {
+        JobSpecification spec = new JobSpecification();
+        IFileSplitProvider splitsProvider = new ConstantFileSplitProvider(inSplits);
 
-		RecordDescriptor inDesc = new RecordDescriptor(
-				new ISerializerDeserializer[] {
-						IntegerSerializerDeserializer.INSTANCE,
-						IntegerSerializerDeserializer.INSTANCE,
-						IntegerSerializerDeserializer.INSTANCE,
-						IntegerSerializerDeserializer.INSTANCE,
-						IntegerSerializerDeserializer.INSTANCE,
-						FloatSerializerDeserializer.INSTANCE,
-						FloatSerializerDeserializer.INSTANCE,
-						FloatSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE });
+        RecordDescriptor inDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
+                FloatSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
-		FileScanOperatorDescriptor fileScanner = new FileScanOperatorDescriptor(
-				spec, splitsProvider, new DelimitedDataTupleParserFactory(
-						new IValueParserFactory[] {
-								IntegerParserFactory.INSTANCE,
-								IntegerParserFactory.INSTANCE,
-								IntegerParserFactory.INSTANCE,
-								IntegerParserFactory.INSTANCE,
-								IntegerParserFactory.INSTANCE,
-								FloatParserFactory.INSTANCE,
-								FloatParserFactory.INSTANCE,
-								FloatParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE,
-								UTF8StringParserFactory.INSTANCE, }, '|'),
-				inDesc);
+        FileScanOperatorDescriptor fileScanner = new FileScanOperatorDescriptor(spec, splitsProvider,
+                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
+                        IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
+                        IntegerParserFactory.INSTANCE, FloatParserFactory.INSTANCE, FloatParserFactory.INSTANCE,
+                        FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+                        UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+                        UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+                        UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+                        UTF8StringParserFactory.INSTANCE, }, '|'), inDesc);
 
-		fileScanner.setPartitionConstraint(createPartitionConstraint(inSplits));
+        fileScanner.setPartitionConstraint(createPartitionConstraint(inSplits));
 
-		// Output: each unique string with an integer count
-		RecordDescriptor outDesc = new RecordDescriptor(
-				new ISerializerDeserializer[] {
-						IntegerSerializerDeserializer.INSTANCE,
-						// IntegerSerializerDeserializer.INSTANCE,
-						IntegerSerializerDeserializer.INSTANCE });
+        // Output: each unique string with an integer count
+        RecordDescriptor outDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                IntegerSerializerDeserializer.INSTANCE,
+                // IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE });
 
-		// Specify the grouping key, which will be the string extracted during
-		// the scan.
-		int[] keys = new int[] { 0,
-		// 1
-		};
+        // Specify the grouping key, which will be the string extracted during
+        // the scan.
+        int[] keys = new int[] { 0,
+                // 1
+        };
 
-		AbstractOperatorDescriptor grouper;
+        AbstractOperatorDescriptor grouper;
 
-		switch (alg) {
-		case 0: // External hash group
-			grouper = new ExternalHashGroupOperatorDescriptor(
-					spec,
-					keys,
-					framesLimit,
-					false,
-					new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }),
-					new IBinaryComparatorFactory[] {
-					// IntegerBinaryComparatorFactory.INSTANCE,
-					IntegerBinaryComparatorFactory.INSTANCE },
-					new MultiAggregatorFactory(
-							new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-					outDesc, htSize);
+        switch (alg) {
+            case 0: // External hash group
+                grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, framesLimit, false,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
+                    // IntegerBinaryComparatorFactory.INSTANCE,
+                    IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                            new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
+                            htSize);
 
-			grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
+                grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
 
-			// Connect scanner with the grouper
-			IConnectorDescriptor scanGroupConn = new MToNHashPartitioningConnectorDescriptor(
-					spec, new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }));
-			spec.connect(scanGroupConn, fileScanner, 0, grouper, 0);
-			break;
-		case 1: // External sort + pre-cluster
-			ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(
-					spec, framesLimit, keys, new IBinaryComparatorFactory[] {
-					// IntegerBinaryComparatorFactory.INSTANCE,
-					IntegerBinaryComparatorFactory.INSTANCE }, inDesc);
-			sorter.setPartitionConstraint(createPartitionConstraint(inSplits));
+                // Connect scanner with the grouper
+                IConnectorDescriptor scanGroupConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                spec.connect(scanGroupConn, fileScanner, 0, grouper, 0);
+                break;
+            case 1: // External sort + pre-cluster
+                ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, framesLimit, keys,
+                        new IBinaryComparatorFactory[] {
+                        // IntegerBinaryComparatorFactory.INSTANCE,
+                        IntegerBinaryComparatorFactory.INSTANCE }, inDesc);
+                sorter.setPartitionConstraint(createPartitionConstraint(inSplits));
 
-			// Connect scan operator with the sorter
-			IConnectorDescriptor scanSortConn = new MToNHashPartitioningConnectorDescriptor(
-					spec, new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }));
-			spec.connect(scanSortConn, fileScanner, 0, sorter, 0);
+                // Connect scan operator with the sorter
+                IConnectorDescriptor scanSortConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                spec.connect(scanSortConn, fileScanner, 0, sorter, 0);
 
-			grouper = new PreclusteredGroupOperatorDescriptor(
-					spec,
-					keys,
-					new IBinaryComparatorFactory[] {
-					// IntegerBinaryComparatorFactory.INSTANCE,
-					IntegerBinaryComparatorFactory.INSTANCE },
-					new MultiAggregatorFactory(
-							new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-					outDesc);
+                grouper = new PreclusteredGroupOperatorDescriptor(spec, keys, new IBinaryComparatorFactory[] {
+                        // IntegerBinaryComparatorFactory.INSTANCE,
+                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                                new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc);
 
-			grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
+                grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
 
-			// Connect sorter with the pre-cluster
-			OneToOneConnectorDescriptor sortGroupConn = new OneToOneConnectorDescriptor(
-					spec);
-			spec.connect(sortGroupConn, sorter, 0, grouper, 0);
-			break;
-		case 2: // In-memory hash group
-			grouper = new HashGroupOperatorDescriptor(
-					spec,
-					keys,
-					new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }),
-					new IBinaryComparatorFactory[] {
-					// IntegerBinaryComparatorFactory.INSTANCE,
-					IntegerBinaryComparatorFactory.INSTANCE },
-					new MultiAggregatorFactory(
-							new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-					outDesc, htSize);
+                // Connect sorter with the pre-cluster
+                OneToOneConnectorDescriptor sortGroupConn = new OneToOneConnectorDescriptor(spec);
+                spec.connect(sortGroupConn, sorter, 0, grouper, 0);
+                break;
+            case 2: // In-memory hash group
+                grouper = new HashGroupOperatorDescriptor(spec, keys, new FieldHashPartitionComputerFactory(keys,
+                        new IBinaryHashFunctionFactory[] {
+                        // IntegerBinaryHashFunctionFactory.INSTANCE,
+                        IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
+                    // IntegerBinaryComparatorFactory.INSTANCE,
+                    IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                            new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
+                            htSize);
 
-			grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
+                grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
 
-			// Connect scanner with the grouper
-			IConnectorDescriptor scanConn = new MToNHashPartitioningConnectorDescriptor(
-					spec, new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }));
-			spec.connect(scanConn, fileScanner, 0, grouper, 0);
-			break;
-		default:
-			grouper = new ExternalHashGroupOperatorDescriptor(
-					spec,
-					keys,
-					framesLimit,
-					false,
-					new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }),
-					new IBinaryComparatorFactory[] {
-					// IntegerBinaryComparatorFactory.INSTANCE,
-					IntegerBinaryComparatorFactory.INSTANCE },
-					new MultiAggregatorFactory(
-							new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-					outDesc, htSize);
+                // Connect scanner with the grouper
+                IConnectorDescriptor scanConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                spec.connect(scanConn, fileScanner, 0, grouper, 0);
+                break;
+            default:
+                grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, framesLimit, false,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
+                    // IntegerBinaryComparatorFactory.INSTANCE,
+                    IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                            new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
+                            htSize);
 
-			grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
+                grouper.setPartitionConstraint(createPartitionConstraint(outSplits));
 
-			// Connect scanner with the grouper
-			IConnectorDescriptor scanGroupConnDef = new MToNHashPartitioningConnectorDescriptor(
-					spec, new FieldHashPartitionComputerFactory(keys,
-							new IBinaryHashFunctionFactory[] {
-							// IntegerBinaryHashFunctionFactory.INSTANCE,
-							IntegerBinaryHashFunctionFactory.INSTANCE }));
-			spec.connect(scanGroupConnDef, fileScanner, 0, grouper, 0);
-		}
+                // Connect scanner with the grouper
+                IConnectorDescriptor scanGroupConnDef = new MToNHashPartitioningConnectorDescriptor(spec,
+                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                spec.connect(scanGroupConnDef, fileScanner, 0, grouper, 0);
+        }
 
-		IFileSplitProvider outSplitProvider = new ConstantFileSplitProvider(
-				outSplits);
+        IFileSplitProvider outSplitProvider = new ConstantFileSplitProvider(outSplits);
 
-		AbstractSingleActivityOperatorDescriptor writer;
+        AbstractSingleActivityOperatorDescriptor writer;
 
-		if (outPlain)
-			writer = new PlainFileWriterOperatorDescriptor(spec,
-					outSplitProvider, "|");
-		else
-			writer = new FrameFileWriterOperatorDescriptor(spec,
-					outSplitProvider);
+        if (outPlain)
+            writer = new PlainFileWriterOperatorDescriptor(spec, outSplitProvider, "|");
+        else
+            writer = new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
 
-		writer.setPartitionConstraint(createPartitionConstraint(outSplits));
+        writer.setPartitionConstraint(createPartitionConstraint(outSplits));
 
-		IConnectorDescriptor groupOutConn = new OneToOneConnectorDescriptor(
-				spec);
-		spec.connect(groupOutConn, grouper, 0, writer, 0);
+        IConnectorDescriptor groupOutConn = new OneToOneConnectorDescriptor(spec);
+        spec.connect(groupOutConn, grouper, 0, writer, 0);
 
-		spec.addRoot(writer);
-		return spec;
-	}
+        spec.addRoot(writer);
+        return spec;
+    }
 
-	private static PartitionConstraint createPartitionConstraint(
-			FileSplit[] splits) {
-		LocationConstraint[] lConstraints = new LocationConstraint[splits.length];
-		for (int i = 0; i < splits.length; ++i) {
-			lConstraints[i] = new AbsoluteLocationConstraint(
-					splits[i].getNodeName());
-		}
-		return new ExplicitPartitionConstraint(lConstraints);
-	}
+    private static PartitionConstraint createPartitionConstraint(FileSplit[] splits) {
+        LocationConstraint[] lConstraints = new LocationConstraint[splits.length];
+        for (int i = 0; i < splits.length; ++i) {
+            lConstraints[i] = new AbsoluteLocationConstraint(splits[i].getNodeName());
+        }
+        return new ExplicitPartitionConstraint(lConstraints);
+    }
 }
