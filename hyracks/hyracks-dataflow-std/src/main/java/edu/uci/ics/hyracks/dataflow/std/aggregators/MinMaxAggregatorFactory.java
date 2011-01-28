@@ -19,33 +19,63 @@ import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
-public class CountAggregatorFactory implements IFieldValueResultingAggregatorFactory {
+/**
+ * Min/Max aggregator factory
+ */
+public class MinMaxAggregatorFactory implements IFieldValueResultingAggregatorFactory {
+
+    /**
+	 * 
+	 */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * indicate the type of the value: true: max false: min
+     */
+    private boolean type;
+
+    /**
+     * The field to be aggregated.
+     */
+    private int field;
+
+    public MinMaxAggregatorFactory(boolean type, int field) {
+        this.type = type;
+        this.field = field;
+    }
 
     @Override
     public IFieldValueResultingAggregator createFieldValueResultingAggregator() {
         return new IFieldValueResultingAggregator() {
-            private int count;
+
+            private float minmax;
 
             @Override
             public void output(DataOutput resultAcceptor) throws HyracksDataException {
                 try {
-                    resultAcceptor.writeInt(count);
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    resultAcceptor.writeFloat(minmax);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
                 }
             }
 
             @Override
             public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                count = 0;
+                minmax = 0;
             }
 
             @Override
             public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                ++count;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, field);
+                float nval = FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2
+                        * fieldCount + fieldStart);
+                if ((type ? (nval > minmax) : (nval < minmax))) {
+                    minmax = nval;
+                }
             }
         };
     }
@@ -53,21 +83,37 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
     @Override
     public ISpillableFieldValueResultingAggregator createSpillableFieldValueResultingAggregator() {
         return new ISpillableFieldValueResultingAggregator() {
-            private int count;
+
+            private float minmax;
 
             @Override
             public void output(DataOutput resultAcceptor) throws HyracksDataException {
                 try {
-                    resultAcceptor.writeInt(count);
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    resultAcceptor.writeFloat(minmax);
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
                 }
             }
 
             @Override
             public void initFromPartial(IFrameTupleAccessor accessor, int tIndex, int fIndex)
                     throws HyracksDataException {
-                count = IntegerSerializerDeserializer.getInt(
+                minmax = FloatSerializerDeserializer.getFloat(
+                        accessor.getBuffer().array(),
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                                + accessor.getFieldStartOffset(tIndex, fIndex));
+
+            }
+
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                minmax = 0;
+            }
+
+            @Override
+            public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
+                    throws HyracksDataException {
+                minmax = FloatSerializerDeserializer.getFloat(
                         accessor.getBuffer().array(),
                         accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
@@ -76,22 +122,16 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
 
             @Override
             public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                count++;
-            }
-
-            @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                count = 0;
-            }
-
-            @Override
-            public void accumulatePartialResult(IFrameTupleAccessor accessor, int tIndex, int fIndex)
-                    throws HyracksDataException {
-                count += IntegerSerializerDeserializer.getInt(
-                        accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
-                                + accessor.getFieldStartOffset(tIndex, fIndex));
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldCount = accessor.getFieldCount();
+                int fieldStart = accessor.getFieldStartOffset(tIndex, field);
+                float nval = FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(), tupleOffset + 2
+                        * fieldCount + fieldStart);
+                if ((type ? (nval > minmax) : (nval < minmax))) {
+                    minmax = nval;
+                }
             }
         };
     }
+
 }
