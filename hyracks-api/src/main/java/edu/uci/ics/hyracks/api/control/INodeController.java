@@ -32,16 +32,16 @@ public interface INodeController extends Remote {
     public NodeCapability getNodeCapability() throws Exception;
 
     public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, int attempt, byte[] plan,
-            UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions)
+            UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions)
             throws Exception;
 
     public void initializeJobletPhase2(String appName, UUID jobId, byte[] plan, UUID stageId,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Set<Integer>> opPartitions,
+            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions,
             Map<PortInstanceId, Endpoint> globalPortMap) throws Exception;
 
     public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception;
 
-    public void abortJoblet(UUID jobId, UUID stageId) throws Exception;
+    public void abortJoblet(UUID jobId, int attempt) throws Exception;
 
     public void cleanUpJob(UUID jobId) throws Exception;
 

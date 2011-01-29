@@ -18,11 +18,7 @@ import java.io.File;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -99,9 +95,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -109,22 +103,16 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 1 },
                 new int[] { 0 }, new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
@@ -179,9 +167,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -189,23 +175,17 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
         GraceHashJoinOperatorDescriptor join = new GraceHashJoinOperatorDescriptor(spec, 4, 10, 200, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
@@ -260,9 +240,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -270,23 +248,17 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
 
         HybridHashJoinOperatorDescriptor join = new HybridHashJoinOperatorDescriptor(spec, 5, 20, 200, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 0);
@@ -343,9 +315,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -353,22 +323,16 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID, NC2_ID);
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 1 },
                 new int[] { 0 }, new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -429,9 +393,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -439,23 +401,17 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID, NC2_ID);
 
         GraceHashJoinOperatorDescriptor join = new GraceHashJoinOperatorDescriptor(spec, 3, 20, 100, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -516,9 +472,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -526,23 +480,17 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID, NC2_ID);
 
         HybridHashJoinOperatorDescriptor join = new HybridHashJoinOperatorDescriptor(spec, 3, 20, 100, 1.2,
                 new int[] { 1 }, new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -603,9 +551,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -613,20 +559,16 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID, NC2_ID);
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 1 },
                 new int[] { 0 }, new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128);
-        join.setPartitionConstraint(new PartitionCountConstraint(2));
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, join, 2);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },
@@ -687,9 +629,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -697,30 +637,22 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
-        PartitionConstraint custPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        custScanner.setPartitionConstraint(custPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID, NC2_ID);
 
         MaterializingOperatorDescriptor ordMat = new MaterializingOperatorDescriptor(spec, ordersDesc);
-        ordMat.setPartitionConstraint(new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) }));
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordMat, NC1_ID, NC2_ID);
 
         MaterializingOperatorDescriptor custMat = new MaterializingOperatorDescriptor(spec, custDesc);
-        custMat.setPartitionConstraint(new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) }));
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custMat, NC1_ID, NC2_ID);
 
         InMemoryHashJoinOperatorDescriptor join = new InMemoryHashJoinOperatorDescriptor(spec, new int[] { 1 },
                 new int[] { 0 }, new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128);
-        PartitionConstraint joinPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC1_ID), new AbsoluteLocationConstraint(NC2_ID) });
-        join.setPartitionConstraint(joinPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordPartConn = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 1 },

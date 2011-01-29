@@ -21,17 +21,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class JobPlan implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    private final String appName;
+
+    private final UUID jobId;
 
     private final JobSpecification jobSpec;
 
@@ -53,9 +56,9 @@ public class JobPlan implements Serializable {
 
     private final Map<OperatorDescriptorId, List<ActivityNodeId>> operatorOutputMap;
 
-    private JobStage endStage;
-
-    public JobPlan(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
+    public JobPlan(String appName, UUID jobId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
+        this.appName = appName;
+        this.jobId = jobId;
         this.jobSpec = jobSpec;
         this.jobFlags = jobFlags;
         activityNodes = new HashMap<ActivityNodeId, IActivityNode>();
@@ -66,6 +69,14 @@ public class JobPlan implements Serializable {
         taskOutputMap = new HashMap<ActivityNodeId, List<Integer>>();
         operatorInputMap = new HashMap<OperatorDescriptorId, List<ActivityNodeId>>();
         operatorOutputMap = new HashMap<OperatorDescriptorId, List<ActivityNodeId>>();
+    }
+
+    public String getApplicationName() {
+        return appName;
+    }
+
+    public UUID getJobId() {
+        return jobId;
     }
 
     public JobSpecification getJobSpecification() {
@@ -106,14 +117,6 @@ public class JobPlan implements Serializable {
 
     public Map<OperatorDescriptorId, List<ActivityNodeId>> getOperatorOutputMap() {
         return operatorOutputMap;
-    }
-
-    public void setEndStage(JobStage endStage) {
-        this.endStage = endStage;
-    }
-
-    public JobStage getEndStage() {
-        return endStage;
     }
 
     public List<IConnectorDescriptor> getTaskInputs(ActivityNodeId hanId) {

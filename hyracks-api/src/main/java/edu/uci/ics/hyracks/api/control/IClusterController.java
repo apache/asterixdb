@@ -15,20 +15,23 @@
 package edu.uci.ics.hyracks.api.control;
 
 import java.rmi.Remote;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
+
+import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 
 public interface IClusterController extends Remote {
     public NodeParameters registerNode(INodeController nodeController) throws Exception;
 
     public void unregisterNode(INodeController nodeController) throws Exception;
 
-    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId,
-            Map<String, Long> statistics) throws Exception;
+    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId, StageletProfile statistics)
+            throws Exception;
 
     public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception;
 
     public void nodeHeartbeat(String id) throws Exception;
 
-    public void reportProfile(String id, Map<UUID, Map<String, Long>> counterDump) throws Exception;
+    public void reportProfile(String id, List<JobProfile> profiles) throws Exception;
 }

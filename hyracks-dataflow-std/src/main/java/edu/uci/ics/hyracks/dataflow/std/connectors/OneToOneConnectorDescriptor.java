@@ -17,10 +17,15 @@ package edu.uci.ics.hyracks.dataflow.std.connectors;
 import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
+import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
+import edu.uci.ics.hyracks.api.constraints.expressions.RelationalExpression;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.NonDeterministicFrameReader;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
@@ -44,5 +49,16 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
             IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         return new NonDeterministicFrameReader(ctx, demux);
+    }
+
+    @Override
+    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan) {
+        JobSpecification jobSpec = plan.getJobSpecification();
+        IOperatorDescriptor consumer = jobSpec.getConsumer(this);
+        IOperatorDescriptor producer = jobSpec.getProducer(this);
+
+        constraintAcceptor.addConstraintExpression(new RelationalExpression(new PartitionCountExpression(consumer
+                .getOperatorId()), new PartitionCountExpression(producer.getOperatorId()),
+                RelationalExpression.Operator.EQUAL));
     }
 }

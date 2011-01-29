@@ -19,18 +19,17 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     protected final OperatorDescriptorId odId;
-
-    protected PartitionConstraint partitionConstraint;
 
     protected String[] partitions;
 
@@ -64,18 +63,13 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     }
 
     @Override
-    public PartitionConstraint getPartitionConstraint() {
-        return partitionConstraint;
-    }
-
-    @Override
-    public void setPartitionConstraint(PartitionConstraint partitionConstraint) {
-        this.partitionConstraint = partitionConstraint;
-    }
-
-    @Override
     public RecordDescriptor[] getOutputRecordDescriptors() {
         return recordDescriptors;
+    }
+
+    @Override
+    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan) {
+        // do nothing
     }
 
     @Override
@@ -86,7 +80,6 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
         jop.put("java-class", getClass().getName());
         jop.put("in-arity", getInputArity());
         jop.put("out-arity", getOutputArity());
-        jop.put("partition-constraint", String.valueOf(partitionConstraint));
         return jop;
     }
 }

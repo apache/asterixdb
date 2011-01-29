@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,15 +34,17 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
-import edu.uci.ics.hyracks.control.nc.job.profiling.CounterContext;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable;
 
-public class Stagelet implements IHyracksStageletContext {
+public class Stagelet implements IHyracksStageletContext, ICounterContext {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(Stagelet.class.getName());
@@ -56,7 +57,7 @@ public class Stagelet implements IHyracksStageletContext {
 
     private final Map<OperatorInstanceId, OperatorRunnable> honMap;
 
-    private final CounterContext stageletCounterContext;
+    private final Map<String, Counter> counterMap;
 
     private final IWorkspaceFileFactory fileFactory;
 
@@ -77,7 +78,7 @@ public class Stagelet implements IHyracksStageletContext {
         pendingOperators = new HashSet<OperatorInstanceId>();
         started = false;
         honMap = new HashMap<OperatorInstanceId, OperatorRunnable>();
-        stageletCounterContext = new CounterContext(joblet.getJobId() + "." + stageId + "." + nodeId);
+        counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
     }
@@ -88,10 +89,6 @@ public class Stagelet implements IHyracksStageletContext {
 
     public Map<OperatorInstanceId, OperatorRunnable> getOperatorMap() {
         return honMap;
-    }
-
-    public CounterContext getStageletCounterContext() {
-        return stageletCounterContext;
     }
 
     public void setEndpointList(List<Endpoint> endpointList) {
@@ -143,12 +140,7 @@ public class Stagelet implements IHyracksStageletContext {
                     LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
                             + opIId.getPartition() + "(" + hon + ")" + ": ABORTED");
                     e.printStackTrace();
-                    // DO NOT UNCOMMENT THE FOLLOWING LINE.
-                    // The failure of an operator triggers a re-attempt of the job at the CC. If the failure was non-transient,
-                    // this will lead to an infinite number of attempts since there is no upper bount yet on how many times
-                    // a job is retried.
-
-                    // notifyOperatorFailure(opIId);
+                    notifyOperatorFailure(opIId);
                 }
             }
         });
@@ -158,10 +150,10 @@ public class Stagelet implements IHyracksStageletContext {
         pendingOperators.remove(opIId);
         if (pendingOperators.isEmpty()) {
             try {
-                Map<String, Long> stats = new TreeMap<String, Long>();
-                dumpProfile(stats);
+                StageletProfile sProfile = new StageletProfile(stageId);
+                dumpProfile(sProfile);
                 close();
-                joblet.notifyStageletComplete(stageId, attempt, stats);
+                joblet.notifyStageletComplete(stageId, attempt, sProfile);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -183,8 +175,11 @@ public class Stagelet implements IHyracksStageletContext {
         }
     }
 
-    public void dumpProfile(Map<String, Long> counterDump) {
-        stageletCounterContext.dump(counterDump);
+    public synchronized void dumpProfile(StageletProfile sProfile) {
+        Map<String, Long> dumpMap = sProfile.getCounters();
+        for (Counter c : counterMap.values()) {
+            dumpMap.put(c.getName(), c.get());
+        }
     }
 
     @Override
@@ -199,7 +194,7 @@ public class Stagelet implements IHyracksStageletContext {
 
     @Override
     public ICounterContext getCounterContext() {
-        return stageletCounterContext;
+        return this;
     }
 
     @Override
@@ -229,5 +224,15 @@ public class Stagelet implements IHyracksStageletContext {
     @Override
     public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
         return fileFactory.createWorkspaceFile(prefix);
+    }
+
+    @Override
+    public ICounter getCounter(String name, boolean create) {
+        Counter counter = counterMap.get(name);
+        if (counter == null && create) {
+            counter = new Counter(name);
+            counterMap.put(name, counter);
+        }
+        return counter;
     }
 }

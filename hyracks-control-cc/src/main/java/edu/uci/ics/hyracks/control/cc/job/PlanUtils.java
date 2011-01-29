@@ -17,12 +17,14 @@ package edu.uci.ics.hyracks.control.cc.job;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class PlanUtils {
-    public static void visit(JobSpecification spec, IOperatorDescriptorVisitor visitor) throws Exception {
+    public static void visit(JobSpecification spec, IOperatorDescriptorVisitor visitor) throws HyracksException {
         Set<OperatorDescriptorId> seen = new HashSet<OperatorDescriptorId>();
         for (IOperatorDescriptor op : spec.getOperatorMap().values()) {
             visitOperator(visitor, seen, op);
@@ -30,10 +32,16 @@ public class PlanUtils {
     }
 
     private static void visitOperator(IOperatorDescriptorVisitor visitor, Set<OperatorDescriptorId> seen,
-            IOperatorDescriptor op) throws Exception {
+            IOperatorDescriptor op) throws HyracksException {
         if (!seen.contains(op)) {
             visitor.visit(op);
         }
         seen.add(op.getOperatorId());
+    }
+
+    public static void visit(JobSpecification spec, IConnectorDescriptorVisitor visitor) throws HyracksException {
+        for (IConnectorDescriptor c : spec.getConnectorMap().values()) {
+            visitor.visit(c);
+        }
     }
 }

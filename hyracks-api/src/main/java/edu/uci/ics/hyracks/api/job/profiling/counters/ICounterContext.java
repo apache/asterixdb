@@ -21,13 +21,6 @@ package edu.uci.ics.hyracks.api.job.profiling.counters;
  */
 public interface ICounterContext {
     /**
-     * Returns the fully-qualified context name
-     * 
-     * @return fully-qualified context name.
-     */
-    public String getContextName();
-
-    /**
      * Get a counter with the specified name.
      * 
      * @param name

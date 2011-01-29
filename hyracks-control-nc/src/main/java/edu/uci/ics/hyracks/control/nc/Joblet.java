@@ -16,9 +16,7 @@ package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
@@ -31,14 +29,17 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
-import edu.uci.ics.hyracks.control.nc.job.profiling.CounterContext;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
-public class Joblet implements IHyracksJobletContext {
+public class Joblet implements IHyracksJobletContext, ICounterContext {
     private static final long serialVersionUID = 1L;
 
     private final NodeControllerService nodeController;
@@ -53,7 +54,7 @@ public class Joblet implements IHyracksJobletContext {
 
     private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
 
-    private final ICounterContext counterContext;
+    private final Map<String, Counter> counterMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
@@ -66,7 +67,7 @@ public class Joblet implements IHyracksJobletContext {
         this.attempt = attempt;
         stageletMap = new HashMap<UUID, Stagelet>();
         envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
-        counterContext = new CounterContext(getJobId() + "." + nodeController.getId());
+        counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
     }
@@ -117,8 +118,7 @@ public class Joblet implements IHyracksJobletContext {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, Map<String, Long> stats)
-            throws Exception {
+    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletProfile stats) throws Exception {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
@@ -132,19 +132,15 @@ public class Joblet implements IHyracksJobletContext {
         return nodeController;
     }
 
-    public void dumpProfile(Map<String, Long> counterDump) {
-        Set<UUID> stageIds;
-        synchronized (this) {
-            stageIds = new HashSet<UUID>(stageletMap.keySet());
+    public synchronized void dumpProfile(JobletProfile jProfile) {
+        Map<String, Long> counters = jProfile.getCounters();
+        for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
+            counters.put(e.getKey(), e.getValue().get());
         }
-        for (UUID stageId : stageIds) {
-            Stagelet si;
-            synchronized (this) {
-                si = stageletMap.get(stageId);
-            }
-            if (si != null) {
-                si.dumpProfile(counterDump);
-            }
+        for (Stagelet si : stageletMap.values()) {
+            StageletProfile sProfile = new StageletProfile(si.getStageId());
+            si.dumpProfile(sProfile);
+            jProfile.getStageletProfiles().put(si.getStageId(), sProfile);
         }
     }
 
@@ -160,7 +156,7 @@ public class Joblet implements IHyracksJobletContext {
 
     @Override
     public ICounterContext getCounterContext() {
-        return counterContext;
+        return this;
     }
 
     @Override
@@ -190,5 +186,19 @@ public class Joblet implements IHyracksJobletContext {
     @Override
     public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
         return fileFactory.createWorkspaceFile(prefix);
+    }
+
+    public Map<UUID, Stagelet> getStageletMap() {
+        return stageletMap;
+    }
+
+    @Override
+    public synchronized ICounter getCounter(String name, boolean create) {
+        Counter counter = counterMap.get(name);
+        if (counter == null && create) {
+            counter = new Counter(name);
+            counterMap.put(name, counter);
+        }
+        return counter;
     }
 }

@@ -17,13 +17,16 @@ package edu.uci.ics.hyracks.api.job;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -48,6 +51,10 @@ public class JobSpecification implements Serializable {
 
     private final Map<String, Serializable> properties;
 
+    private final Set<ConstraintExpression> userConstraints;
+
+    private int maxAttempts;
+
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
@@ -56,6 +63,7 @@ public class JobSpecification implements Serializable {
         opOutputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
         properties = new HashMap<String, Serializable>();
+        userConstraints = new HashSet<ConstraintExpression>();
     }
 
     public void addRoot(IOperatorDescriptor op) {
@@ -71,11 +79,11 @@ public class JobSpecification implements Serializable {
                         new Pair<IOperatorDescriptor, Integer>(producerOp, producerPort),
                         new Pair<IOperatorDescriptor, Integer>(consumerOp, consumerPort)));
     }
-    
+
     public void setProperty(String name, Serializable value) {
         properties.put(name, value);
     }
-    
+
     public Serializable getProperty(String name) {
         return properties.get(name);
     }
@@ -165,6 +173,22 @@ public class JobSpecification implements Serializable {
         return roots;
     }
 
+    public void setMaxAttempts(int maxAttempts) {
+        this.maxAttempts = maxAttempts;
+    }
+
+    public int getMaxAttempts() {
+        return maxAttempts;
+    }
+
+    public void addUserConstraint(ConstraintExpression constraint) {
+        userConstraints.add(constraint);
+    }
+
+    public Set<ConstraintExpression> getUserConstraints() {
+        return userConstraints;
+    }
+
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {
         List<V> vList = map.get(key);
         if (vList == null) {
@@ -180,8 +204,6 @@ public class JobSpecification implements Serializable {
 
         for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : opMap.entrySet()) {
             buffer.append(e.getKey().getId()).append(" : ").append(e.getValue().toString()).append("\n");
-            IOperatorDescriptor op = e.getValue();
-            buffer.append("   Partition Constraint: ").append(op.getPartitionConstraint()).append("\n");
             List<IConnectorDescriptor> inputs = opInputMap.get(e.getKey());
             if (inputs != null && !inputs.isEmpty()) {
                 buffer.append("   Inputs:\n");

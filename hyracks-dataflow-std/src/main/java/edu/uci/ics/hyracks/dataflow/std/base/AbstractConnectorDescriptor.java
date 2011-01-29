@@ -19,8 +19,10 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public abstract class AbstractConnectorDescriptor implements IConnectorDescriptor {
@@ -45,5 +47,10 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
         jconn.put("java-class", getClass().getName());
 
         return jconn;
+    }
+
+    @Override
+    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan) {
+        // do nothing
     }
 }

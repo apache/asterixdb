@@ -20,10 +20,7 @@ import java.io.File;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -99,15 +96,11 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         InMemorySortOperatorDescriptor sorter = new InMemorySortOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
-        PartitionConstraint sortersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        sorter.setPartitionConstraint(sortersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         // declare fields
         int fieldCount = 3;
@@ -138,9 +131,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         BTreeBulkLoadOperatorDescriptor btreeBulkLoad = new BTreeBulkLoadOperatorDescriptor(spec, storageManager,
                 btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory, typeTraits,
                 comparatorFactories, fieldPermutation, 0.7f);
-        PartitionConstraint btreePartitionConstraintA = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        btreeBulkLoad.setPartitionConstraint(btreePartitionConstraintA);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, btreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
 
@@ -234,9 +225,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        PartitionConstraint keyProviderPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
         IBTreeRegistryProvider btreeRegistryProvider = new TestBTreeRegistryProvider();
 
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -257,14 +246,10 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
         // bufferCacheProvider, btreeRegistryProvider, 0, "btreetest.bin",
         // interiorFrameFactory, leafFrameFactory, cmp);
 
-        PartitionConstraint btreePartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        btreeSearchOp.setPartitionConstraint(btreePartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, btreeSearchOp, NC1_ID);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, btreeSearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), btreeSearchOp, 0, printer, 0);
@@ -296,9 +281,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         // we will create a primary index and 2 secondary indexes
         // first create comparators for primary index
@@ -406,9 +389,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                 ordersDesc, storageManager, btreeRegistryProvider, btreeSplitProviderA, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, fieldPermutationA,
                 BTreeOp.BTO_INSERT);
-        PartitionConstraint insertPartitionConstraintA = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        insertOpA.setPartitionConstraint(insertPartitionConstraintA);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, insertOpA, NC1_ID);
 
         // first secondary index
         IFileSplitProvider btreeSplitProviderB = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
@@ -418,9 +399,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                 ordersDesc, storageManager, btreeRegistryProvider, btreeSplitProviderB, secondaryInteriorFrameFactory,
                 secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, fieldPermutationB,
                 BTreeOp.BTO_INSERT);
-        PartitionConstraint insertPartitionConstraintB = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        insertOpB.setPartitionConstraint(insertPartitionConstraintB);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, insertOpB, NC1_ID);
 
         // second secondary index
         IFileSplitProvider btreeSplitProviderC = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
@@ -430,14 +409,10 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
                 ordersDesc, storageManager, btreeRegistryProvider, btreeSplitProviderC, secondaryInteriorFrameFactory,
                 secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, fieldPermutationC,
                 BTreeOp.BTO_INSERT);
-        PartitionConstraint insertPartitionConstraintC = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        insertOpC.setPartitionConstraint(insertPartitionConstraintC);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, insertOpC, NC1_ID);
 
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
-        PartitionConstraint nullSinkPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        nullSink.setPartitionConstraint(nullSinkPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, nullSink, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, insertOpA, 0);
 
