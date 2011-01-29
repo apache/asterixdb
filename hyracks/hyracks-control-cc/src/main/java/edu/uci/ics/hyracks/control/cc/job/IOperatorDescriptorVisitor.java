@@ -15,7 +15,8 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public interface IOperatorDescriptorVisitor {
-    public void visit(IOperatorDescriptor op) throws Exception;
+    public void visit(IOperatorDescriptor op) throws HyracksException;
 }

@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.constraints.PartitionCountConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -74,7 +74,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
         }
         recordDescriptors[0] = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) recordReader
                 .createKey().getClass(), (Class<? extends Writable>) recordReader.createValue().getClass());
-        this.setPartitionConstraint(new PartitionCountConstraint(splits.length));
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, this, splits.length);
         inputSplitsProxy = new InputSplitsProxy(jobConf, splits);
         this.inputFormatClassName = inputFormat.getClass().getName();
     }

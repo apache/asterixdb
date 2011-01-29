@@ -22,7 +22,6 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -159,8 +158,7 @@ public class SecondaryIndexSearchExample {
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        PartitionConstraint keyProviderPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
+        JobHelper.createPartitionConstraint(spec, keyProviderOp, splitNCs);
 
         int[] secondaryLowKeyFields = { 0 }; // low key is in field 0 of tuples
                                              // going into secondary index
@@ -175,8 +173,7 @@ public class SecondaryIndexSearchExample {
                 storageManager, btreeRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
                 secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, true, secondaryLowKeyFields,
                 secondaryHighKeyFields, true, true);
-        PartitionConstraint secondarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        secondarySearchOp.setPartitionConstraint(secondarySearchConstraint);
+        JobHelper.createPartitionConstraint(spec, secondarySearchOp, splitNCs);
 
         // secondary index will output tuples with [UTF8String, Integer]
         // the Integer field refers to the key in the primary index of the
@@ -192,13 +189,11 @@ public class SecondaryIndexSearchExample {
                 storageManager, btreeRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, comparatorFactories, true, primaryLowKeyFields,
                 primaryHighKeyFields, true, true);
-        PartitionConstraint primarySearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        primarySearchOp.setPartitionConstraint(primarySearchConstraint);
+        JobHelper.createPartitionConstraint(spec, primarySearchOp, splitNCs);
 
         // have each node print the results of its respective B-Tree
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        printer.setPartitionConstraint(printerConstraint);
+        JobHelper.createPartitionConstraint(spec, printer, splitNCs);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondarySearchOp, 0);
 

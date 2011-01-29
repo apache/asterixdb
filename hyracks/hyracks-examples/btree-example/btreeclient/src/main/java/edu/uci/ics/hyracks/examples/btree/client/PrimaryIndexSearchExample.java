@@ -22,7 +22,6 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -137,8 +136,7 @@ public class PrimaryIndexSearchExample {
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        PartitionConstraint keyProviderPartitionConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        keyProviderOp.setPartitionConstraint(keyProviderPartitionConstraint);
+        JobHelper.createPartitionConstraint(spec, keyProviderOp, splitNCs);
 
         int[] lowKeyFields = { 0 }; // low key is in field 0 of tuples going
                                     // into search op
@@ -149,13 +147,11 @@ public class PrimaryIndexSearchExample {
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
                 btreeRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory, typeTraits,
                 comparatorFactories, true, lowKeyFields, highKeyFields, true, true);
-        PartitionConstraint btreeSearchConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        btreeSearchOp.setPartitionConstraint(btreeSearchConstraint);
+        JobHelper.createPartitionConstraint(spec, btreeSearchOp, splitNCs);
 
         // have each node print the results of its respective B-Tree
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerConstraint = JobHelper.createPartitionConstraint(splitNCs);
-        printer.setPartitionConstraint(printerConstraint);
+        JobHelper.createPartitionConstraint(spec, printer, splitNCs);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, btreeSearchOp, 0);
 

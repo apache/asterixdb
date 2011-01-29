@@ -18,10 +18,7 @@ import java.io.File;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -91,9 +88,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                 splitProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
                 desc);
-        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        csvScanner.setPartitionConstraint(csvPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID, NC1_ID);
 
         int[] keys = new int[] { 0 };
         int tableSize = 8;
@@ -106,18 +101,16 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                 // Hash partitioner
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
-                        // Key comparator
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        // Aggregator factory
-                        new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-                        outputRec, // Output format
-                        tableSize // Size of the hashing table, which is used to control
-                        // the partition when hashing
+                // Key comparator
+                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                // Aggregator factory
+                new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
+                outputRec, // Output format
+                tableSize // Size of the hashing table, which is used to control
+        // the partition when hashing
         );
 
-        PartitionConstraint grouperPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        grouper.setPartitionConstraint(grouperPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
@@ -125,9 +118,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, grouper, 0, printer, 0);
@@ -161,9 +152,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                 splitProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
                 desc);
-        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        csvScanner.setPartitionConstraint(csvPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID, NC1_ID);
 
         int[] keys = new int[] { 0 };
         int tableSize = 8;
@@ -173,13 +162,11 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                 keys,
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
-                        outputRec, tableSize);
+                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
+                outputRec, tableSize);
 
-        PartitionConstraint grouperPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        grouper.setPartitionConstraint(grouperPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
@@ -187,9 +174,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(new LocationConstraint[] {
-                new AbsoluteLocationConstraint(NC2_ID), new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, grouper, 0, printer, 0);
@@ -208,7 +193,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-        "data/tpch0.001/lineitem.tbl"))) };
+                "data/tpch0.001/lineitem.tbl"))) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
@@ -229,17 +214,11 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
-
-        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(csvPartitionConstraint);
 
         int[] keys = new int[] { 0 };
         int tableSize = 8;
@@ -247,13 +226,11 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         ExternalHashGroupOperatorDescriptor grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, 3, false,
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
-                                new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec, tableSize);
+                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                new MultiAggregatorFactory(new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
+                        new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec, tableSize);
 
-        PartitionConstraint grouperPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        grouper.setPartitionConstraint(grouperPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
@@ -261,9 +238,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         spec.connect(conn1, ordScanner, 0, grouper, 0);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, grouper, 0, printer, 0);
@@ -282,7 +257,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-        "data/tpch0.001/lineitem.tbl"))) };
+                "data/tpch0.001/lineitem.tbl"))) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -303,18 +278,12 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 FloatSerializerDeserializer.INSTANCE });
-
-        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(csvPartitionConstraint);
 
         // Group on two fields
         int[] keys = new int[] { 0, 1 };
@@ -323,15 +292,13 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         ExternalHashGroupOperatorDescriptor grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, 3, false,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         UTF8StringBinaryHashFunctionFactory.INSTANCE, UTF8StringBinaryHashFunctionFactory.INSTANCE }),
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
-            UTF8StringBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
-                    new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
-                            new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec,
-                            tableSize);
+                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
+                        UTF8StringBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                        new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
+                                new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec,
+                tableSize);
 
-        PartitionConstraint grouperPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        grouper.setPartitionConstraint(grouperPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
@@ -339,9 +306,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         spec.connect(conn1, ordScanner, 0, grouper, 0);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, grouper, 0, printer, 0);
@@ -360,7 +325,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-        "data/tpch0.001/lineitem.tbl"))) };
+                "data/tpch0.001/lineitem.tbl"))) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
@@ -381,18 +346,12 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, }, '|'), ordersDesc);
-        PartitionConstraint ordersPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(ordersPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 FloatSerializerDeserializer.INSTANCE });
-
-        PartitionConstraint csvPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        ordScanner.setPartitionConstraint(csvPartitionConstraint);
 
         // Group on two fields
         int[] keys = new int[] { 0, 1 };
@@ -401,15 +360,13 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         ExternalHashGroupOperatorDescriptor grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, 3000, true,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         IntegerBinaryHashFunctionFactory.INSTANCE, IntegerBinaryHashFunctionFactory.INSTANCE }),
-                        new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE,
-            IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
-                    new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
-                            new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec,
-                            tableSize);
+                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE,
+                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                        new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory(),
+                                new SumAggregatorFactory(4), new MinMaxAggregatorFactory(true, 5) }), outputRec,
+                tableSize);
 
-        PartitionConstraint grouperPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        grouper.setPartitionConstraint(grouperPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
@@ -417,9 +374,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
         spec.connect(conn1, ordScanner, 0, grouper, 0);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraint printerPartitionConstraint = new ExplicitPartitionConstraint(
-                new LocationConstraint[] { new AbsoluteLocationConstraint(NC1_ID) });
-        printer.setPartitionConstraint(printerPartitionConstraint);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, grouper, 0, printer, 0);

@@ -22,10 +22,7 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.AbsoluteLocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.ExplicitPartitionConstraint;
-import edu.uci.ics.hyracks.api.constraints.LocationConstraint;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraint;
+import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -125,7 +122,7 @@ public class WordCountMain {
 
         FileScanOperatorDescriptor wordScanner = new FileScanOperatorDescriptor(spec, splitsProvider,
                 new WordTupleParserFactory(), wordDesc);
-        wordScanner.setPartitionConstraint(createPartitionConstraint(inSplits));
+        createPartitionConstraint(spec, wordScanner, inSplits);
 
         RecordDescriptor groupResultDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -139,7 +136,7 @@ public class WordCountMain {
                     new MultiAggregatorFactory(
                             new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
                     groupResultDesc, htSize);
-            gBy.setPartitionConstraint(createPartitionConstraint(outSplits));
+            createPartitionConstraint(spec, gBy, outSplits);
             IConnectorDescriptor scanGroupConn = new MToNHashPartitioningConnectorDescriptor(spec,
                     new FieldHashPartitionComputerFactory(keys,
                             new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }));
@@ -150,7 +147,7 @@ public class WordCountMain {
                     keys, new UTF8StringNormalizedKeyComputerFactory(), cfs, wordDesc)
                     : new ExternalSortOperatorDescriptor(spec, sbSize, keys,
                             new UTF8StringNormalizedKeyComputerFactory(), cfs, wordDesc);
-            sorter.setPartitionConstraint(createPartitionConstraint(outSplits));
+            createPartitionConstraint(spec, sorter, outSplits);
 
             IConnectorDescriptor scanSortConn = new MToNHashPartitioningConnectorDescriptor(spec,
                     new FieldHashPartitionComputerFactory(keys,
@@ -162,14 +159,14 @@ public class WordCountMain {
                     new MultiAggregatorFactory(
                             new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }),
                     groupResultDesc);
-            gBy.setPartitionConstraint(createPartitionConstraint(outSplits));
+            createPartitionConstraint(spec, gBy, outSplits);
             OneToOneConnectorDescriptor sortGroupConn = new OneToOneConnectorDescriptor(spec);
             spec.connect(sortGroupConn, sorter, 0, gBy, 0);
         }
 
         IFileSplitProvider outSplitProvider = new ConstantFileSplitProvider(outSplits);
         FrameFileWriterOperatorDescriptor writer = new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
-        writer.setPartitionConstraint(createPartitionConstraint(outSplits));
+        createPartitionConstraint(spec, writer, outSplits);
 
         IConnectorDescriptor gbyPrinterConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(gbyPrinterConn, gBy, 0, writer, 0);
@@ -178,11 +175,11 @@ public class WordCountMain {
         return spec;
     }
 
-    private static PartitionConstraint createPartitionConstraint(FileSplit[] splits) {
-        LocationConstraint[] lConstraints = new LocationConstraint[splits.length];
+    private static void createPartitionConstraint(JobSpecification spec, IOperatorDescriptor op, FileSplit[] splits) {
+        String[] parts = new String[splits.length];
         for (int i = 0; i < splits.length; ++i) {
-            lConstraints[i] = new AbsoluteLocationConstraint(splits[i].getNodeName());
+            parts[i] = splits[i].getNodeName();
         }
-        return new ExplicitPartitionConstraint(lConstraints);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, op, parts);
     }
 }

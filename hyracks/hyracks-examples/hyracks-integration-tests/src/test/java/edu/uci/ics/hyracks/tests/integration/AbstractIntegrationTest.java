@@ -43,7 +43,6 @@ public abstract class AbstractIntegrationTest {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
         ccConfig.profileDumpPeriod = 1000;
-        ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 

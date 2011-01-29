@@ -32,6 +32,6 @@ public class CCConfig {
     @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node controller in milliseconds. 0 to disable. (default: 0)")
     public int profileDumpPeriod = 0;
 
-    @Option(name = "-use-jol", usage = "Forces Hyracks to use the JOL based scheduler (default: false)")
-    public boolean useJOL = false;
+    @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
+    public int defaultMaxJobAttempts = 5;
 }
