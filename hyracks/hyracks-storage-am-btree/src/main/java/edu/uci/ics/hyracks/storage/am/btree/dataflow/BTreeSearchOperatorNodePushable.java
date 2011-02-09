@@ -174,7 +174,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             throw new HyracksDataException(e);
         }
     }
-
+    
     @Override
     public void close() throws HyracksDataException {
         try {

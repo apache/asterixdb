@@ -60,8 +60,10 @@ public class RangeSearchCursor implements IBTreeCursor {
         if (page != null) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
-            page = null;
         }
+        tupleIndex = 0;
+		page = null;
+		pred = null;
     }
 
     public ITupleReference getTuple() {
@@ -217,9 +219,11 @@ public class RangeSearchCursor implements IBTreeCursor {
 
     @Override
     public void reset() {
-        tupleIndex = 0;
-        page = null;
-        pred = null;
+        try {
+			close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
     }
 
     @Override
