@@ -24,14 +24,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -65,18 +61,14 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.test.support.TestJobletContext;
-import edu.uci.ics.hyracks.test.support.TestNCApplicationContext;
-import edu.uci.ics.hyracks.test.support.TestRootContext;
-import edu.uci.ics.hyracks.test.support.TestStageletContext;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
+import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class SimpleConjunctiveSearcherTest {
+public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
+
     // testing params
     // private static final int PAGE_SIZE = 256;
     // private static final int NUM_PAGES = 10;
@@ -87,12 +79,7 @@ public class SimpleConjunctiveSearcherTest {
     private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 32768;
-
-    static {
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
-    }
-
-    private String tmpDir = System.getProperty("java.io.tmpdir");
+    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     public class BufferAllocator implements ICacheMemoryAllocator {
         @Override
@@ -107,16 +94,11 @@ public class SimpleConjunctiveSearcherTest {
 
     @Test
     public void test01() throws Exception {
-        IHyracksRootContext rootCtx = new TestRootContext(HYRACKS_FRAME_SIZE);
-        INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
-        IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID(), 0);
-        IHyracksStageletContext stageletCtx = new TestStageletContext(jobletCtx, UUID.randomUUID());
 
-        IStorageManagerInterface smi = new TestStorageManagerInterface();
-
-        IBufferCache bufferCache = smi.getBufferCache(stageletCtx);
-        IFileMapProvider fmp = smi.getFileMapProvider(stageletCtx);
-        FileReference file = new FileReference(new File(tmpDir + "/" + "btreetest.bin"));
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        FileReference file = new FileReference(new File(fileName));
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
@@ -155,15 +137,15 @@ public class SimpleConjunctiveSearcherTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
-        ByteBuffer frame = stageletCtx.allocateFrame();
-        FrameTupleAppender appender = new FrameTupleAppender(stageletCtx.getFrameSize());
+        ByteBuffer frame = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
 
         ISerializerDeserializer[] btreeSerde = { UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor btreeRecDesc = new RecordDescriptor(btreeSerde);
-        IFrameTupleAccessor accessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), btreeRecDesc);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), btreeRecDesc);
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
@@ -213,11 +195,11 @@ public class SimpleConjunctiveSearcherTest {
         ISerializerDeserializer[] querySerde = { UTF8StringSerializerDeserializer.INSTANCE };
         RecordDescriptor queryRecDesc = new RecordDescriptor(querySerde);
 
-        FrameTupleAppender queryAppender = new FrameTupleAppender(stageletCtx.getFrameSize());
+        FrameTupleAppender queryAppender = new FrameTupleAppender(ctx.getFrameSize());
         ArrayTupleBuilder queryTb = new ArrayTupleBuilder(querySerde.length);
         DataOutput queryDos = queryTb.getDataOutput();
 
-        IFrameTupleAccessor queryAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), queryRecDesc);
+        IFrameTupleAccessor queryAccessor = new FrameTupleAccessor(ctx.getFrameSize(), queryRecDesc);
         queryAccessor.reset(frame);
         FrameTupleReference queryTuple = new FrameTupleReference();
 
@@ -240,11 +222,11 @@ public class SimpleConjunctiveSearcherTest {
             resultSerde[i] = btreeSerde[numKeyFields + i];
         }
         RecordDescriptor resultRecDesc = new RecordDescriptor(resultSerde);
-        FrameTupleAccessor resultAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), resultRecDesc);
+        FrameTupleAccessor resultAccessor = new FrameTupleAccessor(ctx.getFrameSize(), resultRecDesc);
         FrameTupleReference resultTuple = new FrameTupleReference();
-
-        SimpleConjunctiveSearcher searcher = new SimpleConjunctiveSearcher(stageletCtx, btree, btreeRecDesc,
-                queryTokenizer, numKeyFields, numValueFields);
+        
+        SimpleConjunctiveSearcher searcher = new SimpleConjunctiveSearcher(ctx, btree, btreeRecDesc, queryTokenizer,
+                numKeyFields, numValueFields);
 
         long timeStart = System.currentTimeMillis();
         searcher.search(queryTuple, 0);
@@ -259,8 +241,8 @@ public class SimpleConjunctiveSearcherTest {
             for (int i = 0; i < resultAccessor.getTupleCount(); i++) {
                 resultTuple.reset(resultAccessor, i);
                 for (int j = 0; j < resultTuple.getFieldCount(); j++) {
-                    ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j),
-                            resultTuple.getFieldStart(j), resultTuple.getFieldLength(j));
+                    ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j), resultTuple
+                            .getFieldStart(j), resultTuple.getFieldLength(j));
                     DataInput dataIn = new DataInputStream(inStream);
                     Object o = resultSerde[j].deserialize(dataIn);
                     System.out.print(o + " ");
