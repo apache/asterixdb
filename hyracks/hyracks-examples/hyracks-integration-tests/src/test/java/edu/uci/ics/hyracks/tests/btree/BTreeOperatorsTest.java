@@ -17,7 +17,10 @@ package edu.uci.ics.hyracks.tests.btree;
 
 import java.io.DataOutput;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,8 +71,10 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
 	private IBTreeRegistryProvider btreeRegistryProvider = new TestBTreeRegistryProvider();
 
-	private final String sep = System.getProperty("file.separator");
-
+	private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+			"ddMMyy-hhmmssSS");
+	private final static String sep = System.getProperty("file.separator");
+	
 	// field, type and key declarations for primary index
 	private int primaryFieldCount = 6;
 	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
@@ -82,13 +87,15 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private IBTreeLeafFrameFactory primaryLeafFrameFactory = new NSMLeafFrameFactory(
 			primaryTupleWriterFactory);
 
-	private String primaryBtreeName = "primary.ix";
-	private String primaryNc1FileName = System.getProperty("java.io.tmpdir")
+	private static String primaryBtreeName = "primary"
+			+ simpleDateFormat.format(new Date());
+	private static String primaryFileName = System
+			.getProperty("java.io.tmpdir")
 			+ sep + "nc1" + sep + primaryBtreeName;
 
 	private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-					primaryNc1FileName))) });
+					primaryFileName))) });
 
 	private RecordDescriptor primaryRecDesc = new RecordDescriptor(
 			new ISerializerDeserializer[] {
@@ -111,13 +118,15 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private IBTreeLeafFrameFactory secondaryLeafFrameFactory = new NSMLeafFrameFactory(
 			secondaryTupleWriterFactory);
 
-	private String secondaryBtreeName = "secondary.ix";
-	private String secondaryNc1FileName = System.getProperty("java.io.tmpdir")
+	private static String secondaryBtreeName = "secondary"
+			+ simpleDateFormat.format(new Date());
+	private static String secondaryFileName = System
+			.getProperty("java.io.tmpdir")
 			+ sep + "nc1" + sep + secondaryBtreeName;
 
 	private IFileSplitProvider secondaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-					secondaryNc1FileName))) });
+					secondaryFileName))) });
 
 	private RecordDescriptor secondaryRecDesc = new RecordDescriptor(
 			new ISerializerDeserializer[] {
@@ -593,4 +602,12 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		runTest(spec);
 	}
 
+	@AfterClass
+	public static void cleanup() throws Exception {
+		File primary = new File(primaryFileName);
+		primary.deleteOnExit();
+
+		File secondary = new File(secondaryFileName);
+		secondary.deleteOnExit();
+	}
 }

@@ -48,14 +48,20 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
-        writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
-        btreeOpHelper.init();
-        btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-        opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(),
-                btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
+    	AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
+    	RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+    	accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
+    	writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+    	try {
+    		btreeOpHelper.init();
+    		btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
+    		opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(),
+    				btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
+    	} catch(Exception e) {
+    		// cleanup in case of failure
+    		btreeOpHelper.deinit();
+    		throw new HyracksDataException(e);
+    	}
     }
 
     @Override
