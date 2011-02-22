@@ -37,165 +37,194 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 
-public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private BTreeOpHelper btreeOpHelper;
-    private FrameTupleAccessor accessor;
+public class BTreeSearchOperatorNodePushable extends
+		AbstractUnaryInputUnaryOutputOperatorNodePushable {
+	private BTreeOpHelper btreeOpHelper;
+	private FrameTupleAccessor accessor;
 
-    private ByteBuffer writeBuffer;
-    private FrameTupleAppender appender;
-    private ArrayTupleBuilder tb;
-    private DataOutput dos;
+	private ByteBuffer writeBuffer;
+	private FrameTupleAppender appender;
+	private ArrayTupleBuilder tb;
+	private DataOutput dos;
 
-    private BTree btree;
-    private boolean isForward;
-    private PermutingFrameTupleReference lowKey;
-    private PermutingFrameTupleReference highKey;
-    private boolean lowKeyInclusive;
-    private boolean highKeyInclusive;
-    private RangePredicate rangePred;
-    private MultiComparator lowKeySearchCmp;
-    private MultiComparator highKeySearchCmp;
-    private IBTreeCursor cursor;
-    private IBTreeLeafFrame cursorFrame;
-    private BTreeOpContext opCtx;
+	private BTree btree;
+	private boolean isForward;
+	private PermutingFrameTupleReference lowKey;
+	private PermutingFrameTupleReference highKey;
+	private boolean lowKeyInclusive;
+	private boolean highKeyInclusive;
+	private RangePredicate rangePred;
+	private MultiComparator lowKeySearchCmp;
+	private MultiComparator highKeySearchCmp;
+	private IBTreeCursor cursor;
+	private IBTreeLeafFrame cursorFrame;
+	private BTreeOpContext opCtx;
 
-    private RecordDescriptor recDesc;
+	private RecordDescriptor recDesc;
 
-    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
-        this.isForward = isForward;
-        this.lowKeyInclusive = lowKeyInclusive;
-        this.highKeyInclusive = highKeyInclusive;
-        this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        if (lowKeyFields != null && lowKeyFields.length > 0) {
-            lowKey = new PermutingFrameTupleReference();
-            lowKey.setFieldPermutation(lowKeyFields);
-        }
-        if (highKeyFields != null && highKeyFields.length > 0) {
-            highKey = new PermutingFrameTupleReference();
-            highKey.setFieldPermutation(highKeyFields);
-        }
-    }
+	public BTreeSearchOperatorNodePushable(
+			AbstractBTreeOperatorDescriptor opDesc,
+			IHyracksStageletContext ctx, int partition,
+			IRecordDescriptorProvider recordDescProvider, boolean isForward,
+			int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive,
+			boolean highKeyInclusive) {
+		btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition,
+				BTreeOpHelper.BTreeMode.OPEN_BTREE);
+		this.isForward = isForward;
+		this.lowKeyInclusive = lowKeyInclusive;
+		this.highKeyInclusive = highKeyInclusive;
+		this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc
+				.getOperatorId(), 0);
+		if (lowKeyFields != null && lowKeyFields.length > 0) {
+			lowKey = new PermutingFrameTupleReference();
+			lowKey.setFieldPermutation(lowKeyFields);
+		}
+		if (highKeyFields != null && highKeyFields.length > 0) {
+			highKey = new PermutingFrameTupleReference();
+			highKey.setFieldPermutation(highKeyFields);
+		}
+	}
 
-    @Override
-    public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper.getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+	@Override
+	public void open() throws HyracksDataException {
+		AbstractBTreeOperatorDescriptor opDesc = btreeOpHelper
+				.getOperatorDescriptor();
+		accessor = new FrameTupleAccessor(btreeOpHelper
+				.getHyracksStageletContext().getFrameSize(), recDesc);
 
-        cursorFrame = opDesc.getLeafFactory().getFrame();
-        cursor = new RangeSearchCursor(cursorFrame);
+		cursorFrame = opDesc.getLeafFactory().getFrame();
+		cursor = new RangeSearchCursor(cursorFrame);
 
-        btreeOpHelper.init();
-        btree = btreeOpHelper.getBTree();
+		try {
 
-        // construct range predicate
+			btreeOpHelper.init();
+			btree = btreeOpHelper.getBTree();
 
-        int lowKeySearchFields = btree.getMultiComparator().getComparators().length;
-        int highKeySearchFields = btree.getMultiComparator().getComparators().length;
-        if (lowKey != null)
-            lowKeySearchFields = lowKey.getFieldCount();
-        if (highKey != null)
-            highKeySearchFields = highKey.getFieldCount();
+			// construct range predicate
 
-        IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
-        for (int i = 0; i < lowKeySearchFields; i++) {
-            lowKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
-        }
-        lowKeySearchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(), lowKeySearchComparators);
+			int lowKeySearchFields = btree.getMultiComparator()
+					.getComparators().length;
+			int highKeySearchFields = btree.getMultiComparator()
+					.getComparators().length;
+			if (lowKey != null)
+				lowKeySearchFields = lowKey.getFieldCount();
+			if (highKey != null)
+				highKeySearchFields = highKey.getFieldCount();
 
-        if (lowKeySearchFields == highKeySearchFields) {
-            highKeySearchCmp = lowKeySearchCmp;
-        } else {
-            IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
-            for (int i = 0; i < highKeySearchFields; i++) {
-                highKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
-            }
-            highKeySearchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(), highKeySearchComparators);
+			IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
+			for (int i = 0; i < lowKeySearchFields; i++) {
+				lowKeySearchComparators[i] = btree.getMultiComparator()
+						.getComparators()[i];
+			}
+			lowKeySearchCmp = new MultiComparator(btree.getMultiComparator()
+					.getTypeTraits(), lowKeySearchComparators);
 
-        }
+			if (lowKeySearchFields == highKeySearchFields) {
+				highKeySearchCmp = lowKeySearchCmp;
+			} else {
+				IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
+				for (int i = 0; i < highKeySearchFields; i++) {
+					highKeySearchComparators[i] = btree.getMultiComparator()
+							.getComparators()[i];
+				}
+				highKeySearchCmp = new MultiComparator(btree
+						.getMultiComparator().getTypeTraits(),
+						highKeySearchComparators);
 
-        rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
-                highKeySearchCmp);
+			}
 
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+			rangePred = new RangePredicate(isForward, null, null,
+					lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
+					highKeySearchCmp);
 
-        writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
-        tb = new ArrayTupleBuilder(btree.getMultiComparator().getFieldCount());
-        dos = tb.getDataOutput();
-        appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
-        appender.reset(writeBuffer, true);
+			accessor = new FrameTupleAccessor(btreeOpHelper
+					.getHyracksStageletContext().getFrameSize(), recDesc);
 
-        opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper.getLeafFrame(),
-                btreeOpHelper.getInteriorFrame(), null);
-    }
+			writeBuffer = btreeOpHelper.getHyracksStageletContext()
+					.allocateFrame();
+			tb = new ArrayTupleBuilder(btree.getMultiComparator()
+					.getFieldCount());
+			dos = tb.getDataOutput();
+			appender = new FrameTupleAppender(btreeOpHelper
+					.getHyracksStageletContext().getFrameSize());
+			appender.reset(writeBuffer, true);
 
-    private void writeSearchResults() throws Exception {
-        while (cursor.hasNext()) {
-            tb.reset();
-            cursor.next();
+			opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper
+					.getLeafFrame(), btreeOpHelper.getInteriorFrame(), null);
 
-            ITupleReference frameTuple = cursor.getTuple();
-            for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-                dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-                tb.addFieldEndOffset();
-            }
+		} catch (Exception e) {
+			btreeOpHelper.deinit();
+		}
+	}
 
-            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                FrameUtils.flushFrame(writeBuffer, writer);
-                appender.reset(writeBuffer, true);
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    throw new IllegalStateException();
-                }
-            }
-        }
-    }
+	private void writeSearchResults() throws Exception {
+		while (cursor.hasNext()) {
+			tb.reset();
+			cursor.next();
 
-    @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        accessor.reset(buffer);
+			ITupleReference frameTuple = cursor.getTuple();
+			for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+				dos.write(frameTuple.getFieldData(i), frameTuple
+						.getFieldStart(i), frameTuple.getFieldLength(i));
+				tb.addFieldEndOffset();
+			}
 
-        int tupleCount = accessor.getTupleCount();
-        try {
-            for (int i = 0; i < tupleCount; i++) {
-                if (lowKey != null)
-                    lowKey.reset(accessor, i);
-                if (highKey != null)
-                    highKey.reset(accessor, i);
-                rangePred.setLowKey(lowKey, lowKeyInclusive);
-                rangePred.setHighKey(highKey, highKeyInclusive);
+			if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+					tb.getSize())) {
+				FrameUtils.flushFrame(writeBuffer, writer);
+				appender.reset(writeBuffer, true);
+				if (!appender.append(tb.getFieldEndOffsets(),
+						tb.getByteArray(), 0, tb.getSize())) {
+					throw new IllegalStateException();
+				}
+			}
+		}
+	}
 
-                cursor.reset();
-                btree.search(cursor, rangePred, opCtx);
-                writeSearchResults();
-            }
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
-    }
+	@Override
+	public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+		accessor.reset(buffer);
 
-    @Override
-    public void close() throws HyracksDataException {
-        try {
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(writeBuffer, writer);
-            }
-            writer.close();
-            try {
-                cursor.close();
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
-        } finally {
-            btreeOpHelper.deinit();
-        }
-    }
+		int tupleCount = accessor.getTupleCount();
+		try {
+			for (int i = 0; i < tupleCount; i++) {
+				if (lowKey != null)
+					lowKey.reset(accessor, i);
+				if (highKey != null)
+					highKey.reset(accessor, i);
+				rangePred.setLowKey(lowKey, lowKeyInclusive);
+				rangePred.setHighKey(highKey, highKeyInclusive);
 
-    @Override
-    public void flush() throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(writeBuffer, writer);
-        }
-    }
+				cursor.reset();
+				btree.search(cursor, rangePred, opCtx);
+				writeSearchResults();
+			}
+		} catch (Exception e) {
+			throw new HyracksDataException(e);
+		}
+	}
+
+	@Override
+	public void close() throws HyracksDataException {
+		try {
+			if (appender.getTupleCount() > 0) {
+				FrameUtils.flushFrame(writeBuffer, writer);
+			}
+			writer.close();
+			try {
+				cursor.close();
+			} catch (Exception e) {
+				throw new HyracksDataException(e);
+			}
+		} finally {
+			btreeOpHelper.deinit();
+		}
+	}
+
+	@Override
+	public void flush() throws HyracksDataException {
+		if (appender.getTupleCount() > 0) {
+			FrameUtils.flushFrame(writeBuffer, writer);
+		}
+	}
 }

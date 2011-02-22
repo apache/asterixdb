@@ -15,6 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,7 +30,9 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final IHyracksStageletContext ctx;
+	private static final Logger LOGGER = Logger.getLogger(BTreeDropOperatorNodePushable.class.getName());
+	
+	private final IHyracksStageletContext ctx;
     private IBTreeRegistryProvider btreeRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
@@ -58,30 +63,39 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
+    	try {
 
-        BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry(ctx);
-        IBufferCache bufferCache = storageManager.getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
+    		BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry(ctx);
+    		IBufferCache bufferCache = storageManager.getBufferCache(ctx);
+    		IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
 
-        FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+    		FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
 
-        boolean fileIsMapped = fileMapProvider.isMapped(f);
-        if (!fileIsMapped) {
-            throw new HyracksDataException("Cannot drop B-Tree with name " + f.toString() + ". No file mapping exists.");
-        }
+    		boolean fileIsMapped = fileMapProvider.isMapped(f);
+    		if (!fileIsMapped) {    			    			
+    			throw new HyracksDataException("Cannot drop B-Tree with name " + f.toString() + ". No file mapping exists.");
+    		}
 
-        int btreeFileId = fileMapProvider.lookupFileId(f);
+    		int btreeFileId = fileMapProvider.lookupFileId(f);
 
-        // unregister btree instance
-        btreeRegistry.lock();
-        try {
-            btreeRegistry.unregister(btreeFileId);
-        } finally {
-            btreeRegistry.unlock();
-        }
+    		// unregister btree instance
+    		btreeRegistry.lock();
+    		try {
+    			btreeRegistry.unregister(btreeFileId);
+    		} finally {
+    			btreeRegistry.unlock();
+    		}
 
-        // remove name to id mapping
-        bufferCache.deleteFile(btreeFileId);
+    		// remove name to id mapping
+    		bufferCache.deleteFile(btreeFileId);
+    	}
+    	// TODO: for the time being we don't throw,
+		// with proper exception handling (no hanging job problem) we should throw
+    	catch (Exception e) {
+    		if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("BTRee Drop Operator Failed Due To Exception: " + e.getMessage());
+            }
+    	}
     }
 
     @Override

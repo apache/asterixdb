@@ -2,25 +2,25 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.text</groupId>
   <artifactId>textclient</artifactId>
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.5-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>text-example</artifactId>
-    <version>0.1.4-SNAPSHOT</version>
+    <version>0.1.5-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.4-SNAPSHOT</version>
+  		<version>0.1.5-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
   		<artifactId>texthelper</artifactId>
-  		<version>0.1.4-SNAPSHOT</version>
+  		<version>0.1.5-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
