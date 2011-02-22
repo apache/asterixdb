@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.control.INodeController;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class NodeControllerState {
     private final INodeController nodeController;

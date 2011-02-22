@@ -12,9 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.resources;
+package edu.uci.ics.hyracks.api.comm;
 
-import java.io.Serializable;
+import java.nio.ByteBuffer;
 
-public interface IResource extends Serializable {
+public interface ISenderProxy {
+    public ByteBuffer getReadBuffer();
+
+    public int getSenderIndex();
 }

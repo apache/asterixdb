@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobAttempt;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class ReportProfilesEvent implements Runnable {
     private final ClusterControllerService ccs;

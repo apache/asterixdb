@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.api.job.profiling.om;
+package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
 import java.util.HashMap;
 import java.util.Map;

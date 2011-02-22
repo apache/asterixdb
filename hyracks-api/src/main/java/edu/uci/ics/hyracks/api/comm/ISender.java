@@ -12,11 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package edu.uci.ics.hyracks.api.comm;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
-public interface IEndpointDataWriterFactory {
-    public IFrameWriter createFrameWriter(int index) throws HyracksDataException;
+public interface ISender {
+    public IFrameWriter createSenderWriter(int receiverIndex);
 }

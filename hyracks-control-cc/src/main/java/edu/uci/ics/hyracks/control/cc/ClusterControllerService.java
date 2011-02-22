@@ -33,15 +33,9 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
-import edu.uci.ics.hyracks.api.control.CCConfig;
-import edu.uci.ics.hyracks.api.control.IClusterController;
-import edu.uci.ics.hyracks.api.control.INodeController;
-import edu.uci.ics.hyracks.api.control.NodeParameters;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -64,7 +58,13 @@ import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
 import edu.uci.ics.hyracks.control.cc.scheduler.naive.NaiveScheduler;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
+import edu.uci.ics.hyracks.control.common.base.CCConfig;
+import edu.uci.ics.hyracks.control.common.base.IClusterController;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
+import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.StageletProfile;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
         IHyracksClientInterface {
@@ -94,6 +94,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final Timer timer;
 
+    private final CCClientInterface ccci;
+
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
@@ -106,13 +108,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         jobQueue = new JobQueue();
         scheduler = new NaiveScheduler(this);
         this.timer = new Timer(true);
+        ccci = new CCClientInterface(this);
     }
 
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService");
         Registry registry = LocateRegistry.createRegistry(ccConfig.port);
-        registry.rebind(IHyracksClientInterface.class.getName(), this);
+        registry.rebind(IHyracksClientInterface.class.getName(), ccci);
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();

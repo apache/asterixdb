@@ -12,19 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager;
+package edu.uci.ics.hyracks.api.comm;
 
-import java.util.UUID;
+import java.util.BitSet;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
-public interface IJobManagerQueryInterface {
-    public JSONArray getAllJobSummaries() throws Exception;
+public interface IReceiver {
+    public void setReceiverEventListener(IReceiverEventListener listener) throws HyracksException;
 
-    public JSONObject getJobSpecification(UUID jobId) throws Exception;
+    public void init(int sender) throws HyracksException;
 
-    public JSONObject getJobPlan(UUID jobId) throws Exception;
-
-    public JSONObject getJobProfile(UUID jobId, int attempt) throws Exception;
+    public ISenderProxy getReadySender(BitSet senderMask, int senderIndexPreference);
 }

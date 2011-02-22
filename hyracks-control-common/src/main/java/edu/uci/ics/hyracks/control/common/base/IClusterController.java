@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.control;
+package edu.uci.ics.hyracks.control.common.base;
 
 import java.rmi.Remote;
 import java.util.List;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.StageletProfile;
 
 public interface IClusterController extends Remote {
     public NodeParameters registerNode(INodeController nodeController) throws Exception;

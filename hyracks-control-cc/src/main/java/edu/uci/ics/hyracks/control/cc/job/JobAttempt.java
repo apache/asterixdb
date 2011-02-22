@@ -7,9 +7,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobPlan;
-import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.cc.scheduler.IJobAttemptSchedulerState;
 import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobAttempt {
     private final JobRun jobRun;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job.profiling.om;
+package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
 import java.util.HashMap;
 import java.util.Map;

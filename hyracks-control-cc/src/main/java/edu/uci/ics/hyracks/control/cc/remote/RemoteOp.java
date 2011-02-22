@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.remote;
 
-import edu.uci.ics.hyracks.api.control.INodeController;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public interface RemoteOp<T> {
     public String getNodeId();

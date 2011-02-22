@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
-import edu.uci.ics.hyracks.api.control.INodeController;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class RemoteRunner {
     public static <T, R> R runRemote(ClusterControllerService ccs, final RemoteOp<T>[] remoteOps,

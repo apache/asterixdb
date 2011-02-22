@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.control.cc.remote.ops;
 
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.control.INodeController;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class StageStarter implements RemoteOp<Void> {
     private String nodeId;

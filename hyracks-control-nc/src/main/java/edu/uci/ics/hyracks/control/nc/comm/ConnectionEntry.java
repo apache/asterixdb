@@ -129,7 +129,6 @@ public class ConnectionEntry implements IConnectionEntry {
         }
     }
 
-    @Override
     public void setDataReceiveListener(IDataReceiveListener listener) {
         this.recvListener = listener;
     }
@@ -163,7 +162,6 @@ public class ConnectionEntry implements IConnectionEntry {
         return jobId;
     }
 
-    @Override
     public void setJobId(UUID jobId) {
         this.jobId = jobId;
     }
@@ -173,12 +171,10 @@ public class ConnectionEntry implements IConnectionEntry {
         return stageId;
     }
 
-    @Override
     public void setStageId(UUID stageId) {
         this.stageId = stageId;
     }
 
-    @Override
     public void abort() {
         aborted = true;
     }

@@ -18,7 +18,7 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.dcache.client.DCacheClient;
 import edu.uci.ics.dcache.client.DCacheClientConfig;
-import edu.uci.ics.hyracks.api.control.NCConfig;
+import edu.uci.ics.hyracks.control.common.base.NCConfig;
 
 public class NCDriver {
     public static void main(String args[]) throws Exception {

@@ -12,7 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.resources;
+package edu.uci.ics.hyracks.api.comm;
 
-public interface ITimeSharedResource {
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
+public interface IEndpointDataWriterFactory {
+    public IFrameWriter createFrameWriter(int index) throws HyracksDataException;
 }

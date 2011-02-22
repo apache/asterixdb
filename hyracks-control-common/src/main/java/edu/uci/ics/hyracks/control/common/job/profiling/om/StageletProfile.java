@@ -12,20 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.control;
+package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
-import java.io.Serializable;
+import java.util.UUID;
 
-public class NodeCapability implements Serializable {
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class StageletProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private int cpuCount;
+    private final UUID stageId;
 
-    public int getCPUCount() {
-        return cpuCount;
+    public StageletProfile(UUID stageId) {
+        this.stageId = stageId;
     }
 
-    public void setCPUCount(int cpuCount) {
-        this.cpuCount = cpuCount;
+    public UUID getStageId() {
+        return stageId;
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        json.put("type", "joblet-profile");
+        json.put("stage-id", stageId.toString());
+        populateCounters(json);
+
+        return json;
     }
 }

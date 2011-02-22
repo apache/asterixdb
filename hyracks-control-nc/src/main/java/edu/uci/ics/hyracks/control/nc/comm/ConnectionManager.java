@@ -307,7 +307,7 @@ public class ConnectionManager {
                         if (!pendingAbortConnections.isEmpty()) {
                             for (IConnectionEntry ce : pendingAbortConnections) {
                                 SelectionKey key = ce.getSelectionKey();
-                                ce.abort();
+                                ((ConnectionEntry) ce).abort();
                                 ((ConnectionEntry) ce).dispatch(key);
                                 key.cancel();
                                 ce.close();
@@ -352,7 +352,8 @@ public class ConnectionManager {
     private class InitialDataReceiveListener implements IDataReceiveListener {
         @Override
         public void dataReceived(IConnectionEntry entry) throws IOException {
-            ByteBuffer buffer = entry.getReadBuffer();
+            ConnectionEntry ce = (ConnectionEntry) entry;
+            ByteBuffer buffer = ce.getReadBuffer();
             buffer.flip();
             IDataReceiveListener newListener = null;
             if (buffer.remaining() >= INITIAL_MESSAGE_LEN) {
@@ -367,28 +368,28 @@ public class ConnectionManager {
                 synchronized (ConnectionManager.this) {
                     connectionReceiver = pendingConnectionReceivers.get(endpointID);
                     if (connectionReceiver == null) {
-                        entry.close();
+                        ce.close();
                         return;
                     }
                 }
 
-                newListener = connectionReceiver.getDataReceiveListener(endpointID, entry, senderId);
-                entry.setDataReceiveListener(newListener);
-                entry.setJobId(connectionReceiver.getJobId());
-                entry.setStageId(connectionReceiver.getStageId());
+                newListener = connectionReceiver.getDataReceiveListener(endpointID, ce, senderId);
+                ce.setDataReceiveListener(newListener);
+                ce.setJobId(connectionReceiver.getJobId());
+                ce.setStageId(connectionReceiver.getStageId());
                 synchronized (ConnectionManager.this) {
-                    connections.add(entry);
+                    connections.add(ce);
                 }
                 byte[] ack = new byte[4];
                 ByteBuffer ackBuffer = ByteBuffer.wrap(ack);
                 ackBuffer.clear();
                 ackBuffer.putInt(FrameConstants.SIZE_LEN);
                 ackBuffer.flip();
-                entry.write(ackBuffer);
+                ce.write(ackBuffer);
             }
             buffer.compact();
             if (newListener != null && buffer.remaining() > 0) {
-                newListener.dataReceived(entry);
+                newListener.dataReceived(ce);
             }
         }
 

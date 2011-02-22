@@ -14,27 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.comm;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.util.UUID;
+public interface IReceiverEventListener {
+    public void notifySenderAvailability(int sender);
 
-public interface IConnectionEntry {
-    ByteBuffer getReadBuffer();
-
-    SelectionKey getSelectionKey();
-
-    void attach(Object attachment);
-
-    Object getAttachment();
-
-    void close() throws IOException;
-
-    void write(ByteBuffer buffer);
-
-    UUID getJobId();
-
-    UUID getStageId();
-
-    boolean aborted();
+    public void notifySenderCount(int senderCount);
 }

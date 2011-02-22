@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFactory, IConnectionDemultiplexer,
@@ -38,13 +39,18 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
     private final int frameSize;
     private IConnectionEntry senders[];
     private int openSenderCount;
-    private UUID jobId;
-    private UUID stageId;
+    private final UUID jobId;
+    private final int attempt;
+    private final UUID stageId;
+    private final ConnectorDescriptorId cdId;
 
-    public DemuxDataReceiveListenerFactory(IHyracksStageletContext ctx, UUID jobId, UUID stageId) {
+    public DemuxDataReceiveListenerFactory(IHyracksStageletContext ctx, UUID jobId, int attempt, UUID stageId,
+            ConnectorDescriptorId cdId) {
         frameSize = ctx.getFrameSize();
         this.jobId = jobId;
+        this.attempt = attempt;
         this.stageId = stageId;
+        this.cdId = cdId;
         readyBits = new BitSet();
         senders = null;
         openSenderCount = 0;

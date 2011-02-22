@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.cc.remote.ops;
 
-import edu.uci.ics.hyracks.api.control.INodeController;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class ApplicationDestroyer implements RemoteOp<Void> {
     private String nodeId;

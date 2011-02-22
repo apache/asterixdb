@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.control.cc;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.api.control.CCConfig;
+import edu.uci.ics.hyracks.control.common.base.CCConfig;
 
 public class CCDriver {
     public static void main(String args[]) throws Exception {

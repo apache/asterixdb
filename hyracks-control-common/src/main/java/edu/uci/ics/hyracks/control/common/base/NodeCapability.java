@@ -12,8 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.resources;
+package edu.uci.ics.hyracks.control.common.base;
 
-public interface ISpaceSharedResource {
+import java.io.Serializable;
 
+public class NodeCapability implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private int cpuCount;
+
+    public int getCPUCount() {
+        return cpuCount;
+    }
+
+    public void setCPUCount(int cpuCount) {
+        this.cpuCount = cpuCount;
+    }
 }
