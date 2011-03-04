@@ -22,9 +22,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
 public class BTreeBulkLoadOperatorNodePushable extends
 		AbstractUnaryInputSinkOperatorNodePushable {
@@ -56,7 +56,7 @@ public class BTreeBulkLoadOperatorNodePushable extends
 				opDesc.getOperatorId(), 0);
 		accessor = new FrameTupleAccessor(btreeOpHelper
 				.getHyracksStageletContext().getFrameSize(), recDesc);
-		IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 		try {
 			btreeOpHelper.init();
 			btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());

@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
-  <artifactId>hyracks-storage-am-btree</artifactId>
+  <artifactId>hyracks-storage-am-common</artifactId>
   <version>0.1.4</version>
 
   <parent>
@@ -23,41 +23,20 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>  	
+  <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-storage-am-common</artifactId>
+  		<artifactId>hyracks-api</artifactId>
   		<version>0.1.4</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency>  	
+  	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-dataflow-common</artifactId>
+  		<artifactId>hyracks-storage-common</artifactId>
   		<version>0.1.4</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency>  	
-  	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.4</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>  	
-  	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.1.4</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>  	
-  	<dependency>
-  		<groupId>junit</groupId>
-  		<artifactId>junit</artifactId>
-  		<version>4.8.1</version>
-  		<type>jar</type>
-  		<scope>test</scope>
-  	</dependency>  	  		
+  	</dependency>
   </dependencies>
 </project>

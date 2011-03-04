@@ -23,10 +23,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
 public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
@@ -56,7 +56,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     		btreeOpHelper.init();
     		btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
     		opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(),
-    				btreeOpHelper.getInteriorFrame(), new MetaDataFrame());
+    				btreeOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
     	} catch(Exception e) {
     		// cleanup in case of failure
     		btreeOpHelper.deinit();

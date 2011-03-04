@@ -47,9 +47,6 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -57,6 +54,11 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
@@ -124,13 +126,15 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         // IBTreeLeafFrameFactory leafFrameFactory = new
         // FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
         IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
-        IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-        IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-        BTree btree = new BTree(bufferCache, interiorFrameFactory, leafFrameFactory, cmp);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+        
+        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 
@@ -188,7 +192,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
             }
         }
 
-        int numPages = btree.getMaxPage(metaFrame);
+        int numPages = btree.getFreePageManager().getMaxPage(metaFrame);
         System.out.println("NUMPAGES: " + numPages);
 
         // build query as tuple reference

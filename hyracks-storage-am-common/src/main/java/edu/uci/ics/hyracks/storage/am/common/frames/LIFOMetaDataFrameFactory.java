@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.frames;
+package edu.uci.ics.hyracks.storage.am.common.frames;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 
-public class MetaDataFrameFactory implements IBTreeMetaDataFrameFactory {
+public class LIFOMetaDataFrameFactory implements ITreeIndexMetaDataFrameFactory {
     @Override
-    public IBTreeMetaDataFrame getFrame() {
-        return new MetaDataFrame();
+    public ITreeIndexMetaDataFrame getFrame() {
+        return new LIFOMetaDataFrame();
     }
 }

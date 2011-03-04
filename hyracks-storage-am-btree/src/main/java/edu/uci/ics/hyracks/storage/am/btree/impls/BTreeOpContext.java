@@ -18,13 +18,13 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 
 public final class BTreeOpContext {
     public final BTreeOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
-    public final IBTreeMetaDataFrame metaFrame;
+    public final ITreeIndexMetaDataFrame metaFrame;
     public IBTreeCursor cursor;
     public RangePredicate pred;
     public final SplitKey splitKey;
@@ -34,7 +34,7 @@ public final class BTreeOpContext {
     public final IntArrayList freePages;
 
     public BTreeOpContext(BTreeOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-            IBTreeMetaDataFrame metaFrame, int treeHeightHint) {
+    		ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.leafFrame = leafFrame;
         this.interiorFrame = interiorFrame;

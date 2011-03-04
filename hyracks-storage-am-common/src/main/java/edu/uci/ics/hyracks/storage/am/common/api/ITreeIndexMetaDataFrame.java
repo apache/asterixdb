@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public interface IBTreeMetaDataFrame {
+public interface ITreeIndexMetaDataFrame {
     public void initBuffer(int level);
 
     public void setPage(ICachedPage page);

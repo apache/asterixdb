@@ -25,10 +25,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
 public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
@@ -43,7 +43,7 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
 
         IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
         DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
-        IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
+        ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 
         try {
         

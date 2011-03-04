@@ -61,6 +61,7 @@
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>
     <module>hyracks-storage-common</module>
+    <module>hyracks-storage-am-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
     <module>hyracks-test-support</module>

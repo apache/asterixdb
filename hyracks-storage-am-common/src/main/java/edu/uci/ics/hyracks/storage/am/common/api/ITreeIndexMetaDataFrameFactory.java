@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-public interface IBTreeMetaDataFrameFactory {
-    public IBTreeMetaDataFrame getFrame();
+
+public interface ITreeIndexMetaDataFrameFactory {
+    public ITreeIndexMetaDataFrame getFrame();
 }

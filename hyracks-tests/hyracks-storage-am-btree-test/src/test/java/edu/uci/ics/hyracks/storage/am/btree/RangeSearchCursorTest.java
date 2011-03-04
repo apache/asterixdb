@@ -50,10 +50,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -64,6 +61,11 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -96,11 +98,11 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 			tupleWriterFactory);
 	IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 			tupleWriterFactory);
-	IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
+	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
 	IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
 	IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-	IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
 	IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 	ByteBuffer frame = ctx.allocateFrame();
@@ -146,7 +148,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
@@ -251,7 +255,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
@@ -358,7 +364,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);		
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
