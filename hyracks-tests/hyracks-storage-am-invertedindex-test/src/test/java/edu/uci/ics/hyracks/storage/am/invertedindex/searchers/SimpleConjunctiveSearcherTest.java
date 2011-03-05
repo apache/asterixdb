@@ -50,7 +50,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
@@ -165,7 +165,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         int addProb = 0;
         int addProbStep = 2;
 
-        BTreeOpContext opCtx = btree.createOpContext(BTreeOp.BTO_INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext opCtx = btree.createOpContext(TreeIndexOp.TI_INSERT, leafFrame, interiorFrame, metaFrame);
 
         for (int i = 0; i < tokens.size(); i++) {
 

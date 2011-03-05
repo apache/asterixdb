@@ -2,25 +2,25 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
-public class FieldPrefixTupleReference implements IBTreeTupleReference {
+public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     private FieldPrefixNSMLeafFrame frame;
     private int prefixTupleStartOff;
     private int suffixTupleStartOff;
     private int numPrefixFields;
     private int fieldCount;
-    private IBTreeTupleReference helperTuple;
+    private ITreeIndexTupleReference helperTuple;
 
-    public FieldPrefixTupleReference(IBTreeTupleReference helperTuple) {
+    public FieldPrefixTupleReference(ITreeIndexTupleReference helperTuple) {
         this.helperTuple = helperTuple;
     }
 
     @Override
-    public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         this.frame = (FieldPrefixNSMLeafFrame) frame;
 
         int tupleSlotOff = this.frame.slotManager.getTupleSlotOff(tupleIndex);

@@ -48,7 +48,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
@@ -162,7 +162,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// 10000
@@ -221,7 +221,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 		try {
@@ -401,7 +401,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		for (int i = 0; i < 10000; i++) {
@@ -443,7 +443,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -603,7 +603,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 		int maxLength = 10; // max string length to be generated
 		for (int i = 0; i < 10000; i++) {
@@ -646,7 +646,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -803,9 +803,9 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
-		BTreeOpContext deleteOpCtx = btree.createOpContext(BTreeOp.BTO_DELETE,
+		BTreeOpContext deleteOpCtx = btree.createOpContext(TreeIndexOp.TI_DELETE,
 				leafFrame, interiorFrame, metaFrame);
 
 		int runs = 3;
@@ -1070,7 +1070,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		// TODO: check when searching backwards
 		RangePredicate rangePred = new RangePredicate(true, lowKey, highKey,
 				true, true, searchCmp, searchCmp);
-		BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(rangeCursor, rangePred, searchOpCtx);
 
@@ -1202,7 +1202,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		intervals[9][0] = 20;
 		intervals[9][1] = 35;
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// int exceptionCount = 0;
@@ -1247,7 +1247,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 

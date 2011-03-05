@@ -23,12 +23,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -395,7 +395,7 @@ public class BTree {
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
         ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
-        SpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
+        FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
 
             case SUFFICIENT_CONTIGUOUS_SPACE: {
@@ -424,7 +424,7 @@ public class BTree {
                 if (reCompressed)
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
 
-                if (spaceStatus == SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
                     ctx.leafFrame.insert(tuple, cmp);
                     ctx.splitKey.reset();
 
@@ -533,7 +533,7 @@ public class BTree {
             throws Exception {
         ctx.interiorFrame.setPage(node);
         ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-        SpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
+        FrameOpSpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
             case INSUFFICIENT_SPACE: {
                 splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
@@ -543,7 +543,7 @@ public class BTree {
                 rightNode.acquireWriteLatch();
                 writeLatchesAcquired++;
                 try {
-                    IBTreeFrame rightFrame = interiorFrameFactory.getFrame();
+                    ITreeIndexFrame rightFrame = interiorFrameFactory.getFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                     rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
@@ -784,8 +784,8 @@ public class BTree {
         }
     }
 
-    private final void acquireLatch(ICachedPage node, BTreeOp op, boolean isLeaf) {
-        if (isLeaf && (op.equals(BTreeOp.BTO_INSERT) || op.equals(BTreeOp.BTO_DELETE))) {
+    private final void acquireLatch(ICachedPage node, TreeIndexOp op, boolean isLeaf) {
+        if (isLeaf && (op.equals(TreeIndexOp.TI_INSERT) || op.equals(TreeIndexOp.TI_DELETE))) {
             node.acquireWriteLatch();
             writeLatchesAcquired++;
         } else {
@@ -794,8 +794,8 @@ public class BTree {
         }
     }
 
-    private final void releaseLatch(ICachedPage node, BTreeOp op, boolean isLeaf) {
-        if (isLeaf && (op.equals(BTreeOp.BTO_INSERT) || op.equals(BTreeOp.BTO_DELETE))) {
+    private final void releaseLatch(ICachedPage node, TreeIndexOp op, boolean isLeaf) {
+        if (isLeaf && (op.equals(TreeIndexOp.TI_INSERT) || op.equals(TreeIndexOp.TI_DELETE))) {
             node.releaseWriteLatch();
             writeLatchesReleased++;
         } else {
@@ -882,7 +882,7 @@ public class BTree {
 
                         switch (ctx.op) {
 
-                            case BTO_INSERT: {
+                            case TI_INSERT: {
                                 if (ctx.splitKey.getBuffer() != null) {
                                     node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     pins++;
@@ -902,7 +902,7 @@ public class BTree {
                             }
                                 break;
 
-                            case BTO_DELETE: {
+                            case TI_DELETE: {
                                 if (ctx.splitKey.getBuffer() != null) {
                                     node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     pins++;
@@ -922,7 +922,7 @@ public class BTree {
                             }
                                 break;
 
-                            case BTO_SEARCH: {
+                            case TI_SEARCH: {
                                 // do nothing
                             }
                                 break;
@@ -957,17 +957,17 @@ public class BTree {
                 }
             } else { // isLeaf and !smFlag
                 switch (ctx.op) {
-                    case BTO_INSERT: {
+                    case TI_INSERT: {
                         insertLeaf(node, pageId, ctx.pred.getLowKey(), ctx);
                     }
                         break;
 
-                    case BTO_DELETE: {
+                    case TI_DELETE: {
                         deleteLeaf(node, pageId, ctx.pred.getLowKey(), ctx);
                     }
                         break;
 
-                    case BTO_SEARCH: {
+                    case TI_SEARCH: {
                         ctx.cursor.open(node, ctx.pred);
                     }
                         break;
@@ -1006,19 +1006,19 @@ public class BTree {
         public final int slotSize;
         public final int leafMaxBytes;
         public final int interiorMaxBytes;
-        public final SplitKey splitKey;
+        public final BTreeSplitKey splitKey;
         // we maintain a frontier of nodes for each level
         private final ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<NodeFrontier>();
         private final IBTreeLeafFrame leafFrame;
         private final IBTreeInteriorFrame interiorFrame;
         private final ITreeIndexMetaDataFrame metaFrame;
 
-        private final IBTreeTupleWriter tupleWriter;
+        private final ITreeIndexTupleWriter tupleWriter;
 
         public BulkLoadContext(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
                 ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
 
-            splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
+            splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             tupleWriter = leafFrame.getTupleWriter();
 
             NodeFrontier leafFrontier = new NodeFrontier(leafFrame.createTupleReference());
@@ -1071,7 +1071,7 @@ public class BTree {
         int spaceUsed = ctx.interiorFrame.getBuffer().capacity() - ctx.interiorFrame.getTotalFreeSpace();
         if (spaceUsed + spaceNeeded > ctx.interiorMaxBytes) {
 
-            SplitKey copyKey = ctx.splitKey.duplicate(ctx.leafFrame.getTupleWriter().createTupleReference());
+            BTreeSplitKey copyKey = ctx.splitKey.duplicate(ctx.leafFrame.getTupleWriter().createTupleReference());
             tuple = copyKey.getTuple();
 
             frontier.lastTuple.resetByOffset(frontier.page.getBuffer(), ctx.interiorFrame
@@ -1193,7 +1193,7 @@ public class BTree {
         loaded = true;
     }
 
-    public BTreeOpContext createOpContext(BTreeOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+    public BTreeOpContext createOpContext(TreeIndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame) {
         // TODO: figure out better tree-height hint
         return new BTreeOpContext(op, leafFrame, interiorFrame, metaFrame, 6);

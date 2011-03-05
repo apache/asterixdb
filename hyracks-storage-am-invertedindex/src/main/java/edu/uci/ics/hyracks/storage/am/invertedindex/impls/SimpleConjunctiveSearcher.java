@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -152,7 +152,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         maxResultBufIdx = 0;
 
-        BTreeOpContext opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext opCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH, leafFrame, interiorFrame, null);
 
         resultTupleAppender.reset(newResultBuffers.get(0), true);
         try {

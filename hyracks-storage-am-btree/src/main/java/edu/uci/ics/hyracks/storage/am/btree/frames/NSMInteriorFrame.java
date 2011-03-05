@@ -25,29 +25,29 @@ import java.util.Collections;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
 
-public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
+public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
 
     private static final int rightLeafOff = smFlagOff + 1;
 
     private static final int childPtrSize = 4;
 
     // private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
-    private IBTreeTupleReference cmpFrameTuple;
+    private ITreeIndexTupleReference cmpFrameTuple;
 
-    public NSMInteriorFrame(IBTreeTupleWriter tupleWriter) {
+    public NSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter);
         cmpFrameTuple = tupleWriter.createTupleReference();
 
@@ -64,16 +64,16 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
     }
 
     @Override
-    public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
         int bytesRequired = tupleWriter.bytesRequired(tuple) + 8; // for the two
         // childpointers
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
                 - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
-            return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
-            return SpaceStatus.SUFFICIENT_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         else
-            return SpaceStatus.INSUFFICIENT_SPACE;
+            return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     @Override
@@ -144,7 +144,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
     }
 
     @Override
-    public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
             throws Exception {
         // before doing anything check if key already exists
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -162,7 +162,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
         int tupleCount = buf.getInt(tupleCountOff);
 
         int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
-        IBTreeFrame targetFrame = null;
+        ITreeIndexFrame targetFrame = null;
         frameTuple.resetByOffset(buf, getTupleOffset(tuplesToLeft - 1));
         if (cmp.compare(tuple, frameTuple) <= 0) {
             targetFrame = this;
@@ -189,7 +189,7 @@ public class NSMInteriorFrame extends NSMFrame implements IBTreeInteriorFrame {
         // copy data to be inserted, we need this because creating the splitkey
         // will overwrite the data param (data points to same memory as
         // splitKey.getData())
-        SplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
+        BTreeSplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
 
         // set split key to be highest value in left page
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());

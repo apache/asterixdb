@@ -17,14 +17,14 @@ package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriterFactory;
 
 public class NSMLeafFrameFactory implements IBTreeLeafFrameFactory {
 
     private static final long serialVersionUID = 1L;
-    private IBTreeTupleWriterFactory tupleWriterFactory;
+    private ITreeIndexTupleWriterFactory tupleWriterFactory;
 
-    public NSMLeafFrameFactory(IBTreeTupleWriterFactory tupleWriterFactory) {
+    public NSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }
 

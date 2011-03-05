@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 
-public interface IBTreeInteriorFrame extends IBTreeFrame {
+public interface IBTreeInteriorFrame extends ITreeIndexFrame {
     public int getChildPageId(RangePredicate pred, MultiComparator srcCmp);
 
     public int getLeftmostChildPageId(MultiComparator cmp);

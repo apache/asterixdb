@@ -16,10 +16,10 @@
 package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriterFactory;
 
-public class TypeAwareTupleWriterFactory implements IBTreeTupleWriterFactory {
+public class TypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
     private ITypeTrait[] typeTraits;
@@ -29,7 +29,7 @@ public class TypeAwareTupleWriterFactory implements IBTreeTupleWriterFactory {
     }
 
     @Override
-    public IBTreeTupleWriter createTupleWriter() {
+    public ITreeIndexTupleWriter createTupleWriter() {
         return new TypeAwareTupleWriter(typeTraits);
     }
 

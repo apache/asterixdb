@@ -21,19 +21,19 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 
 public final class BTreeOpContext {
-    public final BTreeOp op;
+    public final TreeIndexOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
     public IBTreeCursor cursor;
     public RangePredicate pred;
-    public final SplitKey splitKey;
+    public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
     public final IntArrayList pageLsns; // used like a stack
     public final IntArrayList smPages;
     public final IntArrayList freePages;
 
-    public BTreeOpContext(BTreeOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+    public BTreeOpContext(TreeIndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
     		ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.leafFrame = leafFrame;
@@ -41,11 +41,11 @@ public final class BTreeOpContext {
         this.metaFrame = metaFrame;
 
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
-        if (op != BTreeOp.BTO_SEARCH) {
+        if (op != TreeIndexOp.TI_SEARCH) {
             smPages = new IntArrayList(treeHeightHint, treeHeightHint);
             freePages = new IntArrayList(treeHeightHint, treeHeightHint);
             pred = new RangePredicate(true, null, null, true, true, null, null);
-            splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
+            splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
         } else {
             smPages = null;
             freePages = null;

@@ -13,8 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.api;
 
-public enum SpaceStatus {
-    INSUFFICIENT_SPACE, SUFFICIENT_CONTIGUOUS_SPACE, SUFFICIENT_SPACE
+import java.nio.ByteBuffer;
+
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+
+public interface ITreeIndexTupleReference extends ITupleReference {
+    public void setFieldCount(int fieldCount);
+
+    public void setFieldCount(int fieldStartIndex, int fieldCount);
+
+    public void resetByOffset(ByteBuffer buf, int tupleStartOffset);
+
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
 }

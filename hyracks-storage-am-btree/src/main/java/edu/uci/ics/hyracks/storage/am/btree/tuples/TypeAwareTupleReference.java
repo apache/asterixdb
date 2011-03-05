@@ -18,10 +18,10 @@ package edu.uci.ics.hyracks.storage.am.btree.tuples;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 
-public class TypeAwareTupleReference implements IBTreeTupleReference {
+public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected ByteBuffer buf;
     protected int fieldStartIndex;
     protected int fieldCount;
@@ -62,7 +62,7 @@ public class TypeAwareTupleReference implements IBTreeTupleReference {
     }
 
     @Override
-    public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
     }
 

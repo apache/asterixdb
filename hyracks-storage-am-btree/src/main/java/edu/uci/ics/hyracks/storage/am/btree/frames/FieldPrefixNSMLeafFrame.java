@@ -26,10 +26,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
@@ -42,8 +42,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -69,12 +69,12 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public IPrefixSlotManager slotManager; // TODO: should be protected, but
     // will trigger some refactoring
 
-    private IBTreeTupleWriter tupleWriter;
+    private ITreeIndexTupleWriter tupleWriter;
 
     private FieldPrefixTupleReference frameTuple;
     private FieldPrefixPrefixTupleReference framePrefixTuple;
 
-    public FieldPrefixNSMLeafFrame(IBTreeTupleWriter tupleWriter) {
+    public FieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
@@ -225,7 +225,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
         int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
 
@@ -233,11 +233,11 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         // see if the tuple would fit uncompressed
         if (bytesRequired + slotManager.getSlotSize() <= freeContiguous)
-            return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
 
         // see if tuple would fit into remaining space after compaction
         if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
-            return SpaceStatus.SUFFICIENT_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
 
         // see if the tuple matches a prefix and will fit after truncating the
         // prefix
@@ -250,16 +250,16 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             int compressedSize = tupleWriter.bytesRequired(tuple, numPrefixFields, tuple.getFieldCount()
                     - numPrefixFields);
             if (compressedSize + slotManager.getSlotSize() <= freeContiguous)
-                return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+                return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
 
-        return SpaceStatus.INSUFFICIENT_SPACE;
+        return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     @Override
-    public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
         // TODO Auto-generated method stub
-        return SpaceStatus.INSUFFICIENT_SPACE;
+        return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     protected void resetSpaceParams() {
@@ -446,7 +446,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
             throws Exception {
 
         FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame) rightFrame;
@@ -470,7 +470,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         int tuplesToLeft;
         int midSlotNum = tupleCount / 2;
-        IBTreeFrame targetFrame = null;
+        ITreeIndexFrame targetFrame = null;
         frameTuple.resetByTupleIndex(this, midSlotNum);
         int comparison = cmp.compare(tuple, frameTuple);
         if (comparison >= 0) {
@@ -638,17 +638,17 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         frameTuple.setFieldCount(fieldCount);
     }
 
-    public IBTreeTupleWriter getTupleWriter() {
+    public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
 
     @Override
-    public IBTreeTupleReference createTupleReference() {
+    public ITreeIndexTupleReference createTupleReference() {
         return new FieldPrefixTupleReference(tupleWriter.createTupleReference());
     }
 
     @Override
-    public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference pageTuple, MultiComparator cmp,
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
         int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);

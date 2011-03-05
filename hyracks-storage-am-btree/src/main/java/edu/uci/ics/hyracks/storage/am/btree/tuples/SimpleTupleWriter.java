@@ -18,10 +18,10 @@ package edu.uci.ics.hyracks.storage.am.btree.tuples;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 
-public class SimpleTupleWriter implements IBTreeTupleWriter {
+public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 
     @Override
     public int bytesRequired(ITupleReference tuple) {
@@ -42,7 +42,7 @@ public class SimpleTupleWriter implements IBTreeTupleWriter {
     }
 
     @Override
-    public IBTreeTupleReference createTupleReference() {
+    public ITreeIndexTupleReference createTupleReference() {
         return new SimpleTupleReference();
     }
 

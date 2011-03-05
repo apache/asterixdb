@@ -21,11 +21,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SplitKey;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public interface IBTreeFrame {
+public interface ITreeIndexFrame {
     public void setPage(ICachedPage page);
 
     public ICachedPage getPage();
@@ -47,9 +47,9 @@ public interface IBTreeFrame {
     public int getTupleCount();
 
     // assumption: page must be write-latched at this point
-    public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
 
-    public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
+    public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
 
     public int getTupleOffset(int slotNum);
 
@@ -65,10 +65,9 @@ public interface IBTreeFrame {
     public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
 
     // TODO; what if tuples more than half-page size?
-    public int split(IBTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, SplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
             throws Exception;
-
-    // TODO: check if we do something nicer than returning object
+    
     public ISlotManager getSlotManager();
 
     // ATTENTION: in b-tree operations it may not always be possible to
@@ -97,6 +96,6 @@ public interface IBTreeFrame {
 
     public void setFreeSpaceOff(int freeSpace);
 
-    public IBTreeTupleWriter getTupleWriter();
+    public ITreeIndexTupleWriter getTupleWriter();
 
 }

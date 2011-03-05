@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -42,7 +42,7 @@ public class RangeSearchCursor implements IBTreeCursor {
     private FindTupleNoExactMatchPolicy lowKeyFtp;
     private FindTupleNoExactMatchPolicy highKeyFtp;
 
-    private IBTreeTupleReference frameTuple;
+    private ITreeIndexTupleReference frameTuple;
 
     private RangePredicate pred;
     private MultiComparator lowKeyCmp;

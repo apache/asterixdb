@@ -19,10 +19,10 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 
-public class TypeAwareTupleWriter implements IBTreeTupleWriter {
+public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
     private ITypeTrait[] typeTraits;
     private VarLenIntEncoderDecoder encDec = new VarLenIntEncoderDecoder();
@@ -42,7 +42,7 @@ public class TypeAwareTupleWriter implements IBTreeTupleWriter {
 
     @Override
     public int bytesRequired(ITupleReference tuple, int startField, int numFields) {
-        int bytes = getNullFlagsBytes(tuple, startField, numFields) + getFieldSlotsBytes(tuple, startField, numFields);
+        int bytes = getNullFlagsBytes(numFields) + getFieldSlotsBytes(tuple, startField, numFields);
         for (int i = startField; i < startField + numFields; i++) {
             bytes += tuple.getFieldLength(i);
         }
@@ -50,7 +50,7 @@ public class TypeAwareTupleWriter implements IBTreeTupleWriter {
     }
 
     @Override
-    public IBTreeTupleReference createTupleReference() {
+    public ITreeIndexTupleReference createTupleReference() {
         return new TypeAwareTupleReference(typeTraits);
     }
 
@@ -86,7 +86,7 @@ public class TypeAwareTupleWriter implements IBTreeTupleWriter {
     public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
             int targetOff) {
         int runner = targetOff;
-        int nullFlagsBytes = getNullFlagsBytes(tuple, startField, numFields);
+        int nullFlagsBytes = getNullFlagsBytes(numFields);
         // write null indicator bits
         for (int i = 0; i < nullFlagsBytes; i++) {
             targetBuf.put(runner++, (byte) 0);
@@ -124,7 +124,7 @@ public class TypeAwareTupleWriter implements IBTreeTupleWriter {
         return fieldSlotBytes;
     }
 
-    private int getNullFlagsBytes(ITupleReference tuple, int startField, int numFields) {
+    private int getNullFlagsBytes(int numFields) {
         return (int) Math.ceil((double) numFields / 8.0);
     }
 

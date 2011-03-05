@@ -15,15 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriterFactory;
 
-public class SimpleTupleWriterFactory implements IBTreeTupleWriterFactory {
+public class SimpleTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IBTreeTupleWriter createTupleWriter() {
+    public ITreeIndexTupleWriter createTupleWriter() {
         return new SimpleTupleWriter();
     }
 

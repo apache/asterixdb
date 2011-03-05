@@ -15,6 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-public enum BTreeOp {
-    BTO_INSERT, BTO_DELETE, BTO_UPDATE, BTO_SEARCH
+public enum TreeIndexOp {
+    TI_INSERT, TI_DELETE, TI_UPDATE, TI_SEARCH
 }

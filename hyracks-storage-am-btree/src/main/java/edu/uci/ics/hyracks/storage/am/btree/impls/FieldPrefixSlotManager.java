@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 
@@ -45,7 +45,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     // returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
-    public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp) {
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp) {
         int prefixMid;
         int prefixBegin = 0;
         int prefixEnd = frame.getPrefixTupleCount() - 1;
@@ -68,8 +68,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     @Override
-    public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple,
-            IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
+    public int findSlot(ITupleReference searchKey, ITreeIndexTupleReference frameTuple,
+            ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
             FindTupleNoExactMatchPolicy matchPolicy) {
         if (frame.getTupleCount() <= 0)
             encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_SLOT);

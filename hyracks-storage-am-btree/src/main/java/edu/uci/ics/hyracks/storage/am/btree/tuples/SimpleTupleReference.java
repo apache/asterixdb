@@ -17,10 +17,10 @@ package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 
-public class SimpleTupleReference implements IBTreeTupleReference {
+public class SimpleTupleReference implements ITreeIndexTupleReference {
 
     protected ByteBuffer buf;
     protected int fieldStartIndex;
@@ -36,7 +36,7 @@ public class SimpleTupleReference implements IBTreeTupleReference {
     }
 
     @Override
-    public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
     }
 

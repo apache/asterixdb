@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -38,7 +38,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     private IBTreeLeafFrame frame = null;
     private IBufferCache bufferCache = null;
 
-    private IBTreeTupleReference frameTuple;
+    private ITreeIndexTupleReference frameTuple;
 
     public DiskOrderScanCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
@@ -53,7 +53,7 @@ public class DiskOrderScanCursor implements IBTreeCursor {
     }
 
     @Override
-    public IBTreeTupleReference getTuple() {
+    public ITreeIndexTupleReference getTuple() {
         return frameTuple;
     }
 

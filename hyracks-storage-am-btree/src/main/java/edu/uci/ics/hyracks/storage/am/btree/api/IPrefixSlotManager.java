@@ -50,14 +50,14 @@ public interface IPrefixSlotManager {
 
     public int encodeSlotFields(int firstField, int secondField);
 
-    public int findSlot(ITupleReference searchKey, IBTreeTupleReference frameTuple,
-            IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
+    public int findSlot(ITupleReference searchKey, ITreeIndexTupleReference frameTuple,
+            ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
             FindTupleNoExactMatchPolicy matchPolicy);
 
     public int insertSlot(int slot, int tupleOff);
 
     // returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
-    public int findPrefix(ITupleReference tuple, IBTreeTupleReference framePrefixTuple, MultiComparator multiCmp);
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp);
 
     public int getTupleSlotStartOff();
 

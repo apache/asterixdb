@@ -16,17 +16,17 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 
 public class OrderedSlotManager implements ISlotManager {
 
     private static final int slotSize = 4;
-    private IBTreeFrame frame;
+    private ITreeIndexFrame frame;
 
     @Override
-    public int findTupleIndex(ITupleReference searchKey, IBTreeTupleReference frameTuple, MultiComparator multiCmp,
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
         if (frame.getTupleCount() <= 0)
             return -1;
@@ -121,7 +121,7 @@ public class OrderedSlotManager implements ISlotManager {
     }
 
     @Override
-    public void setFrame(IBTreeFrame frame) {
+    public void setFrame(ITreeIndexFrame frame) {
         this.frame = frame;
     }
 

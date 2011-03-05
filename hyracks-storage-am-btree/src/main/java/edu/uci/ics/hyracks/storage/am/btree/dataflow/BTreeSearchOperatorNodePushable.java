@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -149,7 +149,7 @@ public class BTreeSearchOperatorNodePushable extends
 					.getHyracksStageletContext().getFrameSize());
 			appender.reset(writeBuffer, true);
 
-			opCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, btreeOpHelper
+			opCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH, btreeOpHelper
 					.getLeafFrame(), btreeOpHelper.getInteriorFrame(), null);
 
 		} catch (Exception e) {

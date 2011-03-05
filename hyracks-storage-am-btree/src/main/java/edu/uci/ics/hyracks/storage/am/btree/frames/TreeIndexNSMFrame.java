@@ -25,9 +25,9 @@ import java.util.Collections;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
@@ -35,10 +35,10 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.OrderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SpaceStatus;
+import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public abstract class NSMFrame implements IBTreeFrame {
+public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     protected static final int pageLsnOff = 0; // 0
     protected static final int tupleCountOff = pageLsnOff + 4; // 4
@@ -51,10 +51,10 @@ public abstract class NSMFrame implements IBTreeFrame {
     protected ByteBuffer buf = null;
     protected ISlotManager slotManager;
 
-    protected IBTreeTupleWriter tupleWriter;
-    protected IBTreeTupleReference frameTuple;
+    protected ITreeIndexTupleWriter tupleWriter;
+    protected ITreeIndexTupleReference frameTuple;
 
-    public NSMFrame(IBTreeTupleWriter tupleWriter) {
+    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
         this.slotManager = new OrderedSlotManager();
@@ -198,21 +198,21 @@ public abstract class NSMFrame implements IBTreeFrame {
     }
 
     @Override
-    public SpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
                 - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
-            return SpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
-            return SpaceStatus.SUFFICIENT_SPACE;
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         else
-            return SpaceStatus.INSUFFICIENT_SPACE;
+            return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     @Override
-    public SpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
         // TODO Auto-generated method stub
-        return SpaceStatus.INSUFFICIENT_SPACE;
+        return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     protected void resetSpaceParams() {
@@ -309,7 +309,7 @@ public abstract class NSMFrame implements IBTreeFrame {
         frameTuple.setFieldCount(fieldCount);
     }
 
-    public IBTreeTupleWriter getTupleWriter() {
+    public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
 }

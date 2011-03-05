@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
@@ -32,14 +32,14 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     private final BTreeOpHelper btreeOpHelper;
     private FrameTupleAccessor accessor;
     private final IRecordDescriptorProvider recordDescProvider;
-    private final BTreeOp op;
+    private final TreeIndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private ByteBuffer writeBuffer;
     private BTreeOpContext opCtx;
 
     public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc,
             IHyracksStageletContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, BTreeOp op) {
+            IRecordDescriptorProvider recordDescProvider, TreeIndexOp op) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
@@ -75,12 +75,12 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             try {
                 switch (op) {
 
-                    case BTO_INSERT: {
+                    case TI_INSERT: {
                         btree.insert(tuple, opCtx);
                     }
                         break;
 
-                    case BTO_DELETE: {
+                    case TI_DELETE: {
                         btree.delete(tuple, opCtx);
                     }
                         break;

@@ -55,7 +55,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
+import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -158,7 +158,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -265,7 +265,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -374,7 +374,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -556,7 +556,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 						btree.getMultiComparator(), btree.getMultiComparator()
 								.getTypeTraits());
 				BTreeOpContext searchOpCtx = btree.createOpContext(
-						BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+						TreeIndexOp.TI_SEARCH, leafFrame, interiorFrame, null);
 				btree.search(rangeCursor, rangePred, searchOpCtx);
 
 				try {
