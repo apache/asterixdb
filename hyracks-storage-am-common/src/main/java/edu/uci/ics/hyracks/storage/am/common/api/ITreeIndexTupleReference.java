@@ -13,20 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import java.nio.ByteBuffer;
 
-public interface IBTreeInteriorFrame extends ITreeIndexFrame {
-    public int getChildPageId(RangePredicate pred, MultiComparator srcCmp);
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-    public int getLeftmostChildPageId(MultiComparator cmp);
+public interface ITreeIndexTupleReference extends ITupleReference {
+    public void setFieldCount(int fieldCount);
 
-    public int getRightmostChildPageId(MultiComparator cmp);
+    public void setFieldCount(int fieldStartIndex, int fieldCount);
 
-    public void setRightmostChildPageId(int pageId);
+    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset);
 
-    public void deleteGreatest(MultiComparator cmp);
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
 }

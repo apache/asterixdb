@@ -19,8 +19,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 
 public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 

@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-import java.io.Serializable;
-
-public interface ITreeIndexTupleWriterFactory extends Serializable {
-    public ITreeIndexTupleWriter createTupleWriter();
+public enum TreeIndexOp {
+    TI_INSERT, TI_DELETE, TI_UPDATE, TI_SEARCH
 }

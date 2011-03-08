@@ -25,18 +25,19 @@ import java.util.Collections;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.SlotOffTupleOff;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
+import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 
 public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
 
@@ -87,7 +88,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         if (tupleIndex < 0)
             isDuplicate = false; // greater than all existing keys
         else {
-            frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));
+            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
             if (cmp.compare(tuple, frameTuple) != 0)
                 isDuplicate = false;
         }
@@ -120,7 +121,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
                 // case was handled in the if above)
                 if (buf.getInt(tupleCountOff) > 1) {
                     int rightNeighborOff = slotOff - slotManager.getSlotSize();
-                    frameTuple.resetByOffset(buf, slotManager.getTupleOff(rightNeighborOff));
+                    frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
                     System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize,
                             buf.array(), getLeftChildPageOff(frameTuple, cmp), childPtrSize);
                 }
@@ -144,7 +145,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
             throws Exception {
         // before doing anything check if key already exists
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -152,7 +153,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         if (tupleIndex >= 0) {
-            frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));
+            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
             if (cmp.compare(tuple, frameTuple) == 0) {
                 throw new BTreeException("Inserting duplicate key in interior node during split");
             }
@@ -163,7 +164,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
 
         int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
         ITreeIndexFrame targetFrame = null;
-        frameTuple.resetByOffset(buf, getTupleOffset(tuplesToLeft - 1));
+        frameTuple.resetByTupleOffset(buf, getTupleOffset(tuplesToLeft - 1));
         if (cmp.compare(tuple, frameTuple) <= 0) {
             targetFrame = this;
         } else {
@@ -189,18 +190,18 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         // copy data to be inserted, we need this because creating the splitkey
         // will overwrite the data param (data points to same memory as
         // splitKey.getData())
-        BTreeSplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
+        ISplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
 
         // set split key to be highest value in left page
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        frameTuple.resetByOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
-        splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
 
         int deleteTupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        frameTuple.resetByOffset(buf, deleteTupleOff);
+        frameTuple.resetByTupleOffset(buf, deleteTupleOff);
         buf.putInt(rightLeafOff, buf.getInt(getLeftChildPageOff(frameTuple, cmp)));
         buf.putInt(tupleCountOff, tuplesToLeft - 1);
 
@@ -234,7 +235,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
 
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
-            frameTuple.resetByOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf, tupleOff);
 
             int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                     + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1);
@@ -294,14 +295,14 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
             return buf.getInt(rightLeafOff);
         } else {
             int origTupleOff = slotManager.getTupleOff(slotOff);
-            cmpFrameTuple.resetByOffset(buf, origTupleOff);
+            cmpFrameTuple.resetByTupleOffset(buf, origTupleOff);
             int cmpTupleOff = origTupleOff;
             if (pred.isForward()) {
                 int maxSlotOff = buf.capacity();
                 slotOff += slotManager.getSlotSize();
                 while (slotOff < maxSlotOff) {
                     cmpTupleOff = slotManager.getTupleOff(slotOff);
-                    frameTuple.resetByOffset(buf, cmpTupleOff);
+                    frameTuple.resetByTupleOffset(buf, cmpTupleOff);
                     if (targetCmp.compare(cmpFrameTuple, frameTuple) != 0)
                         break;
                     slotOff += slotManager.getSlotSize();
@@ -312,15 +313,15 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
                 slotOff -= slotManager.getSlotSize();
                 while (slotOff > minSlotOff) {
                     cmpTupleOff = slotManager.getTupleOff(slotOff);
-                    frameTuple.resetByOffset(buf, cmpTupleOff);
+                    frameTuple.resetByTupleOffset(buf, cmpTupleOff);
                     if (targetCmp.compare(cmpFrameTuple, frameTuple) != 0)
                         break;
                     slotOff -= slotManager.getSlotSize();
                 }
                 slotOff += slotManager.getSlotSize();
             }
-
-            frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));
+            
+            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
             int childPageOff = getLeftChildPageOff(frameTuple, srcCmp);
             return buf.getInt(childPageOff);
         }
@@ -337,14 +338,14 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
 
         if (tupleIndex < 0) {
             tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-            frameTuple.resetByOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf, tupleOff);
             keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
 
             // copy new rightmost pointer
             System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);
         } else {
             tupleOff = slotManager.getTupleOff(slotOff);
-            frameTuple.resetByOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf, tupleOff);
             keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
             // perform deletion (we just do a memcpy to overwrite the slot)
             int slotStartOff = slotManager.getSlotEndOff();
@@ -368,7 +369,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
     public int getLeftmostChildPageId(MultiComparator cmp) {
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotStartOff());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        frameTuple.resetByOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
         int childPageOff = getLeftChildPageOff(frameTuple, cmp);
         return buf.getInt(childPageOff);
     }
@@ -390,7 +391,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         int tupleCount = buf.getInt(tupleCountOff);
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
-            frameTuple.resetByOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf, tupleOff);
             int intVal = getInt(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                     + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);
@@ -408,7 +409,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         int slotOff = slotManager.getSlotEndOff();
         int tupleOff = slotManager.getTupleOff(slotOff);
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        frameTuple.resetByOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
         int keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);
 

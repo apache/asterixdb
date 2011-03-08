@@ -13,8 +13,21 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-public enum FindTupleNoExactMatchPolicy {
-    FTP_LOWER_KEY, FTP_HIGHER_KEY
+public class SlotOffTupleOff implements Comparable<SlotOffTupleOff> {
+    public int tupleIndex;
+    public int slotOff;
+    public int tupleOff;
+
+    public SlotOffTupleOff(int tupleIndex, int slotOff, int recOff) {
+        this.tupleIndex = tupleIndex;
+        this.slotOff = slotOff;
+        this.tupleOff = recOff;
+    }
+
+    @Override
+    public int compareTo(SlotOffTupleOff o) {
+        return tupleOff - o.tupleOff;
+    }
 }

@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class SimpleTupleReference implements ITreeIndexTupleReference {
 
@@ -30,14 +30,14 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
     protected int fieldSlotsBytes;
 
     @Override
-    public void resetByOffset(ByteBuffer buf, int tupleStartOff) {
+    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
         this.buf = buf;
         this.tupleStartOff = tupleStartOff;
     }
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        resetByOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
+        resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
     }
 
     @Override

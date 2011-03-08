@@ -19,15 +19,16 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
+import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     protected static final int prevLeafOff = smFlagOff + 1;
@@ -75,7 +76,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
         if (tupleIndex < 0)
             isDuplicate = false; // greater than all existing keys
         else {
-            frameTuple.resetByOffset(buf, slotManager.getTupleOff(slotOff));
+            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
             if (cmp.compare(tuple, frameTuple) != 0)
                 isDuplicate = false;
         }
@@ -105,7 +106,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
             throws Exception {
 
         frameTuple.setFieldCount(cmp.getFieldCount());
@@ -127,7 +128,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
         int mid = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
-        frameTuple.resetByOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
         if (cmp.compare(tuple, frameTuple) >= 0) {
             tuplesToLeft = mid + (tupleCount % 2);
             targetFrame = rightFrame;
@@ -160,12 +161,12 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
 
         // set split key to be highest value in left page
         tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        frameTuple.resetByOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
 
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
-        splitKey.getTuple().resetByOffset(splitKey.getBuffer(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
 
         return 0;
     }

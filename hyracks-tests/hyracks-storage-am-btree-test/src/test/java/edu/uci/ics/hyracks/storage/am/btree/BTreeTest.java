@@ -47,11 +47,8 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.SimpleTupleWriterFactory;
@@ -59,15 +56,17 @@ import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-@SuppressWarnings("unchecked")
 public class BTreeTest extends AbstractBTreeTest {
 
 	private static final int PAGE_SIZE = 256;
@@ -194,7 +193,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 			try {
 				btree.insert(tuple, insertOpCtx);
-			} catch (BTreeException e) {
+			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -850,7 +849,7 @@ public class BTreeTest extends AbstractBTreeTest {
 				try {
 					btree.insert(tuple, insertOpCtx);
 					insDone++;
-				} catch (BTreeException e) {
+				} catch (TreeIndexException e) {
 					// e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -888,7 +887,7 @@ public class BTreeTest extends AbstractBTreeTest {
 				try {
 					btree.delete(tuple, deleteOpCtx);
 					delDone++;
-				} catch (BTreeException e) {
+				} catch (TreeIndexException e) {
 					// e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();

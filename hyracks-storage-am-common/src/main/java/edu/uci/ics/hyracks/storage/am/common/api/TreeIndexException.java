@@ -13,18 +13,26 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import java.nio.ByteBuffer;
+public class TreeIndexException extends Exception {
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+    private static final long serialVersionUID = 1L;
+    private boolean handled = false;
 
-public interface ITreeIndexTupleReference extends ITupleReference {
-    public void setFieldCount(int fieldCount);
+    public TreeIndexException(Exception e) {
+        super(e);
+    }
 
-    public void setFieldCount(int fieldStartIndex, int fieldCount);
+    public TreeIndexException(String message) {
+        super(message);
+    }
 
-    public void resetByOffset(ByteBuffer buf, int tupleStartOffset);
+    public void setHandled(boolean handled) {
+        this.handled = handled;
+    }
 
-    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
+    public boolean getHandled() {
+        return handled;
+    }
 }

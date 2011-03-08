@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeSplitKey;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
@@ -65,7 +64,7 @@ public interface ITreeIndexFrame {
     public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
 
     // TODO; what if tuples more than half-page size?
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, BTreeSplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
             throws Exception;
     
     public ISlotManager getSlotManager();

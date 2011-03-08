@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.ISplitKey;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class BTreeSplitKey implements ISplitKey {
     public byte[] data = null;
@@ -43,7 +43,7 @@ public class BTreeSplitKey implements ISplitKey {
             buf = ByteBuffer.wrap(data);
         }
 
-        tuple.resetByOffset(buf, 0);
+        tuple.resetByTupleOffset(buf, 0);
     }
 
     public void reset() {
@@ -85,7 +85,7 @@ public class BTreeSplitKey implements ISplitKey {
         copy.data = data.clone();
         copy.buf = ByteBuffer.wrap(copy.data);
         copy.tuple.setFieldCount(tuple.getFieldCount());
-        copy.tuple.resetByOffset(copy.buf, 0);
+        copy.tuple.resetByTupleOffset(copy.buf, 0);
         return copy;
     }
 }

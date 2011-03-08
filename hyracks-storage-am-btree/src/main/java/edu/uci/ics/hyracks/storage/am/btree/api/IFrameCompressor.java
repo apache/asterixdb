@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IFrameCompressor {
     public boolean compress(FieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception;

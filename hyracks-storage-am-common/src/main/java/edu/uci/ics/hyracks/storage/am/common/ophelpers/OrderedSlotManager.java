@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class OrderedSlotManager implements ISlotManager {
 

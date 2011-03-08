@@ -16,8 +16,8 @@
 package edu.uci.ics.hyracks.storage.am.btree.tuples;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.btree.api.ITreeIndexTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
 public class TypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 

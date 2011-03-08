@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-public enum TreeIndexOp {
-    TI_INSERT, TI_DELETE, TI_UPDATE, TI_SEARCH
+public enum FindTupleMode {
+    FTM_INCLUSIVE, FTM_EXCLUSIVE, FTM_EXACT
 }

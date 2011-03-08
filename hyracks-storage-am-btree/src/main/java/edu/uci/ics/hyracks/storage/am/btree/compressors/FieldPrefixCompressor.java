@@ -27,8 +27,8 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
 

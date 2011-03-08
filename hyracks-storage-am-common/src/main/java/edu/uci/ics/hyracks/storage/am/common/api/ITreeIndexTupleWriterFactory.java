@@ -13,21 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-public class SlotOffTupleOff implements Comparable<SlotOffTupleOff> {
-    public int tupleIndex;
-    public int slotOff;
-    public int tupleOff;
+import java.io.Serializable;
 
-    public SlotOffTupleOff(int tupleIndex, int slotOff, int recOff) {
-        this.tupleIndex = tupleIndex;
-        this.slotOff = slotOff;
-        this.tupleOff = recOff;
-    }
-
-    @Override
-    public int compareTo(SlotOffTupleOff o) {
-        return tupleOff - o.tupleOff;
-    }
+public interface ITreeIndexTupleWriterFactory extends Serializable {
+    public ITreeIndexTupleWriter createTupleWriter();
 }

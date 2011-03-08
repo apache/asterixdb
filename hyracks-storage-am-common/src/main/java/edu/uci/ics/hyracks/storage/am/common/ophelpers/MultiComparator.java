@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-@SuppressWarnings("unchecked")
 public class MultiComparator {
 
     private static final long serialVersionUID = 1L;

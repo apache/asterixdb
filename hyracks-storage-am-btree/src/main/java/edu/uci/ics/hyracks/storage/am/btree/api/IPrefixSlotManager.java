@@ -17,9 +17,10 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleMode;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 // a slot consists of two fields:
 // first field is 1 byte, it indicates the slot number of a prefix tuple

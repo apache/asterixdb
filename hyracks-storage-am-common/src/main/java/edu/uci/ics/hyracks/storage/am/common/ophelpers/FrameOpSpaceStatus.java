@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-public enum FindTupleMode {
-    FTM_INCLUSIVE, FTM_EXCLUSIVE, FTM_EXACT
+public enum FrameOpSpaceStatus {
+    INSUFFICIENT_SPACE, SUFFICIENT_CONTIGUOUS_SPACE, SUFFICIENT_SPACE
 }
