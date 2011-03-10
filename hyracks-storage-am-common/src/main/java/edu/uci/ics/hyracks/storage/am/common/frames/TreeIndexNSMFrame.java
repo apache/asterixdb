@@ -55,6 +55,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
+        this.slotManager = slotManager;
     }
 
     @Override
