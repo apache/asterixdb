@@ -32,9 +32,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.OrderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -54,10 +52,9 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     protected ITreeIndexTupleWriter tupleWriter;
     protected ITreeIndexTupleReference frameTuple;
 
-    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter) {
+    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
-        this.slotManager = new OrderedSlotManager();
     }
 
     @Override

@@ -48,7 +48,7 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeBulkLoadOperatorDescri
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will load a primary index from randomly generated data

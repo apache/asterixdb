@@ -35,7 +35,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     protected static final int nextLeafOff = prevLeafOff + 4;
 
     public NSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
-        super(tupleWriter);
+        super(tupleWriter, new OrderedSlotManager());
     }
 
     @Override

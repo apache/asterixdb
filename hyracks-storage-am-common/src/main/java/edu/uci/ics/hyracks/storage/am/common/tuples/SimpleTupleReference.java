@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.tuples;
+package edu.uci.ics.hyracks.storage.am.common.tuples;
 
 import java.nio.ByteBuffer;
 

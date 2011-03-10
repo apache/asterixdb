@@ -32,10 +32,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 
@@ -44,12 +44,12 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
     private static final int rightLeafOff = smFlagOff + 1;
 
     private static final int childPtrSize = 4;
-
+    
     // private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
     private ITreeIndexTupleReference cmpFrameTuple;
 
     public NSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
-        super(tupleWriter);
+        super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
 
     }

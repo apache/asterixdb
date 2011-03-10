@@ -34,17 +34,17 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 // WARNING: only works when tupleWriter is an instance of TypeAwareTupleWriter

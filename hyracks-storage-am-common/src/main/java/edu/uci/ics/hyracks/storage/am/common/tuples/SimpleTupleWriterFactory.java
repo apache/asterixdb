@@ -13,24 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.tuples;
+package edu.uci.ics.hyracks.storage.am.common.tuples;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
-public class TypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
+public class SimpleTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
-    private ITypeTrait[] typeTraits;
-
-    public TypeAwareTupleWriterFactory(ITypeTrait[] typeTraits) {
-        this.typeTraits = typeTraits;
-    }
 
     @Override
     public ITreeIndexTupleWriter createTupleWriter() {
-        return new TypeAwareTupleWriter(typeTraits);
+        return new SimpleTupleWriter();
     }
 
 }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.tuples;
+package edu.uci.ics.hyracks.storage.am.common.tuples;
 
 import java.nio.ByteBuffer;
 
@@ -29,9 +29,9 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected int nullFlagsBytes;
     protected int dataStartOff;
 
-    private ITypeTrait[] typeTraits;
-    private VarLenIntEncoderDecoder encDec = new VarLenIntEncoderDecoder();
-    private int[] decodedFieldSlots;
+    protected ITypeTrait[] typeTraits;
+    protected VarLenIntEncoderDecoder encDec = new VarLenIntEncoderDecoder();
+    protected int[] decodedFieldSlots;
 
     public TypeAwareTupleReference(ITypeTrait[] typeTraits) {
         this.typeTraits = typeTraits;
