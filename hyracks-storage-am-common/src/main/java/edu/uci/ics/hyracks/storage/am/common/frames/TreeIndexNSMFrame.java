@@ -216,8 +216,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     protected void resetSpaceParams() {
-        buf.putInt(freeSpaceOff, totalFreeSpaceOff + 4);
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - (totalFreeSpaceOff + 4));
+	buf.putInt(freeSpaceOff, smFlagOff + 1);
+	buf.putInt(totalFreeSpaceOff, buf.capacity() - (smFlagOff + 1));
     }
 
     @Override
