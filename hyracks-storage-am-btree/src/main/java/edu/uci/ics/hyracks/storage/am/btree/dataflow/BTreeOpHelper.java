@@ -84,8 +84,12 @@ final class BTreeOpHelper {
 		
 		}
 
-        btreeFileId = fileMapProvider.lookupFileId(f);
-        bufferCache.openFile(btreeFileId);
+        int fileId = fileMapProvider.lookupFileId(f);		
+        bufferCache.openFile(fileId);
+        
+        // only set btreeFileId member when open() succeeds, 
+        // otherwise rollback will try to close the file that failed to open
+        btreeFileId = fileId;
 
 		interiorFrame = opDesc.getInteriorFactory().getFrame();
 		leafFrame = opDesc.getLeafFactory().getFrame();

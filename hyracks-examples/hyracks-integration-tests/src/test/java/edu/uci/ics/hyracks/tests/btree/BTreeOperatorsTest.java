@@ -74,7 +74,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 			"ddMMyy-hhmmssSS");
 	private final static String sep = System.getProperty("file.separator");
-	
+
 	// field, type and key declarations for primary index
 	private int primaryFieldCount = 6;
 	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
@@ -91,7 +91,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 			+ simpleDateFormat.format(new Date());
 	private static String primaryFileName = System
 			.getProperty("java.io.tmpdir")
-			+ sep + "nc1" + sep + primaryBtreeName;
+			+ sep + primaryBtreeName;
 
 	private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
@@ -122,7 +122,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 			+ simpleDateFormat.format(new Date());
 	private static String secondaryFileName = System
 			.getProperty("java.io.tmpdir")
-			+ sep + "nc1" + sep + secondaryBtreeName;
+			+ sep + secondaryBtreeName;
 
 	private IFileSplitProvider secondaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
