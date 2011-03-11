@@ -27,6 +27,10 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import edu.uci.ics.fuzzyjoin.tokenizer.DelimitedUTF8StringBinaryTokenizer;
+import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
+import edu.uci.ics.fuzzyjoin.tokenizer.ITokenFactory;
+import edu.uci.ics.fuzzyjoin.tokenizer.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -59,10 +63,8 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -208,8 +210,9 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         FrameTupleReference queryTuple = new FrameTupleReference();
 
         String query = "computer hyracks fast";
-        char queryDelimiter = ' ';
-        IBinaryTokenizer queryTokenizer = new DelimitedUTF8StringBinaryTokenizer(queryDelimiter);
+        
+        ITokenFactory tokenFactory = new UTF8WordTokenFactory();
+        IBinaryTokenizer queryTokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
         queryTb.reset();
         UTF8StringSerializerDeserializer.INSTANCE.serialize(query, queryDos);
@@ -255,26 +258,26 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
             }
         }
 
-        /*
-         * IBinaryComparator[] searchCmps = new IBinaryComparator[1];
-         * searchCmps[0] =
-         * UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-         * MultiComparator searchCmp = new MultiComparator(typeTraits,
-         * searchCmps);
-         * 
-         * // ordered scan IBTreeCursor scanCursor = new
-         * RangeSearchCursor(leafFrame); RangePredicate nullPred = new
-         * RangePredicate(true, null, null, true, true, null); BTreeOpContext
-         * searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame,
-         * interiorFrame, metaFrame); btree.search(scanCursor, nullPred,
-         * searchOpCtx);
-         * 
-         * try { while (scanCursor.hasNext()) { scanCursor.next();
-         * ITupleReference frameTuple = scanCursor.getTuple(); String rec =
-         * cmp.printTuple(frameTuple, btreeSerde); System.out.println(rec); } }
-         * catch (Exception e) { e.printStackTrace(); } finally {
-         * scanCursor.close(); }
-         */
+//        
+//         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+//         searchCmps[0] =
+//         UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+//         MultiComparator searchCmp = new MultiComparator(typeTraits,
+//         searchCmps);
+//         
+//         // ordered scan IBTreeCursor scanCursor = new
+//         RangeSearchCursor(leafFrame); RangePredicate nullPred = new
+//         RangePredicate(true, null, null, true, true, null); BTreeOpContext
+//         searchOpCtx = btree.createOpContext(BTreeOp.BTO_SEARCH, leafFrame,
+//         interiorFrame, metaFrame); btree.search(scanCursor, nullPred,
+//         searchOpCtx);
+//         
+//         try { while (scanCursor.hasNext()) { scanCursor.next();
+//         ITupleReference frameTuple = scanCursor.getTuple(); String rec =
+//         cmp.printTuple(frameTuple, btreeSerde); System.out.println(rec); } }
+//         catch (Exception e) { e.printStackTrace(); } finally {
+//         scanCursor.close(); }
+        
 
         btree.close();
         bufferCache.closeFile(fileId);

@@ -23,7 +23,7 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>
+  <dependencies>  	
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
@@ -59,6 +59,13 @@
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
+  	<dependency>
+  		<groupId>edu.uci.ics.fuzzyjoin</groupId>
+  		<artifactId>fuzzyjoin-core</artifactId>
+  		<version>0.0.2-SNAPSHOT</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>

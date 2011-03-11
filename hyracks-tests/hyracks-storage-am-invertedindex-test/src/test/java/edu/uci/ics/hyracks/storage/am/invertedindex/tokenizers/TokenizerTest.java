@@ -19,16 +19,16 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.util.ArrayList;
 import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.fuzzyjoin.tokenizer.DelimitedUTF8StringBinaryTokenizer;
+import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
+import edu.uci.ics.fuzzyjoin.tokenizer.ITokenFactory;
+import edu.uci.ics.fuzzyjoin.tokenizer.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
-import edu.uci.ics.hyracks.dataflow.common.data.hash.UTF8StringBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 public class TokenizerTest {
@@ -43,7 +43,8 @@ public class TokenizerTest {
         int maxWordLength = 50;
         char delimiter = ' ';
 
-        DelimitedUTF8StringBinaryTokenizer tok = new DelimitedUTF8StringBinaryTokenizer(delimiter);
+        ITokenFactory tokenFactory = new UTF8WordTokenFactory();
+        DelimitedUTF8StringBinaryTokenizer tok = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
         // create a bunch of documents
         for (int i = 0; i < numDocs; i++) {
@@ -78,7 +79,8 @@ public class TokenizerTest {
                 // write token to outputstream
                 ByteArrayAccessibleOutputStream baaosWrite = new ByteArrayAccessibleOutputStream();
                 DataOutputStream dosWrite = new DataOutputStream(baaosWrite);
-                tok.writeToken(dosWrite);
+                IToken token = tok.getToken();
+                token.serializeToken(dosWrite);
 
                 // deserialize token to get string object
                 ByteArrayInputStream inStream = new ByteArrayInputStream(baaosWrite.toByteArray());
@@ -90,7 +92,8 @@ public class TokenizerTest {
         }
     }
 
-    // testing HashedQGramUTF8StringBinaryTokenizer
+    /*
+    // testing HashedNGramUTF8StringBinaryTokenizer
     @Test
     public void test02() throws Exception {
         Random rnd = new Random(50);
@@ -115,27 +118,16 @@ public class TokenizerTest {
 
             // randomly choose pre and postfixing
             boolean prePost = false;
-            if (Math.abs(rnd.nextInt()) % 2 == 0)
-                prePost = true;
+            //if (Math.abs(rnd.nextInt()) % 2 == 0)
+              //  prePost = true;
 
-            HashedQGramUTF8StringBinaryTokenizer qgramTok = new HashedQGramUTF8StringBinaryTokenizer(q, prePost);
-
-            String extendedString = str;
-            if (prePost) {
-                // pre and postfix string
-                StringBuilder strBuilder = new StringBuilder();
-                for (int j = 0; j < q - 1; j++)
-                    strBuilder.append(qgramTok.getPreChar());
-                strBuilder.append(str);
-                for (int j = 0; j < q - 1; j++)
-                    strBuilder.append(qgramTok.getPostChar());
-                extendedString = strBuilder.toString();
-            }
-
+            ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
+            NGramUTF8StringBinaryTokenizer qgramTok = new NGramUTF8StringBinaryTokenizer(q, prePost, true, false, tokenFactory);
+            
             // generate q-grams in deserialized form
             ArrayList<String> javaGrams = new ArrayList<String>();
-            for (int j = 0; j < extendedString.length() - q + 1; j++) {
-                javaGrams.add(extendedString.substring(j, j + q));
+            for (int j = 0; j < str.length() - q + 1; j++) {
+                javaGrams.add(str.substring(j, j + q).toLowerCase());
             }
 
             // serialize string for use in binary gram tokenizer
@@ -153,7 +145,8 @@ public class TokenizerTest {
                 // write token to outputstream
                 ByteArrayAccessibleOutputStream baaosWrite = new ByteArrayAccessibleOutputStream();
                 DataOutputStream dosWrite = new DataOutputStream(baaosWrite);
-                qgramTok.writeToken(dosWrite);
+                IToken token = qgramTok.getToken();
+                token.serializeToken(dosWrite);
 
                 // deserialize token to get hashed gram
                 ByteArrayInputStream inStream = new ByteArrayInputStream(baaosWrite.toByteArray());
@@ -175,6 +168,7 @@ public class TokenizerTest {
             }
         }
     }
+    */
 
     public static String randomString(int length, Random random) {
         int maxAttempts = 1000;

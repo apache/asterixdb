@@ -4,6 +4,10 @@ import java.io.File;
 
 import org.junit.Test;
 
+import edu.uci.ics.fuzzyjoin.tokenizer.DelimitedUTF8StringBinaryTokenizerFactory;
+import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizerFactory;
+import edu.uci.ics.fuzzyjoin.tokenizer.ITokenFactory;
+import edu.uci.ics.fuzzyjoin.tokenizer.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -21,9 +25,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class InvertedIndexOperatorsTest extends AbstractIntegrationTest {
@@ -45,7 +47,9 @@ public class InvertedIndexOperatorsTest extends AbstractIntegrationTest {
 
         RecordDescriptor tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
-        IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(' ');
+        
+        ITokenFactory tokenFactory = new UTF8WordTokenFactory();
+        IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false, tokenFactory);
         int[] tokenFields = { 1 };
         int[] projFields = { 0 };
         BinaryTokenizerOperatorDescriptor binaryTokenizer = new BinaryTokenizerOperatorDescriptor(spec,

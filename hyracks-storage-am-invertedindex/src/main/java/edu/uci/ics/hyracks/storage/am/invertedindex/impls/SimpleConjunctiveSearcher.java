@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
+import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -41,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 
@@ -135,7 +136,8 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
             queryTokenBuilder.reset();
             try {
-                queryTokenizer.writeToken(queryTokenDos);
+                IToken token = queryTokenizer.getToken();
+            	token.serializeToken(queryTokenDos);
                 queryTokenBuilder.addFieldEndOffset();
             } catch (IOException e) {
                 throw new HyracksDataException(e);
