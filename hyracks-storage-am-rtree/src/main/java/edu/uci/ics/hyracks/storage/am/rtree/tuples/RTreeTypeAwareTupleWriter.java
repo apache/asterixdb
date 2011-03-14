@@ -34,7 +34,7 @@ public class RTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
         // write data
         for (int i = 0; i < refs.length; i++) {
             double d3 = DoubleSerializerDeserializer.getDouble(refs[i].getFieldData(i), refs[i].getFieldStart(i));
-            
+
             System.arraycopy(refs[i].getFieldData(i), refs[i].getFieldStart(i), targetBuf.array(), runner,
                     refs[i].getFieldLength(i));
             runner += refs[i].getFieldLength(i);

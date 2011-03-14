@@ -33,7 +33,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
             this.tuples[i] = tupleWriter.createTupleReference();
         }
     }
-    
+
     public ITreeIndexTupleReference[] getTuples() {
         return tuples;
     }
@@ -61,9 +61,10 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
-    public int split(IRTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, RTreeSplitKey leftSplitKey,
-            RTreeSplitKey rightSplitKey) throws Exception {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
+            throws Exception {
 
+        RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
         RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
         frameTuple.setFieldCount(cmp.getFieldCount());
@@ -74,7 +75,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
 
         int tuplesToLeft;
         int mid = tupleCount / 2;
-        IRTreeFrame targetFrame = null;
+        ITreeIndexFrame targetFrame = null;
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(mid));
         frameTuple.resetByTupleOffset(buf, tupleOff);
         if (cmp.compare(tuple, frameTuple) >= 0) {
@@ -113,15 +114,15 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         frameTuple.resetByTupleOffset(buf, tupleOff);
 
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
-        leftSplitKey.initData(splitKeySize);
+        splitKey.initData(splitKeySize);
         this.adjustNode(tuples, cmp);
-        rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, leftSplitKey.getBuffer(), 0);
-        leftSplitKey.getTuple().resetByTupleOffset(leftSplitKey.getBuffer(), 0);
+        rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, rTreeSplitKey.getLeftPageBuffer(), 0);
+        rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
 
-        rightSplitKey.initData(splitKeySize);
-        rightFrame.adjustNode(((NSMRTreeFrame) rightFrame).getTuples(), cmp);
-        rTreeTupleWriterRightFrame.writeTupleFields(((NSMRTreeFrame) rightFrame).getTuples(), 0, rightSplitKey.getBuffer(), 0);
-        rightSplitKey.getTuple().resetByTupleOffset(rightSplitKey.getBuffer(), 0);
+        ((IRTreeFrame) rightFrame).adjustNode(((NSMRTreeFrame) rightFrame).getTuples(), cmp);
+        rTreeTupleWriterRightFrame.writeTupleFields(((NSMRTreeFrame) rightFrame).getTuples(), 0,
+                rTreeSplitKey.getRightPageBuffer(), 0);
+        rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
 
         return 0;
     }
@@ -281,12 +282,5 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                 }
             }
         }
-    }
-
-    @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
-        // TODO Auto-generated method stub
-        return 0;
     }
 }

@@ -2,61 +2,136 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
-public class RTreeSplitKey {
-    public byte[] data = null;
-    public ByteBuffer buf = null;
-    public ITreeIndexTupleReference tuple;
+public class RTreeSplitKey implements ISplitKey {
+    public byte[] leftPageData = null;
+    public ByteBuffer leftPageBuf = null;
+    public ITreeIndexTupleReference leftTuple;
+
+    public byte[] rightPageData = null;
+    public ByteBuffer rightPageBuf = null;
+    public ITreeIndexTupleReference rightTuple;
+
     public int keySize = 0;
 
-    public RTreeSplitKey(ITreeIndexTupleReference tuple) {
-        this.tuple = tuple;
+    public RTreeSplitKey(ITreeIndexTupleReference leftTuple, ITreeIndexTupleReference rightTuple) {
+        this.leftTuple = leftTuple;
+        this.rightTuple = rightTuple;
     }
 
     public void initData(int keySize) {
         // try to reuse existing memory from a lower-level split if possible
         this.keySize = keySize;
-        if (data != null) {
-            if (data.length < keySize + 4) {
-                data = new byte[keySize + 4]; // add 4 for the page
-                buf = ByteBuffer.wrap(data);
+        if (leftPageData != null) {
+            if (leftPageData.length < keySize + 4) {
+                leftPageData = new byte[keySize + 4]; // add 4 for the page
+                leftPageBuf = ByteBuffer.wrap(leftPageData);
             }
         } else {
-            data = new byte[keySize + 4]; // add 4 for the page
-            buf = ByteBuffer.wrap(data);
+            leftPageData = new byte[keySize + 4]; // add 4 for the page
+            leftPageBuf = ByteBuffer.wrap(leftPageData);
+        }
+        if (rightPageData != null) {
+            if (rightPageData.length < keySize + 4) {
+                rightPageData = new byte[keySize + 4]; // add 4 for the page
+                rightPageBuf = ByteBuffer.wrap(rightPageData);
+            }
+        } else {
+            rightPageData = new byte[keySize + 4]; // add 4 for the page
+            rightPageBuf = ByteBuffer.wrap(rightPageData);
         }
 
-        tuple.resetByTupleOffset(buf, 0);
+        leftTuple.resetByTupleOffset(leftPageBuf, 0);
+        rightTuple.resetByTupleOffset(rightPageBuf, 0);
     }
 
-    public void reset() {
-        data = null;
-        buf = null;
+    public void resetLeftPage() {
+        leftPageData = null;
+        leftPageBuf = null;
     }
 
-    public ByteBuffer getBuffer() {
-        return buf;
+    public void resetRightPage() {
+        rightPageData = null;
+        rightPageBuf = null;
     }
 
-    public ITreeIndexTupleReference getTuple() {
-        return tuple;
+    public ByteBuffer getLeftPageBuffer() {
+        return leftPageBuf;
     }
 
-    public int getPage() {
-        return buf.getInt(keySize);
+    public ByteBuffer getRightPageBuffer() {
+        return rightPageBuf;
     }
 
-    public void setPage(int Page) {
-        buf.putInt(keySize, Page);
+    public ITreeIndexTupleReference getLeftTuple() {
+        return leftTuple;
     }
 
-    public RTreeSplitKey duplicate(ITreeIndexTupleReference copyTuple) {
-        RTreeSplitKey copy = new RTreeSplitKey(copyTuple);
-        copy.data = data.clone();
-        copy.buf = ByteBuffer.wrap(copy.data);
-        copy.tuple.setFieldCount(tuple.getFieldCount());
-        copy.tuple.resetByTupleOffset(copy.buf, 0);
+    public ITreeIndexTupleReference getRightTuple() {
+        return rightTuple;
+    }
+
+    public int getLeftPage() {
+        return leftPageBuf.getInt(keySize);
+    }
+
+    public int getRightPage() {
+        return rightPageBuf.getInt(keySize);
+    }
+
+    public void setLeftPage(int page) {
+        leftPageBuf.putInt(keySize, page);
+    }
+
+    public void setRightPage(int page) {
+        rightPageBuf.putInt(keySize, page);
+    }
+
+    public ISplitKey duplicate(ITreeIndexTupleReference copyLeftTuple, ITreeIndexTupleReference copyRightTuple) {
+        RTreeSplitKey copy = new RTreeSplitKey(copyLeftTuple, copyRightTuple);
+        copy.leftPageData = leftPageData.clone();
+        copy.leftPageBuf = ByteBuffer.wrap(copy.leftPageData);
+        copy.leftTuple.setFieldCount(leftTuple.getFieldCount());
+        copy.leftTuple.resetByTupleOffset(copy.leftPageBuf, 0);
+
+        copy.rightPageData = rightPageData.clone();
+        copy.rightPageBuf = ByteBuffer.wrap(copy.rightPageData);
+        copy.rightTuple.setFieldCount(rightTuple.getFieldCount());
+        copy.rightTuple.resetByTupleOffset(copy.rightPageBuf, 0);
         return copy;
+    }
+
+    @Override
+    public void reset() {
+        leftPageData = null;
+        leftPageBuf = null;
+        rightPageData = null;
+        rightPageBuf = null;
+    }
+
+    @Override
+    public ByteBuffer getBuffer() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ITreeIndexTupleReference getTuple() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setPages(int leftPage, int rightPage) {
+        leftPageBuf.putInt(keySize, leftPage);
+        rightPageBuf.putInt(keySize, rightPage);
+    }
+
+    @Override
+    public ISplitKey duplicate(ITreeIndexTupleReference copyTuple) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

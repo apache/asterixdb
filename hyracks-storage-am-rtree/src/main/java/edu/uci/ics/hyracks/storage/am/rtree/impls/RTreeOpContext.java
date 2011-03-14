@@ -11,8 +11,7 @@ public final class RTreeOpContext {
     public final IRTreeFrame leafFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
     public final ByteArrayList overflowArray;
-    public final RTreeSplitKey leftSplitKey;
-    public final RTreeSplitKey rightSplitKey;
+    public final RTreeSplitKey splitKey;
     public int insertLevel;
     public ITupleReference tuple;
 
@@ -22,8 +21,8 @@ public final class RTreeOpContext {
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.metaFrame = metaFrame;
-        leftSplitKey = new RTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
-        rightSplitKey = new RTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
+        splitKey = new RTreeSplitKey(leafFrame.getTupleWriter().createTupleReference(), leafFrame.getTupleWriter()
+                .createTupleReference());
         overflowArray = new ByteArrayList(treeHeightHint, treeHeightHint);
     }
 

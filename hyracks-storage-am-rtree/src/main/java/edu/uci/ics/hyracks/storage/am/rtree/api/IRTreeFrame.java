@@ -9,10 +9,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
 public interface IRTreeFrame extends ITreeIndexFrame {
 
     public int getChildPageId(ITupleReference tuple, MultiComparator cmp);
-    
-    public int split(IRTreeFrame rightFrame, ITupleReference tuple, MultiComparator cmp, RTreeSplitKey leftSplitKey,
-            RTreeSplitKey rightSplitKey) throws Exception;
-    
+
     public void adjustNode(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
 
     public void adjustTuple(ITupleReference tuple, MultiComparator cmp);

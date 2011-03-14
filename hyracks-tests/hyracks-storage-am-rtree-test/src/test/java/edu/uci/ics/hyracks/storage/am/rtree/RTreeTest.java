@@ -52,10 +52,8 @@ public class RTreeTest extends AbstractRTreeTest {
     public void test01() throws Exception {
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder
-                .getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder
-                .getFileMapProvider(ctx);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         FileReference file = new FileReference(new File(fileName));
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
@@ -78,7 +76,6 @@ public class RTreeTest extends AbstractRTreeTest {
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
 
-
         // declare leaf-frame-tuple fields
         int leafFieldCount = 5;
         ITypeTrait[] leafTypeTraits = new ITypeTrait[leafFieldCount];
@@ -90,11 +87,11 @@ public class RTreeTest extends AbstractRTreeTest {
 
         MultiComparator interiorCmp = new MultiComparator(interiorTypeTraits, cmps);
         MultiComparator leafCmp = new MultiComparator(leafTypeTraits, cmps);
-        
-        
-        RTreeTypeAwareTupleWriterFactory interiorTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(interiorTypeTraits);
+
+        RTreeTypeAwareTupleWriterFactory interiorTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
+                interiorTypeTraits);
         RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
-        
+
         IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory);
         IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
@@ -103,8 +100,9 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
-        
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp, leafCmp);
+
+        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp,
+                leafCmp);
         rtree.create(fileId, leafFrame, metaFrame);
         rtree.open(fileId);
 
@@ -118,31 +116,22 @@ public class RTreeTest extends AbstractRTreeTest {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx
-                .getFrameSize(), recDesc);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        
         RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame);
-        
+
         Random rnd = new Random();
         rnd.setSeed(50);
-        
-        for (int i = 0; i < 33; i++) {
+
+        for (int i = 0; i < 10000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
             double p2x = rnd.nextDouble();
             double p2y = rnd.nextDouble();
-            
-//            System.out.println(p1x);
-//            System.out.println(p1y);
-//            System.out.println(p2x);
-//            System.out.println(p2y);
-//            
-           System.out.println("=================================");
-            
+
             int pk = rnd.nextInt();
 
             tb.reset();
@@ -162,25 +151,26 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            //if (i % 1000 == 0) {
-                long end = System.currentTimeMillis();
-                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y) + "\n");
-            //}
+            // if (i % 1000 == 0) {
+            long end = System.currentTimeMillis();
+            print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+                    + " " + Math.max(p1y, p2y) + "\n");
+            // }
 
             try {
-                if(i == 22)
-                    System.out.print("");
                 rtree.insert(tuple, insertOpCtx);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            rtree.printTree(leafFrame, interiorFrame, recDescSers);
-            System.out.println();
         }
 
-//        rtree.printTree(leafFrame, interiorFrame, recDescSers);
-//        System.out.println();
+        rtree.printTree(leafFrame, interiorFrame, recDescSers);
+        System.out.println();
+
+        String stats = rtree.printStats();
+        print(stats);
+
         rtree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
