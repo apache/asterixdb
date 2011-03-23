@@ -123,12 +123,12 @@ final class BTreeOpHelper {
 					if (mode == BTreeMode.CREATE_BTREE) {
 						ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 						try {
-							btree.create(btreeFileId, leafFrame, metaFrame);
-							btree.open(btreeFileId);
+							btree.create(btreeFileId, leafFrame, metaFrame);							
 						} catch (Exception e) {
 							throw new HyracksDataException(e);
 						}
 					}
+					btree.open(btreeFileId);
 					btreeRegistry.register(btreeFileId, btree);
 				}
 			} finally {
