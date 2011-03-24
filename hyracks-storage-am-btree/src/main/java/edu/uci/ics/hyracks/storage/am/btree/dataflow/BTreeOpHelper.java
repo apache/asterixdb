@@ -83,12 +83,20 @@ final class BTreeOpHelper {
 		break;
 		
 		}
-
+		
         int fileId = fileMapProvider.lookupFileId(f);		
-        bufferCache.openFile(fileId);
+        try {
+        	bufferCache.openFile(fileId);
+        } catch(HyracksDataException e) {
+        	// revert state of buffer cache since file failed to open
+        	if(!fileIsMapped) {
+        		bufferCache.deleteFile(fileId);
+        	}
+        	throw e;
+        }
         
-        // only set btreeFileId member when open() succeeds, 
-        // otherwise rollback will try to close the file that failed to open
+        // only set btreeFileId member when openFile() succeeds, 
+        // otherwise deinit() will try to close the file that failed to open
         btreeFileId = fileId;
 
 		interiorFrame = opDesc.getInteriorFactory().getFrame();
