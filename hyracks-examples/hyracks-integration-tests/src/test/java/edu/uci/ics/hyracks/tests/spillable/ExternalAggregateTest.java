@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.dataflow.std.aggregators.IFieldValueResultingAggregat
 import edu.uci.ics.hyracks.dataflow.std.aggregators.MinMaxAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.MultiAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.SumAggregatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -112,7 +112,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
+        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
@@ -168,7 +168,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
+        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
@@ -232,7 +232,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
+        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }));
         spec.connect(conn1, ordScanner, 0, grouper, 0);
@@ -300,7 +300,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
+        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         UTF8StringBinaryHashFunctionFactory.INSTANCE, UTF8StringBinaryHashFunctionFactory.INSTANCE }));
         spec.connect(conn1, ordScanner, 0, grouper, 0);
@@ -368,7 +368,7 @@ public class ExternalAggregateTest extends AbstractIntegrationTest {
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNHashPartitioningConnectorDescriptor(spec,
+        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         IntegerBinaryHashFunctionFactory.INSTANCE, IntegerBinaryHashFunctionFactory.INSTANCE }));
         spec.connect(conn1, ordScanner, 0, grouper, 0);

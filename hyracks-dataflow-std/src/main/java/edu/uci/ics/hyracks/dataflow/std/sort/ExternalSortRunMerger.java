@@ -21,7 +21,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
 public class ExternalSortRunMerger {
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private final FrameSorter frameSorter;
     private final List<RunFileReader> runs;
     private final int[] sortFields;
@@ -48,7 +48,7 @@ public class ExternalSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    public ExternalSortRunMerger(IHyracksStageletContext ctx, FrameSorter frameSorter, List<RunFileReader> runs,
+    public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<RunFileReader> runs,
             int[] sortFields, IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDesc,
             int framesLimit, IFrameWriter writer) {
         this.ctx = ctx;
@@ -116,7 +116,7 @@ public class ExternalSortRunMerger {
                 inFrames.remove(i);
             }
         } else {
-            newRun = ctx.createWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
+            newRun = ctx.createManagedWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
             writer = new RunFileWriter(newRun, ctx.getIOManager());
             writer.open();
         }

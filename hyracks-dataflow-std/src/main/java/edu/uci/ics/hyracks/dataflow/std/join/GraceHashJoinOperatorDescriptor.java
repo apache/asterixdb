@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -108,9 +108,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -151,7 +150,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
                     RunFileWriter writer = fWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.getJobletContext().createWorkspaceFile(partitionsKey);
+                        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(partitionsKey);
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
                         fWriters[i] = writer;
@@ -208,9 +207,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();

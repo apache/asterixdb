@@ -14,53 +14,72 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.cc.scheduler.IJobRunStateMachine;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
-    private final JobPlan plan;
-    private final List<JobAttempt> attempts;
+    private final UUID jobId;
+
+    private final JobActivityGraph jag;
+
+    private final Map<PartitionId, NetworkAddress> partitionAvailabilityMap;
+
+    private final Map<PartitionId, String> partitionRequestorMap;
+
+    private final Set<String> participatingNodeIds;
+
+    private final JobProfile profile;
+
+    private final Map<ActivityNodeId, ActivityCluster> activityClusterMap;
+
+    private IJobRunStateMachine jsm;
+
     private JobStatus status;
-    private Set<ConstraintExpression> constraints;
 
-    public JobRun(JobPlan plan, Set<ConstraintExpression> constraints) {
-        this.plan = plan;
-        attempts = new ArrayList<JobAttempt>();
-        this.constraints = constraints;
+    private Exception exception;
+
+    public JobRun(UUID jobId, JobActivityGraph plan) {
+        this.jobId = jobId;
+        this.jag = plan;
+        partitionAvailabilityMap = new HashMap<PartitionId, NetworkAddress>();
+        partitionRequestorMap = new HashMap<PartitionId, String>();
+        participatingNodeIds = new HashSet<String>();
+        profile = new JobProfile(jobId);
+        activityClusterMap = new HashMap<ActivityNodeId, ActivityCluster>();
     }
 
-    public JobPlan getJobPlan() {
-        return plan;
+    public UUID getJobId() {
+        return jobId;
     }
 
-    public synchronized void setStatus(JobStatus status) {
+    public JobActivityGraph getJobActivityGraph() {
+        return jag;
+    }
+
+    public synchronized void setStatus(JobStatus status, Exception exception) {
         this.status = status;
+        this.exception = exception;
         notifyAll();
     }
 
-    public JobStatus getStatus() {
+    public synchronized JobStatus getStatus() {
         return status;
     }
 
-    public List<JobAttempt> getAttempts() {
-        return attempts;
-    }
-
-    public Set<ConstraintExpression> getConstraints() {
-        return constraints;
-    }
-
-    public JobAttempt createAttempt(IScheduler scheduler) {
-        int attemptNumber = attempts.size();
-        JobAttempt attempt = new JobAttempt(this, plan, attemptNumber, scheduler);
-        attempts.add(attempt);
-        return attempt;
+    public synchronized Exception getException() {
+        return exception;
     }
 
     @Override
@@ -68,5 +87,36 @@ public class JobRun implements IJobStatusConditionVariable {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
             wait();
         }
+        if (exception != null) {
+            throw new HyracksException("Job Failed", exception);
+        }
+    }
+
+    public Set<String> getParticipatingNodeIds() {
+        return participatingNodeIds;
+    }
+
+    public JobProfile getJobProfile() {
+        return profile;
+    }
+
+    public void setStateMachine(IJobRunStateMachine jsm) {
+        this.jsm = jsm;
+    }
+
+    public IJobRunStateMachine getStateMachine() {
+        return jsm;
+    }
+
+    public Map<PartitionId, NetworkAddress> getPartitionAvailabilityMap() {
+        return partitionAvailabilityMap;
+    }
+
+    public Map<PartitionId, String> getPartitionRequestorMap() {
+        return partitionRequestorMap;
+    }
+
+    public Map<ActivityNodeId, ActivityCluster> getActivityClusterMap() {
+        return activityClusterMap;
     }
 }

@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.examples.btree.helper;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 
@@ -28,7 +28,7 @@ public class BTreeRegistryProvider implements IBTreeRegistryProvider {
     }
 
     @Override
-    public BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx) {
+    public BTreeRegistry getBTreeRegistry(IHyracksTaskContext ctx) {
         return RuntimeContext.get(ctx).getBTreeRegistry();
     }
 }

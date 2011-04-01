@@ -12,22 +12,15 @@ public class JobProfile extends AbstractProfile {
 
     private final UUID jobId;
 
-    private final int attempt;
-
     private final Map<String, JobletProfile> jobletProfiles;
 
-    public JobProfile(UUID jobId, int attempt) {
+    public JobProfile(UUID jobId) {
         this.jobId = jobId;
-        this.attempt = attempt;
         jobletProfiles = new HashMap<String, JobletProfile>();
     }
 
     public UUID getJobId() {
         return jobId;
-    }
-
-    public int getAttempt() {
-        return attempt;
     }
 
     public Map<String, JobletProfile> getJobletProfiles() {
@@ -40,7 +33,6 @@ public class JobProfile extends AbstractProfile {
 
         json.put("type", "job-profile");
         json.put("job-id", jobId.toString());
-        json.put("attempt", attempt);
         populateCounters(json);
         for (JobletProfile p : jobletProfiles.values()) {
             json.accumulate("joblets", p.toJSON());

@@ -39,7 +39,7 @@ public class GetJobSpecificationJSONEvent extends SynchronizableRunnable {
             spec = new JSONObject();
             return;
         }
-        spec = run.getJobPlan().getJobSpecification().toJSON();
+        spec = run.getJobActivityGraph().getJobSpecification().toJSON();
     }
 
     public JSONObject getSpecification() {

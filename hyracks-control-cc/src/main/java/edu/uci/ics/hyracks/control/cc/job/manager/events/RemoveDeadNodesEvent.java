@@ -17,12 +17,10 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
 
 public class RemoveDeadNodesEvent implements Runnable {
     private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesEvent.class.getName());
@@ -46,12 +44,7 @@ public class RemoveDeadNodesEvent implements Runnable {
         }
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
-            for (final UUID jid : state.getActiveJobIds()) {
-                JobRun run = ccs.getRunMap().get(jid);
-                int lastAttempt = run.getAttempts().size() - 1;
-                LOGGER.info("Aborting: " + jid);
-                ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jid, lastAttempt));
-            }
+            // Deal with dead tasks.
         }
     }
 }

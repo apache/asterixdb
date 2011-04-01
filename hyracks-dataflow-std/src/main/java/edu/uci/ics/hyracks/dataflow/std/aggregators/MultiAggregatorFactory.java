@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.aggregators;
 import java.io.DataOutput;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -36,7 +36,7 @@ public class MultiAggregatorFactory implements IAccumulatingAggregatorFactory {
     }
 
     @Override
-    public ISpillableAccumulatingAggregator createSpillableAggregator(IHyracksStageletContext ctx,
+    public ISpillableAccumulatingAggregator createSpillableAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDesc, final RecordDescriptor outRecordDescriptor) {
         final ISpillableFieldValueResultingAggregator aggregators[] = new ISpillableFieldValueResultingAggregator[aFactories.length];
         for (int i = 0; i < aFactories.length; ++i) {
@@ -122,7 +122,7 @@ public class MultiAggregatorFactory implements IAccumulatingAggregatorFactory {
     }
 
     @Override
-    public IAccumulatingAggregator createAggregator(IHyracksStageletContext ctx, RecordDescriptor inRecordDesc,
+    public IAccumulatingAggregator createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
         final IFieldValueResultingAggregator aggregators[] = new IFieldValueResultingAggregator[aFactories.length];
         for (int i = 0; i < aFactories.length; ++i) {

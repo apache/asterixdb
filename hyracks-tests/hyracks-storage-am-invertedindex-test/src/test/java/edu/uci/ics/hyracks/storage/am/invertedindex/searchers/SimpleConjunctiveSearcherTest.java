@@ -28,7 +28,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -79,7 +79,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
     private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 32768;
-    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     public class BufferAllocator implements ICacheMemoryAllocator {
         @Override
@@ -224,7 +224,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         RecordDescriptor resultRecDesc = new RecordDescriptor(resultSerde);
         FrameTupleAccessor resultAccessor = new FrameTupleAccessor(ctx.getFrameSize(), resultRecDesc);
         FrameTupleReference resultTuple = new FrameTupleReference();
-        
+
         SimpleConjunctiveSearcher searcher = new SimpleConjunctiveSearcher(ctx, btree, btreeRecDesc, queryTokenizer,
                 numKeyFields, numValueFields);
 
@@ -241,8 +241,8 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
             for (int i = 0; i < resultAccessor.getTupleCount(); i++) {
                 resultTuple.reset(resultAccessor, i);
                 for (int j = 0; j < resultTuple.getFieldCount(); j++) {
-                    ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j), resultTuple
-                            .getFieldStart(j), resultTuple.getFieldLength(j));
+                    ByteArrayInputStream inStream = new ByteArrayInputStream(resultTuple.getFieldData(j),
+                            resultTuple.getFieldStart(j), resultTuple.getFieldLength(j));
                     DataInput dataIn = new DataInputStream(inStream);
                     Object o = resultSerde[j].deserialize(dataIn);
                     System.out.print(o + " ");

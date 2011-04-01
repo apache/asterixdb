@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.control.cc;
 import java.io.File;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -33,9 +34,12 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -47,15 +51,17 @@ import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCreateEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.JobStartEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.NodeHeartbeatEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterNodeEvent;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionAvailibilityEvent;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionRequestEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.RemoveDeadNodesEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.ReportProfilesEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.StageletCompleteEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.StageletFailureEvent;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskCompleteEvent;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskFailureEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.UnregisterNodeEvent;
 import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.jobqueue.JobQueue;
-import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
-import edu.uci.ics.hyracks.control.cc.scheduler.naive.NaiveScheduler;
+import edu.uci.ics.hyracks.control.cc.scheduler.DefaultJobScheduler;
+import edu.uci.ics.hyracks.control.cc.scheduler.IJobScheduler;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.CCConfig;
@@ -64,7 +70,7 @@ import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.StageletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
         IHyracksClientInterface {
@@ -88,7 +94,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final JobQueue jobQueue;
 
-    private final IScheduler scheduler;
+    private final IJobScheduler scheduler;
 
     private final Executor taskExecutor;
 
@@ -106,7 +112,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         webServer = new WebServer(this);
         runMap = new HashMap<UUID, JobRun>();
         jobQueue = new JobQueue();
-        scheduler = new NaiveScheduler(this);
+        scheduler = new DefaultJobScheduler(this);
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
     }
@@ -144,7 +150,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return jobQueue;
     }
 
-    public IScheduler getScheduler() {
+    public IJobScheduler getScheduler() {
         return scheduler;
     }
 
@@ -191,15 +197,16 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void notifyStageletComplete(UUID jobId, UUID stageId, int attempt, String nodeId, StageletProfile statistics)
+    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
-        StageletCompleteEvent sce = new StageletCompleteEvent(this, jobId, stageId, attempt, nodeId);
+        TaskCompleteEvent sce = new TaskCompleteEvent(this, jobId, taskId, nodeId);
         jobQueue.schedule(sce);
     }
 
     @Override
-    public void notifyStageletFailure(UUID jobId, UUID stageId, int attempt, String nodeId) throws Exception {
-        StageletFailureEvent sfe = new StageletFailureEvent(this, jobId, stageId, attempt, nodeId);
+    public void notifyTaskFailure(UUID jobId, TaskAttemptId taskId, String nodeId, Exception exception)
+            throws Exception {
+        TaskFailureEvent sfe = new TaskFailureEvent(this, jobId, taskId, nodeId, exception);
         jobQueue.schedule(sfe);
     }
 
@@ -213,7 +220,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void start(UUID jobId) throws Exception {
         JobStartEvent jse = new JobStartEvent(this, jobId);
-        jobQueue.scheduleAndSync(jse);
+        jobQueue.schedule(jse);
     }
 
     @Override
@@ -267,6 +274,16 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public ClusterControllerInfo getClusterControllerInfo() throws Exception {
         return info;
+    }
+
+    @Override
+    public void registerPartitionProvider(PartitionId pid, NetworkAddress address) throws Exception {
+        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, address));
+    }
+
+    @Override
+    public void registerPartitionRequest(Collection<PartitionId> requiredPartitionIds, String nodeId) {
+        jobQueue.schedule(new RegisterPartitionRequestEvent(this, requiredPartitionIds, nodeId));
     }
 
     private class DeadNodeSweeper extends TimerTask {

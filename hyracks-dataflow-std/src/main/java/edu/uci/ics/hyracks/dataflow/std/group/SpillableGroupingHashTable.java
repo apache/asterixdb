@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -43,7 +43,7 @@ public class SpillableGroupingHashTable {
     /**
      * Context.
      */
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
 
     /**
      * Columns for group-by
@@ -164,7 +164,7 @@ public class SpillableGroupingHashTable {
      * @param tableSize
      *            The size of the table, which specified the number of partitions of the table.
      */
-    public SpillableGroupingHashTable(IHyracksStageletContext ctx, int[] fields,
+    public SpillableGroupingHashTable(IHyracksTaskContext ctx, int[] fields,
             IBinaryComparatorFactory[] comparatorFactories, ITuplePartitionComputerFactory tpcf,
             IAccumulatingAggregatorFactory aggregatorFactory, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outputRecordDescriptor, int framesLimit, int tableSize) {

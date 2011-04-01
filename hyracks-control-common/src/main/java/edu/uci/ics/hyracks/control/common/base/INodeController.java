@@ -15,14 +15,14 @@
 package edu.uci.ics.hyracks.control.common.base;
 
 import java.rmi.Remote;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.comm.Endpoint;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public interface INodeController extends Remote {
     public String getId() throws Exception;
@@ -31,21 +31,12 @@ public interface INodeController extends Remote {
 
     public NodeCapability getNodeCapability() throws Exception;
 
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, int attempt, byte[] plan,
-            UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions)
-            throws Exception;
+    public void startTasks(String appName, UUID jobId, byte[] planBytes, List<TaskAttemptId> tasks,
+            Map<OperatorDescriptorId, Integer> opNumPartitions) throws Exception;
 
-    public void initializeJobletPhase2(String appName, UUID jobId, byte[] plan, UUID stageId,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions,
-            Map<PortInstanceId, Endpoint> globalPortMap) throws Exception;
-
-    public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception;
-
-    public void abortJoblet(UUID jobId, int attempt) throws Exception;
+    public void abortTasks(UUID jobId, List<TaskAttemptId> tasks) throws Exception;
 
     public void cleanUpJob(UUID jobId) throws Exception;
-
-    public void startStage(UUID jobId, UUID stageId) throws Exception;
 
     public void notifyRegistration(IClusterController ccs) throws Exception;
 
@@ -53,4 +44,6 @@ public interface INodeController extends Remote {
             throws Exception;
 
     public void destroyApplication(String appName) throws Exception;
+
+    public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
 }

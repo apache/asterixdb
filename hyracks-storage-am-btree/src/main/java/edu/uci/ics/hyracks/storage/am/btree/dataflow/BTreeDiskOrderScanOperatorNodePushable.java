@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final BTreeOpHelper btreeOpHelper;
 
-    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
     }
@@ -46,55 +46,55 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
         IBTreeMetaDataFrame metaFrame = new MetaDataFrame();
 
         try {
-        
-        	btreeOpHelper.init();
-        	
-        	try {
-        		btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
 
-        		MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
-        		ByteBuffer frame = btreeOpHelper.getHyracksStageletContext().allocateFrame();
-        		FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
-        		appender.reset(frame, true);
-        		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
-        		DataOutput dos = tb.getDataOutput();
+            btreeOpHelper.init();
 
-        		while (cursor.hasNext()) {
-        			tb.reset();
-        			cursor.next();
+            try {
+                btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
 
-        			ITupleReference frameTuple = cursor.getTuple();
-        			for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-        				dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-        				tb.addFieldEndOffset();
-        			}
+                MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
+                ByteBuffer frame = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+                FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext()
+                        .getFrameSize());
+                appender.reset(frame, true);
+                ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+                DataOutput dos = tb.getDataOutput();
 
-        			if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-        				FrameUtils.flushFrame(frame, writer);
-        				appender.reset(frame, true);
-        				if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-        					throw new IllegalStateException();
-        				}
-        			}
-        		}
+                while (cursor.hasNext()) {
+                    tb.reset();
+                    cursor.next();
 
-        		if (appender.getTupleCount() > 0) {
-        			FrameUtils.flushFrame(frame, writer);
-        		}
-        	}
-        	finally {
-        		cursor.close();
-        		writer.close();
-        	}
+                    ITupleReference frameTuple = cursor.getTuple();
+                    for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+                        dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+                        tb.addFieldEndOffset();
+                    }
 
-        } catch(Exception e) {
-        	deinitialize();
-        	throw new HyracksDataException(e);
+                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                        FrameUtils.flushFrame(frame, writer);
+                        appender.reset(frame, true);
+                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                            throw new IllegalStateException();
+                        }
+                    }
+                }
+
+                if (appender.getTupleCount() > 0) {
+                    FrameUtils.flushFrame(frame, writer);
+                }
+            } finally {
+                cursor.close();
+                writer.close();
+            }
+
+        } catch (Exception e) {
+            deinitialize();
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
-    	btreeOpHelper.deinit();
+        btreeOpHelper.deinit();
     }
 }

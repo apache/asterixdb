@@ -26,19 +26,17 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
+import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 
 public class TestJobletContext implements IHyracksJobletContext {
     private final INCApplicationContext appContext;
     private UUID jobId;
-    private int attempt;
-    private ManagedWorkspaceFileFactory fileFactory;
+    private WorkspaceFileFactory fileFactory;
 
-    public TestJobletContext(INCApplicationContext appContext, UUID jobId, int attempt) throws HyracksException {
+    public TestJobletContext(INCApplicationContext appContext, UUID jobId) throws HyracksException {
         this.appContext = appContext;
         this.jobId = jobId;
-        this.attempt = attempt;
-        fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
     }
 
     @Override
@@ -57,13 +55,18 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     @Override
-    public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
+        return fileFactory.createManagedWorkspaceFile(prefix);
+    }
+
+    @Override
+    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
+        return fileFactory.createUnmanagedWorkspaceFile(prefix);
     }
 
     @Override
     public ICounterContext getCounterContext() {
-        return new CounterContext(jobId + "." + attempt);
+        return new CounterContext(jobId.toString());
     }
 
     @Override
@@ -84,10 +87,5 @@ public class TestJobletContext implements IHyracksJobletContext {
     @Override
     public UUID getJobId() {
         return jobId;
-    }
-
-    @Override
-    public int getAttempt() {
-        return attempt;
     }
 }

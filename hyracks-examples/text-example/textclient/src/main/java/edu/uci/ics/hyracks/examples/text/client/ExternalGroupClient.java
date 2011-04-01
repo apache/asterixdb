@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.dataflow.std.aggregators.IFieldValueResultingAggregat
 import edu.uci.ics.hyracks.dataflow.std.aggregators.MultiAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -207,7 +207,7 @@ public class ExternalGroupClient {
                 createPartitionConstraint(spec, grouper, outSplits);
 
                 // Connect scanner with the grouper
-                IConnectorDescriptor scanGroupConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                IConnectorDescriptor scanGroupConn = new MToNPartitioningConnectorDescriptor(spec,
                         new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         // IntegerBinaryHashFunctionFactory.INSTANCE,
                                 IntegerBinaryHashFunctionFactory.INSTANCE }));
@@ -221,7 +221,7 @@ public class ExternalGroupClient {
                 createPartitionConstraint(spec, sorter, inSplits);
 
                 // Connect scan operator with the sorter
-                IConnectorDescriptor scanSortConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                IConnectorDescriptor scanSortConn = new MToNPartitioningConnectorDescriptor(spec,
                         new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         // IntegerBinaryHashFunctionFactory.INSTANCE,
                                 IntegerBinaryHashFunctionFactory.INSTANCE }));
@@ -251,7 +251,7 @@ public class ExternalGroupClient {
                 createPartitionConstraint(spec, grouper, outSplits);
 
                 // Connect scanner with the grouper
-                IConnectorDescriptor scanConn = new MToNHashPartitioningConnectorDescriptor(spec,
+                IConnectorDescriptor scanConn = new MToNPartitioningConnectorDescriptor(spec,
                         new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         // IntegerBinaryHashFunctionFactory.INSTANCE,
                                 IntegerBinaryHashFunctionFactory.INSTANCE }));
@@ -270,7 +270,7 @@ public class ExternalGroupClient {
                 createPartitionConstraint(spec, grouper, outSplits);
 
                 // Connect scanner with the grouper
-                IConnectorDescriptor scanGroupConnDef = new MToNHashPartitioningConnectorDescriptor(spec,
+                IConnectorDescriptor scanGroupConnDef = new MToNPartitioningConnectorDescriptor(spec,
                         new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                         // IntegerBinaryHashFunctionFactory.INSTANCE,
                                 IntegerBinaryHashFunctionFactory.INSTANCE }));

@@ -23,11 +23,7 @@ public abstract class ConstraintExpression implements Serializable {
     public enum ExpressionTag {
         CONSTANT,
         PARTITION_COUNT,
-        RESOURCE_SUM,
         PARTITION_LOCATION,
-        ENUMERATED_SET,
-        BELONGS_TO,
-        RELATIONAL,
     }
 
     public abstract ExpressionTag getTag();

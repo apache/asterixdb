@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -198,15 +198,14 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             // Create the in-memory hash table
             final SpillableGroupingHashTable gTable = new SpillableGroupingHashTable(ctx, keyFields,
                     comparatorFactories, tpcf, aggregatorFactory, recordDescProvider.getInputRecordDescriptor(
                             getOperatorId(), 0), recordDescriptors[0],
-                            // Always take one frame for the input records
-                            framesLimit - 1, tableSize);
+                    // Always take one frame for the input records
+                    framesLimit - 1, tableSize);
             // Create the tuple accessor
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
@@ -255,7 +254,7 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                             flushFramesToRun();
                             if (!gTable.insert(accessor, i))
                                 throw new HyracksDataException(
-                                "Failed to insert a new buffer into the aggregate operator!");
+                                        "Failed to insert a new buffer into the aggregate operator!");
                         }
                     }
 
@@ -280,7 +279,7 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                     gTable.sortFrames();
                     FileReference runFile;
                     try {
-                        runFile = ctx.getJobletContext().createWorkspaceFile(
+                        runFile = ctx.getJobletContext().createManagedWorkspaceFile(
                                 ExternalHashGroupOperatorDescriptor.class.getSimpleName());
                     } catch (IOException e) {
                         throw new HyracksDataException(e);
@@ -319,9 +318,8 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -400,7 +398,7 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                  * @throws IOException
                  */
                 private void doPass(LinkedList<RunFileReader> runs, int passCount) throws HyracksDataException,
-                IOException {
+                        IOException {
                     FileReference newRun = null;
                     IFrameWriter writer = this.writer;
                     boolean finalPass = false;
@@ -424,7 +422,7 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                         }
                     } else {
                         // Otherwise, a new run file will be created
-                        newRun = ctx.getJobletContext().createWorkspaceFile(
+                        newRun = ctx.getJobletContext().createManagedWorkspaceFile(
                                 ExternalHashGroupOperatorDescriptor.class.getSimpleName());
                         writer = new RunFileWriter(newRun, ctx.getIOManager());
                         writer.open();
@@ -610,7 +608,7 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                  * @throws HyracksDataException
                  */
                 private void closeRun(int index, RunFileReader[] runCursors, IFrameTupleAccessor[] tupleAccessor)
-                throws HyracksDataException {
+                        throws HyracksDataException {
                     runCursors[index].close();
                     runCursors[index] = null;
                     tupleAccessor[index] = null;
@@ -673,10 +671,10 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                     for (int f = 0; f < keyFields.length; ++f) {
                         int fIdx = keyFields[f];
                         int s1 = fta1.getTupleStartOffset(j1) + fta1.getFieldSlotsLength()
-                        + fta1.getFieldStartOffset(j1, fIdx);
+                                + fta1.getFieldStartOffset(j1, fIdx);
                         int l1 = fta1.getFieldEndOffset(j1, fIdx) - fta1.getFieldStartOffset(j1, fIdx);
                         int s2 = fta2.getTupleStartOffset(j2) + fta2.getFieldSlotsLength()
-                        + fta2.getFieldStartOffset(j2, fIdx);
+                                + fta2.getFieldStartOffset(j2, fIdx);
                         int l2 = fta2.getFieldEndOffset(j2, fIdx) - fta2.getFieldStartOffset(j2, fIdx);
                         int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
                         if (c != 0) {

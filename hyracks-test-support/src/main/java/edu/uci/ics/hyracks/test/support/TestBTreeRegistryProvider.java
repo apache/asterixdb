@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 
@@ -22,7 +22,7 @@ public class TestBTreeRegistryProvider implements IBTreeRegistryProvider {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx) {
+    public BTreeRegistry getBTreeRegistry(IHyracksTaskContext ctx) {
         return TestStorageManagerComponentHolder.getBTreeRegistry(ctx);
     }
 }

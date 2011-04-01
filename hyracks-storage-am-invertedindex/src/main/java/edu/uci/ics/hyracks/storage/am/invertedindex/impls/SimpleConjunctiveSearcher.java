@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -54,7 +54,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
     private final IBinaryComparator[] valueCmps;
 
     private final BTree btree;
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private final ArrayTupleBuilder resultTupleBuilder;
     private final FrameTupleAppender resultTupleAppender;
     private final FrameTupleAccessor resultFrameAccessor;
@@ -73,7 +73,7 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
     private final IBinaryTokenizer queryTokenizer;
 
-    public SimpleConjunctiveSearcher(IHyracksStageletContext ctx, BTree btree, RecordDescriptor btreeRecDesc,
+    public SimpleConjunctiveSearcher(IHyracksTaskContext ctx, BTree btree, RecordDescriptor btreeRecDesc,
             IBinaryTokenizer queryTokenizer, int numKeyFields, int numValueFields) {
         this.ctx = ctx;
         this.btree = btree;

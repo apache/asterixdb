@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 
-public final class PartitionLocationExpression extends ConstraintExpression {
+public final class PartitionLocationExpression extends LValueConstraintExpression {
     private static final long serialVersionUID = 1L;
 
     private final OperatorDescriptorId opId;
@@ -49,5 +49,33 @@ public final class PartitionLocationExpression extends ConstraintExpression {
     @Override
     protected void toString(StringBuilder buffer) {
         buffer.append(getTag()).append('(').append(opId.toString()).append(", ").append(partition).append(')');
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((opId == null) ? 0 : opId.hashCode());
+        result = prime * result + partition;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PartitionLocationExpression other = (PartitionLocationExpression) obj;
+        if (opId == null) {
+            if (other.opId != null)
+                return false;
+        } else if (!opId.equals(other.opId))
+            return false;
+        if (partition != other.partition)
+            return false;
+        return true;
     }
 }

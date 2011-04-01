@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -29,31 +29,32 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 final class BTreeOpHelper {
 
-	public enum BTreeMode {
-		OPEN_BTREE, CREATE_BTREE, ENLIST_BTREE
-	}
-	
-	private IBTreeInteriorFrame interiorFrame;
-	private IBTreeLeafFrame leafFrame;
+    public enum BTreeMode {
+        OPEN_BTREE,
+        CREATE_BTREE,
+        ENLIST_BTREE
+    }
 
-	private BTree btree;
-	private int btreeFileId = -1;
-	private int partition;
+    private IBTreeInteriorFrame interiorFrame;
+    private IBTreeLeafFrame leafFrame;
+
+    private BTree btree;
+    private int btreeFileId = -1;
+    private int partition;
 
     private AbstractBTreeOperatorDescriptor opDesc;
-    private IHyracksStageletContext ctx;
+    private IHyracksTaskContext ctx;
 
-	private BTreeMode mode;
+    private BTreeMode mode;
 
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksStageletContext ctx, int partition,
-            BTreeMode mode) {
+    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition, BTreeMode mode) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.mode = mode;
         this.partition = partition;
     }
 
-	void init() throws HyracksDataException {
+    void init() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
         IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
@@ -61,72 +62,67 @@ final class BTreeOpHelper {
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         boolean fileIsMapped = fileMapProvider.isMapped(f);
 
-		switch (mode) {
-		
-		case OPEN_BTREE: {
-			if (!fileIsMapped) {
-				throw new HyracksDataException(
-						"Trying to open btree from unmapped file " + f.toString());
-			}
-		}
-		break;
+        switch (mode) {
 
-		case CREATE_BTREE:
-		case ENLIST_BTREE: {
-			if (!fileIsMapped) {
-				bufferCache.createFile(f);
-			}
-		}
-		break;
-		
-		}
+            case OPEN_BTREE: {
+                if (!fileIsMapped) {
+                    throw new HyracksDataException("Trying to open btree from unmapped file " + f.toString());
+                }
+            }
+                break;
+
+            case CREATE_BTREE:
+            case ENLIST_BTREE: {
+                if (!fileIsMapped) {
+                    bufferCache.createFile(f);
+                }
+            }
+                break;
+
+        }
 
         btreeFileId = fileMapProvider.lookupFileId(f);
         bufferCache.openFile(btreeFileId);
 
-		interiorFrame = opDesc.getInteriorFactory().getFrame();
-		leafFrame = opDesc.getLeafFactory().getFrame();
+        interiorFrame = opDesc.getInteriorFactory().getFrame();
+        leafFrame = opDesc.getLeafFactory().getFrame();
 
         BTreeRegistry btreeRegistry = opDesc.getBtreeRegistryProvider().getBTreeRegistry(ctx);
         btree = btreeRegistry.get(btreeFileId);
         if (btree == null) {
 
-			// create new btree and register it
-			btreeRegistry.lock();
-			try {
-				// check if btree has already been registered by another thread
-				btree = btreeRegistry.get(btreeFileId);
-				if (btree == null) {
-					// this thread should create and register the btree
+            // create new btree and register it
+            btreeRegistry.lock();
+            try {
+                // check if btree has already been registered by another thread
+                btree = btreeRegistry.get(btreeFileId);
+                if (btree == null) {
+                    // this thread should create and register the btree
 
-					IBinaryComparator[] comparators = new IBinaryComparator[opDesc
-							.getComparatorFactories().length];
-					for (int i = 0; i < opDesc.getComparatorFactories().length; i++) {
-						comparators[i] = opDesc.getComparatorFactories()[i]
-								.createBinaryComparator();
-					}
+                    IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getComparatorFactories().length];
+                    for (int i = 0; i < opDesc.getComparatorFactories().length; i++) {
+                        comparators[i] = opDesc.getComparatorFactories()[i].createBinaryComparator();
+                    }
 
-					MultiComparator cmp = new MultiComparator(opDesc
-							.getTypeTraits(), comparators);
+                    MultiComparator cmp = new MultiComparator(opDesc.getTypeTraits(), comparators);
 
-					btree = new BTree(bufferCache, opDesc.getInteriorFactory(),
-							opDesc.getLeafFactory(), cmp);
-					if (mode == BTreeMode.CREATE_BTREE) {
-						MetaDataFrame metaFrame = new MetaDataFrame();
-						try {
-							btree.create(btreeFileId, leafFrame, metaFrame);
-							btree.open(btreeFileId);
-						} catch (Exception e) {
-							throw new HyracksDataException(e);
-						}
-					}
-					btreeRegistry.register(btreeFileId, btree);
-				}
-			} finally {
-				btreeRegistry.unlock();
-			}
-		}
-	}
+                    btree = new BTree(bufferCache, opDesc.getInteriorFactory(), opDesc.getLeafFactory(), cmp);
+                    if (mode == BTreeMode.CREATE_BTREE) {
+                        MetaDataFrame metaFrame = new MetaDataFrame();
+                        try {
+                            btree.create(btreeFileId, leafFrame, metaFrame);
+                            btree.open(btreeFileId);
+                        } catch (Exception e) {
+                            throw new HyracksDataException(e);
+                        }
+                    }
+                    btreeRegistry.register(btreeFileId, btree);
+                }
+            } finally {
+                btreeRegistry.unlock();
+            }
+        }
+    }
 
     public void deinit() throws HyracksDataException {
         if (btreeFileId != -1) {
@@ -135,27 +131,27 @@ final class BTreeOpHelper {
         }
     }
 
-	public BTree getBTree() {
-		return btree;
-	}
+    public BTree getBTree() {
+        return btree;
+    }
 
-    public IHyracksStageletContext getHyracksStageletContext() {
+    public IHyracksTaskContext getHyracksStageletContext() {
         return ctx;
     }
 
-	public AbstractBTreeOperatorDescriptor getOperatorDescriptor() {
-		return opDesc;
-	}
+    public AbstractBTreeOperatorDescriptor getOperatorDescriptor() {
+        return opDesc;
+    }
 
-	public IBTreeLeafFrame getLeafFrame() {
-		return leafFrame;
-	}
+    public IBTreeLeafFrame getLeafFrame() {
+        return leafFrame;
+    }
 
-	public IBTreeInteriorFrame getInteriorFrame() {
-		return interiorFrame;
-	}
+    public IBTreeInteriorFrame getInteriorFrame() {
+        return interiorFrame;
+    }
 
-	public int getBTreeFileId() {
-		return btreeFileId;
-	}
+    public int getBTreeFileId() {
+        return btreeFileId;
+    }
 }

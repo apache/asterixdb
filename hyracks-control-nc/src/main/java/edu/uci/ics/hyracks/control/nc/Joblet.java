@@ -15,28 +15,35 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
+import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
+import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.StageletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.control.nc.io.ManagedWorkspaceFileFactory;
+import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class Joblet implements IHyracksJobletContext, ICounterContext {
@@ -48,11 +55,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final UUID jobId;
 
-    private final int attempt;
-
-    private final Map<UUID, Stagelet> stageletMap;
+    private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
     private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
+
+    private final Map<TaskAttemptId, Task> taskMap;
 
     private final Map<String, Counter> counterMap;
 
@@ -60,16 +67,16 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    public Joblet(NodeControllerService nodeController, UUID jobId, int attempt, INCApplicationContext appCtx) {
+    public Joblet(NodeControllerService nodeController, UUID jobId, INCApplicationContext appCtx) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
-        this.attempt = attempt;
-        stageletMap = new HashMap<UUID, Stagelet>();
+        partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
+        taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
     }
 
     @Override
@@ -86,6 +93,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             opEnvMap.put(partition, new OperatorEnvironmentImpl());
         }
         return opEnvMap.get(partition);
+    }
+
+    public void addTask(Task task) {
+        taskMap.put(task.getTaskId(), task);
+    }
+
+    public Map<TaskAttemptId, Task> getTaskMap() {
+        return taskMap;
     }
 
     private static final class OperatorEnvironmentImpl implements IOperatorEnvironment {
@@ -106,26 +121,20 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
     }
 
-    public void setStagelet(UUID stageId, Stagelet stagelet) {
-        stageletMap.put(stageId, stagelet);
-    }
-
-    public Stagelet getStagelet(UUID stageId) throws Exception {
-        return stageletMap.get(stageId);
-    }
-
     public Executor getExecutor() {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletProfile stats) throws Exception {
-        stageletMap.remove(stageId);
-        nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
+    public synchronized void notifyTaskComplete(Task task) throws Exception {
+        taskMap.remove(task);
+        TaskProfile taskProfile = new TaskProfile(task.getTaskId());
+        task.dumpProfile(taskProfile);
+        nodeController.notifyTaskComplete(jobId, task.getTaskId(), taskProfile);
     }
 
-    public void notifyStageletFailed(UUID stageId, int attempt) throws Exception {
-        stageletMap.remove(stageId);
-        nodeController.notifyStageFailed(jobId, stageId, attempt);
+    public synchronized void notifyStageletFailed(Task task, Exception exception) throws Exception {
+        taskMap.remove(task);
+        nodeController.notifyTaskFailed(jobId, task.getTaskId(), exception);
     }
 
     public NodeControllerService getNodeController() {
@@ -137,21 +146,16 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
             counters.put(e.getKey(), e.getValue().get());
         }
-        for (Stagelet si : stageletMap.values()) {
-            StageletProfile sProfile = new StageletProfile(si.getStageId());
-            si.dumpProfile(sProfile);
-            jProfile.getStageletProfiles().put(si.getStageId(), sProfile);
+        for (Task task : taskMap.values()) {
+            TaskProfile taskProfile = new TaskProfile(task.getTaskId());
+            task.dumpProfile(taskProfile);
+            jProfile.getTaskProfiles().put(task.getTaskId(), taskProfile);
         }
     }
 
     @Override
     public INCApplicationContext getApplicationContext() {
         return appCtx;
-    }
-
-    @Override
-    public int getAttempt() {
-        return attempt;
     }
 
     @Override
@@ -184,12 +188,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
+        return fileFactory.createManagedWorkspaceFile(prefix);
     }
 
-    public Map<UUID, Stagelet> getStageletMap() {
-        return stageletMap;
+    @Override
+    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
+        return fileFactory.createUnmanagedWorkspaceFile(prefix);
     }
 
     @Override
@@ -200,5 +205,20 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             counterMap.put(name, counter);
         }
         return counter;
+    }
+
+    public synchronized void advertisePartitionRequest(Collection<PartitionId> requiredPartitionIds,
+            IPartitionCollector collector) throws Exception {
+        for (PartitionId pid : requiredPartitionIds) {
+            partitionRequestMap.put(pid, collector);
+        }
+        nodeController.getClusterController().registerPartitionRequest(requiredPartitionIds, nodeController.getId());
+    }
+
+    public synchronized void reportPartitionAvailability(PartitionChannel channel) throws HyracksException {
+        IPartitionCollector collector = partitionRequestMap.get(channel.getPartitionId());
+        if (collector != null) {
+            collector.addPartitions(Collections.singleton(channel));
+        }
     }
 }

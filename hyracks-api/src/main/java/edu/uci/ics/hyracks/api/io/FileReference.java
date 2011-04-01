@@ -51,4 +51,8 @@ public final class FileReference implements Serializable {
     public int hashCode() {
         return file.hashCode();
     }
+
+    public void delete() {
+        file.delete();
+    }
 }

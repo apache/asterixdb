@@ -16,29 +16,30 @@ package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 
 public class JobletProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
     private final String nodeId;
 
-    private final Map<UUID, StageletProfile> stageletProfiles;
+    private final Map<TaskAttemptId, TaskProfile> taskProfiles;
 
     public JobletProfile(String nodeId) {
         this.nodeId = nodeId;
-        stageletProfiles = new HashMap<UUID, StageletProfile>();
+        taskProfiles = new HashMap<TaskAttemptId, TaskProfile>();
     }
 
     public String getNodeId() {
         return nodeId;
     }
 
-    public Map<UUID, StageletProfile> getStageletProfiles() {
-        return stageletProfiles;
+    public Map<TaskAttemptId, TaskProfile> getTaskProfiles() {
+        return taskProfiles;
     }
 
     @Override
@@ -48,8 +49,8 @@ public class JobletProfile extends AbstractProfile {
         json.put("type", "joblet-profile");
         json.put("node-id", nodeId.toString());
         populateCounters(json);
-        for (StageletProfile p : stageletProfiles.values()) {
-            json.accumulate("stagelets", p.toJSON());
+        for (TaskProfile p : taskProfiles.values()) {
+            json.accumulate("tasks", p.toJSON());
         }
 
         return json;
@@ -57,11 +58,11 @@ public class JobletProfile extends AbstractProfile {
 
     public void merge(JobletProfile jp) {
         super.merge(this);
-        for (StageletProfile sp : jp.stageletProfiles.values()) {
-            if (stageletProfiles.containsKey(sp.getStageId())) {
-                stageletProfiles.get(sp.getStageId()).merge(sp);
+        for (TaskProfile tp : jp.taskProfiles.values()) {
+            if (taskProfiles.containsKey(tp.getTaskId())) {
+                taskProfiles.get(tp.getTaskId()).merge(tp);
             } else {
-                stageletProfiles.put(sp.getStageId(), sp);
+                taskProfiles.put(tp.getTaskId(), tp);
             }
         }
     }

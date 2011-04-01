@@ -39,8 +39,7 @@ public class JobStartEvent extends SynchronizableRunnable {
         if (run.getStatus() != JobStatus.INITIALIZED) {
             throw new Exception("Job already started");
         }
-        run.setStatus(JobStatus.RUNNING);
-
-        new JobAttemptStartEvent(ccs, jobId).run();
+        run.setStatus(JobStatus.RUNNING, null);
+        run.getStateMachine().schedule();
     }
 }

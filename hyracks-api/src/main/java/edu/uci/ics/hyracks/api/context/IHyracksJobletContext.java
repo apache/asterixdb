@@ -26,7 +26,5 @@ public interface IHyracksJobletContext extends IHyracksCommonContext, IWorkspace
 
     public UUID getJobId();
 
-    public int getAttempt();
-
     public ICounterContext getCounterContext();
 }

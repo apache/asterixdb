@@ -14,14 +14,11 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobAttempt;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
 
 public class GetJobProfileJSONEvent extends SynchronizableRunnable {
@@ -38,17 +35,7 @@ public class GetJobProfileJSONEvent extends SynchronizableRunnable {
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
         profile = new JSONObject();
-        if (run == null) {
-            return;
-        }
-        List<JobAttempt> attempts = run.getAttempts();
-        if (attempts.size() <= attempt) {
-            return;
-        }
-        JobAttempt ja = attempts.get(attempt);
-        profile = ja.getJobProfile().toJSON();
     }
 
     public JSONObject getProfile() {

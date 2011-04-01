@@ -22,7 +22,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class StorageManagerTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
-	private IHyracksStageletContext ctx = TestUtils.create(32768);
+    private IHyracksTaskContext ctx = TestUtils.create(32768);
 
 	public class PinnedLatchedPage {
 		public final ICachedPage page;

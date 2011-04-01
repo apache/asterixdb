@@ -23,7 +23,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -71,7 +71,7 @@ public class BTreeTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
-	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
 	public class BufferAllocator implements ICacheMemoryAllocator {
 		@Override

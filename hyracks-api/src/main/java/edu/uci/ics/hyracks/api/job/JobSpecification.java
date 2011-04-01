@@ -26,7 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
+import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -51,7 +51,7 @@ public class JobSpecification implements Serializable {
 
     private final Map<String, Serializable> properties;
 
-    private final Set<ConstraintExpression> userConstraints;
+    private final Set<Constraint> userConstraints;
 
     private int maxAttempts;
 
@@ -63,7 +63,7 @@ public class JobSpecification implements Serializable {
         opOutputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
         properties = new HashMap<String, Serializable>();
-        userConstraints = new HashSet<ConstraintExpression>();
+        userConstraints = new HashSet<Constraint>();
     }
 
     public void addRoot(IOperatorDescriptor op) {
@@ -181,11 +181,11 @@ public class JobSpecification implements Serializable {
         return maxAttempts;
     }
 
-    public void addUserConstraint(ConstraintExpression constraint) {
+    public void addUserConstraint(Constraint constraint) {
         userConstraints.add(constraint);
     }
 
-    public Set<ConstraintExpression> getUserConstraints() {
+    public Set<Constraint> getUserConstraints() {
         return userConstraints;
     }
 

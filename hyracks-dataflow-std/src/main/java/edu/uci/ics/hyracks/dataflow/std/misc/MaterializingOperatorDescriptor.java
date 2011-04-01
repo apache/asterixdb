@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -60,15 +60,14 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private RunFileWriter out;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    FileReference file = ctx.getJobletContext().createWorkspaceFile(
+                    FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                             MaterializingOperatorDescriptor.class.getSimpleName());
                     out = new RunFileWriter(file, ctx.getIOManager());
                     out.open();
@@ -101,9 +100,8 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {

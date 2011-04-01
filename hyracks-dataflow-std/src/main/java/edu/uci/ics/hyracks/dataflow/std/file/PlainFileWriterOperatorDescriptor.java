@@ -20,7 +20,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -61,9 +61,9 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
      * @see edu.uci.ics.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.uci.ics.hyracks.api.context.IHyracksContext, edu.uci.ics.hyracks.api.job.IOperatorEnvironment, edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider, int, int)
      */
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-    throws HyracksDataException {
+            throws HyracksDataException {
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         // Frame accessor
@@ -95,7 +95,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                     frameTupleAccessor.reset(buffer);
                     for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                         int start = frameTupleAccessor.getTupleStartOffset(tIndex)
-                        + frameTupleAccessor.getFieldSlotsLength();
+                                + frameTupleAccessor.getFieldSlotsLength();
                         bbis.setByteBuffer(buffer, start);
                         Object[] record = new Object[recordDescriptor.getFields().length];
                         for (int i = 0; i < record.length; ++i) {

@@ -17,20 +17,20 @@ package edu.uci.ics.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private IHyracksStageletContext ctx;
+    private IHyracksTaskContext ctx;
 
     private int[] fieldSlots;
     private byte[] tupleData;
     private int tupleSize;
 
-    public ConstantTupleSourceOperatorNodePushable(IHyracksStageletContext ctx, int[] fieldSlots, byte[] tupleData,
+    public ConstantTupleSourceOperatorNodePushable(IHyracksTaskContext ctx, int[] fieldSlots, byte[] tupleData,
             int tupleSize) {
         super();
         this.fieldSlots = fieldSlots;
