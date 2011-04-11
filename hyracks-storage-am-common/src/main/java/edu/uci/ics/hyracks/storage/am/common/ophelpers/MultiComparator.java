@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 
 public class MultiComparator {
 
@@ -31,6 +32,12 @@ public class MultiComparator {
 
     private IBinaryComparator[] cmps = null;
     private ITypeTrait[] typeTraits;
+    
+    private IBinaryComparator intCmp = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+
+    public IBinaryComparator getIntCmp() {
+        return intCmp;
+    }
 
     public MultiComparator(ITypeTrait[] typeTraits, IBinaryComparator[] cmps) {
         this.typeTraits = typeTraits;

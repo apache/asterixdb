@@ -31,12 +31,16 @@ public class ByteArrayList {
     }
 
     // WARNING: caller is responsible for checking size > 0
-    public int getLast() {
+    public byte getLast() {
         return data[size - 1];
     }
 
-    public int get(int i) {
+    public byte get(int i) {
         return data[i];
+    }
+    
+    public void set(int i, byte b) {
+        data[i] = b;
     }
 
     public void clear() {

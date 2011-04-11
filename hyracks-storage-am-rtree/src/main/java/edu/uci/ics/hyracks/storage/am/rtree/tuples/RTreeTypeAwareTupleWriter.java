@@ -3,7 +3,6 @@ package edu.uci.ics.hyracks.storage.am.rtree.tuples;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
@@ -33,8 +32,6 @@ public class RTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
 
         // write data
         for (int i = 0; i < refs.length; i++) {
-            double d3 = DoubleSerializerDeserializer.getDouble(refs[i].getFieldData(i), refs[i].getFieldStart(i));
-
             System.arraycopy(refs[i].getFieldData(i), refs[i].getFieldStart(i), targetBuf.array(), runner,
                     refs[i].getFieldLength(i));
             runner += refs[i].getFieldLength(i);

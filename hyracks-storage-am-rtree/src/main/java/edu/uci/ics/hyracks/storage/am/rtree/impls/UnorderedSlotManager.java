@@ -6,17 +6,22 @@ import edu.uci.ics.hyracks.storage.am.common.frames.AbstractSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrame;
 
 public class UnorderedSlotManager extends AbstractSlotManager {
+    @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
-        if (mode == FindTupleMode.FTM_EXACT) {
-            for (int i = 0; i < frame.getTupleCount(); i++) {
-                frameTuple.resetByTupleIndex(frame, i);
-                int cmp = multiCmp.compare(searchKey, frameTuple);
-                if (cmp == 0) {
-                    return i;
-                }
+        for (int i = 0; i < frame.getTupleCount(); i++) {
+            frameTuple.resetByTupleIndex(frame, i);
+            int cmp = multiCmp.getIntCmp().compare(frameTuple.getFieldData(multiCmp.getKeyFieldCount()),
+                    frameTuple.getFieldStart(multiCmp.getKeyFieldCount()),
+                    frameTuple.getFieldLength(multiCmp.getKeyFieldCount()),
+                    searchKey.getFieldData(multiCmp.getKeyFieldCount()),
+                    searchKey.getFieldStart(multiCmp.getKeyFieldCount()),
+                    searchKey.getFieldLength(multiCmp.getKeyFieldCount()));
+            if (cmp == 0) {
+                return i;
             }
         }
         return -1;
@@ -29,4 +34,23 @@ public class UnorderedSlotManager extends AbstractSlotManager {
         return slotOff;
     }
 
+    public void modifySlot(int slotOff, int tupleOff) {
+        setSlot(slotOff, tupleOff);
+    }
+
+    public void deleteEmptySlots() {
+        int slotOff = getSlotStartOff();
+        int numOfSlots = ((getSlotStartOff() - getSlotEndOff()) / slotSize) + 1;
+        for (int i = 0; i < numOfSlots; i++) {
+            if (frame.getBuffer().getInt(slotOff) == -1) {
+                int slotStartOff = getSlotEndOff();
+                int length = slotOff - slotStartOff;
+                System.arraycopy(frame.getBuffer().array(), slotStartOff, frame.getBuffer().array(),
+                        slotStartOff + slotSize, length);
+                ((NSMRTreeFrame)frame).setTupleCount(frame.getTupleCount() - 1);
+            } else {
+                slotOff -= slotSize;
+            }
+        }
+    }
 }
