@@ -110,6 +110,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void close() throws HyracksDataException {
+                    System.err.println("close%%%%%%%%%%%%%%%%%%%%%%%%%" + joiner + " " + env);
                     env.set(JOINER, joiner);
                 }
 
@@ -138,6 +139,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 @Override
                 public void open() throws HyracksDataException {
                     joiner = (InMemoryHashJoin) env.get(JOINER);
+                    System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%" + joiner + " " + env);
                     writer.open();
                 }
 
@@ -148,6 +150,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void close() throws HyracksDataException {
+                    System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^" + joiner);
                     joiner.closeJoin(writer);
                     writer.close();
                     env.set(JOINER, null);

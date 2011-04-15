@@ -20,9 +20,9 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetJobSpecificationJSONEvent extends SynchronizableRunnable {
+public class GetJobSpecificationJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final UUID jobId;
     private JSONObject spec;

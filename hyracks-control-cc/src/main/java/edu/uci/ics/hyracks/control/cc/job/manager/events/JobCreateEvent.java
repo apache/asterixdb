@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.control.cc.job.IOperatorDescriptorVisitor;
 import edu.uci.ics.hyracks.control.cc.job.JobActivityGraphBuilder;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class JobCreateEvent extends SynchronizableRunnable {
+public class JobCreateEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final byte[] jobSpec;
     private final EnumSet<JobFlag> jobFlags;
@@ -65,7 +65,7 @@ public class JobCreateEvent extends SynchronizableRunnable {
         });
         final JobActivityGraph jag = builder.getActivityGraph();
 
-        JobRun run = new JobRun(UUID.randomUUID(), jag);
+        JobRun run = new JobRun(jobId, jag);
 
         run.setStatus(JobStatus.INITIALIZED, null);
 

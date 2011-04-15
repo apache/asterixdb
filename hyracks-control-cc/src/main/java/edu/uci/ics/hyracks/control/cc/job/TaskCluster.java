@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 public class TaskCluster {
     private final ActivityCluster activityCluster;
 
-    private final TaskState[] tasks;
+    private final Task[] tasks;
 
     private final Set<TaskCluster> blockers;
 
@@ -32,7 +32,7 @@ public class TaskCluster {
 
     private final List<TaskClusterAttempt> taskClusterAttempts;
 
-    public TaskCluster(ActivityCluster activityCluster, TaskState[] tasks) {
+    public TaskCluster(ActivityCluster activityCluster, Task[] tasks) {
         this.activityCluster = activityCluster;
         this.tasks = tasks;
         this.blockers = new HashSet<TaskCluster>();
@@ -40,7 +40,7 @@ public class TaskCluster {
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
     }
 
-    public TaskState[] getTasks() {
+    public Task[] getTasks() {
         return tasks;
     }
 

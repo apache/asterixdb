@@ -24,8 +24,8 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.NonDeterministicPartitionCollector;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicPartitionCollector;
 
 public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     public MToNReplicatingConnectorDescriptor(JobSpecification spec) {
@@ -82,6 +82,7 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
             int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(0, nProducerPartitions);
-        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, expectedPartitions);
+        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, nProducerPartitions,
+                expectedPartitions);
     }
 }

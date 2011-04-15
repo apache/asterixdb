@@ -12,17 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package edu.uci.ics.hyracks.control.cc.jobqueue;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
+import java.util.logging.Level;
 
-public interface IHyracksTaskContext extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry {
-    public IHyracksJobletContext getJobletContext();
-
-    public TaskAttemptId getTaskAttemptId();
-
-    public ICounterContext getCounterContext();
+public abstract class AbstractEvent implements Runnable {
+    public Level logLevel() {
+        return Level.INFO;
+    }
 }

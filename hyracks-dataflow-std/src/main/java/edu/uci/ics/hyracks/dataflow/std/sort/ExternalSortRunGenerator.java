@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -25,13 +26,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 public class ExternalSortRunGenerator implements IFrameWriter {
     private final IHyracksTaskContext ctx;
     private final FrameSorter frameSorter;
-    private final List<RunFileReader> runs;
+    private final List<IFrameReader> runs;
     private final int maxSortFrames;
 
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
@@ -39,7 +39,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
             RecordDescriptor recordDesc, int framesLimit) {
         this.ctx = ctx;
         frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc);
-        runs = new LinkedList<RunFileReader>();
+        runs = new LinkedList<IFrameReader>();
         maxSortFrames = framesLimit - 1;
     }
 
@@ -91,7 +91,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         return frameSorter;
     }
 
-    public List<RunFileReader> getRuns() {
+    public List<IFrameReader> getRuns() {
         return runs;
     }
 }

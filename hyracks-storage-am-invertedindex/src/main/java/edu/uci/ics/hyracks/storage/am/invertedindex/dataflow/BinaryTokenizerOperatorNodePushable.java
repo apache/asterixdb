@@ -62,6 +62,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         builderDos = builder.getDataOutput();
         appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(writeBuffer, true);
+        writer.open();
     }
 
     @Override

@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetNodeEvent extends SynchronizableRunnable {
+public class GetNodeEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final String nodeId;
     private NodeControllerState state;

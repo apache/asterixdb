@@ -19,9 +19,9 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetJobProfileJSONEvent extends SynchronizableRunnable {
+public class GetJobProfileJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final UUID jobId;
     private final int attempt;

@@ -42,7 +42,7 @@ public abstract class AbstractIntegrationTest {
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
-        ccConfig.profileDumpPeriod = 1000;
+        ccConfig.profileDumpPeriod = 10000;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 

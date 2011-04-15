@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
@@ -47,11 +47,11 @@ import edu.uci.ics.hyracks.control.cc.job.IConnectorDescriptorVisitor;
 import edu.uci.ics.hyracks.control.cc.job.IOperatorDescriptorVisitor;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
-import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
+import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
-import edu.uci.ics.hyracks.control.cc.job.TaskState;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCleanupEvent;
 import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
+import edu.uci.ics.hyracks.control.common.job.dataflow.PipelinedConnectorPolicy;
 
 public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     private static final Logger LOGGER = Logger.getLogger(DefaultJobRunStateMachine.class.getName());
@@ -59,6 +59,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     private final ClusterControllerService ccs;
 
     private final JobRun jobRun;
+
+    private final Map<OperatorDescriptorId, String> operatorLocationAssignmentMap;
 
     private final Set<ActivityCluster> completedClusters;
 
@@ -71,8 +73,13 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     public DefaultJobRunStateMachine(ClusterControllerService ccs, JobRun jobRun) {
         this.ccs = ccs;
         this.jobRun = jobRun;
+        this.operatorLocationAssignmentMap = new HashMap<OperatorDescriptorId, String>();
         completedClusters = new HashSet<ActivityCluster>();
         inProgressClusters = new HashSet<ActivityCluster>();
+    }
+
+    public Map<OperatorDescriptorId, String> getOperatorLocationAssignmentMap() {
+        return operatorLocationAssignmentMap;
     }
 
     public PartitionConstraintSolver getSolver() {
@@ -161,6 +168,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                 s.addDependent(bs);
             }
         }
+        jobRun.getActivityClusterMap().putAll(stageMap);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inferred " + (stages.size() + 1) + " stages");
             for (ActivityCluster s : stages) {
@@ -193,7 +201,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     }
 
     private void findRunnableClusters(Set<ActivityCluster> frontier, ActivityCluster candidate) {
-        if (completedClusters.contains(candidate) || frontier.contains(candidate)) {
+        if (completedClusters.contains(candidate) || frontier.contains(candidate)
+                || inProgressClusters.contains(candidate)) {
             return;
         }
         boolean runnable = true;
@@ -241,26 +250,32 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
             solver.addConstraints(contributedConstraints);
 
             rootActivityCluster = inferStages(jag);
-            Set<ActivityCluster> runnableClusters = new HashSet<ActivityCluster>();
-            findRunnableClusters(runnableClusters);
-            if (runnableClusters.isEmpty() && inProgressClusters.isEmpty()) {
-                ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobRun.getJobId(), JobStatus.TERMINATED, null));
-                return;
-            }
-            for (ActivityCluster ac : runnableClusters) {
-                inProgressClusters.add(ac);
-                buildTaskClusters(ac);
-                IActivityClusterStateMachine acsm = new DefaultActivityClusterStateMachine(ccs, this, ac);
-                ac.setStateMachine(acsm);
-                acsm.schedule();
-            }
+            startRunnableActivityClusters();
         } catch (Exception e) {
+            e.printStackTrace();
             ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobRun.getJobId(), JobStatus.FAILURE, e));
             throw new HyracksException(e);
         }
     }
 
-    private Map<ActivityNodeId, Integer> computePartitionCounts(ActivityCluster ac) throws HyracksException {
+    private void startRunnableActivityClusters() throws HyracksException {
+        Set<ActivityCluster> runnableClusters = new HashSet<ActivityCluster>();
+        findRunnableClusters(runnableClusters);
+        if (runnableClusters.isEmpty() && inProgressClusters.isEmpty()) {
+            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobRun.getJobId(), JobStatus.TERMINATED, null));
+            return;
+        }
+        for (ActivityCluster ac : runnableClusters) {
+            inProgressClusters.add(ac);
+            buildTaskClusters(ac);
+            IActivityClusterStateMachine acsm = new DefaultActivityClusterStateMachine(ccs, this, ac);
+            ac.setStateMachine(acsm);
+            acsm.schedule();
+        }
+    }
+
+    private Map<ActivityNodeId, ActivityPartitionDetails> computePartitionCounts(ActivityCluster ac)
+            throws HyracksException {
         Set<LValueConstraintExpression> lValues = new HashSet<LValueConstraintExpression>();
         for (ActivityNodeId anId : ac.getActivities()) {
             lValues.add(new PartitionCountExpression(anId.getOperatorDescriptorId()));
@@ -282,22 +297,43 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
             }
             nPartMap.put(((PartitionCountExpression) lv).getOperatorDescriptorId(), Integer.valueOf(nParts));
         }
-        Map<ActivityNodeId, Integer> activityPartsMap = new HashMap<ActivityNodeId, Integer>();
+        Map<ActivityNodeId, ActivityPartitionDetails> activityPartsMap = new HashMap<ActivityNodeId, ActivityPartitionDetails>();
         for (ActivityNodeId anId : ac.getActivities()) {
-            activityPartsMap.put(anId, nPartMap.get(anId.getOperatorDescriptorId()));
+            int nParts = nPartMap.get(anId.getOperatorDescriptorId());
+            int[] nInputPartitions = null;
+            List<IConnectorDescriptor> inputs = jobRun.getJobActivityGraph().getActivityInputConnectorDescriptors(anId);
+            if (inputs != null) {
+                nInputPartitions = new int[inputs.size()];
+                for (int i = 0; i < nInputPartitions.length; ++i) {
+                    nInputPartitions[i] = nPartMap.get(jobRun.getJobActivityGraph()
+                            .getProducerActivity(inputs.get(i).getConnectorId()).getOperatorDescriptorId());
+                }
+            }
+            int[] nOutputPartitions = null;
+            List<IConnectorDescriptor> outputs = jobRun.getJobActivityGraph().getActivityOutputConnectorDescriptors(
+                    anId);
+            if (outputs != null) {
+                nOutputPartitions = new int[outputs.size()];
+                for (int i = 0; i < nOutputPartitions.length; ++i) {
+                    nOutputPartitions[i] = nPartMap.get(jobRun.getJobActivityGraph()
+                            .getConsumerActivity(outputs.get(i).getConnectorId()).getOperatorDescriptorId());
+                }
+            }
+            ActivityPartitionDetails apd = new ActivityPartitionDetails(nParts, nInputPartitions, nOutputPartitions);
+            activityPartsMap.put(anId, apd);
         }
         return activityPartsMap;
     }
 
     private void buildTaskClusters(ActivityCluster ac) throws HyracksException {
-        Map<ActivityNodeId, Integer> pcMap = computePartitionCounts(ac);
-        Map<ActivityNodeId, TaskState[]> taskStateMap = ac.getTaskStateMap();
+        Map<ActivityNodeId, ActivityPartitionDetails> pcMap = computePartitionCounts(ac);
+        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskStateMap();
 
         for (ActivityNodeId anId : ac.getActivities()) {
-            int nParts = pcMap.get(anId);
-            TaskState[] taskStates = new TaskState[nParts];
-            for (int i = 0; i < nParts; ++i) {
-                taskStates[i] = new TaskState(new TaskId(anId, i));
+            ActivityPartitionDetails apd = pcMap.get(anId);
+            Task[] taskStates = new Task[apd.getPartitionCount()];
+            for (int i = 0; i < taskStates.length; ++i) {
+                taskStates[i] = new Task(new TaskId(anId, i), apd);
             }
             taskStateMap.put(anId, taskStates);
         }
@@ -308,8 +344,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
 
         Map<TaskId, Set<TaskId>> taskClusterMap = new HashMap<TaskId, Set<TaskId>>();
         for (ActivityNodeId anId : activities) {
-            TaskState[] taskStates = taskStateMap.get(anId);
-            for (TaskState ts : taskStates) {
+            Task[] taskStates = taskStateMap.get(anId);
+            for (Task ts : taskStates) {
                 Set<TaskId> cluster = new HashSet<TaskId>();
                 cluster.add(ts.getTaskId());
                 taskClusterMap.put(ts.getTaskId(), cluster);
@@ -320,15 +356,18 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         JobActivityGraph jag = jobRun.getJobActivityGraph();
         BitSet targetBitmap = new BitSet();
         for (ActivityNodeId ac1 : activities) {
-            TaskState[] ac1TaskStates = taskStateMap.get(ac1);
+            Task[] ac1TaskStates = taskStateMap.get(ac1);
             int nProducers = ac1TaskStates.length;
             List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
                     IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
+                    if (cPolicy == null) {
+                        cPolicy = new PipelinedConnectorPolicy();
+                    }
                     ActivityNodeId ac2 = jag.getConsumerActivity(cdId);
-                    TaskState[] ac2TaskStates = taskStateMap.get(ac2);
+                    Task[] ac2TaskStates = taskStateMap.get(ac2);
                     int nConsumers = ac2TaskStates.length;
                     for (int i = 0; i < nProducers; ++i) {
                         c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
@@ -339,7 +378,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                             connectionInfo.put(ac1TaskStates[i].getTaskId(), cInfoList);
                         }
                         Set<TaskId> cluster = taskClusterMap.get(ac1TaskStates[i].getTaskId());
-                        for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j)) {
+                        for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j + 1)) {
                             cInfoList.add(new Pair<TaskId, IConnectorPolicy>(ac2TaskStates[j].getTaskId(), cPolicy));
                             if (cPolicy.requiresProducerConsumerCoscheduling()) {
                                 cluster.add(ac2TaskStates[j].getTaskId());
@@ -378,11 +417,11 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         Set<Set<TaskId>> clusters = new HashSet<Set<TaskId>>(taskClusterMap.values());
         Set<TaskCluster> tcSet = new HashSet<TaskCluster>();
         for (Set<TaskId> cluster : clusters) {
-            Set<TaskState> taskStates = new HashSet<TaskState>();
+            Set<Task> taskStates = new HashSet<Task>();
             for (TaskId tid : cluster) {
                 taskStates.add(taskStateMap.get(tid.getActivityId())[tid.getPartition()]);
             }
-            TaskCluster tc = new TaskCluster(ac, taskStates.toArray(new TaskState[taskStates.size()]));
+            TaskCluster tc = new TaskCluster(ac, taskStates.toArray(new Task[taskStates.size()]));
             tcSet.add(tc);
             for (TaskId tid : cluster) {
                 taskStateMap.get(tid.getActivityId())[tid.getPartition()].setTaskCluster(tc);
@@ -391,12 +430,12 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         ac.setTaskClusters(tcSet.toArray(new TaskCluster[tcSet.size()]));
 
         for (TaskCluster tc : tcSet) {
-            for (TaskState ts : tc.getTasks()) {
+            for (Task ts : tc.getTasks()) {
                 TaskId tid = ts.getTaskId();
                 List<Pair<TaskId, IConnectorPolicy>> cInfoList = connectionInfo.get(tid);
                 if (cInfoList != null) {
                     for (Pair<TaskId, IConnectorPolicy> p : cInfoList) {
-                        TaskState targetTS = taskStateMap.get(p.first.getActivityId())[p.first.getPartition()];
+                        Task targetTS = taskStateMap.get(p.first.getActivityId())[p.first.getPartition()];
                         TaskCluster targetTC = targetTS.getTaskCluster();
                         if (targetTC != tc) {
                             targetTC.getDependencies().add(tc);
@@ -411,6 +450,14 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
 
         computeBlockerClosure(tcSet);
         computeDependencyClosure(tcSet);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Plan for " + ac);
+            LOGGER.info("Built " + tcSet.size() + " Task Clusters");
+            for (TaskCluster tc : tcSet) {
+                LOGGER.info("Tasks: " + Arrays.toString(tc.getTasks()));
+            }
+        }
     }
 
     private void computeDependencyClosure(Set<TaskCluster> tcSet) {
@@ -453,5 +500,24 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                 }
             }
         }
+    }
+
+    @Override
+    public void notifyActivityClusterFailure(ActivityCluster ac, Exception exception) throws HyracksException {
+        for (ActivityCluster ac2 : inProgressClusters) {
+            abortActivityCluster(ac2);
+        }
+        jobRun.setStatus(JobStatus.FAILURE, exception);
+    }
+
+    private void abortActivityCluster(ActivityCluster ac) throws HyracksException {
+        ac.getStateMachine().abort();
+    }
+
+    @Override
+    public void notifyActivityClusterComplete(ActivityCluster ac) throws HyracksException {
+        completedClusters.add(ac);
+        inProgressClusters.remove(ac);
+        startRunnableActivityClusters();
     }
 }

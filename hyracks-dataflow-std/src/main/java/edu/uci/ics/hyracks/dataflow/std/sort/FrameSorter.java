@@ -136,7 +136,6 @@ public class FrameSorter {
         FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         ByteBuffer outFrame = ctx.allocateFrame();
-        writer.open();
         appender.reset(outFrame, true);
         int n = tPointers.length / 4;
         for (int ptr = 0; ptr < n; ++ptr) {

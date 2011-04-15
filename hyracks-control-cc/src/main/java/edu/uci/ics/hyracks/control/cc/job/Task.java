@@ -15,18 +15,26 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 
-public class TaskState {
+public class Task {
     private final TaskId taskId;
+
+    private final ActivityPartitionDetails apd;
 
     private TaskCluster taskCluster;
 
-    public TaskState(TaskId taskId) {
+    public Task(TaskId taskId, ActivityPartitionDetails apd) {
         this.taskId = taskId;
+        this.apd = apd;
     }
 
     public TaskId getTaskId() {
         return taskId;
+    }
+
+    public ActivityPartitionDetails getActivityPartitionDetails() {
+        return apd;
     }
 
     public TaskCluster getTaskCluster() {
@@ -35,5 +43,10 @@ public class TaskState {
 
     public void setTaskCluster(TaskCluster taskCluster) {
         this.taskCluster = taskCluster;
+    }
+
+    @Override
+    public String toString() {
+        return taskId + "(" + apd + ")";
     }
 }

@@ -14,4 +14,6 @@ public interface INetworkChannel {
     public SocketAddress getRemoteAddress();
 
     public void abort();
+
+    public void notifyConnectionManagerRegistration() throws IOException;
 }

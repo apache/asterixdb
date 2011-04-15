@@ -206,8 +206,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void notifyTaskFailure(UUID jobId, TaskAttemptId taskId, String nodeId, Exception exception)
             throws Exception {
-        TaskFailureEvent sfe = new TaskFailureEvent(this, jobId, taskId, nodeId, exception);
-        jobQueue.schedule(sfe);
+        TaskFailureEvent tfe = new TaskFailureEvent(this, jobId, taskId, nodeId, exception);
+        jobQueue.schedule(tfe);
     }
 
     @Override
@@ -240,9 +240,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public synchronized void nodeHeartbeat(String id) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Heartbeat from: " + id);
-        }
         jobQueue.schedule(new NodeHeartbeatEvent(this, id));
     }
 

@@ -85,7 +85,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public TaskAttemptId getTaskId() {
+    public TaskAttemptId getTaskAttemptId() {
         return taskId;
     }
 }

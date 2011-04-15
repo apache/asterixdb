@@ -87,9 +87,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         cursorFrame = opDesc.getLeafFactory().getFrame();
         cursor = new RangeSearchCursor(cursorFrame);
 
+        writer.open();
         try {
-
             btreeOpHelper.init();
+
             btree = btreeOpHelper.getBTree();
 
             // construct range predicate

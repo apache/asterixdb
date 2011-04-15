@@ -42,7 +42,9 @@ import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     private final Joblet joblet;
 
-    private final TaskAttemptId taskId;
+    private final TaskAttemptId taskAttemptId;
+
+    private final String displayName;
 
     private final IWorkspaceFileFactory fileFactory;
 
@@ -56,9 +58,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private volatile boolean aborted;
 
-    public Task(Joblet joblet, TaskAttemptId taskId) {
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName) {
         this.joblet = joblet;
-        this.taskId = taskId;
+        this.taskAttemptId = taskId;
+        this.displayName = displayName;
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
@@ -109,8 +112,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public TaskAttemptId getTaskId() {
-        return taskId;
+    public TaskAttemptId getTaskAttemptId() {
+        return taskAttemptId;
     }
 
     @Override
@@ -142,12 +145,17 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public void abort() {
         aborted = true;
-        collector.abort();
+        if (collector != null) {
+            collector.abort();
+        }
     }
 
     @Override
     public void run() {
+        Thread ct = Thread.currentThread();
+        String threadName = ct.getName();
         try {
+            ct.setName(displayName + ": " + taskAttemptId);
             operator.initialize();
             try {
                 if (collector != null) {
@@ -185,8 +193,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             } finally {
                 operator.deinitialize();
             }
+            joblet.notifyTaskComplete(this);
         } catch (Exception e) {
-
+            e.printStackTrace();
+            joblet.notifyTaskFailed(this, e);
+        } finally {
+            ct.setName(threadName);
         }
     }
 }

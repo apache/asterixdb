@@ -18,9 +18,9 @@ import java.util.UUID;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetJobStatusConditionVariableEvent extends SynchronizableRunnable {
+public class GetJobStatusConditionVariableEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final UUID jobId;
     private IJobStatusConditionVariable cVar;

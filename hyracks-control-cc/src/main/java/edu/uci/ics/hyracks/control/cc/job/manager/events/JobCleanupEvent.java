@@ -22,10 +22,11 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 
-public class JobCleanupEvent implements Runnable {
+public class JobCleanupEvent extends AbstractEvent {
     private ClusterControllerService ccs;
     private UUID jobId;
     private JobStatus status;
@@ -57,7 +58,7 @@ public class JobCleanupEvent implements Runnable {
                         e.printStackTrace();
                     }
                 }
-                ccs.getJobQueue().schedule(new Runnable() {
+                ccs.getJobQueue().schedule(new AbstractEvent() {
                     @Override
                     public void run() {
                         CCApplicationContext appCtx = ccs.getApplicationMap().get(

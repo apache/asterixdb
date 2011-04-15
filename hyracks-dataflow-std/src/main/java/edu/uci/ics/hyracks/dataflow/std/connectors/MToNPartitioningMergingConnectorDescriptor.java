@@ -24,8 +24,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.SortMergePartitionCollector;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.collectors.SortMergePartitionCollector;
 
 public class MToNPartitioningMergingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -33,13 +33,20 @@ public class MToNPartitioningMergingConnectorDescriptor extends AbstractMToNConn
     private final ITuplePartitionComputerFactory tpcf;
     private final int[] sortFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
+    private final boolean stable;
 
     public MToNPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
             int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
+        this(spec, tpcf, sortFields, comparatorFactories, false);
+    }
+
+    public MToNPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
+            int[] sortFields, IBinaryComparatorFactory[] comparatorFactories, boolean stable) {
         super(spec);
         this.tpcf = tpcf;
         this.sortFields = sortFields;
         this.comparatorFactories = comparatorFactories;
+        this.stable = stable;
     }
 
     @Override
@@ -59,6 +66,6 @@ public class MToNPartitioningMergingConnectorDescriptor extends AbstractMToNConn
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         return new SortMergePartitionCollector(ctx, getConnectorId(), index, sortFields, comparators, recordDesc,
-                nProducerPartitions, nProducerPartitions);
+                nProducerPartitions, nProducerPartitions, stable);
     }
 }

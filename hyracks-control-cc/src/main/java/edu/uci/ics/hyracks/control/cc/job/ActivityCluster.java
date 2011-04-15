@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.scheduler.IActivityClusterStateMachine;
 
 public class ActivityCluster {
@@ -31,7 +32,7 @@ public class ActivityCluster {
 
     private final Set<ActivityCluster> dependents;
 
-    private final Map<ActivityNodeId, TaskState[]> taskStateMap;
+    private final Map<ActivityNodeId, Task[]> taskStateMap;
 
     private TaskCluster[] taskClusters;
 
@@ -42,7 +43,7 @@ public class ActivityCluster {
         this.activities = activities;
         dependencies = new HashSet<ActivityCluster>();
         dependents = new HashSet<ActivityCluster>();
-        taskStateMap = new HashMap<ActivityNodeId, TaskState[]>();
+        taskStateMap = new HashMap<ActivityNodeId, Task[]>();
     }
 
     public Set<ActivityNodeId> getActivities() {
@@ -61,7 +62,7 @@ public class ActivityCluster {
         return dependencies;
     }
 
-    public Map<ActivityNodeId, TaskState[]> getTaskStateMap() {
+    public Map<ActivityNodeId, Task[]> getTaskStateMap() {
         return taskStateMap;
     }
 
@@ -83,5 +84,17 @@ public class ActivityCluster {
 
     public JobRun getJobRun() {
         return jobRun;
+    }
+
+    public int getMaxTaskClusterAttempts() {
+        return 1;
+    }
+
+    public void notifyTaskClusterFailure(TaskClusterAttempt tcAttempt, Exception exception) throws HyracksException {
+        acsm.notifyTaskClusterFailure(tcAttempt, exception);
+    }
+
+    public void notifyActivityClusterComplete() throws HyracksException {
+        jobRun.getStateMachine().notifyActivityClusterComplete(this);
     }
 }

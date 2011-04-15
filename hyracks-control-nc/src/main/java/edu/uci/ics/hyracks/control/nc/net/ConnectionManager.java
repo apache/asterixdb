@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SelectionKey;
@@ -26,8 +25,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +43,7 @@ import edu.uci.ics.hyracks.control.nc.partitions.IPartitionRequestListener;
 public class ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
 
-    private static final int INITIAL_MESSAGE_SIZE = 40;
+    static final int INITIAL_MESSAGE_SIZE = 40;
 
     private final IHyracksRootContext ctx;
 
@@ -95,6 +96,7 @@ public class ConnectionManager {
     private final class ConnectionListenerThread extends Thread {
         public ConnectionListenerThread() {
             super("Hyracks NC Connection Listener");
+            setDaemon(true);
         }
 
         @Override
@@ -105,7 +107,9 @@ public class ConnectionManager {
                     dataListener.addIncomingConnection(sc);
                 } catch (AsynchronousCloseException e) {
                     // do nothing
-                    e.printStackTrace();
+                    if (!stopped) {
+                        e.printStackTrace();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -117,19 +121,20 @@ public class ConnectionManager {
         private Selector selector;
 
         private final List<SocketChannel> pendingIncomingConnections;
-        private final List<SocketChannel> pendingNegotiations;
+        private final Set<SocketChannel> pendingNegotiations;
         private final List<INetworkChannel> pendingOutgoingConnections;
         private final List<INetworkChannel> pendingAbortConnections;
 
         public DataListenerThread() {
             super("Hyracks Data Listener Thread");
+            setDaemon(true);
             try {
                 selector = Selector.open();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             pendingIncomingConnections = new ArrayList<SocketChannel>();
-            pendingNegotiations = new ArrayList<SocketChannel>();
+            pendingNegotiations = new HashSet<SocketChannel>();
             pendingOutgoingConnections = new ArrayList<INetworkChannel>();
             pendingAbortConnections = new ArrayList<INetworkChannel>();
         }
@@ -170,16 +175,12 @@ public class ConnectionManager {
                         }
                         if (!pendingOutgoingConnections.isEmpty()) {
                             for (INetworkChannel nc : pendingOutgoingConnections) {
-                                SocketAddress rAddr = nc.getRemoteAddress();
                                 SocketChannel sc = SocketChannel.open();
                                 sc.configureBlocking(false);
-                                int interestOps = SelectionKey.OP_READ;
-                                if (!sc.connect(rAddr)) {
-                                    interestOps |= SelectionKey.OP_CONNECT;
-                                }
-                                SelectionKey scKey = sc.register(selector, interestOps);
+                                SelectionKey scKey = sc.register(selector, 0);
                                 scKey.attach(nc);
                                 nc.setSelectionKey(scKey);
+                                nc.notifyConnectionManagerRegistration();
                             }
                             pendingOutgoingConnections.clear();
                         }
@@ -207,6 +208,7 @@ public class ConnectionManager {
                                         buffer.flip();
                                         if (buffer.remaining() >= INITIAL_MESSAGE_SIZE) {
                                             PartitionId pid = readInitialMessage(buffer);
+                                            pendingNegotiations.remove(sc);
                                             key.interestOps(0);
                                             NetworkOutputChannel channel = new NetworkOutputChannel(ctx, 5);
                                             channel.setSelectionKey(key);

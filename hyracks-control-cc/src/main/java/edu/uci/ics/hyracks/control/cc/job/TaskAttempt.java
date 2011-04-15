@@ -26,9 +26,11 @@ public class TaskAttempt {
         ABORTED,
     }
 
+    private final TaskClusterAttempt tcAttempt;
+
     private final TaskAttemptId taskId;
 
-    private final TaskState taskState;
+    private final Task taskState;
 
     private String nodeId;
 
@@ -36,16 +38,21 @@ public class TaskAttempt {
 
     private Exception exception;
 
-    public TaskAttempt(TaskAttemptId taskId, TaskState taskState) {
+    public TaskAttempt(TaskClusterAttempt tcAttempt, TaskAttemptId taskId, Task taskState) {
+        this.tcAttempt = tcAttempt;
         this.taskId = taskId;
         this.taskState = taskState;
+    }
+
+    public TaskClusterAttempt getTaskClusterAttempt() {
+        return tcAttempt;
     }
 
     public TaskAttemptId getTaskAttemptId() {
         return taskId;
     }
 
-    public TaskState getTaskState() {
+    public Task getTaskState() {
         return taskState;
     }
 

@@ -15,7 +15,12 @@
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 
 public interface IJobRunStateMachine {
     public void schedule() throws HyracksException;
+
+    public void notifyActivityClusterFailure(ActivityCluster ac, Exception exception) throws HyracksException;
+
+    public void notifyActivityClusterComplete(ActivityCluster activityCluster) throws HyracksException;
 }

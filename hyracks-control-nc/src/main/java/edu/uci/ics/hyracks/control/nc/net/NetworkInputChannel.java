@@ -21,11 +21,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -57,6 +59,8 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
     private IInputChannelMonitor monitor;
 
     private Object attachment;
+
+    private ByteBuffer writeBuffer;
 
     public NetworkInputChannel(IHyracksRootContext ctx, ConnectionManager connectionManager,
             SocketAddress remoteAddress, PartitionId partitionId, int nBuffers) {
@@ -94,11 +98,16 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
 
     @Override
     public synchronized void recycleBuffer(ByteBuffer buffer) {
+        buffer.clear();
         emptyQueue.add(buffer);
         if (!eos && !aborted) {
             int ops = key.interestOps();
             if ((ops & SelectionKey.OP_READ) == 0) {
                 key.interestOps(ops | SelectionKey.OP_READ);
+                key.selector().wakeup();
+                if (currentBuffer == null) {
+                    currentBuffer = emptyQueue.poll();
+                }
             }
         }
     }
@@ -125,7 +134,17 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
             monitor.notifyEndOfStream(this);
             return true;
         }
-        if (key.isReadable()) {
+        if (key.isConnectable()) {
+            if (socketChannel.finishConnect()) {
+                key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT);
+                prepareForWrite();
+            }
+        } else if (key.isWritable()) {
+            socketChannel.write(writeBuffer);
+            if (writeBuffer.remaining() == 0) {
+                key.interestOps(SelectionKey.OP_READ);
+            }
+        } else if (key.isReadable()) {
             if (LOGGER.isLoggable(Level.FINER)) {
                 LOGGER.finer("Before read: " + currentBuffer.position() + " " + currentBuffer.limit());
             }
@@ -144,6 +163,11 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("NetworkInputChannel: frame received: sender = " + partitionId.getSenderIndex());
                 }
+                if (currentBuffer.getInt(FrameHelper.getTupleCountOffset(currentBuffer.capacity())) == 0) {
+                    eos = true;
+                    monitor.notifyEndOfStream(this);
+                    return true;
+                }
                 fullQueue.add(currentBuffer);
                 currentBuffer = emptyQueue.poll();
                 if (currentBuffer == null && key.isValid()) {
@@ -156,6 +180,26 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
             currentBuffer.compact();
         }
         return false;
+    }
+
+    private void prepareForConnect() {
+        key.interestOps(SelectionKey.OP_CONNECT);
+    }
+
+    private void prepareForWrite() {
+        writeBuffer = ByteBuffer.allocate(ConnectionManager.INITIAL_MESSAGE_SIZE);
+        writeUUID(writeBuffer, partitionId.getJobId());
+        writeUUID(writeBuffer, partitionId.getConnectorDescriptorId().getId());
+        writeBuffer.putInt(partitionId.getSenderIndex());
+        writeBuffer.putInt(partitionId.getReceiverIndex());
+        writeBuffer.flip();
+
+        key.interestOps(SelectionKey.OP_WRITE);
+    }
+
+    private void writeUUID(ByteBuffer buffer, UUID uuid) {
+        buffer.putLong(uuid.getMostSignificantBits());
+        buffer.putLong(uuid.getLeastSignificantBits());
     }
 
     @Override
@@ -184,5 +228,14 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
 
     public boolean aborted() {
         return aborted;
+    }
+
+    @Override
+    public void notifyConnectionManagerRegistration() throws IOException {
+        if (socketChannel.connect(remoteAddress)) {
+            prepareForWrite();
+        } else {
+            prepareForConnect();
+        }
     }
 }

@@ -20,21 +20,23 @@ import java.util.logging.Logger;
 public class JobQueue {
     private static final Logger LOGGER = Logger.getLogger(JobQueue.class.getName());
 
-    private final LinkedBlockingQueue<Runnable> queue;
+    private final LinkedBlockingQueue<AbstractEvent> queue;
     private final JobThread thread;
 
     public JobQueue() {
-        queue = new LinkedBlockingQueue<Runnable>();
+        queue = new LinkedBlockingQueue<AbstractEvent>();
         thread = new JobThread();
         thread.start();
     }
 
-    public void schedule(Runnable runnable) {
-        LOGGER.info("Scheduling: " + runnable);
-        queue.offer(runnable);
+    public void schedule(AbstractEvent event) {
+        if (LOGGER.isLoggable(event.logLevel())) {
+            LOGGER.info("Scheduling: " + event);
+        }
+        queue.offer(event);
     }
 
-    public void scheduleAndSync(SynchronizableRunnable sRunnable) throws Exception {
+    public void scheduleAndSync(SynchronizableEvent sRunnable) throws Exception {
         schedule(sRunnable);
         sRunnable.sync();
     }

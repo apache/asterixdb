@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.NonDeterministicPartitionCollector;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicPartitionCollector;
 
 public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -50,7 +50,8 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
             int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(index);
-        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, expectedPartitions);
+        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, nProducerPartitions,
+                expectedPartitions);
     }
 
     @Override

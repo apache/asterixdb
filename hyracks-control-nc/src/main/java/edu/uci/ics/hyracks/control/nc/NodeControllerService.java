@@ -58,6 +58,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -73,6 +74,7 @@ import edu.uci.ics.hyracks.control.common.base.NCConfig;
 import edu.uci.ics.hyracks.control.common.base.NodeCapability;
 import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -81,6 +83,7 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.net.ConnectionManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkInputChannel;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
+import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
@@ -215,8 +218,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return InetAddress.getByAddress(ipBytes);
     }
 
-    public void startTasks(String appName, UUID jobId, byte[] jagBytes, List<TaskAttemptId> tasks,
-            Map<OperatorDescriptorId, Integer> opNumPartitions) throws Exception {
+    public void startTasks(String appName, final UUID jobId, byte[] jagBytes,
+            List<TaskAttemptDescriptor> taskDescriptors) throws Exception {
         try {
             NCApplicationContext appCtx = applications.get(appName);
             final JobActivityGraph plan = (JobActivityGraph) appCtx.deserialize(jagBytes);
@@ -235,56 +238,53 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
             final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx);
 
-            for (TaskAttemptId tid : tasks) {
-                IActivityNode han = plan.getActivityNodeMap().get(tid.getTaskId().getActivityId());
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("Initializing " + tid + " -> " + han);
+            for (TaskAttemptDescriptor td : taskDescriptors) {
+                TaskAttemptId taId = td.getTaskAttemptId();
+                TaskId tid = taId.getTaskId();
+                IActivityNode han = plan.getActivityNodeMap().get(tid.getActivityId());
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 IOperatorDescriptor op = han.getOwner();
-                int partition = tid.getTaskId().getPartition();
-                Task task = new Task(joblet, tid);
+                final int partition = tid.getPartition();
+                Task task = new Task(joblet, taId, han.getClass().getName());
                 IOperatorNodePushable operator = han.createPushRuntime(task, joblet.getEnvironment(op, partition), rdp,
-                        partition, opNumPartitions.get(op.getOperatorId()));
+                        partition, td.getPartitionCount());
 
                 IPartitionCollector collector = null;
 
-                List<IConnectorDescriptor> inputs = plan.getActivityInputConnectorDescriptors(tid.getTaskId()
-                        .getActivityId());
+                List<IConnectorDescriptor> inputs = plan.getActivityInputConnectorDescriptors(tid.getActivityId());
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         if (i >= 1) {
                             throw new HyracksException("Multiple inputs to an activity not currently supported");
                         }
-                        if (!inputs.isEmpty()) {
-                            IConnectorDescriptor conn = inputs.get(0);
-                            OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                    .getOperatorId();
-                            OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                    .getOperatorId();
-                            RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
-                            collector = conn.createPartitionCollector(task, recordDesc, partition,
-                                    opNumPartitions.get(producerOpId), opNumPartitions.get(consumerOpId));
+                        IConnectorDescriptor conn = inputs.get(i);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
+                        RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        collector = conn.createPartitionCollector(task, recordDesc, partition,
+                                td.getInputPartitionCounts()[i], td.getPartitionCount());
                     }
                 }
-                List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getTaskId()
-                        .getActivityId());
+                List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getActivityId());
                 if (outputs != null) {
                     for (int i = 0; i < outputs.size(); ++i) {
-                        IConnectorDescriptor conn = outputs.get(i);
-                        OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                .getOperatorId();
-                        OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                .getOperatorId();
+                        final IConnectorDescriptor conn = outputs.get(i);
                         RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
                         IPartitionWriterFactory pwFactory = new IPartitionWriterFactory() {
                             @Override
                             public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                                return null;
+                                return new PipelinedPartition(partitionManager, new PartitionId(jobId,
+                                        conn.getConnectorId(), partition, receiverIndex));
                             }
                         };
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("output: " + i + ": " + conn.getConnectorId());
+                        }
                         IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
-                                opNumPartitions.get(producerOpId), opNumPartitions.get(consumerOpId));
+                                td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
                         operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
                 }
@@ -334,12 +334,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyTaskFailed(UUID jobId, TaskAttemptId taskId, Exception exception) throws Exception {
+    public void notifyTaskFailed(UUID jobId, TaskAttemptId taskId, Exception exception) {
         try {
             ccs.notifyTaskFailure(jobId, taskId, id, exception);
         } catch (Exception e) {
             e.printStackTrace();
-            throw e;
         }
     }
 
@@ -467,8 +466,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
         Joblet ji = jobletMap.get(pid.getJobId());
-        PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ctx, connectionManager,
-                new InetSocketAddress(networkAddress.getIpAddress(), networkAddress.getPort()), pid, 1));
-        ji.reportPartitionAvailability(channel);
+        if (ji != null) {
+            PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ctx, connectionManager,
+                    new InetSocketAddress(networkAddress.getIpAddress(), networkAddress.getPort()), pid, 1));
+            ji.reportPartitionAvailability(channel);
+        }
     }
 }

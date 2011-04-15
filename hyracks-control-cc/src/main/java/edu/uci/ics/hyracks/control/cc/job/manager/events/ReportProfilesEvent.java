@@ -17,12 +17,14 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
-public class ReportProfilesEvent implements Runnable {
+public class ReportProfilesEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
     private final List<JobProfile> profiles;
 
@@ -37,5 +39,10 @@ public class ReportProfilesEvent implements Runnable {
         for (JobProfile profile : profiles) {
             JobRun run = runMap.get(profile.getJobId());
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.FINEST;
     }
 }

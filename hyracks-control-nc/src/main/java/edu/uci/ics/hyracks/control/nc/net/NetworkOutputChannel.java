@@ -149,10 +149,8 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
         synchronized (this) {
             fullQueue.add(destBuffer);
         }
-        int interestOps = key.interestOps();
-        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
-            key.interestOps(interestOps | SelectionKey.OP_WRITE);
-        }
+        key.interestOps(SelectionKey.OP_WRITE);
+        key.selector().wakeup();
     }
 
     @Override
@@ -163,5 +161,11 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
     @Override
     public synchronized void close() throws HyracksDataException {
         eos = true;
+        key.interestOps(SelectionKey.OP_WRITE);
+        key.selector().wakeup();        
+    }
+
+    @Override
+    public void notifyConnectionManagerRegistration() throws IOException {
     }
 }

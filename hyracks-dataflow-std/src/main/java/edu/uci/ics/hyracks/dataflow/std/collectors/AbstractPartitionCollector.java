@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm;
+package edu.uci.ics.hyracks.dataflow.std.collectors;
 
 import java.util.UUID;
 
@@ -21,21 +21,21 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 
 public abstract class AbstractPartitionCollector implements IPartitionCollector {
-    protected final IHyracksTaskContext stageletContext;
+    protected final IHyracksTaskContext ctx;
 
     protected final ConnectorDescriptorId connectorId;
 
     protected final int receiverIndex;
 
     public AbstractPartitionCollector(IHyracksTaskContext ctx, ConnectorDescriptorId connectorId, int receiverIndex) {
-        this.stageletContext = ctx;
+        this.ctx = ctx;
         this.connectorId = connectorId;
         this.receiverIndex = receiverIndex;
     }
 
     @Override
     public UUID getJobId() {
-        return stageletContext.getJobletContext().getJobId();
+        return ctx.getJobletContext().getJobId();
     }
 
     @Override

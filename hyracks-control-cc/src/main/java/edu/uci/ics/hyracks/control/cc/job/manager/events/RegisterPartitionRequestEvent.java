@@ -22,9 +22,10 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 
-public class RegisterPartitionRequestEvent implements Runnable {
+public class RegisterPartitionRequestEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
     private final Collection<PartitionId> requiredPartitionIds;
     private final String nodeId;
@@ -60,5 +61,10 @@ public class RegisterPartitionRequestEvent implements Runnable {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PartitionRequest@[" + nodeId + "][" + requiredPartitionIds + "]";
     }
 }

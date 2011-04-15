@@ -90,13 +90,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
         Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(hod.getOperatorId());
         if (!opEnvMap.containsKey(partition)) {
-            opEnvMap.put(partition, new OperatorEnvironmentImpl());
+            opEnvMap.put(partition, new OperatorEnvironmentImpl(nodeController.getId()));
         }
         return opEnvMap.get(partition);
     }
 
     public void addTask(Task task) {
-        taskMap.put(task.getTaskId(), task);
+        taskMap.put(task.getTaskAttemptId(), task);
     }
 
     public Map<TaskAttemptId, Task> getTaskMap() {
@@ -104,9 +104,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     private static final class OperatorEnvironmentImpl implements IOperatorEnvironment {
+        private final String nodeId;
         private final Map<String, Object> map;
 
-        public OperatorEnvironmentImpl() {
+        public OperatorEnvironmentImpl(String nodeId) {
+            this.nodeId = nodeId;
             map = new HashMap<String, Object>();
         }
 
@@ -119,6 +121,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         public void set(String name, Object value) {
             map.put(name, value);
         }
+
+        public String toString() {
+            return super.toString() + "@" + nodeId;
+        }
     }
 
     public Executor getExecutor() {
@@ -127,14 +133,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {
         taskMap.remove(task);
-        TaskProfile taskProfile = new TaskProfile(task.getTaskId());
+        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
         task.dumpProfile(taskProfile);
-        nodeController.notifyTaskComplete(jobId, task.getTaskId(), taskProfile);
+        nodeController.notifyTaskComplete(jobId, task.getTaskAttemptId(), taskProfile);
     }
 
-    public synchronized void notifyStageletFailed(Task task, Exception exception) throws Exception {
+    public synchronized void notifyTaskFailed(Task task, Exception exception) {
         taskMap.remove(task);
-        nodeController.notifyTaskFailed(jobId, task.getTaskId(), exception);
+        nodeController.notifyTaskFailed(jobId, task.getTaskAttemptId(), exception);
     }
 
     public NodeControllerService getNodeController() {
@@ -147,9 +153,9 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             counters.put(e.getKey(), e.getValue().get());
         }
         for (Task task : taskMap.values()) {
-            TaskProfile taskProfile = new TaskProfile(task.getTaskId());
+            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
             task.dumpProfile(taskProfile);
-            jProfile.getTaskProfiles().put(task.getTaskId(), taskProfile);
+            jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }
     }
 

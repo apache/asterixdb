@@ -16,11 +16,16 @@ package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
+import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
 
 public interface IActivityClusterStateMachine {
     public void schedule() throws HyracksException;
 
+    public void abort() throws HyracksException;
+
     public void notifyTaskComplete(TaskAttempt ta) throws HyracksException;
 
     public void notifyTaskFailure(TaskAttempt ta, Exception exception) throws HyracksException;
+
+    public void notifyTaskClusterFailure(TaskClusterAttempt tcAttempt, Exception exception) throws HyracksException;
 }

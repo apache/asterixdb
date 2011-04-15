@@ -14,27 +14,43 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-
 public class TaskClusterAttempt {
     public enum TaskClusterStatus {
-        INITIALIZED,
         RUNNING,
         COMPLETED,
         FAILED,
+        ABORTED,
     }
 
-    private final TaskAttempt[] taskAttempts;
+    private final TaskCluster taskCluster;
+
+    private final int attempt;
+
+    private TaskAttempt[] taskAttempts;
 
     private TaskClusterStatus status;
 
     private int pendingTaskCounter;
 
-    public TaskClusterAttempt(TaskAttempt[] taskAttempts) {
+    public TaskClusterAttempt(TaskCluster taskCluster, int attempt) {
+        this.taskCluster = taskCluster;
+        this.attempt = attempt;
+    }
+
+    public TaskCluster getTaskCluster() {
+        return taskCluster;
+    }
+
+    public void setTaskAttempts(TaskAttempt[] taskAttempts) {
         this.taskAttempts = taskAttempts;
     }
 
     public TaskAttempt[] getTaskAttempts() {
         return taskAttempts;
+    }
+
+    public int getAttempt() {
+        return attempt;
     }
 
     public void setStatus(TaskClusterStatus status) {

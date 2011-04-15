@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm;
+package edu.uci.ics.hyracks.dataflow.std.collectors;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,31 +35,33 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
 
     private final BitSet expectedPartitions;
 
-    private IInputChannel[] channels;
+    private final int nSenderPartitions;
 
-    private BitSet frameAvailability;
+    private final IInputChannel[] channels;
 
-    private int[] availableFrameCounts;
+    private final BitSet frameAvailability;
 
-    private BitSet eosSenders;
+    private final int[] availableFrameCounts;
+
+    private final BitSet eosSenders;
 
     private BitSet closedSenders;
 
     private int lastReadSender;
 
     public NonDeterministicPartitionCollector(IHyracksTaskContext ctx, ConnectorDescriptorId connectorId,
-            int receiverIndex, BitSet expectedPartitions) {
+            int receiverIndex, int nSenderPartitions, BitSet expectedPartitions) {
         super(ctx, connectorId, receiverIndex);
         this.expectedPartitions = expectedPartitions;
-        int nSenders = expectedPartitions.size();
+        this.nSenderPartitions = nSenderPartitions;
         reader = new FrameReader();
-        channels = new IInputChannel[nSenders];
-        eosSenders = new BitSet(nSenders);
-        closedSenders = new BitSet(nSenders);
+        channels = new IInputChannel[nSenderPartitions];
+        eosSenders = new BitSet(nSenderPartitions);
+        closedSenders = new BitSet(nSenderPartitions);
         closedSenders.or(expectedPartitions);
-        closedSenders.flip(0, nSenders);
-        frameAvailability = new BitSet(nSenders);
-        availableFrameCounts = new int[nSenders];
+        closedSenders.flip(0, nSenderPartitions);
+        frameAvailability = new BitSet(nSenderPartitions);
+        availableFrameCounts = new int[nSenderPartitions];
     }
 
     @Override
@@ -68,13 +70,15 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
     }
 
     @Override
-    public synchronized void addPartitions(Collection<PartitionChannel> partitions) throws HyracksException {
+    public void addPartitions(Collection<PartitionChannel> partitions) throws HyracksException {
         for (PartitionChannel pc : partitions) {
             PartitionId pid = pc.getPartitionId();
             IInputChannel channel = pc.getInputChannel();
             channel.setAttachment(pid);
             channel.registerMonitor(reader);
-            channels[pid.getSenderIndex()] = channel;
+            synchronized (this) {
+                channels[pid.getSenderIndex()] = channel;
+            }
             channel.open();
         }
     }
@@ -99,7 +103,7 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                 while (true) {
                     switch (lastReadSender) {
                         default:
-                            lastReadSender = frameAvailability.nextSetBit(lastReadSender);
+                            lastReadSender = frameAvailability.nextSetBit(lastReadSender + 1);
                             if (lastReadSender >= 0) {
                                 break;
                             }
@@ -121,13 +125,14 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                         eosSenders.clear(i);
                         closedSenders.set(i);
                     }
-                    if (closedSenders.nextClearBit(0) < 0) {
+                    int nextClosedBitIndex = closedSenders.nextClearBit(0);
+                    if (nextClosedBitIndex < 0 || nextClosedBitIndex >= nSenderPartitions) {
                         return false;
                     }
                     try {
                         NonDeterministicPartitionCollector.this.wait();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        throw new HyracksDataException(e);
                     }
                 }
             }
@@ -136,9 +141,11 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
         @Override
         public void close() throws HyracksDataException {
             synchronized (NonDeterministicPartitionCollector.this) {
-                for (int i = closedSenders.nextClearBit(0); i >= 0; i = closedSenders.nextClearBit(i)) {
+                for (int i = closedSenders.nextClearBit(0); i >= 0 && i < nSenderPartitions; i = closedSenders
+                        .nextClearBit(i + 1)) {
                     if (channels[i] != null) {
                         channels[i].close();
+                        channels[i] = null;
                     }
                 }
             }
@@ -169,7 +176,7 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
     @Override
     public Collection<PartitionId> getRequiredPartitionIds() throws HyracksException {
         Collection<PartitionId> c = new ArrayList<PartitionId>(expectedPartitions.cardinality());
-        for (int i = expectedPartitions.nextSetBit(0); i >= 0; i = expectedPartitions.nextSetBit(i)) {
+        for (int i = expectedPartitions.nextSetBit(0); i >= 0; i = expectedPartitions.nextSetBit(i + 1)) {
             c.add(new PartitionId(getJobId(), getConnectorId(), i, getReceiverIndex()));
         }
         return c;

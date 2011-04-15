@@ -19,9 +19,9 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetJobSummariesJSONEvent extends SynchronizableRunnable {
+public class GetJobSummariesJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private JSONArray summaries;
 

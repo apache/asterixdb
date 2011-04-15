@@ -18,9 +18,9 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class UnregisterNodeEvent extends SynchronizableRunnable {
+public class UnregisterNodeEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final String nodeId;
 

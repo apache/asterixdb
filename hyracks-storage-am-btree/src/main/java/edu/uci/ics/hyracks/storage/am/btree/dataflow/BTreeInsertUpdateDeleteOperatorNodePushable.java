@@ -51,6 +51,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
         writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+        writer.open();
         try {
             btreeOpHelper.init();
             btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
