@@ -418,7 +418,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 Task task = taskMap.get(taId);
                 if (task != null) {
                     task.abort();
-                    task.close();
                 }
             }
             ji.close();

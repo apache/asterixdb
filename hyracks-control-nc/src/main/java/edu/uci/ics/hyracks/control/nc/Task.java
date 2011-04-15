@@ -199,6 +199,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             joblet.notifyTaskFailed(this, e);
         } finally {
             ct.setName(threadName);
+            close();
         }
     }
 }

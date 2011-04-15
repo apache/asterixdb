@@ -393,8 +393,11 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         while (!done) {
             done = true;
             Set<TaskId> set = new HashSet<TaskId>();
+            Set<TaskId> oldSet = null;
             for (Map.Entry<TaskId, Set<TaskId>> e : taskClusterMap.entrySet()) {
                 set.clear();
+                oldSet = e.getValue();
+                set.addAll(e.getValue());
                 for (TaskId tid : e.getValue()) {
                     set.addAll(taskClusterMap.get(tid));
                 }
@@ -409,7 +412,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                     break;
                 }
             }
-            for (TaskId tid : set) {
+            for (TaskId tid : oldSet) {
                 taskClusterMap.put(tid, set);
             }
         }
