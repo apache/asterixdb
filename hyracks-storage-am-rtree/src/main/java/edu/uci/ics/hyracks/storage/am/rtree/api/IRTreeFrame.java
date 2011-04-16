@@ -9,12 +9,20 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
-
+    
+    public int findTuple(ITupleReference tuple, MultiComparator cmp);
+    
+    public int getPageNsn();
+    
+    public void setPageNsn(int pageNsn);
+    
     public int getRightPage();
 
     public void setRightPage(int rightPage);
 
-    public int getChildPageId(ITupleReference tuple, TupleEntryArrayList entries, ITreeIndexTupleReference[] nodesMBRs,
+    public int getBestChildPageId(MultiComparator cmp);
+    
+    public boolean checkEnlargement(ITupleReference tuple, TupleEntryArrayList entries, ITreeIndexTupleReference[] nodesMBRs,
             MultiComparator cmp);
 
     public void adjustNodeMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
@@ -30,4 +38,6 @@ public interface IRTreeFrame extends ITreeIndexFrame {
     public Rectangle intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
 
     public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+    
+    public void enlarge(ITupleReference tuple, MultiComparator cmp);
 }

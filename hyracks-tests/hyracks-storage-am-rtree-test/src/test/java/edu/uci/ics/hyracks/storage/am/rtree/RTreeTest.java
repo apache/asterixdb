@@ -48,8 +48,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class RTreeTest extends AbstractRTreeTest {
 
-    private static final int PAGE_SIZE = 1024;
-    private static final int NUM_PAGES = 1000;
+    private static final int PAGE_SIZE = 256;
+    private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 

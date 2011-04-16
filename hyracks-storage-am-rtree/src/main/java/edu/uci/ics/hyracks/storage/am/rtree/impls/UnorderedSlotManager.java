@@ -45,9 +45,9 @@ public class UnorderedSlotManager extends AbstractSlotManager {
             if (frame.getBuffer().getInt(slotOff) == -1) {
                 int slotStartOff = getSlotEndOff();
                 int length = slotOff - slotStartOff;
-                System.arraycopy(frame.getBuffer().array(), slotStartOff, frame.getBuffer().array(),
-                        slotStartOff + slotSize, length);
-                ((NSMRTreeFrame)frame).setTupleCount(frame.getTupleCount() - 1);
+                System.arraycopy(frame.getBuffer().array(), slotStartOff, frame.getBuffer().array(), slotStartOff
+                        + slotSize, length);
+                ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
             } else {
                 slotOff -= slotSize;
             }

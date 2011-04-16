@@ -51,14 +51,7 @@
   		<version>0.1.4</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency>  	
-  	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-storage-am-btree</artifactId>
-  		<version>0.1.4</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>  	
+  	</dependency>  		
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>
