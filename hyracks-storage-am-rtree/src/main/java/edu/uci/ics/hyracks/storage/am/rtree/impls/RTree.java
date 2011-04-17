@@ -400,7 +400,7 @@ public class RTree {
                 writeLatchesAcquired++;
                 ctx.interiorFrame.setPage(parentNode);
             }
-        }
+        } 
         if (foundParent) {
             ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), interiorCmp);
             insertTuple(parentNode, parentId, ctx.splitKey.getRightTuple(), ctx, ctx.interiorFrame.isLeaf());
@@ -411,71 +411,68 @@ public class RTree {
             writeLatchesReleased++;
             bufferCache.unpin(parentNode);
             unpins++;
+            return;
         }
 
-        // // very rare situation when the there is a root split, search for the
-        // parent tuple
-        // ctx.path.clear();
-        // ctx.pageLsns.clear();
-        // findPath(ctx, isLeaf);
+        // very rare situation when the there is a root split, do an exhaustive
+        // breadth-first traversal looking for the parent tuple
 
-        // newstack = findPath( item->parent )
-        // replace part of stack to new one
-        // latch( parent->page, X-mode )
-        // findParent( item );
-
+        ctx.path.clear();
+        ctx.pageLsns.clear();
+        ctx.findPathList.clear();
+        findPath(ctx);
+        updateParent(ctx);
     }
 
-    // public void findPath(RTreeOpContext ctx, boolean isLeaf) throws Exception
-    // {
-    // int pageId = rootPage;
-    // int parentLsn = 0;
-    // ctx.path.add(pageId);
-    // ctx.pageLsns.add(parentLsn);
-    //
-    // while (!ctx.path.isEmpty()) {
-    // pageId = ctx.path.getLast();
-    // parentLsn = ctx.pageLsns.getLast();
-    // ICachedPage node =
-    // bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-    // pins++;
-    // node.acquireReadLatch();
-    // readLatchesAcquired++;
-    // ctx.interiorFrame.setPage(node);
-    //
-    // if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
-    // ctx.path.add(ctx.interiorFrame.getRightPage());
-    // ctx.pageLsns.add(0);
-    // }
-    //
-    //
-    // }
-    //
-    // push stack, [root, 0, 0] // page, LSN, parent
-    // while( stack )
-    // ptr = top of stack
-    // latch( ptr->page, S-mode )
-    // if ( ptr->parent->page->lsn < ptr->page->nsn )
-    // push stack, [ ptr->page->rightlink, 0, ptr->parent ]
-    // end
-    // for( each tuple on page )
-    // if ( tuple->pagepointer == item->page )
-    // return stack
-    // else
-    // add to stack at the end [tuple->pagepointer,0, ptr]
-    // end
-    // end
-    // unlatch( ptr->page )
-    // pop stack
-    // end
-    //
-    //
-    //
-    //
-    //
-    //
-    // }
+    public void findPath(RTreeOpContext ctx) throws Exception {
+        int pageId = rootPage;
+        int parentIndex = -1;
+        int parentLsn = 0;
+        int pageLsn, pageIndex;
+        ctx.findPathList.add(pageId, parentIndex);
 
+        while (!ctx.findPathList.isLast()) {
+            pageId = ctx.findPathList.getFirstPageId();
+            parentIndex = ctx.findPathList.getFirstParentIndex();
+            ctx.findPathList.moveFirst();
+            ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+            pins++;
+            node.acquireReadLatch();
+            readLatchesAcquired++;
+            ctx.interiorFrame.setPage(node);
+            pageLsn = ctx.interiorFrame.getPageLsn();
+            pageIndex = ctx.findPathList.size() - 1;
+            ctx.findPathList.setPageLsn(pageIndex, pageLsn);
+
+            if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
+                ctx.findPathList.add(ctx.interiorFrame.getRightPage(), parentIndex);
+            }
+            parentLsn = pageLsn;
+            
+            if (ctx.interiorFrame.findTuple(ctx.splitKey.getLeftTuple(), ctx.findPathList, pageIndex, interiorCmp) != -1) {
+                fillPath(ctx, pageIndex);
+
+                node.releaseReadLatch();
+                readLatchesReleased++;
+                bufferCache.unpin(node);
+                unpins++;
+                return;
+            }
+            node.releaseReadLatch();
+            readLatchesReleased++;
+            bufferCache.unpin(node);
+            unpins++;
+        } 
+    }
+
+    public void fillPath(RTreeOpContext ctx, int pageIndex) throws Exception {
+        if (pageIndex != -1) {
+            fillPath(ctx, ctx.findPathList.getParentIndex(pageIndex));
+            ctx.path.add(ctx.findPathList.getPageId(pageIndex));
+            ctx.pageLsns.add(ctx.findPathList.getPageLsn(pageIndex));
+        }
+    }
+    
     public ICachedPage findLeaf(RTreeOpContext ctx) throws Exception {
         int pageId = rootPage;
         boolean writeLatched = false;

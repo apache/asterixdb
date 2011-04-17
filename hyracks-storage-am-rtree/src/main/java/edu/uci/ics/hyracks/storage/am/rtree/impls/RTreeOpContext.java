@@ -20,6 +20,7 @@ public final class RTreeOpContext {
     public ITreeIndexTupleReference[] nodesMBRs;
     public final IntArrayList path;
     public final IntArrayList pageLsns;
+    public final FindPathList findPathList; // works as a queue
     public Rectangle[] rec;
 
     public RTreeOpContext(TreeIndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
@@ -38,6 +39,7 @@ public final class RTreeOpContext {
         nodesMBRs = new ITreeIndexTupleReference[treeHeightHint];
         path = new IntArrayList(treeHeightHint, treeHeightHint);
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
+        findPathList = new FindPathList(100, 100);
         for (int i = 0; i < treeHeightHint; i++) {
             nodesMBRs[i] = interiorFrame.getTupleWriter().createTupleReference();
             nodesMBRs[i].setFieldCount(nodesMBRs[i].getFieldCount());
@@ -70,6 +72,9 @@ public final class RTreeOpContext {
             path.clear();
         }
         if (pageLsns != null) {
+            pageLsns.clear();
+        }
+        if (findPathList != null) {
             pageLsns.clear();
         }
     }
