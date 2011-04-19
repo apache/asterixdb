@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCleanupEvent;
 import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 import edu.uci.ics.hyracks.control.common.job.dataflow.PipelinedConnectorPolicy;
+import edu.uci.ics.hyracks.control.common.job.dataflow.SendSideMaterializedConnectorPolicy;
 
 public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     private static final Logger LOGGER = Logger.getLogger(DefaultJobRunStateMachine.class.getName());
@@ -327,7 +328,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
 
     private void buildTaskClusters(ActivityCluster ac) throws HyracksException {
         Map<ActivityNodeId, ActivityPartitionDetails> pcMap = computePartitionCounts(ac);
-        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskStateMap();
+
+        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskMap();
 
         for (ActivityNodeId anId : ac.getActivities()) {
             ActivityPartitionDetails apd = pcMap.get(anId);
@@ -337,10 +339,10 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
             }
             taskStateMap.put(anId, taskStates);
         }
-
+        Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = assignConnectorPolicy(ac, pcMap);
+        ac.setConnectorPolicyMap(connectorPolicies);
+        
         Set<ActivityNodeId> activities = ac.getActivities();
-
-        Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
 
         Map<TaskId, Set<TaskId>> taskClusterMap = new HashMap<TaskId, Set<TaskId>>();
         for (ActivityNodeId anId : activities) {
@@ -364,7 +366,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                     ConnectorDescriptorId cdId = c.getConnectorId();
                     IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
                     if (cPolicy == null) {
-                        cPolicy = new PipelinedConnectorPolicy();
+                        cPolicy = new SendSideMaterializedConnectorPolicy();
                     }
                     ActivityNodeId ac2 = jag.getConsumerActivity(cdId);
                     Task[] ac2TaskStates = taskStateMap.get(ac2);
@@ -461,6 +463,41 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                 LOGGER.info("Tasks: " + Arrays.toString(tc.getTasks()));
             }
         }
+    }
+
+    private Map<ConnectorDescriptorId, IConnectorPolicy> assignConnectorPolicy(ActivityCluster ac,
+            Map<ActivityNodeId, ActivityPartitionDetails> pcMap) {
+        JobActivityGraph jag = jobRun.getJobActivityGraph();
+        Map<ConnectorDescriptorId, IConnectorPolicy> cPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+        Set<ActivityNodeId> activities = ac.getActivities();
+        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskMap();
+        BitSet targetBitmap = new BitSet();
+        for (ActivityNodeId ac1 : activities) {
+            Task[] ac1TaskStates = taskStateMap.get(ac1);
+            int nProducers = ac1TaskStates.length;
+            List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
+            if (outputConns != null) {
+                for (IConnectorDescriptor c : outputConns) {
+                    ConnectorDescriptorId cdId = c.getConnectorId();
+                    ActivityNodeId ac2 = jag.getConsumerActivity(cdId);
+                    Task[] ac2TaskStates = taskStateMap.get(ac2);
+                    int nConsumers = ac2TaskStates.length;
+
+                    int[] fanouts = new int[nProducers];
+                    for (int i = 0; i < nProducers; ++i) {
+                        c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
+                        fanouts[i] = targetBitmap.cardinality();
+                    }
+                    IConnectorPolicy cp = assignConnectorPolicy(c, nProducers, nConsumers, fanouts);
+                    cPolicyMap.put(cdId, cp);
+                }
+            }
+        }
+        return cPolicyMap;
+    }
+
+    private IConnectorPolicy assignConnectorPolicy(IConnectorDescriptor c, int nProducers, int nConsumers, int[] fanouts) {
+        return new PipelinedConnectorPolicy();
     }
 
     private void computeDependencyClosure(Set<TaskCluster> tcSet) {

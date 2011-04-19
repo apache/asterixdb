@@ -51,7 +51,7 @@ public abstract class AbstractTaskLifecycleEvent extends AbstractEvent {
             Map<ActivityNodeId, ActivityCluster> activityClusterMap = run.getActivityClusterMap();
             ActivityCluster ac = activityClusterMap.get(tid.getActivityId());
             if (ac != null) {
-                Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskStateMap();
+                Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskMap();
                 Task[] taskStates = taskStateMap.get(tid.getActivityId());
                 if (taskStates != null && taskStates.length > tid.getPartition()) {
                     Task ts = taskStates[tid.getPartition()];

@@ -20,8 +20,10 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.scheduler.IActivityClusterStateMachine;
+import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public class ActivityCluster {
     private final JobRun jobRun;
@@ -37,6 +39,8 @@ public class ActivityCluster {
     private TaskCluster[] taskClusters;
 
     private IActivityClusterStateMachine acsm;
+
+    private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
 
     public ActivityCluster(JobRun jobRun, Set<ActivityNodeId> activities) {
         this.jobRun = jobRun;
@@ -62,7 +66,7 @@ public class ActivityCluster {
         return dependencies;
     }
 
-    public Map<ActivityNodeId, Task[]> getTaskStateMap() {
+    public Map<ActivityNodeId, Task[]> getTaskMap() {
         return taskStateMap;
     }
 
@@ -96,5 +100,13 @@ public class ActivityCluster {
 
     public void notifyActivityClusterComplete() throws HyracksException {
         jobRun.getStateMachine().notifyActivityClusterComplete(this);
+    }
+
+    public void setConnectorPolicyMap(Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) {
+        this.connectorPolicies = connectorPolicies;
+    }
+
+    public Map<ConnectorDescriptorId, IConnectorPolicy> getConnectorPolicyMap() {
+        return connectorPolicies;
     }
 }

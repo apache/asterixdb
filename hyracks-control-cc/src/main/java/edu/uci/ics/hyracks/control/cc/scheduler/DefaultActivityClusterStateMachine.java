@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
@@ -45,6 +46,7 @@ import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
+import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public class DefaultActivityClusterStateMachine implements IActivityClusterStateMachine {
     private static final Logger LOGGER = Logger.getLogger(DefaultActivityClusterStateMachine.class.getName());
@@ -223,6 +225,7 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
         final UUID jobId = jobRun.getJobId();
         final JobActivityGraph jag = jobRun.getJobActivityGraph();
         final String appName = jag.getApplicationName();
+        final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = ac.getConnectorPolicyMap();
         for (Map.Entry<String, List<TaskAttemptDescriptor>> e : taskAttemptMap.entrySet()) {
             String nodeId = e.getKey();
             final List<TaskAttemptDescriptor> taskDescriptors = e.getValue();
@@ -234,7 +237,7 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
                     public void run() {
                         try {
                             node.getNodeController().startTasks(appName, jobId, JavaSerializationUtils.serialize(jag),
-                                    taskDescriptors);
+                                    taskDescriptors, connectorPolicies);
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (Exception e) {

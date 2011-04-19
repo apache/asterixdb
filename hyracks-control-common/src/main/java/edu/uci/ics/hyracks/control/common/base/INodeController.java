@@ -16,12 +16,15 @@ package edu.uci.ics.hyracks.control.common.base;
 
 import java.rmi.Remote;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
+import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public interface INodeController extends Remote {
     public String getId() throws Exception;
@@ -30,8 +33,8 @@ public interface INodeController extends Remote {
 
     public NodeCapability getNodeCapability() throws Exception;
 
-    public void startTasks(String appName, UUID jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors)
-            throws Exception;
+    public void startTasks(String appName, UUID jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception;
 
     public void abortTasks(UUID jobId, List<TaskAttemptId> tasks) throws Exception;
 

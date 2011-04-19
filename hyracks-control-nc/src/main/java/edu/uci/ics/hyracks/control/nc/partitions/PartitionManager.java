@@ -23,9 +23,13 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
+import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class PartitionManager implements IPartitionRequestListener {
     private final NetworkAddress dataPort;
@@ -34,10 +38,16 @@ public class PartitionManager implements IPartitionRequestListener {
 
     private final Map<PartitionId, IPartition> partitionMap;
 
+    private final DefaultDeallocatableRegistry deallocatableRegistry;
+
+    private final IWorkspaceFileFactory fileFactory;
+
     public PartitionManager(NodeControllerService ncs, NetworkAddress dataPort) {
         this.dataPort = dataPort;
         this.ncs = ncs;
         partitionMap = new HashMap<PartitionId, IPartition>();
+        deallocatableRegistry = new DefaultDeallocatableRegistry();
+        fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
     }
 
     public void registerPartition(PartitionId pid, IPartition partition) throws HyracksDataException {
@@ -78,5 +88,13 @@ public class PartitionManager implements IPartitionRequestListener {
         } else {
             throw new HyracksException("Request for unknown partition " + partitionId);
         }
+    }
+
+    public IWorkspaceFileFactory getFileFactory() {
+        return fileFactory;
+    }
+
+    public void close() {
+        deallocatableRegistry.close();
     }
 }

@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -75,6 +76,9 @@ import edu.uci.ics.hyracks.control.common.base.NodeCapability;
 import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
+import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
+import edu.uci.ics.hyracks.control.common.job.dataflow.PipelinedConnectorPolicy;
+import edu.uci.ics.hyracks.control.common.job.dataflow.SendSideMaterializedConnectorPolicy;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -82,6 +86,7 @@ import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.net.ConnectionManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkInputChannel;
+import edu.uci.ics.hyracks.control.nc.partitions.MaterializedPartitionWriter;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
@@ -137,6 +142,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         applications = new Hashtable<String, NCApplicationContext>();
     }
 
+    public IHyracksRootContext getRootContext() {
+        return ctx;
+    }
+
     private static List<IODeviceHandle> getDevices(String ioDevices) {
         List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
         StringTokenizer tok = new StringTokenizer(ioDevices, ",");
@@ -169,6 +178,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+        partitionManager.close();
         connectionManager.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
@@ -218,8 +228,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return InetAddress.getByAddress(ipBytes);
     }
 
+    @Override
     public void startTasks(String appName, final UUID jobId, byte[] jagBytes,
-            List<TaskAttemptDescriptor> taskDescriptors) throws Exception {
+            List<TaskAttemptDescriptor> taskDescriptors,
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap) throws Exception {
         try {
             NCApplicationContext appCtx = applications.get(appName);
             final JobActivityGraph plan = (JobActivityGraph) appCtx.deserialize(jagBytes);
@@ -273,13 +285,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
                         RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
-                        IPartitionWriterFactory pwFactory = new IPartitionWriterFactory() {
-                            @Override
-                            public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                                return new PipelinedPartition(partitionManager, new PartitionId(jobId,
-                                        conn.getConnectorId(), partition, receiverIndex));
-                            }
-                        };
+                        IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
+
+                        IPartitionWriterFactory pwFactory = createPartitionWriterFactory(cPolicy, jobId, conn,
+                                partition);
+
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
                         }
@@ -298,6 +308,28 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             e.printStackTrace();
             throw e;
         }
+    }
+
+    private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final UUID jobId,
+            final IConnectorDescriptor conn, final int senderIndex) {
+        if (cPolicy instanceof PipelinedConnectorPolicy) {
+            return new IPartitionWriterFactory() {
+                @Override
+                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                    return new PipelinedPartition(partitionManager, new PartitionId(jobId, conn.getConnectorId(),
+                            senderIndex, receiverIndex));
+                }
+            };
+        } else if (cPolicy instanceof SendSideMaterializedConnectorPolicy) {
+            return new IPartitionWriterFactory() {
+                @Override
+                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                    return new MaterializedPartitionWriter(ctx, partitionManager, new PartitionId(jobId,
+                            conn.getConnectorId(), senderIndex, receiverIndex), executor);
+                }
+            };
+        }
+        throw new IllegalArgumentException("Unknown connector policy: " + cPolicy);
     }
 
     private synchronized Joblet getOrCreateLocalJoblet(UUID jobId, INCApplicationContext appCtx) throws Exception {

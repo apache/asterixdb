@@ -56,23 +56,28 @@ public class MaterializedPartition implements IPartition {
                 try {
                     FileHandle fh = ioManager.open(partitionFile, IIOManager.FileReadWriteMode.READ_ONLY,
                             IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-                    writer.open();
                     try {
-                        long offset = 0;
-                        ByteBuffer buffer = ctx.allocateFrame();
-                        while (true) {
-                            buffer.clear();
-                            long size = ioManager.syncRead(fh, offset, buffer);
-                            if (size < 0) {
-                                break;
-                            } else if (size < buffer.capacity()) {
-                                throw new HyracksDataException("Premature end of file");
+                        writer.open();
+                        try {
+                            long offset = 0;
+                            ByteBuffer buffer = ctx.allocateFrame();
+                            while (true) {
+                                buffer.clear();
+                                long size = ioManager.syncRead(fh, offset, buffer);
+                                if (size < 0) {
+                                    break;
+                                } else if (size < buffer.capacity()) {
+                                    throw new HyracksDataException("Premature end of file");
+                                }
+                                offset += size;
+                                buffer.flip();
+                                writer.nextFrame(buffer);
                             }
-                            buffer.flip();
-                            writer.nextFrame(buffer);
+                        } finally {
+                            writer.close();
                         }
                     } finally {
-                        writer.close();
+                        ioManager.close(fh);
                     }
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
