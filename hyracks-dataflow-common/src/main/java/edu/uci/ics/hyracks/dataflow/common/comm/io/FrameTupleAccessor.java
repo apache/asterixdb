@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
  * A frame is formatted with tuple data concatenated starting at offset 0, one tuple after another.
  * Offset FS - 4 holds an int indicating the number of tuples (N) in the frame. FS - ((i + 1) * 4) for i from
  * 0 to N - 1 holds an int indicating the offset of the (i + 1)^th tuple.
- * Every tuple is organized as a sequence of shorts indicating the end of each field in the tuple relative to the end of the
+ * Every tuple is organized as a sequence of ints indicating the end of each field in the tuple relative to the end of the
  * field slots.
  * 
  * @author vinayakb
@@ -71,12 +71,12 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return fIdx == 0 ? 0 : buffer.getShort(getTupleStartOffset(tupleIndex) + (fIdx - 1) * 2);
+        return fIdx == 0 ? 0 : buffer.getInt(getTupleStartOffset(tupleIndex) + (fIdx - 1) * 4);
     }
 
     @Override
     public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return buffer.getShort(getTupleStartOffset(tupleIndex) + fIdx * 2);
+        return buffer.getInt(getTupleStartOffset(tupleIndex) + fIdx * 4);
     }
 
     @Override
@@ -86,7 +86,7 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldSlotsLength() {
-        return recordDescriptor.getFields().length * 2;
+        return recordDescriptor.getFields().length * 4;
     }
 
     public void prettyPrint() {
