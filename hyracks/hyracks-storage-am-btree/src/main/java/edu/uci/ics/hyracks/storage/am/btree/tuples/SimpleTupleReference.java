@@ -67,10 +67,10 @@ public class SimpleTupleReference implements IBTreeTupleReference {
     @Override
     public int getFieldLength(int fIdx) {
         if (fIdx == 0) {
-            return buf.getShort(tupleStartOff + nullFlagsBytes);
+            return buf.getInt(tupleStartOff + nullFlagsBytes);
         } else {
-            return buf.getShort(tupleStartOff + nullFlagsBytes + fIdx * 2)
-                    - buf.getShort(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+            return buf.getInt(tupleStartOff + nullFlagsBytes + fIdx * 4)
+                    - buf.getInt(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 4));
         }
     }
 
@@ -80,7 +80,7 @@ public class SimpleTupleReference implements IBTreeTupleReference {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes;
         } else {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes
-                    + buf.getShort(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+                    + buf.getInt(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 4));
         }
     }
 
@@ -89,6 +89,6 @@ public class SimpleTupleReference implements IBTreeTupleReference {
     }
 
     protected int getFieldSlotsBytes() {
-        return fieldCount * 2;
+        return fieldCount * 4;
     }
 }

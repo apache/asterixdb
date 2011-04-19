@@ -102,7 +102,7 @@ public class SumAggregatorFactory implements IFieldValueResultingAggregatorFacto
                     throws HyracksDataException {
                 sum = IntegerSerializerDeserializer.getInt(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
             }
 
@@ -116,7 +116,7 @@ public class SumAggregatorFactory implements IFieldValueResultingAggregatorFacto
                     throws HyracksDataException {
                 sum += IntegerSerializerDeserializer.getInt(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
             }
 

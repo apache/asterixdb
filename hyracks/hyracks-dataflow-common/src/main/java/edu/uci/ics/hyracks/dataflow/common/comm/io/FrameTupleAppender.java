@@ -46,12 +46,12 @@ public class FrameTupleAppender {
     }
 
     public boolean append(int[] fieldSlots, byte[] bytes, int offset, int length) {
-        if (tupleDataEndOffset + fieldSlots.length * 2 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (tupleDataEndOffset + fieldSlots.length * 4 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
             for (int i = 0; i < fieldSlots.length; ++i) {
-                buffer.putShort(tupleDataEndOffset + i * 2, (short) fieldSlots[i]);
+                buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots[i]);
             }
-            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + fieldSlots.length * 2, length);
-            tupleDataEndOffset += fieldSlots.length * 2 + length;
+            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + fieldSlots.length * 4, length);
+            tupleDataEndOffset += fieldSlots.length * 4 + length;
             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
@@ -99,9 +99,9 @@ public class FrameTupleAppender {
             // Copy slots from accessor0 verbatim
             System.arraycopy(src0.array(), startOffset0, buffer.array(), tupleDataEndOffset, slotsLen0);
             // Copy slots from accessor1 with the following transformation: newSlotIdx = oldSlotIdx + dataLen0
-            for (int i = 0; i < slotsLen1 / 2; ++i) {
-                buffer.putShort(tupleDataEndOffset + slotsLen0 + i * 2,
-                        (short) (src1.getShort(startOffset1 + i * 2) + dataLen0));
+            for (int i = 0; i < slotsLen1 / 4; ++i) {
+                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4,
+                        src1.getInt(startOffset1 + i * 4) + dataLen0);
             }
             // Copy data0
             System.arraycopy(src0.array(), startOffset0 + slotsLen0, buffer.array(), tupleDataEndOffset + slotsLen0
@@ -119,7 +119,7 @@ public class FrameTupleAppender {
     }
 
     public boolean appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields) {
-        int fTargetSlotsLength = fields.length * 2;
+        int fTargetSlotsLength = fields.length * 4;
         int length = fTargetSlotsLength;
         for (int i = 0; i < fields.length; ++i) {
             length += (accessor.getFieldEndOffset(tIndex, fields[i]) - accessor.getFieldStartOffset(tIndex, fields[i]));
@@ -138,7 +138,7 @@ public class FrameTupleAppender {
                 System.arraycopy(accessor.getBuffer().array(), fSrcStart, buffer.array(), tupleDataEndOffset
                         + fTargetSlotsLength + fStartOffset, fLen);
                 fEndOffset += fLen;
-                buffer.putShort(tupleDataEndOffset + i * 2, (short) fEndOffset);
+                buffer.putInt(tupleDataEndOffset + i * 4, fEndOffset);
                 fStartOffset = fEndOffset;
             }
             tupleDataEndOffset += length;
