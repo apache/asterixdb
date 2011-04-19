@@ -62,7 +62,7 @@ public class SimpleTupleWriter implements IBTreeTupleWriter {
                     .getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
-            targetBuf.putShort(targetOff + nullFlagsBytes + i * 2, (short) fieldEndOff);
+            targetBuf.putInt(targetOff + nullFlagsBytes + i * 4, fieldEndOff);
         }
 
         return runner - targetOff;
@@ -85,7 +85,7 @@ public class SimpleTupleWriter implements IBTreeTupleWriter {
                     .getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
-            targetBuf.putShort(targetOff + nullFlagsBytes + fieldCounter * 2, (short) fieldEndOff);
+            targetBuf.putInt(targetOff + nullFlagsBytes + fieldCounter * 4, fieldEndOff);
             fieldCounter++;
         }
 
@@ -97,7 +97,7 @@ public class SimpleTupleWriter implements IBTreeTupleWriter {
     }
 
     private int getFieldSlotsBytes(ITupleReference tuple) {
-        return tuple.getFieldCount() * 2;
+        return tuple.getFieldCount() * 4;
     }
 
     private int getNullFlagsBytes(ITupleReference tuple, int startField, int numFields) {
@@ -105,6 +105,6 @@ public class SimpleTupleWriter implements IBTreeTupleWriter {
     }
 
     private int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {
-        return numFields * 2;
+        return numFields * 4;
     }
 }
