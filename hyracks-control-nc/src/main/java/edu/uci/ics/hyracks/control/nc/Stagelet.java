@@ -146,9 +146,13 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
         });
     }
 
-    protected synchronized void notifyOperatorCompletion(OperatorInstanceId opIId) {
-        pendingOperators.remove(opIId);
-        if (pendingOperators.isEmpty()) {
+    protected void notifyOperatorCompletion(OperatorInstanceId opIId) {
+        boolean done = false;
+        synchronized (pendingOperators) {
+            pendingOperators.remove(opIId);
+            done = pendingOperators.isEmpty();
+        }
+        if (done) {
             try {
                 StageletProfile sProfile = new StageletProfile(stageId);
                 dumpProfile(sProfile);

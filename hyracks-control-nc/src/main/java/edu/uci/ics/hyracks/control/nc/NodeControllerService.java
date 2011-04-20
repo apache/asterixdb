@@ -129,7 +129,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
         nodeCapability = computeNodeCapability();
         connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
-        jobletMap = new HashMap<UUID, Joblet>();
+        jobletMap = new Hashtable<UUID, Joblet>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
@@ -438,19 +438,20 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         si.setEndpointList(null);
     }
 
-    private synchronized Joblet getLocalJoblet(UUID jobId) throws Exception {
+    private Joblet getLocalJoblet(UUID jobId) throws Exception {
         Joblet ji = jobletMap.get(jobId);
         return ji;
     }
 
-    private synchronized Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx)
-            throws Exception {
-        Joblet ji = jobletMap.get(jobId);
-        if (ji == null || ji.getAttempt() != attempt) {
-            ji = new Joblet(this, jobId, attempt, appCtx);
-            jobletMap.put(jobId, ji);
+    private Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx) throws Exception {
+        synchronized (jobletMap) {
+            Joblet ji = jobletMap.get(jobId);
+            if (ji == null || ji.getAttempt() != attempt) {
+                ji = new Joblet(this, jobId, attempt, appCtx);
+                jobletMap.put(jobId, ji);
+            }
+            return ji;
         }
-        return ji;
     }
 
     public Executor getExecutor() {
@@ -458,7 +459,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void cleanUpJob(UUID jobId) throws Exception {
+    public void cleanUpJob(UUID jobId) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
@@ -563,7 +564,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void abortJoblet(UUID jobId, int attempt) throws Exception {
+    public void abortJoblet(UUID jobId, int attempt) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Aborting Job: " + jobId + ":" + attempt);
         }
