@@ -231,7 +231,7 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
     }
 
     @Override
-    public ICounter getCounter(String name, boolean create) {
+    public synchronized ICounter getCounter(String name, boolean create) {
         Counter counter = counterMap.get(name);
         if (counter == null && create) {
             counter = new Counter(name);
