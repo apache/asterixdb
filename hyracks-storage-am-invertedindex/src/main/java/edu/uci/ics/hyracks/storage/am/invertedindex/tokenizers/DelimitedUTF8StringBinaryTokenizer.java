@@ -30,6 +30,7 @@ public class DelimitedUTF8StringBinaryTokenizer implements IBinaryTokenizer {
             new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
 
     private final char delimiter;
+    private final byte typeTag;
     private byte[] data;
     private int start;
     private int length;
@@ -38,8 +39,14 @@ public class DelimitedUTF8StringBinaryTokenizer implements IBinaryTokenizer {
     private int tokenStart;
     private int pos;
 
+    public DelimitedUTF8StringBinaryTokenizer(char delimiter, byte typeTag) {
+        this.delimiter = delimiter;
+        this.typeTag = typeTag;
+    }
+
     public DelimitedUTF8StringBinaryTokenizer(char delimiter) {
         this.delimiter = delimiter;
+        this.typeTag = -1;
     }
 
     @Override
@@ -88,6 +95,9 @@ public class DelimitedUTF8StringBinaryTokenizer implements IBinaryTokenizer {
 
     @Override
     public void writeToken(DataOutput dos) throws IOException {
+        if (typeTag > 0)
+            dos.write(typeTag);
+
         // WARNING: 2-byte length indicator is specific to UTF-8
         dos.writeShort((short) tokenLength);
         dos.write(data, tokenStart, tokenLength);
@@ -96,5 +106,11 @@ public class DelimitedUTF8StringBinaryTokenizer implements IBinaryTokenizer {
     @Override
     public RecordDescriptor getTokenSchema() {
         return tokenSchema;
+    }
+
+    // cannot be implemented for this tokenizer
+    @Override
+    public int getNumTokens() {
+        return -1;
     }
 }
