@@ -12,6 +12,34 @@ public class UnorderedSlotManager extends AbstractSlotManager {
     @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
+        
+        int maxFieldPos = multiCmp.getKeyFieldCount() / 2;
+        for (int i = 0; i < frame.getTupleCount(); i++) {
+            frameTuple.resetByTupleIndex(frame, i);
+
+            boolean foundTuple = true;
+            for (int j = 0; j < maxFieldPos; j++) {
+                int k = maxFieldPos + j;
+                int c1 = multiCmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
+                        frameTuple.getFieldLength(j), searchKey.getFieldData(j), searchKey.getFieldStart(j),
+                        searchKey.getFieldLength(j));
+
+                if (c1 != 0) {
+                    foundTuple = false;
+                    break;
+                }
+                int c2 = multiCmp.getComparators()[k].compare(frameTuple.getFieldData(k), frameTuple.getFieldStart(k),
+                        frameTuple.getFieldLength(k), searchKey.getFieldData(k), searchKey.getFieldStart(k),
+                        searchKey.getFieldLength(k));
+                if (c2 != 0) {
+                    foundTuple = false;
+                    break;
+                }
+            }
+            if (foundTuple) {
+                return i;
+            }
+        }
         return -1;
     }
 

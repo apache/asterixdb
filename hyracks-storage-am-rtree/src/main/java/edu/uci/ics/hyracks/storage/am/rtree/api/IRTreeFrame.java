@@ -23,7 +23,7 @@ public interface IRTreeFrame extends ITreeIndexFrame {
 
     public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp);
     
-    public int findTuple(ITupleReference tuple, MultiComparator cmp);
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp);
 
     public int getPageNsn();
 

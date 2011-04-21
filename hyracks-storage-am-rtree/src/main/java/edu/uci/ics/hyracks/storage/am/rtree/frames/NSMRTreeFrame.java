@@ -603,38 +603,11 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
-    public int findTuple(ITupleReference tuple, MultiComparator cmp) {
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < getTupleCount(); i++) {
-            frameTuple.resetByTupleIndex(this, i);
-
-            boolean foundTuple = true;
-            for (int j = 0; j < maxFieldPos; j++) {
-                int k = maxFieldPos + j;
-                int c1 = cmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
-                        frameTuple.getFieldLength(j), tuple.getFieldData(j), tuple.getFieldStart(j),
-                        tuple.getFieldLength(j));
-
-                if (c1 != 0) {
-                    foundTuple = false;
-                    break;
-                }
-                int c2 = cmp.getComparators()[k].compare(frameTuple.getFieldData(k), frameTuple.getFieldStart(k),
-                        frameTuple.getFieldLength(k), tuple.getFieldData(k), tuple.getFieldStart(k),
-                        tuple.getFieldLength(k));
-                if (c2 != 0) {
-                    foundTuple = false;
-                    break;
-                }
-            }
-            if (foundTuple) {
-                return i;
-            }
-        }
-        return -1;
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
     }
-
+    
     @Override
     public void delete(int tupleIndex, MultiComparator cmp) throws Exception {
         frameTuple.setFieldCount(cmp.getFieldCount());

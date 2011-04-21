@@ -708,7 +708,7 @@ public class RTree {
                 }
             } else {
                 ctx.leafFrame.setPage(node);
-                int tupleIndex = ctx.leafFrame.findTuple(ctx.tuple, leafCmp);
+                int tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, leafCmp);
                 if (tupleIndex != -1) {
 
                     node.releaseReadLatch();
@@ -725,7 +725,7 @@ public class RTree {
                     if (ctx.leafFrame.getPageLsn() != pageLsn) {
                         // The page was changed while we unlocked it
 
-                        tupleIndex = ctx.leafFrame.findTuple(ctx.tuple, leafCmp);
+                        tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, leafCmp);
                         if (tupleIndex == -1) {
                             ctx.traverseList.add(pageId, parentLsn, parentIndex);
                             ctx.pathList.add(pageId, parentLsn, ctx.traverseList.size() - 1);
