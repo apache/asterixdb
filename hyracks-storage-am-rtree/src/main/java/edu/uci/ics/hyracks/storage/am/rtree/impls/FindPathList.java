@@ -36,7 +36,7 @@ public class FindPathList {
         return size;
     }
 
-    public void add(int pageId, int parentId) {
+    public void add(int pageId, int parentIndex) {
         if (size == pageIds.length) {
             int[] newPageIds = new int[pageIds.length + growth];
             System.arraycopy(pageIds, 0, newPageIds, 0, pageIds.length);
@@ -52,7 +52,7 @@ public class FindPathList {
         }
 
         pageIds[size] = pageId;
-        parentIndexes[size] = parentId;
+        parentIndexes[size] = parentIndex;
         size++;
     }
 
