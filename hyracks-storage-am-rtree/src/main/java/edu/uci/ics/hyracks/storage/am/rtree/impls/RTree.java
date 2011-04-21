@@ -638,14 +638,13 @@ public class RTree {
                 tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), interiorCmp);
             }
             boolean recomputeMBR = ctx.interiorFrame.recomputeMBR(ctx.splitKey.getLeftTuple(), tupleIndex, interiorCmp);
-            
-            
+
             if (recomputeMBR) {
                 ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), tupleIndex, interiorCmp);
                 ctx.pathList.removeLast();
-                
+
                 ctx.splitKey.reset();
-                if (!ctx.pathList.isEmpty()) {                   
+                if (!ctx.pathList.isEmpty()) {
                     ctx.interiorFrame.computeMBR(ctx.splitKey, interiorCmp);
                     ctx.splitKey.setLeftPage(parentId);
                 }
@@ -669,7 +668,7 @@ public class RTree {
         findPath(ctx);
         updateParentForDelete(ctx);
     }
-    
+
     public int findTupleToDelete(RTreeOpContext ctx) throws Exception {
 
         ctx.traverseList.add(rootPage, -1, -1);
@@ -747,16 +746,13 @@ public class RTree {
     }
 
     public void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws Exception {
-
-         if (ctx.leafFrame.getTupleCount() == 1) {
-        
-         } else {
-
         ctx.leafFrame.delete(tupleIndex, leafCmp);
-        ctx.leafFrame.computeMBR(ctx.splitKey, leafCmp);
-        ctx.splitKey.setLeftPage(pageId);
-
-         }
+        if (ctx.leafFrame.getTupleCount() == 0) {
+            ctx.leafFrame.setSmFlag(true);
+        } else {
+            ctx.leafFrame.computeMBR(ctx.splitKey, leafCmp);
+            ctx.splitKey.setLeftPage(pageId);
+        }
     }
 
     public void search(Stack<Integer> s, ITupleReference tuple, RTreeOpContext ctx, ArrayList<Rectangle> results)

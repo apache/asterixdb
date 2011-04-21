@@ -105,6 +105,12 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
+        super.insert(tuple, cmp);
+        setSmFlag(false);
+    }
+
+    @Override
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey,
             TupleEntryArrayList entries1, TupleEntryArrayList entries2, Rectangle[] rec) throws Exception {
 
@@ -603,18 +609,27 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         for (int i = 0; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
 
+            boolean foundTuple = true;
             for (int j = 0; j < maxFieldPos; j++) {
                 int k = maxFieldPos + j;
                 int c1 = cmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
                         frameTuple.getFieldLength(j), tuple.getFieldData(j), tuple.getFieldStart(j),
                         tuple.getFieldLength(j));
 
+                if (c1 != 0) {
+                    foundTuple = false;
+                    break;
+                }
                 int c2 = cmp.getComparators()[k].compare(frameTuple.getFieldData(k), frameTuple.getFieldStart(k),
                         frameTuple.getFieldLength(k), tuple.getFieldData(k), tuple.getFieldStart(k),
                         tuple.getFieldLength(k));
-                if (c1 == 0 && c2 == 0) {
-                    return i;
+                if (c2 != 0) {
+                    foundTuple = false;
+                    break;
                 }
+            }
+            if (foundTuple) {
+                return i;
             }
         }
         return -1;
@@ -638,21 +653,21 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
     }
-    
+
     @Override
     public int findTupleByPointer(int pageId, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
         for (int i = 0; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
             int id = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(cmp.getKeyFieldCount()),
-                        frameTuple.getFieldStart(cmp.getKeyFieldCount()));
+                    frameTuple.getFieldStart(cmp.getKeyFieldCount()));
             if (id == pageId) {
                 return i;
             }
         }
         return -1;
     }
-    
+
     @Override
     public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
@@ -777,7 +792,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
         frameTuple.setFieldCount(cmp.getFieldCount());
-        
+
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
         frameTuple.resetByTupleOffset(buf, tupleOff);
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
@@ -787,12 +802,12 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, rTreeSplitKey.getLeftPageBuffer(), 0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
     }
-    
+
     @Override
     public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
         frameTuple.resetByTupleIndex(this, tupleIndex);
-        
+
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
