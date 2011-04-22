@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.DataOutput;
 import java.io.File;
+import java.io.IOException;
 
 import org.junit.Test;
 
@@ -68,6 +69,11 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
             return new INullWriter() {
                 @Override
                 public void writeNull(DataOutput out) throws HyracksDataException {
+                    try {
+                        out.writeShort(0);
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
                 }
             };
         }
@@ -361,7 +367,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
         //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
         // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
-        // PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
@@ -443,7 +449,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
         //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
         // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
-        // PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
@@ -525,7 +531,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
         //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
         // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
-        // PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
