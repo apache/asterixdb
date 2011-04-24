@@ -251,13 +251,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 for (int i : tasks.get(hanId)) {
                     IOperatorNodePushable hon = han.createPushRuntime(stagelet, joblet.getEnvironment(op, i), rdp, i,
                             opNumPartitions.get(op.getOperatorId()));
-                    OperatorRunnable or = new OperatorRunnable(stagelet, hon);
+                    OperatorRunnable or = new OperatorRunnable(stagelet, hon, inputs == null ? 0 : inputs.size(),
+                            executor);
                     stagelet.setOperator(op.getOperatorId(), i, or);
                     if (inputs != null) {
                         for (int j = 0; j < inputs.size(); ++j) {
-                            if (j >= 1) {
-                                throw new IllegalStateException();
-                            }
                             IConnectorDescriptor conn = inputs.get(j);
                             OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
                                     .getOperatorId();
@@ -276,7 +274,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             portMap.put(piId, endpoint);
                             IFrameReader reader = createReader(stagelet, conn, drlf, i, plan, stagelet,
                                     opNumPartitions.get(producerOpId), opNumPartitions.get(consumerOpId));
-                            or.setFrameReader(reader);
+                            or.setFrameReader(j, reader);
                         }
                     }
                     honMap.put(new OperatorInstanceId(op.getOperatorId(), i), or);
