@@ -19,6 +19,7 @@ import java.io.Serializable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobPlan;
@@ -73,7 +74,8 @@ public interface IOperatorDescriptor extends Serializable {
      * @param plan
      *            - Job Plan
      */
-    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan);
+    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan,
+            ICCApplicationContext appCtx);
 
     /**
      * Translates this operator descriptor to JSON.

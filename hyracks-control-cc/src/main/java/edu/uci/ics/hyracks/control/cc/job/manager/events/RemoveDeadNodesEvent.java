@@ -44,6 +44,7 @@ public class RemoveDeadNodesEvent implements Runnable {
                 LOGGER.info(e.getKey() + " considered dead");
             }
         }
+        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
             for (final UUID jid : state.getActiveJobIds()) {
@@ -51,6 +52,13 @@ public class RemoveDeadNodesEvent implements Runnable {
                 int lastAttempt = run.getAttempts().size() - 1;
                 LOGGER.info("Aborting: " + jid);
                 ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jid, lastAttempt));
+            }
+            String ipAddress = state.getNCConfig().dataIPAddress;
+            Set<String> ipNodes = ipAddressNodeNameMap.get(ipAddress);
+            if (ipNodes != null) {
+                if (ipNodes.remove(deadNode) && ipNodes.isEmpty()) {
+                    ipAddressNodeNameMap.remove(ipAddress);
+                }
             }
         }
     }
