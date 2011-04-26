@@ -747,9 +747,9 @@ public class RTree {
 
     public void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws Exception {
         ctx.leafFrame.delete(tupleIndex, leafCmp);
-        if (ctx.leafFrame.getTupleCount() == 0) {
-            ctx.leafFrame.setSmFlag(true);
-        } else {
+        
+        // if the page is empty, just leave it there for future inserts
+        if (ctx.leafFrame.getTupleCount() > 0) {
             ctx.leafFrame.computeMBR(ctx.splitKey, leafCmp);
             ctx.splitKey.setLeftPage(pageId);
         }

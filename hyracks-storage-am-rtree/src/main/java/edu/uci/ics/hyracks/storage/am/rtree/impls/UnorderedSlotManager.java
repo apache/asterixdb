@@ -12,7 +12,7 @@ public class UnorderedSlotManager extends AbstractSlotManager {
     @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
-        
+
         int maxFieldPos = multiCmp.getKeyFieldCount() / 2;
         for (int i = 0; i < frame.getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(frame, i);
@@ -36,11 +36,35 @@ public class UnorderedSlotManager extends AbstractSlotManager {
                     break;
                 }
             }
+            int remainingFieldCount = multiCmp.getFieldCount() - multiCmp.getKeyFieldCount();
+            for (int j = multiCmp.getKeyFieldCount(); j < multiCmp.getKeyFieldCount() + remainingFieldCount; j++) {
+                if (!compareField(searchKey, frameTuple, j)) {
+                    foundTuple = false;
+                    break;
+                }
+            }
             if (foundTuple) {
                 return i;
             }
         }
         return -1;
+    }
+
+    public boolean compareField(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, int fIdx) {
+        int searchKeyFieldLength = searchKey.getFieldLength(fIdx);
+        int frameTupleFieldLength = frameTuple.getFieldLength(fIdx);
+
+        if (searchKeyFieldLength != frameTupleFieldLength) {
+            return false;
+        }
+
+        for (int i = 0; i < searchKeyFieldLength; i++) {
+            if (searchKey.getFieldData(fIdx)[i + searchKey.getFieldStart(fIdx)] != frameTuple.getFieldData(fIdx)[i
+                    + frameTuple.getFieldStart(fIdx)]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

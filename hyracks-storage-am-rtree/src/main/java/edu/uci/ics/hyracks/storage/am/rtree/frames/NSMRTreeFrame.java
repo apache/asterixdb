@@ -105,12 +105,6 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        super.insert(tuple, cmp);
-        setSmFlag(false);
-    }
-
-    @Override
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey,
             TupleEntryArrayList entries1, TupleEntryArrayList entries2, Rectangle[] rec) throws Exception {
 
@@ -606,6 +600,17 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
+    }
+    
+    @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
+        frameTuple.setFieldCount(cmp.getFieldCount());
+        slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
+        int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
+
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
     }
     
     @Override
