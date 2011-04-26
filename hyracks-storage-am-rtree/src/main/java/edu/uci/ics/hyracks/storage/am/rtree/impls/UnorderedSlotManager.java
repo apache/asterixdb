@@ -80,17 +80,20 @@ public class UnorderedSlotManager extends AbstractSlotManager {
 
     public void deleteEmptySlots() {
         int slotOff = getSlotStartOff();
-        int numOfSlots = ((getSlotStartOff() - getSlotEndOff()) / slotSize) + 1;
-        for (int i = 0; i < numOfSlots; i++) {
+        while (slotOff >= getSlotEndOff()) {
             if (frame.getBuffer().getInt(slotOff) == -1) {
-                int slotStartOff = getSlotEndOff();
-                int length = slotOff - slotStartOff;
-                System.arraycopy(frame.getBuffer().array(), slotStartOff, frame.getBuffer().array(), slotStartOff
-                        + slotSize, length);
-                ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
-            } else {
-                slotOff -= slotSize;
+                while (frame.getBuffer().getInt(getSlotEndOff()) == -1) {
+                    ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+                }
+                if (slotOff > getSlotEndOff()) {
+                    System.arraycopy(frame.getBuffer().array(), getSlotEndOff(), frame.getBuffer().array(), slotOff,
+                            slotSize);
+                    ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+                } else {
+                    break;
+                }
             }
+            slotOff -= slotSize;
         }
     }
 }
