@@ -194,7 +194,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
     }
 
-    @Test
+    //@Test
     public void test02() throws Exception {
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
