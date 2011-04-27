@@ -48,12 +48,12 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class RTreeTest extends AbstractRTreeTest {
 
-    private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
+    private static final int PAGE_SIZE = 1024;
+    private static final int NUM_PAGES = 10000;
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
-    // @Test
+     @Test
     public void test01() throws Exception {
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
@@ -282,10 +282,19 @@ public class RTreeTest extends AbstractRTreeTest {
             String[] splittedLine1 = inputLine.split(",");
             String[] splittedLine2 = splittedLine1[0].split("\\s");
 
-            double p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
-            double p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
+            double p1x = 0;
+            double p1y = 0;
+            
+            try {
+                p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
+                p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
+            } catch (Exception e) {
+                inputLine = reader.readLine();
+                continue;
+            }
             double p2x = p1x;
             double p2y = p1y;
+            
 
             int pk = rnd.nextInt();
 
@@ -317,7 +326,7 @@ public class RTreeTest extends AbstractRTreeTest {
                 e.printStackTrace();
             }
             
-            if (index == 10000) {
+            if (index == 1000) {
                 break;
             }
             inputLine = reader.readLine();
@@ -327,8 +336,8 @@ public class RTreeTest extends AbstractRTreeTest {
 //            System.out.println();
         }
 
-        rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        System.out.println();
+        //rtree.printTree(leafFrame, interiorFrame, recDescSers);
+        //System.out.println();
 
         RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame);
 
@@ -344,11 +353,22 @@ public class RTreeTest extends AbstractRTreeTest {
             String[] splittedLine1 = inputLine.split(",");
             String[] splittedLine2 = splittedLine1[0].split("\\s");
 
-            double p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
-            double p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
-            double p2x = Double.valueOf(splittedLine2[3].trim()).doubleValue();
-            double p2y = Double.valueOf(splittedLine2[4].trim()).doubleValue();
+            
+            double p1x;
+            double p1y;
+            double p2x;
+            double p2y;
 
+            try {
+                p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
+                p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
+                p2x = Double.valueOf(splittedLine2[3].trim()).doubleValue();
+                p2y = Double.valueOf(splittedLine2[4].trim()).doubleValue();
+            } catch (Exception e) {
+                inputLine = reader2.readLine();
+                continue;
+            }
+            
             int pk = rnd.nextInt();
 
             tb.reset();
@@ -388,8 +408,148 @@ public class RTreeTest extends AbstractRTreeTest {
 
         System.out.println("Number of Results: " + totalResults);
 
-        String stats = rtree.printStats();
-        print(stats);
+//        String stats = rtree.printStats();
+//        print(stats);
+        
+        
+        
+        
+        
+        RTreeOpContext deleteOpCtx = rtree.createOpContext(TreeIndexOp.TI_DELETE, interiorFrame, leafFrame, metaFrame);
+
+        
+        BufferedReader reader3 = new BufferedReader(new FileReader(datasetFile));
+        inputLine = reader3.readLine();
+        index = 0;
+        rnd.setSeed(50);
+        while (inputLine != null) {
+
+            String[] splittedLine1 = inputLine.split(",");
+            String[] splittedLine2 = splittedLine1[0].split("\\s");
+
+            double p1x = 0;
+            double p1y = 0;
+            
+            try {
+                p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
+                p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
+            } catch (Exception e) {
+                inputLine = reader3.readLine();
+                continue;
+            }
+            double p2x = p1x;
+            double p2y = p1y;
+
+            int pk = rnd.nextInt();
+
+            tb.reset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p1x, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p1y, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p2x, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p2y, dos);
+            tb.addFieldEndOffset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(pk, dos);
+            tb.addFieldEndOffset();
+
+            appender.reset(hyracksFrame, true);
+            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+
+            tuple.reset(accessor, 0);
+
+            print("Deleteing " + index + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+                    + " " + Math.max(p1y, p2y) + "\n");
+
+            try {
+                rtree.delete(tuple, deleteOpCtx);
+            } catch (TreeIndexException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            if (index == 1000) {
+                break;
+            }
+            inputLine = reader3.readLine();
+            index++;
+
+//            rtree.printTree(leafFrame, interiorFrame, recDescSers);
+//            System.out.println();
+        }
+        
+        
+        
+        
+        
+        
+        BufferedReader reader4 = new BufferedReader(new FileReader(querysetFile));
+
+        inputLine = reader4.readLine();
+        totalResults = 0;
+        index = 0;
+        Stack<Integer> s2 = new Stack<Integer>();
+        while (inputLine != null) {
+
+            String[] splittedLine1 = inputLine.split(",");
+            String[] splittedLine2 = splittedLine1[0].split("\\s");
+
+            double p1x = Double.valueOf(splittedLine2[1].trim()).doubleValue();
+            double p1y = Double.valueOf(splittedLine2[2].trim()).doubleValue();
+            double p2x = Double.valueOf(splittedLine2[3].trim()).doubleValue();
+            double p2y = Double.valueOf(splittedLine2[4].trim()).doubleValue();
+
+            int pk = rnd.nextInt();
+
+            tb.reset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p1x, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p1y, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p2x, dos);
+            tb.addFieldEndOffset();
+            DoubleSerializerDeserializer.INSTANCE.serialize(p2y, dos);
+            tb.addFieldEndOffset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(pk, dos);
+            tb.addFieldEndOffset();
+
+            appender.reset(hyracksFrame, true);
+            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+
+            tuple.reset(accessor, 0);
+
+            print("SEARCHING " + index + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+                    + " " + Math.max(p1y, p2y) + "\n");
+
+            try {
+                ArrayList<Rectangle> results = new ArrayList<Rectangle>();
+                rtree.search(s2, tuple, searchOpCtx, results);
+                totalResults += results.size();
+            } catch (TreeIndexException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            inputLine = reader4.readLine();
+            index++;
+
+        }
+
+        System.out.println("Number of Results: " + totalResults);
+
+//        stats = rtree.printStats();
+//        print(stats);
+        
+        
+        
+        
+        
+        rtree.printTree(leafFrame, interiorFrame, recDescSers);
+        System.out.println();
+
+
+        
 
         rtree.close();
         bufferCache.closeFile(fileId);
