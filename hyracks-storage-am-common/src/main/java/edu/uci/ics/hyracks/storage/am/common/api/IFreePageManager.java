@@ -7,4 +7,5 @@ public interface IFreePageManager {
 	public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException;
 	public int getMaxPage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException;
 	public void init(ITreeIndexMetaDataFrame metaFrame, int currentMaxPage) throws HyracksDataException;
+	public ITreeIndexMetaDataFrameFactory getMetaDataFrameFactory();
 }

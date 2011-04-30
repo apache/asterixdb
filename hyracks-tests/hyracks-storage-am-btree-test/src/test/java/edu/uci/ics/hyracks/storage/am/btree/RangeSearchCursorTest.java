@@ -148,7 +148,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -255,7 +255,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -364,7 +364,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);		
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);		
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.invertedindex.searchers;
+package edu.uci.ics.hyracks.storage.am.invertedindex;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -66,7 +66,6 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SimpleConjunctiveSearcher;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -83,18 +82,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
     private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 10;
     private static final int HYRACKS_FRAME_SIZE = 32768;
-    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-
-    public class BufferAllocator implements ICacheMemoryAllocator {
-        @Override
-        public ByteBuffer[] allocate(int pageSize, int numPages) {
-            ByteBuffer[] buffers = new ByteBuffer[numPages];
-            for (int i = 0; i < numPages; ++i) {
-                buffers[i] = ByteBuffer.allocate(pageSize);
-            }
-            return buffers;
-        }
-    }
+    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);    
 
     @Test
     public void test01() throws Exception {
@@ -102,7 +90,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
+        FileReference file = new FileReference(new File(btreeFileName));
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
@@ -121,9 +109,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);        
         IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
         // IBTreeLeafFrameFactory leafFrameFactory = new
         // FieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
@@ -134,7 +120,7 @@ public class SimpleConjunctiveSearcherTest extends AbstractInvIndexTest {
         IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
         
         BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
         btree.create(fileId, leafFrame, metaFrame);

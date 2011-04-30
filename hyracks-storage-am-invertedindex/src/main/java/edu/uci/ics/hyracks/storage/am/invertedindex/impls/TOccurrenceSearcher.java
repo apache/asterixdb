@@ -19,12 +19,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -33,28 +33,20 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 
-public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
+public class TOccurrenceSearcher {
 
-    private final int numKeyFields;
-    private final int numValueFields;
-
-    private final IBinaryComparator[] keyCmps;
-    private final IBinaryComparator[] valueCmps;
-
-    private final BTree btree;
     private final IHyracksStageletContext ctx;
     private final ArrayTupleBuilder resultTupleBuilder;
     private final FrameTupleAppender resultTupleAppender;
@@ -70,51 +62,46 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
     private final IBTreeInteriorFrame interiorFrame;
     private final IBTreeCursor btreeCursor;
     private final FrameTupleReference searchKey = new FrameTupleReference();
-    private final RangePredicate pred = new RangePredicate(true, null, null, true, true, null, null);
+    private final RangePredicate btreePred = new RangePredicate(true, null, null, true, true, null, null);
+        
+    private final InvertedIndex invIndex;    
+    private final IBinaryTokenizer queryTokenizer;    
+    private final int occurrenceThreshold;
+    
+    private final int cursorCacheSize = 10;
+    private ArrayList<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
+    private ArrayList<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
 
-    private final IBinaryTokenizer queryTokenizer;
-
-    public SimpleConjunctiveSearcher(IHyracksStageletContext ctx, BTree btree, RecordDescriptor btreeRecDesc,
-            IBinaryTokenizer queryTokenizer, int numKeyFields, int numValueFields) {
+    public TOccurrenceSearcher(IHyracksStageletContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer, int occurrenceThreshold) {
         this.ctx = ctx;
-        this.btree = btree;
+        this.invIndex = invIndex;
         this.queryTokenizer = queryTokenizer;
-        this.numKeyFields = numKeyFields;
-        this.numValueFields = numValueFields;
+        this.occurrenceThreshold = occurrenceThreshold;
 
-        leafFrame = btree.getLeafFrameFactory().getFrame();
-        interiorFrame = btree.getInteriorFrameFactory().getFrame();
+        leafFrame = invIndex.getBTree().getLeafFrameFactory().getFrame();
+        interiorFrame = invIndex.getBTree().getInteriorFrameFactory().getFrame();
+
         btreeCursor = new RangeSearchCursor(leafFrame);
         resultTupleAppender = new FrameTupleAppender(ctx.getFrameSize());
-        resultTupleBuilder = new ArrayTupleBuilder(numValueFields);
+        resultTupleBuilder = new ArrayTupleBuilder(1); // TODO: fix hardcoded
         newResultBuffers.add(ctx.allocateFrame());
         prevResultBuffers.add(ctx.allocateFrame());
 
-        MultiComparator btreeCmp = btree.getMultiComparator();
+        MultiComparator searchCmp = invIndex.getBTree().getMultiComparator();
+        btreePred.setLowKeyComparator(searchCmp);
+        btreePred.setHighKeyComparator(searchCmp);
+        btreePred.setLowKey(searchKey, true);
+        btreePred.setHighKey(searchKey, true);
 
-        keyCmps = new IBinaryComparator[numKeyFields];
-        for (int i = 0; i < numKeyFields; i++) {
-            keyCmps[i] = btreeCmp.getComparators()[i];
-        }
-
-        valueCmps = new IBinaryComparator[numValueFields];
-        for (int i = 0; i < numValueFields; i++) {
-            valueCmps[i] = btreeCmp.getComparators()[numKeyFields + i];
-        }
-
-        MultiComparator searchCmp = new MultiComparator(btreeCmp.getTypeTraits(), keyCmps);
-        pred.setLowKeyComparator(searchCmp);
-        pred.setHighKeyComparator(searchCmp);
-        pred.setLowKey(searchKey, true);
-        pred.setHighKey(searchKey, true);
-
-        ISerializerDeserializer[] valueSerde = new ISerializerDeserializer[numValueFields];
-        for (int i = 0; i < numValueFields; i++) {
-            valueSerde[i] = btreeRecDesc.getFields()[numKeyFields + i];
-
-        }
+        ISerializerDeserializer[] valueSerde = { IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor valueRecDesc = new RecordDescriptor(valueSerde);
         resultFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), valueRecDesc);
+
+        // pre-create cursor objects
+        for (int i = 0; i < cursorCacheSize; i++) {
+            invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
+                    .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
+        }
     }
 
     public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception {
@@ -137,15 +124,14 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
             queryTokenBuilder.reset();
             try {
                 IToken token = queryTokenizer.getToken();
-            	token.serializeToken(queryTokenDos);
-                queryTokenBuilder.addFieldEndOffset();
+                token.serializeToken(queryTokenDos);
+                queryTokenBuilder.addFieldEndOffset();                
+                // WARNING: assuming one frame is big enough to hold all tokens
+                queryTokenAppender.append(queryTokenBuilder.getFieldEndOffsets(), queryTokenBuilder.getByteArray(), 0,
+                        queryTokenBuilder.getSize());
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
-
-            // WARNING: assuming one frame is big enough to hold all tokens
-            queryTokenAppender.append(queryTokenBuilder.getFieldEndOffsets(), queryTokenBuilder.getByteArray(), 0,
-                    queryTokenBuilder.getSize());
         }
 
         FrameTupleAccessor queryTokenAccessor = new FrameTupleAccessor(ctx.getFrameSize(), queryTokenRecDesc);
@@ -154,9 +140,41 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         maxResultBufIdx = 0;
 
-        BTreeOpContext opCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH, leafFrame, interiorFrame, null);
+        // expand cursor cache if necessary
+        if (numQueryTokens > invListCursorCache.size()) {
+            int diff = numQueryTokens - invListCursorCache.size();
+            for (int i = 0; i < diff; i++) {
+                invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
+                        .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
+            }
+        }
+        
+        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(TreeIndexOp.TI_SEARCH, leafFrame,
+                interiorFrame, null);
+        invListCursors.clear();
+        System.out.println("NUM QUERY TOKENS: " + numQueryTokens);
+        for (int i = 0; i < numQueryTokens; i++) {
+            searchKey.reset(queryTokenAccessor, i);
+            invIndex.openCursor(btreeCursor, btreePred, btreeOpCtx, invListCursorCache.get(i));
+            invListCursors.add(invListCursorCache.get(i));
+        }
+        Collections.sort(invListCursors);
 
+        ISerializerDeserializer[] invListSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+        for (int i = 0; i < numQueryTokens; i++) {
+            System.out.println("LISTSIZE: " + invListCursors.get(i).getNumElements());
+            
+            invListCursors.get(i).pinPagesSync();
+            String s = invListCursors.get(i).printInvList(invListSerdes);
+            System.out.println(s);
+            invListCursors.get(i).unpinPages();
+        }
+        
+        int numPrefixTokens = numQueryTokens - occurrenceThreshold + 1;
+                
         resultTupleAppender.reset(newResultBuffers.get(0), true);
+        
+        /*
         try {
             // append first inverted list to temporary results
             searchKey.reset(queryTokenAccessor, 0);
@@ -170,26 +188,19 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
-
-        resultFrameAccessor.reset(newResultBuffers.get(0));
-
-        // intersect temporary results with remaining inverted lists
-        for (int i = 1; i < numQueryTokens; i++) {
-            swap = prevResultBuffers;
-            prevResultBuffers = newResultBuffers;
-            newResultBuffers = swap;
-            try {
-                searchKey.reset(queryTokenAccessor, i);
-                btree.search(btreeCursor, pred, opCtx);
-                maxResultBufIdx = intersectList(btreeCursor, prevResultBuffers, maxResultBufIdx, newResultBuffers);
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
-            btreeCursor.close();
-            btreeCursor.reset();
+        */
+        
+        
+        resultTupleAppender.reset(newResultBuffers.get(0), true);
+        
+        for(int i = 0; i < numPrefixTokens; i++) {
+            
         }
-    }
-
+        
+    }        
+    
+   
+    /*
     private int appendTupleToNewResults(IBTreeCursor btreeCursor, int newBufIdx) throws IOException {
         ByteBuffer newCurrentBuffer = newResultBuffers.get(newBufIdx);
 
@@ -218,9 +229,11 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         return newBufIdx;
     }
+    */
 
-    private int intersectList(IBTreeCursor btreeCursor, List<ByteBuffer> prevResultBuffers, int maxPrevBufIdx,
-            List<ByteBuffer> newResultBuffers) throws IOException, Exception {
+    
+    /*
+    private int mergeInvList(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers, int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws IOException, Exception {
 
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
@@ -237,15 +250,19 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
         boolean advancePrevResult = false;
         int resultTidx = 0;
 
-        while ((!advanceCursor || btreeCursor.hasNext()) && prevBufIdx <= maxPrevBufIdx
+        while ((!advanceCursor || invListCursor.hasNext()) && prevBufIdx <= maxPrevBufIdx
                 && resultTidx < resultFrameAccessor.getTupleCount()) {
 
             if (advanceCursor)
-                btreeCursor.next();
-            ITupleReference tuple = btreeCursor.getTuple();
-
+                invListCursor.next();
+            
+            ICachedPage invListPage = invListCursor.getPage();
+            int invListOff = invListCursor.getOffset();
+            
             int cmp = 0;
-            for (int i = 0; i < valueCmps.length; i++) {
+            int valueFields = 1;
+            for (int i = 0; i < valueFields; i++) {
+                                                
                 int tupleFidx = numKeyFields + i;
                 cmp = valueCmps[i].compare(tuple.getFieldData(tupleFidx), tuple.getFieldStart(tupleFidx),
                         tuple.getFieldLength(tupleFidx), resultFrameAccessor.getBuffer().array(),
@@ -287,10 +304,40 @@ public class SimpleConjunctiveSearcher implements IInvertedIndexSearcher {
 
         return newBufIdx;
     }
+      
+    private int appendTupleToNewResults(IBTreeCursor btreeCursor, int newBufIdx) throws IOException {
+        ByteBuffer newCurrentBuffer = newResultBuffers.get(newBufIdx);
 
-    @Override
-    public IInvertedIndexResultCursor getResultCursor() {
-        resultCursor.setResults(newResultBuffers, maxResultBufIdx + 1);
-        return resultCursor;
+        ITupleReference tuple = btreeCursor.getTuple();
+        resultTupleBuilder.reset();
+        DataOutput dos = resultTupleBuilder.getDataOutput();
+        for (int i = 0; i < numValueFields; i++) {
+            int fIdx = numKeyFields + i;
+            dos.write(tuple.getFieldData(fIdx), tuple.getFieldStart(fIdx), tuple.getFieldLength(fIdx));
+            resultTupleBuilder.addFieldEndOffset();
+        }
+
+        if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(), 0,
+                resultTupleBuilder.getSize())) {
+            newBufIdx++;
+            if (newBufIdx >= newResultBuffers.size()) {
+                newResultBuffers.add(ctx.allocateFrame());
+            }
+            newCurrentBuffer = newResultBuffers.get(newBufIdx);
+            resultTupleAppender.reset(newCurrentBuffer, true);
+            if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(),
+                    0, resultTupleBuilder.getSize())) {
+                throw new IllegalStateException();
+            }
+        }
+
+        return newBufIdx;
     }
+    */
+
+    /*
+     * @Override public IInvertedIndexResultCursor getResultCursor() {
+     * resultCursor.setResults(newResultBuffers, maxResultBufIdx + 1); return
+     * resultCursor; }
+     */
 }

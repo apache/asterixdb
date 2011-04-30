@@ -104,7 +104,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         int dim = 2;
         RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp,
@@ -245,7 +245,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         int dim = 2;
         RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp,

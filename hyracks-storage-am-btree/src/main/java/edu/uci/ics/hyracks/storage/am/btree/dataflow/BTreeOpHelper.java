@@ -24,7 +24,9 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -125,11 +127,12 @@ final class BTreeOpHelper {
 							.getTypeTraits(), comparators);
 
 					// TODO: abstract away in some kind of factory
-					IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0);
+					ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
+					IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaDataFrameFactory);
 					btree = new BTree(bufferCache, freePageManager, opDesc.getInteriorFactory(),
 							opDesc.getLeafFactory(), cmp);
 					if (mode == BTreeMode.CREATE_BTREE) {
-						ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
+						ITreeIndexMetaDataFrame metaFrame = btree.getFreePageManager().getMetaDataFrameFactory().getFrame();
 						try {
 							btree.create(btreeFileId, leafFrame, metaFrame);							
 						} catch (Exception e) {

@@ -3,6 +3,7 @@ package edu.uci.ics.hyracks.storage.am.common.freepage;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -12,12 +13,13 @@ public class LinkedListFreePageManager implements IFreePageManager {
 	private final IBufferCache bufferCache;
 	private final int fileId;
 	private final int headPage;
+	private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
 
-	public LinkedListFreePageManager(IBufferCache bufferCache, int fileId,
-			int headPage) {
+	public LinkedListFreePageManager(IBufferCache bufferCache, int fileId, int headPage, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
 		this.bufferCache = bufferCache;
 		this.fileId = fileId;
 		this.headPage = headPage;
+		this.metaDataFrameFactory = metaDataFrameFactory;
 	}
 
 	@Override
@@ -168,4 +170,8 @@ public class LinkedListFreePageManager implements IFreePageManager {
 		}
 	}
 
+	@Override
+	public ITreeIndexMetaDataFrameFactory getMetaDataFrameFactory() {
+		return metaDataFrameFactory;
+	}
 }

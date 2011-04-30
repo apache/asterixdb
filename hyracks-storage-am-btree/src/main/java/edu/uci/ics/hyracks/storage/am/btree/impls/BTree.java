@@ -42,6 +42,8 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BTree {
 	
+	public static final float DEFAULT_FILL_FACTOR = 0.7f;
+	
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
     

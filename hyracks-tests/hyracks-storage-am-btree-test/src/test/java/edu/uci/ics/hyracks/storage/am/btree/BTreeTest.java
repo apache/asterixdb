@@ -133,7 +133,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -371,7 +371,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -578,7 +578,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -778,7 +778,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -965,7 +965,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
@@ -1141,7 +1141,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
