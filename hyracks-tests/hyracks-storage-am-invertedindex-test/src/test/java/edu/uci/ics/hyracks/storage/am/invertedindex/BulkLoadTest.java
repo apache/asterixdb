@@ -57,15 +57,15 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BulkLoadTest extends AbstractInvIndexTest {
 	// testing params
-    private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 256;
+    //private static final int PAGE_SIZE = 256;
+    //private static final int NUM_PAGES = 100;
+    //private static final int HYRACKS_FRAME_SIZE = 256;
 
     // realistic params
     // private static final int PAGE_SIZE = 65536;
-    //private static final int PAGE_SIZE = 32768;
-    //private static final int NUM_PAGES = 10;
-    //private static final int HYRACKS_FRAME_SIZE = 32768;
+    private static final int PAGE_SIZE = 32768;
+    private static final int NUM_PAGES = 10000;
+    private static final int HYRACKS_FRAME_SIZE = 32768;
     private IHyracksStageletContext stageletCtx = TestUtils.create(HYRACKS_FRAME_SIZE);    
 
     @Test
@@ -160,7 +160,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         tokens.add("systems");
         tokens.add("university");      
         
-        int maxId = 1000;
+        int maxId = 100;
         int addProb = 0;
         int addProbStep = 2;        
 
@@ -221,7 +221,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         queryAccessor.reset(frame);
         FrameTupleReference queryTuple = new FrameTupleReference();
 
-        String query = "computer hyracks fast blubb";
+        //String query = "computer hyracks fast";
+        String query = "compilers fast university hyracks";
         
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizer queryTokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
@@ -239,14 +240,16 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         DataInput dataIn = new DataInputStream(inStream);
         Object o = serde.deserialize(dataIn);
         System.out.println(o.toString());
-        
-        
-        TOccurrenceSearcher searcher = new TOccurrenceSearcher(stageletCtx, invIndex, queryTokenizer, 1);
+                
+        TOccurrenceSearcher searcher = new TOccurrenceSearcher(stageletCtx, invIndex, queryTokenizer);
 
-        long timeStart = System.currentTimeMillis();
-        searcher.search(queryTuple, 0);
-        long timeEnd = System.currentTimeMillis();
-        System.out.println("SEARCH TIME: " + (timeEnd - timeStart) + "ms");
+        int repeats = 10;
+        for(int i = 0; i < repeats; i++) {
+        	long timeStart = System.currentTimeMillis();
+        	searcher.search(queryTuple, 0);
+        	long timeEnd = System.currentTimeMillis();
+        	System.out.println("SEARCH TIME: " + (timeEnd - timeStart) + "ms");
+        }
         
         
         

@@ -4,11 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -115,7 +115,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     }
     
     @Override
-    public boolean containsKey(byte[] searchKey, int keyStartOff, int keyLength, IBinaryComparator comparator) {
+    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) {
         int mid;
         int begin = 0;
         int end = numElements - 1;
@@ -123,7 +123,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
         while (begin <= end) {
             mid = (begin + end) / 2;
             positionCursor(mid);
-            int cmp = comparator.compare(searchKey, keyStartOff, keyLength, getPage().getBuffer().array(), getOffset(), elementSize);
+            int cmp = invListCmp.compare(searchTuple, tuple);
             if (cmp < 0) {
                 end = mid - 1;
             } else if (cmp > 0) {
