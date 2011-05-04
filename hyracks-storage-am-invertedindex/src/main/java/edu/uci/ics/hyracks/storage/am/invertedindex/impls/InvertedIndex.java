@@ -5,7 +5,6 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -18,7 +17,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -132,13 +130,7 @@ public class InvertedIndex {
     }    
     
     public boolean openCursor(IBTreeCursor btreeCursor, RangePredicate btreePred, BTreeOpContext btreeOpCtx, IInvertedListCursor invListCursor) throws Exception {
-        btree.search(btreeCursor, btreePred, btreeOpCtx);
-        
-        UTF8StringSerializerDeserializer serde = UTF8StringSerializerDeserializer.INSTANCE;        
-        ByteArrayInputStream inStream = new ByteArrayInputStream(btreePred.getHighKey().getFieldData(0), btreePred.getHighKey().getFieldStart(0), btreePred.getHighKey().getFieldLength(0));
-        DataInput dataIn = new DataInputStream(inStream);
-        Object o = serde.deserialize(dataIn);
-        System.out.println(o.toString());
+        btree.search(btreeCursor, btreePred, btreeOpCtx);       
         
         boolean ret = false;
         if(btreeCursor.hasNext()) {

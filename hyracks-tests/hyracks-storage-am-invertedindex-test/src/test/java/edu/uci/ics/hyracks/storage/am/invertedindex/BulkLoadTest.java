@@ -160,9 +160,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         tokens.add("systems");
         tokens.add("university");      
         
-        int maxId = 100;
+        int maxId = 1000000;
         int addProb = 0;
-        int addProbStep = 2;        
+        int addProbStep = 10;        
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(invListBuilder, HYRACKS_FRAME_SIZE);
@@ -172,7 +172,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         int[] elementFields = { 1 };
         for (int i = 0; i < tokens.size(); i++) {
 
-            addProb += addProbStep;
+            addProb += addProbStep * (i+1);
             StringBuilder strBuilder = new StringBuilder();
             for (int j = 0; j < maxId; j++) {
                 if ((Math.abs(rnd.nextInt()) % addProb) == 0) {                   
@@ -222,7 +222,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         FrameTupleReference queryTuple = new FrameTupleReference();
 
         //String query = "computer hyracks fast";
-        String query = "compilers fast university hyracks";
+        //String query = "compilers fast university hyracks";
+        String query = "compilers fast";
         
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizer queryTokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
@@ -240,19 +241,23 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         DataInput dataIn = new DataInputStream(inStream);
         Object o = serde.deserialize(dataIn);
         System.out.println(o.toString());
-                
+        
         TOccurrenceSearcher searcher = new TOccurrenceSearcher(stageletCtx, invIndex, queryTokenizer);
+        //TOccurrenceSearcherSuffixProbeOnly searcher = new TOccurrenceSearcherSuffixProbeSingle(stageletCtx, invIndex, queryTokenizer);
+        //TOccurrenceSearcherSuffixScanOnly searcher = new TOccurrenceSearcherSuffixScan(stageletCtx, invIndex, queryTokenizer);
 
-        int repeats = 10;
+        int repeats = 1000;
+        double totalTime = 0;
         for(int i = 0; i < repeats; i++) {
         	long timeStart = System.currentTimeMillis();
+        	searcher.reset();
         	searcher.search(queryTuple, 0);
         	long timeEnd = System.currentTimeMillis();
-        	System.out.println("SEARCH TIME: " + (timeEnd - timeStart) + "ms");
+        	//System.out.println("SEARCH TIME: " + (timeEnd - timeStart) + "ms");
+        	totalTime += timeEnd - timeStart;
         }
-        
-        
-        
+        double avgTime = totalTime / (double)repeats;
+        System.out.println("AVG TIME: " + avgTime + "ms");                        
         
         /*
         // ------------------------- TEST B
