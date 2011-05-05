@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.1.5-SNAPSHOT</version>
+  <version>0.1.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <build>
@@ -12,7 +12,7 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>2.0</version>
         <configuration>
-            <goals>source:jar javadoc:jar deploy:deploy</goals>
+            <goals>package source:jar javadoc:jar deploy:deploy</goals>
         </configuration>
       </plugin>
     </plugins>
