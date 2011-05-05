@@ -26,7 +26,7 @@ public class TestUtils {
     public static IHyracksStageletContext create(int frameSize) {
         try {
             IHyracksRootContext rootCtx = new TestRootContext(frameSize);
-            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
+            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
             IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID(), 0);
             IHyracksStageletContext stageletCtx = new TestStageletContext(jobletCtx, UUID.randomUUID());
             return stageletCtx;
