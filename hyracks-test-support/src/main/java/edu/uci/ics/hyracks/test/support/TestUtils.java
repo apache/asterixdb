@@ -30,7 +30,7 @@ public class TestUtils {
     public static IHyracksTaskContext create(int frameSize) {
         try {
             IHyracksRootContext rootCtx = new TestRootContext(frameSize);
-            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
+            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
             IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID());
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(
                     new OperatorDescriptorId(UUID.randomUUID()), 0), 0), 0);

@@ -471,7 +471,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             if (applications.containsKey(appName)) {
                 throw new HyracksException("Duplicate application with name: " + appName + " being created.");
             }
-            appCtx = new NCApplicationContext(serverCtx, ctx, appName);
+            appCtx = new NCApplicationContext(serverCtx, ctx, appName, id);
             applications.put(appName, appCtx);
         }
         if (deployHar) {
