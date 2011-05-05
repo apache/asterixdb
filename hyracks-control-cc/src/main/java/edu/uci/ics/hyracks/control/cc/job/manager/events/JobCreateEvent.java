@@ -60,7 +60,7 @@ public class JobCreateEvent extends SynchronizableRunnable {
             throw new HyracksException("No application with id " + appName + " found");
         }
         JobSpecification spec = appCtx.createJobSpecification(jobId, jobSpec);
-        JobRun run = plan(jobId, spec, jobFlags);
+        JobRun run = plan(jobId, spec, appCtx, jobFlags);
         run.setStatus(JobStatus.INITIALIZED);
 
         ccs.getRunMap().put(jobId, run);
@@ -71,7 +71,8 @@ public class JobCreateEvent extends SynchronizableRunnable {
         return jobId;
     }
 
-    private JobRun plan(UUID jobId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+    private JobRun plan(UUID jobId, JobSpecification jobSpec, final CCApplicationContext appCtx,
+            EnumSet<JobFlag> jobFlags) throws Exception {
         final JobPlanBuilder builder = new JobPlanBuilder();
         builder.init(appName, jobId, jobSpec, jobFlags);
         PlanUtils.visit(jobSpec, new IOperatorDescriptorVisitor() {
@@ -92,13 +93,13 @@ public class JobCreateEvent extends SynchronizableRunnable {
         PlanUtils.visit(jobSpec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) {
-                op.contributeSchedulingConstraints(acceptor, plan);
+                op.contributeSchedulingConstraints(acceptor, plan, appCtx);
             }
         });
         PlanUtils.visit(jobSpec, new IConnectorDescriptorVisitor() {
             @Override
             public void visit(IConnectorDescriptor conn) {
-                conn.contributeSchedulingConstraints(acceptor, plan);
+                conn.contributeSchedulingConstraints(acceptor, plan, appCtx);
             }
         });
         contributedConstraints.addAll(jobSpec.getUserConstraints());
