@@ -12,12 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.dataflow;
+package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-import java.io.Serializable;
+public final class PipelinedConnectorPolicy implements IConnectorPolicy {
+    private static final long serialVersionUID = 1L;
 
-public interface IConnectorPolicy extends Serializable {
-    public boolean requiresProducerConsumerCoscheduling();
+    @Override
+    public boolean requiresProducerConsumerCoscheduling() {
+        return true;
+    }
 
-    public boolean consumerWaitsForProducerToFinish();
+    @Override
+    public boolean consumerWaitsForProducerToFinish() {
+        return true;
+    }
+
+    @Override
+    public boolean materializeOnSendSide() {
+        return false;
+    }
+
+    @Override
+    public boolean materializeOnReceiveSide() {
+        return false;
+    }
 }

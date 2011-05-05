@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.dataflow.std.misc;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -43,14 +43,14 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        MaterializerActivityNode ma = new MaterializerActivityNode();
-        ReaderActivityNode ra = new ReaderActivityNode();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        MaterializerActivityNode ma = new MaterializerActivityNode(new ActivityId(odId, 0));
+        ReaderActivityNode ra = new ReaderActivityNode(new ActivityId(odId, 1));
 
-        builder.addTask(ma);
+        builder.addActivity(ma);
         builder.addSourceEdge(0, ma, 0);
 
-        builder.addTask(ra);
+        builder.addActivity(ra);
         builder.addTargetEdge(0, ra, 0);
 
         builder.addBlockingEdge(ma, ra);
@@ -58,6 +58,10 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
 
     private final class MaterializerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
+
+        public MaterializerActivityNode(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -89,15 +93,14 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
             };
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return MaterializingOperatorDescriptor.this;
-        }
     }
 
     private final class ReaderActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
+
+        public ReaderActivityNode(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -124,11 +127,6 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                     env.set(MATERIALIZED_FILE, null);
                 }
             };
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return MaterializingOperatorDescriptor.this;
         }
     }
 }

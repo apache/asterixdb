@@ -46,8 +46,6 @@ public class RegisterPartitionRequestEvent extends AbstractEvent {
                 if (run == null) {
                     return;
                 }
-                Map<PartitionId, String> partitionRequestorMap = run.getPartitionRequestorMap();
-                partitionRequestorMap.put(pid, nodeId);
 
                 Map<PartitionId, NetworkAddress> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
                 NetworkAddress networkAddress = partitionAvailabilityMap.get(pid);
@@ -58,6 +56,9 @@ public class RegisterPartitionRequestEvent extends AbstractEvent {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                } else {
+                    Map<PartitionId, String> partitionRequestorMap = run.getPartitionRequestorMap();
+                    partitionRequestorMap.put(pid, nodeId);
                 }
             }
         }

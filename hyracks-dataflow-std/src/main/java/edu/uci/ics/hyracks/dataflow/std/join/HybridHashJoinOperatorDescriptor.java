@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -92,14 +92,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(SMALLRELATION);
-        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(LARGERELATION);
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(new ActivityId(odId, 0), SMALLRELATION);
+        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(new ActivityId(odId, 1), LARGERELATION);
 
-        builder.addTask(phase1);
+        builder.addActivity(phase1);
         builder.addSourceEdge(0, phase1, 0);
 
-        builder.addTask(phase2);
+        builder.addActivity(phase2);
         builder.addSourceEdge(1, phase2, 0);
 
         builder.addBlockingEdge(phase1, phase2);
@@ -111,10 +111,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         private static final long serialVersionUID = 1L;
         private String relationName;
 
-        public BuildAndPartitionActivityNode(String relationName) {
-            super();
+        public BuildAndPartitionActivityNode(ActivityId id, String relationName) {
+            super(id);
             this.relationName = relationName;
-
         }
 
         @Override
@@ -288,19 +287,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
-        }
     }
 
     private class PartitionAndJoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
         private String largeRelation;
 
-        public PartitionAndJoinActivityNode(String relationName) {
-            super();
+        public PartitionAndJoinActivityNode(ActivityId id, String relationName) {
+            super(id);
             this.largeRelation = relationName;
         }
 
@@ -491,11 +485,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
         }
     }
 }

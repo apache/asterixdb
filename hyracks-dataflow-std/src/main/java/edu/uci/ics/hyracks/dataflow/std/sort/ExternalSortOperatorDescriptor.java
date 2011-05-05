@@ -19,8 +19,8 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -65,14 +65,14 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        SortActivity sa = new SortActivity();
-        MergeActivity ma = new MergeActivity();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        SortActivity sa = new SortActivity(new ActivityId(odId, 0));
+        MergeActivity ma = new MergeActivity(new ActivityId(odId, 1));
 
-        builder.addTask(sa);
+        builder.addActivity(sa);
         builder.addSourceEdge(0, sa, 0);
 
-        builder.addTask(ma);
+        builder.addActivity(ma);
         builder.addTargetEdge(0, ma, 0);
 
         builder.addBlockingEdge(sa, ma);
@@ -81,9 +81,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private class SortActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalSortOperatorDescriptor.this;
+        public SortActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
@@ -121,9 +120,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private class MergeActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalSortOperatorDescriptor.this;
+        public MergeActivity(ActivityId id) {
+            super(id);
         }
 
         @Override

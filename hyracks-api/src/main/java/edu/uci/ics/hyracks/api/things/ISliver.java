@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.dataflow;
+package edu.uci.ics.hyracks.api.things;
 
-public final class PipelinedConnectorPolicy implements IConnectorPolicy {
-    private static final long serialVersionUID = 1L;
+import java.nio.ByteBuffer;
 
-    @Override
-    public boolean requiresProducerConsumerCoscheduling() {
-        return true;
-    }
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-    @Override
-    public boolean consumerWaitsForProducerToFinish() {
-        return true;
-    }
+public interface ISliver {
+    public void open() throws HyracksDataException;
+
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException;
+
+    public void commit() throws HyracksDataException;
+
+    public void abort();
 }

@@ -19,38 +19,42 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.scheduler.IActivityClusterStateMachine;
-import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public class ActivityCluster {
     private final JobRun jobRun;
 
-    private final Set<ActivityNodeId> activities;
+    private final Set<ActivityId> activities;
 
     private final Set<ActivityCluster> dependencies;
 
     private final Set<ActivityCluster> dependents;
 
-    private final Map<ActivityNodeId, Task[]> taskStateMap;
+    private final Map<ActivityId, Task[]> taskStateMap;
 
     private TaskCluster[] taskClusters;
+
+    private Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
 
     private IActivityClusterStateMachine acsm;
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
 
-    public ActivityCluster(JobRun jobRun, Set<ActivityNodeId> activities) {
+    public ActivityCluster(JobRun jobRun, Set<ActivityId> activities) {
         this.jobRun = jobRun;
         this.activities = activities;
         dependencies = new HashSet<ActivityCluster>();
         dependents = new HashSet<ActivityCluster>();
-        taskStateMap = new HashMap<ActivityNodeId, Task[]>();
+        taskStateMap = new HashMap<ActivityId, Task[]>();
+        partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
     }
 
-    public Set<ActivityNodeId> getActivities() {
+    public Set<ActivityId> getActivities() {
         return activities;
     }
 
@@ -66,7 +70,7 @@ public class ActivityCluster {
         return dependencies;
     }
 
-    public Map<ActivityNodeId, Task[]> getTaskMap() {
+    public Map<ActivityId, Task[]> getTaskMap() {
         return taskStateMap;
     }
 
@@ -76,6 +80,10 @@ public class ActivityCluster {
 
     public void setTaskClusters(TaskCluster[] taskClusters) {
         this.taskClusters = taskClusters;
+    }
+
+    public Map<PartitionId, TaskCluster> getPartitionProducingTaskClusterMap() {
+        return partitionProducingTaskClusterMap;
     }
 
     public IActivityClusterStateMachine getStateMachine() {
@@ -91,7 +99,7 @@ public class ActivityCluster {
     }
 
     public int getMaxTaskClusterAttempts() {
-        return 1;
+        return jobRun.getJobActivityGraph().getJobSpecification().getMaxAttempts();
     }
 
     public void notifyTaskClusterFailure(TaskClusterAttempt tcAttempt, Exception exception) throws HyracksException {

@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -73,18 +73,20 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        HashPartitionActivityNode rpart = new HashPartitionActivityNode(SMALLRELATION, keys0, 0);
-        HashPartitionActivityNode spart = new HashPartitionActivityNode(LARGERELATION, keys1, 1);
-        JoinActivityNode join = new JoinActivityNode();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        HashPartitionActivityNode rpart = new HashPartitionActivityNode(new ActivityId(odId, 0), SMALLRELATION, keys0,
+                0);
+        HashPartitionActivityNode spart = new HashPartitionActivityNode(new ActivityId(odId, 1), LARGERELATION, keys1,
+                1);
+        JoinActivityNode join = new JoinActivityNode(new ActivityId(odId, 2));
 
-        builder.addTask(rpart);
+        builder.addActivity(rpart);
         builder.addSourceEdge(0, rpart, 0);
 
-        builder.addTask(spart);
+        builder.addActivity(spart);
         builder.addSourceEdge(1, spart, 0);
 
-        builder.addTask(join);
+        builder.addActivity(join);
         builder.addBlockingEdge(rpart, spart);
         builder.addBlockingEdge(spart, join);
 
@@ -101,7 +103,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         private int operatorInputIndex;
         private int keys[];
 
-        public HashPartitionActivityNode(String partitionsKey, int keys[], int operatorInputIndex) {
+        public HashPartitionActivityNode(ActivityId id, String partitionsKey, int keys[], int operatorInputIndex) {
+            super(id);
             this.partitionsKey = partitionsKey;
             this.keys = keys;
             this.operatorInputIndex = operatorInputIndex;
@@ -196,15 +199,14 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return GraceHashJoinOperatorDescriptor.this;
-        }
     }
 
     private class JoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
+
+        public JoinActivityNode(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -279,11 +281,6 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return GraceHashJoinOperatorDescriptor.this;
         }
     }
 }

@@ -22,9 +22,9 @@ import java.util.UUID;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
-import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public interface INodeController extends Remote {
     public String getId() throws Exception;

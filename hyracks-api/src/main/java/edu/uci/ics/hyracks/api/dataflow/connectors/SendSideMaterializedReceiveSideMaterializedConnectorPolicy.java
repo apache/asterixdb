@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.dataflow;
+package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-public final class SendSideMaterializedConnectorPolicy implements IConnectorPolicy {
+public final class SendSideMaterializedReceiveSideMaterializedConnectorPolicy implements IConnectorPolicy {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -24,6 +24,16 @@ public final class SendSideMaterializedConnectorPolicy implements IConnectorPoli
 
     @Override
     public boolean consumerWaitsForProducerToFinish() {
+        return true;
+    }
+
+    @Override
+    public boolean materializeOnSendSide() {
+        return true;
+    }
+
+    @Override
+    public boolean materializeOnReceiveSide() {
         return true;
     }
 }

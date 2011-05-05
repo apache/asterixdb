@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.util.Pair;
 
@@ -52,6 +53,8 @@ public class JobSpecification implements Serializable {
     private final Map<String, Serializable> properties;
 
     private final Set<Constraint> userConstraints;
+
+    private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
     private int maxAttempts;
 
@@ -171,6 +174,14 @@ public class JobSpecification implements Serializable {
 
     public List<OperatorDescriptorId> getRoots() {
         return roots;
+    }
+
+    public IConnectorPolicyAssignmentPolicy getConnectorPolicyAssignmentPolicy() {
+        return connectorPolicyAssignmentPolicy;
+    }
+
+    public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
+        this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
     }
 
     public void setMaxAttempts(int maxAttempts) {

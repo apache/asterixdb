@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -61,14 +61,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        HashBuildActivityNode hba = new HashBuildActivityNode();
-        HashProbeActivityNode hpa = new HashProbeActivityNode();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        HashBuildActivityNode hba = new HashBuildActivityNode(new ActivityId(odId, 0));
+        HashProbeActivityNode hpa = new HashProbeActivityNode(new ActivityId(odId, 1));
 
-        builder.addTask(hba);
+        builder.addActivity(hba);
         builder.addSourceEdge(0, hba, 0);
 
-        builder.addTask(hpa);
+        builder.addActivity(hpa);
         builder.addSourceEdge(1, hpa, 0);
         builder.addTargetEdge(0, hpa, 0);
 
@@ -77,6 +77,10 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
     private class HashBuildActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
+
+        public HashBuildActivityNode(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -119,15 +123,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return InMemoryHashJoinOperatorDescriptor.this;
-        }
     }
 
     private class HashProbeActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
+
+        public HashProbeActivityNode(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -159,11 +162,6 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return InMemoryHashJoinOperatorDescriptor.this;
         }
     }
 }

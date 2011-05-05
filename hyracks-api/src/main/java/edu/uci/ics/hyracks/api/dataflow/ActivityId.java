@@ -15,14 +15,13 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 import java.io.Serializable;
-import java.util.UUID;
 
-public final class ActivityNodeId implements Serializable {
+public final class ActivityId implements Serializable {
     private static final long serialVersionUID = 1L;
     private final OperatorDescriptorId odId;
-    private final UUID id;
+    private final long id;
 
-    public ActivityNodeId(OperatorDescriptorId odId, UUID id) {
+    public ActivityId(OperatorDescriptorId odId, long id) {
         this.odId = odId;
         this.id = id;
     }
@@ -31,13 +30,13 @@ public final class ActivityNodeId implements Serializable {
         return odId;
     }
 
-    public UUID getLocalId() {
+    public long getLocalId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return odId.hashCode() + id.hashCode();
+        return (int) (odId.hashCode() + id);
     }
 
     @Override
@@ -45,14 +44,14 @@ public final class ActivityNodeId implements Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ActivityNodeId)) {
+        if (!(o instanceof ActivityId)) {
             return false;
         }
-        ActivityNodeId other = (ActivityNodeId) o;
-        return other.odId.equals(odId) && other.id.equals(id);
+        ActivityId other = (ActivityId) o;
+        return other.odId.equals(odId) && other.id == id;
     }
 
     public String toString() {
-        return "ANID:" + id;
+        return "ANID:[" + odId + ":" + id + "]";
     }
 }

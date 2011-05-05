@@ -9,8 +9,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -21,37 +22,38 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     private JobActivityGraph jag;
 
     @Override
-    public void addBlockingEdge(IActivityNode blocker, IActivityNode blocked) {
-        addToValueSet(jag.getBlocker2BlockedMap(), blocker.getActivityNodeId(), blocked.getActivityNodeId());
-        addToValueSet(jag.getBlocked2BlockerMap(), blocked.getActivityNodeId(), blocker.getActivityNodeId());
+    public void addBlockingEdge(IActivity blocker, IActivity blocked) {
+        addToValueSet(jag.getBlocker2BlockedMap(), blocker.getActivityId(), blocked.getActivityId());
+        addToValueSet(jag.getBlocked2BlockerMap(), blocked.getActivityId(), blocker.getActivityId());
     }
 
     @Override
-    public void addSourceEdge(int operatorInputIndex, IActivityNode task, int taskInputIndex) {
+    public void addSourceEdge(int operatorInputIndex, IActivity task, int taskInputIndex) {
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding source edge: " + task.getOwner().getOperatorId() + ":" + operatorInputIndex + " -> "
-                    + task.getActivityNodeId() + ":" + taskInputIndex);
+            LOGGER.finest("Adding source edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
+                    + operatorInputIndex + " -> " + task.getActivityId() + ":" + taskInputIndex);
         }
-        insertIntoIndexedMap(jag.getActivityInputMap(), task.getActivityNodeId(), taskInputIndex, operatorInputIndex);
-        insertIntoIndexedMap(jag.getOperatorInputMap(), task.getOwner().getOperatorId(), operatorInputIndex,
-                task.getActivityNodeId());
+        insertIntoIndexedMap(jag.getActivityInputMap(), task.getActivityId(), taskInputIndex, operatorInputIndex);
+        insertIntoIndexedMap(jag.getOperatorInputMap(), task.getActivityId().getOperatorDescriptorId(),
+                operatorInputIndex, task.getActivityId());
     }
 
     @Override
-    public void addTargetEdge(int operatorOutputIndex, IActivityNode task, int taskOutputIndex) {
+    public void addTargetEdge(int operatorOutputIndex, IActivity task, int taskOutputIndex) {
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding target edge: " + task.getOwner().getOperatorId() + ":" + operatorOutputIndex + " -> "
-                    + task.getActivityNodeId() + ":" + taskOutputIndex);
+            LOGGER.finest("Adding target edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
+                    + operatorOutputIndex + " -> " + task.getActivityId() + ":" + taskOutputIndex);
         }
-        insertIntoIndexedMap(jag.getActivityOutputMap(), task.getActivityNodeId(), taskOutputIndex, operatorOutputIndex);
-        insertIntoIndexedMap(jag.getOperatorOutputMap(), task.getOwner().getOperatorId(), operatorOutputIndex,
-                task.getActivityNodeId());
+        insertIntoIndexedMap(jag.getActivityOutputMap(), task.getActivityId(), taskOutputIndex, operatorOutputIndex);
+        insertIntoIndexedMap(jag.getOperatorOutputMap(), task.getActivityId().getOperatorDescriptorId(),
+                operatorOutputIndex, task.getActivityId());
     }
 
     @Override
-    public void addTask(IActivityNode task) {
-        jag.getActivityNodeMap().put(task.getActivityNodeId(), task);
-        addToValueSet(jag.getOperatorActivityMap(), task.getOwner().getOperatorId(), task.getActivityNodeId());
+    public void addActivity(IActivity task) {
+        ActivityId activityId = task.getActivityId();
+        jag.getActivityNodeMap().put(activityId, task);
+        addToValueSet(jag.getOperatorActivityMap(), activityId.getOperatorDescriptorId(), activityId);
     }
 
     private <K, V> void addToValueSet(Map<K, Set<V>> map, K n1, V n2) {

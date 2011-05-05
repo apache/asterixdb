@@ -29,17 +29,21 @@ import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
+import edu.uci.ics.hyracks.api.dataflow.connectors.PipelinedConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
@@ -50,9 +54,6 @@ import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
 import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCleanupEvent;
-import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
-import edu.uci.ics.hyracks.control.common.job.dataflow.PipelinedConnectorPolicy;
-import edu.uci.ics.hyracks.control.common.job.dataflow.SendSideMaterializedConnectorPolicy;
 
 public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     private static final Logger LOGGER = Logger.getLogger(DefaultJobRunStateMachine.class.getName());
@@ -87,33 +88,35 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         return solver;
     }
 
-    private static Pair<ActivityNodeId, ActivityNodeId> findMergePair(JobActivityGraph jag, JobSpecification spec,
+    private static Pair<ActivityId, ActivityId> findMergePair(JobActivityGraph jag, JobSpecification spec,
             Set<ActivityCluster> eqSets) {
-        Map<ActivityNodeId, IActivityNode> activityNodeMap = jag.getActivityNodeMap();
+        Map<ActivityId, IActivity> activityNodeMap = jag.getActivityNodeMap();
         for (ActivityCluster eqSet : eqSets) {
-            for (ActivityNodeId t : eqSet.getActivities()) {
-                IOperatorDescriptor owner = activityNodeMap.get(t).getOwner();
+            for (ActivityId t : eqSet.getActivities()) {
+                IActivity activity = activityNodeMap.get(t);
                 List<Integer> inputList = jag.getActivityInputMap().get(t);
                 if (inputList != null) {
                     for (Integer idx : inputList) {
-                        IConnectorDescriptor conn = spec.getInputConnectorDescriptor(owner, idx);
+                        IConnectorDescriptor conn = spec.getInputConnectorDescriptor(activity.getActivityId()
+                                .getOperatorDescriptorId(), idx);
                         OperatorDescriptorId producerId = spec.getProducer(conn).getOperatorId();
                         int producerOutputIndex = spec.getProducerOutputIndex(conn);
-                        ActivityNodeId inTask = jag.getOperatorOutputMap().get(producerId).get(producerOutputIndex);
+                        ActivityId inTask = jag.getOperatorOutputMap().get(producerId).get(producerOutputIndex);
                         if (!eqSet.getActivities().contains(inTask)) {
-                            return new Pair<ActivityNodeId, ActivityNodeId>(t, inTask);
+                            return new Pair<ActivityId, ActivityId>(t, inTask);
                         }
                     }
                 }
                 List<Integer> outputList = jag.getActivityOutputMap().get(t);
                 if (outputList != null) {
                     for (Integer idx : outputList) {
-                        IConnectorDescriptor conn = spec.getOutputConnectorDescriptor(owner, idx);
+                        IConnectorDescriptor conn = spec.getOutputConnectorDescriptor(activity.getActivityId()
+                                .getOperatorDescriptorId(), idx);
                         OperatorDescriptorId consumerId = spec.getConsumer(conn).getOperatorId();
                         int consumerInputIndex = spec.getConsumerInputIndex(conn);
-                        ActivityNodeId outTask = jag.getOperatorInputMap().get(consumerId).get(consumerInputIndex);
+                        ActivityId outTask = jag.getOperatorInputMap().get(consumerId).get(consumerInputIndex);
                         if (!eqSet.getActivities().contains(outTask)) {
-                            return new Pair<ActivityNodeId, ActivityNodeId>(t, outTask);
+                            return new Pair<ActivityId, ActivityId>(t, outTask);
                         }
                     }
                 }
@@ -128,11 +131,11 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         /*
          * Build initial equivalence sets map. We create a map such that for each IOperatorTask, t -> { t }
          */
-        Map<ActivityNodeId, ActivityCluster> stageMap = new HashMap<ActivityNodeId, ActivityCluster>();
+        Map<ActivityId, ActivityCluster> stageMap = new HashMap<ActivityId, ActivityCluster>();
         Set<ActivityCluster> stages = new HashSet<ActivityCluster>();
-        for (Set<ActivityNodeId> taskIds : jag.getOperatorActivityMap().values()) {
-            for (ActivityNodeId taskId : taskIds) {
-                Set<ActivityNodeId> eqSet = new HashSet<ActivityNodeId>();
+        for (Set<ActivityId> taskIds : jag.getOperatorActivityMap().values()) {
+            for (ActivityId taskId : taskIds) {
+                Set<ActivityId> eqSet = new HashSet<ActivityId>();
                 eqSet.add(taskId);
                 ActivityCluster stage = new ActivityCluster(jobRun, eqSet);
                 stageMap.put(taskId, stage);
@@ -143,23 +146,23 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         boolean changed = true;
         while (changed) {
             changed = false;
-            Pair<ActivityNodeId, ActivityNodeId> pair = findMergePair(jag, spec, stages);
+            Pair<ActivityId, ActivityId> pair = findMergePair(jag, spec, stages);
             if (pair != null) {
                 merge(stageMap, stages, pair.first, pair.second);
                 changed = true;
             }
         }
 
-        ActivityCluster endStage = new ActivityCluster(jobRun, new HashSet<ActivityNodeId>());
-        Map<ActivityNodeId, Set<ActivityNodeId>> blocker2BlockedMap = jag.getBlocker2BlockedMap();
+        ActivityCluster endStage = new ActivityCluster(jobRun, new HashSet<ActivityId>());
+        Map<ActivityId, Set<ActivityId>> blocker2BlockedMap = jag.getBlocker2BlockedMap();
         for (ActivityCluster s : stages) {
             endStage.addDependency(s);
             s.addDependent(endStage);
             Set<ActivityCluster> blockedStages = new HashSet<ActivityCluster>();
-            for (ActivityNodeId t : s.getActivities()) {
-                Set<ActivityNodeId> blockedTasks = blocker2BlockedMap.get(t);
+            for (ActivityId t : s.getActivities()) {
+                Set<ActivityId> blockedTasks = blocker2BlockedMap.get(t);
                 if (blockedTasks != null) {
-                    for (ActivityNodeId bt : blockedTasks) {
+                    for (ActivityId bt : blockedTasks) {
                         blockedStages.add(stageMap.get(bt));
                     }
                 }
@@ -180,14 +183,14 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         return endStage;
     }
 
-    private void merge(Map<ActivityNodeId, ActivityCluster> eqSetMap, Set<ActivityCluster> eqSets, ActivityNodeId t1,
-            ActivityNodeId t2) {
+    private void merge(Map<ActivityId, ActivityCluster> eqSetMap, Set<ActivityCluster> eqSets, ActivityId t1,
+            ActivityId t2) {
         ActivityCluster stage1 = eqSetMap.get(t1);
-        Set<ActivityNodeId> s1 = stage1.getActivities();
+        Set<ActivityId> s1 = stage1.getActivities();
         ActivityCluster stage2 = eqSetMap.get(t2);
-        Set<ActivityNodeId> s2 = stage2.getActivities();
+        Set<ActivityId> s2 = stage2.getActivities();
 
-        Set<ActivityNodeId> mergedSet = new HashSet<ActivityNodeId>();
+        Set<ActivityId> mergedSet = new HashSet<ActivityId>();
         mergedSet.addAll(s1);
         mergedSet.addAll(s2);
 
@@ -196,7 +199,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         ActivityCluster mergedStage = new ActivityCluster(jobRun, mergedSet);
         eqSets.add(mergedStage);
 
-        for (ActivityNodeId t : mergedSet) {
+        for (ActivityId t : mergedSet) {
             eqSetMap.put(t, mergedStage);
         }
     }
@@ -275,10 +278,10 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         }
     }
 
-    private Map<ActivityNodeId, ActivityPartitionDetails> computePartitionCounts(ActivityCluster ac)
+    private Map<ActivityId, ActivityPartitionDetails> computePartitionCounts(ActivityCluster ac)
             throws HyracksException {
         Set<LValueConstraintExpression> lValues = new HashSet<LValueConstraintExpression>();
-        for (ActivityNodeId anId : ac.getActivities()) {
+        for (ActivityId anId : ac.getActivities()) {
             lValues.add(new PartitionCountExpression(anId.getOperatorDescriptorId()));
         }
         solver.solve(lValues);
@@ -298,8 +301,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
             }
             nPartMap.put(((PartitionCountExpression) lv).getOperatorDescriptorId(), Integer.valueOf(nParts));
         }
-        Map<ActivityNodeId, ActivityPartitionDetails> activityPartsMap = new HashMap<ActivityNodeId, ActivityPartitionDetails>();
-        for (ActivityNodeId anId : ac.getActivities()) {
+        Map<ActivityId, ActivityPartitionDetails> activityPartsMap = new HashMap<ActivityId, ActivityPartitionDetails>();
+        for (ActivityId anId : ac.getActivities()) {
             int nParts = nPartMap.get(anId.getOperatorDescriptorId());
             int[] nInputPartitions = null;
             List<IConnectorDescriptor> inputs = jobRun.getJobActivityGraph().getActivityInputConnectorDescriptors(anId);
@@ -327,61 +330,54 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     }
 
     private void buildTaskClusters(ActivityCluster ac) throws HyracksException {
-        Map<ActivityNodeId, ActivityPartitionDetails> pcMap = computePartitionCounts(ac);
+        Map<ActivityId, ActivityPartitionDetails> pcMap = computePartitionCounts(ac);
 
-        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskMap();
+        Map<ActivityId, Task[]> taskStateMap = ac.getTaskMap();
+        Set<ActivityId> activities = ac.getActivities();
 
-        for (ActivityNodeId anId : ac.getActivities()) {
+        Map<TaskId, Set<TaskId>> taskClusterMap = new HashMap<TaskId, Set<TaskId>>();
+
+        for (ActivityId anId : activities) {
             ActivityPartitionDetails apd = pcMap.get(anId);
             Task[] taskStates = new Task[apd.getPartitionCount()];
             for (int i = 0; i < taskStates.length; ++i) {
-                taskStates[i] = new Task(new TaskId(anId, i), apd);
+                TaskId tid = new TaskId(anId, i);
+                taskStates[i] = new Task(tid, apd);
+                Set<TaskId> cluster = new HashSet<TaskId>();
+                cluster.add(tid);
+                taskClusterMap.put(tid, cluster);
             }
             taskStateMap.put(anId, taskStates);
         }
+
         Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = assignConnectorPolicy(ac, pcMap);
         ac.setConnectorPolicyMap(connectorPolicies);
-        
-        Set<ActivityNodeId> activities = ac.getActivities();
 
-        Map<TaskId, Set<TaskId>> taskClusterMap = new HashMap<TaskId, Set<TaskId>>();
-        for (ActivityNodeId anId : activities) {
-            Task[] taskStates = taskStateMap.get(anId);
-            for (Task ts : taskStates) {
-                Set<TaskId> cluster = new HashSet<TaskId>();
-                cluster.add(ts.getTaskId());
-                taskClusterMap.put(ts.getTaskId(), cluster);
-            }
-        }
-
-        Map<TaskId, List<Pair<TaskId, IConnectorPolicy>>> connectionInfo = new HashMap<TaskId, List<Pair<TaskId, IConnectorPolicy>>>();
+        Map<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>> taskConnectivity = new HashMap<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>>();
         JobActivityGraph jag = jobRun.getJobActivityGraph();
         BitSet targetBitmap = new BitSet();
-        for (ActivityNodeId ac1 : activities) {
+        for (ActivityId ac1 : activities) {
             Task[] ac1TaskStates = taskStateMap.get(ac1);
             int nProducers = ac1TaskStates.length;
             List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
-                    IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
-                    if (cPolicy == null) {
-                        cPolicy = new SendSideMaterializedConnectorPolicy();
-                    }
-                    ActivityNodeId ac2 = jag.getConsumerActivity(cdId);
+                    ActivityId ac2 = jag.getConsumerActivity(cdId);
                     Task[] ac2TaskStates = taskStateMap.get(ac2);
                     int nConsumers = ac2TaskStates.length;
                     for (int i = 0; i < nProducers; ++i) {
                         c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
-                        List<Pair<TaskId, IConnectorPolicy>> cInfoList = connectionInfo.get(ac1TaskStates[i]
+                        List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(ac1TaskStates[i]
                                 .getTaskId());
                         if (cInfoList == null) {
-                            cInfoList = new ArrayList<Pair<TaskId, IConnectorPolicy>>();
-                            connectionInfo.put(ac1TaskStates[i].getTaskId(), cInfoList);
+                            cInfoList = new ArrayList<Pair<TaskId, ConnectorDescriptorId>>();
+                            taskConnectivity.put(ac1TaskStates[i].getTaskId(), cInfoList);
                         }
                         Set<TaskId> cluster = taskClusterMap.get(ac1TaskStates[i].getTaskId());
                         for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j + 1)) {
-                            cInfoList.add(new Pair<TaskId, IConnectorPolicy>(ac2TaskStates[j].getTaskId(), cPolicy));
+                            cInfoList.add(new Pair<TaskId, ConnectorDescriptorId>(ac2TaskStates[j].getTaskId(), cdId));
+                            IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
                             if (cPolicy.requiresProducerConsumerCoscheduling()) {
                                 cluster.add(ac2TaskStates[j].getTaskId());
                             }
@@ -434,17 +430,25 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         }
         ac.setTaskClusters(tcSet.toArray(new TaskCluster[tcSet.size()]));
 
-        for (TaskCluster tc : tcSet) {
+        Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap = ac.getPartitionProducingTaskClusterMap();
+        for (TaskCluster tc : ac.getTaskClusters()) {
             for (Task ts : tc.getTasks()) {
                 TaskId tid = ts.getTaskId();
-                List<Pair<TaskId, IConnectorPolicy>> cInfoList = connectionInfo.get(tid);
+                List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(tid);
                 if (cInfoList != null) {
-                    for (Pair<TaskId, IConnectorPolicy> p : cInfoList) {
+                    for (Pair<TaskId, ConnectorDescriptorId> p : cInfoList) {
                         Task targetTS = taskStateMap.get(p.first.getActivityId())[p.first.getPartition()];
                         TaskCluster targetTC = targetTS.getTaskCluster();
                         if (targetTC != tc) {
+                            ConnectorDescriptorId cdId = p.second;
+                            PartitionId pid = new PartitionId(jobRun.getJobId(), cdId, tid.getPartition(),
+                                    p.first.getPartition());
+                            tc.getProducedPartitions().add(pid);
+                            targetTC.getRequiredPartitions().add(pid);
+                            partitionProducingTaskClusterMap.put(pid, tc);
+                            IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
                             targetTC.getDependencies().add(tc);
-                            if (p.second.consumerWaitsForProducerToFinish()) {
+                            if (cPolicy.consumerWaitsForProducerToFinish()) {
                                 targetTC.getBlockers().add(tc);
                             }
                         }
@@ -466,20 +470,20 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     }
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> assignConnectorPolicy(ActivityCluster ac,
-            Map<ActivityNodeId, ActivityPartitionDetails> pcMap) {
+            Map<ActivityId, ActivityPartitionDetails> pcMap) {
         JobActivityGraph jag = jobRun.getJobActivityGraph();
         Map<ConnectorDescriptorId, IConnectorPolicy> cPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
-        Set<ActivityNodeId> activities = ac.getActivities();
-        Map<ActivityNodeId, Task[]> taskStateMap = ac.getTaskMap();
+        Set<ActivityId> activities = ac.getActivities();
+        Map<ActivityId, Task[]> taskStateMap = ac.getTaskMap();
         BitSet targetBitmap = new BitSet();
-        for (ActivityNodeId ac1 : activities) {
+        for (ActivityId ac1 : activities) {
             Task[] ac1TaskStates = taskStateMap.get(ac1);
             int nProducers = ac1TaskStates.length;
             List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
-                    ActivityNodeId ac2 = jag.getConsumerActivity(cdId);
+                    ActivityId ac2 = jag.getConsumerActivity(cdId);
                     Task[] ac2TaskStates = taskStateMap.get(ac2);
                     int nConsumers = ac2TaskStates.length;
 
@@ -497,6 +501,11 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
     }
 
     private IConnectorPolicy assignConnectorPolicy(IConnectorDescriptor c, int nProducers, int nConsumers, int[] fanouts) {
+        IConnectorPolicyAssignmentPolicy cpap = jobRun.getJobActivityGraph().getJobSpecification()
+                .getConnectorPolicyAssignmentPolicy();
+        if (cpap != null) {
+            return cpap.getConnectorPolicyAssignment(c, nProducers, nConsumers, fanouts);
+        }
         return new PipelinedConnectorPolicy();
     }
 

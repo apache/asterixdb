@@ -20,11 +20,16 @@ import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class TaskCluster {
     private final ActivityCluster activityCluster;
 
     private final Task[] tasks;
+
+    private final Set<PartitionId> producedPartitions;
+
+    private final Set<PartitionId> requiredPartitions;
 
     private final Set<TaskCluster> blockers;
 
@@ -35,6 +40,8 @@ public class TaskCluster {
     public TaskCluster(ActivityCluster activityCluster, Task[] tasks) {
         this.activityCluster = activityCluster;
         this.tasks = tasks;
+        this.producedPartitions = new HashSet<PartitionId>();
+        this.requiredPartitions = new HashSet<PartitionId>();
         this.blockers = new HashSet<TaskCluster>();
         this.dependencies = new HashSet<TaskCluster>();
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
@@ -46,6 +53,14 @@ public class TaskCluster {
 
     public Set<TaskCluster> getDependencies() {
         return dependencies;
+    }
+
+    public Set<PartitionId> getProducedPartitions() {
+        return producedPartitions;
+    }
+
+    public Set<PartitionId> getRequiredPartitions() {
+        return requiredPartitions;
     }
 
     public Set<TaskCluster> getBlockers() {

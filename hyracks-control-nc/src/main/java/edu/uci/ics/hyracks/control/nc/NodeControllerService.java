@@ -53,13 +53,13 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -76,9 +76,6 @@ import edu.uci.ics.hyracks.control.common.base.NodeCapability;
 import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
-import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
-import edu.uci.ics.hyracks.control.common.job.dataflow.PipelinedConnectorPolicy;
-import edu.uci.ics.hyracks.control.common.job.dataflow.SendSideMaterializedConnectorPolicy;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -89,6 +86,7 @@ import edu.uci.ics.hyracks.control.nc.net.NetworkInputChannel;
 import edu.uci.ics.hyracks.control.nc.partitions.MaterializedPartitionWriter;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
+import edu.uci.ics.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
@@ -253,14 +251,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
-                IActivityNode han = plan.getActivityNodeMap().get(tid.getActivityId());
+                IActivity han = plan.getActivityNodeMap().get(tid.getActivityId());
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
-                IOperatorDescriptor op = han.getOwner();
                 final int partition = tid.getPartition();
                 Task task = new Task(joblet, taId, han.getClass().getName());
-                IOperatorNodePushable operator = han.createPushRuntime(task, joblet.getEnvironment(op, partition), rdp,
+                IOperatorNodePushable operator = han.createPushRuntime(task,
+                        joblet.getEnvironment(han.getActivityId().getOperatorDescriptorId(), partition), rdp,
                         partition, td.getPartitionCount());
 
                 IPartitionCollector collector = null;
@@ -272,12 +270,12 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             throw new HyracksException("Multiple inputs to an activity not currently supported");
                         }
                         IConnectorDescriptor conn = inputs.get(i);
+                        IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
                         RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
-                        collector = conn.createPartitionCollector(task, recordDesc, partition,
-                                td.getInputPartitionCounts()[i], td.getPartitionCount());
+                        collector = createPartitionCollector(td, partition, task, i, conn, recordDesc, cPolicy);
                     }
                 }
                 List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getActivityId());
@@ -310,17 +308,21 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
+    private IPartitionCollector createPartitionCollector(TaskAttemptDescriptor td, final int partition, Task task,
+            int i, IConnectorDescriptor conn, RecordDescriptor recordDesc, IConnectorPolicy cPolicy)
+            throws HyracksDataException {
+        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
+                td.getInputPartitionCounts()[i], td.getPartitionCount());
+        if (cPolicy.materializeOnReceiveSide()) {
+            return new ReceiveSideMaterializingCollector(ctx, partitionManager, collector, executor);
+        } else {
+            return collector;
+        }
+    }
+
     private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final UUID jobId,
             final IConnectorDescriptor conn, final int senderIndex) {
-        if (cPolicy instanceof PipelinedConnectorPolicy) {
-            return new IPartitionWriterFactory() {
-                @Override
-                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new PipelinedPartition(partitionManager, new PartitionId(jobId, conn.getConnectorId(),
-                            senderIndex, receiverIndex));
-                }
-            };
-        } else if (cPolicy instanceof SendSideMaterializedConnectorPolicy) {
+        if (cPolicy.materializeOnSendSide()) {
             return new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
@@ -328,8 +330,15 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                             conn.getConnectorId(), senderIndex, receiverIndex), executor);
                 }
             };
+        } else {
+            return new IPartitionWriterFactory() {
+                @Override
+                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                    return new PipelinedPartition(partitionManager, new PartitionId(jobId, conn.getConnectorId(),
+                            senderIndex, receiverIndex));
+                }
+            };
         }
-        throw new IllegalArgumentException("Unknown connector policy: " + cPolicy);
     }
 
     private synchronized Joblet getOrCreateLocalJoblet(UUID jobId, INCApplicationContext appCtx) throws Exception {

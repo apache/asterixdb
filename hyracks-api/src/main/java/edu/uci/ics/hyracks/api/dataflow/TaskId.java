@@ -19,16 +19,16 @@ import java.io.Serializable;
 public final class TaskId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final ActivityNodeId activityId;
+    private final ActivityId activityId;
 
     private final int partition;
 
-    public TaskId(ActivityNodeId activityId, int partition) {
+    public TaskId(ActivityId activityId, int partition) {
         this.activityId = activityId;
         this.partition = partition;
     }
 
-    public ActivityNodeId getActivityId() {
+    public ActivityId getActivityId() {
         return activityId;
     }
 

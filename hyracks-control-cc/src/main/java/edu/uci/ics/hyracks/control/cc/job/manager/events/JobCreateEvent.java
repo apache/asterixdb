@@ -60,7 +60,7 @@ public class JobCreateEvent extends SynchronizableEvent {
         PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) {
-                op.contributeTaskGraph(builder);
+                op.contributeActivities(builder);
             }
         });
         final JobActivityGraph jag = builder.getActivityGraph();

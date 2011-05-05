@@ -14,38 +14,29 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
-
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
-public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractOperatorDescriptor implements
-        IActivityNode {
+public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractOperatorDescriptor implements IActivity {
     private static final long serialVersionUID = 1L;
 
-    protected final ActivityNodeId activityNodeId;
+    protected final ActivityId activityNodeId;
 
     public AbstractSingleActivityOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity) {
         super(spec, inputArity, outputArity);
-        activityNodeId = new ActivityNodeId(odId, UUID.randomUUID());
+        activityNodeId = new ActivityId(odId, 0);
     }
 
     @Override
-    public ActivityNodeId getActivityNodeId() {
+    public ActivityId getActivityId() {
         return activityNodeId;
     }
 
     @Override
-    public final IOperatorDescriptor getOwner() {
-        return this;
-    }
-
-    @Override
-    public final void contributeTaskGraph(IActivityGraphBuilder builder) {
-        builder.addTask(this);
+    public final void contributeActivities(IActivityGraphBuilder builder) {
+        builder.addActivity(this);
         for (int i = 0; i < getInputArity(); ++i) {
             builder.addSourceEdge(i, this, i);
         }

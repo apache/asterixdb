@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
@@ -40,34 +40,34 @@ public class JobActivityGraph implements Serializable {
 
     private final EnumSet<JobFlag> jobFlags;
 
-    private final Map<ActivityNodeId, IActivityNode> activityNodes;
+    private final Map<ActivityId, IActivity> activityNodes;
 
-    private final Map<ActivityNodeId, Set<ActivityNodeId>> blocker2blockedMap;
+    private final Map<ActivityId, Set<ActivityId>> blocker2blockedMap;
 
-    private final Map<ActivityNodeId, Set<ActivityNodeId>> blocked2blockerMap;
+    private final Map<ActivityId, Set<ActivityId>> blocked2blockerMap;
 
-    private final Map<OperatorDescriptorId, Set<ActivityNodeId>> operatorActivityMap;
+    private final Map<OperatorDescriptorId, Set<ActivityId>> operatorActivityMap;
 
-    private final Map<ActivityNodeId, List<Integer>> activityInputMap;
+    private final Map<ActivityId, List<Integer>> activityInputMap;
 
-    private final Map<ActivityNodeId, List<Integer>> activityOutputMap;
+    private final Map<ActivityId, List<Integer>> activityOutputMap;
 
-    private final Map<OperatorDescriptorId, List<ActivityNodeId>> operatorInputMap;
+    private final Map<OperatorDescriptorId, List<ActivityId>> operatorInputMap;
 
-    private final Map<OperatorDescriptorId, List<ActivityNodeId>> operatorOutputMap;
+    private final Map<OperatorDescriptorId, List<ActivityId>> operatorOutputMap;
 
     public JobActivityGraph(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
         this.appName = appName;
         this.jobSpec = jobSpec;
         this.jobFlags = jobFlags;
-        activityNodes = new HashMap<ActivityNodeId, IActivityNode>();
-        blocker2blockedMap = new HashMap<ActivityNodeId, Set<ActivityNodeId>>();
-        blocked2blockerMap = new HashMap<ActivityNodeId, Set<ActivityNodeId>>();
-        operatorActivityMap = new HashMap<OperatorDescriptorId, Set<ActivityNodeId>>();
-        activityInputMap = new HashMap<ActivityNodeId, List<Integer>>();
-        activityOutputMap = new HashMap<ActivityNodeId, List<Integer>>();
-        operatorInputMap = new HashMap<OperatorDescriptorId, List<ActivityNodeId>>();
-        operatorOutputMap = new HashMap<OperatorDescriptorId, List<ActivityNodeId>>();
+        activityNodes = new HashMap<ActivityId, IActivity>();
+        blocker2blockedMap = new HashMap<ActivityId, Set<ActivityId>>();
+        blocked2blockerMap = new HashMap<ActivityId, Set<ActivityId>>();
+        operatorActivityMap = new HashMap<OperatorDescriptorId, Set<ActivityId>>();
+        activityInputMap = new HashMap<ActivityId, List<Integer>>();
+        activityOutputMap = new HashMap<ActivityId, List<Integer>>();
+        operatorInputMap = new HashMap<OperatorDescriptorId, List<ActivityId>>();
+        operatorOutputMap = new HashMap<OperatorDescriptorId, List<ActivityId>>();
     }
 
     public String getApplicationName() {
@@ -82,39 +82,39 @@ public class JobActivityGraph implements Serializable {
         return jobFlags;
     }
 
-    public Map<ActivityNodeId, IActivityNode> getActivityNodeMap() {
+    public Map<ActivityId, IActivity> getActivityNodeMap() {
         return activityNodes;
     }
 
-    public Map<ActivityNodeId, Set<ActivityNodeId>> getBlocker2BlockedMap() {
+    public Map<ActivityId, Set<ActivityId>> getBlocker2BlockedMap() {
         return blocker2blockedMap;
     }
 
-    public Map<ActivityNodeId, Set<ActivityNodeId>> getBlocked2BlockerMap() {
+    public Map<ActivityId, Set<ActivityId>> getBlocked2BlockerMap() {
         return blocked2blockerMap;
     }
 
-    public Map<OperatorDescriptorId, Set<ActivityNodeId>> getOperatorActivityMap() {
+    public Map<OperatorDescriptorId, Set<ActivityId>> getOperatorActivityMap() {
         return operatorActivityMap;
     }
 
-    public Map<ActivityNodeId, List<Integer>> getActivityInputMap() {
+    public Map<ActivityId, List<Integer>> getActivityInputMap() {
         return activityInputMap;
     }
 
-    public Map<ActivityNodeId, List<Integer>> getActivityOutputMap() {
+    public Map<ActivityId, List<Integer>> getActivityOutputMap() {
         return activityOutputMap;
     }
 
-    public Map<OperatorDescriptorId, List<ActivityNodeId>> getOperatorInputMap() {
+    public Map<OperatorDescriptorId, List<ActivityId>> getOperatorInputMap() {
         return operatorInputMap;
     }
 
-    public Map<OperatorDescriptorId, List<ActivityNodeId>> getOperatorOutputMap() {
+    public Map<OperatorDescriptorId, List<ActivityId>> getOperatorOutputMap() {
         return operatorOutputMap;
     }
 
-    public List<IConnectorDescriptor> getActivityInputConnectorDescriptors(ActivityNodeId hanId) {
+    public List<IConnectorDescriptor> getActivityInputConnectorDescriptors(ActivityId hanId) {
         List<Integer> inputIndexes = activityInputMap.get(hanId);
         if (inputIndexes == null) {
             return null;
@@ -127,7 +127,7 @@ public class JobActivityGraph implements Serializable {
         return inputs;
     }
 
-    public List<IConnectorDescriptor> getActivityOutputConnectorDescriptors(ActivityNodeId hanId) {
+    public List<IConnectorDescriptor> getActivityOutputConnectorDescriptors(ActivityId hanId) {
         List<Integer> outputIndexes = activityOutputMap.get(hanId);
         if (outputIndexes == null) {
             return null;
@@ -140,14 +140,14 @@ public class JobActivityGraph implements Serializable {
         return outputs;
     }
 
-    public ActivityNodeId getConsumerActivity(ConnectorDescriptorId cdId) {
+    public ActivityId getConsumerActivity(ConnectorDescriptorId cdId) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
                 .getConnectorOperatorMap().get(cdId);
 
         OperatorDescriptorId consumerOpId = connEdge.second.first.getOperatorId();
         int consumerInputIdx = connEdge.second.second;
 
-        for (ActivityNodeId anId : operatorActivityMap.get(consumerOpId)) {
+        for (ActivityId anId : operatorActivityMap.get(consumerOpId)) {
             List<Integer> anInputs = activityInputMap.get(anId);
             if (anInputs != null) {
                 for (Integer idx : anInputs) {
@@ -160,14 +160,14 @@ public class JobActivityGraph implements Serializable {
         return null;
     }
 
-    public ActivityNodeId getProducerActivity(ConnectorDescriptorId cdId) {
+    public ActivityId getProducerActivity(ConnectorDescriptorId cdId) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
                 .getConnectorOperatorMap().get(cdId);
 
         OperatorDescriptorId producerOpId = connEdge.first.first.getOperatorId();
         int producerInputIdx = connEdge.first.second;
 
-        for (ActivityNodeId anId : operatorActivityMap.get(producerOpId)) {
+        for (ActivityId anId : operatorActivityMap.get(producerOpId)) {
             List<Integer> anOutputs = activityOutputMap.get(anId);
             if (anOutputs != null) {
                 for (Integer idx : anOutputs) {
@@ -180,12 +180,12 @@ public class JobActivityGraph implements Serializable {
         return null;
     }
 
-    public RecordDescriptor getActivityInputRecordDescriptor(ActivityNodeId hanId, int inputIndex) {
+    public RecordDescriptor getActivityInputRecordDescriptor(ActivityId hanId, int inputIndex) {
         int opInputIndex = getActivityInputMap().get(hanId).get(inputIndex);
         return jobSpec.getOperatorInputRecordDescriptor(hanId.getOperatorDescriptorId(), opInputIndex);
     }
 
-    public RecordDescriptor getActivityOutputRecordDescriptor(ActivityNodeId hanId, int outputIndex) {
+    public RecordDescriptor getActivityOutputRecordDescriptor(ActivityId hanId, int outputIndex) {
         int opOutputIndex = getActivityOutputMap().get(hanId).get(outputIndex);
         return jobSpec.getOperatorOutputRecordDescriptor(hanId.getOperatorDescriptorId(), opOutputIndex);
     }

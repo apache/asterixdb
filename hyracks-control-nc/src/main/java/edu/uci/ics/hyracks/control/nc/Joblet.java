@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -84,11 +83,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jobId;
     }
 
-    public IOperatorEnvironment getEnvironment(IOperatorDescriptor hod, int partition) {
-        if (!envMap.containsKey(hod.getOperatorId())) {
-            envMap.put(hod.getOperatorId(), new HashMap<Integer, IOperatorEnvironment>());
+    public IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
+        if (!envMap.containsKey(opId)) {
+            envMap.put(opId, new HashMap<Integer, IOperatorEnvironment>());
         }
-        Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(hod.getOperatorId());
+        Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(opId);
         if (!opEnvMap.containsKey(partition)) {
             opEnvMap.put(partition, new OperatorEnvironmentImpl(nodeController.getId()));
         }

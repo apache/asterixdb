@@ -18,10 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -37,14 +36,13 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
     private class CollectActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public ActivityNodeId getActivityNodeId() {
-            return id;
+        public CollectActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorDescriptor getOwner() {
-            return SplitVectorOperatorDescriptor.this;
+        public ActivityId getActivityId() {
+            return id;
         }
 
         @Override
@@ -82,9 +80,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
     private class SplitActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return SplitVectorOperatorDescriptor.this;
+        public SplitActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
@@ -139,14 +136,14 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        CollectActivity ca = new CollectActivity();
-        SplitActivity sa = new SplitActivity();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        CollectActivity ca = new CollectActivity(new ActivityId(odId, 0));
+        SplitActivity sa = new SplitActivity(new ActivityId(odId, 1));
 
-        builder.addTask(ca);
+        builder.addActivity(ca);
         builder.addSourceEdge(0, ca, 0);
 
-        builder.addTask(sa);
+        builder.addActivity(sa);
         builder.addTargetEdge(0, sa, 0);
 
         builder.addBlockingEdge(ca, sa);

@@ -12,26 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.remote.ops;
+package edu.uci.ics.hyracks.api.things;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.comm.Endpoint;
-import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
-import edu.uci.ics.hyracks.control.cc.remote.Accumulator;
+public final class ThingDescriptorId implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-public class PortMapMergingAccumulator implements
-        Accumulator<Map<PortInstanceId, Endpoint>, Map<PortInstanceId, Endpoint>> {
-    Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
+    private final long id;
 
-    @Override
-    public void accumulate(Map<PortInstanceId, Endpoint> o) {
-        portMap.putAll(o);
+    public ThingDescriptorId(long id) {
+        this.id = id;
+    }
+
+    public long getId() {
+        return id;
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> getResult() {
-        return portMap;
+    public String toString() {
+        return "TID: " + id;
+    }
+
+    public int hashCode() {
+        return (int) (id & 0xffffffff);
+    }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof ThingDescriptorId)) {
+            return false;
+        }
+        return id == ((ThingDescriptorId) o).id;
     }
 }

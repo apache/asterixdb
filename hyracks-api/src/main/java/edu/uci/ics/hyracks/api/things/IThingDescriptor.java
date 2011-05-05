@@ -12,20 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package edu.uci.ics.hyracks.api.things;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-
-public interface IActivityNode extends Serializable {
-    public ActivityNodeId getActivityNodeId();
-
-    public IOperatorDescriptor getOwner();
-
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException;
+public interface IThingDescriptor extends Serializable {
+    public ThingDescriptorId getThingId();
 }

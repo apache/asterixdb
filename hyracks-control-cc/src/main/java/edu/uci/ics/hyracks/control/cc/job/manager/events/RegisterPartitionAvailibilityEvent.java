@@ -46,7 +46,7 @@ public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
         partitionAvailabilityMap.put(pid, networkAddress);
 
         Map<PartitionId, String> partitionRequestorMap = run.getPartitionRequestorMap();
-        String requestor = partitionRequestorMap.get(pid);
+        String requestor = partitionRequestorMap.remove(pid);
         if (requestor != null) {
             NodeControllerState ncs = ccs.getNodeMap().get(requestor);
             if (ncs != null) {

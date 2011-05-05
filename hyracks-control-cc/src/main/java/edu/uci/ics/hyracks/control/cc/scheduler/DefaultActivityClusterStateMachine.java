@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
@@ -46,7 +47,6 @@ import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
-import edu.uci.ics.hyracks.control.common.job.dataflow.IConnectorPolicy;
 
 public class DefaultActivityClusterStateMachine implements IActivityClusterStateMachine {
     private static final Logger LOGGER = Logger.getLogger(DefaultActivityClusterStateMachine.class.getName());
@@ -146,19 +146,25 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
         inProgressTaskClusters.add(tc);
     }
 
+    private TaskClusterAttempt findLastTaskClusterAttempt(TaskCluster tc) {
+        List<TaskClusterAttempt> attempts = tc.getAttempts();
+        if (!attempts.isEmpty()) {
+            return attempts.get(attempts.size() - 1);
+        }
+        return null;
+    }
+
     @Override
     public void notifyTaskComplete(TaskAttempt ta) throws HyracksException {
         TaskAttemptId taId = ta.getTaskAttemptId();
         TaskCluster tc = ta.getTaskState().getTaskCluster();
-        List<TaskClusterAttempt> tcAttempts = tc.getAttempts();
-        int lastAttempt = tcAttempts.size() - 1;
-        if (taId.getAttempt() == lastAttempt) {
-            TaskClusterAttempt tcAttempt = tcAttempts.get(lastAttempt);
+        TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
+        if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
             TaskAttempt.TaskStatus taStatus = ta.getStatus();
             if (taStatus == TaskAttempt.TaskStatus.RUNNING) {
                 ta.setStatus(TaskAttempt.TaskStatus.COMPLETED, null);
-                if (tcAttempt.decrementPendingTasksCounter() == 0) {
-                    tcAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.COMPLETED);
+                if (lastAttempt.decrementPendingTasksCounter() == 0) {
+                    lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.COMPLETED);
                     inProgressTaskClusters.remove(tc);
                     startRunnableTaskClusters();
                 }
@@ -171,42 +177,19 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
     }
 
     private void startRunnableTaskClusters() throws HyracksException {
-        TaskCluster[] taskClusters = ac.getTaskClusters();
-
+        Set<TaskCluster> runnableTaskClusters = new HashSet<TaskCluster>();
+        findRunnableTaskClusters(runnableTaskClusters);
         Map<String, List<TaskAttemptDescriptor>> taskAttemptMap = new HashMap<String, List<TaskAttemptDescriptor>>();
-        for (TaskCluster tc : taskClusters) {
-            Set<TaskCluster> dependencies = tc.getDependencies();
-            List<TaskClusterAttempt> attempts = tc.getAttempts();
-            if (!attempts.isEmpty()) {
-                TaskClusterAttempt lastAttempt = attempts.get(attempts.size() - 1);
-                if (lastAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED
-                        || lastAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING) {
-                    continue;
+        for (TaskCluster tc : runnableTaskClusters) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Found runnable TC: " + Arrays.toString(tc.getTasks()));
+                List<TaskClusterAttempt> attempts = tc.getAttempts();
+                LOGGER.info("Attempts so far:" + attempts.size());
+                for (TaskClusterAttempt tcAttempt : attempts) {
+                    LOGGER.info("Status: " + tcAttempt.getStatus());
                 }
             }
-            boolean runnable = true;
-            for (TaskCluster depTC : dependencies) {
-                List<TaskClusterAttempt> tcAttempts = depTC.getAttempts();
-                if (tcAttempts.isEmpty()) {
-                    runnable = false;
-                    break;
-                }
-                TaskClusterAttempt tcAttempt = tcAttempts.get(tcAttempts.size() - 1);
-                if (tcAttempt.getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
-                    runnable = false;
-                    break;
-                }
-            }
-            if (runnable) {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Found runnable TC: " + Arrays.toString(tc.getTasks()));
-                    LOGGER.info("Attempts so far:" + attempts.size());
-                    for (TaskClusterAttempt tcAttempt : attempts) {
-                        LOGGER.info("Status: " + tcAttempt.getStatus());
-                    }
-                }
-                assignTaskLocations(tc, taskAttemptMap);
-            }
+            assignTaskLocations(tc, taskAttemptMap);
         }
 
         if (taskAttemptMap.isEmpty()) {
@@ -219,7 +202,63 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
         startTasks(taskAttemptMap);
     }
 
-    private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) {
+    private void findRunnableTaskClusters(Set<TaskCluster> runnableTaskClusters) {
+        TaskCluster[] taskClusters = ac.getTaskClusters();
+
+        for (TaskCluster tc : taskClusters) {
+            Set<TaskCluster> blockers = tc.getBlockers();
+            TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
+            if (lastAttempt != null
+                    && (lastAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED || lastAttempt
+                            .getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING)) {
+                continue;
+            }
+            boolean runnable = true;
+            for (TaskCluster blockerTC : blockers) {
+                List<TaskClusterAttempt> tcAttempts = blockerTC.getAttempts();
+                if (tcAttempts.isEmpty()) {
+                    runnable = false;
+                    break;
+                }
+                TaskClusterAttempt tcAttempt = tcAttempts.get(tcAttempts.size() - 1);
+                if (tcAttempt.getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
+                    runnable = false;
+                    break;
+                }
+            }
+            if (runnable) {
+                runnableTaskClusters.add(tc);
+            }
+        }
+    }
+
+    private void findCascadingAbortTaskClusterAttempts(TaskClusterAttempt abortedTCAttempt,
+            Set<TaskClusterAttempt> cascadingAbortTaskClusterAttempts) {
+        boolean changed = true;
+        cascadingAbortTaskClusterAttempts.add(abortedTCAttempt);
+        while (changed) {
+            changed = false;
+            for (TaskCluster tc : ac.getTaskClusters()) {
+                TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
+                if (tca != null && tca.getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING) {
+                    boolean abort = false;
+                    for (TaskClusterAttempt catca : cascadingAbortTaskClusterAttempts) {
+                        TaskCluster catc = catca.getTaskCluster();
+                        if (tc.getDependencies().contains(catc)) {
+                            abort = true;
+                            break;
+                        }
+                    }
+                    if (abort) {
+                        changed = cascadingAbortTaskClusterAttempts.add(tca) || changed;
+                    }
+                }
+            }
+        }
+        cascadingAbortTaskClusterAttempts.remove(abortedTCAttempt);
+    }
+
+    private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) throws HyracksException {
         Executor executor = ccs.getExecutor();
         JobRun jobRun = ac.getJobRun();
         final UUID jobId = jobRun.getJobId();
@@ -249,7 +288,7 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
         }
     }
 
-    private void abortTaskCluster(TaskClusterAttempt tcAttempt) {
+    private void abortTaskCluster(TaskClusterAttempt tcAttempt) throws HyracksException {
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<String, List<TaskAttemptId>>();
         for (TaskAttempt ta2 : tcAttempt.getTaskAttempts()) {
             if (ta2.getStatus() == TaskAttempt.TaskStatus.RUNNING) {
@@ -281,23 +320,26 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
                 });
             }
         }
-
     }
 
     @Override
     public void notifyTaskFailure(TaskAttempt ta, Exception exception) throws HyracksException {
         TaskAttemptId taId = ta.getTaskAttemptId();
         TaskCluster tc = ta.getTaskState().getTaskCluster();
-        List<TaskClusterAttempt> tcAttempts = tc.getAttempts();
-        int lastAttempt = tcAttempts.size() - 1;
-        if (taId.getAttempt() == lastAttempt) {
-            TaskClusterAttempt tcAttempt = tcAttempts.get(lastAttempt);
+        TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
+        if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
             TaskAttempt.TaskStatus taStatus = ta.getStatus();
             if (taStatus == TaskAttempt.TaskStatus.RUNNING) {
                 ta.setStatus(TaskAttempt.TaskStatus.FAILED, exception);
-                abortTaskCluster(tcAttempt);
-                tcAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
-                ac.notifyTaskClusterFailure(tcAttempt, exception);
+                abortTaskCluster(lastAttempt);
+                lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
+                Set<TaskClusterAttempt> cascadingAbortTaskClusterAttempts = new HashSet<TaskClusterAttempt>();
+                findCascadingAbortTaskClusterAttempts(lastAttempt, cascadingAbortTaskClusterAttempts);
+                for (TaskClusterAttempt tca : cascadingAbortTaskClusterAttempts) {
+                    abortTaskCluster(tca);
+                    tca.setStatus(TaskClusterAttempt.TaskClusterStatus.ABORTED);
+                }
+                ac.notifyTaskClusterFailure(lastAttempt, exception);
             } else {
                 LOGGER.warning("Spurious task complete notification: " + taId + " Current state = " + taStatus);
             }
@@ -307,7 +349,7 @@ public class DefaultActivityClusterStateMachine implements IActivityClusterState
     }
 
     @Override
-    public void abort() {
+    public void abort() throws HyracksException {
         TaskCluster[] taskClusters = ac.getTaskClusters();
         for (TaskCluster tc : taskClusters) {
             List<TaskClusterAttempt> tcAttempts = tc.getAttempts();

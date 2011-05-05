@@ -63,7 +63,7 @@ public interface IOperatorDescriptor extends Serializable {
      * @param builder
      *            - graph builder
      */
-    public void contributeTaskGraph(IActivityGraphBuilder builder);
+    public void contributeActivities(IActivityGraphBuilder builder);
 
     /**
      * Contributes any scheduling constraints imposed by this operator.

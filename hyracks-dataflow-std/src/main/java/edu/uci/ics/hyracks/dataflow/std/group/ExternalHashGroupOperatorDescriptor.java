@@ -25,8 +25,8 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -175,14 +175,14 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
      * (edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder)
      */
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        PartialAggregateActivity partialAggAct = new PartialAggregateActivity();
-        MergeActivity mergeAct = new MergeActivity();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        PartialAggregateActivity partialAggAct = new PartialAggregateActivity(new ActivityId(odId, 0));
+        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, 1));
 
-        builder.addTask(partialAggAct);
+        builder.addActivity(partialAggAct);
         builder.addSourceEdge(0, partialAggAct, 0);
 
-        builder.addTask(mergeAct);
+        builder.addActivity(mergeAct);
         builder.addTargetEdge(0, mergeAct, 0);
 
         // FIXME Block or not?
@@ -191,11 +191,11 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
     }
 
     private class PartialAggregateActivity extends AbstractActivityNode {
-
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
+
+        public PartialAggregateActivity(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -302,20 +302,14 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
 
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalHashGroupOperatorDescriptor.this;
-        }
-
     }
 
     private class MergeActivity extends AbstractActivityNode {
-
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
+
+        public MergeActivity(ActivityId id) {
+            super(id);
+        }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
@@ -652,11 +646,6 @@ public class ExternalHashGroupOperatorDescriptor extends AbstractOperatorDescrip
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalHashGroupOperatorDescriptor.this;
         }
 
         private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {

@@ -12,22 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.base;
+package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.IActivity;
+import java.io.Serializable;
 
-public abstract class AbstractActivityNode implements IActivity {
-    private static final long serialVersionUID = 1L;
+public interface IConnectorPolicy extends Serializable {
+    public boolean requiresProducerConsumerCoscheduling();
 
-    protected final ActivityId id;
+    public boolean consumerWaitsForProducerToFinish();
 
-    public AbstractActivityNode(ActivityId id) {
-        this.id = id;
-    }
+    public boolean materializeOnSendSide();
 
-    @Override
-    public ActivityId getActivityId() {
-        return id;
-    }
+    public boolean materializeOnReceiveSide();
 }

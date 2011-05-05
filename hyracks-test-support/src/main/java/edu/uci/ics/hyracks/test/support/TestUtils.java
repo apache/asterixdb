@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
@@ -32,8 +32,8 @@ public class TestUtils {
             IHyracksRootContext rootCtx = new TestRootContext(frameSize);
             INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
             IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID());
-            TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityNodeId(new OperatorDescriptorId(
-                    UUID.randomUUID()), UUID.randomUUID()), 0), 0);
+            TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(
+                    new OperatorDescriptorId(UUID.randomUUID()), 0), 0), 0);
             IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid);
             return taskCtx;
         } catch (HyracksException e) {

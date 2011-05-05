@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -42,7 +42,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobProfile profile;
 
-    private final Map<ActivityNodeId, ActivityCluster> activityClusterMap;
+    private final Map<ActivityId, ActivityCluster> activityClusterMap;
 
     private IJobRunStateMachine jsm;
 
@@ -57,7 +57,7 @@ public class JobRun implements IJobStatusConditionVariable {
         partitionRequestorMap = new HashMap<PartitionId, String>();
         participatingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
-        activityClusterMap = new HashMap<ActivityNodeId, ActivityCluster>();
+        activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
     }
 
     public UUID getJobId() {
@@ -116,7 +116,7 @@ public class JobRun implements IJobStatusConditionVariable {
         return partitionRequestorMap;
     }
 
-    public Map<ActivityNodeId, ActivityCluster> getActivityClusterMap() {
+    public Map<ActivityId, ActivityCluster> getActivityClusterMap() {
         return activityClusterMap;
     }
 }
