@@ -2,19 +2,19 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.tpch</groupId>
   <artifactId>tpchclient</artifactId>
-  <version>0.1.5-SNAPSHOT</version>
+  <version>0.1.5</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.5</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.5-SNAPSHOT</version>
+  		<version>0.1.5</version>
   		<scope>compile</scope>
   	</dependency>
   </dependencies>
