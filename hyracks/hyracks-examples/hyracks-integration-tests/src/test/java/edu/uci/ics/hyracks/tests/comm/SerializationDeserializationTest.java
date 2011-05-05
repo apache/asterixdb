@@ -56,7 +56,7 @@ public class SerializationDeserializationTest {
 
         public SerDeserRunner(RecordDescriptor rDes) throws HyracksException {
             IHyracksRootContext rootCtx = new TestRootContext(FRAME_SIZE);
-            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx);
+            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
             IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID(), 0);
             ctx = new TestStageletContext(jobletCtx, UUID.randomUUID());
             this.rDes = rDes;
