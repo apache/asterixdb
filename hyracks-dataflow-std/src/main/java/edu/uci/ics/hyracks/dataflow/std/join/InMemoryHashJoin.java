@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
+import java.io.DataOutput;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,8 +22,10 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
@@ -30,36 +33,51 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 public class InMemoryHashJoin {
     private final Link[] table;
     private final List<ByteBuffer> buffers;
-    private final FrameTupleAccessor accessor0;
-    private final ITuplePartitionComputer tpc0;
-    private final FrameTupleAccessor accessor1;
-    private final ITuplePartitionComputer tpc1;
+    private final FrameTupleAccessor accessorBuild;
+    private final ITuplePartitionComputer tpcBuild;
+    private final FrameTupleAccessor accessorProbe;
+    private final ITuplePartitionComputer tpcProbe;
     private final FrameTupleAppender appender;
     private final FrameTuplePairComparator tpComparator;
     private final ByteBuffer outBuffer;
-
+    private final boolean isLeftOuter;
+    private final ArrayTupleBuilder nullTupleBuild;
+    
     public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessor0,
             ITuplePartitionComputer tpc0, FrameTupleAccessor accessor1, ITuplePartitionComputer tpc1,
-            FrameTuplePairComparator comparator) {
+            FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1)
+            throws HyracksDataException {
         table = new Link[tableSize];
         buffers = new ArrayList<ByteBuffer>();
-        this.accessor0 = accessor0;
-        this.tpc0 = tpc0;
-        this.accessor1 = accessor1;
-        this.tpc1 = tpc1;
+        this.accessorBuild = accessor1;
+        this.tpcBuild = tpc1;
+        this.accessorProbe = accessor0;
+        this.tpcProbe = tpc0;
         appender = new FrameTupleAppender(ctx.getFrameSize());
         tpComparator = comparator;
         outBuffer = ctx.allocateFrame();
         appender.reset(outBuffer, true);
+        this.isLeftOuter = isLeftOuter;        
+        if (isLeftOuter) {
+            int fieldCountOuter = accessor1.getFieldCount();
+            nullTupleBuild = new ArrayTupleBuilder(fieldCountOuter);
+            DataOutput out = nullTupleBuild.getDataOutput();
+            for (int i = 0; i < fieldCountOuter; i++) {
+                nullWriters1[i].writeNull(out);
+                nullTupleBuild.addFieldEndOffset();
+            }
+        } else {
+            nullTupleBuild = null;
+        }
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
         buffers.add(buffer);
         int bIndex = buffers.size() - 1;
-        accessor0.reset(buffer);
-        int tCount = accessor0.getTupleCount();
+        accessorBuild.reset(buffer);
+        int tCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tCount; ++i) {
-            int entry = tpc0.partition(accessor0, i, table.length);
+            int entry = tpcBuild.partition(accessorBuild, i, table.length);
             long tPointer = (((long) bIndex) << 32) + i;
             Link link = table[entry];
             if (link == null) {
@@ -70,27 +88,39 @@ public class InMemoryHashJoin {
     }
 
     public void join(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
-        accessor1.reset(buffer);
-        int tupleCount1 = accessor1.getTupleCount();
-        for (int i = 0; i < tupleCount1; ++i) {
-            int entry = tpc1.partition(accessor1, i, table.length);
+        accessorProbe.reset(buffer);
+        int tupleCount0 = accessorProbe.getTupleCount();
+        for (int i = 0; i < tupleCount0; ++i) {
+            int entry = tpcProbe.partition(accessorProbe, i, table.length);
             Link link = table[entry];
+            boolean matchFound = false;
             if (link != null) {
                 for (int j = 0; j < link.size; ++j) {
                     long pointer = link.pointers[j];
                     int bIndex = (int) ((pointer >> 32) & 0xffffffff);
                     int tIndex = (int) (pointer & 0xffffffff);
-                    accessor0.reset(buffers.get(bIndex));
-                    int c = tpComparator.compare(accessor0, tIndex, accessor1, i);
+                    accessorBuild.reset(buffers.get(bIndex));
+                    int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
                     if (c == 0) {
-                        if (!appender.appendConcat(accessor0, tIndex, accessor1, i)) {
+                        matchFound = true;
+                        if (!appender.appendConcat(accessorProbe, i, accessorBuild, tIndex)) {
                             flushFrame(outBuffer, writer);
                             appender.reset(outBuffer, true);
-                            if (!appender.appendConcat(accessor0, tIndex, accessor1, i)) {
+                            if (!appender.appendConcat(accessorProbe, i, accessorBuild, tIndex)) {
                                 throw new IllegalStateException();
                             }
                         }
                     }
+                }
+            }
+            if (!matchFound && isLeftOuter) {
+                if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
+                    flushFrame(outBuffer, writer);
+                    appender.reset(outBuffer, true);
+                    if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0, nullTupleBuild
+                            .getSize())) {
+                        throw new IllegalStateException();
+                    }                  
                 }
             }
         }

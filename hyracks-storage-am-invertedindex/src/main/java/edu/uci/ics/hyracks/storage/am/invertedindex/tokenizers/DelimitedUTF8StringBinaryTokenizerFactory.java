@@ -22,13 +22,20 @@ public class DelimitedUTF8StringBinaryTokenizerFactory implements IBinaryTokeniz
 
     private static final long serialVersionUID = 1L;
     private final char delimiter;
+    private final byte typeTag;
+
+    public DelimitedUTF8StringBinaryTokenizerFactory(char delimiter, byte typeTag) {
+        this.delimiter = delimiter;
+        this.typeTag = typeTag;
+    }
 
     public DelimitedUTF8StringBinaryTokenizerFactory(char delimiter) {
         this.delimiter = delimiter;
+        this.typeTag = -1;
     }
 
     @Override
     public IBinaryTokenizer createBinaryTokenizer() {
-        return new DelimitedUTF8StringBinaryTokenizer(delimiter);
+        return new DelimitedUTF8StringBinaryTokenizer(delimiter, typeTag);
     }
 }

@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.control.nc;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -46,29 +48,32 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final String displayName;
 
+    private final Executor executor;
+
     private final IWorkspaceFileFactory fileFactory;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final Map<String, Counter> counterMap;
 
-    private IPartitionCollector collector;
+    private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
 
     private volatile boolean aborted;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName) {
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor) {
         this.joblet = joblet;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
+        this.executor = executor;
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
     }
 
-    public void setTaskRuntime(IPartitionCollector collector, IOperatorNodePushable operator) {
-        this.collector = collector;
+    public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
+        this.collectors = collectors;
         this.operator = operator;
     }
 
@@ -145,8 +150,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public void abort() {
         aborted = true;
-        if (collector != null) {
-            collector.abort();
+        for (IPartitionCollector c : collectors) {
+            c.abort();
         }
     }
 
@@ -158,36 +163,27 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             ct.setName(displayName + ": " + taskAttemptId);
             operator.initialize();
             try {
-                if (collector != null) {
-                    if (aborted) {
-                        return;
-                    }
-                    collector.open();
-                    try {
-                        joblet.advertisePartitionRequest(collector.getRequiredPartitionIds(), collector);
-                        IFrameReader reader = collector.getReader();
-                        reader.open();
-                        try {
-                            IFrameWriter writer = operator.getInputFrameWriter(0);
-                            writer.open();
-                            try {
-                                ByteBuffer buffer = allocateFrame();
-                                while (reader.nextFrame(buffer)) {
-                                    if (aborted) {
-                                        return;
-                                    }
-                                    buffer.flip();
-                                    writer.nextFrame(buffer);
-                                    buffer.compact();
+                if (collectors.length > 0) {
+                    final Semaphore sem = new Semaphore(collectors.length - 1);
+                    for (int i = 1; i < collectors.length; ++i) {
+                        final IPartitionCollector collector = collectors[i];
+                        final IFrameWriter writer = operator.getInputFrameWriter(i);
+                        sem.acquire();
+                        executor.execute(new Runnable() {
+                            public void run() {
+                                try {
+                                    pushFrames(collector, writer);
+                                } catch (HyracksDataException e) {
+                                } finally {
+                                    sem.release();
                                 }
-                            } finally {
-                                writer.close();
                             }
-                        } finally {
-                            reader.close();
-                        }
+                        });
+                    }
+                    try {
+                        pushFrames(collectors[0], operator.getInputFrameWriter(0));
                     } finally {
-                        collector.close();
+                        sem.acquire(collectors.length - 1);
                     }
                 }
             } finally {
@@ -200,6 +196,44 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } finally {
             ct.setName(threadName);
             close();
+        }
+    }
+
+    private void pushFrames(IPartitionCollector collector, IFrameWriter writer) throws HyracksDataException {
+        if (aborted) {
+            return;
+        }
+        try {
+            collector.open();
+            try {
+                joblet.advertisePartitionRequest(collector.getRequiredPartitionIds(), collector);
+                IFrameReader reader = collector.getReader();
+                reader.open();
+                try {
+                    writer.open();
+                    try {
+                        ByteBuffer buffer = allocateFrame();
+                        while (reader.nextFrame(buffer)) {
+                            if (aborted) {
+                                return;
+                            }
+                            buffer.flip();
+                            writer.nextFrame(buffer);
+                            buffer.compact();
+                        }
+                    } finally {
+                        writer.close();
+                    }
+                } finally {
+                    reader.close();
+                }
+            } finally {
+                collector.close();
+            }
+        } catch (HyracksException e) {
+            throw new HyracksDataException(e);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
     }
 }

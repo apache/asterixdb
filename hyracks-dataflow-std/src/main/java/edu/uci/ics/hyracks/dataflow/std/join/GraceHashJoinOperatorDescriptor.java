@@ -23,6 +23,8 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -44,8 +46,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodeP
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String SMALLRELATION = "RelR";
-    private static final String LARGERELATION = "RelS";
+    private static final String RELATION0 = "Rel0";
+    private static final String RELATION1 = "Rel1";
 
     private static final long serialVersionUID = 1L;
     private final int[] keys0;
@@ -56,6 +58,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     private final double factor;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
     private final IBinaryComparatorFactory[] comparatorFactories;
+    private final boolean isLeftOuter;
+    private final INullWriterFactory[] nullWriterFactories1;
 
     public GraceHashJoinOperatorDescriptor(JobSpecification spec, int memsize, int inputsize0, int recordsPerFrame,
             double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
@@ -69,15 +73,33 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         this.keys1 = keys1;
         this.hashFunctionFactories = hashFunctionFactories;
         this.comparatorFactories = comparatorFactories;
+        this.isLeftOuter = false;
+        this.nullWriterFactories1 = null;
+        recordDescriptors[0] = recordDescriptor;
+    }
+
+    public GraceHashJoinOperatorDescriptor(JobSpecification spec, int memsize, int inputsize0, int recordsPerFrame,
+            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, boolean isLeftOuter,
+            INullWriterFactory[] nullWriterFactories1) {
+        super(spec, 2, 1);
+        this.memsize = memsize;
+        this.inputsize0 = inputsize0;
+        this.recordsPerFrame = recordsPerFrame;
+        this.factor = factor;
+        this.keys0 = keys0;
+        this.keys1 = keys1;
+        this.hashFunctionFactories = hashFunctionFactories;
+        this.comparatorFactories = comparatorFactories;
+        this.isLeftOuter = isLeftOuter;
+        this.nullWriterFactories1 = nullWriterFactories1;
         recordDescriptors[0] = recordDescriptor;
     }
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        HashPartitionActivityNode rpart = new HashPartitionActivityNode(new ActivityId(odId, 0), SMALLRELATION, keys0,
-                0);
-        HashPartitionActivityNode spart = new HashPartitionActivityNode(new ActivityId(odId, 1), LARGERELATION, keys1,
-                1);
+        HashPartitionActivityNode rpart = new HashPartitionActivityNode(new ActivityId(odId, 0), RELATION0, keys0, 0);
+        HashPartitionActivityNode spart = new HashPartitionActivityNode(new ActivityId(odId, 1), RELATION1, keys1, 1);
         JoinActivityNode join = new JoinActivityNode(new ActivityId(odId, 2));
 
         builder.addActivity(rpart);
@@ -217,18 +239,24 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
             }
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
+            final INullWriter[] nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
+            if (isLeftOuter) {
+                for (int i = 0; i < nullWriterFactories1.length; i++) {
+                    nullWriters1[i] = nullWriterFactories1[i].createNullWriter();
+                }
+            }
 
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 private InMemoryHashJoin joiner;
 
-                private RunFileWriter[] rWriters;
-                private RunFileWriter[] sWriters;
+                private RunFileWriter[] buildWriters;
+                private RunFileWriter[] probeWriters;
                 private final int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
 
                 @Override
                 public void initialize() throws HyracksDataException {
-                    rWriters = (RunFileWriter[]) env.get(SMALLRELATION);
-                    sWriters = (RunFileWriter[]) env.get(LARGERELATION);
+                    buildWriters = (RunFileWriter[]) env.get(RELATION1);
+                    probeWriters = (RunFileWriter[]) env.get(RELATION0);
 
                     ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(numPartitions,
                             new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)).createPartitioner();
@@ -241,34 +269,36 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                     // buffer
                     int tableSize = (int) (numPartitions * recordsPerFrame * factor);
                     for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
-                        RunFileWriter rWriter = rWriters[partitionid];
-                        RunFileWriter sWriter = sWriters[partitionid];
-                        if (rWriter == null || sWriter == null) {
+                        RunFileWriter buildWriter = buildWriters[partitionid];
+                        RunFileWriter probeWriter = probeWriters[partitionid];
+                        if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
                             continue;
                         }
                         joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(), rd0),
                                 hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                                new FrameTuplePairComparator(keys0, keys1, comparators));
+                                new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1);
 
                         // build
-                        RunFileReader rReader = rWriter.createReader();
-                        rReader.open();
-                        while (rReader.nextFrame(buffer)) {
-                            ByteBuffer copyBuffer = ctx.allocateFrame();
-                            FrameUtils.copy(buffer, copyBuffer);
-                            joiner.build(copyBuffer);
-                            buffer.clear();
+                        if (buildWriter != null) {
+                            RunFileReader buildReader = buildWriter.createReader();
+                            buildReader.open();
+                            while (buildReader.nextFrame(buffer)) {
+                                ByteBuffer copyBuffer = ctx.allocateFrame();
+                                FrameUtils.copy(buffer, copyBuffer);
+                                joiner.build(copyBuffer);
+                                buffer.clear();
+                            }
+                            buildReader.close();
                         }
-                        rReader.close();
 
                         // probe
-                        RunFileReader sReader = sWriter.createReader();
-                        sReader.open();
-                        while (sReader.nextFrame(buffer)) {
+                        RunFileReader probeReader = probeWriter.createReader();
+                        probeReader.open();
+                        while (probeReader.nextFrame(buffer)) {
                             joiner.join(buffer, writer);
                             buffer.clear();
                         }
-                        sReader.close();
+                        probeReader.close();
                         joiner.closeJoin(writer);
                     }
                     writer.close();
@@ -276,8 +306,8 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void deinitialize() throws HyracksDataException {
-                    env.set(LARGERELATION, null);
-                    env.set(SMALLRELATION, null);
+                    env.set(RELATION1, null);
+                    env.set(RELATION0, null);
                 }
             };
             return op;

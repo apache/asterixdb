@@ -32,6 +32,8 @@ public interface IBinaryTokenizer {
 
     public int getTokenLength();
 
+    public int getNumTokens();
+
     public void writeToken(DataOutput dos) throws IOException;
 
     public RecordDescriptor getTokenSchema();

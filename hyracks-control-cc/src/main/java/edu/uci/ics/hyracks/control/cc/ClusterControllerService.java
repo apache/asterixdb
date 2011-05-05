@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -35,6 +36,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -67,6 +69,7 @@ import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.CCConfig;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
+import edu.uci.ics.hyracks.control.common.base.NCConfig;
 import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
@@ -81,6 +84,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final Map<String, NodeControllerState> nodeRegistry;
+
+    private final Map<String, Set<String>> ipAddressNodeNameMap;
 
     private final Map<String, CCApplicationContext> applications;
 
@@ -102,9 +107,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final CCClientInterface ccci;
 
+    private final ICCContext ccContext;
+
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
+        ipAddressNodeNameMap = new HashMap<String, Set<String>>();
         applications = new Hashtable<String, CCApplicationContext>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(
                 ClusterControllerService.class.getName()));
@@ -115,6 +123,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         scheduler = new DefaultJobScheduler(this);
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
+        ccContext = new ICCContext() {
+            @Override
+            public Map<String, Set<String>> getIPAddressNodeMap() {
+                return ipAddressNodeNameMap;
+            }
+        };
     }
 
     @Override
@@ -162,6 +176,10 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return nodeRegistry;
     }
 
+    public Map<String, Set<String>> getIPAddressNodeNameMap() {
+        return ipAddressNodeNameMap;
+    }
+
     public CCConfig getConfig() {
         return ccConfig;
     }
@@ -178,7 +196,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public NodeParameters registerNode(INodeController nodeController) throws Exception {
         String id = nodeController.getId();
-        NodeControllerState state = new NodeControllerState(nodeController);
+        NCConfig ncConfig = nodeController.getConfiguration();
+        NodeControllerState state = new NodeControllerState(nodeController, ncConfig);
         jobQueue.scheduleAndSync(new RegisterNodeEvent(this, id, state));
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
@@ -249,7 +268,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
             if (applications.containsKey(appName)) {
                 throw new HyracksException("Duplicate application with name: " + appName + " being created.");
             }
-            CCApplicationContext appCtx = new CCApplicationContext(serverCtx, appName);
+            CCApplicationContext appCtx = new CCApplicationContext(serverCtx, ccContext, appName);
             applications.put(appName, appCtx);
         }
     }

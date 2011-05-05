@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
@@ -230,6 +231,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         try {
             solver = new PartitionConstraintSolver();
             final JobActivityGraph jag = jobRun.getJobActivityGraph();
+            final ICCApplicationContext appCtx = ccs.getApplicationMap().get(jag.getApplicationName());
             JobSpecification spec = jag.getJobSpecification();
             final Set<Constraint> contributedConstraints = new HashSet<Constraint>();
             final IConstraintAcceptor acceptor = new IConstraintAcceptor() {
@@ -241,13 +243,13 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
             PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
                 @Override
                 public void visit(IOperatorDescriptor op) {
-                    op.contributeSchedulingConstraints(acceptor, jag);
+                    op.contributeSchedulingConstraints(acceptor, jag, appCtx);
                 }
             });
             PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
                 @Override
                 public void visit(IConnectorDescriptor conn) {
-                    conn.contributeSchedulingConstraints(acceptor, jag);
+                    conn.contributeSchedulingConstraints(acceptor, jag, appCtx);
                 }
             });
             contributedConstraints.addAll(spec.getUserConstraints());

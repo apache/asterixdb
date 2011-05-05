@@ -24,7 +24,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -133,7 +132,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         partitionManager = new PartitionManager(this, connectionManager.getNetworkAddress());
         connectionManager.setPartitionRequestListener(partitionManager);
 
-        jobletMap = new HashMap<UUID, Joblet>();
+        jobletMap = new Hashtable<UUID, Joblet>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
@@ -256,26 +255,25 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
-                Task task = new Task(joblet, taId, han.getClass().getName());
+                Task task = new Task(joblet, taId, han.getClass().getName(), executor);
                 IOperatorNodePushable operator = han.createPushRuntime(task,
                         joblet.getEnvironment(han.getActivityId().getOperatorDescriptorId(), partition), rdp,
                         partition, td.getPartitionCount());
 
-                IPartitionCollector collector = null;
+                List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
                 List<IConnectorDescriptor> inputs = plan.getActivityInputConnectorDescriptors(tid.getActivityId());
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
-                        if (i >= 1) {
-                            throw new HyracksException("Multiple inputs to an activity not currently supported");
-                        }
                         IConnectorDescriptor conn = inputs.get(i);
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
                         RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
-                        collector = createPartitionCollector(td, partition, task, i, conn, recordDesc, cPolicy);
+                        IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
+                                recordDesc, cPolicy);
+                        collectors.add(collector);
                     }
                 }
                 List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getActivityId());
@@ -297,7 +295,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                     }
                 }
 
-                task.setTaskRuntime(collector, operator);
+                task.setTaskRuntime(collectors.toArray(new IPartitionCollector[collectors.size()]), operator);
                 joblet.addTask(task);
 
                 task.start();
@@ -355,7 +353,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void cleanUpJob(UUID jobId) throws Exception {
+    public void cleanUpJob(UUID jobId) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }

@@ -44,9 +44,17 @@ public class RemoveDeadNodesEvent extends AbstractEvent {
                 LOGGER.info(e.getKey() + " considered dead");
             }
         }
+        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
             // Deal with dead tasks.
+            String ipAddress = state.getNCConfig().dataIPAddress;
+            Set<String> ipNodes = ipAddressNodeNameMap.get(ipAddress);
+            if (ipNodes != null) {
+                if (ipNodes.remove(deadNode) && ipNodes.isEmpty()) {
+                    ipAddressNodeNameMap.remove(ipAddress);
+                }
+            }
         }
     }
 

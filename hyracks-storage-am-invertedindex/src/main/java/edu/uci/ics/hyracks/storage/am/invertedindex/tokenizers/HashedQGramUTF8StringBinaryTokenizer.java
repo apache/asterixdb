@@ -142,4 +142,9 @@ public class HashedQGramUTF8StringBinaryTokenizer implements IBinaryTokenizer {
     public RecordDescriptor getTokenSchema() {
         return tokenSchema;
     }
+
+    @Override
+    public int getNumTokens() {
+        return 0;
+    }
 }
