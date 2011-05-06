@@ -64,7 +64,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
     // realistic params
     // private static final int PAGE_SIZE = 65536;
     private static final int PAGE_SIZE = 32768;
-    private static final int NUM_PAGES = 10000;
+    private static final int NUM_PAGES = 100;
     private static final int HYRACKS_FRAME_SIZE = 32768;
     private IHyracksStageletContext stageletCtx = TestUtils.create(HYRACKS_FRAME_SIZE);    
 
@@ -246,7 +246,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         //TOccurrenceSearcherSuffixProbeOnly searcher = new TOccurrenceSearcherSuffixProbeSingle(stageletCtx, invIndex, queryTokenizer);
         //TOccurrenceSearcherSuffixScanOnly searcher = new TOccurrenceSearcherSuffixScan(stageletCtx, invIndex, queryTokenizer);
 
-        int repeats = 1000;
+        int repeats = 100;
         double totalTime = 0;
         for(int i = 0; i < repeats; i++) {
         	long timeStart = System.currentTimeMillis();

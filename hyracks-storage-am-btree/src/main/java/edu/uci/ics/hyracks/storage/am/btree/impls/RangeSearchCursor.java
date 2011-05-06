@@ -86,9 +86,7 @@ public class RangeSearchCursor implements IBTreeCursor {
         bufferCache.unpin(page);
 
         page = nextLeaf;
-        frame.setPage(page);
-        
-        System.out.println("NEXT LEAF: " + nextLeafPage + " " + frame.getTupleCount());
+        frame.setPage(page);       
     }
 
     @Override
