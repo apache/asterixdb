@@ -187,4 +187,9 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
         return slotManager.findTupleIndex(searchKey, pageTuple, cmp, ftm, ftp);
     }
+
+	@Override
+	public int getPageHeaderSize() {
+		return nextLeafOff;
+	}
 }

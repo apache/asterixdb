@@ -36,9 +36,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
@@ -59,7 +57,6 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
-import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
@@ -69,8 +66,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BTreeTest extends AbstractBTreeTest {
 
-	private static final int PAGE_SIZE = 256;
-	private static final int NUM_PAGES = 10;
+	private static final int PAGE_SIZE = 256;	
+	private static final int NUM_PAGES = 10;	
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
@@ -120,9 +117,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
-				typeTraits);
-		// SimpleTupleWriterFactory tupleWriterFactory = new
-		// SimpleTupleWriterFactory();
+				typeTraits);		
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
 		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
@@ -203,7 +198,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		}
 		// btree.printTree(leafFrame, interiorFrame);
 		// System.out.println();
-
+			
 		int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
 		System.out.println("MAXPAGE: " + maxPage);
 
@@ -317,9 +312,11 @@ public class BTreeTest extends AbstractBTreeTest {
 		bufferCache.closeFile(fileId);
 		bufferCache.close();
 
-		print("\n");
+		print("\n");	
 	}
 
+	/*
+	
 	// COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
 	// create a B-tree with one two fixed-length "key" fields and one
 	// fixed-length "value" field
@@ -1350,4 +1347,5 @@ public class BTreeTest extends AbstractBTreeTest {
 		}
 		return strBuilder.toString();
 	}
+	*/
 }

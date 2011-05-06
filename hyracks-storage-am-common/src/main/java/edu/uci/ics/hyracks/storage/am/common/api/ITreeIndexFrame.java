@@ -74,7 +74,8 @@ public interface ITreeIndexFrame {
     // a compatible interior and leaf implementation MUST return identical
     // values when given the same ByteBuffer for the functions below
     public boolean isLeaf();
-
+    public boolean isInterior();
+    
     public byte getLevel();
 
     public void setLevel(byte level);
@@ -97,4 +98,5 @@ public interface ITreeIndexFrame {
 
     public ITreeIndexTupleWriter getTupleWriter();
 
+    public int getPageHeaderSize();
 }

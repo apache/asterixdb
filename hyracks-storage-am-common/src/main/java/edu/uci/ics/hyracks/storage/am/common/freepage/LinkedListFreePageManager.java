@@ -10,6 +10,8 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class LinkedListFreePageManager implements IFreePageManager {
 
+	private static final byte META_PAGE_LEVEL_INDICATOR = -1;
+	private static final byte FREE_PAGE_LEVEL_INDICATOR = -2;
 	private final IBufferCache bufferCache;
 	private final int fileId;
 	private final int headPage;
@@ -55,7 +57,7 @@ public class LinkedListFreePageManager implements IFreePageManager {
 							.getBuffer().array(), 0, metaNode.getBuffer()
 							.capacity());
 
-					metaFrame.initBuffer(-1);
+					metaFrame.initBuffer(META_PAGE_LEVEL_INDICATOR);
 					metaFrame.setNextPage(newPage);
 					metaFrame.setMaxPage(metaMaxPage);
 					metaFrame.addFreePage(freePage);
@@ -131,7 +133,7 @@ public class LinkedListFreePageManager implements IFreePageManager {
 			metaNode.releaseWriteLatch();
 			bufferCache.unpin(metaNode);
 		}
-
+		
 		return freePage;
 	}
 
@@ -162,7 +164,7 @@ public class LinkedListFreePageManager implements IFreePageManager {
 		metaNode.acquireWriteLatch();
 		try {
 			metaFrame.setPage(metaNode);
-			metaFrame.initBuffer((byte) -1);
+			metaFrame.initBuffer(META_PAGE_LEVEL_INDICATOR);
 			metaFrame.setMaxPage(currentMaxPage);
 		} finally {
 			metaNode.releaseWriteLatch();
@@ -174,4 +176,24 @@ public class LinkedListFreePageManager implements IFreePageManager {
 	public ITreeIndexMetaDataFrameFactory getMetaDataFrameFactory() {
 		return metaDataFrameFactory;
 	}
+
+	@Override
+	public byte getFreePageLevelIndicator() {
+		return FREE_PAGE_LEVEL_INDICATOR;
+	}
+
+	@Override
+	public byte getMetaPageLevelIndicator() {
+		return META_PAGE_LEVEL_INDICATOR;
+	}
+
+	@Override
+	public boolean isFreePage(ITreeIndexMetaDataFrame metaFrame) {
+		return metaFrame.getLevel() == FREE_PAGE_LEVEL_INDICATOR;
+	}
+
+	@Override
+	public boolean isMetaPage(ITreeIndexMetaDataFrame metaFrame) {
+		return metaFrame.getLevel() == META_PAGE_LEVEL_INDICATOR;
+	}	
 }

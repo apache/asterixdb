@@ -448,4 +448,9 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         strBuilder.append("\n");
         return strBuilder.toString();
     }
+    
+    @Override
+	public int getPageHeaderSize() {
+		return rightLeafOff;
+	}
 }

@@ -382,6 +382,11 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
     }
+    
+    @Override
+    public boolean isInterior() {
+        return buf.get(levelOff) > 0;
+    }
 
     @Override
     public byte getLevel() {
@@ -658,4 +663,8 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             return tupleIndex;
     }
 
+    @Override
+	public int getPageHeaderSize() {
+		return nextLeafOff;
+	}
 }

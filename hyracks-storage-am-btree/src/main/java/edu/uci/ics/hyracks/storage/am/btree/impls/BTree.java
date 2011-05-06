@@ -439,7 +439,7 @@ public class BTree {
 
                     uselessCompressionTime += (end - start);
                     uselessCompression++;
-
+                    
                     // perform split
                     splitsByLevel[0]++; // debug
                     int rightSiblingPageId = ctx.leafFrame.getNextLeaf();
@@ -677,7 +677,7 @@ public class BTree {
                     treeLatchesAcquired++;
 
                     try {
-                        ctx.leafFrame.delete(tuple, cmp, true);
+                        ctx.leafFrame.delete(tuple, cmp, true);                        
                         // to propagate the deletion we only need to make the
                         // splitKey != null
                         // we can reuse data to identify which key to delete in
@@ -695,9 +695,10 @@ public class BTree {
                     // together
                     // with
                     // logging
+                    ctx.leafFrame.setLevel(freePageManager.getFreePageLevelIndicator());
 
                     ctx.smPages.add(pageId);
-                    ctx.leafFrame.setSmFlag(true);
+                    ctx.leafFrame.setSmFlag(true);                    
 
                     node.releaseWriteLatch();
                     writeLatchesReleased++;
@@ -771,7 +772,8 @@ public class BTree {
             // tie
             // together
             // with
-            // logging
+            // logging            
+            ctx.leafFrame.setLevel(freePageManager.getFreePageLevelIndicator());
             ctx.smPages.add(pageId);
             ctx.interiorFrame.setSmFlag(true);
             ctx.interiorFrame.setRightmostChildPageId(-1); // this node is
@@ -1198,7 +1200,43 @@ public class BTree {
 
         loaded = true;
     }
-
+    
+    public void getBTreeStats(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+            ITreeIndexMetaDataFrame metaFrame, BTreeStats btreeStats) throws HyracksDataException {
+    	    	
+    	btreeStats.begin();
+    	
+    	int maxPageId = freePageManager.getMaxPage(metaFrame);  	    	    	
+    	for(int pageId = 0; pageId < maxPageId; pageId++) {
+        	ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        	page.acquireReadLatch();
+    		try {
+    			metaFrame.setPage(page);
+    			leafFrame.setPage(page);
+    			interiorFrame.setPage(page);    				    			    		
+    			
+    			if(pageId == rootPage) {
+    				btreeStats.addRoot(leafFrame, interiorFrame);
+    			} else if(leafFrame.isLeaf()) {
+    				double fillFactor = (double)(leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace()) / (double)leafFrame.getBuffer().capacity();
+    				System.out.println("FILLFACTOR: " + pageId + " " + fillFactor + " " + leafFrame.getTupleCount());
+    				btreeStats.add(leafFrame);
+    			} else if(interiorFrame.isInterior()) {
+    				btreeStats.add(interiorFrame);
+    			} else {
+    				System.out.println("META: " + metaFrame.getLevel());
+    				btreeStats.add(metaFrame, freePageManager);
+    			}    			    			
+    			
+    		} finally {
+    			page.releaseReadLatch();
+    			bufferCache.unpin(page);
+    		}        	    		
+    	}
+    	
+    	btreeStats.end();
+    }
+    
     public BTreeOpContext createOpContext(TreeIndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame) {
         // TODO: figure out better tree-height hint

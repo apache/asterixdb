@@ -72,6 +72,11 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
     }
+    
+    @Override
+    public boolean isInterior() {
+        return buf.get(levelOff) > 0;
+    }
 
     @Override
     public byte getLevel() {

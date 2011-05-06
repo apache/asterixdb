@@ -805,4 +805,10 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         }
         return false;
     }
+
+	@Override
+	public int getPageHeaderSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

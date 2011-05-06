@@ -73,8 +73,8 @@ public class TOccurrenceSearcher {
     protected int occurrenceThreshold;
     
     protected final int cursorCacheSize = 10;
-    protected ArrayList<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
-    protected ArrayList<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
+    protected List<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
+    protected List<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
     
     public TOccurrenceSearcher(IHyracksStageletContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer) {
         this.ctx = ctx;
@@ -126,11 +126,9 @@ public class TOccurrenceSearcher {
         }
         currentNumResults = 0;
     }
-    
-    
+        
     public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception {
-
-        // parse query, TODO: this parsing is too simple
+        
         RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
 
