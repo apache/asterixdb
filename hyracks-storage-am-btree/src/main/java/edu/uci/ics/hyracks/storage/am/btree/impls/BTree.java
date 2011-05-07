@@ -402,6 +402,7 @@ public class BTree {
         ctx.leafFrame.setPage(node);
         ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
+                
         switch (spaceStatus) {
 
             case SUFFICIENT_CONTIGUOUS_SPACE: {
@@ -833,12 +834,16 @@ public class BTree {
     private void performOp(int pageId, ICachedPage parent, BTreeOpContext ctx) throws Exception {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         pins++;
-
+                              
         ctx.interiorFrame.setPage(node);
-        boolean isLeaf = ctx.interiorFrame.isLeaf();
-        acquireLatch(node, ctx.op, isLeaf);
+        // this check performs an unprotected read in the page
+        // the following could happen: TODO fill out
+        boolean unsafeIsLeaf = ctx.interiorFrame.isLeaf();
+        acquireLatch(node, ctx.op, unsafeIsLeaf);
         boolean smFlag = ctx.interiorFrame.getSmFlag();
-
+        // re-check leafness after latching 
+        boolean isLeaf = ctx.interiorFrame.isLeaf();
+                
         // remember trail of pageLsns, to unwind recursion in case of an ongoing
         // structure modification
         ctx.pageLsns.add(ctx.interiorFrame.getPageLsn());
@@ -944,7 +949,7 @@ public class BTree {
                     ctx.opRestarts++;
                     System.out.println("ONGOING SM ON PAGE " + pageId + " AT LEVEL " + ctx.interiorFrame.getLevel()
                             + ", RESTARTS: " + ctx.opRestarts);
-                    releaseLatch(node, ctx.op, isLeaf);
+                    releaseLatch(node, ctx.op, unsafeIsLeaf);
                     bufferCache.unpin(node);
                     unpins++;
 
@@ -986,7 +991,7 @@ public class BTree {
             // System.out.println(e.getMessage());
             // e.printStackTrace();
             if (!e.getHandled()) {
-                releaseLatch(node, ctx.op, isLeaf);
+                releaseLatch(node, ctx.op, unsafeIsLeaf);
                 bufferCache.unpin(node);
                 unpins++;
                 e.setHandled(true);
@@ -996,7 +1001,7 @@ public class BTree {
             // failure to pin a new node during a split
             System.out.println("ASTERIX EXCEPTION");
             e.printStackTrace();
-            releaseLatch(node, ctx.op, isLeaf);
+            releaseLatch(node, ctx.op, unsafeIsLeaf);
             bufferCache.unpin(node);
             unpins++;
             BTreeException propException = new BTreeException(e);
