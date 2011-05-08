@@ -36,7 +36,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
@@ -57,6 +59,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
@@ -314,8 +317,6 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("\n");	
 	}
-
-	/*
 	
 	// COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
 	// create a B-tree with one two fixed-length "key" fields and one
@@ -1347,5 +1348,4 @@ public class BTreeTest extends AbstractBTreeTest {
 		}
 		return strBuilder.toString();
 	}
-	*/
 }

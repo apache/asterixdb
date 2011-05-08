@@ -19,10 +19,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -31,9 +29,6 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeStats;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -43,18 +38,24 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexBufferCacheWarmup;
+import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
+import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BTreeStatsTest extends AbstractBTreeTest {
-	
-	private static final int PAGE_SIZE = 32768;	
-	private static final int NUM_PAGES = 1000;	
+
+	// private static final int PAGE_SIZE = 256;
+	// private static final int NUM_PAGES = 10;
+	//private static final int PAGE_SIZE = 32768;
+    private static final int PAGE_SIZE = 4096;
+    private static final int NUM_PAGES = 1000;
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-	
+
 	// FIXED-LENGTH KEY TEST
 	// create a B-tree with one fixed-length "key" field and one fixed-length
 	// "value" field
@@ -90,7 +91,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
-				typeTraits);		
+				typeTraits);
 		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
 		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
@@ -101,10 +102,11 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
-		
-		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
-				leafFrameFactory, cmp);
+		IFreePageManager freePageManager = new LinkedListFreePageManager(
+				bufferCache, fileId, 0, metaFrameFactory);
+
+		BTree btree = new BTree(bufferCache, freePageManager,
+				interiorFrameFactory, leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
 
@@ -129,13 +131,13 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		BTreeOpContext insertOpCtx = btree.createOpContext(
+				TreeIndexOp.TI_INSERT, leafFrame, interiorFrame, metaFrame);
 
 		// 10000
-		for (int i = 0; i < 100000; i++) {
+		for (int i = 0; i < 1000000; i++) {
 
-			int f0 = rnd.nextInt() % 100000;
+			int f0 = rnd.nextInt() % 1000000;
 			int f1 = 5;
 
 			tb.reset();
@@ -171,33 +173,20 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		}
 		// btree.printTree(leafFrame, interiorFrame);
 		// System.out.println();
+
 		
-		print("ORDERED SCAN:\n");
-		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
-		RangePredicate nullPred = new RangePredicate(true, null, null, true,
-				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
-				leafFrame, interiorFrame, null);
-		btree.search(scanCursor, nullPred, searchOpCtx);
-		try {
-			while (scanCursor.hasNext()) {
-				scanCursor.next();				
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			scanCursor.close();
-		}
-		
-		BTreeStats btreeStats = new BTreeStats();
-		btree.getBTreeStats(leafFrame, interiorFrame, metaFrame, btreeStats);
-		String s = btreeStats.toString();		
+		TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, btree.getRootPageId());		
+		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
+		String s = stats.toString();
 		System.out.println(s);
+
+		TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager, fileId);
+		bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] {1, 2}, new int[] {2, 5});
 		
 		btree.close();
 		bufferCache.closeFile(fileId);
 		bufferCache.close();
 
-		print("\n");				
+		print("\n");
 	}
 }

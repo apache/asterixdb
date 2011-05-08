@@ -30,8 +30,9 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     protected static final int tupleCountOff = 0;
     protected static final int freeSpaceOff = tupleCountOff + 4;
     protected static final int maxPageOff = freeSpaceOff + 4;
-    protected static final byte levelOff = maxPageOff + 1;
-    protected static final byte nextPageOff = maxPageOff + 8;
+    protected static final int dummyFieldOff = maxPageOff + 4;
+    protected static final byte levelOff = dummyFieldOff + 4;
+    protected static final byte nextPageOff = levelOff + 1;
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;

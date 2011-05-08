@@ -129,7 +129,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void compact(MultiComparator cmp) {
+    public boolean compact(MultiComparator cmp) {
         resetSpaceParams();
         frameTuple.setFieldCount(cmp.getFieldCount());
 
@@ -160,11 +160,14 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
         buf.putInt(freeSpaceOff, freeSpace);
         buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
+        
+        return false;
     }
 
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-        frameTuple.setFieldCount(cmp.getFieldCount());
+    	
+    	frameTuple.setFieldCount(cmp.getFieldCount());
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
@@ -224,13 +227,15 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        frameTuple.setFieldCount(cmp.getFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
+    	frameTuple.setFieldCount(cmp.getFieldCount());
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);        
+    }
+    
+    @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {        
         slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
-
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());

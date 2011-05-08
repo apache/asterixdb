@@ -115,7 +115,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     // 3. prefix tuple are sorted (last prefix tuple is at highest offset)
     // this procedure will not move prefix tuples
     @Override
-    public void compact(MultiComparator cmp) {
+    public boolean compact(MultiComparator cmp) {
         resetSpaceParams();
 
         frameTuple.setFieldCount(cmp.getFieldCount());
@@ -168,11 +168,13 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             slotManager.setSlot(sortedTupleOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
             freeSpace += tupleLength;
         }
-
+        
         buf.putInt(freeSpaceOff, freeSpace);
         int totalFreeSpace = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
         buf.putInt(totalFreeSpaceOff, totalFreeSpace);
+        
+        return false;
     }
 
     @Override
@@ -290,12 +292,14 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-
-        slot = slotManager.insertSlot(slot, buf.getInt(freeSpaceOff));
-
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
+    	return slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
+    			FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    }
+    
+    @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {        
+        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
         int numPrefixFields = 0;
         if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
@@ -457,18 +461,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame) rightFrame;
 
         frameTuple.setFieldCount(cmp.getFieldCount());
-
-        // before doing anything check if key already exists
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-        int tupleSlotNum = slotManager.decodeSecondSlotField(slot);
-        if (tupleSlotNum != FieldPrefixSlotManager.GREATEST_SLOT) {
-            frameTuple.resetByTupleIndex(this, tupleSlotNum);
-            if (cmp.compare(tuple, frameTuple) == 0) {
-                throw new BTreeException("Inserting duplicate key into unique index");
-            }
-        }
-
+        
         ByteBuffer right = rf.getBuffer();
         int tupleCount = getTupleCount();
         int prefixTupleCount = getPrefixTupleCount();
@@ -578,7 +571,8 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         rightFrame.compact(cmp);
 
         // insert last key
-        targetFrame.insert(tuple, cmp);
+        int targetTupleIndex = targetFrame.findTupleIndex(tuple, cmp);
+        targetFrame.insert(tuple, cmp, targetTupleIndex);
 
         // set split key to be highest value in left page
         frameTuple.resetByTupleIndex(this, getTupleCount() - 1);

@@ -15,7 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.frames.AbstractSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
@@ -33,12 +38,12 @@ public class OrderedSlotManager extends AbstractSlotManager {
         int mid;
         int begin = 0;
         int end = frame.getTupleCount() - 1;
-
+        
         while (begin <= end) {
             mid = (begin + end) / 2;
-            frameTuple.resetByTupleIndex(frame, mid);
-
-            int cmp = multiCmp.compare(searchKey, frameTuple);
+            frameTuple.resetByTupleIndex(frame, mid);            
+            
+            int cmp = multiCmp.compare(searchKey, frameTuple);            
             if (cmp < 0) {
                 end = mid - 1;
             } else if (cmp > 0) {

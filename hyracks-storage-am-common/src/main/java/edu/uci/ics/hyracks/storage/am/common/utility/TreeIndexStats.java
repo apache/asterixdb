@@ -1,14 +1,12 @@
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.utility;
 
 import java.text.DecimalFormat;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 
-public class BTreeStats {
+public class TreeIndexStats {
 
 	private TreeIndexNodeTypeStats rootStats = new TreeIndexNodeTypeStats();
 	private TreeIndexNodeTypeStats interiorStats = new TreeIndexNodeTypeStats();
@@ -27,22 +25,17 @@ public class BTreeStats {
 		treeLevels = 0;
 	}
 	
-	public void addRoot(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame) {
-		treeLevels = leafFrame.getLevel();
-		if(leafFrame.isLeaf()) {
-			rootStats.add(leafFrame);
-		} 
-		else {
-			rootStats.add(interiorFrame);
+	public void addRoot(ITreeIndexFrame frame) {
+		treeLevels = frame.getLevel() + 1;
+		rootStats.add(frame);
+	}
+	
+	public void add(ITreeIndexFrame frame) {		
+		if(frame.isLeaf()) {
+		    leafStats.add(frame);
+		} else if(frame.isInterior()) {
+		    interiorStats.add(frame);
 		}
-	}
-	
-	public void add(IBTreeLeafFrame leafFrame) {		
-		leafStats.add(leafFrame);
-	}
-	
-	public void add(IBTreeInteriorFrame interiorFrame) {
-		interiorStats.add(interiorFrame);	
 	}
 	
 	public void add(ITreeIndexMetaDataFrame metaFrame, IFreePageManager freePageManager) {
@@ -108,12 +101,8 @@ public class BTreeStats {
 		
 		public void add(ITreeIndexFrame frame) {
 			numPages++;
-			numTuples += frame.getTupleCount();							
-			sumFillFactors += (double)(frame.getBuffer().capacity() - frame.getTotalFreeSpace()) / (double)frame.getBuffer().capacity();
-			double fillFactor = (double)(frame.getBuffer().capacity() - frame.getTotalFreeSpace()) / (double)frame.getBuffer().capacity();			
-			//System.out.println("BLUBBI: " + frame.getBuffer().capacity() + " " + frame.getTotalFreeSpace() + " " + frame.getBuffer().capacity());
-			//System.out.println("INDIVIDUAL FILL FACTOR: " + fillFactor);
-			//if(fillFactor < 0.5) System.out.println("LOW FILL FACTOR: " + frame.getTupleCount());
+			numTuples += frame.getTupleCount();					
+			sumFillFactors += (double)(frame.getBuffer().capacity() - frame.getTotalFreeSpace()) / (double)frame.getBuffer().capacity();			
 		}
 		
 		public long getNumTuples() {

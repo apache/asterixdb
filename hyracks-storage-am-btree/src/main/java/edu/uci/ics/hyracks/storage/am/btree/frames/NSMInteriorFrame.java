@@ -77,9 +77,8 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
-    @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
+    	frameTuple.setFieldCount(cmp.getKeyFieldCount());
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
@@ -92,42 +91,45 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
             if (cmp.compare(tuple, frameTuple) != 0)
                 isDuplicate = false;
         }
-
         if (isDuplicate) {
             throw new BTreeException("Trying to insert duplicate value into interior node.");
-        } else {
-            slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
-
-            int freeSpace = buf.getInt(freeSpaceOff);
-            int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
-            System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp), buf
-                    .array(), freeSpace + bytesWritten, childPtrSize);
-            int tupleSize = bytesWritten + childPtrSize;
-
-            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-            buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + tupleSize);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - tupleSize - slotManager.getSlotSize());
-
-            // did insert into the rightmost slot?
-            if (slotOff == slotManager.getSlotEndOff()) {
-                System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp)
-                        + childPtrSize, buf.array(), rightLeafOff, childPtrSize);
-            } else {
-                // if slotOff has a right (slot-)neighbor then update its child
-                // pointer
-                // the only time when this is NOT the case, is when this is the
-                // first tuple
-                // (or when the splitkey goes into the rightmost slot but that
-                // case was handled in the if above)
-                if (buf.getInt(tupleCountOff) > 1) {
-                    int rightNeighborOff = slotOff - slotManager.getSlotSize();
-                    frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
-                    System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize,
-                            buf.array(), getLeftChildPageOff(frameTuple, cmp), childPtrSize);
-                }
-            }
         }
+        return tupleIndex;
     }
+    
+    @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+    	int slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
+    	int freeSpace = buf.getInt(freeSpaceOff);
+    	int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
+    	System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp), buf
+    			.array(), freeSpace + bytesWritten, childPtrSize);
+    	int tupleSize = bytesWritten + childPtrSize;
+
+    	buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+    	buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + tupleSize);
+    	buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - tupleSize - slotManager.getSlotSize());
+
+    	// did insert into the rightmost slot?
+    	if (slotOff == slotManager.getSlotEndOff()) {
+    		System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp)
+    				+ childPtrSize, buf.array(), rightLeafOff, childPtrSize);
+    	} else {
+    		// if slotOff has a right (slot-)neighbor then update its child
+    		// pointer
+    		// the only time when this is NOT the case, is when this is the
+    		// first tuple
+    		// (or when the splitkey goes into the rightmost slot but that
+    		// case was handled in the if above)
+    		if (buf.getInt(tupleCountOff) > 1) {
+    			int rightNeighborOff = slotOff - slotManager.getSlotSize();
+    			frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
+    			System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize,
+    					buf.array(), getLeftChildPageOff(frameTuple, cmp), childPtrSize);
+    		}
+    	}
+    }
+
 
     @Override
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
@@ -149,16 +151,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
             throws Exception {
         // before doing anything check if key already exists
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-        int slotOff = slotManager.getSlotOff(tupleIndex);
-        if (tupleIndex >= 0) {
-            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
-            if (cmp.compare(tuple, frameTuple) == 0) {
-                throw new BTreeException("Inserting duplicate key in interior node during split");
-            }
-        }
-
+        
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = buf.getInt(tupleCountOff);
 
@@ -210,13 +203,14 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
         compact(cmp);
 
         // insert key
-        targetFrame.insert(savedSplitKey.getTuple(), cmp);
-
+        int targetTupleIndex = targetFrame.findTupleIndex(savedSplitKey.getTuple(), cmp);
+        targetFrame.insert(savedSplitKey.getTuple(), cmp, targetTupleIndex);
+        
         return 0;
     }
 
     @Override
-    public void compact(MultiComparator cmp) {
+    public boolean compact(MultiComparator cmp) {
         resetSpaceParams();
 
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -248,6 +242,8 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
 
         buf.putInt(freeSpaceOff, freeSpace);
         buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
+        
+        return false;
     }
 
     @Override

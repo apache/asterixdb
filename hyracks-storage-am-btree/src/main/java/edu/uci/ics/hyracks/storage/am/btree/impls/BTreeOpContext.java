@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IntArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 
 public final class BTreeOpContext {

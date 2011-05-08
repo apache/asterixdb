@@ -66,8 +66,8 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        frameTuple.setFieldCount(cmp.getFieldCount());
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
+    	frameTuple.setFieldCount(cmp.getFieldCount());
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
@@ -80,19 +80,21 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
             if (cmp.compare(tuple, frameTuple) != 0)
                 isDuplicate = false;
         }
-
         if (isDuplicate) {
             throw new BTreeException("Trying to insert duplicate value into leaf of unique index");
-        } else {
-            slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
-
-            int freeSpace = buf.getInt(freeSpaceOff);
-            int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);
-
-            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-            buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
         }
+        
+        return tupleIndex;
+    }
+    
+    @Override
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {    	
+    	slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
+    	int freeSpace = buf.getInt(freeSpaceOff);
+    	int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);
+    	buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+    	buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+    	buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
     }
 
     @Override
@@ -110,17 +112,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
             throws Exception {
 
         frameTuple.setFieldCount(cmp.getFieldCount());
-
-        // before doing anything check if key already exists
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-        if (tupleIndex >= 0) {
-            frameTuple.resetByTupleIndex(this, tupleIndex);
-            if (cmp.compare(tuple, frameTuple) == 0) {
-                throw new BTreeException("Inserting duplicate key into unique index");
-            }
-        }
-
+        
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -157,7 +149,8 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
         compact(cmp);
 
         // insert last key
-        targetFrame.insert(tuple, cmp);
+        int targetTupleIndex = targetFrame.findTupleIndex(tuple, cmp);
+        targetFrame.insert(tuple, cmp, targetTupleIndex);
 
         // set split key to be highest value in left page
         tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -167,7 +160,7 @@ public class NSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-
+        
         return 0;
     }
 

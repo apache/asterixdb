@@ -159,7 +159,7 @@ public class LinkedListFreePageManager implements IFreePageManager {
 			throws HyracksDataException {
 		// initialize meta data page
 		ICachedPage metaNode = bufferCache.pin(BufferedFileHandle
-				.getDiskPageId(fileId, headPage), false);
+				.getDiskPageId(fileId, headPage), true);
 
 		metaNode.acquireWriteLatch();
 		try {

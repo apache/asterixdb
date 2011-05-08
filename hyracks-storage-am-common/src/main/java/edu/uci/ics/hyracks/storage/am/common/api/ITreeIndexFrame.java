@@ -31,13 +31,15 @@ public interface ITreeIndexFrame {
 
     public ByteBuffer getBuffer();
 
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception;
-
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception;
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
+    
     public void update(int rid, ITupleReference tuple) throws Exception;
 
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
 
-    public void compact(MultiComparator cmp);
+    // returns true if slots were modified, false otherwise
+    public boolean compact(MultiComparator cmp);
 
     public boolean compress(MultiComparator cmp) throws HyracksDataException;
 

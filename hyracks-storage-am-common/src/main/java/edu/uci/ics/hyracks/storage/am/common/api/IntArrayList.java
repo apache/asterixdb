@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
 public class IntArrayList {
     private int[] data;
