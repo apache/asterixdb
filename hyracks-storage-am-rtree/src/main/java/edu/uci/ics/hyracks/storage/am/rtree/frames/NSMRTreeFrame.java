@@ -10,10 +10,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.EntriesOrder;
@@ -292,13 +289,13 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
             // to split the entries?
             if (entries1.get(i).getTupleIndex() != -1) {
                 frameTuple.resetByTupleIndex(this, entries1.get(i).getTupleIndex());
-                rightFrame.insert(frameTuple, cmp);
+                rightFrame.insert(frameTuple, cmp, -1);
                 ((UnorderedSlotManager) slotManager).modifySlot(
                         slotManager.getSlotOff(entries1.get(i).getTupleIndex()), -1);
                 totalBytes += tupleWriter.bytesRequired(frameTuple);
                 numOfDeletedTuples++;
             } else {
-                rightFrame.insert(tuple, cmp);
+                rightFrame.insert(tuple, cmp, -1);
                 tupleInserted = true;
             }
         }
@@ -314,7 +311,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         compact(cmp);
 
         if (!tupleInserted) {
-            insert(tuple, cmp);
+            insert(tuple, cmp, -1);
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -357,7 +354,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     @Override
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         try {
-            insert(tuple, cmp);
+            insert(tuple, cmp, -1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -601,9 +598,9 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         frameTuple.setFieldCount(cmp.getFieldCount());
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
     }
-    
+
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp) throws Exception {
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
         frameTuple.setFieldCount(cmp.getFieldCount());
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
@@ -612,7 +609,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
     }
-    
+
     @Override
     public void delete(int tupleIndex, MultiComparator cmp) throws Exception {
         frameTuple.setFieldCount(cmp.getFieldCount());
@@ -806,9 +803,8 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         return false;
     }
 
-	@Override
-	public int getPageHeaderSize() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public int getPageHeaderSize() {
+        return rightPageOff;
+    }
 }
