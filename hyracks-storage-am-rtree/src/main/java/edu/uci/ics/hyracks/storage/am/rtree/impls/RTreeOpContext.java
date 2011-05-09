@@ -18,10 +18,10 @@ public final class RTreeOpContext {
     public final PathList pathList; // used to record the pageIds and pageLsns of the visited pages 
     public final TraverseList traverseList; // used for traversing the tree
     public Rectangle[] rec;
-    public String name;
+    public String threadName; // for debugging
 
     public RTreeOpContext(TreeIndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
-            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint, int dim, String name) {
+            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint, int dim, String threadName) {
         this.op = op;
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
@@ -38,7 +38,7 @@ public final class RTreeOpContext {
         for (int i = 0; i < 4; i++) {
             rec[i] = new Rectangle(dim);
         }
-        this.name = name;
+        this.threadName = threadName;
     }
 
     public ITupleReference getTuple() {
