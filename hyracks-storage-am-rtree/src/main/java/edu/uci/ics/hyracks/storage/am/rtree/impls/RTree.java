@@ -67,20 +67,28 @@ public class RTree {
         globalNsn.incrementAndGet();
     }
 
-    public synchronized void readLatchesAcquired() {
+    public synchronized void incrementReadLatchesAcquired() {
         readLatchesAcquired++;
     }
     
-    public synchronized void readLatchesReleased() {
+    public synchronized void incrementReadLatchesReleased() {
         readLatchesReleased++;
     }
    
-    public synchronized void writeLatchesAcquired() {
+    public synchronized void incrementWriteLatchesAcquired() {
         writeLatchesAcquired++;
     }
     
-    public synchronized void writeLatchesReleased() {
+    public synchronized void incrementWriteLatchesReleased() {
         writeLatchesReleased++;
+    }
+    
+    public synchronized void incrementPins() {
+        pins++;
+    }
+    
+    public synchronized void incrementUnpins() {
+        unpins++;
     }
     
     public synchronized int getGlobalNsn() {
@@ -115,16 +123,16 @@ public class RTree {
             IRTreeFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
 
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-        pins++;
+        incrementPins();
         node.acquireReadLatch();
-        readLatchesAcquired();
+        incrementReadLatchesAcquired();
 
         try {
             if (parent != null && unpin == true) {
                 parent.releaseReadLatch();
-                readLatchesReleased();
+                incrementReadLatchesReleased();
                 bufferCache.unpin(parent);
-                unpins++;
+                incrementUnpins();
             }
 
             interiorFrame.setPage(node);
@@ -152,15 +160,15 @@ public class RTree {
             } else {
                 totalTuplesInserted += interiorFrame.getTupleCount();
                 node.releaseReadLatch();
-                readLatchesReleased();
+                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                unpins++;
+                incrementUnpins();
             }
         } catch (Exception e) {
             node.releaseReadLatch();
-            readLatchesReleased();
+            incrementReadLatchesReleased();
             bufferCache.unpin(node);
-            unpins++;
+            incrementUnpins();
             e.printStackTrace();
         }
     }
@@ -180,18 +188,18 @@ public class RTree {
 
             // initialize root page
             ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-            pins++;
+            incrementPins();
 
             rootNode.acquireWriteLatch();
-            writeLatchesAcquired();
+            incrementWriteLatchesAcquired();
             try {
                 leafFrame.setPage(rootNode);
                 leafFrame.initBuffer((byte) 0);
             } finally {
                 rootNode.releaseWriteLatch();
-                writeLatchesReleased();
+                incrementWriteLatchesReleased();
                 bufferCache.unpin(rootNode);
-                unpins++;
+                incrementUnpins();
             }
             currentLevel = 0;
 
@@ -240,9 +248,9 @@ public class RTree {
         }
         
         leafNode.releaseWriteLatch();
-        writeLatchesReleased();
+        incrementWriteLatchesReleased();
         bufferCache.unpin(leafNode);
-        unpins++;
+        incrementUnpins();
 
     }
 
@@ -256,22 +264,22 @@ public class RTree {
         while (true) {
             if (!writeLatched) {
                 node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                pins++;
+                incrementPins();
                 ctx.interiorFrame.setPage(node);
                 isLeaf = ctx.interiorFrame.isLeaf();
                 if (isLeaf) {
                     System.out.println(ctx.name + " trying to get 555555555555 write lock: " + pageId);
                     node.acquireWriteLatch();
-                    writeLatchesAcquired();
+                    incrementWriteLatchesAcquired();
                     writeLatched = true;
                     System.out.println(ctx.name + " Got write lock: " + pageId);
 
                     if (!ctx.interiorFrame.isLeaf()) {
                         System.out.println(ctx.name + " Released write lock77777777: " + pageId);
                         node.releaseWriteLatch();
-                        writeLatchesReleased();
+                        incrementWriteLatchesReleased();
                         bufferCache.unpin(node);
-                        unpins++;
+                        incrementUnpins();
                         writeLatched = false;
                         continue;
                     }
@@ -281,7 +289,7 @@ public class RTree {
                     // tuple.
                     System.out.println(ctx.name + " trying to get read lock: " + pageId);
                     node.acquireReadLatch();
-                    readLatchesAcquired();
+                    incrementReadLatchesAcquired();
                     System.out.println(ctx.name + " Got read lock: " + pageId);
                 }
             }
@@ -292,16 +300,16 @@ public class RTree {
                 if (writeLatched) {
                     System.out.println(ctx.name + " Released write lock888888888: " + pageId);
                     node.releaseWriteLatch();
-                    writeLatchesReleased();
+                    incrementWriteLatchesReleased();
                     bufferCache.unpin(node);
-                    unpins++;
+                    incrementUnpins();
                     writeLatched = false;
                 } else {
                     System.out.println(ctx.name + " Released read lock11111111111: " + pageId);
                     node.releaseReadLatch();
-                    readLatchesReleased();
+                    incrementReadLatchesReleased();
                     bufferCache.unpin(node);
-                    unpins++;
+                    incrementUnpins();
                 }
 
                 pageId = ctx.pathList.getLastPageId();
@@ -330,16 +338,16 @@ public class RTree {
                     if (!writeLatched) {
                         System.out.println(ctx.name + " Released read lock2222222222222222: " + pageId);
                         node.releaseReadLatch();
-                        readLatchesReleased();
+                        incrementReadLatchesReleased();
                         // TODO: do we need to un-pin and pin again?
                         bufferCache.unpin(node);
-                        unpins++;
+                        incrementUnpins();
                         
                         System.out.println(ctx.name + " trying to get 6666666666666 write lock: " + pageId);
                         node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                        pins++;
+                        incrementPins();
                         node.acquireWriteLatch();
-                        writeLatchesAcquired();
+                        incrementWriteLatchesAcquired();
                         ctx.interiorFrame.setPage(node);
                         writeLatched = true;
                         System.out.println(ctx.name + " Got write lock: " + pageId);
@@ -361,24 +369,24 @@ public class RTree {
 
                     System.out.println(ctx.name + " Released write lock999999999: " + pageId);
                     node.releaseWriteLatch();
-                    writeLatchesReleased();
+                    incrementWriteLatchesReleased();
                     bufferCache.unpin(node);
-                    unpins++;
+                    incrementUnpins();
                     writeLatched = false;
                 } else {
                     if (writeLatched) {
                         System.out.println(ctx.name + " Released write lock1010101010: " + pageId);
                         node.releaseWriteLatch();
-                        writeLatchesReleased();
+                        incrementWriteLatchesReleased();
                         bufferCache.unpin(node);
-                        unpins++;
+                        incrementUnpins();
                         writeLatched = false;
                     } else {
                         System.out.println(ctx.name + " Released read lock33333333333333333: " + pageId);
                         node.releaseReadLatch();
-                        readLatchesReleased();
+                        incrementReadLatchesReleased();
                         bufferCache.unpin(node);
-                        unpins++;
+                        incrementUnpins();
                     }
                 }
                 pageId = childPageId;
@@ -440,9 +448,9 @@ public class RTree {
                 System.out.println(ctx.name + " Split");
                 int rightPageId = freePageManager.getFreePage(ctx.metaFrame);
                 ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
-                pins++;
+                incrementPins();
                 rightNode.acquireWriteLatch();
-                writeLatchesAcquired();
+                incrementWriteLatchesAcquired();
                 
                 try {
                     IRTreeFrame rightFrame;
@@ -494,9 +502,9 @@ public class RTree {
                         int newLeftId = freePageManager.getFreePage(ctx.metaFrame);
                         ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId),
                                 true);
-                        pins++;
+                        incrementPins();
                         newLeftNode.acquireWriteLatch();
-                        writeLatchesAcquired();
+                        incrementWriteLatchesAcquired();
                         try {
                             // copy left child to new left child
                             System.arraycopy(node.getBuffer().array(), 0, newLeftNode.getBuffer().array(), 0,
@@ -517,17 +525,17 @@ public class RTree {
                             ctx.interiorFrame.setPageNsn(newNsn);
                         } finally {
                             newLeftNode.releaseWriteLatch();
-                            writeLatchesReleased();
+                            incrementWriteLatchesReleased();
                             bufferCache.unpin(newLeftNode);
-                            unpins++;
+                            incrementUnpins();
                         }
 
                         ctx.splitKey.reset();
                     }
                     rightNode.releaseWriteLatch();
-                    writeLatchesReleased();
+                    incrementWriteLatchesReleased();
                     bufferCache.unpin(rightNode);
-                    unpins++;
+                    incrementUnpins();
                 }
                 break;
             }
@@ -537,9 +545,9 @@ public class RTree {
     public void updateParentForInsert(RTreeOpContext ctx) throws Exception {
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-        pins++;
+        incrementPins();
         parentNode.acquireWriteLatch();
-        writeLatchesAcquired();
+        incrementWriteLatchesAcquired();
         ctx.interiorFrame.setPage(parentNode);
         boolean foundParent = true;
 
@@ -553,9 +561,9 @@ public class RTree {
                 }
                 int rightPage = ctx.interiorFrame.getRightPage();
                 parentNode.releaseWriteLatch();
-                writeLatchesReleased();
+                incrementWriteLatchesReleased();
                 bufferCache.unpin(parentNode);
-                unpins++;
+                incrementUnpins();
 
                 if (rightPage == -1) {
                     break;
@@ -563,9 +571,9 @@ public class RTree {
 
                 parentId = rightPage;
                 parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-                pins++;
+                incrementPins();
                 parentNode.acquireWriteLatch();
-                writeLatchesAcquired();
+                incrementWriteLatchesAcquired();
                 ctx.interiorFrame.setPage(parentNode);
             }
         }
@@ -576,9 +584,9 @@ public class RTree {
             ctx.pathList.removeLast();
 
             parentNode.releaseWriteLatch();
-            writeLatchesReleased();
+            incrementWriteLatchesReleased();
             bufferCache.unpin(parentNode);
-            unpins++;
+            incrementUnpins();
             return;
         }
 
@@ -602,9 +610,9 @@ public class RTree {
             parentIndex = ctx.traverseList.getFirstParentIndex();
 
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-            pins++;
+            incrementPins();
             node.acquireReadLatch();
-            readLatchesAcquired();
+            incrementReadLatchesAcquired();
             ctx.interiorFrame.setPage(node);
             pageLsn = ctx.interiorFrame.getPageLsn();
             pageIndex = ctx.traverseList.first();
@@ -625,15 +633,15 @@ public class RTree {
                 fillPath(ctx, pageIndex);
 
                 node.releaseReadLatch();
-                readLatchesReleased();
+                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                unpins++;
+                incrementUnpins();
                 return;
             }
             node.releaseReadLatch();
-            readLatchesReleased();
+            incrementReadLatchesReleased();
             bufferCache.unpin(node);
-            unpins++;
+            incrementUnpins();
         }
     }
 
@@ -668,18 +676,18 @@ public class RTree {
             }
 
             ctx.leafFrame.getPage().releaseWriteLatch();
-            writeLatchesReleased();
+            incrementWriteLatchesReleased();
             bufferCache.unpin(ctx.leafFrame.getPage());
-            unpins++;
+            incrementUnpins();
         }
     }
 
     public void updateParentForDelete(RTreeOpContext ctx) throws Exception {
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-        pins++;
+        incrementPins();
         parentNode.acquireWriteLatch();
-        writeLatchesAcquired();
+        incrementWriteLatchesAcquired();
         ctx.interiorFrame.setPage(parentNode);
         boolean foundParent = true;
         int tupleIndex = -1;
@@ -695,9 +703,9 @@ public class RTree {
                 }
                 int rightPage = ctx.interiorFrame.getRightPage();
                 parentNode.releaseWriteLatch();
-                writeLatchesReleased();
+                incrementWriteLatchesReleased();
                 bufferCache.unpin(parentNode);
-                unpins++;
+                incrementUnpins();
 
                 if (rightPage == -1) {
                     break;
@@ -705,9 +713,9 @@ public class RTree {
 
                 parentId = rightPage;
                 parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-                pins++;
+                incrementPins();
                 parentNode.acquireWriteLatch();
-                writeLatchesAcquired();
+                incrementWriteLatchesAcquired();
                 ctx.interiorFrame.setPage(parentNode);
             }
         }
@@ -732,9 +740,9 @@ public class RTree {
             }
 
             parentNode.releaseWriteLatch();
-            writeLatchesReleased();
+            incrementWriteLatchesReleased();
             bufferCache.unpin(parentNode);
-            unpins++;
+            incrementUnpins();
             return;
         }
 
@@ -758,9 +766,9 @@ public class RTree {
             int pageIndex = ctx.pathList.getLastPageIndex();
             ctx.pathList.removeLast();
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-            pins++;
+            incrementPins();
             node.acquireReadLatch();
-            readLatchesAcquired();
+            incrementReadLatchesAcquired();
             ctx.interiorFrame.setPage(node);
             boolean isLeaf = ctx.interiorFrame.isLeaf();
             int pageLsn = ctx.interiorFrame.getPageLsn();
@@ -790,14 +798,14 @@ public class RTree {
                 if (tupleIndex != -1) {
 
                     node.releaseReadLatch();
-                    readLatchesReleased();
+                    incrementReadLatchesReleased();
                     bufferCache.unpin(node);
-                    unpins++;
+                    incrementUnpins();
 
                     node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                    pins++;
+                    incrementPins();
                     node.acquireWriteLatch();
-                    writeLatchesAcquired();
+                    incrementWriteLatchesAcquired();
                     ctx.leafFrame.setPage(node);
 
                     if (ctx.leafFrame.getPageLsn() != pageLsn) {
@@ -816,9 +824,9 @@ public class RTree {
                 }
             }
             node.releaseReadLatch();
-            readLatchesReleased();
+            incrementReadLatchesReleased();
             bufferCache.unpin(node);
-            unpins++;
+            incrementUnpins();
         }
         return -1;
     }
@@ -843,9 +851,9 @@ public class RTree {
         while (!s.isEmpty()) {
             int pageId = s.pop();
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-            pins++;
+            incrementPins();
             node.acquireReadLatch();
-            readLatchesAcquired();
+            incrementReadLatchesAcquired();
 
             try {
 
@@ -880,9 +888,9 @@ public class RTree {
 
             } finally {
                 node.releaseReadLatch();
-                readLatchesReleased();
+                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                unpins++;
+                incrementUnpins();
             }
         }
     }
