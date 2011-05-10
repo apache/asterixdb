@@ -79,10 +79,11 @@ public class SortMergePartitionCollector extends AbstractPartitionCollector {
             InputChannelFrameReader channelReader = new InputChannelFrameReader(channel);
             channel.registerMonitor(channelReader);
             channel.setAttachment(channelReader);
+            int senderIndex = pid.getSenderIndex();
             synchronized (this) {
-                channels[pid.getSenderIndex()] = channel;
+                channels[senderIndex] = channel;
             }
-            pbm.addPartition(pid.getSenderIndex());
+            pbm.addPartition(senderIndex);
             channel.open();
         }
     }
@@ -188,19 +189,21 @@ public class SortMergePartitionCollector extends AbstractPartitionCollector {
         }
 
         @Override
-        public synchronized boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-            while (!eos && availableFrames <= 0) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
+        public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
+            synchronized (this) {
+                while (!eos && availableFrames <= 0) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        throw new HyracksDataException(e);
+                    }
                 }
-            }
-            if (eos) {
-                return false;
+                if (availableFrames <=0 && eos) {
+                    return false;
+                }
+                --availableFrames;
             }
             ByteBuffer srcBuffer = channel.getNextBuffer();
-            --availableFrames;
             FrameUtils.copy(srcBuffer, buffer);
             channel.recycleBuffer(srcBuffer);
             return true;

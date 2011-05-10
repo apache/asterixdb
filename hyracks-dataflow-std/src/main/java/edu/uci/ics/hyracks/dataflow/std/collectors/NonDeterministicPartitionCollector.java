@@ -99,6 +99,17 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
 
         @Override
         public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
+            findNextSender();
+            if (lastReadSender >= 0) {
+                ByteBuffer srcFrame = channels[lastReadSender].getNextBuffer();
+                FrameUtils.copy(srcFrame, buffer);
+                channels[lastReadSender].recycleBuffer(srcFrame);
+                return true;
+            }
+            return false;
+        }
+
+        private void findNextSender() throws HyracksDataException {
             synchronized (NonDeterministicPartitionCollector.this) {
                 while (true) {
                     switch (lastReadSender) {
@@ -115,10 +126,7 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                         if (--availableFrameCounts[lastReadSender] == 0) {
                             frameAvailability.clear(lastReadSender);
                         }
-                        ByteBuffer srcFrame = channels[lastReadSender].getNextBuffer();
-                        FrameUtils.copy(srcFrame, buffer);
-                        channels[lastReadSender].recycleBuffer(srcFrame);
-                        return true;
+                        return;
                     }
                     for (int i = eosSenders.nextSetBit(0); i >= 0; i = eosSenders.nextSetBit(i)) {
                         channels[i].close();
@@ -127,7 +135,8 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                     }
                     int nextClosedBitIndex = closedSenders.nextClearBit(0);
                     if (nextClosedBitIndex < 0 || nextClosedBitIndex >= nSenderPartitions) {
-                        return false;
+                        lastReadSender = -1;
+                        return;
                     }
                     try {
                         NonDeterministicPartitionCollector.this.wait();

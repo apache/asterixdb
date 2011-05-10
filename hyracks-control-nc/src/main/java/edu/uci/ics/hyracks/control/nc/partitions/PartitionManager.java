@@ -14,8 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.nc.partitions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +38,7 @@ public class PartitionManager implements IPartitionRequestListener {
 
     private final NodeControllerService ncs;
 
-    private final Map<PartitionId, IPartition> partitionMap;
+    private final Map<PartitionId, List<IPartition>> partitionMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
@@ -45,14 +47,19 @@ public class PartitionManager implements IPartitionRequestListener {
     public PartitionManager(NodeControllerService ncs, NetworkAddress dataPort) {
         this.dataPort = dataPort;
         this.ncs = ncs;
-        partitionMap = new HashMap<PartitionId, IPartition>();
+        partitionMap = new HashMap<PartitionId, List<IPartition>>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
     }
 
     public void registerPartition(PartitionId pid, IPartition partition) throws HyracksDataException {
         synchronized (this) {
-            partitionMap.put(pid, partition);
+            List<IPartition> pList = partitionMap.get(pid);
+            if (pList == null) {
+                pList = new ArrayList<IPartition>();
+                partitionMap.put(pid, pList);
+            }
+            pList.add(partition);
         }
         try {
             ncs.getClusterController().registerPartitionProvider(pid, dataPort);
@@ -62,15 +69,17 @@ public class PartitionManager implements IPartitionRequestListener {
     }
 
     public synchronized IPartition getPartition(PartitionId pid) {
-        return partitionMap.get(pid);
+        return partitionMap.get(pid).get(0);
     }
 
     public synchronized void unregisterPartitions(UUID jobId) {
-        for (Iterator<Map.Entry<PartitionId, IPartition>> i = partitionMap.entrySet().iterator(); i.hasNext();) {
-            Map.Entry<PartitionId, IPartition> e = i.next();
+        for (Iterator<Map.Entry<PartitionId, List<IPartition>>> i = partitionMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry<PartitionId, List<IPartition>> e = i.next();
             PartitionId pid = e.getKey();
             if (jobId.equals(pid.getJobId())) {
-                e.getValue().deallocate();
+                for (IPartition p : e.getValue()) {
+                    p.deallocate();
+                }
                 i.remove();
             }
         }
@@ -79,8 +88,9 @@ public class PartitionManager implements IPartitionRequestListener {
     @Override
     public synchronized void registerPartitionRequest(PartitionId partitionId, IFrameWriter writer)
             throws HyracksException {
-        IPartition partition = partitionMap.get(partitionId);
-        if (partition != null) {
+        List<IPartition> pList = partitionMap.get(partitionId);
+        if (pList != null && !pList.isEmpty()) {
+            IPartition partition = pList.get(0);
             partition.writeTo(writer);
             if (!partition.isReusable()) {
                 partitionMap.remove(partitionId);

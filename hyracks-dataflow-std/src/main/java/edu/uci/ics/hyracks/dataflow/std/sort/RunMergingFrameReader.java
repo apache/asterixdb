@@ -77,6 +77,7 @@ public class RunMergingFrameReader implements IFrameReader {
                 setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
             } else {
                 closeRun(runIndex, runCursors, tupleAccessors);
+                topTuples.pop();
             }
         }
     }
