@@ -19,11 +19,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -45,9 +45,12 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 
-public class TOccurrenceSearcher {
+public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected final IHyracksStageletContext ctx;
     protected final FixedSizeFrameTupleAppender resultFrameTupleApp;
@@ -59,7 +62,6 @@ public class TOccurrenceSearcher {
     protected List<ByteBuffer> newResultBuffers = new ArrayList<ByteBuffer>();
     protected List<ByteBuffer> prevResultBuffers = new ArrayList<ByteBuffer>();
     protected List<ByteBuffer> swap = null;
-    protected final ListResultCursor resultCursor = new ListResultCursor();
     protected int maxResultBufIdx = 0;
 
     protected final IBTreeLeafFrame leafFrame;
@@ -67,10 +69,19 @@ public class TOccurrenceSearcher {
     protected final IBTreeCursor btreeCursor;
     protected final FrameTupleReference searchKey = new FrameTupleReference();
     protected final RangePredicate btreePred = new RangePredicate(true, null, null, true, true, null, null);
-        
+    protected final BTreeOpContext btreeOpCtx;
+    
+    protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
+            new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+    protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFields().length);
+    protected DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
+    protected FrameTupleAppender queryTokenAppender;
+    protected ByteBuffer queryTokenFrame;
+    
     protected final InvertedIndex invIndex;    
     protected final IBinaryTokenizer queryTokenizer;    
-    protected int occurrenceThreshold;
+    protected final ITypeTrait[] invListFieldsWithCount;
+    protected int occurrenceThreshold;    
     
     protected final int cursorCacheSize = 10;
     protected List<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
@@ -86,7 +97,7 @@ public class TOccurrenceSearcher {
 
         btreeCursor = new RangeSearchCursor(leafFrame);
         ITypeTrait[] invListFields = invIndex.getInvListElementCmp().getTypeTraits();
-        ITypeTrait[] invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
+        invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
         int tmp = 0;
         for(int i = 0; i < invListFields.length; i++) {
             invListFieldsWithCount[i] = invListFields[i];
@@ -95,6 +106,9 @@ public class TOccurrenceSearcher {
         // using an integer for counting occurrences
         invListFieldsWithCount[invListFields.length] = new TypeTrait(4);
         invListKeyLength = tmp;
+        
+        btreeOpCtx = invIndex.getBTree().createOpContext(TreeIndexOp.TI_SEARCH, leafFrame,
+                interiorFrame, null);
         
         resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), invListFieldsWithCount);
         resultFrameTupleAcc = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), invListFieldsWithCount);
@@ -112,7 +126,10 @@ public class TOccurrenceSearcher {
         for (int i = 0; i < cursorCacheSize; i++) {
             invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
                     .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
-        }
+        }        
+        
+        queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
+        queryTokenFrame = ctx.allocateFrame();
         
         currentNumResults = 0;
     }
@@ -127,17 +144,9 @@ public class TOccurrenceSearcher {
         currentNumResults = 0;
     }
         
-    public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception {
+    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex, IInvertedIndexSearchModifier searchModifier) throws Exception {
         
-        RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
-
-        ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFields().length);
-        DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
-        FrameTupleAppender queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
-        ByteBuffer queryTokenFrame = ctx.allocateFrame();
         queryTokenAppender.reset(queryTokenFrame, true);
-
         queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
                 queryTuple.getFieldLength(queryFieldIndex));
         while (queryTokenizer.hasNext()) {
@@ -159,9 +168,7 @@ public class TOccurrenceSearcher {
         FrameTupleAccessor queryTokenAccessor = new FrameTupleAccessor(ctx.getFrameSize(), queryTokenRecDesc);
         queryTokenAccessor.reset(queryTokenFrame);
         int numQueryTokens = queryTokenAccessor.getTupleCount();
-
-        maxResultBufIdx = 0;
-
+        
         // expand cursor cache if necessary
         if (numQueryTokens > invListCursorCache.size()) {
             int diff = numQueryTokens - invListCursorCache.size();
@@ -169,18 +176,14 @@ public class TOccurrenceSearcher {
                 invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
                         .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
             }
-        }
+        }                
         
-        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(TreeIndexOp.TI_SEARCH, leafFrame,
-                interiorFrame, null);
-        
-        invListCursors.clear();
+        invListCursors.clear();        
         for (int i = 0; i < numQueryTokens; i++) {
             searchKey.reset(queryTokenAccessor, i);
             invIndex.openCursor(btreeCursor, btreePred, btreeOpCtx, invListCursorCache.get(i));
             invListCursors.add(invListCursorCache.get(i));            
         }
-        Collections.sort(invListCursors);
         
         /*
         for(int i = 0; i < numQueryTokens; i++) {
@@ -188,16 +191,19 @@ public class TOccurrenceSearcher {
         }
         */
         
-        occurrenceThreshold = numQueryTokens;
+        occurrenceThreshold = searchModifier.getOccurrenceThreshold(invListCursors);
+                                
+        int numPrefixLists = searchModifier.getPrefixLists(invListCursors);
+        maxResultBufIdx = mergePrefixLists(numPrefixLists, numQueryTokens);        
+        maxResultBufIdx = mergeSuffixLists(numPrefixLists, numQueryTokens, maxResultBufIdx);        
         
-        int numPrefixTokens = numQueryTokens - occurrenceThreshold + 1;
+        resultCursor.reset(this);
         
-        int maxPrevBufIdx = mergePrefixLists(numPrefixTokens, numQueryTokens);        
-        maxPrevBufIdx = mergeSuffixLists(numPrefixTokens, numQueryTokens, maxPrevBufIdx);        
+        //System.out.println("NUMBER RESULTS: " + currentNumResults);
         
         /*
         StringBuffer strBuffer = new StringBuffer();
-        for(int i = 0; i <= maxPrevBufIdx; i++) {
+        for(int i = 0; i <= maxResultBufIdx; i++) {
             ByteBuffer testBuf = newResultBuffers.get(i);
             resultFrameTupleAcc.reset(testBuf);
             for(int j = 0; j < resultFrameTupleAcc.getTupleCount(); j++) {
@@ -206,7 +212,7 @@ public class TOccurrenceSearcher {
             }            
         }
         System.out.println(strBuffer.toString());     
-        */   
+        */ 
         
     }        
         
@@ -276,6 +282,7 @@ public class TOccurrenceSearcher {
             }
             else {
                 if(count + numQueryTokens - invListIx > occurrenceThreshold) {
+                    //System.out.println("C: " + count);
                     newBufIdx = appendTupleToNewResults(resultTuple, count, newBufIdx);
                 }
             }           
@@ -370,8 +377,8 @@ public class TOccurrenceSearcher {
                     resultTidx = 0;
                 }
             }
-        }
-                
+        }                        
+        
         return newBufIdx;
     }
     
@@ -434,10 +441,10 @@ public class TOccurrenceSearcher {
         
         // append remaining new elements from inverted list
         //if(invListCursor.hasNext()) System.out.println("APPENDING FROM INV LIST");        
-        while(invListCursor.hasNext()) {            
+        while(invListCursor.hasNext()) {        
             invListCursor.next();            
             ITupleReference invListTuple = invListCursor.getTuple();
-            newBufIdx = appendTupleToNewResults(invListTuple, 1, newBufIdx);       
+            newBufIdx = appendTupleToNewResults(invListTuple, 1, newBufIdx);
         }
         
         // append remaining elements from previous result set
@@ -489,146 +496,22 @@ public class TOccurrenceSearcher {
         
         return newBufIdx;
     }
+          
+    public IFrameTupleAccessor createResultFrameTupleAccessor() {
+        return new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), invListFieldsWithCount);
+    }
     
-   
-    /*
-    private int appendTupleToNewResults(IBTreeCursor btreeCursor, int newBufIdx) throws IOException {
-        ByteBuffer newCurrentBuffer = newResultBuffers.get(newBufIdx);
-
-        ITupleReference tuple = btreeCursor.getTuple();
-        resultTupleBuilder.reset();
-        DataOutput dos = resultTupleBuilder.getDataOutput();
-        for (int i = 0; i < numValueFields; i++) {
-            int fIdx = numKeyFields + i;
-            dos.write(tuple.getFieldData(fIdx), tuple.getFieldStart(fIdx), tuple.getFieldLength(fIdx));
-            resultTupleBuilder.addFieldEndOffset();
-        }
-
-        if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(), 0,
-                resultTupleBuilder.getSize())) {
-            newBufIdx++;
-            if (newBufIdx >= newResultBuffers.size()) {
-                newResultBuffers.add(ctx.allocateFrame());
-            }
-            newCurrentBuffer = newResultBuffers.get(newBufIdx);
-            resultTupleAppender.reset(newCurrentBuffer, true);
-            if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(),
-                    0, resultTupleBuilder.getSize())) {
-                throw new IllegalStateException();
-            }
-        }
-
-        return newBufIdx;
+    public ITupleReference createResultTupleReference() {
+        return new FixedSizeTupleReference(invListFieldsWithCount);
     }
-    */
 
-    
-    /*
-    private int mergeInvList(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers, int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws IOException, Exception {
-
-        int newBufIdx = 0;
-        ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
-
-        int prevBufIdx = 0;
-        ByteBuffer prevCurrentBuffer = prevResultBuffers.get(0);
-
-        resultTupleBuilder.reset();
-        resultTupleAppender.reset(newCurrentBuffer, true);
-        resultFrameAccessor.reset(prevCurrentBuffer);
-
-        // WARNING: not very efficient but good enough for the first cut
-        boolean advanceCursor = true;
-        boolean advancePrevResult = false;
-        int resultTidx = 0;
-
-        while ((!advanceCursor || invListCursor.hasNext()) && prevBufIdx <= maxPrevBufIdx
-                && resultTidx < resultFrameAccessor.getTupleCount()) {
-
-            if (advanceCursor)
-                invListCursor.next();
-            
-            ICachedPage invListPage = invListCursor.getPage();
-            int invListOff = invListCursor.getOffset();
-            
-            int cmp = 0;
-            int valueFields = 1;
-            for (int i = 0; i < valueFields; i++) {
-                                                
-                int tupleFidx = numKeyFields + i;
-                cmp = valueCmps[i].compare(tuple.getFieldData(tupleFidx), tuple.getFieldStart(tupleFidx),
-                        tuple.getFieldLength(tupleFidx), resultFrameAccessor.getBuffer().array(),
-                        resultFrameAccessor.getTupleStartOffset(resultTidx) + resultFrameAccessor.getFieldSlotsLength()
-                                + resultFrameAccessor.getFieldStartOffset(resultTidx, i),
-                        resultFrameAccessor.getFieldLength(resultTidx, i));
-                if (cmp != 0)
-                    break;
-            }
-
-            // match found
-            if (cmp == 0) {
-                newBufIdx = appendTupleToNewResults(btreeCursor, newBufIdx);
-
-                advanceCursor = true;
-                advancePrevResult = true;
-            } else {
-                if (cmp < 0) {
-                    advanceCursor = true;
-                    advancePrevResult = false;
-                } else {
-                    advanceCursor = false;
-                    advancePrevResult = true;
-                }
-            }
-
-            if (advancePrevResult) {
-                resultTidx++;
-                if (resultTidx >= resultFrameAccessor.getTupleCount()) {
-                    prevBufIdx++;
-                    if (prevBufIdx <= maxPrevBufIdx) {
-                        prevCurrentBuffer = prevResultBuffers.get(prevBufIdx);
-                        resultFrameAccessor.reset(prevCurrentBuffer);
-                        resultTidx = 0;
-                    }
-                }
-            }
-        }
-
-        return newBufIdx;
+    @Override
+    public List<ByteBuffer> getResultBuffers() {
+        return newResultBuffers;
     }
-      
-    private int appendTupleToNewResults(IBTreeCursor btreeCursor, int newBufIdx) throws IOException {
-        ByteBuffer newCurrentBuffer = newResultBuffers.get(newBufIdx);
 
-        ITupleReference tuple = btreeCursor.getTuple();
-        resultTupleBuilder.reset();
-        DataOutput dos = resultTupleBuilder.getDataOutput();
-        for (int i = 0; i < numValueFields; i++) {
-            int fIdx = numKeyFields + i;
-            dos.write(tuple.getFieldData(fIdx), tuple.getFieldStart(fIdx), tuple.getFieldLength(fIdx));
-            resultTupleBuilder.addFieldEndOffset();
-        }
-
-        if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(), 0,
-                resultTupleBuilder.getSize())) {
-            newBufIdx++;
-            if (newBufIdx >= newResultBuffers.size()) {
-                newResultBuffers.add(ctx.allocateFrame());
-            }
-            newCurrentBuffer = newResultBuffers.get(newBufIdx);
-            resultTupleAppender.reset(newCurrentBuffer, true);
-            if (!resultTupleAppender.append(resultTupleBuilder.getFieldEndOffsets(), resultTupleBuilder.getByteArray(),
-                    0, resultTupleBuilder.getSize())) {
-                throw new IllegalStateException();
-            }
-        }
-
-        return newBufIdx;
-    }
-    */
-
-    /*
-     * @Override public IInvertedIndexResultCursor getResultCursor() {
-     * resultCursor.setResults(newResultBuffers, maxResultBufIdx + 1); return
-     * resultCursor; }
-     */
+    @Override
+    public int getNumValidResultBuffers() {
+        return maxResultBufIdx + 1;
+    }    
 }

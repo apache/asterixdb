@@ -15,10 +15,16 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.api;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IInvertedIndexSearcher {
-    public void search(ITupleReference queryTuple, int queryFieldIndex) throws Exception;
-
-    public IInvertedIndexResultCursor getResultCursor();
+    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex, IInvertedIndexSearchModifier searchModifier) throws Exception;    
+    public IFrameTupleAccessor createResultFrameTupleAccessor();
+    public ITupleReference createResultTupleReference();
+    public List<ByteBuffer> getResultBuffers();
+    public int getNumValidResultBuffers();
 }

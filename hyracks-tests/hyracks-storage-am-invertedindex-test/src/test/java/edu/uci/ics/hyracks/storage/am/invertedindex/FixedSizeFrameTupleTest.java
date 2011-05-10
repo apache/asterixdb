@@ -44,12 +44,10 @@ public class FixedSizeFrameTupleTest {
 			}
 		}
 		
-		ftacc.reset(buffer);
-		System.out.println("TUPLECOUNT: " + ftacc.getTupleCount());
-		System.out.println("CHECKCOUNT: " + check.size());
+		ftacc.reset(buffer);		
 		for(int i = 0; i < ftacc.getTupleCount(); i++) {
-			int val = IntegerSerializerDeserializer.INSTANCE.getInt(ftacc.getBuffer().array(), ftacc.getTupleStartOffset(i));			
-			Assert.assertEquals(check.get(i).intValue(), val);						
+			int val = IntegerSerializerDeserializer.getInt(ftacc.getBuffer().array(), ftacc.getTupleStartOffset(i));			
+			Assert.assertEquals(check.get(i).intValue(), val);
 		}		
 	}
 }
