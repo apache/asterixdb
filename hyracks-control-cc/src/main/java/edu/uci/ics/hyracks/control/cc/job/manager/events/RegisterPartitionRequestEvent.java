@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -47,18 +49,32 @@ public class RegisterPartitionRequestEvent extends AbstractEvent {
                     return;
                 }
 
-                Map<PartitionId, NetworkAddress> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
-                NetworkAddress networkAddress = partitionAvailabilityMap.get(pid);
-                if (networkAddress != null) {
-                    try {
-                        INodeController nc = ncs.getNodeController();
-                        nc.reportPartitionAvailability(pid, networkAddress);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                Map<PartitionId, Set<String>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
+                Set<String> paSet = partitionAvailabilityMap.get(pid);
+                boolean matched = false;
+                if (paSet != null && !paSet.isEmpty()) {
+                    for (String availablePartitionLocation : paSet) {
+                        NodeControllerState availNcs = ccs.getNodeMap().get(availablePartitionLocation);
+                        if (availNcs != null) {
+                            NetworkAddress networkAddress = availNcs.getDataPort();
+                            try {
+                                INodeController nc = ncs.getNodeController();
+                                nc.reportPartitionAvailability(pid, networkAddress);
+                                matched = true;
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                } else {
-                    Map<PartitionId, String> partitionRequestorMap = run.getPartitionRequestorMap();
-                    partitionRequestorMap.put(pid, nodeId);
+                }
+                if (!matched) {
+                    Map<PartitionId, Set<String>> partitionRequestorMap = run.getPartitionRequestorMap();
+                    Set<String> prSet = partitionRequestorMap.get(pid);
+                    if (prSet == null) {
+                        prSet = new HashSet<String>();
+                        partitionRequestorMap.put(pid, prSet);
+                    }
+                    prSet.add(nodeId);
                 }
             }
         }

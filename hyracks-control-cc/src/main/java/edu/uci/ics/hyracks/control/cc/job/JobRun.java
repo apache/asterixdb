@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
@@ -34,9 +33,9 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobActivityGraph jag;
 
-    private final Map<PartitionId, NetworkAddress> partitionAvailabilityMap;
+    private final Map<PartitionId, Set<String>> partitionAvailabilityMap;
 
-    private final Map<PartitionId, String> partitionRequestorMap;
+    private final Map<PartitionId, Set<String>> partitionRequestorMap;
 
     private final Set<String> participatingNodeIds;
 
@@ -53,8 +52,8 @@ public class JobRun implements IJobStatusConditionVariable {
     public JobRun(UUID jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
-        partitionAvailabilityMap = new HashMap<PartitionId, NetworkAddress>();
-        partitionRequestorMap = new HashMap<PartitionId, String>();
+        partitionAvailabilityMap = new HashMap<PartitionId, Set<String>>();
+        partitionRequestorMap = new HashMap<PartitionId, Set<String>>();
         participatingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
@@ -108,11 +107,11 @@ public class JobRun implements IJobStatusConditionVariable {
         return jsm;
     }
 
-    public Map<PartitionId, NetworkAddress> getPartitionAvailabilityMap() {
+    public Map<PartitionId, Set<String>> getPartitionAvailabilityMap() {
         return partitionAvailabilityMap;
     }
 
-    public Map<PartitionId, String> getPartitionRequestorMap() {
+    public Map<PartitionId, Set<String>> getPartitionRequestorMap() {
         return partitionRequestorMap;
     }
 

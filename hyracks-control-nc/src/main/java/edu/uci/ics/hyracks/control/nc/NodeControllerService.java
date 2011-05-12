@@ -70,10 +70,11 @@ import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.base.NCConfig;
-import edu.uci.ics.hyracks.control.common.base.NodeCapability;
-import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NodeCapability;
+import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
@@ -129,7 +130,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
         nodeCapability = computeNodeCapability();
         connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
-        partitionManager = new PartitionManager(this, connectionManager.getNetworkAddress());
+        partitionManager = new PartitionManager(this);
         connectionManager.setPartitionRequestListener(partitionManager);
 
         jobletMap = new Hashtable<UUID, Joblet>();
@@ -159,7 +160,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         connectionManager.start();
         Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
         IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
-        this.nodeParameters = cc.registerNode(this);
+        this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
+                .getNetworkAddress()));
 
         // Schedule heartbeat generator.
         timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod());

@@ -19,18 +19,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
 public interface IClusterController extends Remote {
-    public NodeParameters registerNode(INodeController nodeController) throws Exception;
+    public NodeParameters registerNode(NodeRegistration reg) throws Exception;
 
     public void unregisterNode(INodeController nodeController) throws Exception;
 
-    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics) throws Exception;
+    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
+            throws Exception;
 
     public void notifyTaskFailure(UUID jobId, TaskAttemptId taskId, String nodeId, Exception e) throws Exception;
 
@@ -38,7 +40,7 @@ public interface IClusterController extends Remote {
 
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception;
 
-    public void registerPartitionProvider(PartitionId pid, NetworkAddress address) throws Exception;
+    public void registerPartitionProvider(PartitionId pid, String nodeId) throws Exception;
 
     public void registerPartitionRequest(Collection<PartitionId> requiredPartitionIds, String nodeId) throws Exception;
 }

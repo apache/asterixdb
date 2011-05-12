@@ -66,12 +66,13 @@ import edu.uci.ics.hyracks.control.cc.scheduler.DefaultJobScheduler;
 import edu.uci.ics.hyracks.control.cc.scheduler.IJobScheduler;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
-import edu.uci.ics.hyracks.control.common.base.CCConfig;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.base.NCConfig;
-import edu.uci.ics.hyracks.control.common.base.NodeParameters;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
@@ -194,10 +195,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public NodeParameters registerNode(INodeController nodeController) throws Exception {
-        String id = nodeController.getId();
-        NCConfig ncConfig = nodeController.getConfiguration();
-        NodeControllerState state = new NodeControllerState(nodeController, ncConfig);
+    public NodeParameters registerNode(NodeRegistration reg) throws Exception {
+        INodeController nodeController = reg.getNodeController();
+        String id = reg.getNodeId();
+        NCConfig ncConfig = reg.getNCConfig();
+        NetworkAddress dataPort = reg.getDataPort();
+        NodeControllerState state = new NodeControllerState(nodeController, ncConfig, dataPort);
         jobQueue.scheduleAndSync(new RegisterNodeEvent(this, id, state));
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
@@ -293,8 +296,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void registerPartitionProvider(PartitionId pid, NetworkAddress address) throws Exception {
-        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, address));
+    public void registerPartitionProvider(PartitionId pid, String nodeId) throws Exception {
+        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, nodeId));
     }
 
     @Override

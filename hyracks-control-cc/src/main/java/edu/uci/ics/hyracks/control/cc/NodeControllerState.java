@@ -18,21 +18,25 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.base.NCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NodeControllerState {
     private final INodeController nodeController;
 
     private final NCConfig ncConfig;
 
+    private final NetworkAddress dataPort;
+
     private final Set<UUID> activeJobIds;
 
     private int lastHeartbeatDuration;
 
-    public NodeControllerState(INodeController nodeController, NCConfig ncConfig) {
+    public NodeControllerState(INodeController nodeController, NCConfig ncConfig, NetworkAddress dataPort) {
         this.nodeController = nodeController;
         this.ncConfig = ncConfig;
+        this.dataPort = dataPort;
         activeJobIds = new HashSet<UUID>();
     }
 
@@ -58,5 +62,9 @@ public class NodeControllerState {
 
     public Set<UUID> getActiveJobIds() {
         return activeJobIds;
+    }
+
+    public NetworkAddress getDataPort() {
+        return dataPort;
     }
 }

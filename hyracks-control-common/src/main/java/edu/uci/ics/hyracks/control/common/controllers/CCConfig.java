@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.base;
+package edu.uci.ics.hyracks.control.common.controllers;
 
 import org.kohsuke.args4j.Option;
 

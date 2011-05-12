@@ -14,9 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
@@ -27,13 +28,12 @@ import edu.uci.ics.hyracks.control.common.base.INodeController;
 public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
     private final PartitionId pid;
-    private final NetworkAddress networkAddress;
+    private final String nodeId;
 
-    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionId pid,
-            NetworkAddress networkAddress) {
+    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionId pid, String nodeId) {
         this.ccs = ccs;
         this.pid = pid;
-        this.networkAddress = networkAddress;
+        this.nodeId = nodeId;
     }
 
     @Override
@@ -42,19 +42,27 @@ public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
         if (run == null) {
             return;
         }
-        Map<PartitionId, NetworkAddress> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
-        partitionAvailabilityMap.put(pid, networkAddress);
+        Map<PartitionId, Set<String>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
+        Set<String> paSet = partitionAvailabilityMap.get(pid);
+        if (paSet == null) {
+            paSet = new HashSet<String>();
+            partitionAvailabilityMap.put(pid, paSet);
+        }
+        paSet.add(nodeId);
 
-        Map<PartitionId, String> partitionRequestorMap = run.getPartitionRequestorMap();
-        String requestor = partitionRequestorMap.remove(pid);
-        if (requestor != null) {
-            NodeControllerState ncs = ccs.getNodeMap().get(requestor);
-            if (ncs != null) {
-                try {
-                    INodeController nc = ncs.getNodeController();
-                    nc.reportPartitionAvailability(pid, networkAddress);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        NodeControllerState availNcs = ccs.getNodeMap().get(nodeId);
+        Map<PartitionId, Set<String>> partitionRequestorMap = run.getPartitionRequestorMap();
+        Set<String> prSet = partitionRequestorMap.get(pid);
+        if (prSet != null) {
+            for (String requestor : prSet) {
+                NodeControllerState ncs = ccs.getNodeMap().get(requestor);
+                if (ncs != null) {
+                    try {
+                        INodeController nc = ncs.getNodeController();
+                        nc.reportPartitionAvailability(pid, availNcs.getDataPort());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -62,6 +70,6 @@ public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
 
     @Override
     public String toString() {
-        return "PartitionAvailable@" + networkAddress + "[" + pid + "]";
+        return "PartitionAvailable@" + nodeId + "[" + pid + "]";
     }
 }

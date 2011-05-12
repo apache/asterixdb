@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
@@ -34,8 +33,6 @@ import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class PartitionManager implements IPartitionRequestListener {
-    private final NetworkAddress dataPort;
-
     private final NodeControllerService ncs;
 
     private final Map<PartitionId, List<IPartition>> partitionMap;
@@ -44,8 +41,7 @@ public class PartitionManager implements IPartitionRequestListener {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    public PartitionManager(NodeControllerService ncs, NetworkAddress dataPort) {
-        this.dataPort = dataPort;
+    public PartitionManager(NodeControllerService ncs) {
         this.ncs = ncs;
         partitionMap = new HashMap<PartitionId, List<IPartition>>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
@@ -62,7 +58,7 @@ public class PartitionManager implements IPartitionRequestListener {
             pList.add(partition);
         }
         try {
-            ncs.getClusterController().registerPartitionProvider(pid, dataPort);
+            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
