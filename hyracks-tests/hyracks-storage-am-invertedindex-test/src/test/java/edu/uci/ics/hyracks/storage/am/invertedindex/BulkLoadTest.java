@@ -9,6 +9,7 @@ import java.util.Random;
 
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -121,7 +122,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         
         int invListFields = 1;
         ITypeTrait[] invListTypeTraits = new ITypeTrait[invListFields];
-        invListTypeTraits[0] = new TypeTrait(4);        
+        invListTypeTraits[0] = new TypeTrait(4);
         
         int invListKeys = 1;
         IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
@@ -277,5 +278,10 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         bufferCache.closeFile(btreeFileId);
         bufferCache.closeFile(invListsFileId);
         bufferCache.close();
+    }
+    
+    @AfterClass
+    public static void deinit() {
+    	AbstractInvIndexTest.tearDown();
     }
 }

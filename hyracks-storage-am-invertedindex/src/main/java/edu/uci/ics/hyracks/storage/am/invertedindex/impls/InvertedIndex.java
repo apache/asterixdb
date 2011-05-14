@@ -45,6 +45,10 @@ public class InvertedIndex {
         this.fileId = fileId;
     }
     
+    public void close() {
+    	this.fileId = -1;
+    }
+    
     public BulkLoadContext beginBulkLoad(IInvertedListBuilder invListBuilder, int hyracksFrameSize) throws HyracksDataException {
         BulkLoadContext ctx = new BulkLoadContext(invListBuilder, hyracksFrameSize);
         ctx.init(rootPageId, fileId);

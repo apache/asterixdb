@@ -26,5 +26,5 @@ public interface IInvertedIndexSearcher {
     public IFrameTupleAccessor createResultFrameTupleAccessor();
     public ITupleReference createResultTupleReference();
     public List<ByteBuffer> getResultBuffers();
-    public int getNumValidResultBuffers();
+    public int getNumValidResultBuffers();       
 }

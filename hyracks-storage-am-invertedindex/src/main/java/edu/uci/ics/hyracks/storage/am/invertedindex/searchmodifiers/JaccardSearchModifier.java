@@ -16,7 +16,7 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     
     @Override
     public int getOccurrenceThreshold(List<IInvertedListCursor> invListCursors) {
-        return (int) Math.floor((float) invListCursors.size() * jaccThresh);
+    	return (int) Math.floor((float) invListCursors.size() * jaccThresh);
     }
 
     @Override
@@ -25,7 +25,7 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
         if (invListCursors.size() == 0) {
             return 0;
         }
-        return invListCursors.size() - (int) Math.ceil(jaccThresh * invListCursors.size()) + 1;
+        return invListCursors.size() - getOccurrenceThreshold(invListCursors) + 1;
     }
 
     public float getJaccThresh() {
