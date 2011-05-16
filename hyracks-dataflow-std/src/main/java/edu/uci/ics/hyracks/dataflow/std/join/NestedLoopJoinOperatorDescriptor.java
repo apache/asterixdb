@@ -89,7 +89,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     ByteBuffer copyBuffer = ctx.allocateFrame();
                     FrameUtils.copy(buffer, copyBuffer);
-                    copyBuffer.flip();
+                    FrameUtils.makeReadable(copyBuffer);
                     joiner.cache(copyBuffer);
                 }
 
