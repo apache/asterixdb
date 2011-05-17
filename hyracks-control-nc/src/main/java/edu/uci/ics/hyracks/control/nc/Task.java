@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
@@ -206,7 +207,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         try {
             collector.open();
             try {
-                joblet.advertisePartitionRequest(collector.getRequiredPartitionIds(), collector);
+                joblet.advertisePartitionRequest(collector.getRequiredPartitionIds(), collector, PartitionState.STARTED);
                 IFrameReader reader = collector.getReader();
                 reader.open();
                 try {

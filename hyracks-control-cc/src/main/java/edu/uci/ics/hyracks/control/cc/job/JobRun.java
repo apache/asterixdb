@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.scheduler.IJobRunStateMachine;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
@@ -33,9 +34,9 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobActivityGraph jag;
 
-    private final Map<PartitionId, Set<String>> partitionAvailabilityMap;
+    private final Map<PartitionId, Map<String, PartitionState>> partitionAvailabilityMap;
 
-    private final Map<PartitionId, Set<String>> partitionRequestorMap;
+    private final Map<PartitionId, Map<String, PartitionState>> partitionRequestorMap;
 
     private final Set<String> participatingNodeIds;
 
@@ -52,8 +53,8 @@ public class JobRun implements IJobStatusConditionVariable {
     public JobRun(UUID jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
-        partitionAvailabilityMap = new HashMap<PartitionId, Set<String>>();
-        partitionRequestorMap = new HashMap<PartitionId, Set<String>>();
+        partitionAvailabilityMap = new HashMap<PartitionId, Map<String, PartitionState>>();
+        partitionRequestorMap = new HashMap<PartitionId, Map<String, PartitionState>>();
         participatingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
@@ -107,11 +108,11 @@ public class JobRun implements IJobStatusConditionVariable {
         return jsm;
     }
 
-    public Map<PartitionId, Set<String>> getPartitionAvailabilityMap() {
+    public Map<PartitionId, Map<String, PartitionState>> getPartitionAvailabilityMap() {
         return partitionAvailabilityMap;
     }
 
-    public Map<PartitionId, Set<String>> getPartitionRequestorMap() {
+    public Map<PartitionId, Map<String, PartitionState>> getPartitionRequestorMap() {
         return partitionRequestorMap;
     }
 

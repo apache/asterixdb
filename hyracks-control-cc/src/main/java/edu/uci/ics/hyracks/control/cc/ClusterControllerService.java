@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.control.cc;
 import java.io.File;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -73,6 +72,7 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
@@ -296,13 +296,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void registerPartitionProvider(PartitionId pid, String nodeId) throws Exception {
-        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, nodeId));
+    public void registerPartitionProvider(PartitionId pid, String nodeId, PartitionState state) throws Exception {
+        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, nodeId, state));
     }
 
     @Override
-    public void registerPartitionRequest(Collection<PartitionId> requiredPartitionIds, String nodeId) {
-        jobQueue.schedule(new RegisterPartitionRequestEvent(this, requiredPartitionIds, nodeId));
+    public void registerPartitionRequest(PartitionId pid, String nodeId, PartitionState minState) {
+        jobQueue.schedule(new RegisterPartitionRequestEvent(this, pid, nodeId, minState));
     }
 
     private class DeadNodeSweeper extends TimerTask {

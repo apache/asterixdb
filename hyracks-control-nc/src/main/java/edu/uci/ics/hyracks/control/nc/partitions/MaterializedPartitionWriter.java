@@ -70,5 +70,6 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     public void close() throws HyracksDataException {
         ctx.getIOManager().close(handle);
         manager.registerPartition(pid, new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()));
+        manager.notifyPartitionCommit(pid);
     }
 }

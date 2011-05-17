@@ -74,6 +74,7 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public void close() throws HyracksDataException {
+        manager.notifyPartitionCommit(pid);
         delegate.close();
     }
 }

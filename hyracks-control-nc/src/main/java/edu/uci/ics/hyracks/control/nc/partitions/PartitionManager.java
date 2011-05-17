@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -58,7 +59,15 @@ public class PartitionManager implements IPartitionRequestListener {
             pList.add(partition);
         }
         try {
-            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId());
+            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId(), PartitionState.STARTED);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public void notifyPartitionCommit(PartitionId pid) throws HyracksDataException {
+        try {
+            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId(), PartitionState.COMMITTED);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

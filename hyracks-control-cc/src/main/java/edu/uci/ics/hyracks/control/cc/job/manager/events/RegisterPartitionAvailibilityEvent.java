@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -24,16 +24,20 @@ import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 
 public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
     private final PartitionId pid;
     private final String nodeId;
+    private final PartitionState state;
 
-    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionId pid, String nodeId) {
+    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionId pid, String nodeId,
+            PartitionState state) {
         this.ccs = ccs;
         this.pid = pid;
         this.nodeId = nodeId;
+        this.state = state;
     }
 
     @Override
@@ -42,26 +46,32 @@ public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
         if (run == null) {
             return;
         }
-        Map<PartitionId, Set<String>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
-        Set<String> paSet = partitionAvailabilityMap.get(pid);
-        if (paSet == null) {
-            paSet = new HashSet<String>();
-            partitionAvailabilityMap.put(pid, paSet);
+        Map<PartitionId, Map<String, PartitionState>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
+        Map<String, PartitionState> paMap = partitionAvailabilityMap.get(pid);
+        if (paMap == null) {
+            paMap = new HashMap<String, PartitionState>();
+            partitionAvailabilityMap.put(pid, paMap);
         }
-        paSet.add(nodeId);
+        paMap.put(nodeId, state);
 
         NodeControllerState availNcs = ccs.getNodeMap().get(nodeId);
-        Map<PartitionId, Set<String>> partitionRequestorMap = run.getPartitionRequestorMap();
-        Set<String> prSet = partitionRequestorMap.get(pid);
-        if (prSet != null) {
-            for (String requestor : prSet) {
-                NodeControllerState ncs = ccs.getNodeMap().get(requestor);
-                if (ncs != null) {
-                    try {
-                        INodeController nc = ncs.getNodeController();
-                        nc.reportPartitionAvailability(pid, availNcs.getDataPort());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        Map<PartitionId, Map<String, PartitionState>> partitionRequestorMap = run.getPartitionRequestorMap();
+        Map<String, PartitionState> prMap = partitionRequestorMap.get(pid);
+        if (prMap != null) {
+            Iterator<Map.Entry<String, PartitionState>> i = prMap.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry<String, PartitionState> requestor = i.next();
+                PartitionState minState = requestor.getValue();
+                if (state.isAtLeast(minState)) {
+                    i.remove();
+                    NodeControllerState ncs = ccs.getNodeMap().get(requestor.getKey());
+                    if (ncs != null) {
+                        try {
+                            INodeController nc = ncs.getNodeController();
+                            nc.reportPartitionAvailability(pid, availNcs.getDataPort());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -70,6 +80,6 @@ public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
 
     @Override
     public String toString() {
-        return "PartitionAvailable@" + nodeId + "[" + pid + "]";
+        return "PartitionAvailable@" + nodeId + "[" + pid + "]" + state;
     }
 }
