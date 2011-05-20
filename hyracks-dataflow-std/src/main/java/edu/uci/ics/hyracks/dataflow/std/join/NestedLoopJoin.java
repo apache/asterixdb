@@ -130,7 +130,7 @@ public class NestedLoopJoin {
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        for (int i=0; i<currentMemSize; i++) {
+        for (int i = 0; i < currentMemSize; i++) {
             ByteBuffer outBuffer = outBuffers.get(i);
             runFileReader = runFileWriter.createReader();
             runFileReader.open();
