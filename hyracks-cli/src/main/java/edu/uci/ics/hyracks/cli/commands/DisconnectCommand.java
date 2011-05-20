@@ -1,11 +1,11 @@
 package edu.uci.ics.hyracks.cli.commands;
 
-import edu.uci.ics.hyracks.cli.CLI;
+import edu.uci.ics.hyracks.cli.Session;
 
 public class DisconnectCommand extends Command {
     @Override
-    public void run(CLI cli) throws Exception {
+    public void run(Session session) throws Exception {
         System.err.println("Disconnecting...");
-        cli.setConnection(null);
+        session.setConnection(null);
     }
 }

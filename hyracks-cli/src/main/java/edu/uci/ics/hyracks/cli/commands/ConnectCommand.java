@@ -2,7 +2,7 @@ package edu.uci.ics.hyracks.cli.commands;
 
 import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.cli.CLI;
+import edu.uci.ics.hyracks.cli.Session;
 
 public class ConnectCommand extends Command {
     private String host;
@@ -20,9 +20,9 @@ public class ConnectCommand extends Command {
     }
 
     @Override
-    public void run(CLI cli) throws Exception {
+    public void run(Session session) throws Exception {
         System.err.println("Connecting to host: " + host + ", port: " + port);
         IHyracksClientConnection conn = new HyracksRMIConnection(host, port);
-        cli.setConnection(conn);
+        session.setConnection(conn);
     }
 }
