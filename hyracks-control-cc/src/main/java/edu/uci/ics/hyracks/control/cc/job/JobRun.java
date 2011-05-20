@@ -24,9 +24,8 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.scheduler.IJobRunStateMachine;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
@@ -34,9 +33,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobActivityGraph jag;
 
-    private final Map<PartitionId, Map<String, PartitionState>> partitionAvailabilityMap;
-
-    private final Map<PartitionId, Map<String, PartitionState>> partitionRequestorMap;
+    private final PartitionMatchMaker pmm;
 
     private final Set<String> participatingNodeIds;
 
@@ -53,8 +50,7 @@ public class JobRun implements IJobStatusConditionVariable {
     public JobRun(UUID jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
-        partitionAvailabilityMap = new HashMap<PartitionId, Map<String, PartitionState>>();
-        partitionRequestorMap = new HashMap<PartitionId, Map<String, PartitionState>>();
+        pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
@@ -66,6 +62,10 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public JobActivityGraph getJobActivityGraph() {
         return jag;
+    }
+
+    public PartitionMatchMaker getPartitionMatchMaker() {
+        return pmm;
     }
 
     public synchronized void setStatus(JobStatus status, Exception exception) {
@@ -108,15 +108,11 @@ public class JobRun implements IJobStatusConditionVariable {
         return jsm;
     }
 
-    public Map<PartitionId, Map<String, PartitionState>> getPartitionAvailabilityMap() {
-        return partitionAvailabilityMap;
-    }
-
-    public Map<PartitionId, Map<String, PartitionState>> getPartitionRequestorMap() {
-        return partitionRequestorMap;
-    }
-
     public Map<ActivityId, ActivityCluster> getActivityClusterMap() {
         return activityClusterMap;
+    }
+    
+    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException {
+        jsm.notifyNodeFailures(deadNodes);
     }
 }

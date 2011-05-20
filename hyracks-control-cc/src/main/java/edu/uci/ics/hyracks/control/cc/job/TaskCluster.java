@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,10 +32,6 @@ public class TaskCluster {
 
     private final Set<PartitionId> requiredPartitions;
 
-    private final Set<TaskCluster> blockers;
-
-    private final Set<TaskCluster> dependencies;
-
     private final List<TaskClusterAttempt> taskClusterAttempts;
 
     public TaskCluster(ActivityCluster activityCluster, Task[] tasks) {
@@ -42,17 +39,11 @@ public class TaskCluster {
         this.tasks = tasks;
         this.producedPartitions = new HashSet<PartitionId>();
         this.requiredPartitions = new HashSet<PartitionId>();
-        this.blockers = new HashSet<TaskCluster>();
-        this.dependencies = new HashSet<TaskCluster>();
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
     }
 
     public Task[] getTasks() {
         return tasks;
-    }
-
-    public Set<TaskCluster> getDependencies() {
-        return dependencies;
     }
 
     public Set<PartitionId> getProducedPartitions() {
@@ -61,10 +52,6 @@ public class TaskCluster {
 
     public Set<PartitionId> getRequiredPartitions() {
         return requiredPartitions;
-    }
-
-    public Set<TaskCluster> getBlockers() {
-        return blockers;
     }
 
     public List<TaskClusterAttempt> getAttempts() {
@@ -77,5 +64,10 @@ public class TaskCluster {
 
     public void notifyTaskFailure(TaskAttempt ta, Exception exception) throws HyracksException {
         activityCluster.getStateMachine().notifyTaskFailure(ta, exception);
+    }
+
+    @Override
+    public String toString() {
+        return "TC:" + Arrays.toString(tasks);
     }
 }

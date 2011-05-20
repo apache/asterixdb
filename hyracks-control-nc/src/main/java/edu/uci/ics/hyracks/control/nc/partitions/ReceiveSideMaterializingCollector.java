@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
@@ -37,13 +38,16 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
 
     private final IPartitionCollector delegate;
 
+    private final TaskAttemptId taId;
+
     private final Executor executor;
 
     public ReceiveSideMaterializingCollector(IHyracksRootContext ctx, PartitionManager manager,
-            IPartitionCollector collector, Executor executor) {
+            IPartitionCollector collector, TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;
         this.delegate = collector;
+        this.taId = taId;
         this.executor = executor;
     }
 
@@ -103,7 +107,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
         @Override
         public synchronized void run() {
             PartitionId pid = pc.getPartitionId();
-            MaterializedPartitionWriter mpw = new MaterializedPartitionWriter(ctx, manager, pid, executor);
+            MaterializedPartitionWriter mpw = new MaterializedPartitionWriter(ctx, manager, pid, taId, executor);
             IInputChannel channel = pc.getInputChannel();
             try {
                 channel.registerMonitor(this);

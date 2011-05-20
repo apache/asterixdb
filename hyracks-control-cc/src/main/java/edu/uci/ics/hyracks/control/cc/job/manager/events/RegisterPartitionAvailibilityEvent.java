@@ -14,72 +14,44 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionUtils;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
+import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 
 public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
-    private final PartitionId pid;
-    private final String nodeId;
-    private final PartitionState state;
+    private final PartitionDescriptor partitionDescriptor;
 
-    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionId pid, String nodeId,
-            PartitionState state) {
+    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionDescriptor partitionDescriptor) {
         this.ccs = ccs;
-        this.pid = pid;
-        this.nodeId = nodeId;
-        this.state = state;
+        this.partitionDescriptor = partitionDescriptor;
     }
 
     @Override
     public void run() {
+        final PartitionId pid = partitionDescriptor.getPartitionId();
         JobRun run = ccs.getRunMap().get(pid.getJobId());
         if (run == null) {
             return;
         }
-        Map<PartitionId, Map<String, PartitionState>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
-        Map<String, PartitionState> paMap = partitionAvailabilityMap.get(pid);
-        if (paMap == null) {
-            paMap = new HashMap<String, PartitionState>();
-            partitionAvailabilityMap.put(pid, paMap);
-        }
-        paMap.put(nodeId, state);
-
-        NodeControllerState availNcs = ccs.getNodeMap().get(nodeId);
-        Map<PartitionId, Map<String, PartitionState>> partitionRequestorMap = run.getPartitionRequestorMap();
-        Map<String, PartitionState> prMap = partitionRequestorMap.get(pid);
-        if (prMap != null) {
-            Iterator<Map.Entry<String, PartitionState>> i = prMap.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry<String, PartitionState> requestor = i.next();
-                PartitionState minState = requestor.getValue();
-                if (state.isAtLeast(minState)) {
-                    i.remove();
-                    NodeControllerState ncs = ccs.getNodeMap().get(requestor.getKey());
-                    if (ncs != null) {
-                        try {
-                            INodeController nc = ncs.getNodeController();
-                            nc.reportPartitionAvailability(pid, availNcs.getDataPort());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
+        PartitionMatchMaker pmm = run.getPartitionMatchMaker();
+        List<Pair<PartitionDescriptor, PartitionRequest>> matches = pmm
+                .registerPartitionDescriptor(partitionDescriptor);
+        for (Pair<PartitionDescriptor, PartitionRequest> match : matches) {
+            PartitionUtils.reportPartitionMatch(ccs, pid, match);
         }
     }
 
     @Override
     public String toString() {
-        return "PartitionAvailable@" + nodeId + "[" + pid + "]" + state;
+        return "PartitionAvailable@" + partitionDescriptor;
     }
 }

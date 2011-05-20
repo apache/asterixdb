@@ -19,11 +19,13 @@ import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 
 public class MaterializedPartitionWriter implements IFrameWriter {
@@ -32,6 +34,8 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     protected final PartitionManager manager;
 
     protected final PartitionId pid;
+
+    protected final TaskAttemptId taId;
 
     protected final Executor executor;
 
@@ -42,10 +46,11 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     private long size;
 
     public MaterializedPartitionWriter(IHyracksRootContext ctx, PartitionManager manager, PartitionId pid,
-            Executor executor) {
+            TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;
         this.pid = pid;
+        this.taId = taId;
         this.executor = executor;
     }
 
@@ -69,7 +74,8 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     @Override
     public void close() throws HyracksDataException {
         ctx.getIOManager().close(handle);
-        manager.registerPartition(pid, new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()));
-        manager.notifyPartitionCommit(pid);
+        manager.registerPartition(pid, taId,
+                new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()),
+                PartitionState.COMMITTED);
     }
 }

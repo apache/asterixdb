@@ -117,4 +117,8 @@ public class ActivityCluster {
     public Map<ConnectorDescriptorId, IConnectorPolicy> getConnectorPolicyMap() {
         return connectorPolicies;
     }
+
+    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException {
+        acsm.notifyNodeFailures(deadNodes);
+    }
 }

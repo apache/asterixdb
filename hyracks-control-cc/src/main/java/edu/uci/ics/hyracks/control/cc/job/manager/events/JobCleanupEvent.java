@@ -20,6 +20,7 @@ import java.util.UUID;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
@@ -47,6 +48,10 @@ public class JobCleanupEvent extends AbstractEvent {
         int i = 0;
         for (String n : targetNodes) {
             jcns[i++] = new JobCompleteNotifier(n, jobId);
+            NodeControllerState ncs = ccs.getNodeMap().get(n);
+            if (ncs != null) {
+                ncs.getActiveJobIds().remove(jobId);
+            }
         }
         ccs.getExecutor().execute(new Runnable() {
             @Override

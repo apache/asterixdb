@@ -17,20 +17,25 @@ package edu.uci.ics.hyracks.control.nc.partitions;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.PartitionState;
 
 public class PipelinedPartition implements IFrameWriter, IPartition {
     private final PartitionManager manager;
 
     private final PartitionId pid;
 
+    private final TaskAttemptId taId;
+
     private IFrameWriter delegate;
 
-    public PipelinedPartition(PartitionManager manager, PartitionId pid) {
+    public PipelinedPartition(PartitionManager manager, PartitionId pid, TaskAttemptId taId) {
         this.manager = manager;
         this.pid = pid;
+        this.taId = taId;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public synchronized void open() throws HyracksDataException {
-        manager.registerPartition(pid, this);
+        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
         while (delegate == null) {
             try {
                 wait();
@@ -74,7 +79,7 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public void close() throws HyracksDataException {
-        manager.notifyPartitionCommit(pid);
+        manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
         delegate.close();
     }
 }

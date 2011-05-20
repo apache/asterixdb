@@ -14,77 +14,41 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionUtils;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
+import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 
 public class RegisterPartitionRequestEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
-    private final PartitionId pid;
-    private final String nodeId;
-    private final PartitionState minState;
+    private final PartitionRequest partitionRequest;
 
-    public RegisterPartitionRequestEvent(ClusterControllerService ccs, PartitionId pid, String nodeId,
-            PartitionState minState) {
+    public RegisterPartitionRequestEvent(ClusterControllerService ccs, PartitionRequest partitionRequest) {
         this.ccs = ccs;
-        this.pid = pid;
-        this.nodeId = nodeId;
-        this.minState = minState;
+        this.partitionRequest = partitionRequest;
     }
 
     @Override
     public void run() {
-        NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
-        if (ncs != null) {
-            JobRun run = ccs.getRunMap().get(pid.getJobId());
-            if (run == null) {
-                return;
-            }
-
-            Map<PartitionId, Map<String, PartitionState>> partitionAvailabilityMap = run.getPartitionAvailabilityMap();
-            Map<String, PartitionState> paMap = partitionAvailabilityMap.get(pid);
-            boolean matched = false;
-            if (paMap != null && !paMap.isEmpty()) {
-                for (Map.Entry<String, PartitionState> pa : paMap.entrySet()) {
-                    PartitionState state = pa.getValue();
-                    if (state.isAtLeast(minState)) {
-                        NodeControllerState availNcs = ccs.getNodeMap().get(pa.getKey());
-                        if (availNcs != null) {
-                            NetworkAddress networkAddress = availNcs.getDataPort();
-                            try {
-                                INodeController nc = ncs.getNodeController();
-                                nc.reportPartitionAvailability(pid, networkAddress);
-                                matched = true;
-                                break;
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-            if (!matched) {
-                Map<PartitionId, Map<String, PartitionState>> partitionRequestorMap = run.getPartitionRequestorMap();
-                Map<String, PartitionState> prMap = partitionRequestorMap.get(pid);
-                if (prMap == null) {
-                    prMap = new HashMap<String, PartitionState>();
-                    partitionRequestorMap.put(pid, prMap);
-                }
-                prMap.put(nodeId, minState);
-            }
+        PartitionId pid = partitionRequest.getPartitionId();
+        JobRun run = ccs.getRunMap().get(pid.getJobId());
+        if (run == null) {
+            return;
+        }
+        PartitionMatchMaker pmm = run.getPartitionMatchMaker();
+        Pair<PartitionDescriptor, PartitionRequest> match = pmm.matchPartitionRequest(partitionRequest);
+        if (match != null) {
+            PartitionUtils.reportPartitionMatch(ccs, pid, match);
         }
     }
 
     @Override
     public String toString() {
-        return "PartitionRequest@[" + nodeId + "][" + pid + "]" + minState;
+        return "PartitionRequest@" + partitionRequest;
     }
 }

@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -72,7 +71,8 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
+import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
@@ -296,13 +296,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void registerPartitionProvider(PartitionId pid, String nodeId, PartitionState state) throws Exception {
-        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, pid, nodeId, state));
+    public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) {
+        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, partitionDescriptor));
     }
 
     @Override
-    public void registerPartitionRequest(PartitionId pid, String nodeId, PartitionState minState) {
-        jobQueue.schedule(new RegisterPartitionRequestEvent(this, pid, nodeId, minState));
+    public void registerPartitionRequest(PartitionRequest partitionRequest) {
+        jobQueue.schedule(new RegisterPartitionRequestEvent(this, partitionRequest));
     }
 
     private class DeadNodeSweeper extends TimerTask {

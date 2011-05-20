@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-public final class SendSideMaterializedReceiveSideMaterializedConnectorPolicy implements IConnectorPolicy {
+public final class SendSideMaterializedReceiveSideMaterializedBlockingConnectorPolicy implements IConnectorPolicy {
     private static final long serialVersionUID = 1L;
 
     @Override

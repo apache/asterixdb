@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
@@ -213,11 +214,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return counter;
     }
 
-    public synchronized void advertisePartitionRequest(Collection<PartitionId> pids, IPartitionCollector collector,
-            PartitionState minState) throws Exception {
+    public synchronized void advertisePartitionRequest(TaskAttemptId taId, Collection<PartitionId> pids,
+            IPartitionCollector collector, PartitionState minState) throws Exception {
         for (PartitionId pid : pids) {
             partitionRequestMap.put(pid, collector);
-            nodeController.getClusterController().registerPartitionRequest(pid, nodeController.getId(), minState);
+            PartitionRequest req = new PartitionRequest(pid, nodeController.getId(), taId, minState);
+            nodeController.getClusterController().registerPartitionRequest(req);
         }
     }
 

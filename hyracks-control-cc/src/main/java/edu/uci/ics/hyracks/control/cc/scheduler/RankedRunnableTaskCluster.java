@@ -14,17 +14,28 @@
  */
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
-import java.util.Set;
+import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+public class RankedRunnableTaskCluster {
+    private final int rank;
 
-public interface IJobRunStateMachine {
-    public void schedule() throws HyracksException;
+    private final TaskCluster taskCluster;
 
-    public void notifyActivityClusterFailure(ActivityCluster ac, Exception exception) throws HyracksException;
+    public RankedRunnableTaskCluster(int rank, TaskCluster taskCluster) {
+        this.rank = rank;
+        this.taskCluster = taskCluster;
+    }
 
-    public void notifyActivityClusterComplete(ActivityCluster activityCluster) throws HyracksException;
+    public int getRank() {
+        return rank;
+    }
 
-    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException;
+    public TaskCluster getTaskCluster() {
+        return taskCluster;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + rank + ":" + taskCluster + "]";
+    }
 }

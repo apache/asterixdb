@@ -205,7 +205,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         }
     }
 
-    private void findRunnableClusters(Set<ActivityCluster> frontier, ActivityCluster candidate) {
+    private void findRunnableActivityClusters(Set<ActivityCluster> frontier, ActivityCluster candidate) {
         if (completedClusters.contains(candidate) || frontier.contains(candidate)
                 || inProgressClusters.contains(candidate)) {
             return;
@@ -214,7 +214,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         for (ActivityCluster s : candidate.getDependencies()) {
             if (!completedClusters.contains(s)) {
                 runnable = false;
-                findRunnableClusters(frontier, s);
+                findRunnableActivityClusters(frontier, s);
             }
         }
         if (runnable && candidate != rootActivityCluster) {
@@ -222,8 +222,8 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         }
     }
 
-    private void findRunnableClusters(Set<ActivityCluster> frontier) {
-        findRunnableClusters(frontier, rootActivityCluster);
+    private void findRunnableActivityClusters(Set<ActivityCluster> frontier) {
+        findRunnableActivityClusters(frontier, rootActivityCluster);
     }
 
     @Override
@@ -266,7 +266,7 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
 
     private void startRunnableActivityClusters() throws HyracksException {
         Set<ActivityCluster> runnableClusters = new HashSet<ActivityCluster>();
-        findRunnableClusters(runnableClusters);
+        findRunnableActivityClusters(runnableClusters);
         if (runnableClusters.isEmpty() && inProgressClusters.isEmpty()) {
             ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, jobRun.getJobId(), JobStatus.TERMINATED, null));
             return;
@@ -448,19 +448,11 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
                             tc.getProducedPartitions().add(pid);
                             targetTC.getRequiredPartitions().add(pid);
                             partitionProducingTaskClusterMap.put(pid, tc);
-                            IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
-                            targetTC.getDependencies().add(tc);
-                            if (cPolicy.consumerWaitsForProducerToFinish()) {
-                                targetTC.getBlockers().add(tc);
-                            }
                         }
                     }
                 }
             }
         }
-
-        computeBlockerClosure(tcSet);
-        computeDependencyClosure(tcSet);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Plan for " + ac);
@@ -511,48 +503,6 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         return new PipelinedConnectorPolicy();
     }
 
-    private void computeDependencyClosure(Set<TaskCluster> tcSet) {
-        boolean done = false;
-        while (!done) {
-            done = true;
-            for (TaskCluster tc : tcSet) {
-                Set<TaskCluster> deps = tc.getDependencies();
-                if (!deps.isEmpty()) {
-                    Set<TaskCluster> copy = new HashSet<TaskCluster>(deps);
-                    for (TaskCluster tc2 : copy) {
-                        for (TaskCluster tc3 : tc2.getDependencies()) {
-                            if (!deps.contains(tc3)) {
-                                deps.add(tc3);
-                                done = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void computeBlockerClosure(Set<TaskCluster> tcSet) {
-        boolean done = false;
-        while (!done) {
-            done = true;
-            for (TaskCluster tc : tcSet) {
-                Set<TaskCluster> blockers = tc.getBlockers();
-                if (!blockers.isEmpty()) {
-                    Set<TaskCluster> copy = new HashSet<TaskCluster>(blockers);
-                    for (TaskCluster tc2 : copy) {
-                        for (TaskCluster tc3 : tc2.getBlockers()) {
-                            if (!blockers.contains(tc3)) {
-                                blockers.add(tc3);
-                                done = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void notifyActivityClusterFailure(ActivityCluster ac, Exception exception) throws HyracksException {
         for (ActivityCluster ac2 : inProgressClusters) {
@@ -570,5 +520,15 @@ public class DefaultJobRunStateMachine implements IJobRunStateMachine {
         completedClusters.add(ac);
         inProgressClusters.remove(ac);
         startRunnableActivityClusters();
+    }
+
+    @Override
+    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException {
+        jobRun.getPartitionMatchMaker().notifyNodeFailures(deadNodes);
+        if (!inProgressClusters.isEmpty()) {
+            for (ActivityCluster ac : inProgressClusters) {
+                ac.notifyNodeFailures(deadNodes);
+            }
+        }
     }
 }

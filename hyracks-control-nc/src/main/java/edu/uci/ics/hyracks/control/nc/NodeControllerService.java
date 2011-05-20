@@ -286,7 +286,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
                         IPartitionWriterFactory pwFactory = createPartitionWriterFactory(cPolicy, jobId, conn,
-                                partition);
+                                partition, taId);
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
@@ -314,20 +314,21 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
                 td.getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
-            return new ReceiveSideMaterializingCollector(ctx, partitionManager, collector, executor);
+            return new ReceiveSideMaterializingCollector(ctx, partitionManager, collector, task.getTaskAttemptId(),
+                    executor);
         } else {
             return collector;
         }
     }
 
     private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final UUID jobId,
-            final IConnectorDescriptor conn, final int senderIndex) {
+            final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId) {
         if (cPolicy.materializeOnSendSide()) {
             return new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                     return new MaterializedPartitionWriter(ctx, partitionManager, new PartitionId(jobId,
-                            conn.getConnectorId(), senderIndex, receiverIndex), executor);
+                            conn.getConnectorId(), senderIndex, receiverIndex), taId, executor);
                 }
             };
         } else {
@@ -335,7 +336,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                     return new PipelinedPartition(partitionManager, new PartitionId(jobId, conn.getConnectorId(),
-                            senderIndex, receiverIndex));
+                            senderIndex, receiverIndex), taId);
                 }
             };
         }

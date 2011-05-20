@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
+import java.util.Set;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
@@ -28,4 +30,6 @@ public interface IActivityClusterStateMachine {
     public void notifyTaskFailure(TaskAttempt ta, Exception exception) throws HyracksException;
 
     public void notifyTaskClusterFailure(TaskClusterAttempt tcAttempt, Exception exception) throws HyracksException;
+
+    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException;
 }

@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
+import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
@@ -40,7 +40,7 @@ public interface IClusterController extends Remote {
 
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception;
 
-    public void registerPartitionProvider(PartitionId pid, String nodeId, PartitionState state) throws Exception;
+    public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception;
 
-    public void registerPartitionRequest(PartitionId pid, String nodeId, PartitionState minState) throws Exception;
+    public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
 }

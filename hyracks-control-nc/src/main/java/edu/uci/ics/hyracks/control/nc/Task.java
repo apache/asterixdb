@@ -207,7 +207,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         try {
             collector.open();
             try {
-                joblet.advertisePartitionRequest(collector.getRequiredPartitionIds(), collector, PartitionState.STARTED);
+                joblet.advertisePartitionRequest(taskAttemptId, collector.getRequiredPartitionIds(), collector, PartitionState.STARTED);
                 IFrameReader reader = collector.getReader();
                 reader.open();
                 try {

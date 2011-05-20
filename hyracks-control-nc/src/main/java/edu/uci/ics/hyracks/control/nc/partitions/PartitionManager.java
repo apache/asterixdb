@@ -22,11 +22,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
@@ -49,7 +51,8 @@ public class PartitionManager implements IPartitionRequestListener {
         fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
     }
 
-    public void registerPartition(PartitionId pid, IPartition partition) throws HyracksDataException {
+    public void registerPartition(PartitionId pid, TaskAttemptId taId, IPartition partition, PartitionState state)
+            throws HyracksDataException {
         synchronized (this) {
             List<IPartition> pList = partitionMap.get(pid);
             if (pList == null) {
@@ -58,16 +61,15 @@ public class PartitionManager implements IPartitionRequestListener {
             }
             pList.add(partition);
         }
-        try {
-            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId(), PartitionState.STARTED);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
+        updatePartitionState(pid, taId, partition, state);
     }
 
-    public void notifyPartitionCommit(PartitionId pid) throws HyracksDataException {
+    public void updatePartitionState(PartitionId pid, TaskAttemptId taId, IPartition partition, PartitionState state)
+            throws HyracksDataException {
+        PartitionDescriptor desc = new PartitionDescriptor(pid, ncs.getId(), taId, partition.isReusable());
+        desc.setState(state);
         try {
-            ncs.getClusterController().registerPartitionProvider(pid, ncs.getId(), PartitionState.COMMITTED);
+            ncs.getClusterController().registerPartitionProvider(desc);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
