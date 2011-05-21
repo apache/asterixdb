@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeStatsOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -90,8 +91,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private static String primaryBtreeName = "primary"
 			+ simpleDateFormat.format(new Date());
 	private static String primaryFileName = System
-			.getProperty("java.io.tmpdir")
-			+ sep + primaryBtreeName;
+			.getProperty("java.io.tmpdir") + sep + primaryBtreeName;
 
 	private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
@@ -121,8 +121,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private static String secondaryBtreeName = "secondary"
 			+ simpleDateFormat.format(new Date());
 	private static String secondaryFileName = System
-			.getProperty("java.io.tmpdir")
-			+ sep + secondaryBtreeName;
+			.getProperty("java.io.tmpdir") + sep + secondaryBtreeName;
 
 	private IFileSplitProvider secondaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
@@ -215,6 +214,22 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 		runTest(spec);
 	}
 
+	@Test
+	public void showPrimaryIndexStats() throws Exception {
+		JobSpecification spec = new JobSpecification();
+		
+		BTreeStatsOperatorDescriptor primaryStatsOp = new BTreeStatsOperatorDescriptor(
+				spec, storageManager, btreeRegistryProvider,
+				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
+				primaryLeafFrameFactory, primaryTypeTraits,
+				primaryComparatorFactories);
+		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
+				primaryStatsOp, NC1_ID);
+		
+		spec.addRoot(primaryStatsOp);
+		runTest(spec);
+	}	
+		
 	@Test
 	public void scanPrimaryIndexTest() throws Exception {
 		JobSpecification spec = new JobSpecification();

@@ -2,12 +2,15 @@ package edu.uci.ics.hyracks.storage.am.common.utility;
 
 import java.text.DecimalFormat;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 
 public class TreeIndexStats {
-
+	
 	private TreeIndexNodeTypeStats rootStats = new TreeIndexNodeTypeStats();
 	private TreeIndexNodeTypeStats interiorStats = new TreeIndexNodeTypeStats();
 	private TreeIndexNodeTypeStats leafStats = new TreeIndexNodeTypeStats();	
@@ -129,4 +132,6 @@ public class TreeIndexStats {
 			return sumFillFactors / numPages;
 		}
 	}	
+	
+	
 }

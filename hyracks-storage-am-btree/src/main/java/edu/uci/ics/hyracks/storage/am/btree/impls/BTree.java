@@ -1281,15 +1281,25 @@ public class BTree {
 		ICachedPage rootNode = bufferCache.pin(BufferedFileHandle
 				.getDiskPageId(fileId, rootPage), bulkNewPage);
 		rootNode.acquireWriteLatch();
+		NodeFrontier lastNodeFrontier = ctx.nodeFrontiers.get(ctx.nodeFrontiers
+				.size() - 1);
+		IBTreeInteriorFrame interiorFrame = ctx.interiorFrame;
 		try {
-			ICachedPage toBeRoot = ctx.nodeFrontiers.get(ctx.nodeFrontiers
-					.size() - 1).page;
+			ICachedPage toBeRoot = lastNodeFrontier.page;
 			System.arraycopy(toBeRoot.getBuffer().array(), 0, rootNode
 					.getBuffer().array(), 0, toBeRoot.getBuffer().capacity());
 		} finally {
 			rootNode.releaseWriteLatch();
 			bufferCache.unpin(rootNode);
 
+			// register old root as free page
+			System.out.println("ADDING FREE PAGE: " + lastNodeFrontier.pageId);
+			freePageManager.addFreePage(ctx.metaFrame, lastNodeFrontier.pageId);
+			
+			// make old root a free page
+			interiorFrame.setPage(lastNodeFrontier.page);
+			interiorFrame.initBuffer(freePageManager.getFreePageLevelIndicator());
+						
 			// cleanup
 			for (int i = 0; i < ctx.nodeFrontiers.size(); i++) {
 				ctx.nodeFrontiers.get(i).page.releaseWriteLatch();
