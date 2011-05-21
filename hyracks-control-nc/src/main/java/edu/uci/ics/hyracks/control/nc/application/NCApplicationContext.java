@@ -10,13 +10,20 @@ import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 
 public class NCApplicationContext extends ApplicationContext implements INCApplicationContext {
+    private final String nodeId;
     private final IHyracksRootContext rootCtx;
     private Object appObject;
 
-    public NCApplicationContext(ServerContext serverCtx, IHyracksRootContext rootCtx, String appName)
+    public NCApplicationContext(ServerContext serverCtx, IHyracksRootContext rootCtx, String appName, String nodeId)
             throws IOException {
         super(serverCtx, appName);
+        this.nodeId = nodeId;
         this.rootCtx = rootCtx;
+    }
+
+    @Override
+    public String getNodeId() {
+        return nodeId;
     }
 
     @Override

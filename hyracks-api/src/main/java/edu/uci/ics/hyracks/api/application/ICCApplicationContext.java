@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
 
@@ -25,4 +26,6 @@ public interface ICCApplicationContext extends IApplicationContext {
     public void setJobSpecificationFactory(IJobSpecificationFactory jobSpecFactory);
 
     public void addJobLifecycleListener(IJobLifecycleListener jobLifecycleListener);
+    
+    public ICCContext getCCContext();
 }

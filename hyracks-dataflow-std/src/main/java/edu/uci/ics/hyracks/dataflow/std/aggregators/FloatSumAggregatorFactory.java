@@ -103,7 +103,7 @@ public class FloatSumAggregatorFactory implements IFieldValueResultingAggregator
                     throws HyracksDataException {
                 sum = FloatSerializerDeserializer.getFloat(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
             }
 
@@ -117,7 +117,7 @@ public class FloatSumAggregatorFactory implements IFieldValueResultingAggregator
                     throws HyracksDataException {
                 sum += FloatSerializerDeserializer.getFloat(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
             }
 

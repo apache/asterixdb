@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-storage-am-btree</artifactId>
-  <version>0.1.4</version>
+  <version>0.1.5</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
   </parent>
 
   <build>
@@ -23,32 +23,39 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>  	
+  <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-storage-common</artifactId>
+  		<version>0.1.5</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>  	
+        <dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-common</artifactId>
-  		<version>0.1.4</version>
+  		<version>0.1.5</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-common</artifactId>
-  		<version>0.1.4</version>
+  		<version>0.1.5</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.4</version>
+  		<version>0.1.5</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.1.4</version>
+  		<version>0.1.5</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	

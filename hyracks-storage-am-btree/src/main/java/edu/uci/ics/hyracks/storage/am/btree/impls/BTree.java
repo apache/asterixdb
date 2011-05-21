@@ -1293,7 +1293,6 @@ public class BTree {
 			bufferCache.unpin(rootNode);
 
 			// register old root as free page
-			System.out.println("ADDING FREE PAGE: " + lastNodeFrontier.pageId);
 			freePageManager.addFreePage(ctx.metaFrame, lastNodeFrontier.pageId);
 			
 			// make old root a free page

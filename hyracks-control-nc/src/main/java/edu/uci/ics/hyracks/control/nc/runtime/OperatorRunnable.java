@@ -15,6 +15,8 @@
 package edu.uci.ics.hyracks.control.nc.runtime;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -24,22 +26,27 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class OperatorRunnable implements Runnable {
+    private final IHyracksStageletContext ctx;
     private final IOperatorNodePushable opNode;
-    private IFrameReader reader;
-    private ByteBuffer buffer;
+    private final int nInputs;
+    private final Executor executor;
+    private IFrameReader[] readers;
     private volatile boolean abort;
 
-    public OperatorRunnable(IHyracksStageletContext ctx, IOperatorNodePushable opNode) {
+    public OperatorRunnable(IHyracksStageletContext ctx, IOperatorNodePushable opNode, int nInputs, Executor executor) {
+        this.ctx = ctx;
         this.opNode = opNode;
-        buffer = ctx.allocateFrame();
+        this.nInputs = nInputs;
+        this.executor = executor;
+        readers = new IFrameReader[nInputs];
     }
 
     public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
         opNode.setOutputFrameWriter(index, writer, recordDesc);
     }
 
-    public void setFrameReader(IFrameReader reader) {
-        this.reader = reader;
+    public void setFrameReader(int inputIdx, IFrameReader reader) {
+        this.readers[inputIdx] = reader;
     }
 
     public void abort() {
@@ -50,20 +57,28 @@ public class OperatorRunnable implements Runnable {
     public void run() {
         try {
             opNode.initialize();
-            if (reader != null) {
-                IFrameWriter writer = opNode.getInputFrameWriter(0);
-                writer.open();
-                reader.open();
-                while (readFrame()) {
-                    if (abort) {
-                        break;
-                    }
-                    buffer.flip();
-                    writer.nextFrame(buffer);
-                    buffer.compact();
+            if (nInputs > 0) {
+                final Semaphore sem = new Semaphore(nInputs - 1);
+                for (int i = 1; i < nInputs; ++i) {
+                    final IFrameReader reader = readers[i];
+                    final IFrameWriter writer = opNode.getInputFrameWriter(i);
+                    sem.acquire();
+                    executor.execute(new Runnable() {
+                        public void run() {
+                            try {
+                                pushFrames(reader, writer);
+                            } catch (HyracksDataException e) {
+                            } finally {
+                                sem.release();
+                            }
+                        }
+                    });
                 }
-                reader.close();
-                writer.close();
+                try {
+                    pushFrames(readers[0], opNode.getInputFrameWriter(0));
+                } finally {
+                    sem.acquire(nInputs - 1);
+                }
             }
             opNode.deinitialize();
         } catch (Exception e) {
@@ -71,8 +86,20 @@ public class OperatorRunnable implements Runnable {
         }
     }
 
-    protected boolean readFrame() throws HyracksDataException {
-        return reader.nextFrame(buffer);
+    private void pushFrames(IFrameReader reader, IFrameWriter writer) throws HyracksDataException {
+        ByteBuffer buffer = ctx.allocateFrame();
+        writer.open();
+        reader.open();
+        while (reader.nextFrame(buffer)) {
+            if (abort) {
+                break;
+            }
+            buffer.flip();
+            writer.nextFrame(buffer);
+            buffer.compact();
+        }
+        reader.close();
+        writer.close();
     }
 
     @Override

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.1.4</version>
+  <version>0.1.5</version>
   <packaging>pom</packaging>
 
   <build>
@@ -19,9 +19,9 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.4</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.4</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/hyracks-0.1.4</url>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.5</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.1.5</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/hyracks-0.1.5</url>
   </scm>
 
   <distributionManagement>
@@ -64,7 +64,6 @@
     <module>hyracks-storage-am-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
-    <module>hyracks-storage-am-rtree</module>
     <module>hyracks-test-support</module>
     <module>hyracks-tests</module>
     <module>hyracks-server</module>

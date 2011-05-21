@@ -69,7 +69,7 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
                     throws HyracksDataException {
                 count = IntegerSerializerDeserializer.getInt(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
 
             }
@@ -89,7 +89,7 @@ public class CountAggregatorFactory implements IFieldValueResultingAggregatorFac
                     throws HyracksDataException {
                 count += IntegerSerializerDeserializer.getInt(
                         accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 2
+                        accessor.getTupleStartOffset(tIndex) + accessor.getFieldCount() * 4
                                 + accessor.getFieldStartOffset(tIndex, fIndex));
             }
         };

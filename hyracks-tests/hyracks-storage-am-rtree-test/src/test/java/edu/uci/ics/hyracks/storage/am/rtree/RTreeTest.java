@@ -126,7 +126,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame);
+        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame, "unittest");
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -172,7 +172,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
         // System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame);
+        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame, "unittest");
         ArrayList<Rectangle> results = new ArrayList<Rectangle>();
         rtree.search(s, tuple, searchOpCtx, results);
 
@@ -267,7 +267,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame);
+        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame, "unittest");
 
         File datasetFile = new File("/home/salsubaiee/dataset.txt");
         BufferedReader reader = new BufferedReader(new FileReader(datasetFile));
@@ -339,7 +339,7 @@ public class RTreeTest extends AbstractRTreeTest {
         //rtree.printTree(leafFrame, interiorFrame, recDescSers);
         //System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame);
+        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame, "unittest");
 
         File querysetFile = new File("/home/salsubaiee/queryset.txt");
         BufferedReader reader2 = new BufferedReader(new FileReader(querysetFile));
@@ -415,7 +415,7 @@ public class RTreeTest extends AbstractRTreeTest {
         
         
         
-        RTreeOpContext deleteOpCtx = rtree.createOpContext(TreeIndexOp.TI_DELETE, interiorFrame, leafFrame, metaFrame);
+        RTreeOpContext deleteOpCtx = rtree.createOpContext(TreeIndexOp.TI_DELETE, interiorFrame, leafFrame, metaFrame, "unittest");
 
         
         BufferedReader reader3 = new BufferedReader(new FileReader(datasetFile));

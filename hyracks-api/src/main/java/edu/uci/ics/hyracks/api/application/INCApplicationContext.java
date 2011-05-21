@@ -19,6 +19,8 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 
 public interface INCApplicationContext extends IApplicationContext {
+    public String getNodeId();
+
     public IHyracksRootContext getRootContext();
 
     public void setDistributedState(Serializable state);

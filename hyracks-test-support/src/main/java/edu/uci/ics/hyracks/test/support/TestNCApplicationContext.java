@@ -20,12 +20,20 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 
 public class TestNCApplicationContext implements INCApplicationContext {
-    private IHyracksRootContext rootCtx;
+    private final IHyracksRootContext rootCtx;
+    private final String nodeId;
+
     private Serializable distributedState;
     private Object appObject;
 
-    public TestNCApplicationContext(IHyracksRootContext rootCtx) {
+    public TestNCApplicationContext(IHyracksRootContext rootCtx, String nodeId) {
         this.rootCtx = rootCtx;
+        this.nodeId = nodeId;
+    }
+
+    @Override
+    public String getNodeId() {
+        return nodeId;
     }
 
     @Override

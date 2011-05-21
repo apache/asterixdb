@@ -80,10 +80,10 @@ public abstract class ApplicationContext implements IApplicationContext {
                 }
             });
             classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-            deploymentDescriptor = parseDeploymentDescriptor();
         } else {
             classLoader = getClass().getClassLoader();
         }
+        deploymentDescriptor = parseDeploymentDescriptor();
     }
 
     public void initialize() throws Exception {

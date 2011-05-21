@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -65,9 +66,9 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.appCtx = appCtx;
         this.jobId = jobId;
         this.attempt = attempt;
-        stageletMap = new HashMap<UUID, Stagelet>();
-        envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
-        counterMap = new HashMap<String, Counter>();
+        stageletMap = new Hashtable<UUID, Stagelet>();
+        envMap = new Hashtable<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
+        counterMap = new Hashtable<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
     }
@@ -78,8 +79,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public IOperatorEnvironment getEnvironment(IOperatorDescriptor hod, int partition) {
-        if (!envMap.containsKey(hod.getOperatorId())) {
-            envMap.put(hod.getOperatorId(), new HashMap<Integer, IOperatorEnvironment>());
+        synchronized (envMap) {
+            if (!envMap.containsKey(hod.getOperatorId())) {
+                envMap.put(hod.getOperatorId(), new HashMap<Integer, IOperatorEnvironment>());
+            }
         }
         Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(hod.getOperatorId());
         if (!opEnvMap.containsKey(partition)) {
@@ -118,7 +121,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return nodeController.getExecutor();
     }
 
-    public synchronized void notifyStageletComplete(UUID stageId, int attempt, StageletProfile stats) throws Exception {
+    public void notifyStageletComplete(UUID stageId, int attempt, StageletProfile stats) throws Exception {
         stageletMap.remove(stageId);
         nodeController.notifyStageComplete(jobId, stageId, attempt, stats);
     }
@@ -132,15 +135,19 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return nodeController;
     }
 
-    public synchronized void dumpProfile(JobletProfile jProfile) {
-        Map<String, Long> counters = jProfile.getCounters();
-        for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
-            counters.put(e.getKey(), e.getValue().get());
+    public void dumpProfile(JobletProfile jProfile) {
+        synchronized (counterMap) {
+            Map<String, Long> counters = jProfile.getCounters();
+            for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
+                counters.put(e.getKey(), e.getValue().get());
+            }
         }
-        for (Stagelet si : stageletMap.values()) {
-            StageletProfile sProfile = new StageletProfile(si.getStageId());
-            si.dumpProfile(sProfile);
-            jProfile.getStageletProfiles().put(si.getStageId(), sProfile);
+        synchronized (stageletMap) {
+            for (Stagelet si : stageletMap.values()) {
+                StageletProfile sProfile = new StageletProfile(si.getStageId());
+                si.dumpProfile(sProfile);
+                jProfile.getStageletProfiles().put(si.getStageId(), sProfile);
+            }
         }
     }
 
@@ -193,12 +200,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public synchronized ICounter getCounter(String name, boolean create) {
-        Counter counter = counterMap.get(name);
-        if (counter == null && create) {
-            counter = new Counter(name);
-            counterMap.put(name, counter);
+    public ICounter getCounter(String name, boolean create) {
+        synchronized (counterMap) {
+            Counter counter = counterMap.get(name);
+            if (counter == null && create) {
+                counter = new Counter(name);
+                counterMap.put(name, counter);
+            }
+            return counter;
         }
-        return counter;
     }
 }
