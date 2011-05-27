@@ -96,6 +96,13 @@
               <harFile>${project.build.directory}/textapp-${project.version}-app-assembly.zip</harFile>
             </configuration>
           </execution>
+          <execution>
+            <id>stop-services</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop-services</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>

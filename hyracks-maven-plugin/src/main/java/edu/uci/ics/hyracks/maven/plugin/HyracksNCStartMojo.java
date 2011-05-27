@@ -59,11 +59,7 @@ public class HyracksNCStartMojo extends AbstractHyracksServerMojo {
         }
         String args = cmdLineBuffer.toString();
         final Process proc = launch(new File(hyracksServerHome, makeScriptName(HYRACKS_NC_SCRIPT)), args);
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                proc.destroy();
-            }
-        });
+        HyracksServiceRegistry.INSTANCE.addServiceProcess(proc);
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

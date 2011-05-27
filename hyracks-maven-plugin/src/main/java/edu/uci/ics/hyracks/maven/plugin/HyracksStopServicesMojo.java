@@ -14,35 +14,16 @@
  */
 package edu.uci.ics.hyracks.maven.plugin;
 
-import java.io.File;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 /**
- * @goal start-cc
+ * @goal stop-services
  */
-public class HyracksCCStartMojo extends AbstractHyracksServerMojo {
-    private static final String HYRACKS_CC_SCRIPT = "bin" + File.separator + "hyrackscc";
-
-    /**
-     * @parameter property = "port"
-     */
-    private int port;
-
+public class HyracksStopServicesMojo extends AbstractHyracksMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        StringBuilder cmdLineBuffer = new StringBuilder();
-        if (port != 0) {
-            cmdLineBuffer.append("-port ").append(port);
-        }
-        String args = cmdLineBuffer.toString();
-        final Process proc = launch(new File(hyracksServerHome, makeScriptName(HYRACKS_CC_SCRIPT)), args);
-        HyracksServiceRegistry.INSTANCE.addServiceProcess(proc);
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        getLog().info("Stopping Hyracks Services");
+        HyracksServiceRegistry.INSTANCE.destroyAll();
     }
 }
