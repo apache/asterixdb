@@ -14,6 +14,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrame;
@@ -38,7 +39,6 @@ public class RTree {
     private final IRTreeFrameFactory leafFrameFactory;
     private final MultiComparator interiorCmp;
     private final MultiComparator leafCmp;
-    public final int dim;
 
     public int rootSplits = 0;
     public int[] splitsByLevel = new int[500];
@@ -51,14 +51,13 @@ public class RTree {
     public byte currentLevel = 0;
 
     public RTree(IBufferCache bufferCache, IFreePageManager freePageManager, IRTreeFrameFactory interiorFrameFactory,
-            IRTreeFrameFactory leafFrameFactory, MultiComparator interiorCmp, MultiComparator leafCmp, int dim) {
+            IRTreeFrameFactory leafFrameFactory, MultiComparator interiorCmp, MultiComparator leafCmp) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.interiorCmp = interiorCmp;
         this.leafCmp = leafCmp;
-        this.dim = dim;
         globalNsn = new AtomicInteger();
         this.treeLatch = new ReentrantReadWriteLock(true);
     }
@@ -169,7 +168,7 @@ public class RTree {
             incrementReadLatchesReleased();
             bufferCache.unpin(node);
             incrementUnpins();
-            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -220,7 +219,8 @@ public class RTree {
     public RTreeOpContext createOpContext(TreeIndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
             ITreeIndexMetaDataFrame metaFrame, String threadName) {
         // TODO: figure out better tree-height hint
-        return new RTreeOpContext(op, interiorFrame, leafFrame, metaFrame, 8, dim, threadName);
+        return new RTreeOpContext(op, interiorFrame, leafFrame, metaFrame, 8, interiorCmp.getKeyFieldCount() / 2,
+                threadName);
     }
 
     public void insert(ITupleReference tuple, RTreeOpContext ctx) throws Exception {
@@ -821,6 +821,16 @@ public class RTree {
         }
     }
 
+    public void search(IRTreeCursor cursor, ITupleReference searchKey, RTreeOpContext ctx) throws Exception {
+        ctx.reset();
+        ctx.tuple = searchKey;
+        ctx.cursor = cursor;
+
+        cursor.setBufferCache(bufferCache);
+        cursor.setFileId(fileId);
+        ctx.cursor.open(ctx.pathList, ctx.tuple, rootPage, interiorCmp, leafCmp);
+    }
+
     public void search(Stack<Integer> s, ITupleReference tuple, RTreeOpContext ctx, ArrayList<Rectangle> results)
             throws Exception {
         ctx.reset();
@@ -857,7 +867,7 @@ public class RTree {
                         // check intersection, if intersect, add the tuple to
                         // the
                         // result set
-                        Rectangle rec = ctx.leafFrame.intersect(ctx.tuple, i, leafCmp);
+                        Rectangle rec = ctx.leafFrame.checkIntersect(ctx.tuple, i, leafCmp);
                         if (rec != null) {
                             // add the tuple to the result set
                             results.add(rec);

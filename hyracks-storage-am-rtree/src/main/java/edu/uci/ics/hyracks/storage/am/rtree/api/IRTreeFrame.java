@@ -11,6 +11,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
     
+    public ITreeIndexTupleReference createTupleReference();
+    
     public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
 
     public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
@@ -44,7 +46,9 @@ public interface IRTreeFrame extends ITreeIndexFrame {
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey,
             TupleEntryArrayList entries1, TupleEntryArrayList entries2, Rectangle[] rec) throws Exception;
 
-    public Rectangle intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+    public boolean intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+    
+    public Rectangle checkIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
 
     public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
 

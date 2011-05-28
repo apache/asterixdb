@@ -3,12 +3,14 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 
 public final class RTreeOpContext {
     public final TreeIndexOp op;
     public final IRTreeFrame interiorFrame;
     public final IRTreeFrame leafFrame;
+    public IRTreeCursor cursor;
     public final ITreeIndexMetaDataFrame metaFrame;
     public final RTreeSplitKey splitKey;
     public final SpatialUtils spatialUtils;

@@ -14,5 +14,6 @@
   <modules>
     <module>hyracks-storage-am-btree-test</module>
     <module>hyracks-storage-am-invertedindex-test</module>
+    <module>hyracks-storage-am-rtree-test</module>
   </modules>
 </project>

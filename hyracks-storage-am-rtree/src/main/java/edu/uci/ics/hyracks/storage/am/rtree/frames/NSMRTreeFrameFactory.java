@@ -23,13 +23,15 @@ public class NSMRTreeFrameFactory implements IRTreeFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private int keyFieldCount;
 
-    public NSMRTreeFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    public NSMRTreeFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
         this.tupleWriterFactory = tupleWriterFactory;
+        this.keyFieldCount = keyFieldCount;
     }
 
     @Override
     public IRTreeFrame getFrame() {
-        return new NSMRTreeFrame(tupleWriterFactory.createTupleWriter());
+        return new NSMRTreeFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
     }
 }
