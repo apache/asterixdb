@@ -33,10 +33,12 @@ public class TestStorageManagerComponentHolder {
 
     private static int pageSize;
     private static int numPages;
+    private static int maxOpenFiles;
 
-    public static void init(int pageSize, int numPages) {
+    public static void init(int pageSize, int numPages, int maxOpenFiles) {
         TestStorageManagerComponentHolder.pageSize = pageSize;
         TestStorageManagerComponentHolder.numPages = numPages;
+        TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
         btreeRegistry = null;
@@ -48,7 +50,7 @@ public class TestStorageManagerComponentHolder {
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
             IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
             bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, (IFileMapManager) fileMapProvider,
-                    pageSize, numPages);
+                    pageSize, numPages, maxOpenFiles);
         }
         return bufferCache;
     }

@@ -53,20 +53,14 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 	//private static final int PAGE_SIZE = 32768;
     private static final int PAGE_SIZE = 4096;
     private static final int NUM_PAGES = 1000;
+    private static final int MAX_OPEN_FILES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-
-	// FIXED-LENGTH KEY TEST
-	// create a B-tree with one fixed-length "key" field and one fixed-length
-	// "value" field
-	// fill B-tree with random values using insertions (not bulk load)
-	// perform ordered scan and range search
+	
 	@Test
 	public void test01() throws Exception {
 
-		print("FIXED-LENGTH KEY TEST\n");
-
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -135,9 +129,9 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 				TreeIndexOp.TI_INSERT, leafFrame, interiorFrame, metaFrame);
 
 		// 10000
-		for (int i = 0; i < 1000000; i++) {
+		for (int i = 0; i < 100000; i++) {
 
-			int f0 = rnd.nextInt() % 1000000;
+			int f0 = rnd.nextInt() % 100000;
 			int f1 = 5;
 
 			tb.reset();
@@ -151,10 +145,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 					.getSize());
 
 			tuple.reset(accessor, 0);
-
-			// System.out.println(tuple.getFieldCount() + " " +
-			// tuple.getFieldLength(0) + " " + tuple.getFieldLength(1));
-
+			
 			if (i % 10000 == 0) {
 				long end = System.currentTimeMillis();
 				print("INSERTING " + i + " : " + f0 + " " + f1 + " "
@@ -166,14 +157,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
-			}
-
-			// btree.printTree(leafFrame, interiorFrame);
-			// System.out.println();
+			}			
 		}
-		// btree.printTree(leafFrame, interiorFrame);
-		// System.out.println();
-
 		
 		TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, btree.getRootPageId());		
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);

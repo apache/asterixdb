@@ -66,7 +66,7 @@ import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	static {
-		TestStorageManagerComponentHolder.init(8192, 20);
+		TestStorageManagerComponentHolder.init(8192, 20, 20);
 	}
 
 	private IStorageManagerInterface storageManager = new TestStorageManagerInterface();

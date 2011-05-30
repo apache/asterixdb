@@ -67,7 +67,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -75,18 +74,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class RangeSearchCursorTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
-	private static final int HYRACKS_FRAME_SIZE = 128;
-
-	public class BufferAllocator implements ICacheMemoryAllocator {
-		@Override
-		public ByteBuffer[] allocate(int pageSize, int numPages) {
-			ByteBuffer[] buffers = new ByteBuffer[numPages];
-			for (int i = 0; i < numPages; ++i) {
-				buffers[i] = ByteBuffer.allocate(pageSize);
-			}
-			return buffers;
-		}
-	}
+	private static final int MAX_OPEN_FILES = 10;
+	private static final int HYRACKS_FRAME_SIZE = 128;	
 
 	// declare fields
 	int fieldCount = 2;
@@ -130,7 +119,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		System.out.println("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -235,7 +224,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		System.out.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -344,7 +333,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				tupleWriterFactory);
 		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder

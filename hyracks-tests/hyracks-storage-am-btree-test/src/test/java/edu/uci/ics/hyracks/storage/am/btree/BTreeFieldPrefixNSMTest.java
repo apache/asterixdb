@@ -47,7 +47,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -58,20 +57,10 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
 	private static final int PAGE_SIZE = 32768; // 32K
 	private static final int NUM_PAGES = 40;
+	private static final int MAX_OPEN_FILES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-	
-	public class BufferAllocator implements ICacheMemoryAllocator {
-		@Override
-		public ByteBuffer[] allocate(int pageSize, int numPages) {
-			ByteBuffer[] buffers = new ByteBuffer[numPages];
-			for (int i = 0; i < numPages; ++i) {
-				buffers[i] = ByteBuffer.allocate(pageSize);
-			}
-			return buffers;
-		}
-	}
-
+		
 	private ITupleReference createTuple(IHyracksStageletContext ctx, int f0,
 			int f1, int f2, boolean print) throws HyracksDataException {
 		if (print)
@@ -112,7 +101,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 	@Test
 	public void test01() throws Exception {
 		
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder

@@ -62,7 +62,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -71,20 +70,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
 	private static final int PAGE_SIZE = 256;	
 	private static final int NUM_PAGES = 10;	
+	private static final int MAX_OPEN_FILES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-
-	public class BufferAllocator implements ICacheMemoryAllocator {
-		@Override
-		public ByteBuffer[] allocate(int pageSize, int numPages) {
-			ByteBuffer[] buffers = new ByteBuffer[numPages];
-			for (int i = 0; i < numPages; ++i) {
-				buffers[i] = ByteBuffer.allocate(pageSize);
-			}
-			return buffers;
-		}
-	}
-
+	
 	// FIXED-LENGTH KEY TEST
 	// create a B-tree with one fixed-length "key" field and one fixed-length
 	// "value" field
@@ -95,7 +84,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("FIXED-LENGTH KEY TEST\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -328,7 +317,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("COMPOSITE KEY TEST\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -539,7 +528,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("VARIABLE-LENGTH KEY TEST\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -738,7 +727,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("DELETION TEST\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -922,7 +911,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("BULK LOAD TEST\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -1099,7 +1088,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		print("TIME-INTERVAL INTERSECTION DEMO\n");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder

@@ -51,13 +51,14 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class SearchCursorTest extends AbstractRTreeTest {
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
+    private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     @Test
     public void searchCursorTest() throws Exception {
 
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         FileReference file = new FileReference(new File(fileName));

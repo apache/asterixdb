@@ -60,16 +60,16 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BulkLoadTest extends AbstractInvIndexTest {
 	
-    // private static final int PAGE_SIZE = 65536;
     private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 100;
+    private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 32768;
     private IHyracksStageletContext stageletCtx = TestUtils.create(HYRACKS_FRAME_SIZE);    
 
     @Test
     public void singleFieldPayloadTest() throws Exception {
 
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(stageletCtx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(stageletCtx);
         

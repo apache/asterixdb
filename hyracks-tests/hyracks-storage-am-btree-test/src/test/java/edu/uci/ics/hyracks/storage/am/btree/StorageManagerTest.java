@@ -25,6 +25,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.btree.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -36,6 +37,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class StorageManagerTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
+	private static final int MAX_OPEN_FILES = 10;
+	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(32768);
 
 	public class PinnedLatchedPage {
@@ -247,7 +250,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 	@Test
 	public void oneThreadOneFileTest() throws Exception {
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
