@@ -23,9 +23,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor implements
+        IBTreeOperatorDescriptorHelper {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,13 +40,13 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
     protected final IBTreeLeafFrameFactory leafFrameFactory;
 
     protected final IStorageManagerInterface storageManager;
-    protected final IBTreeRegistryProvider btreeRegistryProvider;
+    protected final IIndexRegistryProvider<BTree> btreeRegistryProvider;
 
     protected final ITypeTrait[] typeTraits;
 
     public AbstractBTreeOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider,
+            IIndexRegistryProvider<BTree> btreeRegistryProvider, IFileSplitProvider fileSplitProvider,
             IBTreeInteriorFrameFactory interiorFactory, IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, inputArity, outputArity);
@@ -58,34 +61,42 @@ public abstract class AbstractBTreeOperatorDescriptor extends AbstractSingleActi
             recordDescriptors[0] = recDesc;
     }
 
-    public IFileSplitProvider getFileSplitProvider() {
+    @Override
+    public IFileSplitProvider getBTreeFileSplitProvider() {
         return fileSplitProvider;
     }
 
-    public IBinaryComparatorFactory[] getComparatorFactories() {
+    @Override
+    public IBinaryComparatorFactory[] getBTreeComparatorFactories() {
         return comparatorFactories;
     }
 
-    public ITypeTrait[] getTypeTraits() {
+    @Override
+    public ITypeTrait[] getBTreeTypeTraits() {
         return typeTraits;
     }
 
-    public IBTreeInteriorFrameFactory getInteriorFactory() {
+    @Override
+    public IBTreeInteriorFrameFactory getBTreeInteriorFactory() {
         return interiorFrameFactory;
     }
 
-    public IBTreeLeafFrameFactory getLeafFactory() {
+    @Override
+    public IBTreeLeafFrameFactory getBTreeLeafFactory() {
         return leafFrameFactory;
     }
 
+    @Override
     public IStorageManagerInterface getStorageManager() {
         return storageManager;
     }
 
-    public IBTreeRegistryProvider getBtreeRegistryProvider() {
+    @Override
+    public IIndexRegistryProvider<BTree> getBTreeRegistryProvider() {
         return btreeRegistryProvider;
     }
 
+    @Override
     public RecordDescriptor getRecordDescriptor() {
         return recordDescriptors[0];
     }

@@ -15,14 +15,15 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
-public class TestBTreeRegistryProvider implements IBTreeRegistryProvider {
+public class TestBTreeRegistryProvider implements IIndexRegistryProvider<BTree> {
     private static final long serialVersionUID = 1L;
-
-    @Override
-    public BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx) {
-        return TestStorageManagerComponentHolder.getBTreeRegistry(ctx);
-    }
+    
+	@Override
+	public IndexRegistry<BTree> getRegistry(IHyracksStageletContext ctx) {
+		return TestStorageManagerComponentHolder.getBTreeRegistry(ctx);
+	}
 }

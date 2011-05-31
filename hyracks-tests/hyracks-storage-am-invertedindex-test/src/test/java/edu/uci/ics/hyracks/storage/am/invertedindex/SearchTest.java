@@ -232,7 +232,7 @@ public class SearchTest extends AbstractInvIndexTest {
         int addProbStep = 10;        
         
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(invListBuilder, HYRACKS_FRAME_SIZE);
+        InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(invListBuilder, HYRACKS_FRAME_SIZE, BTree.DEFAULT_FILL_FACTOR);
         
         int totalElements = 0;        
         for (int i = 0; i < tokens.size(); i++) {

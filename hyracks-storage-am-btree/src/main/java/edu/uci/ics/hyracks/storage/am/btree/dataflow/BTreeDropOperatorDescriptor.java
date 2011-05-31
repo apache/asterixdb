@@ -22,6 +22,8 @@ import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
@@ -29,11 +31,11 @@ public class BTreeDropOperatorDescriptor extends AbstractSingleActivityOperatorD
     private static final long serialVersionUID = 1L;
 
     private IStorageManagerInterface storageManager;
-    private IBTreeRegistryProvider btreeRegistryProvider;
+    private IIndexRegistryProvider<BTree> btreeRegistryProvider;
     private IFileSplitProvider fileSplitProvider;
-
+    
     public BTreeDropOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
-            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider) {
+            IIndexRegistryProvider<BTree> btreeRegistryProvider, IFileSplitProvider fileSplitProvider) {
         super(spec, 0, 0);
         this.storageManager = storageManager;
         this.btreeRegistryProvider = btreeRegistryProvider;

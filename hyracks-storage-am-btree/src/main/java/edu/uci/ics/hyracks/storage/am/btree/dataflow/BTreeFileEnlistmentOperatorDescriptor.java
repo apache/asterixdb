@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // re-create in-memory state for a btree that has already been built (i.e., the file exists):
@@ -39,7 +41,7 @@ public class BTreeFileEnlistmentOperatorDescriptor extends AbstractBTreeOperator
     private static final long serialVersionUID = 1L;
 
     public BTreeFileEnlistmentOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IBTreeRegistryProvider btreeRegistryProvider,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<BTree> btreeRegistryProvider,
             IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
             IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories) {
         super(spec, 0, 0, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory,

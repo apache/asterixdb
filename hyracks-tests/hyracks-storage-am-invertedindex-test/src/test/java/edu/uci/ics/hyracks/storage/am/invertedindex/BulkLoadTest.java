@@ -166,10 +166,10 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         
         int maxId = 1000000;
         int addProb = 0;
-        int addProbStep = 10;        
+        int addProbStep = 10;   
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(invListBuilder, HYRACKS_FRAME_SIZE);
+        InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(invListBuilder, HYRACKS_FRAME_SIZE, BTree.DEFAULT_FILL_FACTOR);
         
         int totalElements = 0;
         for (int i = 0; i < tokens.size(); i++) {

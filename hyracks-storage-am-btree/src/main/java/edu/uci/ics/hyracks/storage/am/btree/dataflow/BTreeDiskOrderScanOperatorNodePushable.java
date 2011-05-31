@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -35,13 +36,13 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
 
     public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, BTreeOpHelper.BTreeMode.OPEN_BTREE);
+        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
     }
 
     @Override
     public void initialize() throws HyracksDataException {
 
-        IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getLeafFactory().getFrame();
+        IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getBTreeLeafFactory().getFrame();
         DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
         ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 

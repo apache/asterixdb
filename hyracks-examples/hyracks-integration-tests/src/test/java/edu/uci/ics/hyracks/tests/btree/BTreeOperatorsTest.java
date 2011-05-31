@@ -53,9 +53,10 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeBulkLoadOperatorDescri
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeStatsOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -70,7 +71,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	}
 
 	private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
-	private IBTreeRegistryProvider btreeRegistryProvider = new TestBTreeRegistryProvider();
+	private IIndexRegistryProvider<BTree> btreeRegistryProvider = new TestBTreeRegistryProvider();
 
 	private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 			"ddMMyy-hhmmssSS");

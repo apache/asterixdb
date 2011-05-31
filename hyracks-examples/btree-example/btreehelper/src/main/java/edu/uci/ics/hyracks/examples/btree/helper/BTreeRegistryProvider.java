@@ -16,10 +16,11 @@
 package edu.uci.ics.hyracks.examples.btree.helper;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.IBTreeRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
-public class BTreeRegistryProvider implements IBTreeRegistryProvider {
+public class BTreeRegistryProvider implements IIndexRegistryProvider<BTree> {
     private static final long serialVersionUID = 1L;
 
     public static final BTreeRegistryProvider INSTANCE = new BTreeRegistryProvider();
@@ -28,7 +29,7 @@ public class BTreeRegistryProvider implements IBTreeRegistryProvider {
     }
 
     @Override
-    public BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx) {
+    public IndexRegistry<BTree> getRegistry(IHyracksStageletContext ctx) {
         return RuntimeContext.get(ctx).getBTreeRegistry();
     }
 }

@@ -49,8 +49,8 @@ public class InvertedIndex {
     	this.fileId = -1;
     }
     
-    public BulkLoadContext beginBulkLoad(IInvertedListBuilder invListBuilder, int hyracksFrameSize) throws HyracksDataException {
-        BulkLoadContext ctx = new BulkLoadContext(invListBuilder, hyracksFrameSize);
+    public BulkLoadContext beginBulkLoad(IInvertedListBuilder invListBuilder, int hyracksFrameSize, float btreeFillFactor) throws HyracksDataException {
+        BulkLoadContext ctx = new BulkLoadContext(invListBuilder, hyracksFrameSize, btreeFillFactor);
         ctx.init(rootPageId, fileId);
         return ctx;
     }
@@ -207,6 +207,7 @@ public class InvertedIndex {
         private final FrameTupleAppender btreeTupleAppender;
         private final FrameTupleAccessor btreeFrameTupleAccessor;
         private final FrameTupleReference btreeFrameTupleReference = new FrameTupleReference();
+        private final float btreeFillFactor;
         private BTree.BulkLoadContext btreeBulkLoadCtx;
 
         private int currentInvListStartPageId;
@@ -219,7 +220,7 @@ public class InvertedIndex {
         private final IInvertedListBuilder invListBuilder;
         private final MultiComparator tokenCmp;        
         
-        public BulkLoadContext(IInvertedListBuilder invListBuilder, int hyracksFrameSize) {
+        public BulkLoadContext(IInvertedListBuilder invListBuilder, int hyracksFrameSize, float btreeFillFactor) {
             this.invListBuilder = invListBuilder;
             this.tokenCmp = btree.getMultiComparator();
             this.btreeTupleBuffer = ByteBuffer.allocate(hyracksFrameSize);
@@ -232,6 +233,7 @@ public class InvertedIndex {
                     IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                     IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
             this.btreeFrameTupleAccessor = new FrameTupleAccessor(hyracksFrameSize, recDesc);
+            this.btreeFillFactor = btreeFillFactor;
         }
 
         public void init(int startPageId, int fileId) throws HyracksDataException {

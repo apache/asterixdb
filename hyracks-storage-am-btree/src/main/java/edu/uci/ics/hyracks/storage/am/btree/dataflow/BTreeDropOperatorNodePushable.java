@@ -25,6 +25,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -33,13 +36,13 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
 	private static final Logger LOGGER = Logger.getLogger(BTreeDropOperatorNodePushable.class.getName());
 	
 	private final IHyracksStageletContext ctx;
-    private IBTreeRegistryProvider btreeRegistryProvider;
+    private IIndexRegistryProvider<BTree> btreeRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
     private int partition;
 
     public BTreeDropOperatorNodePushable(IHyracksStageletContext ctx, IStorageManagerInterface storageManager,
-            IBTreeRegistryProvider btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
+            IIndexRegistryProvider<BTree> btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
         this.ctx = ctx;
         this.storageManager = storageManager;
         this.btreeRegistryProvider = btreeRegistryProvider;
@@ -65,7 +68,7 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
     public void initialize() throws HyracksDataException {
     	try {
 
-    		BTreeRegistry btreeRegistry = btreeRegistryProvider.getBTreeRegistry(ctx);
+    		IndexRegistry<BTree> btreeRegistry = btreeRegistryProvider.getRegistry(ctx);
     		IBufferCache bufferCache = storageManager.getBufferCache(ctx);
     		IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
 

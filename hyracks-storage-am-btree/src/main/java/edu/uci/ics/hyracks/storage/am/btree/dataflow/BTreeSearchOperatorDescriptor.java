@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
@@ -40,7 +42,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractBTreeOperatorDescript
     private boolean highKeyInclusive;
 
     public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IBTreeRegistryProvider btreeRegistryProvider,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<BTree> btreeRegistryProvider,
             IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
             IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields,

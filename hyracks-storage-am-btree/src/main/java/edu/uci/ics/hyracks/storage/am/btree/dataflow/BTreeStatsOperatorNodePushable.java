@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -34,7 +35,7 @@ AbstractOperatorNodePushable {
 			AbstractBTreeOperatorDescriptor opDesc,
 			IHyracksStageletContext ctx, int partition) {
 		btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition,
-				BTreeOpHelper.BTreeMode.CREATE_BTREE);
+		        IndexHelperOpenMode.CREATE);
 		this.ctx = ctx;
 	}
 

@@ -25,18 +25,16 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-final class BTreeOpHelper {
-
-	public enum BTreeMode {
-		OPEN_BTREE, CREATE_BTREE, ENLIST_BTREE
-	}
-	
+public final class BTreeOpHelper {   
+    
 	private IBTreeInteriorFrame interiorFrame;
 	private IBTreeLeafFrame leafFrame;
 
@@ -44,30 +42,30 @@ final class BTreeOpHelper {
 	private int btreeFileId = -1;
 	private int partition;
 
-    private AbstractBTreeOperatorDescriptor opDesc;
+    private IBTreeOperatorDescriptorHelper opDesc;
     private IHyracksStageletContext ctx;
 
-	private BTreeMode mode;
+	private IndexHelperOpenMode mode;
 
-    BTreeOpHelper(AbstractBTreeOperatorDescriptor opDesc, final IHyracksStageletContext ctx, int partition,
-            BTreeMode mode) {
+    public BTreeOpHelper(IBTreeOperatorDescriptorHelper opDesc, final IHyracksStageletContext ctx, int partition,
+            IndexHelperOpenMode mode) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.mode = mode;
         this.partition = partition;
     }
 
-	void init() throws HyracksDataException {
+	public void init() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
         IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
-        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
+        IFileSplitProvider fileSplitProvider = opDesc.getBTreeFileSplitProvider();
 
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         boolean fileIsMapped = fileMapProvider.isMapped(f);
 
 		switch (mode) {
 		
-		case OPEN_BTREE: {
+		case OPEN: {
 			if (!fileIsMapped) {
 				throw new HyracksDataException(
 						"Trying to open btree from unmapped file " + f.toString());
@@ -75,8 +73,8 @@ final class BTreeOpHelper {
 		}
 		break;
 
-		case CREATE_BTREE:
-		case ENLIST_BTREE: {
+		case CREATE:
+		case ENLIST: {
 			if (!fileIsMapped) {
 				bufferCache.createFile(f);
 			}
@@ -100,10 +98,10 @@ final class BTreeOpHelper {
         // otherwise deinit() will try to close the file that failed to open
         btreeFileId = fileId;
 
-		interiorFrame = opDesc.getInteriorFactory().getFrame();
-		leafFrame = opDesc.getLeafFactory().getFrame();
+		interiorFrame = opDesc.getBTreeInteriorFactory().getFrame();
+		leafFrame = opDesc.getBTreeLeafFactory().getFrame();
 
-        BTreeRegistry btreeRegistry = opDesc.getBtreeRegistryProvider().getBTreeRegistry(ctx);
+        IndexRegistry<BTree> btreeRegistry = opDesc.getBTreeRegistryProvider().getRegistry(ctx);
         btree = btreeRegistry.get(btreeFileId);
         if (btree == null) {
 
@@ -116,21 +114,21 @@ final class BTreeOpHelper {
 					// this thread should create and register the btree
 
 					IBinaryComparator[] comparators = new IBinaryComparator[opDesc
-							.getComparatorFactories().length];
-					for (int i = 0; i < opDesc.getComparatorFactories().length; i++) {
-						comparators[i] = opDesc.getComparatorFactories()[i]
+							.getBTreeComparatorFactories().length];
+					for (int i = 0; i < opDesc.getBTreeComparatorFactories().length; i++) {
+						comparators[i] = opDesc.getBTreeComparatorFactories()[i]
 								.createBinaryComparator();
 					}
 
 					MultiComparator cmp = new MultiComparator(opDesc
-							.getTypeTraits(), comparators);
+							.getBTreeTypeTraits(), comparators);
 
 					// TODO: abstract away in some kind of factory
 					ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
 					IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaDataFrameFactory);
-					btree = new BTree(bufferCache, freePageManager, opDesc.getInteriorFactory(),
-							opDesc.getLeafFactory(), cmp);
-					if (mode == BTreeMode.CREATE_BTREE) {
+					btree = new BTree(bufferCache, freePageManager, opDesc.getBTreeInteriorFactory(),
+							opDesc.getBTreeLeafFactory(), cmp);
+					if (mode == IndexHelperOpenMode.CREATE) {
 						ITreeIndexMetaDataFrame metaFrame = btree.getFreePageManager().getMetaDataFrameFactory().getFrame();
 						try {
 							btree.create(btreeFileId, leafFrame, metaFrame);							
@@ -162,7 +160,7 @@ final class BTreeOpHelper {
         return ctx;
     }
 
-	public AbstractBTreeOperatorDescriptor getOperatorDescriptor() {
+	public IBTreeOperatorDescriptorHelper getOperatorDescriptor() {
 		return opDesc;
 	}
 
