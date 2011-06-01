@@ -43,7 +43,7 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
     }
 
     protected Process launchWindowsBatch(File command, String options) throws IOException {
-        String[] commandWithOptions = new String[] { "cmd.exe", "/C", command.getName() + " " + options };
+        String[] commandWithOptions = new String[] { "cmd.exe", "/C", command.getAbsolutePath() + " " + options };
 
         Process proc = Runtime.getRuntime().exec(commandWithOptions);
         dump(proc.getInputStream());
@@ -61,7 +61,7 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
         for (int i = 0; i < optionsArray.length; ++i) {
             commandWithOptions[i + 1] = optionsArray[i];
         }
-        Process proc = Runtime.getRuntime().exec(commandWithOptions, null);
+        Process proc = Runtime.getRuntime().exec(commandWithOptions, null, new File("."));
         dump(proc.getInputStream());
         dump(proc.getErrorStream());
         return proc;
