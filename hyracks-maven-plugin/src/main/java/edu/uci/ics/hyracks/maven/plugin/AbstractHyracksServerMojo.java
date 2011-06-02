@@ -22,4 +22,9 @@ public abstract class AbstractHyracksServerMojo extends AbstractHyracksMojo {
      * @required
      */
     protected File hyracksServerHome;
+
+    /**
+     * @parameter
+     */
+    protected File workingDir;
 }

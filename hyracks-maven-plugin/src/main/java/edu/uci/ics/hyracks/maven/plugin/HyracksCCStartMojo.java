@@ -37,7 +37,7 @@ public class HyracksCCStartMojo extends AbstractHyracksServerMojo {
             cmdLineBuffer.append("-port ").append(port);
         }
         String args = cmdLineBuffer.toString();
-        final Process proc = launch(new File(hyracksServerHome, makeScriptName(HYRACKS_CC_SCRIPT)), args);
+        final Process proc = launch(new File(hyracksServerHome, makeScriptName(HYRACKS_CC_SCRIPT)), args, workingDir);
         HyracksServiceRegistry.INSTANCE.addServiceProcess(proc);
         try {
             Thread.sleep(2000);

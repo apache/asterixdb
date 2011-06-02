@@ -24,7 +24,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public abstract class AbstractHyracksMojo extends AbstractMojo {
-    protected Process launch(File command, String options) throws MojoExecutionException {
+    protected Process launch(File command, String options, File workingDir) throws MojoExecutionException {
         if (!command.isFile()) {
             throw new MojoExecutionException(command.getAbsolutePath() + " is not an executable program");
         }
@@ -35,7 +35,7 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
             if (osName.startsWith("Windows")) {
                 return launchWindowsBatch(command, options);
             } else {
-                return launchUnixScript(command, options);
+                return launchUnixScript(command, options, workingDir);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Error executing command: " + command.getAbsolutePath(), e);
@@ -51,7 +51,7 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
         return proc;
     }
 
-    protected Process launchUnixScript(File command, String options) throws IOException {
+    protected Process launchUnixScript(File command, String options, File workingDir) throws IOException {
         String[] optionsArray = new String[0];
         if (options != null && !options.trim().isEmpty()) {
             optionsArray = options.trim().split("\\s+");
@@ -61,7 +61,8 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
         for (int i = 0; i < optionsArray.length; ++i) {
             commandWithOptions[i + 1] = optionsArray[i];
         }
-        Process proc = Runtime.getRuntime().exec(commandWithOptions, null, new File("."));
+        Process proc = Runtime.getRuntime().exec(commandWithOptions, null,
+                workingDir == null ? new File(".") : workingDir);
         dump(proc.getInputStream());
         dump(proc.getErrorStream());
         return proc;
