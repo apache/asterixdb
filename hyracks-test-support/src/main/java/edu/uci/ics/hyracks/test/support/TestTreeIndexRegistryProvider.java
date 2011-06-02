@@ -12,11 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.test.support;
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
-import java.io.Serializable;
-
-public interface IBTreeLeafFrameFactory extends Serializable {
-    public IBTreeLeafFrame getFrame();
+public class TestTreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIndex> {
+    private static final long serialVersionUID = 1L;
+    
+	@Override
+	public IndexRegistry<ITreeIndex> getRegistry(IHyracksStageletContext ctx) {
+		return TestStorageManagerComponentHolder.getTreeIndexRegistry(ctx);
+	}
 }

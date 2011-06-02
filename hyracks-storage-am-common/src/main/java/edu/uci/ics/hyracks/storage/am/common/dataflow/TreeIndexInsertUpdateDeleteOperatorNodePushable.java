@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.nio.ByteBuffer;
 
@@ -23,25 +23,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
-public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final BTreeOpHelper btreeOpHelper;
+public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final TreeIndexOpHelper treeIndexOpHelper;
     private FrameTupleAccessor accessor;
     private final IRecordDescriptorProvider recordDescProvider;
-    private final TreeIndexOp op;
+    private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private ByteBuffer writeBuffer;
-    private BTreeOpContext opCtx;
+    private IndexOpContext opCtx;
 
-    public BTreeInsertUpdateDeleteOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc,
+    public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksStageletContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, TreeIndexOp op) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
+            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -49,25 +48,25 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = (AbstractBTreeOperatorDescriptor)btreeOpHelper.getOperatorDescriptor();
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor)treeIndexOpHelper.getOperatorDescriptor();
     	RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-    	accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
-    	writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+    	accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
+    	writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
     	try {
-    		btreeOpHelper.init();
-    		btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-    		opCtx = btreeOpHelper.getBTree().createOpContext(op, btreeOpHelper.getLeafFrame(),
-    				btreeOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
+    		treeIndexOpHelper.init();
+    		treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
+    		opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op, treeIndexOpHelper.getLeafFrame(),
+    				treeIndexOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
     	} catch(Exception e) {
     		// cleanup in case of failure
-    		btreeOpHelper.deinit();
+    		treeIndexOpHelper.deinit();
     		throw new HyracksDataException(e);
     	}
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        final BTree btree = btreeOpHelper.getBTree();
+        final ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
         accessor.reset(buffer);
 
         int tupleCount = accessor.getTupleCount();
@@ -76,13 +75,13 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             try {
                 switch (op) {
 
-                    case TI_INSERT: {
-                        btree.insert(tuple, opCtx);
+                    case INSERT: {
+                        treeIndex.insert(tuple, opCtx);
                     }
                         break;
 
-                    case TI_DELETE: {
-                        btree.delete(tuple, opCtx);
+                    case DELETE: {
+                        treeIndex.delete(tuple, opCtx);
                     }
                         break;
 
@@ -108,7 +107,7 @@ public class BTreeInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         try {
             writer.close();
         } finally {
-            btreeOpHelper.deinit();
+            treeIndexOpHelper.deinit();
         }
     }
 

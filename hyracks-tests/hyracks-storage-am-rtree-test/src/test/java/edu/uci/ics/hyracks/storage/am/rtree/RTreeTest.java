@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrameFactory;
@@ -101,7 +101,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
         IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
@@ -126,7 +126,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, interiorFrame, leafFrame, metaFrame,
                 "unittest");
 
         Random rnd = new Random();
@@ -173,7 +173,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
         // System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, interiorFrame, leafFrame, metaFrame,
                 "unittest");
         ArrayList<Rectangle> results = new ArrayList<Rectangle>();
         rtree.search(s, tuple, searchOpCtx, results);
@@ -243,7 +243,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
         IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
@@ -268,7 +268,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, interiorFrame, leafFrame, metaFrame,
                 "unittest");
 
         File datasetFile = new File("/home/salsubaiee/dataset.txt");
@@ -340,7 +340,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
         // System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, interiorFrame, leafFrame, metaFrame,
                 "unittest");
 
         File querysetFile = new File("/home/salsubaiee/queryset.txt");
@@ -412,7 +412,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // String stats = rtree.printStats();
         // print(stats);
 
-        RTreeOpContext deleteOpCtx = rtree.createOpContext(TreeIndexOp.TI_DELETE, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE, interiorFrame, leafFrame, metaFrame,
                 "unittest");
 
         BufferedReader reader3 = new BufferedReader(new FileReader(datasetFile));

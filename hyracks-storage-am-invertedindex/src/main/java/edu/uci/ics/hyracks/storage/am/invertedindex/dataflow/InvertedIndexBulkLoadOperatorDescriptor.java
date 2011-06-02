@@ -23,10 +23,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -41,15 +41,16 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
 
     public InvertedIndexBulkLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             int[] fieldPermutation, IFileSplitProvider btreeFileSplitProvider,
-            IIndexRegistryProvider<BTree> btreeRegistryProvider, IBTreeInteriorFrameFactory interiorFrameFactory,
-            IBTreeLeafFrameFactory leafFrameFactory, ITypeTrait[] btreeTypeTraits,
+            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] btreeTypeTraits,
             IBinaryComparatorFactory[] btreeComparatorFactories, float btreeFillFactor,
+            ITreeIndexOpHelperFactory opHelperFactory,
             IFileSplitProvider invIndexFileSplitProvider,
             IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invIndexTypeTraits,
             IBinaryComparatorFactory[] invIndexComparatorFactories, IInvertedListBuilder invListBuilder) {
-        super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, btreeRegistryProvider, interiorFrameFactory,
+        super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, treeIndexRegistryProvider, interiorFrameFactory,
                 leafFrameFactory, btreeTypeTraits, btreeComparatorFactories, btreeFillFactor,
-                invIndexFileSplitProvider, invIndexRegistryProvider, invIndexTypeTraits, invIndexComparatorFactories);
+                opHelperFactory, invIndexFileSplitProvider, invIndexRegistryProvider, invIndexTypeTraits, invIndexComparatorFactories);
         this.fieldPermutation = fieldPermutation;
         this.btreeFillFactor = btreeFillFactor;
         this.invListBuilder = invListBuilder;

@@ -13,37 +13,37 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class BTreeDiskOrderScanOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
+public class TreeIndexDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public BTreeDiskOrderScanOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<BTree> btreeRegistryProvider,
-            IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
-            IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits) {
-        super(spec, 0, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory,
-                leafFactory, typeTraits, null);
+    private IStorageManagerInterface storageManager;
+    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+    private IFileSplitProvider fileSplitProvider;
+    
+    public TreeIndexDropOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
+            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider) {
+        super(spec, 0, 0);
+        this.storageManager = storageManager;
+        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
+        this.fileSplitProvider = fileSplitProvider;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new BTreeDiskOrderScanOperatorNodePushable(this, ctx, partition);
+        return new TreeIndexDropOperatorNodePushable(ctx, storageManager, treeIndexRegistryProvider, fileSplitProvider, partition);
     }
 }

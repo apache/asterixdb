@@ -13,47 +13,41 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class BTreeInsertUpdateDeleteOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
+public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
     private final int[] fieldPermutation;
-
-    private TreeIndexOp op;
-
-    public BTreeInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<BTree> btreeRegistryProvider,
-            IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
-            IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, TreeIndexOp op) {
-        super(spec, 1, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory,
-                leafFactory, typeTraits, comparatorFactories);
+    private final float fillFactor;    
+    
+    public TreeIndexBulkLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
+            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, float fillFactor, ITreeIndexOpHelperFactory opHelperFactory) {
+        super(spec, 1, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory, leafFrameFactory,
+                typeTraits, comparatorFactories, opHelperFactory);
         this.fieldPermutation = fieldPermutation;
-        this.op = op;
+        this.fillFactor = fillFactor;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new BTreeInsertUpdateDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
-                recordDescProvider, op);
+        return new TreeIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
+                recordDescProvider);
     }
 }

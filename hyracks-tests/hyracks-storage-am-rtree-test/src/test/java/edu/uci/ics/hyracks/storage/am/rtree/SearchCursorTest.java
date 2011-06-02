@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
@@ -102,7 +102,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
         IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
         IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
@@ -127,7 +127,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(TreeIndexOp.TI_INSERT, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, interiorFrame, leafFrame, metaFrame,
                 "unittest");
 
         Random rnd = new Random();
@@ -171,7 +171,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         }
 
         IRTreeCursor searchCursor = new SearchCursor(interiorFrame, leafFrame);
-        RTreeOpContext searchOpCtx = rtree.createOpContext(TreeIndexOp.TI_SEARCH, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, interiorFrame, leafFrame, metaFrame,
                 "cursortest");
         rtree.search(searchCursor, tuple, searchOpCtx);
 

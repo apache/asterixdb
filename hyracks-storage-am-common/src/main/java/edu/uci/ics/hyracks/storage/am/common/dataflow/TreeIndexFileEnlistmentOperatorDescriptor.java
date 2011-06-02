@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -25,10 +25,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // re-create in-memory state for a btree that has already been built (i.e., the file exists):
@@ -36,22 +34,22 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 // 2. create file mappings (FileMappingProvider)
 // 3. register btree instance (BTreeRegistry)
 
-public class BTreeFileEnlistmentOperatorDescriptor extends AbstractBTreeOperatorDescriptor {
+public class TreeIndexFileEnlistmentOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public BTreeFileEnlistmentOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<BTree> btreeRegistryProvider,
-            IFileSplitProvider fileSplitProvider, IBTreeInteriorFrameFactory interiorFactory,
-            IBTreeLeafFrameFactory leafFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories) {
-        super(spec, 0, 0, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFactory,
-                leafFactory, typeTraits, comparatorFactories);
+    public TreeIndexFileEnlistmentOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+            IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
+        super(spec, 0, 0, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int partitions) throws HyracksDataException {
-        return new BTreeFileEnlistmentOperatorNodePushable(this, ctx, partition);
+        return new TreeIndexFileEnlistmentOperatorNodePushable(this, ctx, partition);
     }
 
 }

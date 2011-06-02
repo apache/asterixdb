@@ -28,18 +28,22 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 
 public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private BTreeOpHelper btreeOpHelper;
+    private TreeIndexOpHelper treeIndexOpHelper;
     private FrameTupleAccessor accessor;
 
     private ByteBuffer writeBuffer;
@@ -56,16 +60,16 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private RangePredicate rangePred;
     private MultiComparator lowKeySearchCmp;
     private MultiComparator highKeySearchCmp;
-    private IBTreeCursor cursor;
-    private IBTreeLeafFrame cursorFrame;
+    private ITreeIndexCursor cursor;
+    private ITreeIndexFrame cursorFrame;
     private BTreeOpContext opCtx;
 
     private RecordDescriptor recDesc;
 
-    public BTreeSearchOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
         this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
@@ -82,17 +86,17 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = (AbstractBTreeOperatorDescriptor) btreeOpHelper
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
                 .getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
-        cursorFrame = opDesc.getBTreeLeafFactory().getFrame();
-        cursor = new RangeSearchCursor(cursorFrame);
+        cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
+        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame)cursorFrame);
 
         try {
 
-            btreeOpHelper.init();
-            btree = btreeOpHelper.getBTree();
+            treeIndexOpHelper.init();
+            btree = (BTree)treeIndexOpHelper.getTreeIndex();
 
             // construct range predicate
 
@@ -124,19 +128,19 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 
-            accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+            accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
-            writeBuffer = btreeOpHelper.getHyracksStageletContext().allocateFrame();
+            writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
             tb = new ArrayTupleBuilder(btree.getMultiComparator().getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
+            appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            opCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH, btreeOpHelper.getLeafFrame(), btreeOpHelper
+            opCtx = btree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(), treeIndexOpHelper
                     .getInteriorFrame(), null);
 
         } catch (Exception e) {
-            btreeOpHelper.deinit();
+            treeIndexOpHelper.deinit();
         }
     }
 
@@ -197,7 +201,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 throw new HyracksDataException(e);
             }
         } finally {
-            btreeOpHelper.deinit();
+            treeIndexOpHelper.deinit();
         }
     }
 

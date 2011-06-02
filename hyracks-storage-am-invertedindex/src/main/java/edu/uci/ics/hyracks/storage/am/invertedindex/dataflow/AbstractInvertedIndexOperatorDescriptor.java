@@ -21,10 +21,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -38,12 +38,13 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     // btree
     protected final IFileSplitProvider btreeFileSplitProvider;
-    protected final IIndexRegistryProvider<BTree> btreeRegistryProvider;
-    protected final IBTreeInteriorFrameFactory interiorFrameFactory;
-    protected final IBTreeLeafFrameFactory leafFrameFactory;
+    protected final IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+    protected final ITreeIndexFrameFactory interiorFrameFactory;
+    protected final ITreeIndexFrameFactory leafFrameFactory;
     protected final ITypeTrait[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
-
+    protected final ITreeIndexOpHelperFactory opHelperFactory;
+    
     // inverted index
     protected final IFileSplitProvider invIndexFileSplitProvider;
     protected final IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider;    
@@ -52,9 +53,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IFileSplitProvider btreeFileSplitProvider, IIndexRegistryProvider<BTree> btreeRegistryProvider,
-            IBTreeInteriorFrameFactory interiorFrameFactory, IBTreeLeafFrameFactory leafFrameFactory,
+            IFileSplitProvider btreeFileSplitProvider, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             ITypeTrait[] btreeTypeTraits, IBinaryComparatorFactory[] btreeComparatorFactories, float btreeFillFactor,
+            ITreeIndexOpHelperFactory opHelperFactory,
             IFileSplitProvider invIndexFileSplitProvider,
             IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invIndexTypeTraits,
             IBinaryComparatorFactory[] invIndexComparatorFactories) {
@@ -65,11 +67,12 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
         // btree
         this.btreeFileSplitProvider = btreeFileSplitProvider;
-        this.btreeRegistryProvider = btreeRegistryProvider;
+        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.btreeTypeTraits = btreeTypeTraits;
         this.btreeComparatorFactories = btreeComparatorFactories;
+        this.opHelperFactory = opHelperFactory;
 
         // inverted index
         this.invIndexFileSplitProvider = invIndexFileSplitProvider;
@@ -82,27 +85,27 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public IFileSplitProvider getBTreeFileSplitProvider() {
+    public IFileSplitProvider getTreeIndexFileSplitProvider() {
         return btreeFileSplitProvider;
     }
 
     @Override
-    public IBinaryComparatorFactory[] getBTreeComparatorFactories() {
+    public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
         return btreeComparatorFactories;
     }
 
     @Override
-    public ITypeTrait[] getBTreeTypeTraits() {
+    public ITypeTrait[] getTreeIndexTypeTraits() {
         return btreeTypeTraits;
     }
 
     @Override
-    public IBTreeInteriorFrameFactory getBTreeInteriorFactory() {
+    public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
         return interiorFrameFactory;
     }
 
     @Override
-    public IBTreeLeafFrameFactory getBTreeLeafFactory() {
+    public ITreeIndexFrameFactory getTreeIndexLeafFactory() {
         return leafFrameFactory;
     }
 
@@ -112,8 +115,8 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public IIndexRegistryProvider<BTree> getBTreeRegistryProvider() {
-        return btreeRegistryProvider;
+    public IIndexRegistryProvider<ITreeIndex> getTreeIndexRegistryProvider() {
+        return treeIndexRegistryProvider;
     }
 
     @Override
@@ -139,5 +142,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     @Override
     public ITypeTrait[] getInvIndexTypeTraits() {
         return invIndexTypeTraits;
+    }
+    
+    @Override
+    public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
+        return opHelperFactory;
     }
 }

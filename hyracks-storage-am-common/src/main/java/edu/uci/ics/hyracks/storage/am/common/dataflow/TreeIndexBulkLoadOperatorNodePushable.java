@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.nio.ByteBuffer;
 
@@ -22,24 +22,23 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
-public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private float fillFactor;
-    private final BTreeOpHelper btreeOpHelper;
+    private final TreeIndexOpHelper treeIndexOpHelper;
     private FrameTupleAccessor accessor;
-    private BTree.BulkLoadContext bulkLoadCtx;
+    private IIndexBulkLoadContext bulkLoadCtx;
 
     private IRecordDescriptorProvider recordDescProvider;
 
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public BTreeBulkLoadOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.CREATE);
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.CREATE);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -47,19 +46,19 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractBTreeOperatorDescriptor opDesc = (AbstractBTreeOperatorDescriptor) btreeOpHelper
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
                 .getOperatorDescriptor();
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
         ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
         try {
-            btreeOpHelper.init();
-            btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
-            bulkLoadCtx = btreeOpHelper.getBTree().beginBulkLoad(fillFactor, btreeOpHelper.getLeafFrame(),
-                    btreeOpHelper.getInteriorFrame(), metaFrame);
+            treeIndexOpHelper.init();
+            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
+            bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(fillFactor, treeIndexOpHelper.getLeafFrame(),
+                    treeIndexOpHelper.getInteriorFrame(), metaFrame);
         } catch (Exception e) {
             // cleanup in case of failure
-            btreeOpHelper.deinit();
+            treeIndexOpHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
@@ -70,16 +69,16 @@ public class BTreeBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            btreeOpHelper.getBTree().bulkLoadAddTuple(bulkLoadCtx, tuple);
+            treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(bulkLoadCtx, tuple);
         }
     }
 
     @Override
     public void close() throws HyracksDataException {
         try {
-            btreeOpHelper.getBTree().endBulkLoad(bulkLoadCtx);
+            treeIndexOpHelper.getTreeIndex().endBulkLoad(bulkLoadCtx);
         } finally {
-            btreeOpHelper.deinit();
+            treeIndexOpHelper.deinit();
         }
     }
 

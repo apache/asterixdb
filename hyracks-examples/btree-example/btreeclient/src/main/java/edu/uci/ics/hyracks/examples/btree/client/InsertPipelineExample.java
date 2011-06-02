@@ -41,17 +41,18 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnector
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
-import edu.uci.ics.hyracks.examples.btree.helper.BTreeRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeInsertUpdateDeleteOperatorDescriptor;
+import edu.uci.ics.hyracks.examples.btree.helper.TreeIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -128,7 +129,7 @@ public class InsertPipelineExample {
         // run data generator on first nodecontroller given
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dataGen, splitNCs[0]);
 
-        IIndexRegistryProvider<BTree> btreeRegistryProvider = BTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = TreeIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
         // prepare insertion into primary index
@@ -142,8 +143,8 @@ public class InsertPipelineExample {
 
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
-        IBTreeInteriorFrameFactory primaryInteriorFrameFactory = new NSMInteriorFrameFactory(primaryTupleWriterFactory);
-        IBTreeLeafFrameFactory primaryLeafFrameFactory = new NSMLeafFrameFactory(primaryTupleWriterFactory);
+        ITreeIndexFrameFactory primaryInteriorFrameFactory = new NSMInteriorFrameFactory(primaryTupleWriterFactory);
+        ITreeIndexFrameFactory primaryLeafFrameFactory = new NSMLeafFrameFactory(primaryTupleWriterFactory);
 
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
@@ -155,11 +156,13 @@ public class InsertPipelineExample {
         primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
+        ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
+        
         // create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor primaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, btreeRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
+        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
+                recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation,
-                TreeIndexOp.TI_INSERT);
+                IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -171,9 +174,9 @@ public class InsertPipelineExample {
 
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
-        IBTreeInteriorFrameFactory secondaryInteriorFrameFactory = new NSMInteriorFrameFactory(
+        ITreeIndexFrameFactory secondaryInteriorFrameFactory = new NSMInteriorFrameFactory(
                 secondaryTupleWriterFactory);
-        IBTreeLeafFrameFactory secondaryLeafFrameFactory = new NSMLeafFrameFactory(secondaryTupleWriterFactory);
+        ITreeIndexFrameFactory secondaryLeafFrameFactory = new NSMLeafFrameFactory(secondaryTupleWriterFactory);
 
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
@@ -185,10 +188,10 @@ public class InsertPipelineExample {
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
                 options.secondaryBTreeName);
         // create operator descriptor
-        BTreeInsertUpdateDeleteOperatorDescriptor secondaryInsert = new BTreeInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, btreeRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
+        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
+                recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
                 secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories,
-                secondaryFieldPermutation, TreeIndexOp.TI_INSERT);
+                secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator

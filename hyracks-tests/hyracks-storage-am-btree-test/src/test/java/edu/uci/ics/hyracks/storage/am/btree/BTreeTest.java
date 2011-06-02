@@ -39,26 +39,27 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -110,15 +111,15 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);		
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+		IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -148,7 +149,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// 10000
@@ -204,10 +205,10 @@ public class BTreeTest extends AbstractBTreeTest {
 		// ordered scan
 
 		print("ORDERED SCAN:\n");
-		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 		try {
@@ -225,7 +226,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// disk-order scan
 		print("DISK-ORDER SCAN:\n");
-		DiskOrderScanCursor diskOrderCursor = new DiskOrderScanCursor(leafFrame);
+		BTreeDiskOrderScanCursor diskOrderCursor = new BTreeDiskOrderScanCursor(leafFrame);
 		btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame);
 		try {
 			while (diskOrderCursor.hasNext()) {
@@ -243,7 +244,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		// range search in [-1000, 1000]
 		print("RANGE SEARCH:\n");
 
-		IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
 		// build low and high keys
 		ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -348,15 +349,15 @@ public class BTreeTest extends AbstractBTreeTest {
 				typeTraits);
 		// SimpleTupleWriterFactory tupleWriterFactory = new
 		// SimpleTupleWriterFactory();
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -387,7 +388,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		for (int i = 0; i < 10000; i++) {
@@ -426,10 +427,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// try a simple index scan
 		print("ORDERED SCAN:\n");
-		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -448,7 +449,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// range search in [(-3),(3)]
 		print("RANGE SEARCH:\n");
-		IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
 		// build low and high keys
 		ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -555,15 +556,15 @@ public class BTreeTest extends AbstractBTreeTest {
 		SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
 		// TypeAwareTupleWriterFactory tupleWriterFactory = new
 		// TypeAwareTupleWriterFactory(typeTraits);
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -589,7 +590,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 		int maxLength = 10; // max string length to be generated
 		for (int i = 0; i < 10000; i++) {
@@ -629,10 +630,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// ordered scan
 		print("ORDERED SCAN:\n");
-		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -652,7 +653,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		// range search in ["cbf", cc7"]
 		print("RANGE SEARCH:\n");
 
-		IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
 		// build low and high keys
 		ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -755,15 +756,15 @@ public class BTreeTest extends AbstractBTreeTest {
 		// SimpleTupleWriterFactory();
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -789,9 +790,9 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
-		BTreeOpContext deleteOpCtx = btree.createOpContext(TreeIndexOp.TI_DELETE,
+		BTreeOpContext deleteOpCtx = btree.createOpContext(IndexOp.DELETE,
 				leafFrame, interiorFrame, metaFrame);
 
 		int runs = 3;
@@ -942,15 +943,15 @@ public class BTreeTest extends AbstractBTreeTest {
 		// SimpleTupleWriterFactory();
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
+		ITreeIndexFrame interiorFrame = interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -977,7 +978,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		accessor.reset(frame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		BTree.BulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f,
+		IIndexBulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate sorted records
@@ -1013,7 +1014,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// range search
 		print("RANGE SEARCH:\n");
-		IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame)leafFrame);
 
 		// build low and high keys
 		ArrayTupleBuilder ktb = new ArrayTupleBuilder(1);
@@ -1056,7 +1057,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		// TODO: check when searching backwards
 		RangePredicate rangePred = new RangePredicate(true, lowKey, highKey,
 				true, true, searchCmp, searchCmp);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(rangeCursor, rangePred, searchOpCtx);
 
@@ -1118,15 +1119,15 @@ public class BTreeTest extends AbstractBTreeTest {
 		// SimpleTupleWriterFactory();
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 		
@@ -1188,7 +1189,7 @@ public class BTreeTest extends AbstractBTreeTest {
 		intervals[9][0] = 20;
 		intervals[9][1] = 35;
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// int exceptionCount = 0;
@@ -1230,10 +1231,10 @@ public class BTreeTest extends AbstractBTreeTest {
 		// try a simple index scan
 
 		print("ORDERED SCAN:\n");
-		IBTreeCursor scanCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
 		RangePredicate nullPred = new RangePredicate(true, null, null, true,
 				true, null, null);
-		BTreeOpContext searchOpCtx = btree.createOpContext(TreeIndexOp.TI_SEARCH,
+		BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH,
 				leafFrame, interiorFrame, null);
 		btree.search(scanCursor, nullPred, searchOpCtx);
 
@@ -1252,7 +1253,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
 		// try a range search
 		print("RANGE SEARCH:\n");
-		IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+		ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
 		// build low and high keys
 		ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());

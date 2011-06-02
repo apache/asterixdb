@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
@@ -24,40 +24,38 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.DiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private final BTreeOpHelper btreeOpHelper;
+public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+    private final TreeIndexOpHelper treeIndexOpHelper;
 
-    public BTreeDiskOrderScanOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
     }
 
     @Override
     public void initialize() throws HyracksDataException {
 
-        IBTreeLeafFrame cursorFrame = btreeOpHelper.getOperatorDescriptor().getBTreeLeafFactory().getFrame();
-        DiskOrderScanCursor cursor = new DiskOrderScanCursor(cursorFrame);
+        ITreeIndexFrame cursorFrame = treeIndexOpHelper.getOperatorDescriptor().getTreeIndexLeafFactory().createFrame();
+        ITreeIndexCursor cursor = treeIndexOpHelper.createDiskOrderScanCursor(cursorFrame);
         ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 
         try {
         
-        	btreeOpHelper.init();
+        	treeIndexOpHelper.init();
         	
         	try {
-        		btreeOpHelper.getBTree().diskOrderScan(cursor, cursorFrame, metaFrame);
+        		treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame);
 
-        		MultiComparator cmp = btreeOpHelper.getBTree().getMultiComparator();
-        		ByteBuffer frame = btreeOpHelper.getHyracksStageletContext().allocateFrame();
-        		FrameTupleAppender appender = new FrameTupleAppender(btreeOpHelper.getHyracksStageletContext().getFrameSize());
+        		int fieldCount = treeIndexOpHelper.getTreeIndex().getFieldCount();
+        		ByteBuffer frame = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
+        		FrameTupleAppender appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext().getFrameSize());
         		appender.reset(frame, true);
-        		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         		DataOutput dos = tb.getDataOutput();
 
         		while (cursor.hasNext()) {
@@ -96,6 +94,6 @@ public class BTreeDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputS
 
     @Override
     public void deinitialize() throws HyracksDataException {
-    	btreeOpHelper.deinit();
+    	treeIndexOpHelper.deinit();
     }
 }

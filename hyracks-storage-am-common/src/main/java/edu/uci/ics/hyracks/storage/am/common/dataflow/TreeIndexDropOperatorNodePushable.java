@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,27 +25,25 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable {
-	private static final Logger LOGGER = Logger.getLogger(BTreeDropOperatorNodePushable.class.getName());
+public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
+	private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
 	
 	private final IHyracksStageletContext ctx;
-    private IIndexRegistryProvider<BTree> btreeRegistryProvider;
+    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
     private int partition;
 
-    public BTreeDropOperatorNodePushable(IHyracksStageletContext ctx, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<BTree> btreeRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
+    public TreeIndexDropOperatorNodePushable(IHyracksStageletContext ctx, IStorageManagerInterface storageManager,
+            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
         this.ctx = ctx;
         this.storageManager = storageManager;
-        this.btreeRegistryProvider = btreeRegistryProvider;
+        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
         this.fileSplitProvider = fileSplitProvider;
         this.partition = partition;
     }
@@ -68,7 +66,7 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
     public void initialize() throws HyracksDataException {
     	try {
 
-    		IndexRegistry<BTree> btreeRegistry = btreeRegistryProvider.getRegistry(ctx);
+    		IndexRegistry<ITreeIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
     		IBufferCache bufferCache = storageManager.getBufferCache(ctx);
     		IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
 
@@ -76,27 +74,27 @@ public class BTreeDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     		boolean fileIsMapped = fileMapProvider.isMapped(f);
     		if (!fileIsMapped) {    			    			
-    			throw new HyracksDataException("Cannot drop B-Tree with name " + f.toString() + ". No file mapping exists.");
+    			throw new HyracksDataException("Cannot drop Tree with name " + f.toString() + ". No file mapping exists.");
     		}
 
-    		int btreeFileId = fileMapProvider.lookupFileId(f);
+    		int indexFileId = fileMapProvider.lookupFileId(f);
 
-    		// unregister btree instance
-    		btreeRegistry.lock();
+    		// unregister tree instance
+    		treeIndexRegistry.lock();
     		try {
-    			btreeRegistry.unregister(btreeFileId);
+    			treeIndexRegistry.unregister(indexFileId);
     		} finally {
-    			btreeRegistry.unlock();
+    			treeIndexRegistry.unlock();
     		}
 
     		// remove name to id mapping
-    		bufferCache.deleteFile(btreeFileId);
+    		bufferCache.deleteFile(indexFileId);
     	}
     	// TODO: for the time being we don't throw,
 		// with proper exception handling (no hanging job problem) we should throw
     	catch (Exception e) {
     		if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("BTRee Drop Operator Failed Due To Exception: " + e.getMessage());
+                LOGGER.warning("Tree Drop Operator Failed Due To Exception: " + e.getMessage());
             }
     	}
     }

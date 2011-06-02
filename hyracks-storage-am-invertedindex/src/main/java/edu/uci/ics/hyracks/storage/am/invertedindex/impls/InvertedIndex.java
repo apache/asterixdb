@@ -12,10 +12,11 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
@@ -129,7 +130,7 @@ public class InvertedIndex {
         }
     }    
     
-    public boolean openCursor(IBTreeCursor btreeCursor, RangePredicate btreePred, BTreeOpContext btreeOpCtx, IInvertedListCursor invListCursor) throws Exception {
+    public boolean openCursor(ITreeIndexCursor btreeCursor, RangePredicate btreePred, BTreeOpContext btreeOpCtx, IInvertedListCursor invListCursor) throws Exception {
         btree.search(btreeCursor, btreePred, btreeOpCtx);       
         
         boolean ret = false;
@@ -208,7 +209,7 @@ public class InvertedIndex {
         private final FrameTupleAccessor btreeFrameTupleAccessor;
         private final FrameTupleReference btreeFrameTupleReference = new FrameTupleReference();
         private final float btreeFillFactor;
-        private BTree.BulkLoadContext btreeBulkLoadCtx;
+        private IIndexBulkLoadContext btreeBulkLoadCtx;
 
         private int currentInvListStartPageId;
         private int currentInvListStartOffset;
@@ -237,9 +238,9 @@ public class InvertedIndex {
         }
 
         public void init(int startPageId, int fileId) throws HyracksDataException {
-            btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR, btree.getLeafFrameFactory().getFrame(),
-                    btree.getInteriorFrameFactory().getFrame(), btree.getFreePageManager().getMetaDataFrameFactory()
-                            .getFrame());
+            btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR, btree.getLeafFrameFactory().createFrame(),
+                    btree.getInteriorFrameFactory().createFrame(), btree.getFreePageManager().getMetaDataFrameFactory()
+                            .createFrame());
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();

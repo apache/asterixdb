@@ -45,11 +45,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
@@ -57,14 +54,16 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -83,15 +82,15 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 			typeTraits);
-	IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+	ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 			tupleWriterFactory);
-	IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+	ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 			tupleWriterFactory);
 	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-	IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-	IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+	IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+	IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 	IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 	ByteBuffer frame = ctx.allocateFrame();
@@ -147,7 +146,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -254,7 +253,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -329,9 +328,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		System.out
 				.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
 
-		IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
 
 		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
@@ -363,7 +362,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(TreeIndexOp.TI_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -539,13 +538,13 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				int lowKey = i;
 				int highKey = j;
 
-				IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator(), btree.getMultiComparator()
 								.getTypeTraits());
 				BTreeOpContext searchOpCtx = btree.createOpContext(
-						TreeIndexOp.TI_SEARCH, leafFrame, interiorFrame, null);
+						IndexOp.SEARCH, leafFrame, interiorFrame, null);
 				btree.search(rangeCursor, rangePred, searchOpCtx);
 
 				try {

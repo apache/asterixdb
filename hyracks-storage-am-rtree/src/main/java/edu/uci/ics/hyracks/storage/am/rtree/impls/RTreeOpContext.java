@@ -2,12 +2,12 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 
 public final class RTreeOpContext {
-    public final TreeIndexOp op;
+    public final IndexOp op;
     public final IRTreeFrame interiorFrame;
     public final IRTreeFrame leafFrame;
     public IRTreeCursor cursor;
@@ -22,7 +22,7 @@ public final class RTreeOpContext {
     public Rectangle[] rec;
     public String threadName; // for debugging
 
-    public RTreeOpContext(TreeIndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
+    public RTreeOpContext(IndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
             ITreeIndexMetaDataFrame metaFrame, int treeHeightHint, int dim, String threadName) {
         this.op = op;
         this.interiorFrame = interiorFrame;

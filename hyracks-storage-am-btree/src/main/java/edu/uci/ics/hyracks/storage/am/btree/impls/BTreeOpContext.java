@@ -15,19 +15,20 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IntArrayList;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
-public final class BTreeOpContext {
-    public final TreeIndexOp op;
+public final class BTreeOpContext implements IndexOpContext {
+    public final IndexOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
-    public IBTreeCursor cursor;
+    public ITreeIndexCursor cursor;
     public RangePredicate pred;
     public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
@@ -35,7 +36,7 @@ public final class BTreeOpContext {
     public final IntArrayList smPages;
     public final IntArrayList freePages;
 
-    public BTreeOpContext(TreeIndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+    public BTreeOpContext(IndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
     		ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.leafFrame = leafFrame;
@@ -43,7 +44,7 @@ public final class BTreeOpContext {
         this.metaFrame = metaFrame;
 
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
-        if (op != TreeIndexOp.TI_SEARCH) {
+        if (op != IndexOp.SEARCH) {
             smPages = new IntArrayList(treeHeightHint, treeHeightHint);
             freePages = new IntArrayList(treeHeightHint, treeHeightHint);
             pred = new RangePredicate(true, null, null, true, true, null, null);

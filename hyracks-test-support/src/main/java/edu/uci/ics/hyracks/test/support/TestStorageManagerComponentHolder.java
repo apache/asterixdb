@@ -15,7 +15,7 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static IndexRegistry<BTree> btreeRegistry;
+    private static IndexRegistry<ITreeIndex> treeIndexRegistry;
 
     private static int pageSize;
     private static int numPages;
@@ -42,7 +42,7 @@ public class TestStorageManagerComponentHolder {
         TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        btreeRegistry = null;
+        treeIndexRegistry = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksStageletContext ctx) {
@@ -63,10 +63,10 @@ public class TestStorageManagerComponentHolder {
         return fileMapProvider;
     }
 
-    public synchronized static IndexRegistry<BTree> getBTreeRegistry(IHyracksStageletContext ctx) {
-        if (btreeRegistry == null) {
-            btreeRegistry = new IndexRegistry<BTree>();
+    public synchronized static IndexRegistry<ITreeIndex> getTreeIndexRegistry(IHyracksStageletContext ctx) {
+        if (treeIndexRegistry == null) {
+        	treeIndexRegistry = new IndexRegistry<ITreeIndex>();
         }
-        return btreeRegistry;
+        return treeIndexRegistry;
     }
 }

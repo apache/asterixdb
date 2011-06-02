@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-import java.io.Serializable;
-
-public interface ISearchPredicate extends Serializable {
-    public boolean isForward();
+public enum IndexOp {
+    INSERT, DELETE, UPDATE, SEARCH
 }

@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.ophelpers;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-public enum TreeIndexOp {
-    TI_INSERT, TI_DELETE, TI_UPDATE, TI_SEARCH
+import java.io.Serializable;
+
+public interface ISearchPredicate extends Serializable {
+    public boolean isForward();
 }

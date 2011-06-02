@@ -37,14 +37,14 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
@@ -64,9 +64,9 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 	protected List<ByteBuffer> swap = null;
 	protected int maxResultBufIdx = 0;
 
-	protected final IBTreeLeafFrame leafFrame;
-	protected final IBTreeInteriorFrame interiorFrame;
-	protected final IBTreeCursor btreeCursor;
+	protected final ITreeIndexFrame leafFrame;
+	protected final ITreeIndexFrame interiorFrame;
+	protected final ITreeIndexCursor btreeCursor;
 	protected final FrameTupleReference searchKey = new FrameTupleReference();
 	protected final RangePredicate btreePred = new RangePredicate(true, null, null, true, true, null, null);
 	protected final BTreeOpContext btreeOpCtx;
@@ -92,10 +92,10 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 		this.invIndex = invIndex;
 		this.queryTokenizer = queryTokenizer;
 
-		leafFrame = invIndex.getBTree().getLeafFrameFactory().getFrame();
-		interiorFrame = invIndex.getBTree().getInteriorFrameFactory().getFrame();
+		leafFrame = invIndex.getBTree().getLeafFrameFactory().createFrame();
+		interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
 
-		btreeCursor = new RangeSearchCursor(leafFrame);
+		btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame)leafFrame);
 		ITypeTrait[] invListFields = invIndex.getInvListElementCmp().getTypeTraits();
 		invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
 		int tmp = 0;
@@ -107,7 +107,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 		invListFieldsWithCount[invListFields.length] = new TypeTrait(4);
 		invListKeyLength = tmp;
 
-		btreeOpCtx = invIndex.getBTree().createOpContext(TreeIndexOp.TI_SEARCH, leafFrame,
+		btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH, leafFrame,
 				interiorFrame, null);
 
 		resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), invListFieldsWithCount);

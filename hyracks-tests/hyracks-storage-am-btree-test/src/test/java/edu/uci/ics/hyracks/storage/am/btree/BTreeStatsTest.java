@@ -22,21 +22,20 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexBufferCacheWarmup;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
@@ -86,15 +85,15 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);
-		IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-		IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+		IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, fileId, 0, metaFrameFactory);
@@ -126,7 +125,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		FrameTupleReference tuple = new FrameTupleReference();
 
 		BTreeOpContext insertOpCtx = btree.createOpContext(
-				TreeIndexOp.TI_INSERT, leafFrame, interiorFrame, metaFrame);
+				IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
 
 		// 10000
 		for (int i = 0; i < 100000; i++) {

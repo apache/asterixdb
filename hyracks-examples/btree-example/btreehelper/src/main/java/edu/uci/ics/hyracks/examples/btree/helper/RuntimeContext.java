@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.examples.btree.helper;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class RuntimeContext {
-    private IndexRegistry<BTree> btreeRegistry;
+    private IndexRegistry<ITreeIndex> treeIndexRegistry;
     private IBufferCache bufferCache;
     private IFileMapManager fileMapManager;
 
@@ -39,7 +39,7 @@ public class RuntimeContext {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs, fileMapManager, 32768, 50, 100);
-        btreeRegistry = new IndexRegistry<BTree>();
+        treeIndexRegistry = new IndexRegistry<ITreeIndex>();
     }
 
     public void close() {
@@ -54,8 +54,8 @@ public class RuntimeContext {
         return fileMapManager;
     }
 
-    public IndexRegistry<BTree> getBTreeRegistry() {
-        return btreeRegistry;
+    public IndexRegistry<ITreeIndex> getTreeIndexRegistry() {
+        return treeIndexRegistry;
     }
     
     public static RuntimeContext get(IHyracksStageletContext ctx) {

@@ -12,29 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class BTreeStatsOperatorNodePushable extends
+public class TreeIndexStatsOperatorNodePushable extends
 AbstractOperatorNodePushable {
-	private final BTreeOpHelper btreeOpHelper;
+	private final TreeIndexOpHelper treeIndexOpHelper;
 	private final IHyracksStageletContext ctx;
 	private TreeIndexStatsGatherer statsGatherer;
 
-	public BTreeStatsOperatorNodePushable(
-			AbstractBTreeOperatorDescriptor opDesc,
+	public TreeIndexStatsOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
 			IHyracksStageletContext ctx, int partition) {
-		btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition,
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
 		        IndexHelperOpenMode.CREATE);
 		this.ctx = ctx;
 	}
@@ -56,17 +55,17 @@ AbstractOperatorNodePushable {
 	@Override
 	public void initialize() throws HyracksDataException {
 		try {
-			btreeOpHelper.init();
-			btreeOpHelper.getBTree().open(btreeOpHelper.getBTreeFileId());
+			treeIndexOpHelper.init();
+			treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
 
-			BTree btree = btreeOpHelper.getBTree();			
-			IBufferCache bufferCache = btreeOpHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
+			ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();			
+			IBufferCache bufferCache = treeIndexOpHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
 
-			statsGatherer = new TreeIndexStatsGatherer(bufferCache, btree.getFreePageManager(), btreeOpHelper.getBTreeFileId(), btree.getRootPageId());
-			TreeIndexStats stats = statsGatherer.gatherStats(btree.getLeafFrameFactory().getFrame(), btree.getInteriorFrameFactory().getFrame(), btree.getFreePageManager().getMetaDataFrameFactory().getFrame());
+			statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(), treeIndexOpHelper.getIndexFileId(), treeIndex.getRootPageId());
+			TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex.getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame());
 			System.err.println(stats.toString());
 		} catch (Exception e) {
-			btreeOpHelper.deinit();
+			treeIndexOpHelper.deinit();
 			throw new HyracksDataException(e);
 		}
 	}

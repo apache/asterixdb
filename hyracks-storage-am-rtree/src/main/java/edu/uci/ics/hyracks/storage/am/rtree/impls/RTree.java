@@ -13,7 +13,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.TreeIndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
@@ -215,7 +215,7 @@ public class RTree {
         fileId = -1;
     }
 
-    public RTreeOpContext createOpContext(TreeIndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
+    public RTreeOpContext createOpContext(IndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
             ITreeIndexMetaDataFrame metaFrame, String threadName) {
         // TODO: figure out better tree-height hint
         return new RTreeOpContext(op, interiorFrame, leafFrame, metaFrame, 8, interiorCmp.getKeyFieldCount() / 2,

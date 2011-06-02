@@ -13,22 +13,21 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 
-public class BTreeFileEnlistmentOperatorNodePushable extends AbstractOperatorNodePushable {
+public class TreeIndexFileEnlistmentOperatorNodePushable extends AbstractOperatorNodePushable {
 
-    private final BTreeOpHelper btreeOpHelper;
+    private final TreeIndexOpHelper btreeOpHelper;
 
-    public BTreeFileEnlistmentOperatorNodePushable(AbstractBTreeOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public TreeIndexFileEnlistmentOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition) {
-        btreeOpHelper = new BTreeOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.ENLIST);
+        btreeOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.ENLIST);
     }
 
     @Override
