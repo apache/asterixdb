@@ -20,9 +20,9 @@ import org.apache.hadoop.mapred.JobConf;
 
 public interface IHadoopClassFactory extends Serializable {
 
-    public Object createMapper(String mapClassName,JobConf conf) throws Exception;
+    public Object createMapper(String mapClassName, JobConf conf) throws Exception;
 
-    public Object createReducer(String reduceClassName,JobConf conf) throws Exception;
+    public Object createReducer(String reduceClassName, JobConf conf) throws Exception;
 
     public Class loadClass(String className) throws Exception;
 }

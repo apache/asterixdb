@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile.Writer;
+import org.apache.hadoop.mapred.FileOutputCommitter;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -32,7 +32,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.mapred.FileOutputCommitter;
 
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -43,58 +42,61 @@ import edu.uci.ics.hyracks.dataflow.std.file.IRecordWriter;
 
 public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDescriptor {
 
-    private  class HadoopFileWriter implements IRecordWriter {
+    private class HadoopFileWriter implements IRecordWriter {
 
         Object recordWriter;
         JobConf conf;
         Path finalOutputFile;
         Path tempOutputFile;
-        Path tempDir; 
-        
+        Path tempDir;
+
         HadoopFileWriter(Object recordWriter, int index, JobConf conf) throws Exception {
             this.recordWriter = recordWriter;
             this.conf = conf;
-	    initialize(index, conf);
+            initialize(index, conf);
         }
 
-
         private void initialize(int index, JobConf conf) throws Exception {
-            if(! (conf.getOutputFormat() instanceof NullOutputFormat)) {
+            if (!(conf.getOutputFormat() instanceof NullOutputFormat)) {
                 boolean isMap = conf.getNumReduceTasks() == 0;
-                TaskAttemptID taskAttempId = new TaskAttemptID("0",index,isMap,index,index);
-                conf.set("mapred.task.id",taskAttempId.toString());
-                String suffix =  new String("part-00000");
+                TaskAttemptID taskAttempId = new TaskAttemptID("0", index, isMap, index, index);
+                conf.set("mapred.task.id", taskAttempId.toString());
+                String suffix = new String("part-00000");
                 suffix = new String(suffix.substring(0, suffix.length() - ("" + index).length()));
                 suffix = suffix + index;
                 outputPath = new Path(conf.get("mapred.output.dir"));
-	        tempDir = new Path(outputPath, FileOutputCommitter.TEMP_DIR_NAME);
-	        FileSystem fileSys = tempDir.getFileSystem(conf);
-	        if (!fileSys.mkdirs(tempDir)) {
-	           throw new IOException("Mkdirs failed to create " + tempDir.toString());
-	        }
-                tempOutputFile = new Path(tempDir,new Path("_" + taskAttempId.toString()));
-                tempOutputFile = new Path(tempOutputFile,suffix);
-                finalOutputFile = new Path(outputPath,suffix);
-                if(conf.getUseNewMapper()){
-                    org.apache.hadoop.mapreduce.JobContext jobContext = new org.apache.hadoop.mapreduce.JobContext(conf,null);
-                    org.apache.hadoop.mapreduce.OutputFormat newOutputFormat = (org.apache.hadoop.mapreduce.OutputFormat)ReflectionUtils.newInstance(jobContext.getOutputFormatClass(),conf);
-                    recordWriter = newOutputFormat.getRecordWriter(new TaskAttemptContext(conf, taskAttempId));
-                }else {
-                    recordWriter = conf.getOutputFormat().getRecordWriter(FileSystem.get(conf), conf,suffix, new Progressable() {
-                    @Override
-                    public void progress() {}
-                    });
+                tempDir = new Path(outputPath, FileOutputCommitter.TEMP_DIR_NAME);
+                FileSystem fileSys = tempDir.getFileSystem(conf);
+                if (!fileSys.mkdirs(tempDir)) {
+                    throw new IOException("Mkdirs failed to create " + tempDir.toString());
                 }
-	    }
-	}
+                tempOutputFile = new Path(tempDir, new Path("_" + taskAttempId.toString()));
+                tempOutputFile = new Path(tempOutputFile, suffix);
+                finalOutputFile = new Path(outputPath, suffix);
+                if (conf.getUseNewMapper()) {
+                    org.apache.hadoop.mapreduce.JobContext jobContext = new org.apache.hadoop.mapreduce.JobContext(
+                            conf, null);
+                    org.apache.hadoop.mapreduce.OutputFormat newOutputFormat = (org.apache.hadoop.mapreduce.OutputFormat) ReflectionUtils
+                            .newInstance(jobContext.getOutputFormatClass(), conf);
+                    recordWriter = newOutputFormat.getRecordWriter(new TaskAttemptContext(conf, taskAttempId));
+                } else {
+                    recordWriter = conf.getOutputFormat().getRecordWriter(FileSystem.get(conf), conf, suffix,
+                            new Progressable() {
+                                @Override
+                                public void progress() {
+                                }
+                            });
+                }
+            }
+        }
 
         @Override
         public void write(Object[] record) throws Exception {
-            if(recordWriter != null){
-                if (conf.getUseNewMapper()){
-                    ((org.apache.hadoop.mapreduce.RecordWriter)recordWriter).write(record[0], record[1]);
+            if (recordWriter != null) {
+                if (conf.getUseNewMapper()) {
+                    ((org.apache.hadoop.mapreduce.RecordWriter) recordWriter).write(record[0], record[1]);
                 } else {
-                    ((org.apache.hadoop.mapred.RecordWriter)recordWriter).write(record[0], record[1]);
+                    ((org.apache.hadoop.mapred.RecordWriter) recordWriter).write(record[0], record[1]);
                 }
             }
         }
@@ -102,18 +104,19 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
         @Override
         public void close() {
             try {
-                if(recordWriter != null) {
-                    if (conf.getUseNewMapper()){
-                       ((org.apache.hadoop.mapreduce.RecordWriter)recordWriter).close(new TaskAttemptContext(conf, new TaskAttemptID()));
+                if (recordWriter != null) {
+                    if (conf.getUseNewMapper()) {
+                        ((org.apache.hadoop.mapreduce.RecordWriter) recordWriter).close(new TaskAttemptContext(conf,
+                                new TaskAttemptID()));
                     } else {
-                        ((org.apache.hadoop.mapred.RecordWriter)recordWriter).close(null);
+                        ((org.apache.hadoop.mapred.RecordWriter) recordWriter).close(null);
                     }
-	            if (outputPath != null) {
-		        FileSystem fileSystem = FileSystem.get(conf);
+                    if (outputPath != null) {
+                        FileSystem fileSystem = FileSystem.get(conf);
                         fileSystem.rename(tempOutputFile, finalOutputFile);
-                        fileSystem.delete(tempDir,true);
-		    }	
-                } 
+                        fileSystem.delete(tempDir, true);
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -129,53 +132,51 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
         conf.setClassLoader(this.getClass().getClassLoader());
         Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         FileSystem fileSystem = FileSystem.get(conf);
-        checkIfCanWriteToHDFS(new FileSplit[] { fileSplit });
-        Object recordWriter  = null;
+        Object recordWriter = null;
         return new HadoopFileWriter(recordWriter, index, conf);
     }
-    
 
     Path outputPath;
     Path outputTempPath;
-   
+
     protected Reporter createReporter() {
-    return new Reporter() {
-        @Override
-        public Counter getCounter(Enum<?> name) {
-            return null;
-        }
+        return new Reporter() {
+            @Override
+            public Counter getCounter(Enum<?> name) {
+                return null;
+            }
 
-        @Override
-        public Counter getCounter(String group, String name) {
-            return null;
-        }
+            @Override
+            public Counter getCounter(String group, String name) {
+                return null;
+            }
 
-        @Override
-        public InputSplit getInputSplit() throws UnsupportedOperationException {
-            return null;
-        }
+            @Override
+            public InputSplit getInputSplit() throws UnsupportedOperationException {
+                return null;
+            }
 
-        @Override
-        public void incrCounter(Enum<?> key, long amount) {
+            @Override
+            public void incrCounter(Enum<?> key, long amount) {
 
-        }
+            }
 
-        @Override
-        public void incrCounter(String group, String counter, long amount) {
+            @Override
+            public void incrCounter(String group, String counter, long amount) {
 
-        }
+            }
 
-        @Override
-        public void progress() {
+            @Override
+            public void progress() {
 
-        }
+            }
 
-        @Override
-        public void setStatus(String status) {
+            @Override
+            public void setStatus(String status) {
 
-        }
-    };
-}
+            }
+        };
+    }
 
     private boolean checkIfCanWriteToHDFS(FileSplit[] fileSplits) throws Exception {
         JobConf conf = DatatypeHelper.map2JobConf((HashMap) jobConfMap);
@@ -197,8 +198,9 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
     private static FileSplit[] getOutputSplits(JobConf conf, int noOfMappers) throws ClassNotFoundException {
         int numOutputters = conf.getNumReduceTasks() != 0 ? conf.getNumReduceTasks() : noOfMappers;
         Object outputFormat = null;
-        if(conf.getUseNewMapper()) {
-            outputFormat = ReflectionUtils.newInstance(new org.apache.hadoop.mapreduce.JobContext(conf,null).getOutputFormatClass(), conf);
+        if (conf.getUseNewMapper()) {
+            outputFormat = ReflectionUtils.newInstance(new org.apache.hadoop.mapreduce.JobContext(conf, null)
+                    .getOutputFormatClass(), conf);
         } else {
             outputFormat = conf.getOutputFormat();
         }
@@ -222,23 +224,11 @@ public class HadoopWriteOperatorDescriptor extends AbstractFileWriteOperatorDesc
             }
             return outputFileSplits;
         }
-
     }
 
     public HadoopWriteOperatorDescriptor(JobSpecification jobSpec, JobConf jobConf, int numMapTasks) throws Exception {
         super(jobSpec, getOutputSplits(jobConf, numMapTasks));
         this.jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         checkIfCanWriteToHDFS(super.splits);
-	/*
-        FileSystem fs = FileSystem.get(jobConf);
-        if (jobConf.get("mapred.output.dir") != null) {
-            Path output = new Path(jobConf.get("mapred.output.dir"));
-            Path outputTemp = new Path(output,"_temporary");
-            if(output != null && !fs.exists(outputTemp)) {
-                    fs.mkdirs(outputTemp);
-                }
-            }
-        }
-       */
     }
 }

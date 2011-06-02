@@ -135,7 +135,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             }
             this.writer = writer;
         }
-     
+
         protected void initializeMapper() throws HyracksDataException {
             super.initializeMapper();
             try {
@@ -146,8 +146,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             if (!conf.getUseNewMapper()) {
                 ((org.apache.hadoop.mapred.Mapper) mapper).configure(conf);
             }
-        } 
-
+        }
 
     }
 
@@ -344,7 +343,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 mapperClass = conf.getMapperClass();
                 mapperClassName = mapperClass.getName();
             }
-            mapper = getHadoopClassFactory().createMapper(mapperClassName,conf);
+            mapper = getHadoopClassFactory().createMapper(mapperClassName, conf);
         }
         return mapper;
     }

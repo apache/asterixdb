@@ -16,5 +16,6 @@
     <module>text-example</module>
     <module>btree-example</module>
     <module>hyracks-integration-tests</module>
+    <module>hadoop-compat-example</module>
   </modules>
 </project>
