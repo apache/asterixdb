@@ -76,7 +76,6 @@ public class RTree {
 
     public void incrementReadLatchesReleased() {
         readLatchesReleased.incrementAndGet();
-        ;
     }
 
     public void incrementWriteLatchesAcquired() {
