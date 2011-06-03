@@ -47,310 +47,360 @@ import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 
 public class HadoopAdapter {
 
-    public static final String FS_DEFAULT_NAME = "fs.default.name";
-    private JobConf jobConf;
-    private Map<OperatorDescriptorId,Integer> operatorInstanceCount = new HashMap<OperatorDescriptorId,Integer>();
-    public static final String HYRACKS_EX_SORT_FRAME_LIMIT = "HYRACKS_EX_SORT_FRAME_LIMIT"; 
-    public static final int DEFAULT_EX_SORT_FRAME_LIMIT = 4096;
-    public static final int DEFAULT_MAX_MAPPERS = 40;
-    public static final int DEFAULT_MAX_REDUCERS= 40;
-    public static final String MAX_MAPPERS_KEY = "maxMappers";
-    public static final String MAX_REDUCERS_KEY = "maxReducers";
-    public static final String EX_SORT_FRAME_LIMIT_KEY = "sortFrameLimit";
-    
-    private  int maxMappers = DEFAULT_MAX_MAPPERS;
-    private  int maxReducers = DEFAULT_MAX_REDUCERS;
-    private int exSortFrame = DEFAULT_EX_SORT_FRAME_LIMIT;
-    
-    class NewHadoopConstants {
-    	public static final String INPUT_FORMAT_CLASS_ATTR = "mapreduce.inputformat.class";
-    	public static final String MAP_CLASS_ATTR = "mapreduce.map.class";
-    	public static final String COMBINE_CLASS_ATTR = "mapreduce.combine.class";
-    	public static final String REDUCE_CLASS_ATTR = "mapreduce.reduce.class";
-    	public static final String OUTPUT_FORMAT_CLASS_ATTR = "mapreduce.outputformat.class";
-    	public static final String PARTITIONER_CLASS_ATTR = "mapreduce.partitioner.class";
-    }
-    
-    public HadoopAdapter(String namenodeUrl) {
-        jobConf = new JobConf(true);
-        jobConf.set(FS_DEFAULT_NAME, namenodeUrl);
-        if(System.getenv(MAX_MAPPERS_KEY) != null) {
-            maxMappers = Integer.parseInt(System.getenv(MAX_MAPPERS_KEY));
-        }
-        if(System.getenv(MAX_REDUCERS_KEY) != null) {
-            maxReducers= Integer.parseInt(System.getenv(MAX_REDUCERS_KEY));
-        }
-        if(System.getenv(EX_SORT_FRAME_LIMIT_KEY) != null) {
-            exSortFrame= Integer.parseInt(System.getenv(EX_SORT_FRAME_LIMIT_KEY));
-        }
-    }
+	public static final String FS_DEFAULT_NAME = "fs.default.name";
+	private JobConf jobConf;
+	private Map<OperatorDescriptorId, Integer> operatorInstanceCount = new HashMap<OperatorDescriptorId, Integer>();
+	public static final String HYRACKS_EX_SORT_FRAME_LIMIT = "HYRACKS_EX_SORT_FRAME_LIMIT";
+	public static final int DEFAULT_EX_SORT_FRAME_LIMIT = 4096;
+	public static final int DEFAULT_MAX_MAPPERS = 40;
+	public static final int DEFAULT_MAX_REDUCERS = 40;
+	public static final String MAX_MAPPERS_KEY = "maxMappers";
+	public static final String MAX_REDUCERS_KEY = "maxReducers";
+	public static final String EX_SORT_FRAME_LIMIT_KEY = "sortFrameLimit";
 
-    private String getEnvironmentVariable(String key, String def) {
-        String ret =  System.getenv(key);
-        return ret != null ? ret : def;
-    }
-    
-    public JobConf getConf() {
-        return jobConf;
-    }
+	private int maxMappers = DEFAULT_MAX_MAPPERS;
+	private int maxReducers = DEFAULT_MAX_REDUCERS;
+	private int exSortFrame = DEFAULT_EX_SORT_FRAME_LIMIT;
 
-    public static VersionedProtocol getProtocol(Class protocolClass, InetSocketAddress inetAddress, JobConf jobConf)
-            throws IOException {
-        VersionedProtocol versionedProtocol = RPC.getProxy(protocolClass, ClientProtocol.versionID, inetAddress,
-                jobConf);
-        return versionedProtocol;
-    }
+	class NewHadoopConstants {
+		public static final String INPUT_FORMAT_CLASS_ATTR = "mapreduce.inputformat.class";
+		public static final String MAP_CLASS_ATTR = "mapreduce.map.class";
+		public static final String COMBINE_CLASS_ATTR = "mapreduce.combine.class";
+		public static final String REDUCE_CLASS_ATTR = "mapreduce.reduce.class";
+		public static final String OUTPUT_FORMAT_CLASS_ATTR = "mapreduce.outputformat.class";
+		public static final String PARTITIONER_CLASS_ATTR = "mapreduce.partitioner.class";
+	}
 
-    private static RecordDescriptor getHadoopRecordDescriptor(String className1, String className2) {
-        RecordDescriptor recordDescriptor = null;
-        try {
-            recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
-                    .forName(className1), (Class<? extends Writable>) Class.forName(className2));
-        } catch (ClassNotFoundException cnfe) {
-            cnfe.printStackTrace();
-        }
-        return recordDescriptor;
-    }
+	public HadoopAdapter(String namenodeUrl) {
+		jobConf = new JobConf(true);
+		jobConf.set(FS_DEFAULT_NAME, namenodeUrl);
+		if (System.getenv(MAX_MAPPERS_KEY) != null) {
+			maxMappers = Integer.parseInt(System.getenv(MAX_MAPPERS_KEY));
+		}
+		if (System.getenv(MAX_REDUCERS_KEY) != null) {
+			maxReducers = Integer.parseInt(System.getenv(MAX_REDUCERS_KEY));
+		}
+		if (System.getenv(EX_SORT_FRAME_LIMIT_KEY) != null) {
+			exSortFrame = Integer.parseInt(System
+					.getenv(EX_SORT_FRAME_LIMIT_KEY));
+		}
+	}
 
-    private Object[] getInputSplits(JobConf conf) throws IOException, ClassNotFoundException, InterruptedException {
-        if (conf.getUseNewMapper()) {
-        	return getNewInputSplits(conf);
-        } else {
-        	return getOldInputSplits(conf);
-        }
-    }
-    
-    private org.apache.hadoop.mapreduce.InputSplit[] getNewInputSplits(JobConf conf) throws ClassNotFoundException, IOException, InterruptedException {
-    	org.apache.hadoop.mapreduce.InputSplit[] splits = null;
-    	JobContext context = new JobContext(conf,null);
-    	org.apache.hadoop.mapreduce.InputFormat inputFormat = ReflectionUtils.newInstance(context.getInputFormatClass(),conf);
-    	List<org.apache.hadoop.mapreduce.InputSplit> inputSplits = inputFormat.getSplits(context);
-    	return inputSplits.toArray(new org.apache.hadoop.mapreduce.InputSplit[]{});
-    }
-    
-    private InputSplit[] getOldInputSplits(JobConf conf) throws IOException  {
-      	InputFormat inputFormat = conf.getInputFormat();
-    	return inputFormat.getSplits(conf, conf.getNumMapTasks());
-    }
-   
-    private void configurePartitionCountConstraint(JobSpecification spec, IOperatorDescriptor operator,int instanceCount){
-        PartitionConstraintHelper.addPartitionCountConstraint(spec, operator, instanceCount);
-        operatorInstanceCount.put(operator.getOperatorId(),instanceCount);
-    }
+	private String getEnvironmentVariable(String key, String def) {
+		String ret = System.getenv(key);
+		return ret != null ? ret : def;
+	}
 
-    public HadoopMapperOperatorDescriptor getMapper(JobConf conf,JobSpecification spec, IOperatorDescriptor previousOp)
-            throws Exception {
-        boolean selfRead = previousOp == null;
-        IHadoopClassFactory classFactory = new ClasspathBasedHadoopClassFactory();
-        HadoopMapperOperatorDescriptor mapOp = null;
-        if(selfRead) {
-            Object [] splits = getInputSplits(conf,maxMappers);
-            mapOp = new HadoopMapperOperatorDescriptor(spec, conf, splits,classFactory);
-	    configurePartitionCountConstraint(spec,mapOp,splits.length);
-            System.out.println("No of  mappers :" + splits.length);
-        } else {
-	    configurePartitionCountConstraint(spec,mapOp,getInstanceCount(previousOp));
-            mapOp = new HadoopMapperOperatorDescriptor(spec,conf,classFactory);
-            spec.connect(new OneToOneConnectorDescriptor(spec), previousOp, 0, mapOp, 0);
-        }
-        return mapOp;
-    }
+	public JobConf getConf() {
+		return jobConf;
+	}
 
-    public HadoopReducerOperatorDescriptor getReducer(JobConf conf, JobSpecification spec) {
-        HadoopReducerOperatorDescriptor reduceOp = new HadoopReducerOperatorDescriptor(spec, conf, null,
-                new ClasspathBasedHadoopClassFactory());
-        return reduceOp;
-    }
+	public static VersionedProtocol getProtocol(Class protocolClass,
+			InetSocketAddress inetAddress, JobConf jobConf) throws IOException {
+		VersionedProtocol versionedProtocol = RPC.getProxy(protocolClass,
+				ClientProtocol.versionID, inetAddress, jobConf);
+		return versionedProtocol;
+	}
 
-    public FileSystem getHDFSClient() {
-        FileSystem fileSystem = null;
-        try {
-            fileSystem = FileSystem.get(jobConf);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        return fileSystem;
-    }
+	private static RecordDescriptor getHadoopRecordDescriptor(
+			String className1, String className2) {
+		RecordDescriptor recordDescriptor = null;
+		try {
+			recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+					(Class<? extends Writable>) Class.forName(className1),
+					(Class<? extends Writable>) Class.forName(className2));
+		} catch (ClassNotFoundException cnfe) {
+			cnfe.printStackTrace();
+		}
+		return recordDescriptor;
+	}
 
-    public JobSpecification getJobSpecification(List<JobConf> jobConfs) throws Exception {
-        JobSpecification spec = null;
-        if (jobConfs.size() == 1) {
-            spec = getJobSpecification(jobConfs.get(0));
-        } else {
-            spec = getPipelinedSpec(jobConfs);
-        }
-        return spec;
-    }
+	private Object[] getInputSplits(JobConf conf) throws IOException,
+			ClassNotFoundException, InterruptedException {
+		if (conf.getUseNewMapper()) {
+			return getNewInputSplits(conf);
+		} else {
+			return getOldInputSplits(conf);
+		}
+	}
 
-    private IOperatorDescriptor configureOutput( IOperatorDescriptor previousOperator, JobConf conf,
-            JobSpecification spec) throws Exception {
-	int instanceCountPreviousOperator = operatorInstanceCount.get(previousOperator.getOperatorId());
-        int numOutputters = conf.getNumReduceTasks() != 0 ? conf.getNumReduceTasks() : instanceCountPreviousOperator;
-        HadoopWriteOperatorDescriptor writer = null;
-        writer = new HadoopWriteOperatorDescriptor(spec, conf, numOutputters);
-	configurePartitionCountConstraint(spec,writer,numOutputters);
-        spec.connect(new OneToOneConnectorDescriptor(spec), previousOperator, 0, writer, 0);
-        return writer;
-    }
+	private org.apache.hadoop.mapreduce.InputSplit[] getNewInputSplits(
+			JobConf conf) throws ClassNotFoundException, IOException,
+			InterruptedException {
+		org.apache.hadoop.mapreduce.InputSplit[] splits = null;
+		JobContext context = new JobContext(conf, null);
+		org.apache.hadoop.mapreduce.InputFormat inputFormat = ReflectionUtils
+				.newInstance(context.getInputFormatClass(), conf);
+		List<org.apache.hadoop.mapreduce.InputSplit> inputSplits = inputFormat
+				.getSplits(context);
+		return inputSplits
+				.toArray(new org.apache.hadoop.mapreduce.InputSplit[] {});
+	}
 
+	private InputSplit[] getOldInputSplits(JobConf conf) throws IOException {
+		InputFormat inputFormat = conf.getInputFormat();
+		return inputFormat.getSplits(conf, conf.getNumMapTasks());
+	}
 
-    private int getInstanceCount(IOperatorDescriptor operator) {
-        return operatorInstanceCount.get(operator.getOperatorId());
-    } 
+	private void configurePartitionCountConstraint(JobSpecification spec,
+			IOperatorDescriptor operator, int instanceCount) {
+		PartitionConstraintHelper.addPartitionCountConstraint(spec, operator,
+				instanceCount);
+		operatorInstanceCount.put(operator.getOperatorId(), instanceCount);
+	}
 
-    private IOperatorDescriptor addCombiner(IOperatorDescriptor previousOperator, JobConf jobConf,
-            JobSpecification spec) throws Exception {
-        boolean useCombiner = (jobConf.getCombinerClass() != null);
-        IOperatorDescriptor mapSideOutputOp = previousOperator;
-        if (useCombiner) {
-            System.out.println("Using Combiner:" + jobConf.getCombinerClass().getName());
-            IOperatorDescriptor mapSideCombineSortOp = getExternalSorter(jobConf, spec);
-	    configurePartitionCountConstraint(spec,mapSideCombineSortOp,getInstanceCount(previousOperator));
-    
-            HadoopReducerOperatorDescriptor mapSideCombineReduceOp = getReducer(jobConf, spec);
-	    configurePartitionCountConstraint(spec,mapSideCombineReduceOp,getInstanceCount(previousOperator));
-            spec.connect(new OneToOneConnectorDescriptor(spec), previousOperator, 0, mapSideCombineSortOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), mapSideCombineSortOp, 0, mapSideCombineReduceOp, 0);
-            mapSideOutputOp = mapSideCombineSortOp;
-        }
-        return mapSideOutputOp;
-    }
-    
-    private int getNumReduceTasks(JobConf jobConf) {
-        int numReduceTasks = Math.min(maxReducers,jobConf.getNumReduceTasks());
-        return numReduceTasks;
-    }
-    
-    private IOperatorDescriptor addReducer(IOperatorDescriptor previousOperator, JobConf jobConf,
-            JobSpecification spec) throws Exception {
-        IOperatorDescriptor mrOutputOperator = previousOperator;
-        if (jobConf.getNumReduceTasks() != 0) {
-            IOperatorDescriptor sorter = getExternalSorter(jobConf, spec);
-            HadoopReducerOperatorDescriptor reducer = getReducer(jobConf, spec);
-            int numReduceTasks = getNumReduceTasks(jobConf);
-            System.out.println("No of Reducers :" + numReduceTasks);
-	    configurePartitionCountConstraint(spec,sorter,numReduceTasks);
-	    configurePartitionCountConstraint(spec,reducer,numReduceTasks);
-    
-            IConnectorDescriptor mToNConnectorDescriptor = getMtoNHashPartitioningConnector(jobConf, spec);
-            spec.connect(mToNConnectorDescriptor, previousOperator, 0, sorter, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0, reducer, 0);
-            mrOutputOperator = reducer;
-        }   
-        return mrOutputOperator;
-    }
-    
-    private long getInputSize(Object[] splits,JobConf conf) throws IOException, InterruptedException {
-        long totalInputSize =0;
-    	if(conf.getUseNewMapper()) {
-        	for (org.apache.hadoop.mapreduce.InputSplit split : (org.apache.hadoop.mapreduce.InputSplit[])splits) {
-        	    totalInputSize += split.getLength();
-            }                                       
-        } else {
-	    	for (InputSplit split : (InputSplit[])splits) {
-	            totalInputSize += split.getLength();
-	        }
-        }
-    	return totalInputSize;
-    }
-    
-    private Object[] getInputSplits(JobConf conf, int desiredMaxMappers) throws Exception {
-        Object[] splits = getInputSplits(conf);
-        System.out.println(" initial split count :" + splits.length);
-        System.out.println(" desired mappers :" + desiredMaxMappers);
-        if (splits.length > desiredMaxMappers) {
-            long totalInputSize = getInputSize(splits,conf);
-            long goalSize = (totalInputSize/desiredMaxMappers);
-            System.out.println(" total input length :" + totalInputSize);
-            System.out.println(" goal size :" + goalSize);
-            conf.setLong("mapred.min.split.size", goalSize);
-            conf.setNumMapTasks(desiredMaxMappers);
-            splits = getInputSplits(conf);
-            System.out.println(" revised split count :" + splits.length);
-        }
-        return splits; 
-    }
-    
-    public JobSpecification getPipelinedSpec(List<JobConf> jobConfs) throws Exception {
-        JobSpecification spec = new JobSpecification();
-        Iterator<JobConf> iterator = jobConfs.iterator();
-        JobConf firstMR = iterator.next();
-        IOperatorDescriptor mrOutputOp = configureMapReduce(null, spec,firstMR);
-        while (iterator.hasNext())
-            for (JobConf currentJobConf : jobConfs) {
-                mrOutputOp = configureMapReduce(mrOutputOp, spec , currentJobConf);
-            }
-        configureOutput(mrOutputOp, jobConfs.get(jobConfs.size() - 1), spec);
-        return spec;
-    }
+	public HadoopMapperOperatorDescriptor getMapper(JobConf conf,
+			JobSpecification spec, IOperatorDescriptor previousOp)
+			throws Exception {
+		boolean selfRead = previousOp == null;
+		IHadoopClassFactory classFactory = new ClasspathBasedHadoopClassFactory();
+		HadoopMapperOperatorDescriptor mapOp = null;
+		if (selfRead) {
+			Object[] splits = getInputSplits(conf, maxMappers);
+			mapOp = new HadoopMapperOperatorDescriptor(spec, conf, splits,
+					classFactory);
+			configurePartitionCountConstraint(spec, mapOp, splits.length);
+		} else {
+			configurePartitionCountConstraint(spec, mapOp,
+					getInstanceCount(previousOp));
+			mapOp = new HadoopMapperOperatorDescriptor(spec, conf, classFactory);
+			spec.connect(new OneToOneConnectorDescriptor(spec), previousOp, 0,
+					mapOp, 0);
+		}
+		return mapOp;
+	}
 
-    public JobSpecification getJobSpecification(JobConf conf) throws Exception {
-        JobSpecification spec = new JobSpecification();
-        IOperatorDescriptor mrOutput = configureMapReduce(null,spec, conf);
-        IOperatorDescriptor printer = configureOutput(mrOutput, conf, spec);
-        spec.addRoot(printer);
-        System.out.println(spec);
-        return spec;
-    }
-    
-    private IOperatorDescriptor configureMapReduce(IOperatorDescriptor previousOuputOp, JobSpecification spec, JobConf conf) throws Exception {
-        IOperatorDescriptor mapper = getMapper(conf,spec,previousOuputOp);
-        IOperatorDescriptor mapSideOutputOp = addCombiner(mapper,conf,spec);
-        IOperatorDescriptor reducer = addReducer(mapSideOutputOp, conf, spec);
-        return reducer; 
-    }
+	public HadoopReducerOperatorDescriptor getReducer(JobConf conf,
+			JobSpecification spec, boolean useAsCombiner) {
+		HadoopReducerOperatorDescriptor reduceOp = new HadoopReducerOperatorDescriptor(
+				spec, conf, null, new ClasspathBasedHadoopClassFactory(),
+				useAsCombiner);
+		return reduceOp;
+	}
 
-    public static InMemorySortOperatorDescriptor getInMemorySorter(JobConf conf, JobSpecification spec) {
-        InMemorySortOperatorDescriptor inMemorySortOp = null;
-        RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf.getMapOutputKeyClass().getName(), conf
-                .getMapOutputValueClass().getName());
-        Class<? extends RawComparator> rawComparatorClass = null;
-        WritableComparator writableComparator = WritableComparator.get(conf.getMapOutputKeyClass().asSubclass(
-                WritableComparable.class));
-        WritableComparingBinaryComparatorFactory comparatorFactory = new WritableComparingBinaryComparatorFactory(
-                writableComparator.getClass());
-        inMemorySortOp = new InMemorySortOperatorDescriptor(spec, new int[] { 0 },
-                new IBinaryComparatorFactory[] { comparatorFactory }, recordDescriptor);
-        return inMemorySortOp;
-    }
+	public FileSystem getHDFSClient() {
+		FileSystem fileSystem = null;
+		try {
+			fileSystem = FileSystem.get(jobConf);
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+		return fileSystem;
+	}
 
-    public static ExternalSortOperatorDescriptor getExternalSorter(JobConf conf, JobSpecification spec) {
-        ExternalSortOperatorDescriptor externalSortOp = null;
-        RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf.getMapOutputKeyClass().getName(), conf
-                .getMapOutputValueClass().getName());
-        Class<? extends RawComparator> rawComparatorClass = null;
-        WritableComparator writableComparator = WritableComparator.get(conf.getMapOutputKeyClass().asSubclass(
-                WritableComparable.class));
-        WritableComparingBinaryComparatorFactory comparatorFactory = new WritableComparingBinaryComparatorFactory(
-                writableComparator.getClass());
-        externalSortOp = new ExternalSortOperatorDescriptor(spec,conf.getInt(HYRACKS_EX_SORT_FRAME_LIMIT,DEFAULT_EX_SORT_FRAME_LIMIT),new int[] { 0 },
-                new IBinaryComparatorFactory[] { comparatorFactory }, recordDescriptor);
-        return externalSortOp;
-    }
-    
-    public static MToNPartitioningConnectorDescriptor getMtoNHashPartitioningConnector(JobConf conf,
-            JobSpecification spec) {
+	public JobSpecification getJobSpecification(List<JobConf> jobConfs)
+			throws Exception {
+		JobSpecification spec = null;
+		if (jobConfs.size() == 1) {
+			spec = getJobSpecification(jobConfs.get(0));
+		} else {
+			spec = getPipelinedSpec(jobConfs);
+		}
+		return spec;
+	}
 
-        Class mapOutputKeyClass = conf.getMapOutputKeyClass();
-        Class mapOutputValueClass = conf.getMapOutputValueClass();
+	private IOperatorDescriptor configureOutput(
+			IOperatorDescriptor previousOperator, JobConf conf,
+			JobSpecification spec) throws Exception {
+		int instanceCountPreviousOperator = operatorInstanceCount
+				.get(previousOperator.getOperatorId());
+		int numOutputters = conf.getNumReduceTasks() != 0 ? conf
+				.getNumReduceTasks() : instanceCountPreviousOperator;
+		HadoopWriteOperatorDescriptor writer = null;
+		writer = new HadoopWriteOperatorDescriptor(spec, conf, numOutputters);
+		configurePartitionCountConstraint(spec, writer, numOutputters);
+		spec.connect(new OneToOneConnectorDescriptor(spec), previousOperator,
+				0, writer, 0);
+		return writer;
+	}
 
-        MToNPartitioningConnectorDescriptor connectorDescriptor = null;
-        ITuplePartitionComputerFactory factory = null;
-        conf.getMapOutputKeyClass();
-        if (conf.getPartitionerClass() != null && !conf.getPartitionerClass().getName().startsWith("org.apache.hadoop")) {
-            Class<? extends Partitioner> partitioner = conf.getPartitionerClass();
-            factory = new HadoopPartitionerTuplePartitionComputerFactory(partitioner, DatatypeHelper
-                    .createSerializerDeserializer(mapOutputKeyClass), DatatypeHelper
-                    .createSerializerDeserializer(mapOutputValueClass));
-        } else {
-            RecordDescriptor recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(mapOutputKeyClass,
-                    mapOutputValueClass);
-            ISerializerDeserializer mapOutputKeySerializerDerserializer = DatatypeHelper
-                    .createSerializerDeserializer(mapOutputKeyClass);
-            factory = new HadoopHashTuplePartitionComputerFactory(mapOutputKeySerializerDerserializer);
-        }
-        connectorDescriptor = new MToNPartitioningConnectorDescriptor(spec, factory);
-        return connectorDescriptor;
-    }
+	private int getInstanceCount(IOperatorDescriptor operator) {
+		return operatorInstanceCount.get(operator.getOperatorId());
+	}
+
+	private IOperatorDescriptor addCombiner(
+			IOperatorDescriptor previousOperator, JobConf jobConf,
+			JobSpecification spec) throws Exception {
+		boolean useCombiner = (jobConf.getCombinerClass() != null);
+		IOperatorDescriptor mapSideOutputOp = previousOperator;
+		if (useCombiner) {
+			System.out.println("Using Combiner:"
+					+ jobConf.getCombinerClass().getName());
+			IOperatorDescriptor mapSideCombineSortOp = getExternalSorter(
+					jobConf, spec);
+			configurePartitionCountConstraint(spec, mapSideCombineSortOp,
+					getInstanceCount(previousOperator));
+
+			HadoopReducerOperatorDescriptor mapSideCombineReduceOp = getReducer(
+					jobConf, spec, true);
+			configurePartitionCountConstraint(spec, mapSideCombineReduceOp,
+					getInstanceCount(previousOperator));
+			spec.connect(new OneToOneConnectorDescriptor(spec),
+					previousOperator, 0, mapSideCombineSortOp, 0);
+			spec.connect(new OneToOneConnectorDescriptor(spec),
+					mapSideCombineSortOp, 0, mapSideCombineReduceOp, 0);
+			mapSideOutputOp = mapSideCombineReduceOp;
+		}
+		return mapSideOutputOp;
+	}
+
+	private int getNumReduceTasks(JobConf jobConf) {
+		int numReduceTasks = Math.min(maxReducers, jobConf.getNumReduceTasks());
+		return numReduceTasks;
+	}
+
+	private IOperatorDescriptor addReducer(
+			IOperatorDescriptor previousOperator, JobConf jobConf,
+			JobSpecification spec) throws Exception {
+		IOperatorDescriptor mrOutputOperator = previousOperator;
+		if (jobConf.getNumReduceTasks() != 0) {
+			IOperatorDescriptor sorter = getExternalSorter(jobConf, spec);
+			HadoopReducerOperatorDescriptor reducer = getReducer(jobConf, spec,
+					false);
+			int numReduceTasks = getNumReduceTasks(jobConf);
+			configurePartitionCountConstraint(spec, sorter, numReduceTasks);
+			configurePartitionCountConstraint(spec, reducer, numReduceTasks);
+
+			IConnectorDescriptor mToNConnectorDescriptor = getMtoNHashPartitioningConnector(
+					jobConf, spec);
+			spec.connect(mToNConnectorDescriptor, previousOperator, 0, sorter,
+					0);
+			spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0,
+					reducer, 0);
+			mrOutputOperator = reducer;
+		}
+		return mrOutputOperator;
+	}
+
+	private long getInputSize(Object[] splits, JobConf conf)
+			throws IOException, InterruptedException {
+		long totalInputSize = 0;
+		if (conf.getUseNewMapper()) {
+			for (org.apache.hadoop.mapreduce.InputSplit split : (org.apache.hadoop.mapreduce.InputSplit[]) splits) {
+				totalInputSize += split.getLength();
+			}
+		} else {
+			for (InputSplit split : (InputSplit[]) splits) {
+				totalInputSize += split.getLength();
+			}
+		}
+		return totalInputSize;
+	}
+
+	private Object[] getInputSplits(JobConf conf, int desiredMaxMappers)
+			throws Exception {
+		Object[] splits = getInputSplits(conf);
+		if (splits.length > desiredMaxMappers) {
+			long totalInputSize = getInputSize(splits, conf);
+			long goalSize = (totalInputSize / desiredMaxMappers);
+			conf.setLong("mapred.min.split.size", goalSize);
+			conf.setNumMapTasks(desiredMaxMappers);
+			splits = getInputSplits(conf);
+		}
+		return splits;
+	}
+
+	public JobSpecification getPipelinedSpec(List<JobConf> jobConfs)
+			throws Exception {
+		JobSpecification spec = new JobSpecification();
+		Iterator<JobConf> iterator = jobConfs.iterator();
+		JobConf firstMR = iterator.next();
+		IOperatorDescriptor mrOutputOp = configureMapReduce(null, spec, firstMR);
+		while (iterator.hasNext())
+			for (JobConf currentJobConf : jobConfs) {
+				mrOutputOp = configureMapReduce(mrOutputOp, spec,
+						currentJobConf);
+			}
+		configureOutput(mrOutputOp, jobConfs.get(jobConfs.size() - 1), spec);
+		return spec;
+	}
+
+	public JobSpecification getJobSpecification(JobConf conf) throws Exception {
+		JobSpecification spec = new JobSpecification();
+		IOperatorDescriptor mrOutput = configureMapReduce(null, spec, conf);
+		IOperatorDescriptor printer = configureOutput(mrOutput, conf, spec);
+		spec.addRoot(printer);
+		System.out.println(spec);
+		return spec;
+	}
+
+	private IOperatorDescriptor configureMapReduce(
+			IOperatorDescriptor previousOuputOp, JobSpecification spec,
+			JobConf conf) throws Exception {
+		IOperatorDescriptor mapper = getMapper(conf, spec, previousOuputOp);
+		IOperatorDescriptor mapSideOutputOp = addCombiner(mapper, conf, spec);
+		IOperatorDescriptor reducer = addReducer(mapSideOutputOp, conf, spec);
+		return reducer;
+	}
+
+	public static InMemorySortOperatorDescriptor getInMemorySorter(
+			JobConf conf, JobSpecification spec) {
+		InMemorySortOperatorDescriptor inMemorySortOp = null;
+		RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf
+				.getMapOutputKeyClass().getName(), conf
+				.getMapOutputValueClass().getName());
+		Class<? extends RawComparator> rawComparatorClass = null;
+		WritableComparator writableComparator = WritableComparator.get(conf
+				.getMapOutputKeyClass().asSubclass(WritableComparable.class));
+		WritableComparingBinaryComparatorFactory comparatorFactory = new WritableComparingBinaryComparatorFactory(
+				writableComparator.getClass());
+		inMemorySortOp = new InMemorySortOperatorDescriptor(spec,
+				new int[] { 0 },
+				new IBinaryComparatorFactory[] { comparatorFactory },
+				recordDescriptor);
+		return inMemorySortOp;
+	}
+
+	public static ExternalSortOperatorDescriptor getExternalSorter(
+			JobConf conf, JobSpecification spec) {
+		ExternalSortOperatorDescriptor externalSortOp = null;
+		RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf
+				.getMapOutputKeyClass().getName(), conf
+				.getMapOutputValueClass().getName());
+		Class<? extends RawComparator> rawComparatorClass = null;
+		WritableComparator writableComparator = WritableComparator.get(conf
+				.getMapOutputKeyClass().asSubclass(WritableComparable.class));
+		WritableComparingBinaryComparatorFactory comparatorFactory = new WritableComparingBinaryComparatorFactory(
+				writableComparator.getClass());
+		externalSortOp = new ExternalSortOperatorDescriptor(spec, conf.getInt(
+				HYRACKS_EX_SORT_FRAME_LIMIT, DEFAULT_EX_SORT_FRAME_LIMIT),
+				new int[] { 0 },
+				new IBinaryComparatorFactory[] { comparatorFactory },
+				recordDescriptor);
+		return externalSortOp;
+	}
+
+	public static MToNPartitioningConnectorDescriptor getMtoNHashPartitioningConnector(
+			JobConf conf, JobSpecification spec) {
+
+		Class mapOutputKeyClass = conf.getMapOutputKeyClass();
+		Class mapOutputValueClass = conf.getMapOutputValueClass();
+
+		MToNPartitioningConnectorDescriptor connectorDescriptor = null;
+		ITuplePartitionComputerFactory factory = null;
+		conf.getMapOutputKeyClass();
+		if (conf.getPartitionerClass() != null
+				&& !conf.getPartitionerClass().getName().startsWith(
+						"org.apache.hadoop")) {
+			Class<? extends Partitioner> partitioner = conf
+					.getPartitionerClass();
+			factory = new HadoopPartitionerTuplePartitionComputerFactory(
+					partitioner, DatatypeHelper
+							.createSerializerDeserializer(mapOutputKeyClass),
+					DatatypeHelper
+							.createSerializerDeserializer(mapOutputValueClass));
+		} else {
+			RecordDescriptor recordDescriptor = DatatypeHelper
+					.createKeyValueRecordDescriptor(mapOutputKeyClass,
+							mapOutputValueClass);
+			ISerializerDeserializer mapOutputKeySerializerDerserializer = DatatypeHelper
+					.createSerializerDeserializer(mapOutputKeyClass);
+			factory = new HadoopHashTuplePartitionComputerFactory(
+					mapOutputKeySerializerDerserializer);
+		}
+		connectorDescriptor = new MToNPartitioningConnectorDescriptor(spec,
+				factory);
+		return connectorDescriptor;
+	}
 
 }
