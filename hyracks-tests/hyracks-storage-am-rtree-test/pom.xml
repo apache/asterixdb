@@ -34,7 +34,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.1.4</version>
+  		<version>0.1.5</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>

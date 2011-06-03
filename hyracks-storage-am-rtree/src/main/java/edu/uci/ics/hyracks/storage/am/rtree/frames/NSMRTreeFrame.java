@@ -16,6 +16,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.EntriesOrder;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.SpatialUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.TraverseList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
@@ -26,8 +27,11 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     protected static final int rightPageOff = pageNsnOff + 4;
 
     private ITreeIndexTupleReference[] tuples;
-
     private ITreeIndexTupleReference cmpFrameTuple;
+    public final SpatialUtils spatialUtils;
+    public TupleEntryArrayList tupleEntries1; // used for split and checking enlargement
+    public TupleEntryArrayList tupleEntries2; // used for split
+    public Rectangle[] rec;
 
     private static final double splitFactor = 0.4;
     private static final int nearMinimumOverlapFactor = 32;
@@ -39,6 +43,14 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
             this.tuples[i] = tupleWriter.createTupleReference();
         }
         cmpFrameTuple = tupleWriter.createTupleReference();
+        spatialUtils = new SpatialUtils();
+        // TODO: find a better way to know number of entries per node
+        tupleEntries1 = new TupleEntryArrayList(100, 100, spatialUtils);
+        tupleEntries2 = new TupleEntryArrayList(100, 100, spatialUtils);
+        rec = new Rectangle[4];
+        for (int i = 0; i < 4; i++) {
+            rec[i] = new Rectangle(keyFieldCount / 2);
+        }
     }
 
     @Override
@@ -101,8 +113,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey,
-            TupleEntryArrayList entries1, TupleEntryArrayList entries2, Rectangle[] rec) throws Exception {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws Exception {
 
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -130,27 +141,27 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                 double UpperKey = DoubleSerializerDeserializer.getDouble(frameTuple.getFieldData(j),
                         frameTuple.getFieldStart(j));
 
-                entries1.add(k, LowerKey);
-                entries2.add(k, UpperKey);
+                tupleEntries1.add(k, LowerKey);
+                tupleEntries2.add(k, UpperKey);
             }
             double LowerKey = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i), tuple.getFieldStart(i));
             double UpperKey = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j), tuple.getFieldStart(j));
 
-            entries1.add(-1, LowerKey);
-            entries2.add(-1, UpperKey);
+            tupleEntries1.add(-1, LowerKey);
+            tupleEntries2.add(-1, UpperKey);
 
-            entries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
-            entries2.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
+            tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
+            tupleEntries2.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
 
             double lowerMargin = 0.0, upperMargin = 0.0;
             // generate distribution
             for (int k = 1; k <= splitDistribution; ++k) {
                 int d = m - 1 + k;
 
-                generateDist(tuple, entries1, rec[0], 0, d);
-                generateDist(tuple, entries2, rec[1], 0, d);
-                generateDist(tuple, entries1, rec[2], d, getTupleCount() + 1);
-                generateDist(tuple, entries2, rec[3], d, getTupleCount() + 1);
+                generateDist(tuple, tupleEntries1, rec[0], 0, d);
+                generateDist(tuple, tupleEntries2, rec[1], 0, d);
+                generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1);
+                generateDist(tuple, tupleEntries2, rec[3], d, getTupleCount() + 1);
 
                 // calculate the margin of the distributions
                 lowerMargin += rec[0].margin() + rec[2].margin();
@@ -165,20 +176,20 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                 sortOrder = (lowerMargin < upperMargin) ? 0 : 2;
             }
 
-            entries1.clear();
-            entries2.clear();
+            tupleEntries1.clear();
+            tupleEntries2.clear();
         }
 
         for (int i = 0; i < getTupleCount(); ++i) {
             frameTuple.resetByTupleIndex(this, i);
             double key = DoubleSerializerDeserializer.getDouble(frameTuple.getFieldData(splitAxis + sortOrder),
                     frameTuple.getFieldStart(splitAxis + sortOrder));
-            entries1.add(i, key);
+            tupleEntries1.add(i, key);
         }
         double key = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(splitAxis + sortOrder),
                 tuple.getFieldStart(splitAxis + sortOrder));
-        entries1.add(-1, key);
-        entries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
+        tupleEntries1.add(-1, key);
+        tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
 
         double minArea = Double.MAX_VALUE;
         double minOverlap = Double.MAX_VALUE;
@@ -186,8 +197,8 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         for (int i = 1; i <= splitDistribution; ++i) {
             int d = m - 1 + i;
 
-            generateDist(tuple, entries1, rec[0], 0, d);
-            generateDist(tuple, entries1, rec[2], d, getTupleCount() + 1);
+            generateDist(tuple, tupleEntries1, rec[0], 0, d);
+            generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1);
 
             double overlap = rec[0].overlappedArea(rec[2]);
             if (overlap < minOverlap) {
@@ -215,11 +226,11 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         for (int i = startIndex; i < endIndex; i++) { // TODO: is there a better
                                                       // way
             // to split the entries?
-            if (entries1.get(i).getTupleIndex() != -1) {
-                frameTuple.resetByTupleIndex(this, entries1.get(i).getTupleIndex());
+            if (tupleEntries1.get(i).getTupleIndex() != -1) {
+                frameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
                 rightFrame.insert(frameTuple, cmp, -1);
                 ((UnorderedSlotManager) slotManager).modifySlot(
-                        slotManager.getSlotOff(entries1.get(i).getTupleIndex()), -1);
+                        slotManager.getSlotOff(tupleEntries1.get(i).getTupleIndex()), -1);
                 totalBytes += tupleWriter.bytesRequired(frameTuple);
                 numOfDeletedTuples++;
             } else {
@@ -256,7 +267,8 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
 
-        entries1.clear();
+        tupleEntries1.clear();
+        tupleEntries2.clear();
         return 0;
     }
 
@@ -299,7 +311,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     }
 
     @Override
-    public boolean findBestChild(ITupleReference tuple, TupleEntryArrayList entries, MultiComparator cmp) {
+    public boolean findBestChild(ITupleReference tuple, MultiComparator cmp) {
         cmpFrameTuple.setFieldCount(cmp.getFieldCount());
         frameTuple.setFieldCount(cmp.getFieldCount());
 
@@ -313,19 +325,19 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
             for (int i = 0; i < getTupleCount(); ++i) {
                 frameTuple.resetByTupleIndex(this, i);
                 double enlargedArea = enlargedArea(frameTuple, tuple, cmp);
-                entries.add(i, enlargedArea);
+                tupleEntries1.add(i, enlargedArea);
                 if (enlargedArea < minEnlargedArea) {
                     minEnlargedArea = enlargedArea;
                     bestChild = i;
                 }
             }
-            if (minEnlargedArea < entries.getDoubleEpsilon() || minEnlargedArea > entries.getDoubleEpsilon()) {
+            if (minEnlargedArea < tupleEntries1.getDoubleEpsilon() || minEnlargedArea > tupleEntries1.getDoubleEpsilon()) {
                 minEnlargedArea = Double.MAX_VALUE;
                 int k;
                 if (getTupleCount() > nearMinimumOverlapFactor) {
                     // sort the entries based on their area enlargement needed
                     // to include the object
-                    entries.sort(EntriesOrder.ASCENDING, getTupleCount());
+                    tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount());
                     k = nearMinimumOverlapFactor;
                 } else {
                     k = getTupleCount();
@@ -337,7 +349,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                     double difference = 0.0;
                     for (int j = 0; j < getTupleCount(); ++j) {
                         frameTuple.resetByTupleIndex(this, j);
-                        cmpFrameTuple.resetByTupleIndex(this, entries.get(i).getTupleIndex());
+                        cmpFrameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
 
                         int c = cmp.getIntCmp().compare(frameTuple.getFieldData(cmp.getKeyFieldCount()),
                                 frameTuple.getFieldStart(cmp.getKeyFieldCount()),
@@ -392,7 +404,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
                 }
             }
         }
-        entries.clear();
+        tupleEntries1.clear();
 
         frameTuple.resetByTupleIndex(this, bestChild);
         if (minEnlargedArea > 0.0) {
@@ -709,13 +721,6 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         Rectangle rec = new Rectangle(maxFieldPos);
         rec.set(frameTuple);
         return rec;
-    }
-
-    @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
-        // TODO Auto-generated method stub
-        return 0;
     }
 
     @Override

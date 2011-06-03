@@ -33,12 +33,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchCursor;
@@ -66,15 +67,6 @@ public class SearchCursorTest extends AbstractRTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // declare interior-frame-tuple fields
-        int interiorFieldCount = 5;
-        ITypeTrait[] interiorTypeTraits = new ITypeTrait[interiorFieldCount];
-        interiorTypeTraits[0] = new TypeTrait(8);
-        interiorTypeTraits[1] = new TypeTrait(8);
-        interiorTypeTraits[2] = new TypeTrait(8);
-        interiorTypeTraits[3] = new TypeTrait(8);
-        interiorTypeTraits[4] = new TypeTrait(4);
-
         // declare keys
         int keyFieldCount = 4;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
@@ -92,11 +84,11 @@ public class SearchCursorTest extends AbstractRTreeTest {
         leafTypeTraits[3] = new TypeTrait(8);
         leafTypeTraits[4] = new TypeTrait(4);
 
-        MultiComparator interiorCmp = new MultiComparator(interiorTypeTraits, cmps);
         MultiComparator leafCmp = new MultiComparator(leafTypeTraits, cmps);
+        InteriorFrameSchema interiorFrameSchema = new InteriorFrameSchema(leafCmp);
 
         RTreeTypeAwareTupleWriterFactory interiorTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
-                interiorTypeTraits);
+                interiorFrameSchema.getInteriorCmp().getTypeTraits());
         RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
 
         IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
@@ -108,8 +100,8 @@ public class SearchCursorTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = leafFrameFactory.getFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp,
-                leafCmp);
+        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
+                interiorFrameSchema.getInteriorCmp(), leafCmp);
         rtree.create(fileId, leafFrame, metaFrame);
         rtree.open(fileId);
 
@@ -127,7 +119,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame,
                 "unittest");
 
         Random rnd = new Random();
@@ -171,7 +163,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         }
 
         IRTreeCursor searchCursor = new SearchCursor(interiorFrame, leafFrame);
-        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, interiorFrame, leafFrame, metaFrame,
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame,
                 "cursortest");
         rtree.search(searchCursor, tuple, searchOpCtx);
 

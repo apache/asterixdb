@@ -12,8 +12,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
@@ -215,11 +215,10 @@ public class RTree {
         fileId = -1;
     }
 
-    public RTreeOpContext createOpContext(IndexOp op, IRTreeFrame interiorFrame, IRTreeFrame leafFrame,
+    public RTreeOpContext createOpContext(IndexOp op, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, String threadName) {
         // TODO: figure out better tree-height hint
-        return new RTreeOpContext(op, interiorFrame, leafFrame, metaFrame, 8, interiorCmp.getKeyFieldCount() / 2,
-                threadName);
+        return new RTreeOpContext(op, leafFrame, interiorFrame, metaFrame, 8, threadName);
     }
 
     public void insert(ITupleReference tuple, RTreeOpContext ctx) throws Exception {
@@ -316,8 +315,7 @@ public class RTree {
 
             if (!isLeaf) {
                 // checkEnlargement must be called *before* getBestChildPageId
-                boolean needsEnlargement = ctx.interiorFrame.findBestChild(ctx.getTuple(), ctx.tupleEntries1,
-                        interiorCmp);
+                boolean needsEnlargement = ctx.interiorFrame.findBestChild(ctx.getTuple(), interiorCmp);
                 int childPageId = ctx.interiorFrame.getBestChildPageId(interiorCmp);
 
                 if (needsEnlargement) {
@@ -380,9 +378,9 @@ public class RTree {
             throws Exception {
         FrameOpSpaceStatus spaceStatus;
         if (!isLeaf) {
-            spaceStatus = ctx.interiorFrame.hasSpaceInsert(ctx.getTuple(), interiorCmp);
+            spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, interiorCmp);
         } else {
-            spaceStatus = ctx.leafFrame.hasSpaceInsert(ctx.getTuple(), leafCmp);
+            spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, leafCmp);
         }
 
         switch (spaceStatus) {
@@ -433,8 +431,7 @@ public class RTree {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         rightFrame.setPageTupleFieldCount(interiorCmp.getFieldCount());
-                        ret = ctx.interiorFrame.split(rightFrame, tuple, interiorCmp, ctx.splitKey, ctx.tupleEntries1,
-                                ctx.tupleEntries2, ctx.rec);
+                        ret = ctx.interiorFrame.split(rightFrame, tuple, interiorCmp, ctx.splitKey);
                         ctx.interiorFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
                         incrementGlobalNsn();
@@ -448,8 +445,7 @@ public class RTree {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setPageTupleFieldCount(leafCmp.getFieldCount());
-                        ret = ctx.leafFrame.split(rightFrame, tuple, leafCmp, ctx.splitKey, ctx.tupleEntries1,
-                                ctx.tupleEntries2, ctx.rec);
+                        ret = ctx.leafFrame.split(rightFrame, tuple, leafCmp, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
                         incrementGlobalNsn();
