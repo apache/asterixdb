@@ -23,13 +23,14 @@ import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -310,11 +311,13 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
     private static final long serialVersionUID = 1L;
     private Class reducerClass;
     private IComparatorFactory comparatorFactory;
+    private boolean useAsCombiner = false;
 
     public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IComparatorFactory comparatorFactory,
-            IHadoopClassFactory classFactory) {
+            IHadoopClassFactory classFactory, boolean useAsCombiner) {
         super(spec, 1, getRecordDescriptor(conf, classFactory), conf, classFactory);
         this.comparatorFactory = comparatorFactory;
+        this.useAsCombiner = useAsCombiner;
     }
 
     private Object createReducer() throws Exception {
@@ -322,12 +325,22 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             return ReflectionUtils.newInstance(reducerClass, getJobConf());
         } else {
             Object reducer;
-            if (getJobConf().getUseNewReducer()) {
-                JobContext jobContext = new JobContext(getJobConf(), null);
-                reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?, ?, ?, ?>>) jobContext
-                        .getReducerClass();
+            if (!useAsCombiner) {
+                if (getJobConf().getUseNewReducer()) {
+                    JobContext jobContext = new JobContext(getJobConf(), null);
+                    reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?, ?, ?, ?>>) jobContext
+                            .getReducerClass();
+                } else {
+                    reducerClass = (Class<? extends Reducer>) getJobConf().getReducerClass();
+                }
             } else {
-                reducerClass = (Class<? extends Reducer>) getJobConf().getReducerClass();
+                if (getJobConf().getUseNewReducer()) {
+                    JobContext jobContext = new JobContext(getJobConf(), null);
+                    reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?, ?, ?, ?>>) jobContext
+                            .getCombinerClass();
+                } else {
+                    reducerClass = (Class<? extends Reducer>) getJobConf().getCombinerClass();
+                }
             }
             reducer = getHadoopClassFactory().createReducer(reducerClass.getName(), getJobConf());
             return reducer;
@@ -382,9 +395,8 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
         RecordDescriptor recordDescriptor = null;
         try {
             if (classFactory == null) {
-                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) Class.forName(outputKeyClassName),
-                        (Class<? extends Writable>) Class.forName(outputValueClassName));
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
+                        .forName(outputKeyClassName), (Class<? extends Writable>) Class.forName(outputValueClassName));
             } else {
                 recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                         (Class<? extends Writable>) classFactory.loadClass(outputKeyClassName),

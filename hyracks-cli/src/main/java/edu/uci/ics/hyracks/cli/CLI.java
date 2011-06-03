@@ -15,29 +15,25 @@
 package edu.uci.ics.hyracks.cli;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
 
 import jline.ConsoleReader;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.cli.commands.Command;
 
 public class CLI {
     private static final String HYRACKS_PROMPT = "hyracks> ";
     private static final String HYRAX_CONTINUE_PROMPT = "> ";
     private final ConsoleReader reader;
-    private IHyracksClientConnection connection;
+    private final Session session;
 
     public CLI(String[] args) throws IOException {
         reader = new ConsoleReader();
-        connection = null;
+        session = new Session();
     }
 
     public void run() throws IOException {
         boolean eof = false;
         while (true) {
             String prompt = HYRACKS_PROMPT;
-            StringBuffer command = new StringBuffer();
+            StringBuilder command = new StringBuilder();
             while (true) {
                 String line = reader.readLine(prompt);
                 if (line == null) {
@@ -58,26 +54,10 @@ public class CLI {
                 break;
             }
             try {
-                execute(command);
+                CommandExecutor.execute(session, command.toString());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    private void execute(StringBuffer command) throws Exception {
-        CLIParser parser = new CLIParser(new StringReader(command.toString()));
-        List<Command> cmds = parser.Commands();
-        for (Command cmd : cmds) {
-            cmd.run(this);
-        }
-    }
-
-    public void setConnection(IHyracksClientConnection connection) {
-        this.connection = connection;
-    }
-
-    public IHyracksClientConnection getConnection() {
-        return connection;
     }
 }

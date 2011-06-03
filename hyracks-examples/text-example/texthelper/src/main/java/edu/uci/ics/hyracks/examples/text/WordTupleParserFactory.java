@@ -85,6 +85,7 @@ public class WordTupleParserFactory implements ITupleParserFactory {
                 return false;
             }
 
+            boolean wordStarted = false;
             int p = start;
             while (true) {
                 if (p >= end) {
@@ -96,14 +97,55 @@ public class WordTupleParserFactory implements ITupleParserFactory {
                     p -= (s - start);
                 }
                 char ch = buffer[p];
-                if (Character.isWhitespace(ch)) {
+                if (isNonWordChar(ch)) {
                     fStart = start;
                     fEnd = p;
                     start = p + 1;
-                    return true;
+                    if (wordStarted) {
+                        return true;
+                    }
+                } else {
+                    wordStarted = true;
                 }
                 ++p;
             }
+        }
+
+        private boolean isNonWordChar(char ch) {
+            switch (ch) {
+                case '.':
+                case ',':
+                case '!':
+                case '@':
+                case '#':
+                case '$':
+                case '%':
+                case '^':
+                case '&':
+                case '*':
+                case '(':
+                case ')':
+                case '+':
+                case '=':
+                case ':':
+                case ';':
+                case '"':
+                case '\'':
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case '|':
+                case '\\':
+                case '/':
+                case '<':
+                case '>':
+                case '?':
+                case '~':
+                case '`':
+                    return true;
+            }
+            return Character.isWhitespace(ch);
         }
 
         private boolean readMore() throws IOException {
