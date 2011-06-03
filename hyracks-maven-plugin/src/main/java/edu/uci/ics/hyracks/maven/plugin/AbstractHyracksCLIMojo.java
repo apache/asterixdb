@@ -14,14 +14,21 @@
  */
 package edu.uci.ics.hyracks.maven.plugin;
 
-import org.apache.maven.plugin.AbstractMojo;
+import java.io.File;
+import java.io.PrintWriter;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
-import edu.uci.ics.hyracks.cli.CommandExecutor;
-import edu.uci.ics.hyracks.cli.Session;
+public abstract class AbstractHyracksCLIMojo extends AbstractHyracksMojo {
+    private static final String HYRACKS_CLI_SCRIPT = "bin" + File.separator + "hyrackscli";
 
-public abstract class AbstractHyracksCLIMojo extends AbstractMojo {
+    /**
+     * @parameter
+     * @required
+     */
+    protected File hyracksCLIHome;
+
     /**
      * @parameter
      * @required
@@ -35,10 +42,16 @@ public abstract class AbstractHyracksCLIMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(createConnectCommand());
+        buffer.append('\n');
+        buffer.append(getCommands());
+        final Process proc = launch(new File(hyracksCLIHome, makeScriptName(HYRACKS_CLI_SCRIPT)), null, null);
         try {
-            Session session = new Session();
-            CommandExecutor.execute(session, createConnectCommand());
-            CommandExecutor.execute(session, getCommands());
+            PrintWriter out = new PrintWriter(proc.getOutputStream());
+            out.println(buffer.toString());
+            out.close();
+            proc.waitFor();
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage());
         }
