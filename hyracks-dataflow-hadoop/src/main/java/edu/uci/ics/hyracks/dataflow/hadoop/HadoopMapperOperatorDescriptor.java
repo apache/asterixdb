@@ -381,7 +381,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                             (Class<? extends Writable>) oldReader.createKey().getClass(),
                             (Class<? extends Writable>) oldReader.createValue().getClass());
                 }
-                return createSelfReadingMapper(ctx, env, recordDescriptor, partition);
+                return createSelfReadingMapper(ctx, recordDescriptor, partition);
             } else {
                 return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition),
                         recordDescProvider.getInputRecordDescriptor(this.odId, 0));
@@ -391,7 +391,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         }
     }
 
-    private IOperatorNodePushable createSelfReadingMapper(final IHyracksTaskContext ctx, IOperatorEnvironment env,
+    private IOperatorNodePushable createSelfReadingMapper(final IHyracksTaskContext ctx,
             final RecordDescriptor recordDescriptor, final int partition) {
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             @Override

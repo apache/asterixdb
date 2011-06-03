@@ -36,7 +36,7 @@ public interface INodeController extends Remote {
     public NodeCapability getNodeCapability() throws Exception;
 
     public void startTasks(String appName, UUID jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception;
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, byte[] ctxVarBytes) throws Exception;
 
     public void abortTasks(UUID jobId, List<TaskAttemptId> tasks) throws Exception;
 

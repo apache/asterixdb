@@ -14,17 +14,19 @@
  */
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
-import java.util.Set;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 
-public interface IJobRunStateMachine {
-    public void schedule() throws HyracksException;
+public class JobScheduler {
+    private final ClusterControllerService ccs;
 
-    public void notifyActivityClusterFailure(ActivityCluster ac, Exception exception) throws HyracksException;
+    public JobScheduler(ClusterControllerService ccs) {
+        this.ccs = ccs;
+    }
 
-    public void notifyActivityClusterComplete(ActivityCluster activityCluster) throws HyracksException;
-
-    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException;
+    public void notifyJobCreation(JobRun run) throws HyracksException {
+        JobRunStateMachine jsm = new JobRunStateMachine(ccs, run);
+        run.setStateMachine(jsm);
+    }
 }

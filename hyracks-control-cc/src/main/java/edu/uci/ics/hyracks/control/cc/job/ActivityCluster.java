@@ -22,9 +22,8 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.cc.scheduler.IActivityClusterStateMachine;
+import edu.uci.ics.hyracks.control.cc.scheduler.ActivityClusterStateMachine;
 
 public class ActivityCluster {
     private final JobRun jobRun;
@@ -41,9 +40,11 @@ public class ActivityCluster {
 
     private Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
 
-    private IActivityClusterStateMachine acsm;
+    private ActivityClusterStateMachine acsm;
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
+
+    private Set<TaskCluster> inProgressTaskClusters;
 
     public ActivityCluster(JobRun jobRun, Set<ActivityId> activities) {
         this.jobRun = jobRun;
@@ -52,6 +53,7 @@ public class ActivityCluster {
         dependents = new HashSet<ActivityCluster>();
         taskStateMap = new HashMap<ActivityId, Task[]>();
         partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
+        inProgressTaskClusters = new HashSet<TaskCluster>();
     }
 
     public Set<ActivityId> getActivities() {
@@ -86,11 +88,11 @@ public class ActivityCluster {
         return partitionProducingTaskClusterMap;
     }
 
-    public IActivityClusterStateMachine getStateMachine() {
+    public ActivityClusterStateMachine getStateMachine() {
         return acsm;
     }
 
-    public void setStateMachine(IActivityClusterStateMachine acsm) {
+    public void setStateMachine(ActivityClusterStateMachine acsm) {
         this.acsm = acsm;
     }
 
@@ -102,14 +104,6 @@ public class ActivityCluster {
         return jobRun.getJobActivityGraph().getJobSpecification().getMaxAttempts();
     }
 
-    public void notifyTaskClusterFailure(TaskClusterAttempt tcAttempt, Exception exception) throws HyracksException {
-        acsm.notifyTaskClusterFailure(tcAttempt, exception);
-    }
-
-    public void notifyActivityClusterComplete() throws HyracksException {
-        jobRun.getStateMachine().notifyActivityClusterComplete(this);
-    }
-
     public void setConnectorPolicyMap(Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) {
         this.connectorPolicies = connectorPolicies;
     }
@@ -118,7 +112,7 @@ public class ActivityCluster {
         return connectorPolicies;
     }
 
-    public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException {
-        acsm.notifyNodeFailures(deadNodes);
+    public Set<TaskCluster> getInProgressTaskClusters() {
+        return inProgressTaskClusters;
     }
 }

@@ -12,11 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.scheduler;
+package edu.uci.ics.hyracks.api.naming;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import java.util.Arrays;
 
-public interface IJobScheduler {
-    public void notifyJobCreation(JobRun run) throws HyracksException;
+public final class MultipartName {
+    private Object[] parts;
+
+    public MultipartName(Object... parts) {
+        this.parts = parts;
+    }
+
+    public Object[] getParts() {
+        return parts;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(parts);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MultipartName)) {
+            return false;
+        }
+        return Arrays.deepEquals(parts, ((MultipartName) o).parts);
+    }
 }

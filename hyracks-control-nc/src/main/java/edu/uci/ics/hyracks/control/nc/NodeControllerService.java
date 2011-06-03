@@ -24,6 +24,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
@@ -230,10 +233,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void startTasks(String appName, final UUID jobId, byte[] jagBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap) throws Exception {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, byte[] ctxVarBytes) throws Exception {
         try {
             NCApplicationContext appCtx = applications.get(appName);
             final JobActivityGraph plan = (JobActivityGraph) appCtx.deserialize(jagBytes);
+            Map<MultipartName, Object> ctxVarMap = (Map<MultipartName, Object>) appCtx.deserialize(ctxVarBytes);
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -257,10 +261,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
+                Map<MultipartName, Object> inputGlobalVariables = createInputGlobalVariables(ctxVarMap, han);
                 Task task = new Task(joblet, taId, han.getClass().getName(), executor);
-                IOperatorNodePushable operator = han.createPushRuntime(task,
-                        joblet.getEnvironment(han.getActivityId().getOperatorDescriptorId(), partition), rdp,
-                        partition, td.getPartitionCount());
+                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(), tid.getPartition());
+                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition, td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
@@ -306,6 +310,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             e.printStackTrace();
             throw e;
         }
+    }
+
+    private Map<MultipartName, Object> createInputGlobalVariables(Map<MultipartName, Object> ctxVarMap, IActivity han) {
+        Map<MultipartName, Object> gVars = new HashMap<MultipartName, Object>();
+//        for (MultipartName inVar : han.getInputVariables()) {
+//            gVars.put(inVar, ctxVarMap.get(inVar));
+//        }
+        return gVars;
     }
 
     private IPartitionCollector createPartitionCollector(TaskAttemptDescriptor td, final int partition, Task task,

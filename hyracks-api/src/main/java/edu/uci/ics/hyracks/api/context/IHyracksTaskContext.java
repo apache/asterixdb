@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
@@ -25,4 +27,12 @@ public interface IHyracksTaskContext extends IHyracksCommonContext, IWorkspaceFi
     public TaskAttemptId getTaskAttemptId();
 
     public ICounterContext getCounterContext();
+
+    public Object lookupGlobalVariable(ActivityId producerActivity, int partition, String varName)
+            throws HyracksDataException;
+
+    public Object lookupLocalVariable(ActivityId producerActivity, int partition, String varName)
+            throws HyracksDataException;
+
+    public void setVariable(String name, Object value) throws HyracksDataException;
 }

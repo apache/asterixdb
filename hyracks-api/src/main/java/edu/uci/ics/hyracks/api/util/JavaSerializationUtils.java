@@ -34,6 +34,9 @@ public class JavaSerializationUtils {
     }
 
     public static Object deserialize(byte[] bytes, ClassLoader classLoader) throws IOException, ClassNotFoundException {
+        if (bytes == null) {
+            return null;
+        }
         ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(classLoader);

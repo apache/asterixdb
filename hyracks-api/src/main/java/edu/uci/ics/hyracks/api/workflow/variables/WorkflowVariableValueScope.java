@@ -12,22 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.scheduler;
+package edu.uci.ics.hyracks.api.workflow.variables;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
-
-public class DefaultJobScheduler implements IJobScheduler {
-    private final ClusterControllerService ccs;
-
-    public DefaultJobScheduler(ClusterControllerService ccs) {
-        this.ccs = ccs;
-    }
-
-    @Override
-    public void notifyJobCreation(JobRun run) throws HyracksException {
-        IJobRunStateMachine jsm = new DefaultJobRunStateMachine(ccs, run);
-        run.setStateMachine(jsm);
-    }
+public enum WorkflowVariableValueScope {
+    LOCAL,
+    GLOBAL,
 }

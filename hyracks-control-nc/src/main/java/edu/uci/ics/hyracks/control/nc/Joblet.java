@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
@@ -64,6 +65,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final Map<String, Counter> counterMap;
 
+    private final Map<MultipartName, Object> localVariableMap;
+
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final IWorkspaceFileFactory fileFactory;
@@ -76,6 +79,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
+        localVariableMap = new HashMap<MultipartName, Object>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
     }
@@ -85,7 +89,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jobId;
     }
 
-    public IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
+    public synchronized IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
         if (!envMap.containsKey(opId)) {
             envMap.put(opId, new HashMap<Integer, IOperatorEnvironment>());
         }
@@ -102,6 +106,17 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public Map<TaskAttemptId, Task> getTaskMap() {
         return taskMap;
+    }
+
+    public synchronized Object lookupLocalVariable(MultipartName name) throws HyracksDataException {
+        if (!localVariableMap.containsKey(name)) {
+            throw new HyracksDataException("Unknown variable: " + name);
+        }
+        return localVariableMap.get(name);
+    }
+
+    public synchronized void setLocalVariable(MultipartName name, Object value) {
+        localVariableMap.put(name, value);
     }
 
     private static final class OperatorEnvironmentImpl implements IOperatorEnvironment {

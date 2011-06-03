@@ -12,36 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.things;
+package edu.uci.ics.hyracks.api.workflow.variables;
 
 import java.io.Serializable;
 
-public final class ThingDescriptorId implements Serializable {
+import edu.uci.ics.hyracks.api.naming.MultipartName;
+
+public final class WorkflowVariableDescriptor implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final long id;
+    private final MultipartName name;
 
-    public ThingDescriptorId(long id) {
-        this.id = id;
+    private final WorkflowVariableValueScope scope;
+
+    public WorkflowVariableDescriptor(MultipartName name, WorkflowVariableValueScope scope) {
+        this.name = name;
+        this.scope = scope;
     }
 
-    public long getId() {
-        return id;
+    public MultipartName getName() {
+        return name;
     }
 
-    @Override
-    public String toString() {
-        return "ThID: " + id;
-    }
-
-    public int hashCode() {
-        return (int) (id & 0xffffffff);
-    }
-
-    public boolean equals(Object o) {
-        if (!(o instanceof ThingDescriptorId)) {
-            return false;
-        }
-        return id == ((ThingDescriptorId) o).id;
+    public WorkflowVariableValueScope getScope() {
+        return scope;
     }
 }

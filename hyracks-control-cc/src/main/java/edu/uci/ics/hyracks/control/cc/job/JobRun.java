@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
-import edu.uci.ics.hyracks.control.cc.scheduler.IJobRunStateMachine;
+import edu.uci.ics.hyracks.control.cc.scheduler.JobRunStateMachine;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
@@ -41,7 +41,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final Map<ActivityId, ActivityCluster> activityClusterMap;
 
-    private IJobRunStateMachine jsm;
+    private JobRunStateMachine jsm;
 
     private JobStatus status;
 
@@ -100,18 +100,18 @@ public class JobRun implements IJobStatusConditionVariable {
         return profile;
     }
 
-    public void setStateMachine(IJobRunStateMachine jsm) {
+    public void setStateMachine(JobRunStateMachine jsm) {
         this.jsm = jsm;
     }
 
-    public IJobRunStateMachine getStateMachine() {
+    public JobRunStateMachine getStateMachine() {
         return jsm;
     }
 
     public Map<ActivityId, ActivityCluster> getActivityClusterMap() {
         return activityClusterMap;
     }
-    
+
     public void notifyNodeFailures(Set<String> deadNodes) throws HyracksException {
         jsm.notifyNodeFailures(deadNodes);
     }

@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 
-public class RankedRunnableTaskCluster {
+public class RankedRunnableTaskCluster implements Comparable<RankedRunnableTaskCluster> {
     private final int rank;
 
     private final TaskCluster taskCluster;
@@ -37,5 +37,11 @@ public class RankedRunnableTaskCluster {
     @Override
     public String toString() {
         return "[" + rank + ":" + taskCluster + "]";
+    }
+
+    @Override
+    public int compareTo(RankedRunnableTaskCluster o) {
+        int cmp = rank - o.rank;
+        return cmp < 0 ? -1 : (cmp > 0 ? 1 : 0);
     }
 }
