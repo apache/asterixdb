@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -35,8 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
@@ -92,13 +92,13 @@ public class RTreeTest extends AbstractRTreeTest {
                 interiorFrameSchema.getInteriorCmp().getTypeTraits());
         RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
 
-        IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
-        IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory interiorFrameFactory = new NSMFrameFactory(interiorTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory leafFrameFactory = new NSMFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-        IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
-        IRTreeFrame leafFrame = leafFrameFactory.getFrame();
+        IRTreeFrame interiorFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
+        IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
@@ -121,8 +121,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -177,8 +176,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
         // System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame);
         ArrayList<Rectangle> results = new ArrayList<Rectangle>();
         rtree.search(s, tuple, searchOpCtx, results);
 
@@ -195,7 +193,7 @@ public class RTreeTest extends AbstractRTreeTest {
         print(stats);
 
         // TreeIndexStatsGatherer statsGatherer = new
-        // TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, 1);
+        // TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, rtree.getRootPageId());
         // TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,
         // interiorFrame, metaFrame);
         // String string = stats.toString();
@@ -251,13 +249,13 @@ public class RTreeTest extends AbstractRTreeTest {
                 interiorTypeTraits);
         RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
 
-        IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
-        IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory interiorFrameFactory = new NSMFrameFactory(interiorTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory leafFrameFactory = new NSMFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-        IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
-        IRTreeFrame leafFrame = leafFrameFactory.getFrame();
+        IRTreeFrame interiorFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
+        IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, interiorCmp,
@@ -279,8 +277,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
 
         File datasetFile = new File("/home/salsubaiee/dataset.txt");
         BufferedReader reader = new BufferedReader(new FileReader(datasetFile));
@@ -351,8 +348,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
         // System.out.println();
 
-        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame);
 
         File querysetFile = new File("/home/salsubaiee/queryset.txt");
         BufferedReader reader2 = new BufferedReader(new FileReader(querysetFile));
@@ -423,8 +419,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // String stats = rtree.printStats();
         // print(stats);
 
-        RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE, leafFrame, interiorFrame, metaFrame);
 
         BufferedReader reader3 = new BufferedReader(new FileReader(datasetFile));
         inputLine = reader3.readLine();

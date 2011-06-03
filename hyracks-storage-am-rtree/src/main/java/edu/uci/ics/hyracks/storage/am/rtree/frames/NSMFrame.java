@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
-public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
+public class NSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     protected static final int pageNsnOff = smFlagOff + 1;
     protected static final int rightPageOff = pageNsnOff + 4;
 
@@ -36,7 +36,7 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     private static final double splitFactor = 0.4;
     private static final int nearMinimumOverlapFactor = 32;
 
-    public NSMRTreeFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
+    public NSMFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
         super(tupleWriter, new UnorderedSlotManager());
         this.tuples = new ITreeIndexTupleReference[keyFieldCount];
         for (int i = 0; i < keyFieldCount; i++) {
@@ -262,8 +262,8 @@ public class NSMRTreeFrame extends TreeIndexNSMFrame implements IRTreeFrame {
         rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, rTreeSplitKey.getLeftPageBuffer(), 0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
 
-        ((IRTreeFrame) rightFrame).adjustMBR(((NSMRTreeFrame) rightFrame).getTuples(), cmp);
-        rTreeTupleWriterRightFrame.writeTupleFields(((NSMRTreeFrame) rightFrame).getTuples(), 0,
+        ((IRTreeFrame) rightFrame).adjustMBR(((NSMFrame) rightFrame).getTuples(), cmp);
+        rTreeTupleWriterRightFrame.writeTupleFields(((NSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
 

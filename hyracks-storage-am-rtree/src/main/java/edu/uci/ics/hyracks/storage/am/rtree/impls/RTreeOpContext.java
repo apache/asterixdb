@@ -3,10 +3,11 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 
-public final class RTreeOpContext {
+public final class RTreeOpContext implements IndexOpContext {
     public final IndexOp op;
     public final IRTreeFrame interiorFrame;
     public final IRTreeFrame leafFrame;
@@ -17,10 +18,9 @@ public final class RTreeOpContext {
     public final PathList pathList; // used to record the pageIds and pageLsns
                                     // of the visited pages
     public final TraverseList traverseList; // used for traversing the tree
-    public String threadName; // for debugging
 
     public RTreeOpContext(IndexOp op, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint, String threadName) {
+            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
@@ -30,7 +30,6 @@ public final class RTreeOpContext {
 
         pathList = new PathList(treeHeightHint, treeHeightHint);
         traverseList = new TraverseList(100, 100);
-        this.threadName = threadName;
     }
 
     public ITupleReference getTuple() {

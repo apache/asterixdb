@@ -8,21 +8,28 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class RTree {
+public class RTree implements ITreeIndex {
 
     private boolean created = false;
     private final int rootPage = 1; // the root page never changes
@@ -35,8 +42,8 @@ public class RTree {
     private final IBufferCache bufferCache;
     private int fileId;
 
-    private final IRTreeFrameFactory interiorFrameFactory;
-    private final IRTreeFrameFactory leafFrameFactory;
+    private final ITreeIndexFrameFactory interiorFrameFactory;
+    private final ITreeIndexFrameFactory leafFrameFactory;
     private final MultiComparator interiorCmp;
     private final MultiComparator leafCmp;
 
@@ -50,8 +57,8 @@ public class RTree {
     public AtomicLong unpins = new AtomicLong();
     public byte currentLevel = 0;
 
-    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager, IRTreeFrameFactory interiorFrameFactory,
-            IRTreeFrameFactory leafFrameFactory, MultiComparator interiorCmp, MultiComparator leafCmp) {
+    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, MultiComparator interiorCmp, MultiComparator leafCmp) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
@@ -152,7 +159,7 @@ public class RTree {
 
             System.out.format(keyString);
             if (!interiorFrame.isLeaf()) {
-                ArrayList<Integer> children = ((NSMRTreeFrame) (interiorFrame)).getChildren(interiorCmp);
+                ArrayList<Integer> children = ((NSMFrame) (interiorFrame)).getChildren(interiorCmp);
                 for (int i = 0; i < children.size(); i++) {
                     printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, fields);
                 }
@@ -171,8 +178,8 @@ public class RTree {
         }
     }
 
-    public void create(int fileId, IRTreeFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
-
+    @Override
+    public void create(int indexFileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
         if (created)
             return;
 
@@ -214,14 +221,16 @@ public class RTree {
     public void close() {
         fileId = -1;
     }
-
-    public RTreeOpContext createOpContext(IndexOp op, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame, String threadName) {
-        // TODO: figure out better tree-height hint
-        return new RTreeOpContext(op, leafFrame, interiorFrame, metaFrame, 8, threadName);
+    
+    @Override
+    public RTreeOpContext createOpContext(IndexOp op, ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
+            ITreeIndexMetaDataFrame metaFrame) {
+        return new RTreeOpContext(op, (IRTreeFrame)leafFrame, (IRTreeFrame)interiorFrame, metaFrame, 8);
     }
 
-    public void insert(ITupleReference tuple, RTreeOpContext ctx) throws Exception {
+    @Override
+    public void insert(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+        RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
@@ -427,7 +436,7 @@ public class RTree {
                     numOfPages++; // debug
                     if (!isLeaf) {
                         splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
-                        rightFrame = interiorFrameFactory.getFrame();
+                        rightFrame = (IRTreeFrame)interiorFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         rightFrame.setPageTupleFieldCount(interiorCmp.getFieldCount());
@@ -441,7 +450,7 @@ public class RTree {
                         ctx.interiorFrame.setPageLsn(newNsn);
                     } else {
                         splitsByLevel[0]++; // debug
-                        rightFrame = leafFrameFactory.getFrame();
+                        rightFrame = (IRTreeFrame)leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setPageTupleFieldCount(leafCmp.getFieldCount());
@@ -618,7 +627,9 @@ public class RTree {
         }
     }
 
-    public void delete(ITupleReference tuple, RTreeOpContext ctx) throws Exception {
+    @Override
+    public void delete(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+        RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
@@ -880,11 +891,11 @@ public class RTree {
         }
     }
 
-    public IRTreeFrameFactory getInteriorFrameFactory() {
+    public ITreeIndexFrameFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }
 
-    public IRTreeFrameFactory getLeafFrameFactory() {
+    public ITreeIndexFrameFactory getLeafFrameFactory() {
         return leafFrameFactory;
     }
 
@@ -898,5 +909,52 @@ public class RTree {
 
     public IFreePageManager getFreePageManager() {
         return freePageManager;
+    }
+
+    @Override
+    public void update(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+        throw new Exception("RTree Update not implemented.");
+    }
+
+    
+
+   
+
+    @Override
+    public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
+            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+        throw new HyracksDataException("RTree Bulkload not implemented.");
+    }
+
+    @Override
+    public void bulkLoadAddTuple(IIndexBulkLoadContext ictx, ITupleReference tuple) throws HyracksDataException {
+        throw new HyracksDataException("RTree Bulkload not implemented.");
+    }
+
+    @Override
+    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
+        throw new HyracksDataException("RTree Bulkload not implemented.");
+    }
+
+    @Override
+    public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame)
+            throws HyracksDataException {
+        throw new HyracksDataException("RTree disk order not implemented.");
+        
+    }
+
+    @Override
+    public int getRootPageId() {
+        return rootPage;
+    } 
+
+    @Override
+    public int getFieldCount() {
+        return leafCmp.getFieldCount();
+    }
+
+    @Override
+    public IndexType getIndexType() {
+        return IndexType.RTREE;
     }
 }

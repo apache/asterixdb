@@ -6,7 +6,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.AbstractSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrame;
 
 public class UnorderedSlotManager extends AbstractSlotManager {
     @Override
@@ -83,12 +83,12 @@ public class UnorderedSlotManager extends AbstractSlotManager {
         while (slotOff >= getSlotEndOff()) {
             if (frame.getBuffer().getInt(slotOff) == -1) {
                 while (frame.getBuffer().getInt(getSlotEndOff()) == -1) {
-                    ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+                    ((NSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
                 }
                 if (slotOff > getSlotEndOff()) {
                     System.arraycopy(frame.getBuffer().array(), getSlotEndOff(), frame.getBuffer().array(), slotOff,
                             slotSize);
-                    ((NSMRTreeFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+                    ((NSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
                 } else {
                     break;
                 }

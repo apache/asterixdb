@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -37,8 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMRTreeFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
@@ -91,13 +91,13 @@ public class SearchCursorTest extends AbstractRTreeTest {
                 interiorFrameSchema.getInteriorCmp().getTypeTraits());
         RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
 
-        IRTreeFrameFactory interiorFrameFactory = new NSMRTreeFrameFactory(interiorTupleWriterFactory, keyFieldCount);
-        IRTreeFrameFactory leafFrameFactory = new NSMRTreeFrameFactory(leafTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory interiorFrameFactory = new NSMFrameFactory(interiorTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory leafFrameFactory = new NSMFrameFactory(leafTupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-        IRTreeFrame interiorFrame = interiorFrameFactory.getFrame();
-        IRTreeFrame leafFrame = leafFrameFactory.getFrame();
+        IRTreeFrame interiorFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
+        IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
@@ -119,8 +119,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame,
-                "unittest");
+        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -163,8 +162,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         }
 
         IRTreeCursor searchCursor = new SearchCursor(interiorFrame, leafFrame);
-        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame,
-                "cursortest");
+        RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame);
         rtree.search(searchCursor, tuple, searchOpCtx);
 
         ArrayList<Integer> results = new ArrayList<Integer>();
