@@ -3,16 +3,18 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>0.1.6-SNAPSHOT</version>
-
-  <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
-    <artifactId>hyracks</artifactId>
-    <version>0.1.6-SNAPSHOT</version>
-  </parent>
+  <version>0.0.1-SNAPSHOT</version>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.0</version>
+        <configuration>
+            <goals>package source:jar javadoc:jar deploy:deploy</goals>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -24,6 +26,40 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks-maven-plugin</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks-maven-plugin</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks-maven-plugin</url>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>hyracks-releases</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>hyracks-snapshots</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <repositories>
+    <repository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+    </repository>
+  </repositories>
+
   <dependencies>
   	<dependency>
   		<groupId>org.apache.maven</groupId>
