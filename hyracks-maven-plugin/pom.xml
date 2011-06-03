@@ -3,7 +3,7 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
   <name>Hyracks Maven Plugin</name>
 
   <build>
@@ -29,9 +29,9 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-maven-plugin-0.0.1</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-maven-plugin-0.0.1</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/hyracks-maven-plugin-0.0.1</url>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks-maven-plugin</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks-maven-plugin</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks-maven-plugin</url>
   </scm>
 
   <distributionManagement>
