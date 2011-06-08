@@ -63,7 +63,7 @@ public abstract class TreeIndexOpHelper {
 		case OPEN: {
 			if (!fileIsMapped) {
 				throw new HyracksDataException(
-						"Trying to open btree from unmapped file " + f.toString());
+						"Trying to open tree index from unmapped file " + f.toString());
 			}
 		}
 		break;

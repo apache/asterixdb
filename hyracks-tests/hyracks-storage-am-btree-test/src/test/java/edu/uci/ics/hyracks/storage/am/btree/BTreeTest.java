@@ -227,7 +227,9 @@ public class BTreeTest extends AbstractBTreeTest {
 		// disk-order scan
 		print("DISK-ORDER SCAN:\n");
 		BTreeDiskOrderScanCursor diskOrderCursor = new BTreeDiskOrderScanCursor(leafFrame);
-		btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame);
+		BTreeOpContext diskOrderScanOpCtx = btree.createOpContext(IndexOp.DISKORDERSCAN,
+		        leafFrame, null, null);
+		btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();

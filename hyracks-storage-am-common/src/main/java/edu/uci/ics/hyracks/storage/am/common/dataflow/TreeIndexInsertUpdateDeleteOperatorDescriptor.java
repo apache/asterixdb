@@ -38,11 +38,12 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
     private IndexOp op;
 
     public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> btreeRegistryProvider,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, 1, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFrameFactory,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
+            ITreeIndexOpHelperFactory opHelperFactory) {
+        super(spec, 1, 1, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
         this.fieldPermutation = fieldPermutation;
         this.op = op;

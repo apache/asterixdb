@@ -29,10 +29,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-// re-create in-memory state for a btree that has already been built (i.e., the file exists):
+// re-create in-memory state for a tree index that has already been built (i.e., the file exists):
 // 1. register files in file manager (FileManager)
 // 2. create file mappings (FileMappingProvider)
-// 3. register btree instance (BTreeRegistry)
+// 3. register tree index instance (IndexRegistry)
 
 public class TreeIndexFileEnlistmentOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
@@ -41,7 +41,8 @@ public class TreeIndexFileEnlistmentOperatorDescriptor extends AbstractTreeIndex
     public TreeIndexFileEnlistmentOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
+            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
         super(spec, 0, 0, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
     }

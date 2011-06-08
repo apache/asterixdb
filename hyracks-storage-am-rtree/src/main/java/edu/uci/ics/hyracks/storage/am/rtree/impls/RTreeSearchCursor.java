@@ -2,15 +2,17 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class SearchCursor implements IRTreeCursor {
+public class RTreeSearchCursor implements ITreeIndexCursor {
 
     private int fileId = -1;
     private ICachedPage page = null;
@@ -18,6 +20,7 @@ public class SearchCursor implements IRTreeCursor {
     private IRTreeFrame leafFrame = null;
     private IBufferCache bufferCache = null;
 
+    private SearchPredicate pred;
     private PathList pathList;
     private int rootPage;
     ITupleReference searchKey;
@@ -32,8 +35,8 @@ public class SearchCursor implements IRTreeCursor {
 
     private int pin = 0;
     private int unpin = 0;
-    
-    public SearchCursor(IRTreeFrame interiorFrame, IRTreeFrame leafFrame) {
+
+    public RTreeSearchCursor(IRTreeFrame interiorFrame, IRTreeFrame leafFrame) {
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.frameTuple = leafFrame.createTupleReference();
@@ -131,23 +134,24 @@ public class SearchCursor implements IRTreeCursor {
     }
 
     @Override
-    public void open(PathList pathList, ITupleReference searchKey, int rootPage, MultiComparator interiorCmp,
-            MultiComparator leafCmp) throws Exception {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws Exception {
         // in case open is called multiple times without closing
         if (this.page != null) {
             this.page.releaseReadLatch();
             bufferCache.unpin(this.page);
-            this.pathList.clear();
+            pathList.clear();
         }
 
-        this.pathList = pathList;
-        this.searchKey = searchKey;
-        this.rootPage = rootPage;
-        this.interiorCmp = interiorCmp;
-        this.leafCmp = leafCmp;
+        pathList = ((CursorInitialState) initialState).getPathList();
+        rootPage = ((CursorInitialState) initialState).getRootPage();
 
-        this.pathList.add(this.rootPage, -1, -1);
-        frameTuple.setFieldCount(this.leafCmp.getFieldCount());
+        pred = (SearchPredicate) searchPred;
+        interiorCmp = pred.getInteriorCmp();
+        leafCmp = pred.getLeafCmp();
+        searchKey = pred.getSearchKey();
+
+        pathList.add(this.rootPage, -1, -1);
+        frameTuple.setFieldCount(leafCmp.getFieldCount());
         tupleIndex = 0;
         fetchNextLeafPage();
     }

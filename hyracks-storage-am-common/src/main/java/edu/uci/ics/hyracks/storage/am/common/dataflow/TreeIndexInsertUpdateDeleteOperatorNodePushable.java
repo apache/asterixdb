@@ -87,7 +87,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
                     default: {
                         throw new HyracksDataException("Unsupported operation " + op
-                                + " in BTree InsertUpdateDelete operator");
+                                + " in tree index InsertUpdateDelete operator");
                     }
 
                 }

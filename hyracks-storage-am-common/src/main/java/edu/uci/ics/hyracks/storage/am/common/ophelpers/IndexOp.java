@@ -16,5 +16,5 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 public enum IndexOp {
-    INSERT, DELETE, UPDATE, SEARCH
+    INSERT, DELETE, UPDATE, SEARCH, DISKORDERSCAN
 }

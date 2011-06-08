@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -36,13 +37,13 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchCursor;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -161,9 +162,12 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
         }
 
-        IRTreeCursor searchCursor = new SearchCursor(interiorFrame, leafFrame);
+        ITreeIndexCursor searchCursor = new RTreeSearchCursor(interiorFrame, leafFrame);
+        SearchPredicate searchPredicate = new SearchPredicate(tuple, interiorFrameSchema.getInteriorCmp(), leafCmp);
+        
+
         RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame);
-        rtree.search(searchCursor, tuple, searchOpCtx);
+        rtree.search(searchCursor, searchPredicate, searchOpCtx);
 
         ArrayList<Integer> results = new ArrayList<Integer>();
         try {

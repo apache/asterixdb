@@ -29,6 +29,7 @@ public final class BTreeOpContext implements IndexOpContext {
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
     public ITreeIndexCursor cursor;
+    public CursorInitialState cursorInitialState;
     public RangePredicate pred;
     public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
@@ -44,7 +45,7 @@ public final class BTreeOpContext implements IndexOpContext {
         this.metaFrame = metaFrame;
 
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
-        if (op != IndexOp.SEARCH) {
+        if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
             smPages = new IntArrayList(treeHeightHint, treeHeightHint);
             freePages = new IntArrayList(treeHeightHint, treeHeightHint);
             pred = new RangePredicate(true, null, null, true, true, null, null);
@@ -53,6 +54,7 @@ public final class BTreeOpContext implements IndexOpContext {
             smPages = null;
             freePages = null;
             splitKey = null;
+            cursorInitialState = new CursorInitialState(null);
         }
     }
 

@@ -32,10 +32,10 @@ public class TreeIndexDiskOrderScanOperatorDescriptor extends AbstractTreeIndexO
     private static final long serialVersionUID = 1L;
 
     public TreeIndexDiskOrderScanOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> btreeRegistryProvider,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, 0, 1, recDesc, storageManager, btreeRegistryProvider, fileSplitProvider, interiorFrameFactory,
+        super(spec, 0, 1, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, null, opHelperFactory);
     }
 

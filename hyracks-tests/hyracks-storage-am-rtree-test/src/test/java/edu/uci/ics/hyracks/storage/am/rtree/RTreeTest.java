@@ -23,9 +23,11 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -39,6 +41,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
@@ -192,6 +195,26 @@ public class RTreeTest extends AbstractRTreeTest {
         String stats = rtree.printStats();
         print(stats);
 
+        
+        // disk-order scan
+        print("DISK-ORDER SCAN:\n");
+        RTreeDiskOrderScanCursor diskOrderCursor = new RTreeDiskOrderScanCursor(leafFrame);
+        RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN,
+                leafFrame, null, null);
+        rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
+        try {
+            while (diskOrderCursor.hasNext()) {
+                diskOrderCursor.next();
+                ITupleReference frameTuple = diskOrderCursor.getTuple();
+                String rec = leafCmp.printTuple(frameTuple, recDescSers);
+                print(rec + "\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            diskOrderCursor.close();
+        }
+        
         // TreeIndexStatsGatherer statsGatherer = new
         // TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, rtree.getRootPageId());
         // TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,

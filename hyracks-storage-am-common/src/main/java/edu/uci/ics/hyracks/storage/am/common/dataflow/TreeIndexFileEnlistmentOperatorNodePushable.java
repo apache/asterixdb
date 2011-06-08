@@ -23,11 +23,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 
 public class TreeIndexFileEnlistmentOperatorNodePushable extends AbstractOperatorNodePushable {
 
-    private final TreeIndexOpHelper btreeOpHelper;
+    private final TreeIndexOpHelper treeIndexOpHelper;
 
-    public TreeIndexFileEnlistmentOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
-            int partition) {
-        btreeOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.ENLIST);
+    public TreeIndexFileEnlistmentOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
+            IHyracksStageletContext ctx, int partition) {
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
+                IndexHelperOpenMode.ENLIST);
     }
 
     @Override
@@ -47,10 +48,9 @@ public class TreeIndexFileEnlistmentOperatorNodePushable extends AbstractOperato
     @Override
     public void initialize() throws HyracksDataException {
         try {
-        	btreeOpHelper.init();
-        }
-        finally {
-        	btreeOpHelper.deinit();
+            treeIndexOpHelper.init();
+        } finally {
+            treeIndexOpHelper.deinit();
         }
     }
 

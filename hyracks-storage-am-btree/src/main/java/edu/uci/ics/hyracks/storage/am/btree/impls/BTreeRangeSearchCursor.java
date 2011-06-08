@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -173,14 +174,14 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void open(ICachedPage page, ISearchPredicate searchPred) throws Exception {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws Exception {
         // in case open is called multiple times without closing
-        if (this.page != null) {
-            this.page.releaseReadLatch();
-            bufferCache.unpin(this.page);
+        if (page != null) {
+            page.releaseReadLatch();
+            bufferCache.unpin(page);
         }
 
-        this.page = page;
+        page = ((CursorInitialState) initialState).getPage();
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;

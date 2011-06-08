@@ -28,6 +28,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final TreeIndexOpHelper treeIndexOpHelper;
@@ -44,12 +46,14 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
         ITreeIndexCursor cursor = treeIndexOpHelper.createDiskOrderScanCursor(cursorFrame);
         ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 
+        IndexOpContext diskOrderScanOpCtx = treeIndexOpHelper.getTreeIndex().createOpContext(IndexOp.DISKORDERSCAN,
+                cursorFrame, null, null);
         try {
         
         	treeIndexOpHelper.init();
         	
         	try {
-        		treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame);
+        		treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame, diskOrderScanOpCtx);
 
         		int fieldCount = treeIndexOpHelper.getTreeIndex().getFieldCount();
         		ByteBuffer frame = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();

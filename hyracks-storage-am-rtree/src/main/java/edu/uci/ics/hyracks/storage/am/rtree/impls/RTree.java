@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -42,6 +41,7 @@ public class RTree implements ITreeIndex {
     private final IBufferCache bufferCache;
     private int fileId;
 
+    private final SearchPredicate diskOrderScanPredicate;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
     private final MultiComparator interiorCmp;
@@ -57,8 +57,9 @@ public class RTree implements ITreeIndex {
     public AtomicLong unpins = new AtomicLong();
     public byte currentLevel = 0;
 
-    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, MultiComparator interiorCmp, MultiComparator leafCmp) {
+    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            MultiComparator interiorCmp, MultiComparator leafCmp) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
@@ -67,6 +68,7 @@ public class RTree implements ITreeIndex {
         this.leafCmp = leafCmp;
         globalNsn = new AtomicInteger();
         this.treeLatch = new ReentrantReadWriteLock(true);
+        this.diskOrderScanPredicate = new SearchPredicate(null, interiorCmp, leafCmp);
     }
 
     public void incrementGlobalNsn() {
@@ -221,11 +223,11 @@ public class RTree implements ITreeIndex {
     public void close() {
         fileId = -1;
     }
-    
+
     @Override
     public RTreeOpContext createOpContext(IndexOp op, ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame) {
-        return new RTreeOpContext(op, (IRTreeFrame)leafFrame, (IRTreeFrame)interiorFrame, metaFrame, 8);
+        return new RTreeOpContext(op, (IRTreeFrame) leafFrame, (IRTreeFrame) interiorFrame, metaFrame, 8);
     }
 
     @Override
@@ -436,7 +438,7 @@ public class RTree implements ITreeIndex {
                     numOfPages++; // debug
                     if (!isLeaf) {
                         splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
-                        rightFrame = (IRTreeFrame)interiorFrameFactory.createFrame();
+                        rightFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         rightFrame.setPageTupleFieldCount(interiorCmp.getFieldCount());
@@ -450,7 +452,7 @@ public class RTree implements ITreeIndex {
                         ctx.interiorFrame.setPageLsn(newNsn);
                     } else {
                         splitsByLevel[0]++; // debug
-                        rightFrame = (IRTreeFrame)leafFrameFactory.createFrame();
+                        rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setPageTupleFieldCount(leafCmp.getFieldCount());
@@ -827,14 +829,14 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void search(IRTreeCursor cursor, ITupleReference searchKey, RTreeOpContext ctx) throws Exception {
+    public void search(ITreeIndexCursor cursor, SearchPredicate pred, RTreeOpContext ctx) throws Exception {
         ctx.reset();
-        ctx.tuple = searchKey;
         ctx.cursor = cursor;
 
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(fileId);
-        ctx.cursor.open(ctx.pathList, ctx.tuple, rootPage, interiorCmp, leafCmp);
+        ctx.cursorInitialState.setRootPage(rootPage);
+        ctx.cursor.open(ctx.cursorInitialState, pred);
     }
 
     public void search(Stack<Integer> s, ITupleReference tuple, RTreeOpContext ctx, ArrayList<Rectangle> results)
@@ -916,10 +918,6 @@ public class RTree implements ITreeIndex {
         throw new Exception("RTree Update not implemented.");
     }
 
-    
-
-   
-
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
             ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
@@ -937,16 +935,32 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame)
+    public void diskOrderScan(ITreeIndexCursor icursor,
+            ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame, IndexOpContext ictx)
             throws HyracksDataException {
-        throw new HyracksDataException("RTree disk order not implemented.");
+        RTreeDiskOrderScanCursor cursor = (RTreeDiskOrderScanCursor)icursor;
+        RTreeOpContext ctx = (RTreeOpContext) ictx;
+        ctx.reset();
         
+        int currentPageId = rootPage + 1;
+        int maxPageId = freePageManager.getMaxPage(metaFrame);
+
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(
+                fileId, currentPageId), false);
+        page.acquireReadLatch();
+        cursor.setBufferCache(bufferCache);
+        cursor.setFileId(fileId);
+        cursor.setCurrentPageId(currentPageId);
+        cursor.setMaxPageId(maxPageId);
+        ctx.cursorInitialState.setPage(page);
+        cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
     }
+
 
     @Override
     public int getRootPageId() {
         return rootPage;
-    } 
+    }
 
     @Override
     public int getFieldCount() {

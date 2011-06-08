@@ -246,9 +246,11 @@ public class BTree implements ITreeIndex {
 
 	@Override
 	public void diskOrderScan(ITreeIndexCursor icursor,
-			ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame)
+			ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame, IndexOpContext ictx)
 			throws HyracksDataException {
 	    BTreeDiskOrderScanCursor cursor = (BTreeDiskOrderScanCursor)icursor;
+	    BTreeOpContext ctx = (BTreeOpContext) ictx;
+	    ctx.reset();
 	    
 	    int currentPageId = rootPage + 1;
 		int maxPageId = freePageManager.getMaxPage(metaFrame);
@@ -260,7 +262,8 @@ public class BTree implements ITreeIndex {
 		cursor.setFileId(fileId);
 		cursor.setCurrentPageId(currentPageId);
 		cursor.setMaxPageId(maxPageId);
-		cursor.open(page, diskOrderScanPredicate);
+		ctx.cursorInitialState.setPage(page);
+		cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
 	}
 
 	public void search(ITreeIndexCursor cursor, RangePredicate pred,
@@ -1060,7 +1063,8 @@ public class BTree implements ITreeIndex {
 					break;
 
 				case SEARCH: {
-					ctx.cursor.open(node, ctx.pred);
+				    ctx.cursorInitialState.setPage(node);
+					ctx.cursor.open(ctx.cursorInitialState, ctx.pred);
 				}
 					break;
 				}
