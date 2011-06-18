@@ -67,7 +67,6 @@ public class NaiveScheduler implements IScheduler {
             String[] opParts = null;
             if (!jas.allocations.containsKey(oid)) {
                 Set<ConstraintExpression> opConstraints = jas.opConstraints.get(oid);
-                System.err.println("Constraints: " + opConstraints);
                 for (ConstraintExpression ce : opConstraints) {
                     int nParts = getNumPartitions(oid, ce);
                     if (nParts != -1) {
@@ -137,12 +136,9 @@ public class NaiveScheduler implements IScheduler {
     }
 
     private int getNumPartitions(OperatorDescriptorId oid, ConstraintExpression ce) {
-        System.err.println(ce);
         if (ce.getTag() == ExpressionTag.RELATIONAL) {
             RelationalExpression re = (RelationalExpression) ce;
             if (re.getOperator() == RelationalExpression.Operator.EQUAL) {
-                System.err.println("Left: " + re.getLeft());
-                System.err.println("Right: " + re.getRight());
                 if (re.getLeft().getTag() == ConstraintExpression.ExpressionTag.PARTITION_COUNT) {
                     return getNumPartitions(oid, (PartitionCountExpression) re.getLeft(), re.getRight());
                 } else if (re.getRight().getTag() == ConstraintExpression.ExpressionTag.PARTITION_COUNT) {
