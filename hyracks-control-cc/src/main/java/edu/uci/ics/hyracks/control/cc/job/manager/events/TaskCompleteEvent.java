@@ -19,6 +19,7 @@ import java.util.UUID;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
 public class TaskCompleteEvent extends AbstractTaskLifecycleEvent {
@@ -29,7 +30,8 @@ public class TaskCompleteEvent extends AbstractTaskLifecycleEvent {
     @Override
     protected void performEvent(TaskAttempt ta) {
         try {
-            ta.notifyTaskComplete();
+            ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
+            ac.getJobRun().getScheduler().notifyTaskComplete(ta, ac);
         } catch (HyracksException e) {
             e.printStackTrace();
         }

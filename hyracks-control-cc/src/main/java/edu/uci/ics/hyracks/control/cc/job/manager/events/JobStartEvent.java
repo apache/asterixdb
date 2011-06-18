@@ -40,6 +40,10 @@ public class JobStartEvent extends SynchronizableEvent {
             throw new Exception("Job already started");
         }
         run.setStatus(JobStatus.RUNNING, null);
-        run.getStateMachine().schedule();
+        try {
+            run.getScheduler().startJob();
+        } catch (Exception e) {
+            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, run.getJobId(), JobStatus.FAILURE, e));
+        }
     }
 }

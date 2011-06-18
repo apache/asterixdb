@@ -78,7 +78,7 @@ public class ActivityClusterGraphBuilder {
         return null;
     }
 
-    public ActivityCluster inferStages(JobActivityGraph jag) {
+    public Set<ActivityCluster> inferActivityClusters(JobActivityGraph jag) {
         JobSpecification spec = jag.getJobSpecification();
 
         /*
@@ -106,11 +106,8 @@ public class ActivityClusterGraphBuilder {
             }
         }
 
-        ActivityCluster endStage = new ActivityCluster(jobRun, new HashSet<ActivityId>());
         Map<ActivityId, Set<ActivityId>> blocker2BlockedMap = jag.getBlocker2BlockedMap();
         for (ActivityCluster s : stages) {
-            endStage.addDependency(s);
-            s.addDependent(endStage);
             Set<ActivityCluster> blockedStages = new HashSet<ActivityCluster>();
             for (ActivityId t : s.getActivities()) {
                 Set<ActivityId> blockedTasks = blocker2BlockedMap.get(t);
@@ -125,15 +122,21 @@ public class ActivityClusterGraphBuilder {
                 s.addDependent(bs);
             }
         }
+        Set<ActivityCluster> roots = new HashSet<ActivityCluster>();
+        for (ActivityCluster s : stages) {
+            if (s.getDependents().isEmpty()) {
+                roots.add(s);
+            }
+        }
+        jobRun.setActivityClusters(stages);
         jobRun.getActivityClusterMap().putAll(stageMap);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Inferred " + (stages.size() + 1) + " stages");
+            LOGGER.info("Inferred " + stages.size() + " stages");
             for (ActivityCluster s : stages) {
                 LOGGER.info(s.toString());
             }
-            LOGGER.info("SID: ENDSTAGE");
         }
-        return endStage;
+        return roots;
     }
 
     private void merge(Map<ActivityId, ActivityCluster> eqSetMap, Set<ActivityCluster> eqSets, ActivityId t1,

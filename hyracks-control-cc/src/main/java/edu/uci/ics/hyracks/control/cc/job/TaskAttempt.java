@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public class TaskAttempt {
     public enum TaskStatus {
@@ -75,13 +74,5 @@ public class TaskAttempt {
     public void setStatus(TaskStatus status, Exception exception) {
         this.status = status;
         this.exception = exception;
-    }
-
-    public void notifyTaskComplete() throws HyracksException {
-        taskState.getTaskCluster().notifyTaskComplete(this);
-    }
-
-    public void notifyTaskFailure(Exception exception) throws HyracksException {
-        taskState.getTaskCluster().notifyTaskFailure(this, exception);
     }
 }

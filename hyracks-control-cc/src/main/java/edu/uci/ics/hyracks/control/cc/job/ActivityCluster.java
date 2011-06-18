@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.cc.scheduler.ActivityClusterStateMachine;
 
 public class ActivityCluster {
     private final JobRun jobRun;
@@ -39,8 +38,6 @@ public class ActivityCluster {
     private TaskCluster[] taskClusters;
 
     private Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
-
-    private ActivityClusterStateMachine acsm;
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
 
@@ -72,6 +69,10 @@ public class ActivityCluster {
         return dependencies;
     }
 
+    public Set<ActivityCluster> getDependents() {
+        return dependents;
+    }
+
     public Map<ActivityId, Task[]> getTaskMap() {
         return taskStateMap;
     }
@@ -86,14 +87,6 @@ public class ActivityCluster {
 
     public Map<PartitionId, TaskCluster> getPartitionProducingTaskClusterMap() {
         return partitionProducingTaskClusterMap;
-    }
-
-    public ActivityClusterStateMachine getStateMachine() {
-        return acsm;
-    }
-
-    public void setStateMachine(ActivityClusterStateMachine acsm) {
-        this.acsm = acsm;
     }
 
     public JobRun getJobRun() {

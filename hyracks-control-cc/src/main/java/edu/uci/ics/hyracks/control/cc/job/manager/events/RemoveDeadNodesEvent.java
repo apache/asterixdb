@@ -70,7 +70,7 @@ public class RemoveDeadNodesEvent extends AbstractEvent {
             JobRun run = ccs.getRunMap().get(jobId);
             if (run != null) {
                 try {
-                    run.notifyNodeFailures(deadNodes);
+                    run.getScheduler().notifyNodeFailures(deadNodes);
                 } catch (HyracksException e) {
                     throw new RuntimeException(e);
                 }

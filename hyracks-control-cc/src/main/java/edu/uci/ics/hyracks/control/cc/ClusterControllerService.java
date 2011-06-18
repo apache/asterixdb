@@ -60,7 +60,6 @@ import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskFailureEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.UnregisterNodeEvent;
 import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.jobqueue.JobQueue;
-import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
@@ -99,8 +98,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final JobQueue jobQueue;
 
-    private final JobScheduler scheduler;
-
     private final Executor taskExecutor;
 
     private final Timer timer;
@@ -120,7 +117,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         webServer = new WebServer(this);
         runMap = new HashMap<UUID, JobRun>();
         jobQueue = new JobQueue();
-        scheduler = new JobScheduler(this);
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
         ccContext = new ICCContext() {
@@ -162,10 +158,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     public JobQueue getJobQueue() {
         return jobQueue;
-    }
-
-    public JobScheduler getScheduler() {
-        return scheduler;
     }
 
     public Executor getExecutor() {

@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.control.cc.job.JobActivityGraphBuilder;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 
 public class JobCreateEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
@@ -70,7 +71,8 @@ public class JobCreateEvent extends SynchronizableEvent {
         run.setStatus(JobStatus.INITIALIZED, null);
 
         ccs.getRunMap().put(jobId, run);
-        ccs.getScheduler().notifyJobCreation(run);
+        JobScheduler jrs = new JobScheduler(ccs, run);
+        run.setScheduler(jrs);
         appCtx.notifyJobCreation(jobId, spec);
     }
 

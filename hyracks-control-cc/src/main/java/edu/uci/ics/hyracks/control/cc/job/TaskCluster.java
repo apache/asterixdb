@@ -20,11 +20,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class TaskCluster {
-    private final ActivityCluster activityCluster;
+    private final ActivityCluster ac;
 
     private final Task[] tasks;
 
@@ -34,12 +33,16 @@ public class TaskCluster {
 
     private final List<TaskClusterAttempt> taskClusterAttempts;
 
-    public TaskCluster(ActivityCluster activityCluster, Task[] tasks) {
-        this.activityCluster = activityCluster;
+    public TaskCluster(ActivityCluster ac, Task[] tasks) {
+        this.ac = ac;
         this.tasks = tasks;
         this.producedPartitions = new HashSet<PartitionId>();
         this.requiredPartitions = new HashSet<PartitionId>();
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
+    }
+
+    public ActivityCluster getActivityCluster() {
+        return ac;
     }
 
     public Task[] getTasks() {
@@ -56,14 +59,6 @@ public class TaskCluster {
 
     public List<TaskClusterAttempt> getAttempts() {
         return taskClusterAttempts;
-    }
-
-    public void notifyTaskComplete(TaskAttempt ta) throws HyracksException {
-        activityCluster.getStateMachine().notifyTaskComplete(ta);
-    }
-
-    public void notifyTaskFailure(TaskAttempt ta, Exception exception) throws HyracksException {
-        activityCluster.getStateMachine().notifyTaskFailure(ta, exception);
     }
 
     @Override
