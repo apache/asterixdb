@@ -2,25 +2,25 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   <artifactId>hadoopcompatclient</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.7-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>hadoop-compat-example</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.6</version>
+  		<version>0.1.7-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   		<artifactId>hadoopcompathelper</artifactId>
-  		<version>0.1.6</version>
+  		<version>0.1.7-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
