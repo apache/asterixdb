@@ -14,73 +14,72 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.file;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-public abstract class RecordWriter implements IRecordWriter{
+import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
 
-	 
-	protected final BufferedWriter bufferedWriter;
+public abstract class RecordWriter implements IRecordWriter {
+
+    protected final BufferedWriter bufferedWriter;
     protected final int[] columns;
     protected final char separator;
-    
-    public static final char COMMA = ',';
-    
-    public RecordWriter(Object [] args) throws Exception{
-    	OutputStream outputStream = createOutputStream(args);
-    	if(outputStream != null){
-    		bufferedWriter = new BufferedWriter(new OutputStreamWriter(createOutputStream(args)));
-    	}else{
-    		bufferedWriter = null;
-    	}
-    	this.columns = null;
-    	this.separator = COMMA;
-    }
-    
-    public RecordWriter(int []columns, char separator, Object[] args) throws Exception{
-    	OutputStream outputStream = createOutputStream(args);
-    	if(outputStream != null){
-    		bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-    	}else{
-    		bufferedWriter = null;
-    	}
-    	this.columns = columns;
-    	this.separator = separator;
-    }
-    
-	@Override
-     public void close() {
-         try {
-             bufferedWriter.close();
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-     }
 
-     @Override
-     public void write(Object[] record) throws Exception {
-         if (columns == null) {
-             for (int i = 0; i < record.length; ++i) {
-                 if (i != 0) {
-                     bufferedWriter.write(separator);
-                 }
-                 bufferedWriter.write(String.valueOf(record[i]));
-             }
-         } else {
-             for (int i = 0; i < columns.length; ++i) {
-                 if (i != 0) {
-                     bufferedWriter.write(separator);
-                 }
-                 bufferedWriter.write(String.valueOf(record[columns[i]]));
-             }
-         }
-         bufferedWriter.write("\n");
-     }
-     
-     public abstract OutputStream createOutputStream(Object[] args) throws Exception;
-   
+    public static final char COMMA = ',';
+
+    public RecordWriter(Object[] args) throws Exception {
+        OutputStream outputStream = createOutputStream(args);
+        if (outputStream != null) {
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(createOutputStream(args)));
+        } else {
+            bufferedWriter = null;
+        }
+        this.columns = null;
+        this.separator = COMMA;
+    }
+
+    public RecordWriter(int[] columns, char separator, Object[] args) throws Exception {
+        OutputStream outputStream = createOutputStream(args);
+        if (outputStream != null) {
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
+        } else {
+            bufferedWriter = null;
+        }
+        this.columns = columns;
+        this.separator = separator;
+    }
+
+    @Override
+    public void close() {
+        try {
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void write(Object[] record) throws Exception {
+        if (columns == null) {
+            for (int i = 0; i < record.length; ++i) {
+                if (i != 0) {
+                    bufferedWriter.write(separator);
+                }
+                bufferedWriter.write(StringSerializationUtils.toString(record[i]));
+            }
+        } else {
+            for (int i = 0; i < columns.length; ++i) {
+                if (i != 0) {
+                    bufferedWriter.write(separator);
+                }
+                bufferedWriter.write(StringSerializationUtils.toString(record[columns[i]]));
+            }
+        }
+        bufferedWriter.write("\n");
+    }
+
+    public abstract OutputStream createOutputStream(Object[] args) throws Exception;
+
 }
