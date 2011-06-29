@@ -33,12 +33,8 @@ public class TaskFailureEvent extends AbstractTaskLifecycleEvent {
 
     @Override
     protected void performEvent(TaskAttempt ta) {
-        try {
-            ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
-            ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, exception);
-        } catch (HyracksException e) {
-            e.printStackTrace();
-        }
+        ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
+        ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, exception);
     }
 
     @Override

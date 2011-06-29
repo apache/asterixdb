@@ -126,7 +126,9 @@ public class JobScheduler {
             JobActivityGraph jag = jobRun.getJobActivityGraph();
             for (ActivityId aid : ac.getActivities()) {
                 Set<ActivityId> deps = jag.getBlocked2BlockerMap().get(aid);
-                prereqs.addAll(deps);
+                if (deps != null) {
+                    prereqs.addAll(deps);
+                }
             }
         } else {
 
@@ -140,7 +142,8 @@ public class JobScheduler {
     }
 
     private void findRunnableActivityClusters(Set<ActivityCluster> frontier, ActivityCluster candidate) {
-        if (frontier.contains(candidate) || inProgressClusters.contains(candidate)) {
+        if (frontier.contains(candidate) || inProgressClusters.contains(candidate)
+                || completedClusters.contains(candidate)) {
             return;
         }
         boolean depsComplete = true;
@@ -169,10 +172,7 @@ public class JobScheduler {
             }
         }
         if (depsComplete) {
-            if (runnable && candidate != rootActivityCluster) {
-                frontier.add(candidate);
-            }
-
+            frontier.add(candidate);
         }
     }
 
