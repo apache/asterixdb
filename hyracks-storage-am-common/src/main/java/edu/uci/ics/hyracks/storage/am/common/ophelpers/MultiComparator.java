@@ -92,10 +92,6 @@ public class MultiComparator {
         this.cmps = cmps;
     }
 
-    public int size() {
-        return cmps.length;
-    }
-
     public int getFieldCount() {
         return typeTraits.length;
     }

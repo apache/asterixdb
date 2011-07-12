@@ -5,12 +5,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
 public final class RTreeOpContext implements IndexOpContext {
     public final IndexOp op;
-    public final IRTreeFrame interiorFrame;
-    public final IRTreeFrame leafFrame;
+    public final IRTreeInteriorFrame interiorFrame;
+    public final IRTreeLeafFrame leafFrame;
     public ITreeIndexCursor cursor;
     public CursorInitialState cursorInitialState;
     public final ITreeIndexMetaDataFrame metaFrame;
@@ -20,7 +21,7 @@ public final class RTreeOpContext implements IndexOpContext {
                                     // of the visited pages
     public final TraverseList traverseList; // used for traversing the tree
 
-    public RTreeOpContext(IndexOp op, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
+    public RTreeOpContext(IndexOp op, IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.interiorFrame = interiorFrame;

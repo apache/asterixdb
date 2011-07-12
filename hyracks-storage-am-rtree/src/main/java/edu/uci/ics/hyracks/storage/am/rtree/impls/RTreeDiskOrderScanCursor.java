@@ -118,8 +118,8 @@ public class RTreeDiskOrderScanCursor implements ITreeIndexCursor {
         tupleIndex = 0;
         frame.setPage(page);
         SearchPredicate pred = (SearchPredicate) searchPred;
-        MultiComparator leafCmp = pred.getLeafCmp();
-        frameTuple.setFieldCount(leafCmp.getFieldCount());
+        MultiComparator cmp = pred.getCmp();
+        frameTuple.setFieldCount(cmp.getFieldCount());
         boolean leafExists = positionToNextLeaf(false);
         if (!leafExists) {
             throw new HyracksDataException(

@@ -2,12 +2,14 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -16,8 +18,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     private int fileId = -1;
     private ICachedPage page = null;
-    private IRTreeFrame interiorFrame = null;
-    private IRTreeFrame leafFrame = null;
+    private IRTreeInteriorFrame interiorFrame = null;
+    private IRTreeLeafFrame leafFrame = null;
     private IBufferCache bufferCache = null;
 
     private SearchPredicate pred;
@@ -28,15 +30,14 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     private int tupleIndex = 0;
     private int tupleIndexInc = 0;
 
-    private MultiComparator leafCmp;
-    private MultiComparator interiorCmp;
+    private MultiComparator cmp;
 
     private ITreeIndexTupleReference frameTuple;
 
     private int pin = 0;
     private int unpin = 0;
 
-    public RTreeSearchCursor(IRTreeFrame interiorFrame, IRTreeFrame leafFrame) {
+    public RTreeSearchCursor(IRTreeInteriorFrame interiorFrame, IRTreeLeafFrame leafFrame) {
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.frameTuple = leafFrame.createTupleReference();
@@ -51,7 +52,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         tupleIndex = 0;
         tupleIndexInc = 0;
         page = null;
-        pathList.clear();
+        pathList = null;
     }
 
     public ITupleReference getTuple() {
@@ -85,7 +86,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
             if (!isLeaf) {
                 for (int i = 0; i < interiorFrame.getTupleCount(); i++) {
-                    int childPageId = interiorFrame.getChildPageIdIfIntersect(searchKey, i, interiorCmp);
+                    int childPageId = interiorFrame.getChildPageIdIfIntersect(searchKey, i, cmp);
                     if (childPageId != -1) {
                         pathList.add(childPageId, pageLsn, -1);
                     }
@@ -110,6 +111,10 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public boolean hasNext() throws Exception {
+        if (page == null) {
+            return false;
+        }
+            
         if (tupleIndex == leafFrame.getTupleCount()) {
             if (!fetchNextLeafPage()) {
                 return false;
@@ -118,7 +123,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
         do {
             for (int i = tupleIndex; i < leafFrame.getTupleCount(); i++) {
-                if (leafFrame.intersect(searchKey, i, leafCmp)) {
+                if (leafFrame.intersect(searchKey, i, cmp)) {
                     frameTuple.resetByTupleIndex(leafFrame, i);
                     tupleIndexInc = i + 1;
                     return true;
@@ -146,12 +151,11 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         rootPage = ((CursorInitialState) initialState).getRootPage();
 
         pred = (SearchPredicate) searchPred;
-        interiorCmp = pred.getInteriorCmp();
-        leafCmp = pred.getLeafCmp();
+        cmp = pred.getCmp();
         searchKey = pred.getSearchKey();
-
+        
         pathList.add(this.rootPage, -1, -1);
-        frameTuple.setFieldCount(leafCmp.getFieldCount());
+        frameTuple.setFieldCount(cmp.getFieldCount());
         tupleIndex = 0;
         fetchNextLeafPage();
     }

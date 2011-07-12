@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
+
 public class TraverseList {
     private IntArrayList pageIds;
     private IntArrayList pageLsns;

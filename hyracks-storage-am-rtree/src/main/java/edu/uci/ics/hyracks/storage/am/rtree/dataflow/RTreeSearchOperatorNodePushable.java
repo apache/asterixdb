@@ -22,7 +22,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReferen
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -40,8 +41,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private RTree rtree;
     private PermutingFrameTupleReference searchKey;
     private SearchPredicate searchPred;
-    private MultiComparator interiorCmp;
-    private MultiComparator leafCmp;
+    private MultiComparator cmp;
     private ITreeIndexCursor cursor;
     private ITreeIndexFrame interiorFrame;
     private ITreeIndexFrame leafFrame;
@@ -69,27 +69,26 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
         interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
         leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        cursor = new RTreeSearchCursor((IRTreeFrame) interiorFrame, (IRTreeFrame) leafFrame);
+        cursor = new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrame, (IRTreeLeafFrame) leafFrame);
 
         try {
 
             treeIndexOpHelper.init();
             rtree = (RTree) treeIndexOpHelper.getTreeIndex();
 
-            int keySearchFields = rtree.getLeafCmp().getComparators().length;
+            int keySearchFields = rtree.getCmp().getComparators().length;
 
             IBinaryComparator[] keySearchComparators = new IBinaryComparator[keySearchFields];
             for (int i = 0; i < keySearchFields; i++) {
-                keySearchComparators[i] = rtree.getLeafCmp().getComparators()[i];
+                keySearchComparators[i] = rtree.getCmp().getComparators()[i];
             }
-            interiorCmp = new MultiComparator(rtree.getInteriorCmp().getTypeTraits(), keySearchComparators);
-            leafCmp = new MultiComparator(rtree.getLeafCmp().getTypeTraits(), keySearchComparators);
+            cmp = new MultiComparator(rtree.getCmp().getTypeTraits(), keySearchComparators);
 
-            searchPred = new SearchPredicate(searchKey, interiorCmp, leafCmp);
+            searchPred = new SearchPredicate(searchKey, cmp);
             accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
             writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
-            tb = new ArrayTupleBuilder(rtree.getLeafCmp().getFieldCount());
+            tb = new ArrayTupleBuilder(rtree.getCmp().getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext().getFrameSize());
             appender.reset(writeBuffer, true);

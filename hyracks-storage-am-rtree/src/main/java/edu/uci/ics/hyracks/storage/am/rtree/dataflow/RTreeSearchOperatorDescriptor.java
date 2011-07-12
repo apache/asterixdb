@@ -25,10 +25,10 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     public RTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] leafTypeTraits,
+            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] keyFields, ITreeIndexOpHelperFactory opHelperFactory) {
         super(spec, 1, 1, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, leafTypeTraits, comparatorFactories, opHelperFactory);
+                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
         this.keyFields = keyFields;
     }
 

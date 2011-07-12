@@ -37,9 +37,10 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.InteriorFrameSchema;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -76,39 +77,35 @@ public class SearchCursorTest extends AbstractRTreeTest {
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
 
-        // declare leaf-frame-tuple fields
-        int leafFieldCount = 5;
-        ITypeTrait[] leafTypeTraits = new ITypeTrait[leafFieldCount];
-        leafTypeTraits[0] = new TypeTrait(8);
-        leafTypeTraits[1] = new TypeTrait(8);
-        leafTypeTraits[2] = new TypeTrait(8);
-        leafTypeTraits[3] = new TypeTrait(8);
-        leafTypeTraits[4] = new TypeTrait(4);
+        // declare tuple fields
+        int fieldCount = 5;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(8);
+        typeTraits[1] = new TypeTrait(8);
+        typeTraits[2] = new TypeTrait(8);
+        typeTraits[3] = new TypeTrait(8);
+        typeTraits[4] = new TypeTrait(4);
 
-        MultiComparator leafCmp = new MultiComparator(leafTypeTraits, cmps);
-        InteriorFrameSchema interiorFrameSchema = new InteriorFrameSchema(leafCmp);
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        RTreeTypeAwareTupleWriterFactory interiorTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
-                interiorFrameSchema.getInteriorCmp().getTypeTraits());
-        RTreeTypeAwareTupleWriterFactory leafTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(leafTypeTraits);
+        RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMFrameFactory(interiorTupleWriterFactory, keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMFrameFactory(leafTupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-        IRTreeFrame interiorFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
-        IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
+        IRTreeInteriorFrame interiorFrame = (IRTreeInteriorFrame) interiorFrameFactory.createFrame();
+        IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
-                interiorFrameSchema.getInteriorCmp(), leafCmp);
+        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
         rtree.create(fileId, leafFrame, metaFrame);
         rtree.open(fileId);
 
         ByteBuffer hyracksFrame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(leafCmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
         DataOutput dos = tb.getDataOutput();
 
         @SuppressWarnings("rawtypes")
@@ -163,8 +160,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         }
 
         ITreeIndexCursor searchCursor = new RTreeSearchCursor(interiorFrame, leafFrame);
-        SearchPredicate searchPredicate = new SearchPredicate(tuple, interiorFrameSchema.getInteriorCmp(), leafCmp);
-        
+        SearchPredicate searchPredicate = new SearchPredicate(tuple, cmp);
 
         RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, metaFrame);
         rtree.search(searchCursor, searchPredicate, searchOpCtx);

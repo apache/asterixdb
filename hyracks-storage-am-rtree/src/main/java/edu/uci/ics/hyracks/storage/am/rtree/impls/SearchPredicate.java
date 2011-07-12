@@ -9,13 +9,11 @@ public class SearchPredicate implements ISearchPredicate {
     private static final long serialVersionUID = 1L;
 
     protected ITupleReference searchKey;
-    protected MultiComparator interiorCmp;
-    protected MultiComparator leafCmp;
+    protected MultiComparator cmp;
 
-    public SearchPredicate(ITupleReference searchKey, MultiComparator interiorCmp, MultiComparator leafCmp) {
+    public SearchPredicate(ITupleReference searchKey, MultiComparator cmp) {
         this.searchKey = searchKey;
-        this.interiorCmp = interiorCmp;
-        this.leafCmp = leafCmp;
+        this.cmp = cmp;
     }
 
     public ITupleReference getSearchKey() {
@@ -26,11 +24,7 @@ public class SearchPredicate implements ISearchPredicate {
         this.searchKey = searchKey;
     }
 
-    public MultiComparator getInteriorCmp() {
-        return interiorCmp;
-    }
-
-    public MultiComparator getLeafCmp() {
-        return leafCmp;
+    public MultiComparator getCmp() {
+        return cmp;
     }
 }
