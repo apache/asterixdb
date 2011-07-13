@@ -90,8 +90,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private static String primaryBtreeName = "primary"
 			+ simpleDateFormat.format(new Date());
 	private static String primaryFileName = System
-			.getProperty("java.io.tmpdir")
-			+ sep + "nc1" + sep + primaryBtreeName;
+			.getProperty("java.io.tmpdir") + sep + primaryBtreeName;
 
 	private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
@@ -121,8 +120,7 @@ public class BTreeOperatorsTest extends AbstractIntegrationTest {
 	private static String secondaryBtreeName = "secondary"
 			+ simpleDateFormat.format(new Date());
 	private static String secondaryFileName = System
-			.getProperty("java.io.tmpdir")
-			+ sep + "nc1" + sep + secondaryBtreeName;
+			.getProperty("java.io.tmpdir") + sep + secondaryBtreeName;
 
 	private IFileSplitProvider secondaryBtreeSplitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
