@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +21,6 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class ActivityCluster {
     private final JobRun jobRun;
@@ -33,11 +31,7 @@ public class ActivityCluster {
 
     private final Set<ActivityCluster> dependents;
 
-    private final Map<ActivityId, Task[]> taskStateMap;
-
-    private TaskCluster[] taskClusters;
-
-    private Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
+    private ActivityClusterPlan acp;
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
 
@@ -48,8 +42,6 @@ public class ActivityCluster {
         this.activities = activities;
         dependencies = new HashSet<ActivityCluster>();
         dependents = new HashSet<ActivityCluster>();
-        taskStateMap = new HashMap<ActivityId, Task[]>();
-        partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
         inProgressTaskClusters = new HashSet<TaskCluster>();
     }
 
@@ -73,28 +65,20 @@ public class ActivityCluster {
         return dependents;
     }
 
-    public Map<ActivityId, Task[]> getTaskMap() {
-        return taskStateMap;
-    }
-
-    public TaskCluster[] getTaskClusters() {
-        return taskClusters;
-    }
-
-    public void setTaskClusters(TaskCluster[] taskClusters) {
-        this.taskClusters = taskClusters;
-    }
-
-    public Map<PartitionId, TaskCluster> getPartitionProducingTaskClusterMap() {
-        return partitionProducingTaskClusterMap;
-    }
-
     public JobRun getJobRun() {
         return jobRun;
     }
 
     public int getMaxTaskClusterAttempts() {
         return jobRun.getJobActivityGraph().getJobSpecification().getMaxAttempts();
+    }
+
+    public ActivityClusterPlan getPlan() {
+        return acp;
+    }
+
+    public void setPlan(ActivityClusterPlan acp) {
+        this.acp = acp;
     }
 
     public void setConnectorPolicyMap(Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) {

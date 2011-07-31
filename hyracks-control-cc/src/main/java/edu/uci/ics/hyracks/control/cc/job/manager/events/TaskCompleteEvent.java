@@ -31,7 +31,7 @@ public class TaskCompleteEvent extends AbstractTaskLifecycleEvent {
     protected void performEvent(TaskAttempt ta) {
         try {
             ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
-            ac.getJobRun().getScheduler().notifyTaskComplete(ta, ac);
+            ac.getJobRun().getScheduler().notifyTaskComplete(ta);
         } catch (HyracksException e) {
             e.printStackTrace();
         }

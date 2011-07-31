@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 
@@ -22,11 +25,17 @@ public class Task {
 
     private final ActivityPartitionDetails apd;
 
+    private final Set<TaskId> dependencies;
+
+    private final Set<TaskId> dependents;
+
     private TaskCluster taskCluster;
 
     public Task(TaskId taskId, ActivityPartitionDetails apd) {
         this.taskId = taskId;
         this.apd = apd;
+        this.dependencies = new HashSet<TaskId>();
+        this.dependents = new HashSet<TaskId>();
     }
 
     public TaskId getTaskId() {
@@ -35,6 +44,14 @@ public class Task {
 
     public ActivityPartitionDetails getActivityPartitionDetails() {
         return apd;
+    }
+
+    public Set<TaskId> getDependencies() {
+        return dependencies;
+    }
+
+    public Set<TaskId> getDependents() {
+        return dependents;
     }
 
     public TaskCluster getTaskCluster() {

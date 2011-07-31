@@ -31,13 +31,19 @@ public class TaskCluster {
 
     private final Set<PartitionId> requiredPartitions;
 
+    private final Set<TaskCluster> dependencyTaskClusters;
+
+    private final Set<TaskCluster> dependentTaskClusters;
+
     private final List<TaskClusterAttempt> taskClusterAttempts;
 
     public TaskCluster(ActivityCluster ac, Task[] tasks) {
         this.ac = ac;
         this.tasks = tasks;
-        this.producedPartitions = new HashSet<PartitionId>();
-        this.requiredPartitions = new HashSet<PartitionId>();
+        producedPartitions = new HashSet<PartitionId>();
+        requiredPartitions = new HashSet<PartitionId>();
+        dependencyTaskClusters = new HashSet<TaskCluster>();
+        dependentTaskClusters = new HashSet<TaskCluster>();
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
     }
 
@@ -55,6 +61,14 @@ public class TaskCluster {
 
     public Set<PartitionId> getRequiredPartitions() {
         return requiredPartitions;
+    }
+
+    public Set<TaskCluster> getDependencyTaskClusters() {
+        return dependencyTaskClusters;
+    }
+
+    public Set<TaskCluster> getDependentTaskClusters() {
+        return dependentTaskClusters;
     }
 
     public List<TaskClusterAttempt> getAttempts() {
