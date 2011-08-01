@@ -19,13 +19,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
@@ -79,7 +79,7 @@ public class PartitionManager implements IPartitionRequestListener {
         return partitionMap.get(pid).get(0);
     }
 
-    public synchronized void unregisterPartitions(UUID jobId) {
+    public synchronized void unregisterPartitions(JobId jobId) {
         for (Iterator<Map.Entry<PartitionId, List<IPartition>>> i = partitionMap.entrySet().iterator(); i.hasNext();) {
             Map.Entry<PartitionId, List<IPartition>> e = i.next();
             PartitionId pid = e.getKey();

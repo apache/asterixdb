@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.control.common.base;
 
 import java.rmi.Remote;
 import java.util.List;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
@@ -31,10 +31,10 @@ public interface IClusterController extends Remote {
 
     public void unregisterNode(INodeController nodeController) throws Exception;
 
-    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
+    public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception;
 
-    public void notifyTaskFailure(UUID jobId, TaskAttemptId taskId, String nodeId, Exception e) throws Exception;
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception e) throws Exception;
 
     public void nodeHeartbeat(String id) throws Exception;
 

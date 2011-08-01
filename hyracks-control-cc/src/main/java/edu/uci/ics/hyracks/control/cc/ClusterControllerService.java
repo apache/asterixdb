@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -39,6 +38,7 @@ import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
@@ -94,7 +94,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private ClusterControllerInfo info;
 
-    private final Map<UUID, JobRun> runMap;
+    private final Map<JobId, JobRun> runMap;
 
     private final JobQueue jobQueue;
 
@@ -106,6 +106,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final ICCContext ccContext;
 
+    private long jobCounter;
+
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
@@ -115,7 +117,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 ClusterControllerService.class.getName()));
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
-        runMap = new HashMap<UUID, JobRun>();
+        runMap = new HashMap<JobId, JobRun>();
         jobQueue = new JobQueue();
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
@@ -125,6 +127,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 return ipAddressNodeNameMap;
             }
         };
+        jobCounter = 0;
     }
 
     @Override
@@ -152,7 +155,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return applications;
     }
 
-    public Map<UUID, JobRun> getRunMap() {
+    public Map<JobId, JobRun> getRunMap() {
         return runMap;
     }
 
@@ -176,9 +179,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return ccConfig;
     }
 
+    private JobId createJobId() {
+        return new JobId(jobCounter++);
+    }
+
     @Override
-    public UUID createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        UUID jobId = UUID.randomUUID();
+    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+        JobId jobId = createJobId();
         JobCreateEvent jce = new JobCreateEvent(this, jobId, appName, jobSpec, jobFlags);
         jobQueue.schedule(jce);
         jce.sync();
@@ -210,34 +217,34 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
+    public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
         TaskCompleteEvent sce = new TaskCompleteEvent(this, jobId, taskId, nodeId);
         jobQueue.schedule(sce);
     }
 
     @Override
-    public void notifyTaskFailure(UUID jobId, TaskAttemptId taskId, String nodeId, Exception exception)
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception exception)
             throws Exception {
         TaskFailureEvent tfe = new TaskFailureEvent(this, jobId, taskId, nodeId, exception);
         jobQueue.schedule(tfe);
     }
 
     @Override
-    public JobStatus getJobStatus(UUID jobId) throws Exception {
+    public JobStatus getJobStatus(JobId jobId) throws Exception {
         GetJobStatusEvent gse = new GetJobStatusEvent(this, jobId);
         jobQueue.scheduleAndSync(gse);
         return gse.getStatus();
     }
 
     @Override
-    public void start(UUID jobId) throws Exception {
+    public void start(JobId jobId) throws Exception {
         JobStartEvent jse = new JobStartEvent(this, jobId);
         jobQueue.schedule(jse);
     }
 
     @Override
-    public void waitForCompletion(UUID jobId) throws Exception {
+    public void waitForCompletion(JobId jobId) throws Exception {
         GetJobStatusConditionVariableEvent e = new GetJobStatusConditionVariableEvent(this, jobId);
         jobQueue.scheduleAndSync(e);
         IJobStatusConditionVariable var = e.getConditionVariable();

@@ -15,14 +15,14 @@
 package edu.uci.ics.hyracks.api.partitions;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public final class PartitionId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final UUID jobId;
+    private final JobId jobId;
 
     private final ConnectorDescriptorId cdId;
 
@@ -30,14 +30,14 @@ public final class PartitionId implements Serializable {
 
     private final int receiverIndex;
 
-    public PartitionId(UUID jobId, ConnectorDescriptorId cdId, int senderIndex, int receiverIndex) {
+    public PartitionId(JobId jobId, ConnectorDescriptorId cdId, int senderIndex, int receiverIndex) {
         this.jobId = jobId;
         this.cdId = cdId;
         this.senderIndex = senderIndex;
         this.receiverIndex = receiverIndex;
     }
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 

@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
-import java.util.UUID;
-
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
@@ -25,13 +23,14 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public class TestUtils {
     public static IHyracksTaskContext create(int frameSize) {
         try {
             IHyracksRootContext rootCtx = new TestRootContext(frameSize);
             INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
-            IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID());
+            IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, new JobId(0));
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
             IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid);
             return taskCtx;

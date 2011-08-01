@@ -17,11 +17,10 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -47,7 +46,7 @@ public class RemoveDeadNodesEvent extends AbstractEvent {
                 LOGGER.info(e.getKey() + " considered dead");
             }
         }
-        Set<UUID> affectedJobIds = new HashSet<UUID>();
+        Set<JobId> affectedJobIds = new HashSet<JobId>();
         Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
@@ -66,7 +65,7 @@ public class RemoveDeadNodesEvent extends AbstractEvent {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Number of affected jobs: " + affectedJobIds.size());
         }
-        for (UUID jobId : affectedJobIds) {
+        for (JobId jobId : affectedJobIds) {
             JobRun run = ccs.getRunMap().get(jobId);
             if (run != null) {
                 run.getScheduler().notifyNodeFailures(deadNodes);

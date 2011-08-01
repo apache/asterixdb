@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,13 +36,14 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.nc.partitions.IPartitionRequestListener;
 
 public class ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
 
-    static final int INITIAL_MESSAGE_SIZE = 28;
+    static final int INITIAL_MESSAGE_SIZE = 20;
 
     private final IHyracksRootContext ctx;
 
@@ -231,17 +231,11 @@ public class ConnectionManager {
         }
 
         private PartitionId readInitialMessage(ByteBuffer buffer) {
-            UUID jobId = readUUID(buffer);
+            JobId jobId = new JobId(buffer.getLong());
             ConnectorDescriptorId cdid = new ConnectorDescriptorId(buffer.getInt());
             int senderIndex = buffer.getInt();
             int receiverIndex = buffer.getInt();
             return new PartitionId(jobId, cdid, senderIndex, receiverIndex);
-        }
-
-        private UUID readUUID(ByteBuffer buffer) {
-            long msb = buffer.getLong();
-            long lsb = buffer.getLong();
-            return new UUID(msb, lsb);
         }
     }
 

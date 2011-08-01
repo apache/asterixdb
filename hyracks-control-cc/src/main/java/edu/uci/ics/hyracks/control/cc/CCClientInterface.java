@@ -3,11 +3,11 @@ package edu.uci.ics.hyracks.control.cc;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.EnumSet;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 
 public class CCClientInterface extends UnicastRemoteObject implements IHyracksClientInterface {
@@ -40,22 +40,22 @@ public class CCClientInterface extends UnicastRemoteObject implements IHyracksCl
     }
 
     @Override
-    public UUID createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         return ccs.createJob(appName, jobSpec, jobFlags);
     }
 
     @Override
-    public JobStatus getJobStatus(UUID jobId) throws Exception {
+    public JobStatus getJobStatus(JobId jobId) throws Exception {
         return ccs.getJobStatus(jobId);
     }
 
     @Override
-    public void start(UUID jobId) throws Exception {
+    public void start(JobId jobId) throws Exception {
         ccs.start(jobId);
     }
 
     @Override
-    public void waitForCompletion(UUID jobId) throws Exception {
+    public void waitForCompletion(JobId jobId) throws Exception {
         ccs.waitForCompletion(jobId);
     }
 }

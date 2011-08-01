@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -67,6 +66,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
@@ -113,7 +113,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private IClusterController ccs;
 
-    private final Map<UUID, Joblet> jobletMap;
+    private final Map<JobId, Joblet> jobletMap;
 
     private final Executor executor;
 
@@ -136,7 +136,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         partitionManager = new PartitionManager(this);
         connectionManager.setPartitionRequestListener(partitionManager);
 
-        jobletMap = new Hashtable<UUID, Joblet>();
+        jobletMap = new Hashtable<JobId, Joblet>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
@@ -231,7 +231,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void startTasks(String appName, final UUID jobId, byte[] jagBytes,
+    public void startTasks(String appName, final JobId jobId, byte[] jagBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, byte[] ctxVarBytes) throws Exception {
         try {
@@ -263,8 +263,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 final int partition = tid.getPartition();
                 Map<MultipartName, Object> inputGlobalVariables = createInputGlobalVariables(ctxVarMap, han);
                 Task task = new Task(joblet, taId, han.getClass().getName(), executor);
-                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(), tid.getPartition());
-                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition, td.getPartitionCount());
+                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(),
+                        tid.getPartition());
+                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition,
+                        td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
@@ -314,9 +316,9 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private Map<MultipartName, Object> createInputGlobalVariables(Map<MultipartName, Object> ctxVarMap, IActivity han) {
         Map<MultipartName, Object> gVars = new HashMap<MultipartName, Object>();
-//        for (MultipartName inVar : han.getInputVariables()) {
-//            gVars.put(inVar, ctxVarMap.get(inVar));
-//        }
+        //        for (MultipartName inVar : han.getInputVariables()) {
+        //            gVars.put(inVar, ctxVarMap.get(inVar));
+        //        }
         return gVars;
     }
 
@@ -333,7 +335,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final UUID jobId,
+    private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final JobId jobId,
             final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId) {
         if (cPolicy.materializeOnSendSide()) {
             return new IPartitionWriterFactory() {
@@ -354,7 +356,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    private synchronized Joblet getOrCreateLocalJoblet(UUID jobId, INCApplicationContext appCtx) throws Exception {
+    private synchronized Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx) throws Exception {
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
             ji = new Joblet(this, jobId, appCtx);
@@ -368,7 +370,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void cleanUpJob(UUID jobId) throws Exception {
+    public void cleanUpJob(JobId jobId) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
@@ -379,7 +381,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyTaskComplete(UUID jobId, TaskAttemptId taskId, TaskProfile taskProfile) throws Exception {
+    public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, TaskProfile taskProfile) throws Exception {
         try {
             ccs.notifyTaskComplete(jobId, taskId, id, taskProfile);
         } catch (Exception e) {
@@ -388,7 +390,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    public void notifyTaskFailed(UUID jobId, TaskAttemptId taskId, Exception exception) {
+    public void notifyTaskFailed(JobId jobId, TaskAttemptId taskId, Exception exception) {
         try {
             ccs.notifyTaskFailure(jobId, taskId, id, exception);
         } catch (Exception e) {
@@ -461,7 +463,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public synchronized void abortTasks(UUID jobId, List<TaskAttemptId> tasks) throws Exception {
+    public synchronized void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }

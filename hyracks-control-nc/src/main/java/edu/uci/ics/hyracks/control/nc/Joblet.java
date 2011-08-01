@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
@@ -34,6 +33,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.naming.MultipartName;
@@ -55,7 +55,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final INCApplicationContext appCtx;
 
-    private final UUID jobId;
+    private final JobId jobId;
 
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
@@ -71,7 +71,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    public Joblet(NodeControllerService nodeController, UUID jobId, INCApplicationContext appCtx) {
+    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
@@ -85,7 +85,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 

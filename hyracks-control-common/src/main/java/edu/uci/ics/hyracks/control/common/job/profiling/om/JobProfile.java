@@ -2,24 +2,25 @@ package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
+
 public class JobProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private final UUID jobId;
+    private final JobId jobId;
 
     private final Map<String, JobletProfile> jobletProfiles;
 
-    public JobProfile(UUID jobId) {
+    public JobProfile(JobId jobId) {
         this.jobId = jobId;
         jobletProfiles = new HashMap<String, JobletProfile>();
     }
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 

@@ -18,20 +18,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
-    private final UUID jobId;
+    private final JobId jobId;
 
     private final JobActivityGraph jag;
 
@@ -53,7 +53,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception exception;
 
-    public JobRun(UUID jobId, JobActivityGraph plan) {
+    public JobRun(JobId jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
         pmm = new PartitionMatchMaker();
@@ -63,7 +63,7 @@ public class JobRun implements IJobStatusConditionVariable {
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
     }
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 

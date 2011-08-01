@@ -14,9 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.UUID;
-
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
@@ -24,7 +23,7 @@ import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 public class TaskFailureEvent extends AbstractTaskLifecycleEvent {
     private final Exception exception;
 
-    public TaskFailureEvent(ClusterControllerService ccs, UUID jobId, TaskAttemptId taId, String nodeId,
+    public TaskFailureEvent(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
             Exception exception) {
         super(ccs, jobId, taId, nodeId);
         this.exception = exception;

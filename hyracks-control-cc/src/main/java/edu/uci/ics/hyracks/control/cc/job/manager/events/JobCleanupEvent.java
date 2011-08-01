@@ -15,9 +15,9 @@
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.Set;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
@@ -29,11 +29,11 @@ import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 
 public class JobCleanupEvent extends AbstractEvent {
     private ClusterControllerService ccs;
-    private UUID jobId;
+    private JobId jobId;
     private JobStatus status;
     private Exception exception;
 
-    public JobCleanupEvent(ClusterControllerService ccs, UUID jobId, JobStatus status, Exception exception) {
+    public JobCleanupEvent(ClusterControllerService ccs, JobId jobId, JobStatus status, Exception exception) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.status = status;

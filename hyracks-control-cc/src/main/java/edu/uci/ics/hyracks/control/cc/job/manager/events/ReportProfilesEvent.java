@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
@@ -35,7 +35,7 @@ public class ReportProfilesEvent extends AbstractEvent {
 
     @Override
     public void run() {
-        Map<UUID, JobRun> runMap = ccs.getRunMap();
+        Map<JobId, JobRun> runMap = ccs.getRunMap();
         for (JobProfile profile : profiles) {
             JobRun run = runMap.get(profile.getJobId());
         }

@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.tests.integration;
 
 import java.util.EnumSet;
-import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -23,6 +22,7 @@ import org.junit.BeforeClass;
 import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
@@ -74,7 +74,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     protected void runTest(JobSpecification spec) throws Exception {
-        UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+        JobId jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         System.err.println(spec.toJSON().toString(2));
         hcc.start(jobId);
         System.err.print(jobId);

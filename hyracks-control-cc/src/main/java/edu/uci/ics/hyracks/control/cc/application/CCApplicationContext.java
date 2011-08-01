@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
@@ -26,6 +25,7 @@ import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.job.DeserializingJobSpecificationFactory;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
@@ -60,7 +60,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         this.jobSpecFactory = jobSpecFactory;
     }
 
-    public JobSpecification createJobSpecification(UUID jobId, byte[] bytes) throws HyracksException {
+    public JobSpecification createJobSpecification(byte[] bytes) throws HyracksException {
         return jobSpecFactory.createJobSpecification(bytes, (ICCBootstrap) bootstrap, this);
     }
 
@@ -81,19 +81,19 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         jobLifecycleListeners.add(jobLifecycleListener);
     }
 
-    public synchronized void notifyJobStart(UUID jobId) throws HyracksException {
+    public synchronized void notifyJobStart(JobId jobId) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobStart(jobId);
         }
     }
 
-    public synchronized void notifyJobFinish(UUID jobId) throws HyracksException {
+    public synchronized void notifyJobFinish(JobId jobId) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobFinish(jobId);
         }
     }
 
-    public synchronized void notifyJobCreation(UUID jobId, JobSpecification specification) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification specification) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, specification);
         }

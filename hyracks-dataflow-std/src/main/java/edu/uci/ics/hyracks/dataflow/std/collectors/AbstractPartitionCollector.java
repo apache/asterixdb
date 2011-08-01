@@ -14,11 +14,10 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.collectors;
 
-import java.util.UUID;
-
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public abstract class AbstractPartitionCollector implements IPartitionCollector {
     protected final IHyracksTaskContext ctx;
@@ -34,7 +33,7 @@ public abstract class AbstractPartitionCollector implements IPartitionCollector 
     }
 
     @Override
-    public UUID getJobId() {
+    public JobId getJobId() {
         return ctx.getJobletContext().getJobId();
     }
 

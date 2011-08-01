@@ -12,46 +12,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package edu.uci.ics.hyracks.api.job;
 
 import java.io.Serializable;
 
-public final class ActivityId implements Serializable {
+public final class JobId implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final OperatorDescriptorId odId;
+
     private final long id;
 
-    public ActivityId(OperatorDescriptorId odId, long id) {
-        this.odId = odId;
+    public JobId(long id) {
         this.id = id;
     }
 
-    public OperatorDescriptorId getOperatorDescriptorId() {
-        return odId;
-    }
-
-    public long getLocalId() {
+    public long getId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (odId.hashCode() + id);
+        return (int) id;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (o == this) {
             return true;
         }
-        if (!(o instanceof ActivityId)) {
+        if (!(o instanceof JobId)) {
             return false;
         }
-        ActivityId other = (ActivityId) o;
-        return other.odId.equals(odId) && other.id == id;
+        return ((JobId) o).id == id;
     }
 
+    @Override
     public String toString() {
-        return "ANID:[" + odId + "]:" + id;
+        return "JID:" + id;
+    }
+
+    public static JobId parse(String str) {
+        if (str.startsWith("JID:")) {
+            str = str.substring(4);
+            return new JobId(Long.parseLong(str));
+        }
+        throw new IllegalArgumentException();
     }
 }

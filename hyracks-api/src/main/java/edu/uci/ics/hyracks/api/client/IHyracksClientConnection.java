@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.io.File;
 import java.util.EnumSet;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 
@@ -27,13 +27,13 @@ public interface IHyracksClientConnection {
 
     public void destroyApplication(String appName) throws Exception;
 
-    public UUID createJob(String appName, JobSpecification jobSpec) throws Exception;
+    public JobId createJob(String appName, JobSpecification jobSpec) throws Exception;
 
-    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public JobId createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
-    public JobStatus getJobStatus(UUID jobId) throws Exception;
+    public JobStatus getJobStatus(JobId jobId) throws Exception;
 
-    public void start(UUID jobId) throws Exception;
+    public void start(JobId jobId) throws Exception;
 
-    public void waitForCompletion(UUID jobId) throws Exception;
+    public void waitForCompletion(JobId jobId) throws Exception;
 }

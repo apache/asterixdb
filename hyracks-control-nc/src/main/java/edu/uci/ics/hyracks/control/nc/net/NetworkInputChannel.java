@@ -21,7 +21,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -188,18 +187,13 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
 
     private void prepareForWrite() {
         writeBuffer = ByteBuffer.allocate(ConnectionManager.INITIAL_MESSAGE_SIZE);
-        writeUUID(writeBuffer, partitionId.getJobId());
+        writeBuffer.putLong(partitionId.getJobId().getId());
         writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
         writeBuffer.flip();
 
         key.interestOps(SelectionKey.OP_WRITE);
-    }
-
-    private void writeUUID(ByteBuffer buffer, UUID uuid) {
-        buffer.putLong(uuid.getMostSignificantBits());
-        buffer.putLong(uuid.getLeastSignificantBits());
     }
 
     @Override

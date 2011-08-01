@@ -14,16 +14,15 @@
  */
 package edu.uci.ics.hyracks.control.cc.remote.ops;
 
-import java.util.UUID;
-
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class JobCompleteNotifier implements RemoteOp<Void> {
     private String nodeId;
-    private UUID jobId;
+    private JobId jobId;
 
-    public JobCompleteNotifier(String nodeId, UUID jobId) {
+    public JobCompleteNotifier(String nodeId, JobId jobId) {
         this.nodeId = nodeId;
         this.jobId = jobId;
     }

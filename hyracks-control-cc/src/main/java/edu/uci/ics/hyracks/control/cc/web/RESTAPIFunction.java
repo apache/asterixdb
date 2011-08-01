@@ -14,10 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.web;
 
-import java.util.UUID;
-
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobProfileJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSpecificationJSONEvent;
@@ -47,7 +46,7 @@ public class RESTAPIFunction implements IJSONOutputFunction {
             }
 
             case 2: {
-                UUID jobId = UUID.fromString(arguments[0]);
+                JobId jobId = JobId.parse(arguments[0]);
 
                 if ("spec".equalsIgnoreCase(arguments[1])) {
                     GetJobSpecificationJSONEvent gjse = new GetJobSpecificationJSONEvent(ccs, jobId);

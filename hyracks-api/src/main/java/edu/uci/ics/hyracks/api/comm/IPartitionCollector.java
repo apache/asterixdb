@@ -15,14 +15,14 @@
 package edu.uci.ics.hyracks.api.comm;
 
 import java.util.Collection;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public interface IPartitionCollector {
-    public UUID getJobId();
+    public JobId getJobId();
 
     public ConnectorDescriptorId getConnectorId();
 

@@ -14,18 +14,17 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.UUID;
-
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
 public class GetJobStatusConditionVariableEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
-    private final UUID jobId;
+    private final JobId jobId;
     private IJobStatusConditionVariable cVar;
 
-    public GetJobStatusConditionVariableEvent(ClusterControllerService ccs, UUID jobId) {
+    public GetJobStatusConditionVariableEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }

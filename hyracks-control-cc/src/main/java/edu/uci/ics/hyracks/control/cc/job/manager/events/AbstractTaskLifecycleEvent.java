@@ -16,11 +16,11 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -32,11 +32,11 @@ import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 
 public abstract class AbstractTaskLifecycleEvent extends AbstractEvent {
     protected final ClusterControllerService ccs;
-    protected final UUID jobId;
+    protected final JobId jobId;
     protected final TaskAttemptId taId;
     protected final String nodeId;
 
-    public AbstractTaskLifecycleEvent(ClusterControllerService ccs, UUID jobId, TaskAttemptId taId, String nodeId) {
+    public AbstractTaskLifecycleEvent(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.taId = taId;

@@ -15,12 +15,12 @@
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.EnumSet;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -36,10 +36,10 @@ public class JobCreateEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final byte[] jobSpec;
     private final EnumSet<JobFlag> jobFlags;
-    private final UUID jobId;
+    private final JobId jobId;
     private final String appName;
 
-    public JobCreateEvent(ClusterControllerService ccs, UUID jobId, String appName, byte[] jobSpec,
+    public JobCreateEvent(ClusterControllerService ccs, JobId jobId, String appName, byte[] jobSpec,
             EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
         this.ccs = ccs;
@@ -54,7 +54,7 @@ public class JobCreateEvent extends SynchronizableEvent {
         if (appCtx == null) {
             throw new HyracksException("No application with id " + appName + " found");
         }
-        JobSpecification spec = appCtx.createJobSpecification(jobId, jobSpec);
+        JobSpecification spec = appCtx.createJobSpecification(jobSpec);
 
         final JobActivityGraphBuilder builder = new JobActivityGraphBuilder();
         builder.init(appName, spec, jobFlags);
@@ -76,7 +76,7 @@ public class JobCreateEvent extends SynchronizableEvent {
         appCtx.notifyJobCreation(jobId, spec);
     }
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 }

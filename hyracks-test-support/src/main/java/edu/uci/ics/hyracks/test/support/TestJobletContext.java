@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.test.support;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
@@ -23,6 +22,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
@@ -30,10 +30,10 @@ import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 
 public class TestJobletContext implements IHyracksJobletContext {
     private final INCApplicationContext appContext;
-    private UUID jobId;
+    private JobId jobId;
     private WorkspaceFileFactory fileFactory;
 
-    public TestJobletContext(INCApplicationContext appContext, UUID jobId) throws HyracksException {
+    public TestJobletContext(INCApplicationContext appContext, JobId jobId) throws HyracksException {
         this.appContext = appContext;
         this.jobId = jobId;
         fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
@@ -85,7 +85,7 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     @Override
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 }

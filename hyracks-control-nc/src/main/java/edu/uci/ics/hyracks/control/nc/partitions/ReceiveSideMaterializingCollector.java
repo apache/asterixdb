@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.control.nc.partitions;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
@@ -29,6 +28,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class ReceiveSideMaterializingCollector implements IPartitionCollector {
@@ -52,7 +52,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
     }
 
     @Override
-    public UUID getJobId() {
+    public JobId getJobId() {
         return delegate.getJobId();
     }
 

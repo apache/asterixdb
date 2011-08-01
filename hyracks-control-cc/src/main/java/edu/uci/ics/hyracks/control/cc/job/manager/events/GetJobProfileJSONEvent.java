@@ -14,20 +14,19 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.UUID;
-
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
 public class GetJobProfileJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
-    private final UUID jobId;
+    private final JobId jobId;
     private JSONObject profile;
 
-    public GetJobProfileJSONEvent(ClusterControllerService ccs, UUID jobId) {
+    public GetJobProfileJSONEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
