@@ -31,7 +31,7 @@ public class IntArrayList {
     public int size() {
         return size;
     }
-    
+
     public int first() {
         return first;
     }
@@ -69,11 +69,11 @@ public class IntArrayList {
     public int getFirst() {
         return data[first];
     }
-    
+
     public void moveFirst() {
         first++;
     }
-    
+
     public void clear() {
         size = 0;
         first = 0;
@@ -82,7 +82,7 @@ public class IntArrayList {
     public boolean isLast() {
         return size == first;
     }
-    
+
     public boolean isEmpty() {
         return size == 0;
     }

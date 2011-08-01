@@ -43,12 +43,13 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
     protected final ITypeTrait[] typeTraits;
 
     protected final ITreeIndexOpHelperFactory opHelperFactory;
-    
+
     public AbstractTreeIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
+            ITreeIndexOpHelperFactory opHelperFactory) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
@@ -101,9 +102,9 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
     public RecordDescriptor getRecordDescriptor() {
         return recordDescriptors[0];
     }
-    
+
     @Override
     public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
-    	return opHelperFactory;
+        return opHelperFactory;
     }
 }

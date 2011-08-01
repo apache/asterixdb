@@ -32,7 +32,7 @@ public class MultiComparator {
 
     private IBinaryComparator[] cmps = null;
     private ITypeTrait[] typeTraits;
-    
+
     private IBinaryComparator intCmp = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
     public IBinaryComparator getIntCmp() {
@@ -46,8 +46,8 @@ public class MultiComparator {
 
     public int compare(ITupleReference tupleA, ITupleReference tupleB) {
         for (int i = 0; i < cmps.length; i++) {
-            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i), tupleB
-                    .getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
+            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
+                    tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
             if (cmp < 0)
                 return -1;
             else if (cmp > 0)
@@ -58,8 +58,8 @@ public class MultiComparator {
 
     public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
         for (int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
-            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i), tupleB
-                    .getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
+            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
+                    tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
             if (cmp < 0)
                 return -1;
             else if (cmp > 0)

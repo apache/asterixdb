@@ -27,7 +27,7 @@ public class IndexRegistry<IndexType> {
     public IndexType get(int fileId) {
         return map.get(fileId);
     }
-    
+
     public void lock() {
         registryLock.lock();
     }

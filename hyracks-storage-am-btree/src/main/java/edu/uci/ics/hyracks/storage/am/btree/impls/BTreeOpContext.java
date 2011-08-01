@@ -29,7 +29,7 @@ public final class BTreeOpContext implements IndexOpContext {
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
     public ITreeIndexCursor cursor;
-    public CursorInitialState cursorInitialState;
+    public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
     public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
@@ -38,7 +38,7 @@ public final class BTreeOpContext implements IndexOpContext {
     public final IntArrayList freePages;
 
     public BTreeOpContext(IndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-    		ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
+            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.leafFrame = leafFrame;
         this.interiorFrame = interiorFrame;
@@ -54,7 +54,7 @@ public final class BTreeOpContext implements IndexOpContext {
             smPages = null;
             freePages = null;
             splitKey = null;
-            cursorInitialState = new CursorInitialState(null);
+            cursorInitialState = new BTreeCursorInitialState(null);
         }
     }
 

@@ -21,7 +21,7 @@ public class PathList {
     private IntArrayList pageIds;
     private IntArrayList pageLsns;
     private IntArrayList pageIndexes;
-    
+
     public PathList(int initialCapacity, int growth) {
         pageIds = new IntArrayList(initialCapacity, growth);
         pageLsns = new IntArrayList(initialCapacity, growth);
@@ -32,20 +32,36 @@ public class PathList {
         return pageIds.size();
     }
 
+    public int first() {
+        return pageIds.first();
+    }
+
     public void add(int pageId, int pageLsn, int pageIndex) {
         pageIds.add(pageId);
         pageLsns.add(pageLsn);
         pageIndexes.add(pageIndex);
     }
 
+    public int getFirstPageId() {
+        return pageIds.getFirst();
+    }
+
+    public int getFirstPageLsn() {
+        return pageLsns.getFirst();
+    }
+
+    public int getFirstPageIndex() {
+        return pageIndexes.getFirst();
+    }
+
     public int getLastPageId() {
         return pageIds.getLast();
     }
-    
+
     public int getLastPageLsn() {
         return pageLsns.getLast();
     }
-    
+
     public int getLastPageIndex() {
         return pageIndexes.getLast();
     }
@@ -53,21 +69,35 @@ public class PathList {
     public int getPageId(int i) {
         return pageIds.get(i);
     }
-    
+
     public int getPageLsn(int i) {
         return pageLsns.get(i);
     }
-    
+
     public int getPageIndex(int i) {
         return pageIndexes.get(i);
     }
-    
-    public void removeLast() {
+
+    public void setPageLsn(int i, int pageLsn) {
+        pageLsns.set(i, pageLsn);
+    }
+
+    public void moveFirst() {
+        pageIds.moveFirst();
+        pageLsns.moveFirst();
+        pageIndexes.moveFirst();
+    }
+
+    public void moveLast() {
         pageIds.removeLast();
         pageLsns.removeLast();
         pageIndexes.removeLast();
     }
-    
+
+    public boolean isLast() {
+        return pageIds.isLast();
+    }
+
     public void clear() {
         pageIds.clear();
         pageLsns.clear();

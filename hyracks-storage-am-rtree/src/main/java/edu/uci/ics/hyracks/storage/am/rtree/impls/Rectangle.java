@@ -1,8 +1,22 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class Rectangle {
     private int dim;
@@ -67,18 +81,15 @@ public class Rectangle {
         }
         return margin;
     }
-    
+
     public double overlappedArea(ITupleReference tuple) {
         double area = 1.0;
         double f1, f2;
-        
-        for (int i = 0; i < getDim(); i++)
-        {
+
+        for (int i = 0; i < getDim(); i++) {
             int j = getDim() + i;
-            double low = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i),
-                    tuple.getFieldStart(i));
-            double high = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j),
-                    tuple.getFieldStart(j));
+            double low = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i), tuple.getFieldStart(i));
+            double high = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j), tuple.getFieldStart(j));
             if (getLow(i) > high || getHigh(i) < low) {
                 return 0.0;
             }
@@ -88,13 +99,12 @@ public class Rectangle {
         }
         return area;
     }
-    
+
     public double overlappedArea(Rectangle rec) {
         double area = 1.0;
         double f1, f2;
-        
-        for (int i = 0; i < getDim(); i++)
-        {
+
+        for (int i = 0; i < getDim(); i++) {
             if (getLow(i) > rec.getHigh(i) || getHigh(i) < rec.getLow(i)) {
                 return 0.0;
             }
@@ -105,7 +115,7 @@ public class Rectangle {
         }
         return area;
     }
-    
+
     public double area(ITupleReference tuple) {
         double area = 1.0;
         for (int i = 0; i < getDim(); i++) {
@@ -115,7 +125,7 @@ public class Rectangle {
         }
         return area;
     }
-    
+
     public double area() {
         double area = 1.0;
         for (int i = 0; i < getDim(); i++) {

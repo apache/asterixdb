@@ -13,24 +13,25 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.tuples;
+package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 
-public class RTreeTypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
+public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
-    private ITypeTrait[] typeTraits;
+    private ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private int keyFieldCount;
 
-    public RTreeTypeAwareTupleWriterFactory(ITypeTrait[] typeTraits) {
-        this.typeTraits = typeTraits;
+    public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
+        this.tupleWriterFactory = tupleWriterFactory;
+        this.keyFieldCount = keyFieldCount;
     }
 
     @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
-        return new RTreeTypeAwareTupleWriter(typeTraits);
+    public IRTreeInteriorFrame createFrame() {
+        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
     }
-
 }

@@ -58,8 +58,8 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 
         int fieldEndOff = 0;
         for (int i = 0; i < tuple.getFieldCount(); i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner, tuple
-                    .getFieldLength(i));
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner,
+                    tuple.getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
             targetBuf.putShort(targetOff + nullFlagsBytes + i * 2, (short) fieldEndOff);
@@ -81,8 +81,8 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
         int fieldEndOff = 0;
         int fieldCounter = 0;
         for (int i = startField; i < startField + numFields; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner, tuple
-                    .getFieldLength(i));
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner,
+                    tuple.getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
             targetBuf.putShort(targetOff + nullFlagsBytes + fieldCounter * 2, (short) fieldEndOff);
@@ -99,7 +99,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     protected int getFieldSlotsBytes(ITupleReference tuple) {
         return tuple.getFieldCount() * 2;
     }
-    
+
     protected int getNullFlagsBytes(ITupleReference tuple, int startField, int numFields) {
         return (int) Math.ceil((double) numFields / 8.0);
     }

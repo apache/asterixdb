@@ -47,7 +47,7 @@ public abstract class AbstractSlotManager implements ISlotManager {
     public int getSlotSize() {
         return slotSize;
     }
-    
+
     @Override
     public void setFrame(ITreeIndexFrame frame) {
         this.frame = frame;

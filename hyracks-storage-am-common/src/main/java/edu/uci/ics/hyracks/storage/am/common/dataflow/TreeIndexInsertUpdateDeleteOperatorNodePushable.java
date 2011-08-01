@@ -40,7 +40,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksStageletContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
+                IndexHelperOpenMode.OPEN);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -48,20 +49,21 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor)treeIndexOpHelper.getOperatorDescriptor();
-    	RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-    	accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
-    	writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
-    	try {
-    		treeIndexOpHelper.init();
-    		treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
-    		opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op, treeIndexOpHelper.getLeafFrame(),
-    				treeIndexOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
-    	} catch(Exception e) {
-    		// cleanup in case of failure
-    		treeIndexOpHelper.deinit();
-    		throw new HyracksDataException(e);
-    	}
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
+                .getOperatorDescriptor();
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
+        writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
+        try {
+            treeIndexOpHelper.init();
+            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
+            opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op, treeIndexOpHelper.getLeafFrame(),
+                    treeIndexOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
+        } catch (Exception e) {
+            // cleanup in case of failure
+            treeIndexOpHelper.deinit();
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

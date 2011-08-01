@@ -32,14 +32,15 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
     private static final long serialVersionUID = 1L;
 
     private final int[] fieldPermutation;
-    private final float fillFactor;    
-    
+    private final float fillFactor;
+
     public TreeIndexBulkLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, float fillFactor, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, 1, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-                typeTraits, comparatorFactories, opHelperFactory);
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation,
+            float fillFactor, ITreeIndexOpHelperFactory opHelperFactory) {
+        super(spec, 1, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
     }

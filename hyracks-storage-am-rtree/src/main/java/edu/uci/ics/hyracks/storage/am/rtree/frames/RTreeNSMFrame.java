@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
 import java.util.ArrayList;
@@ -13,41 +28,54 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.SpatialUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
-public abstract class NSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
+public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     protected static final int pageNsnOff = smFlagOff + 1;
     protected static final int rightPageOff = pageNsnOff + 4;
 
     protected ITreeIndexTupleReference[] tuples;
     protected ITreeIndexTupleReference cmpFrameTuple;
-    protected final SpatialUtils spatialUtils;
     protected TupleEntryArrayList tupleEntries1; // used for split and checking
                                                  // enlargement
     protected TupleEntryArrayList tupleEntries2; // used for split
+
     protected Rectangle[] rec;
 
     protected static final double splitFactor = 0.4;
     protected static final int nearMinimumOverlapFactor = 32;
+    private static final double doubleEpsilon = computeDoubleEpsilon();
+    private static final int numTuplesEntries = 100;
 
-    public NSMFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
+    public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
         super(tupleWriter, new UnorderedSlotManager());
         this.tuples = new ITreeIndexTupleReference[keyFieldCount];
         for (int i = 0; i < keyFieldCount; i++) {
             this.tuples[i] = tupleWriter.createTupleReference();
         }
         cmpFrameTuple = tupleWriter.createTupleReference();
-        spatialUtils = new SpatialUtils();
-        // TODO: find a better way to know number of entries per node
-        tupleEntries1 = new TupleEntryArrayList(100, 100, spatialUtils);
-        tupleEntries2 = new TupleEntryArrayList(100, 100, spatialUtils);
+
+        tupleEntries1 = new TupleEntryArrayList(numTuplesEntries, numTuplesEntries);
+        tupleEntries2 = new TupleEntryArrayList(numTuplesEntries, numTuplesEntries);
         rec = new Rectangle[4];
         for (int i = 0; i < 4; i++) {
             rec[i] = new Rectangle(keyFieldCount / 2);
         }
+    }
+
+    private static double computeDoubleEpsilon() {
+        double doubleEpsilon = 1.0;
+
+        do {
+            doubleEpsilon /= 2.0;
+        } while (1.0 + (doubleEpsilon / 2.0) != 1.0);
+        return doubleEpsilon;
+    }
+    
+    public static double doubleEpsilon() {
+        return doubleEpsilon;
     }
 
     @Override
@@ -130,11 +158,7 @@ public abstract class NSMFrame extends TreeIndexNSMFrame implements IRTreeFrame 
 
     @Override
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
-        try {
-            insert(tuple, cmp, -1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override

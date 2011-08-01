@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import java.util.Arrays;
@@ -7,17 +22,11 @@ public class TupleEntryArrayList {
     private TupleEntry[] data;
     private int size;
     private final int growth;
-    private final double doubleEpsilon;
 
-    public TupleEntryArrayList(int initialCapacity, int growth, SpatialUtils spatialUtils) {
-        doubleEpsilon = spatialUtils.getDoubleEpsilon();
+    public TupleEntryArrayList(int initialCapacity, int growth) {
         data = new TupleEntry[initialCapacity];
         size = 0;
         this.growth = growth;
-    }
-
-    public double getDoubleEpsilon() {
-        return doubleEpsilon;
     }
 
     public int size() {
@@ -31,7 +40,7 @@ public class TupleEntryArrayList {
             data = newData;
         }
         if (data[size] == null) {
-            data[size] = new TupleEntry(doubleEpsilon);
+            data[size] = new TupleEntry();
         }
         data[size].setTupleIndex(tupleIndex);
         data[size].setValue(value);

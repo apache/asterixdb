@@ -13,36 +13,32 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.common.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class BTreeDiskOrderScanCursor implements ITreeIndexCursor {
-
-    // TODO: might want to return tuples in physical order, not logical order to
-    // speed up access
+public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
     private int tupleIndex = 0;
     private int fileId = -1;
     int currentPageId = -1;
-    int maxPageId = -1; // TODO: figure out how to scan to the end of file, this
-    // is dirty and may not with concurrent updates
+    int maxPageId = -1;
     private ICachedPage page = null;
-    private IBTreeLeafFrame frame = null;
+    private ITreeIndexFrame frame = null;
     private IBufferCache bufferCache = null;
 
     private ITreeIndexTupleReference frameTuple;
 
-    public BTreeDiskOrderScanCursor(IBTreeLeafFrame frame) {
+    public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
         this.frame = frame;
         this.frameTuple = frame.getTupleWriter().createTupleReference();
     }
@@ -114,16 +110,15 @@ public class BTreeDiskOrderScanCursor implements ITreeIndexCursor {
             bufferCache.unpin(page);
         }
 
-        page = ((CursorInitialState) initialState).getPage();
+        page = initialState.getPage();
         tupleIndex = 0;
         frame.setPage(page);
-        RangePredicate pred = (RangePredicate) searchPred;
-        MultiComparator lowKeyCmp = pred.getLowKeyComparator();
+        MultiComparator lowKeyCmp = searchPred.getLowKeyComparator();
         frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
         boolean leafExists = positionToNextLeaf(false);
         if (!leafExists) {
             throw new HyracksDataException(
-                    "Failed to open disk-order scan cursor for B-tree. Traget B-tree has no leaves.");
+                    "Failed to open disk-order scan cursor for tree index. Traget tree index has no leaves.");
         }
     }
 

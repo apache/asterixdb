@@ -181,7 +181,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             bufferCache.unpin(page);
         }
 
-        page = ((CursorInitialState) initialState).getPage();
+        page = ((BTreeCursorInitialState) initialState).getPage();
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;

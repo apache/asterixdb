@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree;
 
 import java.io.ByteArrayInputStream;
@@ -39,8 +54,8 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -90,8 +105,9 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory, keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
+        ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
+                keyFieldCount);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -147,8 +163,10 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
-                    + " " + Math.max(p1y, p2y) + "\n");
+            if (i % 1000 == 0) {
+                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+                        + " " + Math.max(p1y, p2y) + "\n");
+            }
 
             try {
                 rtree.insert(tuple, insertOpCtx);

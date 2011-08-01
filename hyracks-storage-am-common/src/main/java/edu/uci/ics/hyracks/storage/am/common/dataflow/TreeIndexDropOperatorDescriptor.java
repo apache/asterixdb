@@ -32,7 +32,7 @@ public class TreeIndexDropOperatorDescriptor extends AbstractSingleActivityOpera
     private IStorageManagerInterface storageManager;
     private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
     private IFileSplitProvider fileSplitProvider;
-    
+
     public TreeIndexDropOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider) {
         super(spec, 0, 0);
@@ -44,6 +44,7 @@ public class TreeIndexDropOperatorDescriptor extends AbstractSingleActivityOpera
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexDropOperatorNodePushable(ctx, storageManager, treeIndexRegistryProvider, fileSplitProvider, partition);
+        return new TreeIndexDropOperatorNodePushable(ctx, storageManager, treeIndexRegistryProvider, fileSplitProvider,
+                partition);
     }
 }

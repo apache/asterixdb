@@ -15,15 +15,16 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    
+
     public TreeIndexStatsOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, 0, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-                typeTraits, comparatorFactories, opHelperFactory);
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
+            ITreeIndexOpHelperFactory opHelperFactory) {
+        super(spec, 0, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
     }
-    
+
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {

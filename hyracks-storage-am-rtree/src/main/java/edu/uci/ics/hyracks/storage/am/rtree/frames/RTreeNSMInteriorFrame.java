@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
 import java.io.ByteArrayInputStream;
@@ -21,16 +36,16 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.EntriesOrder;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.PathList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.TraverseList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
-public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
+public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
     private static final int childPtrSize = 4;
 
-    public NSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
+    public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
         super(tupleWriter, keyFieldCount);
     }
 
@@ -75,8 +90,7 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
                     bestChild = i;
                 }
             }
-            if (minEnlargedArea < tupleEntries1.getDoubleEpsilon()
-                    || minEnlargedArea > tupleEntries1.getDoubleEpsilon()) {
+            if (minEnlargedArea < RTreeNSMFrame.doubleEpsilon() || minEnlargedArea > RTreeNSMFrame.doubleEpsilon()) {
                 minEnlargedArea = Double.MAX_VALUE;
                 int k;
                 if (getTupleCount() > nearMinimumOverlapFactor) {
@@ -153,7 +167,7 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
             return false;
         }
     }
-    
+
     @Override
     public int getBestChildPageId(MultiComparator cmp) {
         return buf.getInt(getChildPointerOff(frameTuple, cmp));
@@ -171,7 +185,7 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
         }
         return -1;
     }
-    
+
     @Override
     public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -196,7 +210,7 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
     }
 
     @Override
-    public int findTupleByPointer(ITupleReference tuple, TraverseList traverseList, int parentIndex, MultiComparator cmp) {
+    public int findTupleByPointer(ITupleReference tuple, PathList traverseList, int parentIndex, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         for (int i = 0; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
@@ -263,8 +277,6 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
         else
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
-
-    
 
     @Override
     public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
@@ -396,7 +408,7 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
         }
         boolean tupleInserted = false;
         int totalBytes = 0, numOfDeletedTuples = 0;
-        for (int i = startIndex; i < endIndex; i++) { 
+        for (int i = startIndex; i < endIndex; i++) {
             if (tupleEntries1.get(i).getTupleIndex() != -1) {
                 frameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
                 rightFrame.insert(frameTuple, cmp, -1);
@@ -433,8 +445,8 @@ public class NSMInteriorFrame extends NSMFrame implements IRTreeInteriorFrame {
         rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, rTreeSplitKey.getLeftPageBuffer(), 0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
 
-        ((IRTreeFrame) rightFrame).adjustMBR(((NSMFrame) rightFrame).getTuples(), cmp);
-        rTreeTupleWriterRightFrame.writeTupleFields(((NSMFrame) rightFrame).getTuples(), 0,
+        ((IRTreeFrame) rightFrame).adjustMBR(((RTreeNSMFrame) rightFrame).getTuples(), cmp);
+        rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
 

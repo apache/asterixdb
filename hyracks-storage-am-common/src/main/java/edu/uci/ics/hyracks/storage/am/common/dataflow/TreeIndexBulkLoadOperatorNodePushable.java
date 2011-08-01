@@ -36,9 +36,11 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
 
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
-            int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.CREATE);
+    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
+            IHyracksStageletContext ctx, int partition, int[] fieldPermutation, float fillFactor,
+            IRecordDescriptorProvider recordDescProvider) {
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
+                IndexHelperOpenMode.CREATE);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);

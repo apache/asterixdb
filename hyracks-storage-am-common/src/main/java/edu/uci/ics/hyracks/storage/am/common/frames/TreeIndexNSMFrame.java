@@ -72,7 +72,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
     }
-    
+
     @Override
     public boolean isInterior() {
         return buf.get(levelOff) > 0;
@@ -160,14 +160,14 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
         buf.putInt(freeSpaceOff, freeSpace);
         buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
-        
+
         return false;
     }
 
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-    	
-    	frameTuple.setFieldCount(cmp.getFieldCount());
+
+        frameTuple.setFieldCount(cmp.getFieldCount());
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
@@ -180,11 +180,11 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
                 int tupleOff = slotManager.getTupleOff(slotOff);
                 frameTuple.resetByTupleOffset(buf, tupleOff);
 
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1, cmp
-                        .getFieldCount()
-                        - cmp.getKeyFieldCount());
+                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1,
+                        cmp.getFieldCount() - cmp.getKeyFieldCount());
                 if (comparison != 0) {
-                    throw new TreeIndexException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
+                    throw new TreeIndexException(
+                            "Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }
             }
 
@@ -222,18 +222,19 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     protected void resetSpaceParams() {
-	buf.putInt(freeSpaceOff, smFlagOff + 1);
-	buf.putInt(totalFreeSpaceOff, buf.capacity() - (smFlagOff + 1));
+        buf.putInt(freeSpaceOff, smFlagOff + 1);
+        buf.putInt(totalFreeSpaceOff, buf.capacity() - (smFlagOff + 1));
     }
 
     @Override
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
-    	frameTuple.setFieldCount(cmp.getFieldCount());
-        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE, FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);        
+        frameTuple.setFieldCount(cmp.getFieldCount());
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
+                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
     }
-    
+
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {        
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
         slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
@@ -270,8 +271,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         for (int i = 0; i < tupleCount; i++) {
             frameTuple.resetByTupleIndex(this, i);
             for (int j = 0; j < cmp.getKeyFieldCount(); j++) {
-                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple
-                        .getFieldStart(j), frameTuple.getFieldLength(j));
+                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j),
+                        frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
                 DataInput dataIn = new DataInputStream(inStream);
                 Object o = fields[j].deserialize(dataIn);
                 strBuilder.append(o.toString() + " ");

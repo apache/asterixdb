@@ -31,16 +31,17 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
-	private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
-	
-	private final IHyracksStageletContext ctx;
+    private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
+
+    private final IHyracksStageletContext ctx;
     private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
     private int partition;
 
     public TreeIndexDropOperatorNodePushable(IHyracksStageletContext ctx, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider, int partition) {
+            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+            int partition) {
         this.ctx = ctx;
         this.storageManager = storageManager;
         this.treeIndexRegistryProvider = treeIndexRegistryProvider;
@@ -64,39 +65,41 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
 
     @Override
     public void initialize() throws HyracksDataException {
-    	try {
+        try {
 
-    		IndexRegistry<ITreeIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
-    		IBufferCache bufferCache = storageManager.getBufferCache(ctx);
-    		IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
+            IndexRegistry<ITreeIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
+            IBufferCache bufferCache = storageManager.getBufferCache(ctx);
+            IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
 
-    		FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+            FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
 
-    		boolean fileIsMapped = fileMapProvider.isMapped(f);
-    		if (!fileIsMapped) {    			    			
-    			throw new HyracksDataException("Cannot drop Tree with name " + f.toString() + ". No file mapping exists.");
-    		}
+            boolean fileIsMapped = fileMapProvider.isMapped(f);
+            if (!fileIsMapped) {
+                throw new HyracksDataException("Cannot drop Tree with name " + f.toString()
+                        + ". No file mapping exists.");
+            }
 
-    		int indexFileId = fileMapProvider.lookupFileId(f);
+            int indexFileId = fileMapProvider.lookupFileId(f);
 
-    		// unregister tree instance
-    		treeIndexRegistry.lock();
-    		try {
-    			treeIndexRegistry.unregister(indexFileId);
-    		} finally {
-    			treeIndexRegistry.unlock();
-    		}
+            // unregister tree instance
+            treeIndexRegistry.lock();
+            try {
+                treeIndexRegistry.unregister(indexFileId);
+            } finally {
+                treeIndexRegistry.unlock();
+            }
 
-    		// remove name to id mapping
-    		bufferCache.deleteFile(indexFileId);
-    	}
-    	// TODO: for the time being we don't throw,
-		// with proper exception handling (no hanging job problem) we should throw
-    	catch (Exception e) {
-    		if (LOGGER.isLoggable(Level.WARNING)) {
+            // remove name to id mapping
+            bufferCache.deleteFile(indexFileId);
+        }
+        // TODO: for the time being we don't throw,
+        // with proper exception handling (no hanging job problem) we should
+        // throw
+        catch (Exception e) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Tree Drop Operator Failed Due To Exception: " + e.getMessage());
             }
-    	}
+        }
     }
 
     @Override

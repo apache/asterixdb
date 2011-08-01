@@ -25,6 +25,6 @@ public interface ITreeIndexOperatorDescriptorHelper extends IActivityNode {
     public IIndexRegistryProvider<ITreeIndex> getTreeIndexRegistryProvider();
 
     public RecordDescriptor getRecordDescriptor();
-    
+
     public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory();
 }

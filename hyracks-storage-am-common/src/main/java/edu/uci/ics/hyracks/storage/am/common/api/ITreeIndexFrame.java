@@ -32,8 +32,9 @@ public interface ITreeIndexFrame {
     public ByteBuffer getBuffer();
 
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception;
+
     public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
-    
+
     public void update(int rid, ITupleReference tuple) throws Exception;
 
     public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
@@ -68,7 +69,7 @@ public interface ITreeIndexFrame {
     // TODO; what if tuples more than half-page size?
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
             throws Exception;
-    
+
     public ISlotManager getSlotManager();
 
     // ATTENTION: in b-tree operations it may not always be possible to
@@ -76,8 +77,9 @@ public interface ITreeIndexFrame {
     // a compatible interior and leaf implementation MUST return identical
     // values when given the same ByteBuffer for the functions below
     public boolean isLeaf();
+
     public boolean isInterior();
-    
+
     public byte getLevel();
 
     public void setLevel(byte level);

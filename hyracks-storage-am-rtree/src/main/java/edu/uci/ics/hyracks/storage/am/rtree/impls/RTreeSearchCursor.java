@@ -1,8 +1,22 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -68,7 +82,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         while (!pathList.isEmpty()) {
             int pageId = pathList.getLastPageId();
             int parentLsn = pathList.getLastPageLsn();
-            pathList.removeLast();
+            pathList.moveLast();
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             pin++;
             node.acquireReadLatch();
@@ -114,7 +128,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         if (page == null) {
             return false;
         }
-            
+
         if (tupleIndex == leafFrame.getTupleCount()) {
             if (!fetchNextLeafPage()) {
                 return false;
@@ -147,13 +161,13 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
             pathList.clear();
         }
 
-        pathList = ((CursorInitialState) initialState).getPathList();
-        rootPage = ((CursorInitialState) initialState).getRootPage();
+        pathList = ((RTreeCursorInitialState) initialState).getPathList();
+        rootPage = ((RTreeCursorInitialState) initialState).getRootPage();
 
         pred = (SearchPredicate) searchPred;
-        cmp = pred.getCmp();
+        cmp = pred.getLowKeyComparator();
         searchKey = pred.getSearchKey();
-        
+
         pathList.add(this.rootPage, -1, -1);
         frameTuple.setFieldCount(cmp.getFieldCount());
         tupleIndex = 0;
