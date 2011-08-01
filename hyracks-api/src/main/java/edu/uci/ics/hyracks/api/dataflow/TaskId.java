@@ -52,6 +52,6 @@ public final class TaskId implements Serializable {
 
     @Override
     public String toString() {
-        return "TID:[" + activityId + ":" + partition + ":" + "]";
+        return "TID:[" + activityId + "]:" + partition;
     }
 }

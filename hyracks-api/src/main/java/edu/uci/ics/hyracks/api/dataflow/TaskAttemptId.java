@@ -52,6 +52,6 @@ public final class TaskAttemptId implements Serializable {
 
     @Override
     public String toString() {
-        return "TAID:[" + taskId + ":" + attempt + "]";
+        return "TAID:[" + taskId + "]:" + attempt;
     }
 }

@@ -37,7 +37,6 @@ public final class Runnability {
         NOT_RUNNABLE,
         RUNNABLE,
         RUNNING,
-        UNSATISFIED_PREREQUISITES,
     }
 
     public static Runnability getWorstCase(Runnability r1, Runnability r2) {
@@ -48,7 +47,6 @@ public final class Runnability {
                     case NOT_RUNNABLE:
                     case RUNNABLE:
                     case RUNNING:
-                    case UNSATISFIED_PREREQUISITES:
                         return r2;
                 }
                 break;
@@ -60,9 +58,6 @@ public final class Runnability {
                     case RUNNABLE:
                     case RUNNING:
                         return r1;
-
-                    case UNSATISFIED_PREREQUISITES:
-                        return r2;
                 }
                 break;
 
@@ -75,7 +70,6 @@ public final class Runnability {
                         return r1.priority > 0 ? r1 : new Runnability(Tag.RUNNABLE, 1);
 
                     case NOT_RUNNABLE:
-                    case UNSATISFIED_PREREQUISITES:
                         return r2;
 
                     case RUNNABLE:
@@ -90,22 +84,10 @@ public final class Runnability {
                         return r1;
 
                     case NOT_RUNNABLE:
-                    case UNSATISFIED_PREREQUISITES:
                         return r2;
 
                     case RUNNABLE:
                         return r2.priority > 0 ? r2 : new Runnability(Tag.RUNNABLE, 1);
-                }
-                break;
-
-            case UNSATISFIED_PREREQUISITES:
-                switch (r2.tag) {
-                    case COMPLETED:
-                    case NOT_RUNNABLE:
-                    case RUNNABLE:
-                    case RUNNING:
-                    case UNSATISFIED_PREREQUISITES:
-                        return r1;
                 }
                 break;
         }

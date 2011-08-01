@@ -43,6 +43,7 @@ public class ActivityPartitionDetails {
 
     @Override
     public String toString() {
-        return nPartitions + ":" + Arrays.toString(nInputPartitions) + ":" + Arrays.toString(nOutputPartitions);
+        return nPartitions + ":" + (nInputPartitions == null ? "[]" : Arrays.toString(nInputPartitions)) + ":"
+                + (nOutputPartitions == null ? "[]" : Arrays.toString(nOutputPartitions));
     }
 }

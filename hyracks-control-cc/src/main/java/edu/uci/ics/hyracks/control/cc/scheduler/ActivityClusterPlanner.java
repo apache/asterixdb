@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.hyracks.api.dataflow.connectors.PipelinedConnectorPolicy;
+import edu.uci.ics.hyracks.api.dataflow.connectors.PipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -50,8 +50,11 @@ public class ActivityClusterPlanner {
 
     private final JobScheduler scheduler;
 
+    private final Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
+
     public ActivityClusterPlanner(JobScheduler newJobScheduler) {
         this.scheduler = newJobScheduler;
+        partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
     }
 
     public void planActivityCluster(ActivityCluster ac) throws HyracksException {
@@ -174,7 +177,6 @@ public class ActivityClusterPlanner {
         }
         TaskCluster[] taskClusters = tcSet.toArray(new TaskCluster[tcSet.size()]);
 
-        Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
         for (TaskCluster tc : taskClusters) {
             Set<TaskCluster> tcDependencyTaskClusters = tc.getDependencyTaskClusters();
             for (Task ts : tc.getTasks()) {
@@ -211,7 +213,7 @@ public class ActivityClusterPlanner {
             }
         }
 
-        ac.setPlan(new ActivityClusterPlan(taskClusters, taskMap, partitionProducingTaskClusterMap));
+        ac.setPlan(new ActivityClusterPlan(taskClusters, taskMap));
     }
 
     private TaskCluster getTaskCluster(TaskId tid) {
@@ -267,7 +269,7 @@ public class ActivityClusterPlanner {
         if (cpap != null) {
             return cpap.getConnectorPolicyAssignment(c, nProducers, nConsumers, fanouts);
         }
-        return new PipelinedConnectorPolicy();
+        return new PipeliningConnectorPolicy();
     }
 
     private Map<ActivityId, ActivityPartitionDetails> computePartitionCounts(ActivityCluster ac)
@@ -321,5 +323,9 @@ public class ActivityClusterPlanner {
             activityPartsMap.put(anId, apd);
         }
         return activityPartsMap;
+    }
+
+    public Map<? extends PartitionId, ? extends TaskCluster> getPartitionProducingTaskClusterMap() {
+        return partitionProducingTaskClusterMap;
     }
 }

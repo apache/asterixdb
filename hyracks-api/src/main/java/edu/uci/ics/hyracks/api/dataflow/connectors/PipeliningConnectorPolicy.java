@@ -12,27 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-import java.util.Map;
+public final class PipeliningConnectorPolicy implements IConnectorPolicy {
+    private static final long serialVersionUID = 1L;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-
-public class ActivityClusterPlan {
-    private final Map<ActivityId, Task[]> taskStateMap;
-
-    private final TaskCluster[] taskClusters;
-
-    public ActivityClusterPlan(TaskCluster[] taskClusters, Map<ActivityId, Task[]> taskStateMap) {
-        this.taskStateMap = taskStateMap;
-        this.taskClusters = taskClusters;
+    @Override
+    public boolean requiresProducerConsumerCoscheduling() {
+        return true;
     }
 
-    public Map<ActivityId, Task[]> getTaskMap() {
-        return taskStateMap;
+    @Override
+    public boolean consumerWaitsForProducerToFinish() {
+        return true;
     }
 
-    public TaskCluster[] getTaskClusters() {
-        return taskClusters;
+    @Override
+    public boolean materializeOnSendSide() {
+        return false;
+    }
+
+    @Override
+    public boolean materializeOnReceiveSide() {
+        return false;
     }
 }

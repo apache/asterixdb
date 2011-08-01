@@ -147,7 +147,8 @@ public class JobScheduler {
                 Set<TaskCluster> depACTCRoots = new HashSet<TaskCluster>();
                 for (TaskCluster tc : depAC.getPlan().getTaskClusters()) {
                     if (tc.getProducedPartitions().isEmpty()) {
-                        if (findLastTaskClusterAttempt(tc).getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
+                        TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
+                        if (tca == null || tca.getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
                             tcRootsComplete = false;
                         }
                         depACTCRoots.add(tc);
@@ -163,6 +164,7 @@ public class JobScheduler {
             if (!isPlanned(candidate)) {
                 ActivityClusterPlanner acp = new ActivityClusterPlanner(this);
                 acp.planActivityCluster(candidate);
+                partitionProducingTaskClusterMap.putAll(acp.getPartitionProducingTaskClusterMap());
             }
             for (TaskCluster tc : candidate.getPlan().getTaskClusters()) {
                 if (tc.getProducedPartitions().isEmpty()) {
@@ -203,7 +205,6 @@ public class JobScheduler {
         for (Map.Entry<TaskCluster, Runnability> e : runnabilityMap.entrySet()) {
             TaskCluster tc = e.getKey();
             Runnability runnability = e.getValue();
-            assert runnability.getTag() != Runnability.Tag.UNSATISFIED_PREREQUISITES;
             if (runnability.getTag() != Runnability.Tag.RUNNABLE) {
                 continue;
             }
@@ -244,11 +245,17 @@ public class JobScheduler {
      * Runnability(Non-schedulable TaskCluster) = {NOT_RUNNABLE, _} 
      */
     private Runnability assignRunnabilityRank(TaskCluster goal, Map<TaskCluster, Runnability> runnabilityMap) {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Computing runnability: " + goal);
+        }
         if (runnabilityMap.containsKey(goal)) {
             return runnabilityMap.get(goal);
         }
         TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(goal);
         if (lastAttempt != null) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Last Attempt Status: " + lastAttempt.getStatus());
+            }
             if (lastAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
                 Runnability runnability = new Runnability(Runnability.Tag.COMPLETED, Integer.MIN_VALUE);
                 runnabilityMap.put(goal, runnability);
@@ -264,22 +271,47 @@ public class JobScheduler {
         PartitionMatchMaker pmm = jobRun.getPartitionMatchMaker();
         Runnability aggregateRunnability = new Runnability(Runnability.Tag.RUNNABLE, 0);
         for (PartitionId pid : goal.getRequiredPartitions()) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Inspecting required partition: " + pid);
+            }
             Runnability runnability;
             ConnectorDescriptorId cdId = pid.getConnectorDescriptorId();
             IConnectorPolicy cPolicy = connectorPolicyMap.get(cdId);
             PartitionState maxState = pmm.getMaximumAvailableState(pid);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Policy: " + cPolicy + " maxState: " + maxState);
+            }
             if (PartitionState.COMMITTED.equals(maxState)) {
                 runnability = new Runnability(Runnability.Tag.RUNNABLE, 0);
             } else if (PartitionState.STARTED.equals(maxState) && !cPolicy.consumerWaitsForProducerToFinish()) {
                 runnability = new Runnability(Runnability.Tag.RUNNABLE, 1);
             } else {
                 runnability = assignRunnabilityRank(partitionProducingTaskClusterMap.get(pid), runnabilityMap);
-                if (runnability.getTag() == Runnability.Tag.RUNNABLE && runnability.getPriority() > 0
-                        && cPolicy.consumerWaitsForProducerToFinish()) {
-                    runnability = new Runnability(Runnability.Tag.NOT_RUNNABLE, Integer.MAX_VALUE);
+                switch (runnability.getTag()) {
+                    case RUNNABLE:
+                        if (cPolicy.consumerWaitsForProducerToFinish()) {
+                            runnability = new Runnability(Runnability.Tag.NOT_RUNNABLE, Integer.MAX_VALUE);
+                        } else {
+                            runnability = new Runnability(Runnability.Tag.RUNNABLE, runnability.getPriority() + 1);
+                        }
+                        break;
+
+                    case NOT_RUNNABLE:
+                        break;
+
+                    case RUNNING:
+                        if (cPolicy.consumerWaitsForProducerToFinish()) {
+                            runnability = new Runnability(Runnability.Tag.NOT_RUNNABLE, Integer.MAX_VALUE);
+                        } else {
+                            runnability = new Runnability(Runnability.Tag.RUNNABLE, 1);
+                        }
+                        break;
                 }
             }
             aggregateRunnability = Runnability.getWorstCase(aggregateRunnability, runnability);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("aggregateRunnability: " + aggregateRunnability);
+            }
         }
         runnabilityMap.put(goal, aggregateRunnability);
         return aggregateRunnability;

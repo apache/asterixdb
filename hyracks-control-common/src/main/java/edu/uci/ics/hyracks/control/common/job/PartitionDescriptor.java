@@ -65,7 +65,7 @@ public class PartitionDescriptor implements Serializable {
 
     @Override
     public String toString() {
-        return "[" + pid + ":" + nodeId + ":" + producingTaskAttemptId + (reusable ? "reusable" : "non-reusable")
+        return "[" + pid + ":" + nodeId + ":" + producingTaskAttemptId + (reusable ? "reusable" : "non-reusable") + " "
                 + state + "]";
     }
 }

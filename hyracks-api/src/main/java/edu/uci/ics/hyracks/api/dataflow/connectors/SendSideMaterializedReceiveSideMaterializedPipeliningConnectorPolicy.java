@@ -14,26 +14,26 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.connectors;
 
-public final class PipelinedConnectorPolicy implements IConnectorPolicy {
+public final class SendSideMaterializedReceiveSideMaterializedPipeliningConnectorPolicy implements IConnectorPolicy {
     private static final long serialVersionUID = 1L;
 
     @Override
     public boolean requiresProducerConsumerCoscheduling() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean consumerWaitsForProducerToFinish() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean materializeOnSendSide() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean materializeOnReceiveSide() {
-        return false;
+        return true;
     }
 }
