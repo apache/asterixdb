@@ -19,23 +19,28 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
 public class GetJobProfileJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final UUID jobId;
-    private final int attempt;
     private JSONObject profile;
 
-    public GetJobProfileJSONEvent(ClusterControllerService ccs, UUID jobId, int attempt) {
+    public GetJobProfileJSONEvent(ClusterControllerService ccs, UUID jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
-        this.attempt = attempt;
     }
 
     @Override
     protected void doRun() throws Exception {
         profile = new JSONObject();
+        JobRun jobRun = ccs.getRunMap().get(jobId);
+        if (jobRun == null) {
+            profile = new JSONObject();
+            return;
+        }
+        profile = jobRun.getJobProfile().toJSON();
     }
 
     public JSONObject getProfile() {

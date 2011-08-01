@@ -53,19 +53,12 @@ public class RESTAPIFunction implements IJSONOutputFunction {
                     GetJobSpecificationJSONEvent gjse = new GetJobSpecificationJSONEvent(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjse);
                     result.put("result", gjse.getSpecification());
-                }
-                break;
-            }
-
-            case 3: {
-                UUID jobId = UUID.fromString(arguments[0]);
-                int attempt = Integer.parseInt(arguments[1]);
-
-                if ("profile".equalsIgnoreCase(arguments[2])) {
-                    GetJobProfileJSONEvent gjpe = new GetJobProfileJSONEvent(ccs, jobId, attempt);
+                } else if ("profile".equalsIgnoreCase(arguments[1])) {
+                    GetJobProfileJSONEvent gjpe = new GetJobProfileJSONEvent(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjpe);
                     result.put("result", gjpe.getProfile());
                 }
+
                 break;
             }
         }

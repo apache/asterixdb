@@ -15,12 +15,9 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 
 public class ActivityCluster {
     private final JobRun jobRun;
@@ -33,16 +30,11 @@ public class ActivityCluster {
 
     private ActivityClusterPlan acp;
 
-    private Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
-
-    private Set<TaskCluster> inProgressTaskClusters;
-
     public ActivityCluster(JobRun jobRun, Set<ActivityId> activities) {
         this.jobRun = jobRun;
         this.activities = activities;
         dependencies = new HashSet<ActivityCluster>();
         dependents = new HashSet<ActivityCluster>();
-        inProgressTaskClusters = new HashSet<TaskCluster>();
     }
 
     public Set<ActivityId> getActivities() {
@@ -79,17 +71,5 @@ public class ActivityCluster {
 
     public void setPlan(ActivityClusterPlan acp) {
         this.acp = acp;
-    }
-
-    public void setConnectorPolicyMap(Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) {
-        this.connectorPolicies = connectorPolicies;
-    }
-
-    public Map<ConnectorDescriptorId, IConnectorPolicy> getConnectorPolicyMap() {
-        return connectorPolicies;
-    }
-
-    public Set<TaskCluster> getInProgressTaskClusters() {
-        return inProgressTaskClusters;
     }
 }

@@ -189,7 +189,7 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
     private void prepareForWrite() {
         writeBuffer = ByteBuffer.allocate(ConnectionManager.INITIAL_MESSAGE_SIZE);
         writeUUID(writeBuffer, partitionId.getJobId());
-        writeUUID(writeBuffer, partitionId.getConnectorDescriptorId().getId());
+        writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
         writeBuffer.flip();

@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +29,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     protected final ConnectorDescriptorId id;
 
     public AbstractConnectorDescriptor(JobSpecification spec) {
-        this.id = new ConnectorDescriptorId(UUID.randomUUID());
+        this.id = spec.createConnectorDescriptor();
         spec.getConnectorMap().put(id, this);
     }
 
@@ -44,7 +42,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
         JSONObject jconn = new JSONObject();
 
         jconn.put("type", "connector");
-        jconn.put("id", getConnectorId().getId().toString());
+        jconn.put("id", getConnectorId().getId());
         jconn.put("java-class", getClass().getName());
 
         return jconn;

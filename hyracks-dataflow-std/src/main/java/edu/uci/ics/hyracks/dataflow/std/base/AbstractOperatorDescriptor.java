@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -41,7 +39,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     protected final int outputArity;
 
     public AbstractOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity) {
-        odId = new OperatorDescriptorId(UUID.randomUUID());
+        odId = spec.createOperatorDescriptorId();
         this.inputArity = inputArity;
         this.outputArity = outputArity;
         recordDescriptors = new RecordDescriptor[outputArity];
@@ -78,7 +76,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     public JSONObject toJSON() throws JSONException {
         JSONObject jop = new JSONObject();
         jop.put("type", "operator");
-        jop.put("id", getOperatorId().getId().toString());
+        jop.put("id", getOperatorId().getId());
         jop.put("java-class", getClass().getName());
         jop.put("in-arity", getInputArity());
         jop.put("out-arity", getOutputArity());

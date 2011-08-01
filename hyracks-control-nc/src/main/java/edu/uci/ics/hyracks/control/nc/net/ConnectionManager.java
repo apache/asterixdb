@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.control.nc.partitions.IPartitionRequestListener;
 public class ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
 
-    static final int INITIAL_MESSAGE_SIZE = 40;
+    static final int INITIAL_MESSAGE_SIZE = 28;
 
     private final IHyracksRootContext ctx;
 
@@ -123,7 +123,6 @@ public class ConnectionManager {
         private final List<SocketChannel> pendingIncomingConnections;
         private final Set<SocketChannel> pendingNegotiations;
         private final List<INetworkChannel> pendingOutgoingConnections;
-        private final List<INetworkChannel> pendingAbortConnections;
 
         public DataListenerThread() {
             super("Hyracks Data Listener Thread");
@@ -136,7 +135,6 @@ public class ConnectionManager {
             pendingIncomingConnections = new ArrayList<SocketChannel>();
             pendingNegotiations = new HashSet<SocketChannel>();
             pendingOutgoingConnections = new ArrayList<INetworkChannel>();
-            pendingAbortConnections = new ArrayList<INetworkChannel>();
         }
 
         synchronized void addIncomingConnection(SocketChannel sc) throws IOException {
@@ -146,11 +144,6 @@ public class ConnectionManager {
 
         synchronized void addOutgoingConnection(INetworkChannel channel) throws IOException {
             pendingOutgoingConnections.add(channel);
-            selector.wakeup();
-        }
-
-        synchronized void addPendingAbortConnections(List<INetworkChannel> abortConnections) {
-            pendingAbortConnections.addAll(abortConnections);
             selector.wakeup();
         }
 
@@ -183,15 +176,6 @@ public class ConnectionManager {
                                 nc.notifyConnectionManagerRegistration();
                             }
                             pendingOutgoingConnections.clear();
-                        }
-                        if (!pendingAbortConnections.isEmpty()) {
-                            for (INetworkChannel nc : pendingAbortConnections) {
-                                SelectionKey key = nc.getSelectionKey();
-                                nc.abort();
-                                nc.dispatchNetworkEvent();
-                                key.cancel();
-                            }
-                            pendingAbortConnections.clear();
                         }
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("Selector: " + n);
@@ -248,7 +232,7 @@ public class ConnectionManager {
 
         private PartitionId readInitialMessage(ByteBuffer buffer) {
             UUID jobId = readUUID(buffer);
-            ConnectorDescriptorId cdid = new ConnectorDescriptorId(readUUID(buffer));
+            ConnectorDescriptorId cdid = new ConnectorDescriptorId(buffer.getInt());
             int senderIndex = buffer.getInt();
             int receiverIndex = buffer.getInt();
             return new PartitionId(jobId, cdid, senderIndex, receiverIndex);

@@ -58,6 +58,10 @@ public class JobSpecification implements Serializable {
 
     private int maxAttempts;
 
+    private transient int operatorIdCounter;
+
+    private transient int connectorIdCounter;
+
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
@@ -67,6 +71,16 @@ public class JobSpecification implements Serializable {
         connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
         properties = new HashMap<String, Serializable>();
         userConstraints = new HashSet<Constraint>();
+        operatorIdCounter = 0;
+        connectorIdCounter = 0;
+    }
+
+    public OperatorDescriptorId createOperatorDescriptorId() {
+        return new OperatorDescriptorId(operatorIdCounter++);
+    }
+
+    public ConnectorDescriptorId createConnectorDescriptor() {
+        return new ConnectorDescriptorId(connectorIdCounter++);
     }
 
     public void addRoot(IOperatorDescriptor op) {

@@ -367,7 +367,7 @@ public class JobScheduler {
         tcAttempt.initializePendingTaskCounter();
         tcAttempts.add(tcAttempt);
         tcAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.RUNNING);
-        tc.getActivityCluster().getInProgressTaskClusters().add(tc);
+        inProgressTaskClusters.add(tc);
     }
 
     private static String findLocationOfBlocker(JobRun jobRun, JobActivityGraph jag, TaskId tid) {

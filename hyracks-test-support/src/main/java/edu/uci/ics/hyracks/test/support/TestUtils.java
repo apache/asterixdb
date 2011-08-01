@@ -32,8 +32,7 @@ public class TestUtils {
             IHyracksRootContext rootCtx = new TestRootContext(frameSize);
             INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
             IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID());
-            TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(
-                    new OperatorDescriptorId(UUID.randomUUID()), 0), 0), 0);
+            TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
             IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid);
             return taskCtx;
         } catch (HyracksException e) {
