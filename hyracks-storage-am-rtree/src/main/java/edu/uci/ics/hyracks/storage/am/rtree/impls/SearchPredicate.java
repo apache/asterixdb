@@ -42,7 +42,7 @@ public class SearchPredicate implements ISearchPredicate {
     public MultiComparator getLowKeyComparator() {
         return cmp;
     }
-    
+
     public MultiComparator getHighKeyComparator() {
         return cmp;
     }

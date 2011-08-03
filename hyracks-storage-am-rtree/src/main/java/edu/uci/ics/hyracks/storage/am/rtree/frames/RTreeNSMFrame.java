@@ -73,7 +73,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         } while (1.0 + (doubleEpsilon / 2.0) != 1.0);
         return doubleEpsilon;
     }
-    
+
     public static double doubleEpsilon() {
         return doubleEpsilon;
     }
