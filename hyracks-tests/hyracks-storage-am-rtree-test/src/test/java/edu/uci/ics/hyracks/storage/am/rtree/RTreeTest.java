@@ -69,6 +69,9 @@ public class RTreeTest extends AbstractRTreeTest {
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
+    // create an R-tree of two dimensions
+    // fill the R-tree with random values using insertions
+    // perform ordered scan
     @Test
     public void test01() throws Exception {
 
@@ -220,6 +223,9 @@ public class RTreeTest extends AbstractRTreeTest {
 
     }
 
+    // create an R-tree of two dimensions
+    // fill the R-tree with random values using insertions
+    // and then delete all the tuples which result of an empty R-tree
     @Test
     public void test02() throws Exception {
 
@@ -399,6 +405,9 @@ public class RTreeTest extends AbstractRTreeTest {
 
     }
 
+    // create an R-tree of three dimensions
+    // fill the R-tree with random values using insertions
+    // perform ordered scan
     @Test
     public void test03() throws Exception {
 

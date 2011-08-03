@@ -196,7 +196,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void create(int indexFileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
+    public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
         if (created)
             return;
 
