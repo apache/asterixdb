@@ -17,17 +17,11 @@ package edu.uci.ics.hyracks.storage.am.invertedindex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.fuzzyjoin.tokenizer.DelimitedUTF8StringBinaryTokenizer;
-import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
-import edu.uci.ics.fuzzyjoin.tokenizer.ITokenFactory;
-import edu.uci.ics.fuzzyjoin.tokenizer.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -42,6 +36,8 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SearchResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.JaccardSearchModifier;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFactory;
 
 /**
  * The purpose of this test is to evaluate the performance of searches against

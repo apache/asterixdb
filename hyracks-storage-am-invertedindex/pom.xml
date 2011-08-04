@@ -58,14 +58,7 @@
   		<version>0.1.5</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency>  	
-    <dependency>
-        <groupId>edu.uci.ics.fuzzyjoin</groupId>
-        <artifactId>fuzzyjoin-core</artifactId>
-        <version>0.0.3</version>
-        <type>jar</type>
-        <scope>compile</scope>
-    </dependency>
+  	</dependency>    
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>
