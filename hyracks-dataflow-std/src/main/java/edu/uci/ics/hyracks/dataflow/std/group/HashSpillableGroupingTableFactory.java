@@ -42,7 +42,6 @@ import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class HashSpillableGroupingTableFactory implements ISpillableTableFactory {
-
     private static final long serialVersionUID = 1L;
     private final ITuplePartitionComputerFactory tpcf;
     private final int tableSize;
@@ -152,8 +151,10 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
                 } while (true);
 
                 if (!foundGroup) {
-                    // If no matching group is found, create a new aggregator
-                    // Create a tuple for the new group
+                    /**
+                     * If no matching group is found, create a new aggregator
+                     * Create a tuple for the new group
+                     */
                     internalTupleBuilder.reset();
                     for (int i = 0; i < keyFields.length; i++) {
                         internalTupleBuilder.addField(accessor, tIndex, keyFields[i]);
@@ -334,7 +335,9 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
                         offset++;
                     } while (true);
                 }
-                // Sort using quick sort
+                /**
+                 * Sort using quick sort
+                 */
                 if (tPointers.length > 0) {
                     sort(tPointers, 0, totalTCount);
                 }
@@ -342,11 +345,10 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
 
             private void sort(int[] tPointers, int offset, int length) {
                 int m = offset + (length >> 1);
-                // Get table index
                 int mTable = tPointers[m * 3];
                 int mRow = tPointers[m * 3 + 1];
                 int mNormKey = tPointers[m * 3 + 2];
-                // Get frame and tuple index
+
                 table.getTuplePointer(mTable, mRow, storedTuplePointer);
                 int mFrame = storedTuplePointer.frameIndex;
                 int mTuple = storedTuplePointer.tupleIndex;
