@@ -15,7 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-public class BTreeException extends Exception {
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+
+public class BTreeException extends TreeIndexException {
 
     private static final long serialVersionUID = 1L;
     private boolean handled = false;

@@ -58,7 +58,7 @@
   		<version>0.1.7-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency>  	
+  	</dependency>    
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>

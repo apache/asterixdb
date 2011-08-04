@@ -2,26 +2,26 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
-public class FieldPrefixTupleReference implements IBTreeTupleReference {
+public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
-    private FieldPrefixNSMLeafFrame frame;
+    private BTreeFieldPrefixNSMLeafFrame frame;
     private int prefixTupleStartOff;
     private int suffixTupleStartOff;
     private int numPrefixFields;
     private int fieldCount;
-    private IBTreeTupleReference helperTuple;
+    private ITreeIndexTupleReference helperTuple;
 
-    public FieldPrefixTupleReference(IBTreeTupleReference helperTuple) {
+    public FieldPrefixTupleReference(ITreeIndexTupleReference helperTuple) {
         this.helperTuple = helperTuple;
     }
 
     @Override
-    public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
-        this.frame = (FieldPrefixNSMLeafFrame) frame;
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
+        this.frame = (BTreeFieldPrefixNSMLeafFrame) frame;
 
         int tupleSlotOff = this.frame.slotManager.getTupleSlotOff(tupleIndex);
         int tupleSlot = this.frame.getBuffer().getInt(tupleSlotOff);
@@ -63,11 +63,11 @@ public class FieldPrefixTupleReference implements IBTreeTupleReference {
     public int getFieldLength(int fIdx) {
         if (fIdx < numPrefixFields) {
             helperTuple.setFieldCount(numPrefixFields);
-            helperTuple.resetByOffset(frame.getBuffer(), prefixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
             return helperTuple.getFieldLength(fIdx);
         } else {
             helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
-            helperTuple.resetByOffset(frame.getBuffer(), suffixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
             return helperTuple.getFieldLength(fIdx - numPrefixFields);
         }
     }
@@ -76,18 +76,18 @@ public class FieldPrefixTupleReference implements IBTreeTupleReference {
     public int getFieldStart(int fIdx) {
         if (fIdx < numPrefixFields) {
             helperTuple.setFieldCount(numPrefixFields);
-            helperTuple.resetByOffset(frame.getBuffer(), prefixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
             return helperTuple.getFieldStart(fIdx);
         } else {
             helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
-            helperTuple.resetByOffset(frame.getBuffer(), suffixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
             return helperTuple.getFieldStart(fIdx - numPrefixFields);
         }
     }
 
     // unsupported operation
     @Override
-    public void resetByOffset(ByteBuffer buf, int tupleStartOffset) {
+    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset) {
         frame = null;
     }
 }

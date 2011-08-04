@@ -25,6 +25,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.btree.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -36,6 +37,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class StorageManagerTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
+	private static final int MAX_OPEN_FILES = 10;
+	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksStageletContext ctx = TestUtils.create(32768);
 
 	public class PinnedLatchedPage {
@@ -87,7 +90,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		private void pinRandomPage() {
 			int pageId = Math.abs(rnd.nextInt() % maxPages);
 
-			System.out.println(workerId + " PINNING PAGE: " + pageId);
+			LOGGER.info(workerId + " PINNING PAGE: " + pageId);
 
 			try {
 				ICachedPage page = bufferCache.pin(BufferedFileHandle
@@ -102,14 +105,14 @@ public class StorageManagerTest extends AbstractBTreeTest {
 					break;
 
 				case FTA_READONLY: {
-					System.out.println(workerId + " S LATCHING: " + pageId);
+				    LOGGER.info(workerId + " S LATCHING: " + pageId);
 					page.acquireReadLatch();
 					latch = LatchType.LATCH_S;
 				}
 					break;
 
 				case FTA_WRITEONLY: {
-					System.out.println(workerId + " X LATCHING: " + pageId);
+				    LOGGER.info(workerId + " X LATCHING: " + pageId);
 					page.acquireWriteLatch();
 					latch = LatchType.LATCH_X;
 				}
@@ -117,11 +120,11 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 				case FTA_MIXED: {
 					if (rnd.nextInt() % 2 == 0) {
-						System.out.println(workerId + " S LATCHING: " + pageId);
+					    LOGGER.info(workerId + " S LATCHING: " + pageId);
 						page.acquireReadLatch();
 						latch = LatchType.LATCH_S;
 					} else {
-						System.out.println(workerId + " X LATCHING: " + pageId);
+					    LOGGER.info(workerId + " X LATCHING: " + pageId);
 						page.acquireWriteLatch();
 						latch = LatchType.LATCH_X;
 					}
@@ -145,16 +148,16 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 				if (plPage.latch != null) {
 					if (plPage.latch == LatchType.LATCH_S) {
-						System.out.println(workerId + " S UNLATCHING: "
+					    LOGGER.info(workerId + " S UNLATCHING: "
 								+ plPage.pageId);
 						plPage.page.releaseReadLatch();
 					} else {
-						System.out.println(workerId + " X UNLATCHING: "
+					    LOGGER.info(workerId + " X UNLATCHING: "
 								+ plPage.pageId);
 						plPage.page.releaseWriteLatch();
 					}
 				}
-				System.out.println(workerId + " UNPINNING PAGE: "
+				LOGGER.info(workerId + " UNPINNING PAGE: "
 						+ plPage.pageId);
 
 				bufferCache.unpin(plPage.page);
@@ -165,7 +168,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		}
 
 		private void openFile() {
-			System.out.println(workerId + " OPENING FILE: " + fileId);
+		    LOGGER.info(workerId + " OPENING FILE: " + fileId);
 			try {
 				bufferCache.openFile(fileId);
 				fileIsOpen = true;
@@ -175,7 +178,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		}
 
 		private void closeFile() {
-			System.out.println(workerId + " CLOSING FILE: " + fileId);
+		    LOGGER.info(workerId + " CLOSING FILE: " + fileId);
 			try {
 				bufferCache.closeFile(fileId);
 				fileIsOpen = false;
@@ -192,7 +195,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 			while (loopCount < maxLoopCount) {
 				loopCount++;
 
-				System.out.println(workerId + " LOOP: " + loopCount + "/"
+				LOGGER.info(workerId + " LOOP: " + loopCount + "/"
 						+ maxLoopCount);
 
 				if (fileIsOpen) {
@@ -247,7 +250,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 	@Test
 	public void oneThreadOneFileTest() throws Exception {
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
