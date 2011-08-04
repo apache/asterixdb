@@ -20,22 +20,14 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-/**
- * @author jarodwen
- */
 public class MultiAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-
     private static final long serialVersionUID = 1L;
-
     private final IAggregatorDescriptorFactory[] aggregatorFactories;
 
     public MultiAggregatorDescriptorFactory(IAggregatorDescriptorFactory[] aggregatorFactories) {
         this.aggregatorFactories = aggregatorFactories;
     }
 
-    /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory#createAggregator(edu.uci.ics.hyracks.api.context.IHyracksStageletContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int[])
-     */
     @Override
     public IAggregatorDescriptor createAggregator(final IHyracksStageletContext ctx,
             final RecordDescriptor inRecordDescriptor, final RecordDescriptor outRecordDescriptor, final int[] keyFields)

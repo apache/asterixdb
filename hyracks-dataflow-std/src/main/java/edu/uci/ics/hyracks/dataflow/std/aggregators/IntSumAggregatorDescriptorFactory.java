@@ -24,12 +24,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-/**
- * @author jarodwen
- */
 public class IntSumAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-
     private final int aggField;
     private int outField = -1;
 
@@ -115,8 +111,7 @@ public class IntSumAggregatorDescriptorFactory implements IAggregatorDescriptorF
 
             @Override
             public void reset() {
-                // TODO Auto-generated method stub
-
+                
             }
         };
     }

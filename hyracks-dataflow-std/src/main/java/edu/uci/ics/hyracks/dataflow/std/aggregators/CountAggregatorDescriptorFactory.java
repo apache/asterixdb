@@ -24,13 +24,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-/**
- * @author jarodwen
- */
 public class CountAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-
     private static final long serialVersionUID = 1L;
-
     private int outField = -1;
 
     public CountAggregatorDescriptorFactory() {
@@ -40,9 +35,6 @@ public class CountAggregatorDescriptorFactory implements IAggregatorDescriptorFa
         this.outField = outField;
     }
 
-    /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory#createAggregator(edu.uci.ics.hyracks.api.context.IHyracksStageletContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int[])
-     */
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksStageletContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, final int[] keyFields) throws HyracksDataException {
@@ -103,7 +95,6 @@ public class CountAggregatorDescriptorFactory implements IAggregatorDescriptorFa
 
             @Override
             public void reset() {
-                // TODO Auto-generated method stub
 
             }
         };

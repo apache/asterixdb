@@ -28,15 +28,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
-/**
- * @author jarodwen
- */
 public class ConcatAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-
     private static final long serialVersionUID = 1L;
-
     private static final int INIT_ACCUMULATORS_SIZE = 8;
-
     private final int concatField;
     private int outField = -1;
 
