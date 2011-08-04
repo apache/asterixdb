@@ -14,14 +14,29 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group;
 
-import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
-public interface IAccumulatingAggregatorFactory extends Serializable {
-    IAccumulatingAggregator createAggregator(IHyracksStageletContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
+/**
+ * @author jarodwen
+ */
+public interface ISpillableTable {
 
+    public void close();
+
+    public void reset();
+
+    public int getFrameCount();
+
+    public List<ByteBuffer> getFrames();
+
+    public void sortFrames();
+
+    public boolean insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
+
+    public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException;
 }

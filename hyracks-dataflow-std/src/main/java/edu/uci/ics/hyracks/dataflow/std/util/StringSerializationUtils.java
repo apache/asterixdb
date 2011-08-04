@@ -12,12 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package edu.uci.ics.hyracks.dataflow.std.util;
 
-public interface IRecordReader {
+import java.util.Arrays;
 
-    public boolean read(Object[] record) throws Exception;
-
-    public void close();
-
+public class StringSerializationUtils {
+    public static String toString(Object object) {
+        if (object instanceof Object[]) {
+            return Arrays.deepToString((Object[]) object);
+        } else {
+            return String.valueOf(object);
+        }
+    }
 }

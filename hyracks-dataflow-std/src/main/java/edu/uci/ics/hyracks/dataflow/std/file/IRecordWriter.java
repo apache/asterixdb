@@ -17,10 +17,9 @@ package edu.uci.ics.hyracks.dataflow.std.file;
 import java.io.File;
 
 public interface IRecordWriter {
-	  
-      public void close();
-      
-      public void write(Object[] record) throws Exception;
 
-	
+    public void close();
+
+    public void write(Object[] record) throws Exception;
+
 }
