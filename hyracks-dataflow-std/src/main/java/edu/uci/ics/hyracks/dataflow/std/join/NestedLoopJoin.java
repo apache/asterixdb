@@ -64,7 +64,6 @@ public class NestedLoopJoin {
 
     public void cache(ByteBuffer buffer) throws HyracksDataException {
         runFileWriter.nextFrame(buffer);
-        System.out.println(runFileWriter.getFileSize());
     }
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
@@ -131,7 +130,8 @@ public class NestedLoopJoin {
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        for (ByteBuffer outBuffer : outBuffers) {
+        for (int i = 0; i < currentMemSize; i++) {
+            ByteBuffer outBuffer = outBuffers.get(i);
             runFileReader = runFileWriter.createReader();
             runFileReader.open();
             while (runFileReader.nextFrame(innerBuffer)) {

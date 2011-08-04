@@ -36,15 +36,15 @@ public class InputSplitsProxy implements Serializable {
         isClasses = new Class[inputSplits.length];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        if(conf.getUseNewMapper()){
+        if (conf.getUseNewMapper()) {
             for (int i = 0; i < inputSplits.length; ++i) {
-                isClasses[i] = ((org.apache.hadoop.mapreduce.InputSplit)inputSplits[i]).getClass();
-                ((Writable)inputSplits[i]).write(dos);
+                isClasses[i] = ((org.apache.hadoop.mapreduce.InputSplit) inputSplits[i]).getClass();
+                ((Writable) inputSplits[i]).write(dos);
             }
         } else {
             for (int i = 0; i < inputSplits.length; ++i) {
-                isClasses[i] = ((org.apache.hadoop.mapred.InputSplit)inputSplits[i]).getClass();
-                ((Writable)inputSplits[i]).write(dos);
+                isClasses[i] = ((org.apache.hadoop.mapred.InputSplit) inputSplits[i]).getClass();
+                ((Writable) inputSplits[i]).write(dos);
             }
         }
         dos.close();
@@ -52,17 +52,16 @@ public class InputSplitsProxy implements Serializable {
 
     }
 
-    public Object[] toInputSplits(JobConf jobConf) throws InstantiationException, IllegalAccessException,
-            IOException {
+    public Object[] toInputSplits(JobConf jobConf) throws InstantiationException, IllegalAccessException, IOException {
         Object[] splits = new Object[isClasses.length];
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
         for (int i = 0; i < splits.length; ++i) {
             splits[i] = ReflectionUtils.newInstance(isClasses[i], jobConf);
-            if(jobConf.getUseNewMapper()){
-                ((Writable)splits[i]).readFields(dis);
-            }else {
-                ((Writable)splits[i]).readFields(dis);
-            }    
+            if (jobConf.getUseNewMapper()) {
+                ((Writable) splits[i]).readFields(dis);
+            } else {
+                ((Writable) splits[i]).readFields(dis);
+            }
         }
         return splits;
     }

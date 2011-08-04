@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.uci.ics.hyracks.examples</groupId>
+  <artifactId>hadoop-compat-example</artifactId>
+  <version>0.1.7-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>hyracks-examples</artifactId>
+    <version>0.1.7-SNAPSHOT</version>
+  </parent>
+
+  <modules>
+    <module>hadoopcompathelper</module>
+    <module>hadoopcompatclient</module>
+    <module>hadoopcompatapp</module>
+  </modules>
+
+  <dependencies>
+      <dependency>
+         <groupId>org.apache.hadoop</groupId>
+         <artifactId>hadoop-core</artifactId>
+         <version>0.20.2</version>
+         <type>jar</type>
+         <scope>compile</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>edu.uci.ics.hyracks</groupId>
+         <artifactId>hyracks-hadoop-compat</artifactId>
+         <version>0.1.7-SNAPSHOT</version>
+         <type>jar</type>
+         <scope>compile</scope>
+      </dependency>
+  </dependencies>
+</project>

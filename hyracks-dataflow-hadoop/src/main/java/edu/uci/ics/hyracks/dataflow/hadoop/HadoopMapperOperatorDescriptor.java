@@ -71,16 +71,8 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
             jobConf = getJobConf();
             populateCache(jobConf);
-            try {
-                mapper = createMapper();
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
             conf = new JobConf(jobConf);
             conf.setClassLoader(jobConf.getClassLoader());
-            if (!jobConf.getUseNewMapper()) {
-                ((org.apache.hadoop.mapred.Mapper) mapper).configure(conf);
-            }
             reporter = createReporter();
         }
 
@@ -143,6 +135,19 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             }
             this.writer = writer;
         }
+
+        protected void initializeMapper() throws HyracksDataException {
+            super.initializeMapper();
+            try {
+                mapper = createMapper(conf);
+            } catch (Exception e) {
+                throw new HyracksDataException(e);
+            }
+            if (!conf.getUseNewMapper()) {
+                ((org.apache.hadoop.mapred.Mapper) mapper).configure(conf);
+            }
+        }
+
     }
 
     private class ReaderMapperOperator extends MapperBaseOperator {
@@ -167,10 +172,10 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 } else if (splitRead instanceof org.apache.hadoop.mapreduce.lib.input.FileSplit) {
                     conf.set("map.input.file", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getPath()
                             .toString());
-                    conf.setLong("map.input.start",
-                            ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getStart());
-                    conf.setLong("map.input.length",
-                            ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getLength());
+                    conf.setLong("map.input.start", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead)
+                            .getStart());
+                    conf.setLong("map.input.length", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead)
+                            .getLength());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -180,10 +185,22 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             }
         }
 
+        protected void initializeMapper() throws HyracksDataException {
+            super.initializeMapper();
+            updateConfWithSplit(conf);
+            try {
+                mapper = createMapper(conf);
+            } catch (Exception e) {
+                throw new HyracksDataException(e);
+            }
+            if (!conf.getUseNewMapper()) {
+                ((org.apache.hadoop.mapred.Mapper) mapper).configure(conf);
+            }
+        }
+
         public void mapInput() throws HyracksDataException, InterruptedException, ClassNotFoundException {
             try {
                 initializeMapper();
-                updateConfWithSplit(conf);
                 conf.setClassLoader(this.getClass().getClassLoader());
                 Object reader;
                 Object key = null;
@@ -209,7 +226,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                     };;;
 
                     OutputCommitter outputCommitter = new org.apache.hadoop.mapreduce.lib.output.NullOutputFormat()
-                            .getOutputCommitter(new TaskAttemptContext(jobConf, new TaskAttemptID()));
+                            .getOutputCommitter(new TaskAttemptContext(conf, new TaskAttemptID()));
                     StatusReporter statusReporter = new StatusReporter() {
                         @Override
                         public void setStatus(String arg0) {
@@ -229,7 +246,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                             return null;
                         }
                     };;;
-                    context = new org.apache.hadoop.mapreduce.Mapper().new Context(jobConf, new TaskAttemptID(),
+                    context = new org.apache.hadoop.mapreduce.Mapper().new Context(conf, new TaskAttemptID(),
                             newReader, recordWriter, outputCommitter, statusReporter,
                             (org.apache.hadoop.mapreduce.InputSplit) inputSplit);
                     newReader.initialize((org.apache.hadoop.mapreduce.InputSplit) inputSplit, context);
@@ -298,9 +315,9 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         String mapOutputValueClassName = conf.getMapOutputValueClass().getName();
         try {
             if (hadoopClassFactory == null) {
-                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
-                        (Class<? extends Writable>) Class.forName(mapOutputKeyClassName),
-                        (Class<? extends Writable>) Class.forName(mapOutputValueClassName));
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
+                        .forName(mapOutputKeyClassName), (Class<? extends Writable>) Class
+                        .forName(mapOutputValueClassName));
             } else {
                 recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                         (Class<? extends Writable>) hadoopClassFactory.loadClass(mapOutputKeyClassName),
@@ -312,21 +329,21 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         return recordDescriptor;
     }
 
-    private Object createMapper() throws Exception {
+    private Object createMapper(JobConf conf) throws Exception {
         Object mapper;
         if (mapperClass != null) {
-            return ReflectionUtils.newInstance(mapperClass, jobConf);
+            return ReflectionUtils.newInstance(mapperClass, conf);
         } else {
             String mapperClassName = null;
             if (jobConf.getUseNewMapper()) {
-                JobContext jobContext = new JobContext(jobConf, null);
+                JobContext jobContext = new JobContext(conf, null);
                 mapperClass = jobContext.getMapperClass();
                 mapperClassName = mapperClass.getName();
             } else {
-                mapperClass = super.getJobConf().getMapperClass();
+                mapperClass = conf.getMapperClass();
                 mapperClassName = mapperClass.getName();
             }
-            mapper = getHadoopClassFactory().createMapper(mapperClassName, jobConf);
+            mapper = getHadoopClassFactory().createMapper(mapperClassName, conf);
         }
         return mapper;
     }
@@ -344,8 +361,8 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         } else {
             Class inputFormatClass = conf.getInputFormat().getClass();
             InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
-            return inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit) inputSplit, conf,
-                    super.createReporter());
+            return inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit) inputSplit, conf, super
+                    .createReporter());
         }
     }
 
@@ -383,8 +400,8 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 }
                 return createSelfReadingMapper(ctx, env, recordDescriptor, partition);
             } else {
-                return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition),
-                        recordDescProvider.getInputRecordDescriptor(this.odId, 0));
+                return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition), recordDescProvider
+                        .getInputRecordDescriptor(this.odId, 0));
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);

@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-examples</artifactId>
-  <version>0.1.5</version>
+  <version>0.1.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.7-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -16,5 +16,6 @@
     <module>text-example</module>
     <module>btree-example</module>
     <module>hyracks-integration-tests</module>
+    <module>hadoop-compat-example</module>
   </modules>
 </project>
