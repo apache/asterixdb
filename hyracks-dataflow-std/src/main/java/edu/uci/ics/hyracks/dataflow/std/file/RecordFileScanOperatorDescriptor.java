@@ -66,14 +66,14 @@ public class RecordFileScanOperatorDescriptor extends AbstractDeserializedFileSc
     protected IRecordReader createRecordReader(File file, RecordDescriptor desc) throws Exception {
         return new RecordReaderImpl(file, desc);
     }
-    
+
     @Override
-	protected void configure() throws Exception {
-		// currently a no-op, but is meant to initialize , if required before it is asked 
-		// to create a record reader
-		// this is executed at the node and is useful for operators that could not be 
-		// initialized from the client completely, because of lack of information specific 
-		// to the node where the operator gets executed. 
-		
-	}
+    protected void configure() throws Exception {
+        // currently a no-op, but is meant to initialize , if required before it is asked 
+        // to create a record reader
+        // this is executed at the node and is useful for operators that could not be 
+        // initialized from the client completely, because of lack of information specific 
+        // to the node where the operator gets executed. 
+
+    }
 }
