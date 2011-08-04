@@ -3,10 +3,13 @@ package edu.uci.ics.hyracks.storage.am.btree;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import org.junit.AfterClass;
 
 public abstract class AbstractBTreeTest {
+
+    protected static final Logger LOGGER = Logger.getLogger(AbstractBTreeTest.class.getName());
 
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String tmpDir = System.getProperty("java.io.tmpdir");

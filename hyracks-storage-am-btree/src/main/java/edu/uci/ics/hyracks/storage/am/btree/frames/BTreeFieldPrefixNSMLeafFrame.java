@@ -49,7 +49,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 // WARNING: only works when tupleWriter is an instance of TypeAwareTupleWriter
 
-public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
+public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected static final int pageLsnOff = 0; // 0
     protected static final int tupleCountOff = pageLsnOff + 4; // 4
@@ -74,7 +74,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     private FieldPrefixTupleReference frameTuple;
     private FieldPrefixPrefixTupleReference framePrefixTuple;
 
-    public FieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
+    public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
@@ -458,7 +458,7 @@ public class FieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
             throws Exception {
 
-        FieldPrefixNSMLeafFrame rf = (FieldPrefixNSMLeafFrame) rightFrame;
+        BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
 
         frameTuple.setFieldCount(cmp.getFieldCount());
         

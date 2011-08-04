@@ -90,7 +90,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		private void pinRandomPage() {
 			int pageId = Math.abs(rnd.nextInt() % maxPages);
 
-			System.out.println(workerId + " PINNING PAGE: " + pageId);
+			LOGGER.info(workerId + " PINNING PAGE: " + pageId);
 
 			try {
 				ICachedPage page = bufferCache.pin(BufferedFileHandle
@@ -105,14 +105,14 @@ public class StorageManagerTest extends AbstractBTreeTest {
 					break;
 
 				case FTA_READONLY: {
-					System.out.println(workerId + " S LATCHING: " + pageId);
+				    LOGGER.info(workerId + " S LATCHING: " + pageId);
 					page.acquireReadLatch();
 					latch = LatchType.LATCH_S;
 				}
 					break;
 
 				case FTA_WRITEONLY: {
-					System.out.println(workerId + " X LATCHING: " + pageId);
+				    LOGGER.info(workerId + " X LATCHING: " + pageId);
 					page.acquireWriteLatch();
 					latch = LatchType.LATCH_X;
 				}
@@ -120,11 +120,11 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 				case FTA_MIXED: {
 					if (rnd.nextInt() % 2 == 0) {
-						System.out.println(workerId + " S LATCHING: " + pageId);
+					    LOGGER.info(workerId + " S LATCHING: " + pageId);
 						page.acquireReadLatch();
 						latch = LatchType.LATCH_S;
 					} else {
-						System.out.println(workerId + " X LATCHING: " + pageId);
+					    LOGGER.info(workerId + " X LATCHING: " + pageId);
 						page.acquireWriteLatch();
 						latch = LatchType.LATCH_X;
 					}
@@ -148,16 +148,16 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
 				if (plPage.latch != null) {
 					if (plPage.latch == LatchType.LATCH_S) {
-						System.out.println(workerId + " S UNLATCHING: "
+					    LOGGER.info(workerId + " S UNLATCHING: "
 								+ plPage.pageId);
 						plPage.page.releaseReadLatch();
 					} else {
-						System.out.println(workerId + " X UNLATCHING: "
+					    LOGGER.info(workerId + " X UNLATCHING: "
 								+ plPage.pageId);
 						plPage.page.releaseWriteLatch();
 					}
 				}
-				System.out.println(workerId + " UNPINNING PAGE: "
+				LOGGER.info(workerId + " UNPINNING PAGE: "
 						+ plPage.pageId);
 
 				bufferCache.unpin(plPage.page);
@@ -168,7 +168,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		}
 
 		private void openFile() {
-			System.out.println(workerId + " OPENING FILE: " + fileId);
+		    LOGGER.info(workerId + " OPENING FILE: " + fileId);
 			try {
 				bufferCache.openFile(fileId);
 				fileIsOpen = true;
@@ -178,7 +178,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 		}
 
 		private void closeFile() {
-			System.out.println(workerId + " CLOSING FILE: " + fileId);
+		    LOGGER.info(workerId + " CLOSING FILE: " + fileId);
 			try {
 				bufferCache.closeFile(fileId);
 				fileIsOpen = false;
@@ -195,7 +195,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
 			while (loopCount < maxLoopCount) {
 				loopCount++;
 
-				System.out.println(workerId + " LOOP: " + loopCount + "/"
+				LOGGER.info(workerId + " LOOP: " + loopCount + "/"
 						+ maxLoopCount);
 
 				if (fileIsOpen) {

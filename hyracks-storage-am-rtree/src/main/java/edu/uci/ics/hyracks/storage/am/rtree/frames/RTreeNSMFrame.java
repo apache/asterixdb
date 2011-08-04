@@ -154,12 +154,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
                 }
             }
         }
-    }
-
-    @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
-
-    }
+    }  
 
     @Override
     public ITreeIndexTupleReference createTupleReference() {

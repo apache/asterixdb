@@ -30,13 +30,13 @@ public class SearchResultCursor implements IInvertedIndexResultCursor {
     private FixedSizeTupleReference resultTuple;
     private int numResultBuffers;
     private int currentBufferIndex = 0;
-    private int tupleIndex = 0;    
-    
+    private int tupleIndex = 0;
+
     public SearchResultCursor(IFrameTupleAccessor fta, ITupleReference resultTuple) {
         this.fta = fta;
-        this.resultTuple = (FixedSizeTupleReference)resultTuple;
+        this.resultTuple = (FixedSizeTupleReference) resultTuple;
     }
-    
+
     @Override
     public boolean hasNext() {
         if (currentBufferIndex < numResultBuffers && tupleIndex < fta.getTupleCount())
@@ -46,16 +46,16 @@ public class SearchResultCursor implements IInvertedIndexResultCursor {
     }
 
     @Override
-    public void next() {    	
-    	resultTuple.reset(fta.getBuffer().array(), fta.getTupleStartOffset(tupleIndex));
+    public void next() {
+        resultTuple.reset(fta.getBuffer().array(), fta.getTupleStartOffset(tupleIndex));
         tupleIndex++;
-        if(tupleIndex >= fta.getTupleCount()) {            
-        	if(currentBufferIndex + 1 < numResultBuffers) {
+        if (tupleIndex >= fta.getTupleCount()) {
+            if (currentBufferIndex + 1 < numResultBuffers) {
                 currentBufferIndex++;
                 fta.reset(resultBuffers.get(currentBufferIndex));
                 tupleIndex = 0;
             }
-    	}
+        }
     }
 
     @Override
@@ -64,12 +64,12 @@ public class SearchResultCursor implements IInvertedIndexResultCursor {
     }
 
     @Override
-    public void reset(IInvertedIndexSearcher invIndexSearcher) {        
+    public void reset(IInvertedIndexSearcher invIndexSearcher) {
         currentBufferIndex = 0;
         tupleIndex = 0;
         resultBuffers = invIndexSearcher.getResultBuffers();
         numResultBuffers = invIndexSearcher.getNumValidResultBuffers();
-        if(numResultBuffers > 0) {
+        if (numResultBuffers > 0) {
             fta.reset(resultBuffers.get(0));
         }
     }

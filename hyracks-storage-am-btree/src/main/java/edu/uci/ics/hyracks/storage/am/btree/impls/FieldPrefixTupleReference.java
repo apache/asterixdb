@@ -2,13 +2,13 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
-    private FieldPrefixNSMLeafFrame frame;
+    private BTreeFieldPrefixNSMLeafFrame frame;
     private int prefixTupleStartOff;
     private int suffixTupleStartOff;
     private int numPrefixFields;
@@ -21,7 +21,7 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        this.frame = (FieldPrefixNSMLeafFrame) frame;
+        this.frame = (BTreeFieldPrefixNSMLeafFrame) frame;
 
         int tupleSlotOff = this.frame.slotManager.getTupleSlotOff(tupleIndex);
         int tupleSlot = this.frame.getBuffer().getInt(tupleSlotOff);

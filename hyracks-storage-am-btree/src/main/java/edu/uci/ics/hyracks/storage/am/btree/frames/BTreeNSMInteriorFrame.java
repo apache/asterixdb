@@ -39,7 +39,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 
-public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
+public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
 
     private static final int rightLeafOff = smFlagOff + 1;
 
@@ -48,7 +48,7 @@ public class NSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInterio
     // private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
     private ITreeIndexTupleReference cmpFrameTuple;
 
-    public NSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
+    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
 

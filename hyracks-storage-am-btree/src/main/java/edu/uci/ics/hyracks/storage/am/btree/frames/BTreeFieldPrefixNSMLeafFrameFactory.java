@@ -15,21 +15,21 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
-public class NSMInteriorFrameFactory implements ITreeIndexFrameFactory {
+public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private ITreeIndexTupleWriterFactory tupleWriterFactory;
 
-    public NSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }
 
     @Override
-    public IBTreeInteriorFrame createFrame() {
-        return new NSMInteriorFrame(tupleWriterFactory.createTupleWriter());
+    public IBTreeLeafFrame createFrame() {
+        return new BTreeFieldPrefixNSMLeafFrame(tupleWriterFactory.createTupleWriter());
     }
 }

@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
@@ -64,7 +64,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 	private ITupleReference createTuple(IHyracksStageletContext ctx, int f0,
 			int f1, int f2, boolean print) throws HyracksDataException {
 		if (print)
-			System.out.println("CREATING: " + f0 + " " + f1 + " " + f2);
+		    LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);		
 
 		ByteBuffer buf = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -144,7 +144,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
 			IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
 			ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-			FieldPrefixNSMLeafFrame frame = new FieldPrefixNSMLeafFrame(
+			BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(
 					tupleWriter);
 			frame.setPage(page);
 			frame.initBuffer((byte) 0);
@@ -165,7 +165,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 			for (int i = 0; i < numRecords; i++) {
 
 				if ((i + 1) % 100 == 0)
-					print("INSERTING " + (i + 1) + " / " + numRecords + "\n");
+					LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
 
 				int a = rnd.nextInt() % smallMax;
 				int b = rnd.nextInt() % smallMax;
@@ -205,7 +205,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 			for (int i = 0; i < numRecords; i++) {
 
 				if ((i + 1) % 100 == 0)
-					print("DELETING " + (i + 1) + " / " + numRecords + "\n");
+					LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
 
 				ITupleReference tuple = createTuple(ctx,
 						savedFields[i][0], savedFields[i][1],

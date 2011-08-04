@@ -22,9 +22,14 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IInvertedIndexSearcher {
-    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex, IInvertedIndexSearchModifier searchModifier) throws Exception;    
+    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex,
+            IInvertedIndexSearchModifier searchModifier) throws Exception;
+
     public IFrameTupleAccessor createResultFrameTupleAccessor();
+
     public ITupleReference createResultTupleReference();
+
     public List<ByteBuffer> getResultBuffers();
-    public int getNumValidResultBuffers();       
+
+    public int getNumValidResultBuffers();
 }

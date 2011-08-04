@@ -41,8 +41,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
@@ -83,7 +83,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test01() throws Exception {
 
-        print("FIXED-LENGTH KEY TEST\n");
+        LOGGER.info("FIXED-LENGTH KEY TEST");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -107,8 +107,8 @@ public class BTreeTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -126,7 +126,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        print("INSERTING INTO TREE\n");
+        LOGGER.info("INSERTING INTO TREE");
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -159,12 +159,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            // System.out.println(tuple.getFieldCount() + " " +
-            // tuple.getFieldLength(0) + " " + tuple.getFieldLength(1));
-
             if (i % 1000 == 0) {
                 long end = System.currentTimeMillis();
-                print("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start) + "\n");
+                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
             }
 
             try {
@@ -173,26 +170,20 @@ public class BTreeTest extends AbstractBTreeTest {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            // btree.printTree(leafFrame, interiorFrame);
-            // System.out.println();
         }
         // btree.printTree(leafFrame, interiorFrame);
-        // System.out.println();
 
         int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
-        System.out.println("MAXPAGE: " + maxPage);
-
-        String stats = btree.printStats();
-        print(stats);
-
+        LOGGER.info("MAXPAGE: " + maxPage);
+        LOGGER.info(btree.printStats());        
+        
         long end = System.currentTimeMillis();
         long duration = end - start;
-        print("DURATION: " + duration + "\n");
+        LOGGER.info("DURATION: " + duration);
 
         // ordered scan
 
-        print("ORDERED SCAN:\n");
+        LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
@@ -202,7 +193,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -211,7 +202,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // disk-order scan
-        print("DISK-ORDER SCAN:\n");
+        LOGGER.info("DISK-ORDER SCAN:");
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
         BTreeOpContext diskOrderScanOpCtx = btree.createOpContext(IndexOp.DISKORDERSCAN, leafFrame, null, null);
         btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
@@ -220,7 +211,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -229,7 +220,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in [-1000, 1000]
-        print("RANGE SEARCH:\n");
+        LOGGER.info("RANGE SEARCH:");
 
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
@@ -275,7 +266,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -286,8 +277,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     // COMPOSITE KEY TEST (NON-UNIQUE B-TREE)
@@ -298,7 +287,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test02() throws Exception {
 
-        print("COMPOSITE KEY TEST\n");
+        LOGGER.info("COMPOSITE KEY TEST");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -326,8 +315,8 @@ public class BTreeTest extends AbstractBTreeTest {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         // SimpleTupleWriterFactory tupleWriterFactory = new
         // SimpleTupleWriterFactory();
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -345,7 +334,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        print("INSERTING INTO TREE\n");
+        LOGGER.info("INSERTING INTO TREE");
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -380,7 +369,7 @@ public class BTreeTest extends AbstractBTreeTest {
             tuple.reset(accessor, 0);
 
             if (i % 1000 == 0) {
-                print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
+                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1);
             }
 
             try {
@@ -392,10 +381,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        print("DURATION: " + duration + "\n");
+        LOGGER.info("DURATION: " + duration);
 
         // try a simple index scan
-        print("ORDERED SCAN:\n");
+        LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
@@ -406,7 +395,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -415,7 +404,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in [(-3),(3)]
-        print("RANGE SEARCH:\n");
+        LOGGER.info("RANGE SEARCH:");
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
         // build low and high keys
@@ -477,8 +466,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     // VARIABLE-LENGTH TEST
@@ -489,7 +476,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test03() throws Exception {
 
-        print("VARIABLE-LENGTH KEY TEST\n");
+        LOGGER.info("VARIABLE-LENGTH KEY TEST");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -515,8 +502,8 @@ public class BTreeTest extends AbstractBTreeTest {
         SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
         // TypeAwareTupleWriterFactory tupleWriterFactory = new
         // TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -563,23 +550,20 @@ public class BTreeTest extends AbstractBTreeTest {
             tuple.reset(accessor, 0);
 
             if (i % 1000 == 0) {
-                // print("INSERTING " + i + ": " + cmp.printRecord(record, 0) +
-                // "\n");
-                print("INSERTING " + i + "\n");
+                LOGGER.info("INSERTING " + i);
             }
 
             try {
                 btree.insert(tuple, insertOpCtx);
             } catch (Exception e) {
-                // e.printStackTrace();
             }
         }
         // btree.printTree();
 
-        System.out.println("DONE INSERTING");
+        LOGGER.info("DONE INSERTING");
 
         // ordered scan
-        print("ORDERED SCAN:\n");
+        LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
@@ -590,7 +574,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -599,7 +583,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in ["cbf", cc7"]
-        print("RANGE SEARCH:\n");
+        LOGGER.info("RANGE SEARCH:");
 
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
@@ -645,7 +629,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -656,8 +640,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     // DELETION TEST
@@ -669,7 +651,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test04() throws Exception {
 
-        print("DELETION TEST\n");
+        LOGGER.info("DELETION TEST");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -695,8 +677,8 @@ public class BTreeTest extends AbstractBTreeTest {
         // SimpleTupleWriterFactory tupleWriterFactory = new
         // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -730,9 +712,9 @@ public class BTreeTest extends AbstractBTreeTest {
         int runs = 3;
         for (int run = 0; run < runs; run++) {
 
-            print("DELETION TEST RUN: " + (run + 1) + "/" + runs + "\n");
+            LOGGER.info("DELETION TEST RUN: " + (run + 1) + "/" + runs);
 
-            print("INSERTING INTO BTREE\n");
+            LOGGER.info("INSERTING INTO BTREE");
             int maxLength = 10;
             int ins = 10000;
             String[] f0s = new String[ins];
@@ -758,9 +740,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 tuple.reset(accessor, 0);
 
                 if (i % 1000 == 0) {
-                    print("INSERTING " + i + "\n");
-                    // print("INSERTING " + i + ": " + cmp.printRecord(record,
-                    // 0) + "\n");
+                    LOGGER.info("INSERTING " + i);
                 }
 
                 try {
@@ -777,7 +757,7 @@ public class BTreeTest extends AbstractBTreeTest {
             // btree.printTree();
             // btree.printStats();
 
-            print("DELETING FROM BTREE\n");
+            LOGGER.info("DELETING FROM BTREE");
             int delDone = 0;
             for (int i = 0; i < ins; i++) {
 
@@ -793,9 +773,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 tuple.reset(accessor, 0);
 
                 if (i % 1000 == 0) {
-                    // print("DELETING " + i + ": " +
-                    // cmp.printRecord(records[i], 0) + "\n");
-                    print("DELETING " + i + "\n");
+                    LOGGER.info("DELETING " + i);
                 }
 
                 try {
@@ -808,16 +786,15 @@ public class BTreeTest extends AbstractBTreeTest {
                 }
 
                 if (insDoneCmp[i] != delDone) {
-                    print("INCONSISTENT STATE, ERROR IN DELETION TEST\n");
-                    print("INSDONECMP: " + insDoneCmp[i] + " " + delDone + "\n");
+                    LOGGER.info("INCONSISTENT STATE, ERROR IN DELETION TEST");
+                    LOGGER.info("INSDONECMP: " + insDoneCmp[i] + " " + delDone);
                     break;
                 }
-                // btree.printTree();
             }
             // btree.printTree(leafFrame, interiorFrame);
 
             if (insDone != delDone) {
-                print("ERROR! INSDONE: " + insDone + " DELDONE: " + delDone);
+                LOGGER.info("ERROR! INSDONE: " + insDone + " DELDONE: " + delDone);
                 break;
             }
         }
@@ -825,8 +802,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     // BULK LOAD TEST
@@ -836,7 +811,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test05() throws Exception {
 
-        print("BULK LOAD TEST\n");
+        LOGGER.info("BULK LOAD TEST");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -864,8 +839,8 @@ public class BTreeTest extends AbstractBTreeTest {
         // SimpleTupleWriterFactory tupleWriterFactory = new
         // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
@@ -897,7 +872,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         // generate sorted records
         int ins = 100000;
-        print("BULK LOADING " + ins + " RECORDS\n");
+        LOGGER.info("BULK LOADING " + ins + " RECORDS");
         long start = System.currentTimeMillis();
         for (int i = 0; i < ins; i++) {
 
@@ -923,10 +898,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        print("DURATION: " + duration + "\n");
+        LOGGER.info("DURATION: " + duration);
 
         // range search
-        print("RANGE SEARCH:\n");
+        LOGGER.info("RANGE SEARCH:");
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
 
         // build low and high keys
@@ -973,7 +948,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -984,8 +959,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     // TIME-INTERVAL INTERSECTION DEMO FOR EVENT PEOPLE
@@ -994,7 +967,7 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test06() throws Exception {
 
-        print("TIME-INTERVAL INTERSECTION DEMO\n");
+        LOGGER.info("TIME-INTERVAL INTERSECTION DEMO");
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -1021,8 +994,8 @@ public class BTreeTest extends AbstractBTreeTest {
         // SimpleTupleWriterFactory tupleWriterFactory = new
         // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -1106,13 +1079,11 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            // print("INSERTING " + i + " : " + f0 + " " + f1 + "\n");
-            print("INSERTING " + i + "\n");
+            LOGGER.info("INSERTING " + i);
 
             try {
                 btree.insert(tuple, insertOpCtx);
             } catch (Exception e) {
-                // e.printStackTrace();
             }
         }
         // btree.printTree(leafFrame, interiorFrame);
@@ -1120,11 +1091,11 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        print("DURATION: " + duration + "\n");
+        LOGGER.info("DURATION: " + duration);
 
         // try a simple index scan
 
-        print("ORDERED SCAN:\n");
+        LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
@@ -1144,7 +1115,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // try a range search
-        print("RANGE SEARCH:\n");
+        LOGGER.info("RANGE SEARCH:");
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
         // build low and high keys
@@ -1187,9 +1158,6 @@ public class BTreeTest extends AbstractBTreeTest {
         searchCmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
 
-        // print("INDEX RANGE SEARCH ON: " + cmp.printKey(lowKey, 0) + " " +
-        // cmp.printKey(highKey, 0) + "\n");
-
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
 
@@ -1198,7 +1166,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1209,8 +1177,6 @@ public class BTreeTest extends AbstractBTreeTest {
         btree.close();
         bufferCache.closeFile(fileId);
         bufferCache.close();
-
-        print("\n");
     }
 
     public static String randomString(int length, Random random) {

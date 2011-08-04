@@ -47,9 +47,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
@@ -82,9 +82,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 			typeTraits);
-	ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+	ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 			tupleWriterFactory);
-	ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+	ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
 			tupleWriterFactory);
 	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
@@ -116,7 +116,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void uniqueIndexTest() throws Exception {
 
-		System.out.println("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
 
 		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
@@ -191,8 +191,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
 
-		// System.out.println("STARTING SEARCH TESTS");
-
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
 				maxSearchKey, true, true, true, false);
@@ -221,7 +219,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void nonUniqueIndexTest() throws Exception {
 
-		System.out.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
 
 		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
@@ -295,8 +293,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
 
-		// System.out.println("STARTING SEARCH TESTS");
-
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
 				maxSearchKey, true, true, true, false);
@@ -325,10 +321,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void nonUniqueFieldPrefixIndexTest() throws Exception {
 
-		System.out
-				.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
 
-		ITreeIndexFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new BTreeFieldPrefixNSMLeafFrameFactory(
 				tupleWriterFactory);
 		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
 
@@ -403,8 +398,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
-
-		// System.out.println("STARTING SEARCH TESTS");
 
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
@@ -530,8 +523,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		for (int i = minKey; i < maxKey; i++) {
 			for (int j = minKey; j < maxKey; j++) {
 
-				// if(i != -100 || j != 1) continue;
-
 				results.clear();
 				expectedResults.clear();
 
@@ -583,29 +574,31 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 						else
 							u = ')';
 
-						System.out.println("RANGE: " + l + " " + lowKey + " , "
+						LOGGER.info("RANGE: " + l + " " + lowKey + " , "
 								+ highKey + " " + u);
-						for (Integer r : expectedResults)
-							System.out.print(r + " ");
-						System.out.println();
+						StringBuilder strBuilder = new StringBuilder();
+						for (Integer r : expectedResults) {
+							strBuilder.append(r + " ");
+						}
+						LOGGER.info(strBuilder.toString());
 					}
 				}
 
 				if (results.size() == expectedResults.size()) {
 					for (int k = 0; k < results.size(); k++) {
 						if (!results.get(k).equals(expectedResults.get(k))) {
-							System.out.println("DIFFERENT RESULTS AT: i=" + i
+						    LOGGER.info("DIFFERENT RESULTS AT: i=" + i
 									+ " j=" + j + " k=" + k);
-							System.out.println(results.get(k) + " "
+						    LOGGER.info(results.get(k) + " "
 									+ expectedResults.get(k));
 							return false;
 						}
 					}
 				} else {
-					System.out.println("UNEQUAL NUMBER OF RESULTS AT: i=" + i
+				    LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i
 							+ " j=" + j);
-					System.out.println("RESULTS: " + results.size());
-					System.out.println("EXPECTED RESULTS: "
+				    LOGGER.info("RESULTS: " + results.size());
+				    LOGGER.info("EXPECTED RESULTS: "
 							+ expectedResults.size());
 					return false;
 				}

@@ -88,8 +88,6 @@ public interface ITreeIndexFrame {
 
     public void setSmFlag(boolean smFlag);
 
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
-
     public int getSlotSize();
 
     // TODO: should be removed after new tuple format

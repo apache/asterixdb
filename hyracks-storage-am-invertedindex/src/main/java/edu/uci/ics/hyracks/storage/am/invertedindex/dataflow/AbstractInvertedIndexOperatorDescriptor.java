@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptorHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -44,10 +45,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final ITypeTrait[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final ITreeIndexOpHelperFactory opHelperFactory;
-    
+
     // inverted index
     protected final IFileSplitProvider invIndexFileSplitProvider;
-    protected final IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider;    
+    protected final IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider;
     protected final ITypeTrait[] invIndexTypeTraits;
     protected final IBinaryComparatorFactory[] invIndexComparatorFactories;
 
@@ -56,8 +57,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IFileSplitProvider btreeFileSplitProvider, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             ITypeTrait[] btreeTypeTraits, IBinaryComparatorFactory[] btreeComparatorFactories, float btreeFillFactor,
-            ITreeIndexOpHelperFactory opHelperFactory,
-            IFileSplitProvider invIndexFileSplitProvider,
+            ITreeIndexOpHelperFactory opHelperFactory, IFileSplitProvider invIndexFileSplitProvider,
             IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invIndexTypeTraits,
             IBinaryComparatorFactory[] invIndexComparatorFactories) {
         super(spec, inputArity, outputArity);
@@ -143,7 +143,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public ITypeTrait[] getInvIndexTypeTraits() {
         return invIndexTypeTraits;
     }
-    
+
     @Override
     public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
         return opHelperFactory;

@@ -44,13 +44,13 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
             IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] btreeTypeTraits,
             IBinaryComparatorFactory[] btreeComparatorFactories, float btreeFillFactor,
-            ITreeIndexOpHelperFactory opHelperFactory,
-            IFileSplitProvider invIndexFileSplitProvider,
+            ITreeIndexOpHelperFactory opHelperFactory, IFileSplitProvider invIndexFileSplitProvider,
             IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invIndexTypeTraits,
             IBinaryComparatorFactory[] invIndexComparatorFactories, IInvertedListBuilder invListBuilder) {
-        super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, treeIndexRegistryProvider, interiorFrameFactory,
-                leafFrameFactory, btreeTypeTraits, btreeComparatorFactories, btreeFillFactor,
-                opHelperFactory, invIndexFileSplitProvider, invIndexRegistryProvider, invIndexTypeTraits, invIndexComparatorFactories);
+        super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, treeIndexRegistryProvider,
+                interiorFrameFactory, leafFrameFactory, btreeTypeTraits, btreeComparatorFactories, btreeFillFactor,
+                opHelperFactory, invIndexFileSplitProvider, invIndexRegistryProvider, invIndexTypeTraits,
+                invIndexComparatorFactories);
         this.fieldPermutation = fieldPermutation;
         this.btreeFillFactor = btreeFillFactor;
         this.invListBuilder = invListBuilder;

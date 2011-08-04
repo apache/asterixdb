@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 // all prefixes are recomputed during a reorg or compaction
 
 public interface IPrefixSlotManager {
-    public void setFrame(FieldPrefixNSMLeafFrame frame);
+    public void setFrame(BTreeFieldPrefixNSMLeafFrame frame);
 
     public int decodeFirstSlotField(int slot);
 

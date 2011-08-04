@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -49,7 +49,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
 	// private static final int PAGE_SIZE = 256;
 	// private static final int NUM_PAGES = 10;
-	//private static final int PAGE_SIZE = 32768;
+	// private static final int PAGE_SIZE = 32768;
     private static final int PAGE_SIZE = 4096;
     private static final int NUM_PAGES = 1000;
     private static final int MAX_OPEN_FILES = 10;
@@ -85,9 +85,9 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
 		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 				typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 				tupleWriterFactory);
-		ITreeIndexFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+		ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
 				tupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
@@ -108,7 +108,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
 		long start = System.currentTimeMillis();
 
-		print("INSERTING INTO TREE\n");
+		LOGGER.info("INSERTING INTO TREE");
 
 		ByteBuffer frame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -147,8 +147,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 			
 			if (i % 10000 == 0) {
 				long end = System.currentTimeMillis();
-				print("INSERTING " + i + " : " + f0 + " " + f1 + " "
-						+ (end - start) + "\n");
+				LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " "
+						+ (end - start));
 			}
 
 			try {
@@ -161,8 +161,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		
 		TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, btree.getRootPageId());		
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-		String s = stats.toString();
-		System.out.println(s);
+		LOGGER.info(stats.toString());
 
 		TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager, fileId);
 		bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] {1, 2}, new int[] {2, 5});
@@ -170,7 +169,5 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 		btree.close();
 		bufferCache.closeFile(fileId);
 		bufferCache.close();
-
-		print("\n");
 	}
 }
