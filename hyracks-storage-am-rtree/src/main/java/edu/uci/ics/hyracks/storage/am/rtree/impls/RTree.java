@@ -795,6 +795,12 @@ public class RTree implements ITreeIndex {
                         if (tupleIndex == -1) {
                             ctx.traverseList.add(pageId, -1, parentIndex);
                             ctx.pathList.add(pageId, parentLsn, ctx.traverseList.size() - 1);
+
+                            node.releaseWriteLatch();
+                            incrementWriteLatchesReleased();
+                            bufferCache.unpin(node);
+                            incrementUnpins();
+                            continue;
                         } else {
                             ctx.pathList.clear();
                             fillPath(ctx, pageIndex);
@@ -872,8 +878,6 @@ public class RTree implements ITreeIndex {
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
             ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        // throw new HyracksDataException("RTree Bulkload not implemented.");
-
         if (loaded)
             throw new HyracksDataException("Trying to bulk-load RTree but has RTree already been loaded.");
 
@@ -884,20 +888,15 @@ public class RTree implements ITreeIndex {
 
     @Override
     public void bulkLoadAddTuple(IIndexBulkLoadContext ictx, ITupleReference tuple) throws HyracksDataException {
-        // throw new HyracksDataException("RTree Bulkload not implemented.");
-
         try {
             insert(tuple, ((BulkLoadContext) ictx).insertOpCtx);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new HyracksDataException("BulkLoad Error");
         }
     }
 
     @Override
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        // throw new HyracksDataException("RTree Bulkload not implemented.");
-
         loaded = true;
     }
 

@@ -154,7 +154,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
                 }
             }
         }
-    }  
+    }
 
     @Override
     public ITreeIndexTupleReference createTupleReference() {

@@ -63,9 +63,9 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class RTreeTest extends AbstractRTreeTest {
 
-    private static final int PAGE_SIZE = 8192;
-    private static final int NUM_PAGES = 20;
-    private static final int MAX_OPEN_FILES = 20;
+    private static final int PAGE_SIZE = 256;
+    private static final int NUM_PAGES = 10;
+    private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
@@ -142,7 +142,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         Random rnd2 = new Random();
         rnd2.setSeed(50);
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
@@ -188,7 +188,7 @@ public class RTreeTest extends AbstractRTreeTest {
         }
 
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.out.println();
+        // System.err.println();
 
         String rtreeStats = rtree.printStats();
         print(rtreeStats);
@@ -215,7 +215,7 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.out.println(string);
+        System.err.println(string);
 
         rtree.close();
         bufferCache.closeFile(fileId);
@@ -294,7 +294,7 @@ public class RTreeTest extends AbstractRTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
@@ -340,14 +340,14 @@ public class RTreeTest extends AbstractRTreeTest {
         }
 
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.out.println();
+        // System.err.println();
 
         String rtreeStats = rtree.printStats();
         print(rtreeStats);
 
         RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE, leafFrame, interiorFrame, metaFrame);
         rnd.setSeed(50);
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
@@ -397,7 +397,7 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.out.println(string);
+        System.err.println(string);
 
         rtree.close();
         bufferCache.closeFile(fileId);
@@ -481,7 +481,7 @@ public class RTreeTest extends AbstractRTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
@@ -533,7 +533,7 @@ public class RTreeTest extends AbstractRTreeTest {
         }
 
         // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.out.println();
+        // System.err.println();
 
         String rtreeStats = rtree.printStats();
         print(rtreeStats);
@@ -560,7 +560,7 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.out.println(string);
+        System.err.println(string);
 
         rtree.close();
         bufferCache.closeFile(fileId);

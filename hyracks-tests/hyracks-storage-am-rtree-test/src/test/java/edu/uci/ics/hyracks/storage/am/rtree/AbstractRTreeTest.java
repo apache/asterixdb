@@ -29,7 +29,7 @@ public abstract class AbstractRTreeTest {
     protected final static String fileName = tmpDir + sep + simpleDateFormat.format(new Date());
 
     protected void print(String str) {
-        System.out.print(str);
+        System.err.print(str);
     }
 
     @AfterClass

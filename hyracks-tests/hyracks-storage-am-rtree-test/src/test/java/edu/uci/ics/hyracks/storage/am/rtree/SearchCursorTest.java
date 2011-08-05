@@ -140,7 +140,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
         Random rnd = new Random();
         rnd.setSeed(50);
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
@@ -177,11 +177,9 @@ public class SearchCursorTest extends AbstractRTreeTest {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
 
         for (int i = 0; i < 50; i++) {
-
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();
             double p2x = rnd.nextDouble();
@@ -232,7 +230,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
                 searchCursor.close();
             }
 
-            System.out.println("There are " + results.size() + " objects that satisfy the query");
+            System.err.println("There are " + results.size() + " objects that satisfy the query");
         }
 
         rtree.close();

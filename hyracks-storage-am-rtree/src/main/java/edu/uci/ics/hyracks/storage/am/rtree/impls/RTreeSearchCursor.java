@@ -47,6 +47,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     private MultiComparator cmp;
 
     private ITreeIndexTupleReference frameTuple;
+    private boolean readLatched = false;
 
     private int pin = 0;
     private int unpin = 0;
@@ -59,9 +60,10 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws Exception {
-        if (page != null) {
+        if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
+            readLatched = false;
         }
         tupleIndex = 0;
         tupleIndexInc = 0;
@@ -79,6 +81,12 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     public boolean fetchNextLeafPage() throws HyracksDataException {
+        if (readLatched) {
+            page.releaseReadLatch();
+            bufferCache.unpin(page);
+            unpin++;
+            readLatched = false;
+        }
         while (!pathList.isEmpty()) {
             int pageId = pathList.getLastPageId();
             int parentLsn = pathList.getLastPageLsn();
@@ -86,6 +94,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             pin++;
             node.acquireReadLatch();
+            readLatched = true;
             interiorFrame.setPage(node);
             boolean isLeaf = interiorFrame.isLeaf();
             int pageLsn = interiorFrame.getPageLsn();
@@ -106,17 +115,13 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                     }
                 }
             } else {
-                if (page != null) {
-                    page.releaseReadLatch();
-                    bufferCache.unpin(page);
-                    unpin++;
-                }
                 page = node;
                 leafFrame.setPage(page);
                 tupleIndex = 0;
                 return true;
             }
             node.releaseReadLatch();
+            readLatched = false;
             bufferCache.unpin(node);
             unpin++;
         }
@@ -157,6 +162,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         // in case open is called multiple times without closing
         if (this.page != null) {
             this.page.releaseReadLatch();
+            readLatched = false;
             bufferCache.unpin(this.page);
             pathList.clear();
         }
