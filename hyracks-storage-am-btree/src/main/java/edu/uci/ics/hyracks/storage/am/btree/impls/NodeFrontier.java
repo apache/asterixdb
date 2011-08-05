@@ -15,15 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class NodeFrontier {
     public ICachedPage page;
     public int pageId;
-    public IBTreeTupleReference lastTuple;
+    public ITreeIndexTupleReference lastTuple;
 
-    public NodeFrontier(IBTreeTupleReference lastTuple) {
+    public NodeFrontier(ITreeIndexTupleReference lastTuple) {
         this.lastTuple = lastTuple;
     }
 }

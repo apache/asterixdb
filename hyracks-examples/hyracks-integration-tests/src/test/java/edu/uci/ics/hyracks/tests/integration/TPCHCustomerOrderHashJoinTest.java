@@ -80,7 +80,15 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     }
 
     /*
-     * TPCH Customer table: CREATE TABLE CUSTOMER ( C_CUSTKEY INTEGER NOT NULL, C_NAME VARCHAR(25) NOT NULL, C_ADDRESS VARCHAR(40) NOT NULL, C_NATIONKEY INTEGER NOT NULL, C_PHONE CHAR(15) NOT NULL, C_ACCTBAL DECIMAL(15,2) NOT NULL, C_MKTSEGMENT CHAR(10) NOT NULL, C_COMMENT VARCHAR(117) NOT NULL ); TPCH Orders table: CREATE TABLE ORDERS ( O_ORDERKEY INTEGER NOT NULL, O_CUSTKEY INTEGER NOT NULL, O_ORDERSTATUS CHAR(1) NOT NULL, O_TOTALPRICE DECIMAL(15,2) NOT NULL, O_ORDERDATE DATE NOT NULL, O_ORDERPRIORITY CHAR(15) NOT NULL, O_CLERK CHAR(15) NOT NULL, O_SHIPPRIORITY INTEGER NOT NULL, O_COMMENT VARCHAR(79) NOT NULL );
+     * TPCH Customer table: CREATE TABLE CUSTOMER ( C_CUSTKEY INTEGER NOT NULL,
+     * C_NAME VARCHAR(25) NOT NULL, C_ADDRESS VARCHAR(40) NOT NULL, C_NATIONKEY
+     * INTEGER NOT NULL, C_PHONE CHAR(15) NOT NULL, C_ACCTBAL DECIMAL(15,2) NOT
+     * NULL, C_MKTSEGMENT CHAR(10) NOT NULL, C_COMMENT VARCHAR(117) NOT NULL );
+     * TPCH Orders table: CREATE TABLE ORDERS ( O_ORDERKEY INTEGER NOT NULL,
+     * O_CUSTKEY INTEGER NOT NULL, O_ORDERSTATUS CHAR(1) NOT NULL, O_TOTALPRICE
+     * DECIMAL(15,2) NOT NULL, O_ORDERDATE DATE NOT NULL, O_ORDERPRIORITY
+     * CHAR(15) NOT NULL, O_CLERK CHAR(15) NOT NULL, O_SHIPPRIORITY INTEGER NOT
+     * NULL, O_COMMENT VARCHAR(79) NOT NULL );
      */
 
     @Test
@@ -364,9 +372,11 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-        //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
-        // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
+        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new
+        // FileSplit(NC1_ID, new FileReference(new File(
+        // "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
+        // LineFileWriteOperatorDescriptor printer = new
+        // LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
@@ -446,9 +456,11 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-        //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
-        // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
+        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new
+        // FileSplit(NC1_ID, new FileReference(new File(
+        // "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
+        // LineFileWriteOperatorDescriptor printer = new
+        // LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
@@ -528,9 +540,11 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
-        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-        //     "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
-        // LineFileWriteOperatorDescriptor printer = new LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
+        // FileSplit[] custOrdersJoinSplits = new FileSplit[] { new
+        // FileSplit(NC1_ID, new FileReference(new File(
+        // "data/tpch0.001/custOrdersLeftOuterJoin.csv"))) };
+        // LineFileWriteOperatorDescriptor printer = new
+        // LineFileWriteOperatorDescriptor(spec, custOrdersJoinSplits);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);

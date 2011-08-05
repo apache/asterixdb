@@ -76,6 +76,13 @@
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-storage-am-rtree</artifactId>
+  		<version>0.1.7-SNAPSHOT</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
   		<version>0.1.7-SNAPSHOT</version>
   		<type>jar</type>

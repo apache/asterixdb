@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.dataflow.std.file;
 
 public interface IRecordReader {
 
-	  public boolean read(Object[] record) throws Exception;
+    public boolean read(Object[] record) throws Exception;
 
-      public void close();
-      
+    public void close();
+
 }

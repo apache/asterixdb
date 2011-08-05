@@ -44,6 +44,10 @@ public class BufferedFileHandle {
     public int decReferenceCount() {
         return refCount.decrementAndGet();
     }
+    
+    public int getReferenceCount() {
+        return refCount.get();
+    }
 
     public long getDiskPageId(int pageId) {
         return getDiskPageId(fileId, pageId);

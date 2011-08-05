@@ -63,7 +63,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-    throws HyracksDataException {
+            throws HyracksDataException {
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         // Frame accessor
@@ -95,7 +95,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                     frameTupleAccessor.reset(buffer);
                     for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                         int start = frameTupleAccessor.getTupleStartOffset(tIndex)
-                        + frameTupleAccessor.getFieldSlotsLength();
+                                + frameTupleAccessor.getFieldSlotsLength();
                         bbis.setByteBuffer(buffer, start);
                         Object[] record = new Object[recordDescriptor.getFields().length];
                         for (int i = 0; i < record.length; ++i) {

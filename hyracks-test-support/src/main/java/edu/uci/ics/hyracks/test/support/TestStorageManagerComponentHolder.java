@@ -15,7 +15,8 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeRegistry;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -29,17 +30,19 @@ import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static BTreeRegistry btreeRegistry;
+    private static IndexRegistry<ITreeIndex> treeIndexRegistry;
 
     private static int pageSize;
     private static int numPages;
+    private static int maxOpenFiles;
 
-    public static void init(int pageSize, int numPages) {
+    public static void init(int pageSize, int numPages, int maxOpenFiles) {
         TestStorageManagerComponentHolder.pageSize = pageSize;
         TestStorageManagerComponentHolder.numPages = numPages;
+        TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        btreeRegistry = null;
+        treeIndexRegistry = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksStageletContext ctx) {
@@ -48,7 +51,7 @@ public class TestStorageManagerComponentHolder {
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
             IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
             bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, (IFileMapManager) fileMapProvider,
-                    pageSize, numPages);
+                    pageSize, numPages, maxOpenFiles);
         }
         return bufferCache;
     }
@@ -60,10 +63,10 @@ public class TestStorageManagerComponentHolder {
         return fileMapProvider;
     }
 
-    public synchronized static BTreeRegistry getBTreeRegistry(IHyracksStageletContext ctx) {
-        if (btreeRegistry == null) {
-            btreeRegistry = new BTreeRegistry();
+    public synchronized static IndexRegistry<ITreeIndex> getTreeIndexRegistry(IHyracksStageletContext ctx) {
+        if (treeIndexRegistry == null) {
+        	treeIndexRegistry = new IndexRegistry<ITreeIndex>();
         }
-        return btreeRegistry;
+        return treeIndexRegistry;
     }
 }

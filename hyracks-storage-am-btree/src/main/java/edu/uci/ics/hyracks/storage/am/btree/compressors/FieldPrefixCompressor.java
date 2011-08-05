@@ -24,11 +24,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 public class FieldPrefixCompressor implements IFrameCompressor {
 
@@ -49,7 +49,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     }
 
     @Override
-    public boolean compress(FieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception {
+    public boolean compress(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception {
         int tupleCount = frame.getTupleCount();
         if (tupleCount <= 0) {
             frame.setPrefixTupleCount(0);
@@ -365,7 +365,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     // the prefix length may be different for different keypartitions
     // the occurrenceThreshold determines the minimum number of tuples that must
     // share a common prefix in order for us to consider compressing them
-    private ArrayList<KeyPartition> getKeyPartitions(FieldPrefixNSMLeafFrame frame, MultiComparator cmp,
+    private ArrayList<KeyPartition> getKeyPartitions(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp,
             int occurrenceThreshold) {
         IBinaryComparator[] cmps = cmp.getComparators();
         int fieldCount = cmp.getKeyFieldCount();

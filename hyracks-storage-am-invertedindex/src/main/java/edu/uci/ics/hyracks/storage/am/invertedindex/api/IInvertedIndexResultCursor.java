@@ -15,14 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.api;
 
-import java.nio.ByteBuffer;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IInvertedIndexResultCursor {
     public boolean hasNext();
 
     public void next();
 
-    public ByteBuffer getBuffer();
+    public ITupleReference getTuple();
 
-    public void reset();
+    public void reset(IInvertedIndexSearcher invIndexSearcher);
 }
