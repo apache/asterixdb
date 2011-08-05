@@ -16,9 +16,9 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 
 public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
 
@@ -28,13 +28,13 @@ public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
 
     // assumes tuple index refers to prefix tuples
     @Override
-    public void resetByTupleIndex(IBTreeFrame frame, int tupleIndex) {
-        FieldPrefixNSMLeafFrame concreteFrame = (FieldPrefixNSMLeafFrame) frame;
+    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
+        BTreeFieldPrefixNSMLeafFrame concreteFrame = (BTreeFieldPrefixNSMLeafFrame) frame;
         int prefixSlotOff = concreteFrame.slotManager.getPrefixSlotOff(tupleIndex);
         int prefixSlot = concreteFrame.getBuffer().getInt(prefixSlotOff);
         setFieldCount(concreteFrame.slotManager.decodeFirstSlotField(prefixSlot));
         tupleStartOff = concreteFrame.slotManager.decodeSecondSlotField(prefixSlot);
         buf = concreteFrame.getBuffer();
-        resetByOffset(buf, tupleStartOff);
+        resetByTupleOffset(buf, tupleStartOff);
     }
 }

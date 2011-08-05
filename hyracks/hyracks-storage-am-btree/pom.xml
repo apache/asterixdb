@@ -31,6 +31,13 @@
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
+        <dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-storage-am-common</artifactId>
+  		<version>0.1.7-SNAPSHOT</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>  	
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-common</artifactId>
