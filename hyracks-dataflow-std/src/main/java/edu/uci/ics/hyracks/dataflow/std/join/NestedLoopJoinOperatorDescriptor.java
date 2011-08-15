@@ -17,9 +17,9 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
@@ -51,14 +51,14 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        JoinCacheActivityNode jc = new JoinCacheActivityNode();
-        NestedLoopJoinActivityNode nlj = new NestedLoopJoinActivityNode();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        JoinCacheActivityNode jc = new JoinCacheActivityNode(new ActivityId(getOperatorId(), 0));
+        NestedLoopJoinActivityNode nlj = new NestedLoopJoinActivityNode(new ActivityId(getOperatorId(), 1));
 
-        builder.addTask(jc);
+        builder.addActivity(jc);
         builder.addSourceEdge(1, jc, 0);
 
-        builder.addTask(nlj);
+        builder.addActivity(nlj);
         builder.addSourceEdge(0, nlj, 0);
 
         builder.addTargetEdge(0, nlj, 0);
@@ -68,10 +68,13 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private class JoinCacheActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public JoinCacheActivityNode(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator();
@@ -105,20 +108,18 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return NestedLoopJoinOperatorDescriptor.this;
-        }
     }
 
     private class NestedLoopJoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public NestedLoopJoinActivityNode(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private NestedLoopJoin joiner;
@@ -147,11 +148,6 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return NestedLoopJoinOperatorDescriptor.this;
         }
     }
 }

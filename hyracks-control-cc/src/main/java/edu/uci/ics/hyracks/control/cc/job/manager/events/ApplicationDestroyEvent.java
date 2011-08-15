@@ -19,13 +19,14 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.ApplicationDestroyer;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 
-public class ApplicationDestroyEvent implements Runnable {
+public class ApplicationDestroyEvent extends AbstractEvent {
     private final ClusterControllerService ccs;
     private final String appName;
     private FutureValue fv;
@@ -57,7 +58,7 @@ public class ApplicationDestroyEvent implements Runnable {
                     fv.setException(e);
                     return;
                 }
-                ccs.getJobQueue().schedule(new Runnable() {
+                ccs.getJobQueue().schedule(new AbstractEvent() {
                     @Override
                     public void run() {
                         try {

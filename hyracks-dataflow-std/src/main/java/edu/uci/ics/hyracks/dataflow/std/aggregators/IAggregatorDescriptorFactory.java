@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.aggregators;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -32,6 +32,6 @@ public interface IAggregatorDescriptorFactory extends Serializable {
      * @return
      * @throws HyracksDataException
      */
-    IAggregatorDescriptor createAggregator(IHyracksStageletContext ctx, RecordDescriptor inRecordDescriptor,
+    IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields) throws HyracksDataException;
 }

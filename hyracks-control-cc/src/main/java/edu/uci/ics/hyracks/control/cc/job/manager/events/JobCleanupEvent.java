@@ -14,42 +14,44 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
-import edu.uci.ics.hyracks.control.cc.job.JobAttempt;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 
-public class JobCleanupEvent implements Runnable {
+public class JobCleanupEvent extends AbstractEvent {
     private ClusterControllerService ccs;
-    private UUID jobId;
-    private int attempt;
+    private JobId jobId;
     private JobStatus status;
+    private Exception exception;
 
-    public JobCleanupEvent(ClusterControllerService ccs, UUID jobId, int attempt, JobStatus status) {
+    public JobCleanupEvent(ClusterControllerService ccs, JobId jobId, JobStatus status, Exception exception) {
         this.ccs = ccs;
         this.jobId = jobId;
-        this.attempt = attempt;
         this.status = status;
+        this.exception = exception;
     }
 
     @Override
     public void run() {
         final JobRun run = ccs.getRunMap().get(jobId);
-        final JobAttempt ja = run.getAttempts().get(attempt);
-        Set<String> targetNodes = ja.getParticipatingNodeIds();
+        Set<String> targetNodes = run.getParticipatingNodeIds();
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
         for (String n : targetNodes) {
             jcns[i++] = new JobCompleteNotifier(n, jobId);
+            NodeControllerState ncs = ccs.getNodeMap().get(n);
+            if (ncs != null) {
+                ncs.getActiveJobIds().remove(jobId);
+            }
         }
         ccs.getExecutor().execute(new Runnable() {
             @Override
@@ -61,10 +63,11 @@ public class JobCleanupEvent implements Runnable {
                         e.printStackTrace();
                     }
                 }
-                ccs.getJobQueue().schedule(new Runnable() {
+                ccs.getJobQueue().schedule(new AbstractEvent() {
                     @Override
                     public void run() {
-                        CCApplicationContext appCtx = ccs.getApplicationMap().get(ja.getPlan().getApplicationName());
+                        CCApplicationContext appCtx = ccs.getApplicationMap().get(
+                                run.getJobActivityGraph().getApplicationName());
                         if (appCtx != null) {
                             try {
                                 appCtx.notifyJobFinish(jobId);
@@ -72,12 +75,7 @@ public class JobCleanupEvent implements Runnable {
                                 e.printStackTrace();
                             }
                         }
-                        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-                        for (String nodeId : ja.getParticipatingNodeIds()) {
-                            NodeControllerState state = nodeMap.get(nodeId);
-                            state.getActiveJobIds().remove(jobId);
-                        }
-                        run.setStatus(status);
+                        run.setStatus(status, exception);
                     }
                 });
             }

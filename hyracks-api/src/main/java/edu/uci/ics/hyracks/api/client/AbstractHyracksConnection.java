@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.io.File;
 import java.util.EnumSet;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -26,6 +25,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
@@ -65,27 +65,27 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public UUID createJob(String appName, JobSpecification jobSpec) throws Exception {
+    public JobId createJob(String appName, JobSpecification jobSpec) throws Exception {
         return createJob(appName, jobSpec, EnumSet.noneOf(JobFlag.class));
     }
 
     @Override
-    public UUID createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+    public JobId createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         return hci.createJob(appName, JavaSerializationUtils.serialize(jobSpec), jobFlags);
     }
 
     @Override
-    public JobStatus getJobStatus(UUID jobId) throws Exception {
+    public JobStatus getJobStatus(JobId jobId) throws Exception {
         return hci.getJobStatus(jobId);
     }
 
     @Override
-    public void start(UUID jobId) throws Exception {
+    public void start(JobId jobId) throws Exception {
         hci.start(jobId);
     }
 
     @Override
-    public void waitForCompletion(UUID jobId) throws Exception {
+    public void waitForCompletion(JobId jobId) throws Exception {
         hci.waitForCompletion(jobId);
     }
 }

@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
+import java.net.InetSocketAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.MessageFormat;
@@ -28,11 +28,9 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -47,47 +45,51 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.comm.Endpoint;
-import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
+import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.api.control.IClusterController;
-import edu.uci.ics.hyracks.api.control.INodeController;
-import edu.uci.ics.hyracks.api.control.NCConfig;
-import edu.uci.ics.hyracks.api.control.NodeCapability;
-import edu.uci.ics.hyracks.api.control.NodeParameters;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
-import edu.uci.ics.hyracks.api.dataflow.Direction;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.OperatorInstanceId;
-import edu.uci.ics.hyracks.api.dataflow.PortInstanceId;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobPlan;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.api.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.api.job.profiling.om.JobletProfile;
-import edu.uci.ics.hyracks.api.job.profiling.om.StageletProfile;
+import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.naming.MultipartName;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.common.base.IClusterController;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NodeCapability;
+import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
-import edu.uci.ics.hyracks.control.nc.comm.ConnectionManager;
-import edu.uci.ics.hyracks.control.nc.comm.DemuxDataReceiveListenerFactory;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable;
+import edu.uci.ics.hyracks.control.nc.net.ConnectionManager;
+import edu.uci.ics.hyracks.control.nc.net.NetworkInputChannel;
+import edu.uci.ics.hyracks.control.nc.partitions.MaterializedPartitionWriter;
+import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
+import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
+import edu.uci.ics.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
@@ -103,13 +105,15 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final NodeCapability nodeCapability;
 
+    private final PartitionManager partitionManager;
+
     private final ConnectionManager connectionManager;
 
     private final Timer timer;
 
     private IClusterController ccs;
 
-    private final Map<UUID, Joblet> jobletMap;
+    private final Map<JobId, Joblet> jobletMap;
 
     private final Executor executor;
 
@@ -129,11 +133,18 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
         nodeCapability = computeNodeCapability();
         connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
-        jobletMap = new Hashtable<UUID, Joblet>();
+        partitionManager = new PartitionManager(this);
+        connectionManager.setPartitionRequestListener(partitionManager);
+
+        jobletMap = new Hashtable<JobId, Joblet>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
         applications = new Hashtable<String, NCApplicationContext>();
+    }
+
+    public IHyracksRootContext getRootContext() {
+        return ctx;
     }
 
     private static List<IODeviceHandle> getDevices(String ioDevices) {
@@ -152,7 +163,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         connectionManager.start();
         Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
         IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
-        this.nodeParameters = cc.registerNode(this);
+        this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
+                .getNetworkAddress()));
 
         // Schedule heartbeat generator.
         timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod());
@@ -168,6 +180,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+        partitionManager.close();
         connectionManager.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
@@ -184,6 +197,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     public ConnectionManager getConnectionManager() {
         return connectionManager;
+    }
+
+    public PartitionManager getPartitionManager() {
+        return partitionManager;
+    }
+
+    public IClusterController getClusterController() {
+        return ccs;
     }
 
     private static NodeCapability computeNodeCapability() {
@@ -210,14 +231,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public Map<PortInstanceId, Endpoint> initializeJobletPhase1(String appName, UUID jobId, int attempt,
-            byte[] planBytes, UUID stageId, Map<ActivityNodeId, Set<Integer>> tasks,
-            Map<OperatorDescriptorId, Integer> opNumPartitions) throws Exception {
+    public void startTasks(String appName, final JobId jobId, byte[] jagBytes,
+            List<TaskAttemptDescriptor> taskDescriptors,
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, byte[] ctxVarBytes) throws Exception {
         try {
-            LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 1");
-
             NCApplicationContext appCtx = applications.get(appName);
-            final JobPlan plan = (JobPlan) appCtx.deserialize(planBytes);
+            final JobActivityGraph plan = (JobActivityGraph) appCtx.deserialize(jagBytes);
+            Map<MultipartName, Object> ctxVarMap = (Map<MultipartName, Object>) appCtx.deserialize(ctxVarBytes);
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -231,156 +251,62 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 }
             };
 
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, attempt, appCtx);
+            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx);
 
-            Stagelet stagelet = new Stagelet(joblet, stageId, attempt, id);
-            joblet.setStagelet(stageId, stagelet);
-
-            final Map<PortInstanceId, Endpoint> portMap = new HashMap<PortInstanceId, Endpoint>();
-            Map<OperatorInstanceId, OperatorRunnable> honMap = stagelet.getOperatorMap();
-
-            List<Endpoint> endpointList = new ArrayList<Endpoint>();
-
-            for (ActivityNodeId hanId : tasks.keySet()) {
-                IActivityNode han = plan.getActivityNodeMap().get(hanId);
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("Initializing " + hanId + " -> " + han);
+            for (TaskAttemptDescriptor td : taskDescriptors) {
+                TaskAttemptId taId = td.getTaskAttemptId();
+                TaskId tid = taId.getTaskId();
+                IActivity han = plan.getActivityNodeMap().get(tid.getActivityId());
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Initializing " + taId + " -> " + han);
                 }
-                IOperatorDescriptor op = han.getOwner();
-                List<IConnectorDescriptor> inputs = plan.getTaskInputs(hanId);
-                for (int i : tasks.get(hanId)) {
-                    IOperatorNodePushable hon = han.createPushRuntime(stagelet, joblet.getEnvironment(op, i), rdp, i,
-                            opNumPartitions.get(op.getOperatorId()));
-                    OperatorRunnable or = new OperatorRunnable(stagelet, hon, inputs == null ? 0 : inputs.size(),
-                            executor);
-                    stagelet.setOperator(op.getOperatorId(), i, or);
-                    if (inputs != null) {
-                        for (int j = 0; j < inputs.size(); ++j) {
-                            IConnectorDescriptor conn = inputs.get(j);
-                            OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                    .getOperatorId();
-                            OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                    .getOperatorId();
-                            Endpoint endpoint = new Endpoint(connectionManager.getNetworkAddress(), i);
-                            endpointList.add(endpoint);
-                            DemuxDataReceiveListenerFactory drlf = new DemuxDataReceiveListenerFactory(stagelet, jobId,
-                                    stageId);
-                            connectionManager.acceptConnection(endpoint.getEndpointId(), drlf);
-                            PortInstanceId piId = new PortInstanceId(op.getOperatorId(), Direction.INPUT, plan
-                                    .getTaskInputMap().get(hanId).get(j), i);
-                            if (LOGGER.isLoggable(Level.FINEST)) {
-                                LOGGER.finest("Created endpoint " + piId + " -> " + endpoint);
-                            }
-                            portMap.put(piId, endpoint);
-                            IFrameReader reader = createReader(stagelet, conn, drlf, i, plan, stagelet,
-                                    opNumPartitions.get(producerOpId), opNumPartitions.get(consumerOpId));
-                            or.setFrameReader(j, reader);
+                final int partition = tid.getPartition();
+                Map<MultipartName, Object> inputGlobalVariables = createInputGlobalVariables(ctxVarMap, han);
+                Task task = new Task(joblet, taId, han.getClass().getName(), executor);
+                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(),
+                        tid.getPartition());
+                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition,
+                        td.getPartitionCount());
+
+                List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
+
+                List<IConnectorDescriptor> inputs = plan.getActivityInputConnectorDescriptors(tid.getActivityId());
+                if (inputs != null) {
+                    for (int i = 0; i < inputs.size(); ++i) {
+                        IConnectorDescriptor conn = inputs.get(i);
+                        IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
+                        RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
+                                recordDesc, cPolicy);
+                        collectors.add(collector);
                     }
-                    honMap.put(new OperatorInstanceId(op.getOperatorId(), i), or);
                 }
-            }
+                List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getActivityId());
+                if (outputs != null) {
+                    for (int i = 0; i < outputs.size(); ++i) {
+                        final IConnectorDescriptor conn = outputs.get(i);
+                        RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
-            stagelet.setEndpointList(endpointList);
+                        IPartitionWriterFactory pwFactory = createPartitionWriterFactory(cPolicy, jobId, conn,
+                                partition, taId);
 
-            return portMap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-    private IFrameReader createReader(final IHyracksStageletContext stageletContext, final IConnectorDescriptor conn,
-            IConnectionDemultiplexer demux, final int receiverIndex, JobPlan plan, final Stagelet stagelet,
-            int nProducerCount, int nConsumerCount) throws HyracksDataException {
-        final IFrameReader reader = conn.createReceiveSideReader(stageletContext, plan.getJobSpecification()
-                .getConnectorRecordDescriptor(conn), demux, receiverIndex, nProducerCount, nConsumerCount);
-
-        return plan.getJobFlags().contains(JobFlag.PROFILE_RUNTIME) ? new IFrameReader() {
-            private ICounter openCounter = stageletContext.getCounterContext().getCounter(
-                    conn.getConnectorId().getId() + ".receiver." + receiverIndex + ".open", true);
-            private ICounter closeCounter = stageletContext.getCounterContext().getCounter(
-                    conn.getConnectorId().getId() + ".receiver." + receiverIndex + ".close", true);
-            private ICounter frameCounter = stageletContext.getCounterContext().getCounter(
-                    conn.getConnectorId().getId() + ".receiver." + receiverIndex + ".nextFrame", true);
-
-            @Override
-            public void open() throws HyracksDataException {
-                reader.open();
-                openCounter.update(1);
-            }
-
-            @Override
-            public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                boolean status = reader.nextFrame(buffer);
-                if (status) {
-                    frameCounter.update(1);
-                }
-                return status;
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                reader.close();
-                closeCounter.update(1);
-            }
-        } : reader;
-    }
-
-    @Override
-    public void initializeJobletPhase2(String appName, UUID jobId, byte[] planBytes, UUID stageId,
-            Map<ActivityNodeId, Set<Integer>> tasks, Map<OperatorDescriptorId, Integer> opNumPartitions,
-            final Map<PortInstanceId, Endpoint> globalPortMap) throws Exception {
-        try {
-            LOGGER.log(Level.INFO, String.valueOf(jobId) + "[" + id + ":" + stageId + "]: Initializing Joblet Phase 2");
-            ApplicationContext appCtx = applications.get(appName);
-            final JobPlan plan = (JobPlan) appCtx.deserialize(planBytes);
-
-            final Joblet ji = getLocalJoblet(jobId);
-            final Stagelet stagelet = (Stagelet) ji.getStagelet(stageId);
-            final Map<OperatorInstanceId, OperatorRunnable> honMap = stagelet.getOperatorMap();
-
-            final JobSpecification spec = plan.getJobSpecification();
-
-            for (ActivityNodeId hanId : tasks.keySet()) {
-                IActivityNode han = plan.getActivityNodeMap().get(hanId);
-                IOperatorDescriptor op = han.getOwner();
-                List<IConnectorDescriptor> outputs = plan.getTaskOutputs(hanId);
-                for (int i : tasks.get(hanId)) {
-                    OperatorRunnable or = honMap.get(new OperatorInstanceId(op.getOperatorId(), i));
-                    if (outputs != null) {
-                        for (int j = 0; j < outputs.size(); ++j) {
-                            final IConnectorDescriptor conn = outputs.get(j);
-                            OperatorDescriptorId producerOpId = plan.getJobSpecification().getProducer(conn)
-                                    .getOperatorId();
-                            OperatorDescriptorId consumerOpId = plan.getJobSpecification().getConsumer(conn)
-                                    .getOperatorId();
-                            final int senderIndex = i;
-                            IEndpointDataWriterFactory edwFactory = new IEndpointDataWriterFactory() {
-                                @Override
-                                public IFrameWriter createFrameWriter(int index) throws HyracksDataException {
-                                    PortInstanceId piId = new PortInstanceId(spec.getConsumer(conn).getOperatorId(),
-                                            Direction.INPUT, spec.getConsumerInputIndex(conn), index);
-                                    Endpoint ep = globalPortMap.get(piId);
-                                    if (ep == null) {
-                                        LOGGER.info("Got null Endpoint for " + piId);
-                                        throw new NullPointerException();
-                                    }
-                                    if (LOGGER.isLoggable(Level.FINEST)) {
-                                        LOGGER.finest("Probed endpoint " + piId + " -> " + ep);
-                                    }
-                                    return createWriter(stagelet, connectionManager.connect(ep.getNetworkAddress(),
-                                            ep.getEndpointId(), senderIndex), plan, conn, senderIndex, index, stagelet);
-                                }
-                            };
-                            or.setFrameWriter(j, conn.createSendSideWriter(stagelet, plan.getJobSpecification()
-                                    .getConnectorRecordDescriptor(conn), edwFactory, i, opNumPartitions
-                                    .get(producerOpId), opNumPartitions.get(consumerOpId)), spec
-                                    .getConnectorRecordDescriptor(conn));
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("output: " + i + ": " + conn.getConnectorId());
                         }
+                        IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
+                                td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
+                        operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
-                    stagelet.installRunnable(new OperatorInstanceId(op.getOperatorId(), i));
                 }
+
+                task.setTaskRuntime(collectors.toArray(new IPartitionCollector[collectors.size()]), operator);
+                joblet.addTask(task);
+
+                task.start();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -388,68 +314,55 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
     }
 
-    private IFrameWriter createWriter(final IHyracksStageletContext stageletContext, final IFrameWriter writer,
-            JobPlan plan, final IConnectorDescriptor conn, final int senderIndex, final int receiverIndex,
-            final Stagelet stagelet) throws HyracksDataException {
-        return plan.getJobFlags().contains(JobFlag.PROFILE_RUNTIME) ? new IFrameWriter() {
-            private ICounter openCounter = stageletContext.getCounterContext().getCounter(
-                    conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex + ".open", true);
-            private ICounter closeCounter = stageletContext.getCounterContext().getCounter(
-                    conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex + ".close", true);
-            private ICounter frameCounter = stageletContext.getCounterContext()
-                    .getCounter(
-                            conn.getConnectorId().getId() + ".sender." + senderIndex + "." + receiverIndex
-                                    + ".nextFrame", true);
-
-            @Override
-            public void open() throws HyracksDataException {
-                writer.open();
-                openCounter.update(1);
-            }
-
-            @Override
-            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                frameCounter.update(1);
-                writer.nextFrame(buffer);
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                closeCounter.update(1);
-                writer.close();
-            }
-
-            @Override
-            public void flush() throws HyracksDataException {
-                writer.flush();
-            }
-        } : writer;
+    private Map<MultipartName, Object> createInputGlobalVariables(Map<MultipartName, Object> ctxVarMap, IActivity han) {
+        Map<MultipartName, Object> gVars = new HashMap<MultipartName, Object>();
+        //        for (MultipartName inVar : han.getInputVariables()) {
+        //            gVars.put(inVar, ctxVarMap.get(inVar));
+        //        }
+        return gVars;
     }
 
-    @Override
-    public void commitJobletInitialization(UUID jobId, UUID stageId) throws Exception {
-        final Joblet ji = getLocalJoblet(jobId);
-        Stagelet si = (Stagelet) ji.getStagelet(stageId);
-        for (Endpoint e : si.getEndpointList()) {
-            connectionManager.unacceptConnection(e.getEndpointId());
+    private IPartitionCollector createPartitionCollector(TaskAttemptDescriptor td, final int partition, Task task,
+            int i, IConnectorDescriptor conn, RecordDescriptor recordDesc, IConnectorPolicy cPolicy)
+            throws HyracksDataException {
+        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
+                td.getInputPartitionCounts()[i], td.getPartitionCount());
+        if (cPolicy.materializeOnReceiveSide()) {
+            return new ReceiveSideMaterializingCollector(ctx, partitionManager, collector, task.getTaskAttemptId(),
+                    executor);
+        } else {
+            return collector;
         }
-        si.setEndpointList(null);
     }
 
-    private Joblet getLocalJoblet(UUID jobId) throws Exception {
+    private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final JobId jobId,
+            final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId) {
+        if (cPolicy.materializeOnSendSide()) {
+            return new IPartitionWriterFactory() {
+                @Override
+                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                    return new MaterializedPartitionWriter(ctx, partitionManager, new PartitionId(jobId,
+                            conn.getConnectorId(), senderIndex, receiverIndex), taId, executor);
+                }
+            };
+        } else {
+            return new IPartitionWriterFactory() {
+                @Override
+                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                    return new PipelinedPartition(partitionManager, new PartitionId(jobId, conn.getConnectorId(),
+                            senderIndex, receiverIndex), taId);
+                }
+            };
+        }
+    }
+
+    private synchronized Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx) throws Exception {
         Joblet ji = jobletMap.get(jobId);
-        return ji;
-    }
-
-    private Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx) throws Exception {
-        synchronized (jobletMap) {
-            Joblet ji = jobletMap.get(jobId);
-            if (ji == null || ji.getAttempt() != attempt) {
-                ji = new Joblet(this, jobId, attempt, appCtx);
-                jobletMap.put(jobId, ji);
-            }
-            return ji;
+        if (ji == null) {
+            ji = new Joblet(this, jobId, appCtx);
+            jobletMap.put(jobId, ji);
         }
+        return ji;
     }
 
     public Executor getExecutor() {
@@ -457,43 +370,31 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void cleanUpJob(UUID jobId) throws Exception {
+    public void cleanUpJob(JobId jobId) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
+            partitionManager.unregisterPartitions(jobId);
             joblet.close();
         }
-        connectionManager.dumpStats();
     }
 
-    @Override
-    public void startStage(UUID jobId, UUID stageId) throws Exception {
-        Joblet ji = jobletMap.get(jobId);
-        if (ji != null) {
-            Stagelet s = ji.getStagelet(stageId);
-            if (s != null) {
-                s.start();
-            }
-        }
-    }
-
-    public void notifyStageComplete(UUID jobId, UUID stageId, int attempt, StageletProfile stats) throws Exception {
+    public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, TaskProfile taskProfile) throws Exception {
         try {
-            ccs.notifyStageletComplete(jobId, stageId, attempt, id, stats);
+            ccs.notifyTaskComplete(jobId, taskId, id, taskProfile);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
     }
 
-    public void notifyStageFailed(UUID jobId, UUID stageId, int attempt) throws Exception {
+    public void notifyTaskFailed(JobId jobId, TaskAttemptId taskId, Exception exception) {
         try {
-            ccs.notifyStageletFailure(jobId, stageId, attempt, id);
+            ccs.notifyTaskFailure(jobId, taskId, id, exception);
         } catch (Exception e) {
             e.printStackTrace();
-            throw e;
         }
     }
 
@@ -538,7 +439,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 synchronized (NodeControllerService.this) {
                     profiles = new ArrayList<JobProfile>();
                     for (Joblet ji : jobletMap.values()) {
-                        profiles.add(new JobProfile(ji.getJobId(), ji.getAttempt()));
+                        profiles.add(new JobProfile(ji.getJobId()));
                     }
                 }
                 for (JobProfile jProfile : profiles) {
@@ -562,20 +463,20 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void abortJoblet(UUID jobId, int attempt) throws Exception {
+    public synchronized void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Aborting Job: " + jobId + ":" + attempt);
+            LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }
         Joblet ji = jobletMap.get(jobId);
         if (ji != null) {
-            if (ji.getAttempt() == attempt) {
-                jobletMap.remove(jobId);
+            Map<TaskAttemptId, Task> taskMap = ji.getTaskMap();
+            for (TaskAttemptId taId : tasks) {
+                Task task = taskMap.get(taId);
+                if (task != null) {
+                    task.abort();
+                }
             }
-            for (Stagelet stagelet : ji.getStageletMap().values()) {
-                stagelet.abort();
-                stagelet.close();
-                connectionManager.abortConnections(jobId, stagelet.getStageId());
-            }
+            ji.close();
         }
     }
 
@@ -614,6 +515,16 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         ApplicationContext appCtx = applications.remove(appName);
         if (appCtx != null) {
             appCtx.deinitialize();
+        }
+    }
+
+    @Override
+    public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
+        Joblet ji = jobletMap.get(pid.getJobId());
+        if (ji != null) {
+            PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ctx, connectionManager,
+                    new InetSocketAddress(networkAddress.getIpAddress(), networkAddress.getPort()), pid, 1));
+            ji.reportPartitionAvailability(channel);
         }
     }
 }

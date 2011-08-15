@@ -40,7 +40,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 		tokenFactory = new UTF8NGramTokenFactory();
 		tokenizer = new NGramUTF8StringBinaryTokenizer(3, false, true, false,
 				tokenFactory);
-		searcher = new TOccurrenceSearcher(stageletCtx, invIndex, tokenizer);
+		searcher = new TOccurrenceSearcher(taskCtx, invIndex, tokenizer);
 		resultCursor = new SearchResultCursor(
 				searcher.createResultFrameTupleAccessor(),
 				searcher.createResultTupleReference());

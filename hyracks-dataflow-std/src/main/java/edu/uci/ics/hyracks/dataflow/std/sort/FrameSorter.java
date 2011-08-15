@@ -121,7 +121,6 @@ public class FrameSorter {
     }
 
     public void flushFrames(IFrameWriter writer) throws HyracksDataException {
-        writer.open();
         appender.reset(outFrame, true);
         for (int ptr = 0; ptr < tupleCount; ++ptr) {
             int i = tPointers[ptr * 4];

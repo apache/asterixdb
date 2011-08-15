@@ -19,16 +19,12 @@ import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
@@ -40,25 +36,19 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.test.support.TestJobletContext;
-import edu.uci.ics.hyracks.test.support.TestNCApplicationContext;
-import edu.uci.ics.hyracks.test.support.TestRootContext;
-import edu.uci.ics.hyracks.test.support.TestStageletContext;
+import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class SerializationDeserializationTest {
     private static final String DBLP_FILE = "data/dblp.txt";
 
     private static class SerDeserRunner {
-        private final IHyracksStageletContext ctx;
+        private final IHyracksTaskContext ctx;
         private static final int FRAME_SIZE = 32768;
         private RecordDescriptor rDes;
         private List<ByteBuffer> buffers;
 
         public SerDeserRunner(RecordDescriptor rDes) throws HyracksException {
-            IHyracksRootContext rootCtx = new TestRootContext(FRAME_SIZE);
-            INCApplicationContext appCtx = new TestNCApplicationContext(rootCtx, null);
-            IHyracksJobletContext jobletCtx = new TestJobletContext(appCtx, UUID.randomUUID(), 0);
-            ctx = new TestStageletContext(jobletCtx, UUID.randomUUID());
+            ctx = TestUtils.create(FRAME_SIZE);
             this.rDes = rDes;
             buffers = new ArrayList<ByteBuffer>();
         }

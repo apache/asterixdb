@@ -15,24 +15,23 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public final class OperatorDescriptorId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final UUID id;
+    private final int id;
 
-    public OperatorDescriptorId(UUID id) {
+    public OperatorDescriptorId(int id) {
         this.id = id;
     }
 
-    public UUID getId() {
+    public int getId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return id;
     }
 
     @Override
@@ -43,7 +42,7 @@ public final class OperatorDescriptorId implements Serializable {
         if (!(o instanceof OperatorDescriptorId)) {
             return false;
         }
-        return ((OperatorDescriptorId) o).id.equals(id);
+        return ((OperatorDescriptorId) o).id == id;
     }
 
     @Override

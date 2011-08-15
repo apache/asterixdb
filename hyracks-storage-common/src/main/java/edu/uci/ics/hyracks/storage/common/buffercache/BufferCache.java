@@ -321,6 +321,39 @@ public class BufferCache implements IBufferCacheInternal {
         }
     }
 
+    private String dumpState() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("Buffer cache state\n");
+        buffer.append("Page Size: ").append(pageSize).append('\n');
+        buffer.append("Number of physical pages: ").append(numPages).append('\n');
+        buffer.append("Hash table size: ").append(pageMap.length).append('\n');
+        buffer.append("Page Map:\n");
+        int nCachedPages = 0;
+        for (int i = 0; i < pageMap.length; ++i) {
+            CacheBucket cb = pageMap[i];
+            cb.bucketLock.lock();
+            try {
+                CachedPage cp = cb.cachedPage;
+                if (cp != null) {
+                    buffer.append("   ").append(i).append('\n');
+                    while (cp != null) {
+                        buffer.append("      ").append(cp.cpid).append(" -> [")
+                                .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
+                                .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
+                                .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
+                                .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
+                        cp = cp.next;
+                        ++nCachedPages;
+                    }
+                }
+            } finally {
+                cb.bucketLock.unlock();
+            }
+        }
+        buffer.append("Number of cached pages: ").append(nCachedPages).append('\n');
+        return buffer.toString();
+    }
+
     private void read(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
         cPage.buffer.clear();
@@ -645,6 +678,7 @@ public class BufferCache implements IBufferCacheInternal {
     public void closeFile(int fileId) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Closing file: " + fileId + " in cache: " + this);
+            LOGGER.info(dumpState());
         }
         synchronized (fileInfoMap) {
             BufferedFileHandle fInfo = fileInfoMap.get(fileId);

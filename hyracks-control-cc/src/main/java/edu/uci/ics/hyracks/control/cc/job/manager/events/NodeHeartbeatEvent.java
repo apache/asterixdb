@@ -15,12 +15,13 @@
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class NodeHeartbeatEvent extends SynchronizableRunnable {
+public class NodeHeartbeatEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final String nodeId;
 
@@ -36,5 +37,10 @@ public class NodeHeartbeatEvent extends SynchronizableRunnable {
         if (state != null) {
             state.notifyHeartbeat();
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.FINEST;
     }
 }

@@ -19,7 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
 public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private final IBinaryTokenizer tokenizer;
     private final int[] tokenFields;
     private final int[] projFields;
@@ -45,7 +45,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     private FrameTupleAppender appender;
     private ByteBuffer writeBuffer;
 
-    public BinaryTokenizerOperatorNodePushable(IHyracksStageletContext ctx, RecordDescriptor inputRecDesc,
+    public BinaryTokenizerOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
             RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int[] tokenFields, int[] projFields) {
         this.ctx = ctx;
         this.tokenizer = tokenizer;
@@ -63,6 +63,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         builderDos = builder.getDataOutput();
         appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(writeBuffer, true);
+        writer.open();
     }
 
     @Override

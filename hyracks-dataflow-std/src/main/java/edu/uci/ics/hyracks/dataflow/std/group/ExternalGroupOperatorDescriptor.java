@@ -23,9 +23,9 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -101,32 +101,30 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        AggregateActivity aggregateAct = new AggregateActivity();
-        MergeActivity mergeAct = new MergeActivity();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), 0));
+        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, 1));
 
-        builder.addTask(aggregateAct);
+        builder.addActivity(aggregateAct);
         builder.addSourceEdge(0, aggregateAct, 0);
 
-        builder.addTask(mergeAct);
+        builder.addActivity(mergeAct);
         builder.addTargetEdge(0, mergeAct, 0);
 
         builder.addBlockingEdge(aggregateAct, mergeAct);
     }
 
     private class AggregateActivity extends AbstractActivityNode {
-
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalGroupOperatorDescriptor.this;
+        public AggregateActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) throws HyracksDataException {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                throws HyracksDataException {
             final ISpillableTable gTable = spillableTableFactory.buildSpillableTable(ctx, keyFields,
                     comparatorFactories, firstNormalizerFactory, aggregatorFactory,
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
@@ -191,7 +189,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private void flushFramesToRun() throws HyracksDataException {
                     FileReference runFile;
                     try {
-                        runFile = ctx.getJobletContext().createWorkspaceFile(
+                        runFile = ctx.getJobletContext().createManagedWorkspaceFile(
                                 ExternalGroupOperatorDescriptor.class.getSimpleName());
                     } catch (IOException e) {
                         throw new HyracksDataException(e);
@@ -215,18 +213,16 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     }
 
     private class MergeActivity extends AbstractActivityNode {
-
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return ExternalGroupOperatorDescriptor.this;
+        public MergeActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) throws HyracksDataException {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                throws HyracksDataException {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -325,7 +321,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         runNumber = runs.size();
                     } else {
                         runNumber = framesLimit - 2;
-                        newRun = ctx.getJobletContext().createWorkspaceFile(
+                        newRun = ctx.getJobletContext().createManagedWorkspaceFile(
                                 ExternalGroupOperatorDescriptor.class.getSimpleName());
                         writer = new RunFileWriter(newRun, ctx.getIOManager());
                         writer.open();

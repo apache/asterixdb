@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
@@ -52,7 +52,7 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
     }
 
     @Override
-    public ISpillableTable buildSpillableTable(final IHyracksStageletContext ctx, final int[] keyFields,
+    public ISpillableTable buildSpillableTable(final IHyracksTaskContext ctx, final int[] keyFields,
             final IBinaryComparatorFactory[] comparatorFactories,
             final INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             final IAggregatorDescriptorFactory aggregateDescriptorFactory, final RecordDescriptor inRecordDescriptor,

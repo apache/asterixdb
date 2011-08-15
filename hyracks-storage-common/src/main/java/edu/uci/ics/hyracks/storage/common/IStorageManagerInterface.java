@@ -16,12 +16,12 @@ package edu.uci.ics.hyracks.storage.common;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public interface IStorageManagerInterface extends Serializable {
-    public IBufferCache getBufferCache(IHyracksStageletContext ctx);
+    public IBufferCache getBufferCache(IHyracksTaskContext ctx);
 
-    public IFileMapProvider getFileMapProvider(IHyracksStageletContext ctx);
+    public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx);
 }

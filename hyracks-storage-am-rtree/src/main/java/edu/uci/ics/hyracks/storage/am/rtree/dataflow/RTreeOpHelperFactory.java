@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptorHelper;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
@@ -27,7 +27,7 @@ public class RTreeOpHelperFactory implements ITreeIndexOpHelperFactory {
 
     @Override
     public TreeIndexOpHelper createTreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc,
-            IHyracksStageletContext ctx, int partition, IndexHelperOpenMode mode) {
+            IHyracksTaskContext ctx, int partition, IndexHelperOpenMode mode) {
         return new RTreeOpHelper(opDesc, ctx, partition, mode);
     }
 }

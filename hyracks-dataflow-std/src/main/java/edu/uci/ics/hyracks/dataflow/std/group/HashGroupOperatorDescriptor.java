@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -57,12 +57,12 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        HashBuildActivity ha = new HashBuildActivity();
-        builder.addTask(ha);
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, 0));
+        builder.addActivity(ha);
 
-        OutputActivity oa = new OutputActivity();
-        builder.addTask(oa);
+        OutputActivity oa = new OutputActivity(new ActivityId(odId, 1));
+        builder.addActivity(oa);
 
         builder.addSourceEdge(0, ha, 0);
         builder.addTargetEdge(0, oa, 0);
@@ -72,10 +72,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     private class HashBuildActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public HashBuildActivity(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             return new AbstractUnaryInputSinkOperatorNodePushable() {
@@ -107,18 +110,17 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
             };
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HashGroupOperatorDescriptor.this;
-        }
     }
 
     private class OutputActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public OutputActivity(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, final IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
@@ -130,11 +132,6 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                     env.set(HASHTABLE, null);
                 }
             };
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HashGroupOperatorDescriptor.this;
         }
     }
 }

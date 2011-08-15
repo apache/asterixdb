@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -33,7 +33,7 @@ public class RTreeOpHelper extends TreeIndexOpHelper {
 
     protected MultiComparator interiorCmp;
 
-    public RTreeOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, IHyracksStageletContext ctx, int partition,
+    public RTreeOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, IHyracksTaskContext ctx, int partition,
             IndexHelperOpenMode mode) {
         super(opDesc, ctx, partition, mode);
     }

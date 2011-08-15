@@ -14,53 +14,86 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.control.cc.scheduler.IScheduler;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
+import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
+import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
-    private final JobPlan plan;
-    private final List<JobAttempt> attempts;
+    private final JobId jobId;
+
+    private final JobActivityGraph jag;
+
+    private final PartitionMatchMaker pmm;
+
+    private final Set<String> participatingNodeIds;
+
+    private final JobProfile profile;
+
+    private Set<ActivityCluster> activityClusters;
+
+    private final Map<ActivityId, ActivityCluster> activityClusterMap;
+
+    private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicyMap;
+
+    private JobScheduler js;
+
     private JobStatus status;
-    private Set<ConstraintExpression> constraints;
 
-    public JobRun(JobPlan plan, Set<ConstraintExpression> constraints) {
-        this.plan = plan;
-        attempts = new ArrayList<JobAttempt>();
-        this.constraints = constraints;
+    private Exception exception;
+
+    public JobRun(JobId jobId, JobActivityGraph plan) {
+        this.jobId = jobId;
+        this.jag = plan;
+        pmm = new PartitionMatchMaker();
+        participatingNodeIds = new HashSet<String>();
+        profile = new JobProfile(jobId);
+        activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
+        connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
     }
 
-    public JobPlan getJobPlan() {
-        return plan;
+    public JobId getJobId() {
+        return jobId;
     }
 
-    public synchronized void setStatus(JobStatus status) {
+    public JobActivityGraph getJobActivityGraph() {
+        return jag;
+    }
+
+    public PartitionMatchMaker getPartitionMatchMaker() {
+        return pmm;
+    }
+
+    public synchronized void setStatus(JobStatus status, Exception exception) {
         this.status = status;
+        this.exception = exception;
         notifyAll();
     }
 
-    public JobStatus getStatus() {
+    public synchronized JobStatus getStatus() {
         return status;
     }
 
-    public List<JobAttempt> getAttempts() {
-        return attempts;
-    }
-
-    public Set<ConstraintExpression> getConstraints() {
-        return constraints;
-    }
-
-    public JobAttempt createAttempt(IScheduler scheduler) {
-        int attemptNumber = attempts.size();
-        JobAttempt attempt = new JobAttempt(this, plan, attemptNumber, scheduler);
-        attempts.add(attempt);
-        return attempt;
+    public synchronized Exception getException() {
+        return exception;
     }
 
     @Override
@@ -68,5 +101,164 @@ public class JobRun implements IJobStatusConditionVariable {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
             wait();
         }
+        if (exception != null) {
+            throw new HyracksException("Job Failed", exception);
+        }
+    }
+
+    public Set<String> getParticipatingNodeIds() {
+        return participatingNodeIds;
+    }
+
+    public JobProfile getJobProfile() {
+        return profile;
+    }
+
+    public void setScheduler(JobScheduler js) {
+        this.js = js;
+    }
+
+    public JobScheduler getScheduler() {
+        return js;
+    }
+
+    public Map<ActivityId, ActivityCluster> getActivityClusterMap() {
+        return activityClusterMap;
+    }
+
+    public Set<ActivityCluster> getActivityClusters() {
+        return activityClusters;
+    }
+
+    public void setActivityClusters(Set<ActivityCluster> activityClusters) {
+        this.activityClusters = activityClusters;
+    }
+
+    public Map<ConnectorDescriptorId, IConnectorPolicy> getConnectorPolicyMap() {
+        return connectorPolicyMap;
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject result = new JSONObject();
+
+        result.put("job-id", jobId.toString());
+
+        JSONArray aClusters = new JSONArray();
+        for (ActivityCluster ac : activityClusters) {
+            JSONObject acJSON = new JSONObject();
+
+            acJSON.put("activity-cluster-id", String.valueOf(ac.getActivityClusterId()));
+
+            JSONArray activitiesJSON = new JSONArray();
+            for (ActivityId aid : ac.getActivities()) {
+                activitiesJSON.put(aid);
+            }
+            acJSON.put("activities", activitiesJSON);
+
+            JSONArray dependentsJSON = new JSONArray();
+            for (ActivityCluster dependent : ac.getDependents()) {
+                dependentsJSON.put(String.valueOf(dependent.getActivityClusterId()));
+            }
+            acJSON.put("dependents", dependentsJSON);
+
+            JSONArray dependenciesJSON = new JSONArray();
+            for (ActivityCluster dependency : ac.getDependencies()) {
+                dependenciesJSON.put(String.valueOf(dependency.getActivityClusterId()));
+            }
+            acJSON.put("dependencies", dependenciesJSON);
+
+            ActivityClusterPlan acp = ac.getPlan();
+            if (acp == null) {
+                acJSON.put("plan", (Object) null);
+            } else {
+                JSONObject planJSON = new JSONObject();
+
+                JSONArray acTasks = new JSONArray();
+                for (Map.Entry<ActivityId, ActivityPlan> e : acp.getActivityPlanMap().entrySet()) {
+                    ActivityPlan acPlan = e.getValue();
+                    JSONObject entry = new JSONObject();
+                    entry.put("activity-id", e.getKey().toString());
+
+                    ActivityPartitionDetails apd = acPlan.getActivityPartitionDetails();
+                    entry.put("partition-count", apd.getPartitionCount());
+
+                    JSONArray inPartCountsJSON = new JSONArray();
+                    int[] inPartCounts = apd.getInputPartitionCounts();
+                    if (inPartCounts != null) {
+                        for (int i : inPartCounts) {
+                            inPartCountsJSON.put(i);
+                        }
+                    }
+                    entry.put("input-partition-counts", inPartCountsJSON);
+
+                    JSONArray outPartCountsJSON = new JSONArray();
+                    int[] outPartCounts = apd.getOutputPartitionCounts();
+                    if (outPartCounts != null) {
+                        for (int o : outPartCounts) {
+                            outPartCountsJSON.put(o);
+                        }
+                    }
+                    entry.put("output-partition-counts", outPartCountsJSON);
+
+                    JSONArray tasks = new JSONArray();
+                    for (Task t : acPlan.getTasks()) {
+                        JSONObject task = new JSONObject();
+
+                        task.put("task-id", t.getTaskId().toString());
+
+                        JSONArray dependentTasksJSON = new JSONArray();
+                        for (TaskId dependent : t.getDependents()) {
+                            dependentTasksJSON.put(dependent.toString());
+                        }
+                        task.put("dependents", dependentTasksJSON);
+
+                        JSONArray dependencyTasksJSON = new JSONArray();
+                        for (TaskId dependency : t.getDependencies()) {
+                            dependencyTasksJSON.put(dependency.toString());
+                        }
+                        task.put("dependencies", dependencyTasksJSON);
+
+                        tasks.put(task);
+                    }
+                    entry.put("tasks", tasks);
+
+                    acTasks.put(entry);
+                }
+                planJSON.put("task-map", acTasks);
+
+                JSONArray tClusters = new JSONArray();
+                for (TaskCluster tc : acp.getTaskClusters()) {
+                    JSONObject c = new JSONObject();
+                    c.put("task-cluster-id", String.valueOf(tc.getTaskClusterId()));
+
+                    JSONArray tasks = new JSONArray();
+                    for (Task t : tc.getTasks()) {
+                        tasks.put(t.getTaskId().toString());
+                    }
+                    c.put("tasks", tasks);
+
+                    JSONArray prodParts = new JSONArray();
+                    for (PartitionId p : tc.getProducedPartitions()) {
+                        prodParts.put(p.toString());
+                    }
+                    c.put("produced-partitions", prodParts);
+
+                    JSONArray reqdParts = new JSONArray();
+                    for (PartitionId p : tc.getRequiredPartitions()) {
+                        reqdParts.put(p.toString());
+                    }
+                    c.put("required-partitions", reqdParts);
+
+                    tClusters.put(c);
+                }
+                planJSON.put("task-clusters", tClusters);
+
+                acJSON.put("plan", planJSON);
+            }
+            aClusters.put(acJSON);
+        }
+        result.put("activity-clusters", aClusters);
+
+        return result;
     }
 }

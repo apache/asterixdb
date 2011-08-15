@@ -8,7 +8,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -47,127 +47,116 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BTreeStatsTest extends AbstractBTreeTest {
 
-	// private static final int PAGE_SIZE = 256;
-	// private static final int NUM_PAGES = 10;
-	// private static final int PAGE_SIZE = 32768;
+    // private static final int PAGE_SIZE = 256;
+    // private static final int NUM_PAGES = 10;
+    // private static final int PAGE_SIZE = 32768;
     private static final int PAGE_SIZE = 4096;
     private static final int NUM_PAGES = 1000;
     private static final int MAX_OPEN_FILES = 10;
-	private static final int HYRACKS_FRAME_SIZE = 128;
-	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-	
-	@Test
-	public void test01() throws Exception {
+    private static final int HYRACKS_FRAME_SIZE = 128;
+    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-		IBufferCache bufferCache = TestStorageManagerComponentHolder
-				.getBufferCache(ctx);
-		IFileMapProvider fmp = TestStorageManagerComponentHolder
-				.getFileMapProvider(ctx);
-		FileReference file = new FileReference(new File(fileName));
-		bufferCache.createFile(file);
-		int fileId = fmp.lookupFileId(file);
-		bufferCache.openFile(fileId);
+    @Test
+    public void test01() throws Exception {
 
-		// declare fields
-		int fieldCount = 2;
-		ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-		typeTraits[0] = new TypeTrait(4);
-		typeTraits[1] = new TypeTrait(4);
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        FileReference file = new FileReference(new File(fileName));
+        bufferCache.createFile(file);
+        int fileId = fmp.lookupFileId(file);
+        bufferCache.openFile(fileId);
 
-		// declare keys
-		int keyFieldCount = 1;
-		IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-		cmps[0] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
+        // declare fields
+        int fieldCount = 2;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(4);
+        typeTraits[1] = new TypeTrait(4);
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        // declare keys
+        int keyFieldCount = 1;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-		TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
-				typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-				tupleWriterFactory);
-		ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-				tupleWriterFactory);
-		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-		IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
-		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(
-				bufferCache, fileId, 0, metaFrameFactory);
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-		BTree btree = new BTree(bufferCache, freePageManager,
-				interiorFrameFactory, leafFrameFactory, cmp);
-		btree.create(fileId, leafFrame, metaFrame);
-		btree.open(fileId);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-		Random rnd = new Random();
-		rnd.setSeed(50);
+        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
+        btree.create(fileId, leafFrame, metaFrame);
+        btree.open(fileId);
 
-		long start = System.currentTimeMillis();
+        Random rnd = new Random();
+        rnd.setSeed(50);
 
-		LOGGER.info("INSERTING INTO TREE");
+        long start = System.currentTimeMillis();
 
-		ByteBuffer frame = ctx.allocateFrame();
-		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
-		DataOutput dos = tb.getDataOutput();
+        LOGGER.info("INSERTING INTO TREE");
 
-		ISerializerDeserializer[] recDescSers = {
-				IntegerSerializerDeserializer.INSTANCE,
-				IntegerSerializerDeserializer.INSTANCE };
-		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx
-				.getFrameSize(), recDesc);
-		accessor.reset(frame);
-		FrameTupleReference tuple = new FrameTupleReference();
+        ByteBuffer frame = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(
-				IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE };
+        RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        accessor.reset(frame);
+        FrameTupleReference tuple = new FrameTupleReference();
 
-		// 10000
-		for (int i = 0; i < 100000; i++) {
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
 
-			int f0 = rnd.nextInt() % 100000;
-			int f1 = 5;
+        // 10000
+        for (int i = 0; i < 100000; i++) {
 
-			tb.reset();
-			IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
-			tb.addFieldEndOffset();
-			IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
-			tb.addFieldEndOffset();
+            int f0 = rnd.nextInt() % 100000;
+            int f1 = 5;
 
-			appender.reset(frame, true);
-			appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb
-					.getSize());
+            tb.reset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+            tb.addFieldEndOffset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+            tb.addFieldEndOffset();
 
-			tuple.reset(accessor, 0);
-			
-			if (i % 10000 == 0) {
-				long end = System.currentTimeMillis();
-				LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " "
-						+ (end - start));
-			}
+            appender.reset(frame, true);
+            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
 
-			try {
-				btree.insert(tuple, insertOpCtx);
-			} catch (TreeIndexException e) {
-			} catch (Exception e) {
-				e.printStackTrace();
-			}			
-		}
-		
-		TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, btree.getRootPageId());		
-		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-		LOGGER.info(stats.toString());
+            tuple.reset(accessor, 0);
 
-		TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager, fileId);
-		bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] {1, 2}, new int[] {2, 5});
-		
-		btree.close();
-		bufferCache.closeFile(fileId);
-		bufferCache.close();
-	}
+            if (i % 10000 == 0) {
+                long end = System.currentTimeMillis();
+                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+            }
+
+            try {
+                btree.insert(tuple, insertOpCtx);
+            } catch (TreeIndexException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
+                btree.getRootPageId());
+        TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
+        LOGGER.info(stats.toString());
+
+        TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager,
+                fileId);
+        bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] { 1, 2 }, new int[] { 2, 5 });
+
+        btree.close();
+        bufferCache.closeFile(fileId);
+        bufferCache.close();
+    }
 }

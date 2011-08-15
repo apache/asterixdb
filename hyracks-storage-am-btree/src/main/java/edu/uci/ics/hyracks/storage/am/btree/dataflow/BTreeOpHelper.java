@@ -1,6 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -15,18 +15,18 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeOpHelper extends TreeIndexOpHelper {
 
-    public BTreeOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, IHyracksStageletContext ctx, int partition,
+    public BTreeOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, IHyracksTaskContext ctx, int partition,
             IndexHelperOpenMode mode) {
         super(opDesc, ctx, partition, mode);
     }
-    
+
     public ITreeIndex createTreeIndex() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0, metaDataFrameFactory);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0,
+                metaDataFrameFactory);
         return new BTree(bufferCache, freePageManager, opDesc.getTreeIndexInteriorFactory(),
                 opDesc.getTreeIndexLeafFactory(), cmp);
     }
-    
-    
+
 }

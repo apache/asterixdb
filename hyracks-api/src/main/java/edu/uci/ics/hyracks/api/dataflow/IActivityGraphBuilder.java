@@ -15,11 +15,11 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 public interface IActivityGraphBuilder {
-    public void addTask(IActivityNode task);
+    public void addActivity(IActivity task);
 
-    public void addBlockingEdge(IActivityNode blocker, IActivityNode blocked);
+    public void addBlockingEdge(IActivity blocker, IActivity blocked);
 
-    public void addSourceEdge(int operatorInputIndex, IActivityNode task, int taskInputIndex);
+    public void addSourceEdge(int operatorInputIndex, IActivity task, int taskInputIndex);
 
-    public void addTargetEdge(int operatorOutputIndex, IActivityNode task, int taskOutputIndex);
+    public void addTargetEdge(int operatorOutputIndex, IActivity task, int taskOutputIndex);
 }

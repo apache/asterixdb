@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -37,11 +37,11 @@ public final class InvertedIndexOpHelper {
     private int partition;
 
     private IInvertedIndexOperatorDescriptorHelper opDesc;
-    private IHyracksStageletContext ctx;
+    private IHyracksTaskContext ctx;
 
     private IndexHelperOpenMode mode;
 
-    public InvertedIndexOpHelper(IInvertedIndexOperatorDescriptorHelper opDesc, final IHyracksStageletContext ctx,
+    public InvertedIndexOpHelper(IInvertedIndexOperatorDescriptorHelper opDesc, final IHyracksTaskContext ctx,
             int partition, IndexHelperOpenMode mode) {
         this.opDesc = opDesc;
         this.ctx = ctx;
@@ -142,10 +142,6 @@ public final class InvertedIndexOpHelper {
 
     public InvertedIndex getInvIndex() {
         return invIndex;
-    }
-
-    public IHyracksStageletContext getHyracksStageletContext() {
-        return ctx;
     }
 
     public ITreeIndexOperatorDescriptorHelper getOperatorDescriptor() {

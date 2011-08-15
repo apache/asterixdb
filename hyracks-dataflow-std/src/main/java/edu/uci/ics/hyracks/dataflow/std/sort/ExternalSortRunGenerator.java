@@ -18,28 +18,28 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 public class ExternalSortRunGenerator implements IFrameWriter {
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private final FrameSorter frameSorter;
-    private final List<RunFileReader> runs;
+    private final List<IFrameReader> runs;
     private final int maxSortFrames;
 
-    public ExternalSortRunGenerator(IHyracksStageletContext ctx, int[] sortFields,
+    public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, int framesLimit) {
         this.ctx = ctx;
         frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc);
-        runs = new LinkedList<RunFileReader>();
+        runs = new LinkedList<IFrameReader>();
         maxSortFrames = framesLimit - 1;
     }
 
@@ -70,7 +70,8 @@ public class ExternalSortRunGenerator implements IFrameWriter {
 
     private void flushFramesToRun() throws HyracksDataException {
         frameSorter.sortFrames();
-        FileReference file = ctx.getJobletContext().createWorkspaceFile(ExternalSortRunGenerator.class.getSimpleName());
+        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
+                ExternalSortRunGenerator.class.getSimpleName());
         RunFileWriter writer = new RunFileWriter(file, ctx.getIOManager());
         writer.open();
         try {
@@ -90,7 +91,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         return frameSorter;
     }
 
-    public List<RunFileReader> getRuns() {
+    public List<IFrameReader> getRuns() {
         return runs;
     }
 }

@@ -26,11 +26,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
+import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.util.Pair;
 
@@ -51,9 +52,15 @@ public class JobSpecification implements Serializable {
 
     private final Map<String, Serializable> properties;
 
-    private final Set<ConstraintExpression> userConstraints;
+    private final Set<Constraint> userConstraints;
+
+    private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
     private int maxAttempts;
+
+    private transient int operatorIdCounter;
+
+    private transient int connectorIdCounter;
 
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
@@ -63,7 +70,17 @@ public class JobSpecification implements Serializable {
         opOutputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
         properties = new HashMap<String, Serializable>();
-        userConstraints = new HashSet<ConstraintExpression>();
+        userConstraints = new HashSet<Constraint>();
+        operatorIdCounter = 0;
+        connectorIdCounter = 0;
+    }
+
+    public OperatorDescriptorId createOperatorDescriptorId() {
+        return new OperatorDescriptorId(operatorIdCounter++);
+    }
+
+    public ConnectorDescriptorId createConnectorDescriptor() {
+        return new ConnectorDescriptorId(connectorIdCounter++);
     }
 
     public void addRoot(IOperatorDescriptor op) {
@@ -173,6 +190,14 @@ public class JobSpecification implements Serializable {
         return roots;
     }
 
+    public IConnectorPolicyAssignmentPolicy getConnectorPolicyAssignmentPolicy() {
+        return connectorPolicyAssignmentPolicy;
+    }
+
+    public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
+        this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
+    }
+
     public void setMaxAttempts(int maxAttempts) {
         this.maxAttempts = maxAttempts;
     }
@@ -181,11 +206,11 @@ public class JobSpecification implements Serializable {
         return maxAttempts;
     }
 
-    public void addUserConstraint(ConstraintExpression constraint) {
+    public void addUserConstraint(Constraint constraint) {
         userConstraints.add(constraint);
     }
 
-    public Set<ConstraintExpression> getUserConstraints() {
+    public Set<Constraint> getUserConstraints() {
         return userConstraints;
     }
 

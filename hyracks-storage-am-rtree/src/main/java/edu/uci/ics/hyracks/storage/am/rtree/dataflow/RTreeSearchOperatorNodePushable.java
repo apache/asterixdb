@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -64,7 +64,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     private RecordDescriptor recDesc;
 
-    public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
+    public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) {
         treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
                 IndexHelperOpenMode.OPEN);
@@ -80,11 +80,13 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     public void open() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
                 .getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
         interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
         leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
         cursor = new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrame, (IRTreeLeafFrame) leafFrame);
+
+        writer.open();
 
         try {
 
@@ -100,12 +102,12 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             cmp = new MultiComparator(rtree.getCmp().getTypeTraits(), keySearchComparators);
 
             searchPred = new SearchPredicate(searchKey, cmp);
-            accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
+            accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
-            writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
+            writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
             tb = new ArrayTupleBuilder(rtree.getCmp().getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext().getFrameSize());
+            appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
             opCtx = rtree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(),
@@ -113,6 +115,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
         } catch (Exception e) {
             treeIndexOpHelper.deinit();
+            throw new HyracksDataException(e);
         }
     }
 

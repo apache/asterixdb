@@ -58,7 +58,7 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 		tokenFactory = new UTF8WordTokenFactory();
 		tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false,
 				tokenFactory);
-		searcher = new TOccurrenceSearcher(stageletCtx, invIndex, tokenizer);
+		searcher = new TOccurrenceSearcher(taskCtx, invIndex, tokenizer);
 		resultCursor = new SearchResultCursor(
 				searcher.createResultFrameTupleAccessor(),
 				searcher.createResultTupleReference());

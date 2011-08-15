@@ -46,7 +46,7 @@ public class WebServer {
     }
 
     private void addHandlers() {
-        ContextHandler handler = new ContextHandler("/state");
+        ContextHandler handler = new ContextHandler("/rest");
         RoutingHandler rh = new RoutingHandler();
         rh.addHandler("jobs", new JSONOutputRequestHandler(new RESTAPIFunction(ccs)));
         handler.setHandler(rh);

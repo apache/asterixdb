@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -23,12 +23,12 @@ public class TestStorageManagerInterface implements IStorageManagerInterface {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IBufferCache getBufferCache(IHyracksStageletContext ctx) {
+    public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
         return TestStorageManagerComponentHolder.getBufferCache(ctx);
     }
 
     @Override
-    public IFileMapProvider getFileMapProvider(IHyracksStageletContext ctx) {
+    public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         return TestStorageManagerComponentHolder.getFileMapProvider(ctx);
     }
 }

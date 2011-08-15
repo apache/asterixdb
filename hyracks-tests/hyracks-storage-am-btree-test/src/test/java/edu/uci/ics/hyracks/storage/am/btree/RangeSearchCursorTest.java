@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -92,7 +92,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
 	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-	IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 	ByteBuffer frame = ctx.allocateFrame();
 	FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
 

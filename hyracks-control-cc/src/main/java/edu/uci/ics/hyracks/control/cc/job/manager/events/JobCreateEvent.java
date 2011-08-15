@@ -15,36 +15,31 @@
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
 import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
-import edu.uci.ics.hyracks.control.cc.job.IConnectorDescriptorVisitor;
 import edu.uci.ics.hyracks.control.cc.job.IOperatorDescriptorVisitor;
-import edu.uci.ics.hyracks.control.cc.job.JobPlanBuilder;
+import edu.uci.ics.hyracks.control.cc.job.JobActivityGraphBuilder;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 
-public class JobCreateEvent extends SynchronizableRunnable {
+public class JobCreateEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final byte[] jobSpec;
     private final EnumSet<JobFlag> jobFlags;
-    private final UUID jobId;
+    private final JobId jobId;
     private final String appName;
 
-    public JobCreateEvent(ClusterControllerService ccs, UUID jobId, String appName, byte[] jobSpec,
+    public JobCreateEvent(ClusterControllerService ccs, JobId jobId, String appName, byte[] jobSpec,
             EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
         this.ccs = ccs;
@@ -59,53 +54,29 @@ public class JobCreateEvent extends SynchronizableRunnable {
         if (appCtx == null) {
             throw new HyracksException("No application with id " + appName + " found");
         }
-        JobSpecification spec = appCtx.createJobSpecification(jobId, jobSpec);
-        JobRun run = plan(jobId, spec, appCtx, jobFlags);
-        run.setStatus(JobStatus.INITIALIZED);
+        JobSpecification spec = appCtx.createJobSpecification(jobSpec);
+
+        final JobActivityGraphBuilder builder = new JobActivityGraphBuilder();
+        builder.init(appName, spec, jobFlags);
+        PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
+            @Override
+            public void visit(IOperatorDescriptor op) {
+                op.contributeActivities(builder);
+            }
+        });
+        final JobActivityGraph jag = builder.getActivityGraph();
+
+        JobRun run = new JobRun(jobId, jag);
+
+        run.setStatus(JobStatus.INITIALIZED, null);
 
         ccs.getRunMap().put(jobId, run);
+        JobScheduler jrs = new JobScheduler(ccs, run);
+        run.setScheduler(jrs);
         appCtx.notifyJobCreation(jobId, spec);
     }
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
-    }
-
-    private JobRun plan(UUID jobId, JobSpecification jobSpec, final CCApplicationContext appCtx,
-            EnumSet<JobFlag> jobFlags) throws Exception {
-        final JobPlanBuilder builder = new JobPlanBuilder();
-        builder.init(appName, jobId, jobSpec, jobFlags);
-        PlanUtils.visit(jobSpec, new IOperatorDescriptorVisitor() {
-            @Override
-            public void visit(IOperatorDescriptor op) {
-                op.contributeTaskGraph(builder);
-            }
-        });
-        final JobPlan plan = builder.getPlan();
-
-        final Set<ConstraintExpression> contributedConstraints = new HashSet<ConstraintExpression>();
-        final IConstraintExpressionAcceptor acceptor = new IConstraintExpressionAcceptor() {
-            @Override
-            public void addConstraintExpression(ConstraintExpression constraintExpression) {
-                contributedConstraints.add(constraintExpression);
-            }
-        };
-        PlanUtils.visit(jobSpec, new IOperatorDescriptorVisitor() {
-            @Override
-            public void visit(IOperatorDescriptor op) {
-                op.contributeSchedulingConstraints(acceptor, plan, appCtx);
-            }
-        });
-        PlanUtils.visit(jobSpec, new IConnectorDescriptorVisitor() {
-            @Override
-            public void visit(IConnectorDescriptor conn) {
-                conn.contributeSchedulingConstraints(acceptor, plan, appCtx);
-            }
-        });
-        contributedConstraints.addAll(jobSpec.getUserConstraints());
-
-        JobRun run = new JobRun(plan, contributedConstraints);
-
-        return run;
     }
 }

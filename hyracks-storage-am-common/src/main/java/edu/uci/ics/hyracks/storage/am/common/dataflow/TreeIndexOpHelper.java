@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -39,12 +39,12 @@ public abstract class TreeIndexOpHelper {
     protected int partition;
 
     protected ITreeIndexOperatorDescriptorHelper opDesc;
-    protected IHyracksStageletContext ctx;
+    protected IHyracksTaskContext ctx;
 
     protected IndexHelperOpenMode mode;
 
-    public TreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, final IHyracksStageletContext ctx,
-            int partition, IndexHelperOpenMode mode) {
+    public TreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, final IHyracksTaskContext ctx, int partition,
+            IndexHelperOpenMode mode) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.mode = mode;
@@ -154,7 +154,7 @@ public abstract class TreeIndexOpHelper {
         return treeIndex;
     }
 
-    public IHyracksStageletContext getHyracksStageletContext() {
+    public IHyracksTaskContext getHyracksTaskContext() {
         return ctx;
     }
 

@@ -1,7 +1,6 @@
 package edu.uci.ics.hyracks.hadoop.compat.client;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobID;
@@ -9,19 +8,20 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class HyracksRunningJob implements RunningJob {
 
-    UUID jobId;
+    JobId jobId;
     JobSpecification spec;
     HyracksClient hyracksClient;
 
-    public UUID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 
-    public void setJobId(UUID jobId) {
+    public void setJobId(JobId jobId) {
         this.jobId = jobId;
     }
 
@@ -33,7 +33,7 @@ public class HyracksRunningJob implements RunningJob {
         this.spec = spec;
     }
 
-    public HyracksRunningJob(UUID jobId, JobSpecification jobSpec, HyracksClient hyracksClient) {
+    public HyracksRunningJob(JobId jobId, JobSpecification jobSpec, HyracksClient hyracksClient) {
         this.spec = jobSpec;
         this.jobId = jobId;
         this.hyracksClient = hyracksClient;

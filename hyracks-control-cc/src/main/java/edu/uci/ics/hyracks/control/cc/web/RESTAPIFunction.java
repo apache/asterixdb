@@ -14,11 +14,11 @@
  */
 package edu.uci.ics.hyracks.control.cc.web;
 
-import java.util.UUID;
-
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobActivityGraphJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobProfileJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSpecificationJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSummariesJSONEvent;
@@ -47,25 +47,22 @@ public class RESTAPIFunction implements IJSONOutputFunction {
             }
 
             case 2: {
-                UUID jobId = UUID.fromString(arguments[0]);
+                JobId jobId = JobId.parse(arguments[0]);
 
-                if ("spec".equalsIgnoreCase(arguments[1])) {
+                if ("job-specification".equalsIgnoreCase(arguments[1])) {
                     GetJobSpecificationJSONEvent gjse = new GetJobSpecificationJSONEvent(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjse);
-                    result.put("result", gjse.getSpecification());
-                }
-                break;
-            }
-
-            case 3: {
-                UUID jobId = UUID.fromString(arguments[0]);
-                int attempt = Integer.parseInt(arguments[1]);
-
-                if ("profile".equalsIgnoreCase(arguments[2])) {
-                    GetJobProfileJSONEvent gjpe = new GetJobProfileJSONEvent(ccs, jobId, attempt);
+                    result.put("result", gjse.getJSON());
+                } else if ("job-activity-graph".equalsIgnoreCase(arguments[1])) {
+                    GetJobActivityGraphJSONEvent gjage = new GetJobActivityGraphJSONEvent(ccs, jobId);
+                    ccs.getJobQueue().scheduleAndSync(gjage);
+                    result.put("result", gjage.getJSON());
+                } else if ("profile".equalsIgnoreCase(arguments[1])) {
+                    GetJobProfileJSONEvent gjpe = new GetJobProfileJSONEvent(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjpe);
-                    result.put("result", gjpe.getProfile());
+                    result.put("result", gjpe.getJSON());
                 }
+
                 break;
             }
         }

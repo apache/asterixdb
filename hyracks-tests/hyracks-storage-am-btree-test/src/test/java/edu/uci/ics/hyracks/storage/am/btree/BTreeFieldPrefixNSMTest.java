@@ -24,7 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -59,9 +59,9 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 	private static final int NUM_PAGES = 40;
 	private static final int MAX_OPEN_FILES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
-	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+	private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 		
-	private ITupleReference createTuple(IHyracksStageletContext ctx, int f0,
+    private ITupleReference createTuple(IHyracksTaskContext ctx, int f0,
 			int f1, int f2, boolean print) throws HyracksDataException {
 		if (print)
 		    LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);		

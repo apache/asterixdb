@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -52,7 +52,7 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
 public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
-    protected final IHyracksStageletContext ctx;
+    protected final IHyracksTaskContext ctx;
     protected final FixedSizeFrameTupleAppender resultFrameTupleApp;
     protected final FixedSizeFrameTupleAccessor resultFrameTupleAcc;
     protected final FixedSizeTupleReference resultTuple;
@@ -87,7 +87,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected List<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
     protected List<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
 
-    public TOccurrenceSearcher(IHyracksStageletContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer) {
+    public TOccurrenceSearcher(IHyracksTaskContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer) {
         this.ctx = ctx;
         this.invIndex = invIndex;
         this.queryTokenizer = queryTokenizer;

@@ -17,5 +17,7 @@ package edu.uci.ics.hyracks.api.io;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IWorkspaceFileFactory {
-    public FileReference createWorkspaceFile(String prefix) throws HyracksDataException;
+    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException;
+
+    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException;
 }

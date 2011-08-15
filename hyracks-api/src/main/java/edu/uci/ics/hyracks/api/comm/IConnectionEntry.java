@@ -24,8 +24,6 @@ public interface IConnectionEntry {
 
     SelectionKey getSelectionKey();
 
-    void setDataReceiveListener(IDataReceiveListener listener);
-
     void attach(Object attachment);
 
     Object getAttachment();
@@ -38,11 +36,5 @@ public interface IConnectionEntry {
 
     UUID getStageId();
 
-    void setJobId(UUID jobId);
-
-    void setStageId(UUID stageId);
-
     boolean aborted();
-
-    void abort();
 }

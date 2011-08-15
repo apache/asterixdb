@@ -15,7 +15,7 @@
 package edu.uci.ics.hyracks.dataflow.std.aggregators;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -29,7 +29,7 @@ public class MultiAggregatorDescriptorFactory implements IAggregatorDescriptorFa
     }
 
     @Override
-    public IAggregatorDescriptor createAggregator(final IHyracksStageletContext ctx,
+    public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx,
             final RecordDescriptor inRecordDescriptor, final RecordDescriptor outRecordDescriptor, final int[] keyFields)
             throws HyracksDataException {
 

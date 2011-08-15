@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -116,14 +116,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(BUILDRELATION);
-        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(PROBERELATION);
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(new ActivityId(odId, 0), BUILDRELATION);
+        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(new ActivityId(odId, 1), PROBERELATION);
 
-        builder.addTask(phase1);
+        builder.addActivity(phase1);
         builder.addSourceEdge(1, phase1, 0);
 
-        builder.addTask(phase2);
+        builder.addActivity(phase2);
         builder.addSourceEdge(0, phase2, 0);
 
         builder.addBlockingEdge(phase1, phase2);
@@ -135,16 +135,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         private static final long serialVersionUID = 1L;
         private String relationName;
 
-        public BuildAndPartitionActivityNode(String relationName) {
-            super();
+        public BuildAndPartitionActivityNode(ActivityId id, String relationName) {
+            super(id);
             this.relationName = relationName;
-
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -310,7 +308,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
                     RunFileWriter writer = fWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.getJobletContext().createWorkspaceFile(relationName);
+                        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(relationName);
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
                         fWriters[i] = writer;
@@ -320,26 +318,20 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
-        }
     }
 
     private class PartitionAndJoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
         private String relationName;
 
-        public PartitionAndJoinActivityNode(String relationName) {
-            super();
+        public PartitionAndJoinActivityNode(ActivityId id, String relationName) {
+            super(id);
             this.relationName = relationName;
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, int partition, final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -524,7 +516,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
                     RunFileWriter writer = probeWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.createWorkspaceFile(relationName);
+                        FileReference file = ctx.createManagedWorkspaceFile(relationName);
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
                         probeWriters[i] = writer;
@@ -533,11 +525,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
         }
     }
 }

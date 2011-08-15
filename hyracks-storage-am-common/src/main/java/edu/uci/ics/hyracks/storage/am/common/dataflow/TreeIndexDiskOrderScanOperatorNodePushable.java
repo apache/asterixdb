@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -35,7 +35,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
     private final TreeIndexOpHelper treeIndexOpHelper;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksStageletContext ctx, int partition) {
+            IHyracksTaskContext ctx, int partition) {
         treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
                 IndexHelperOpenMode.OPEN);
     }
@@ -57,8 +57,8 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                 treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame, diskOrderScanOpCtx);
 
                 int fieldCount = treeIndexOpHelper.getTreeIndex().getFieldCount();
-                ByteBuffer frame = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext()
+                ByteBuffer frame = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
+                FrameTupleAppender appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext()
                         .getFrameSize());
                 appender.reset(frame, true);
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);

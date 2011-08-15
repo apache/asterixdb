@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.examples.btree.helper;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
@@ -29,7 +29,7 @@ public class TreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIn
     }
 
     @Override
-    public IndexRegistry<ITreeIndex> getRegistry(IHyracksStageletContext ctx) {
+    public IndexRegistry<ITreeIndex> getRegistry(IHyracksTaskContext ctx) {
         return RuntimeContext.get(ctx).getTreeIndexRegistry();
     }
 }

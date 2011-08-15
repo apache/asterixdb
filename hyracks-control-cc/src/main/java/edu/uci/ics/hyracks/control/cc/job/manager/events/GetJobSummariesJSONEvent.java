@@ -19,9 +19,9 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetJobSummariesJSONEvent extends SynchronizableRunnable {
+public class GetJobSummariesJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private JSONArray summaries;
 
@@ -35,8 +35,7 @@ public class GetJobSummariesJSONEvent extends SynchronizableRunnable {
         for (JobRun run : ccs.getRunMap().values()) {
             JSONObject jo = new JSONObject();
             jo.put("type", "job-summary");
-            jo.put("id", run.getJobPlan().getJobId().toString());
-            jo.put("attempts", run.getAttempts().size());
+            jo.put("id", run.getJobId().toString());
             jo.put("status", run.getStatus().toString());
             summaries.put(jo);
         }

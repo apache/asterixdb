@@ -15,24 +15,23 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public final class ConnectorDescriptorId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private UUID id;
+    private int id;
 
-    public ConnectorDescriptorId(UUID id) {
+    public ConnectorDescriptorId(int id) {
         this.id = id;
     }
 
-    public UUID getId() {
+    public int getId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return id;
     }
 
     @Override
@@ -44,7 +43,7 @@ public final class ConnectorDescriptorId implements Serializable {
             return false;
         }
         ConnectorDescriptorId other = (ConnectorDescriptorId) obj;
-        return id.equals(other.id);
+        return id == other.id;
     }
 
     @Override

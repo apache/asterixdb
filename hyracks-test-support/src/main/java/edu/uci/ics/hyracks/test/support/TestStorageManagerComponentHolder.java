@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
@@ -45,7 +45,7 @@ public class TestStorageManagerComponentHolder {
         treeIndexRegistry = null;
     }
 
-    public synchronized static IBufferCache getBufferCache(IHyracksStageletContext ctx) {
+    public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
         if (bufferCache == null) {
             ICacheMemoryAllocator allocator = new HeapBufferAllocator();
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -56,16 +56,16 @@ public class TestStorageManagerComponentHolder {
         return bufferCache;
     }
 
-    public synchronized static IFileMapProvider getFileMapProvider(IHyracksStageletContext ctx) {
+    public synchronized static IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         if (fileMapProvider == null) {
             fileMapProvider = new TransientFileMapManager();
         }
         return fileMapProvider;
     }
 
-    public synchronized static IndexRegistry<ITreeIndex> getTreeIndexRegistry(IHyracksStageletContext ctx) {
+    public synchronized static IndexRegistry<ITreeIndex> getTreeIndexRegistry(IHyracksTaskContext ctx) {
         if (treeIndexRegistry == null) {
-        	treeIndexRegistry = new IndexRegistry<ITreeIndex>();
+            treeIndexRegistry = new IndexRegistry<ITreeIndex>();
         }
         return treeIndexRegistry;
     }

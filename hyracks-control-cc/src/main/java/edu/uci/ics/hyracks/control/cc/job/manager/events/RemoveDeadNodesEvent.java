@@ -17,14 +17,16 @@ package edu.uci.ics.hyracks.control.cc.job.manager.events;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 
-public class RemoveDeadNodesEvent implements Runnable {
+public class RemoveDeadNodesEvent extends AbstractEvent {
     private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesEvent.class.getName());
 
     private final ClusterControllerService ccs;
@@ -44,15 +46,14 @@ public class RemoveDeadNodesEvent implements Runnable {
                 LOGGER.info(e.getKey() + " considered dead");
             }
         }
+        Set<JobId> affectedJobIds = new HashSet<JobId>();
         Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
-            for (final UUID jid : state.getActiveJobIds()) {
-                JobRun run = ccs.getRunMap().get(jid);
-                int lastAttempt = run.getAttempts().size() - 1;
-                LOGGER.info("Aborting: " + jid);
-                ccs.getJobQueue().schedule(new JobAbortEvent(ccs, jid, lastAttempt));
-            }
+
+            // Deal with dead tasks.
+            affectedJobIds.addAll(state.getActiveJobIds());
+
             String ipAddress = state.getNCConfig().dataIPAddress;
             Set<String> ipNodes = ipAddressNodeNameMap.get(ipAddress);
             if (ipNodes != null) {
@@ -61,5 +62,19 @@ public class RemoveDeadNodesEvent implements Runnable {
                 }
             }
         }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Number of affected jobs: " + affectedJobIds.size());
+        }
+        for (JobId jobId : affectedJobIds) {
+            JobRun run = ccs.getRunMap().get(jobId);
+            if (run != null) {
+                run.getScheduler().notifyNodeFailures(deadNodes);
+            }
+        }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.FINE;
     }
 }

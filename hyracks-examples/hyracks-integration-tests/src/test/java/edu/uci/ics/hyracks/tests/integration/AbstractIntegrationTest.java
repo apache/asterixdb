@@ -15,18 +15,18 @@
 package edu.uci.ics.hyracks.tests.integration;
 
 import java.util.EnumSet;
-import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.control.CCConfig;
-import edu.uci.ics.hyracks.api.control.NCConfig;
 import edu.uci.ics.hyracks.api.job.JobFlag;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {
@@ -42,7 +42,7 @@ public abstract class AbstractIntegrationTest {
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
-        ccConfig.profileDumpPeriod = 1000;
+        ccConfig.profileDumpPeriod = 10000;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
@@ -74,8 +74,8 @@ public abstract class AbstractIntegrationTest {
     }
 
     protected void runTest(JobSpecification spec) throws Exception {
-        UUID jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
-        System.err.println(spec.toJSON());
+        JobId jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+        System.err.println(spec.toJSON().toString(2));
         hcc.start(jobId);
         System.err.print(jobId);
         cc.waitForCompletion(jobId);

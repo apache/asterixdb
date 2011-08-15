@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -38,7 +38,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private IndexOpContext opCtx;
 
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksStageletContext ctx, int partition, int[] fieldPermutation,
+            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
                 IndexHelperOpenMode.OPEN);
@@ -52,8 +52,9 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
                 .getOperatorDescriptor();
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), inputRecDesc);
-        writeBuffer = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
+        writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
+        writer.open();
         try {
             treeIndexOpHelper.init();
             treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
@@ -96,6 +97,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
             } catch (Exception e) {
                 e.printStackTrace();
+                throw new HyracksDataException(e);
             }
         }
 

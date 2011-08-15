@@ -14,16 +14,14 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
+import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public abstract class AbstractConnectorDescriptor implements IConnectorDescriptor {
@@ -31,7 +29,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     protected final ConnectorDescriptorId id;
 
     public AbstractConnectorDescriptor(JobSpecification spec) {
-        this.id = new ConnectorDescriptorId(UUID.randomUUID());
+        this.id = spec.createConnectorDescriptor();
         spec.getConnectorMap().put(id, this);
     }
 
@@ -44,14 +42,14 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
         JSONObject jconn = new JSONObject();
 
         jconn.put("type", "connector");
-        jconn.put("id", getConnectorId().getId().toString());
+        jconn.put("id", getConnectorId().getId());
         jconn.put("java-class", getClass().getName());
 
         return jconn;
     }
 
     @Override
-    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
             ICCApplicationContext appCtx) {
         // do nothing
     }

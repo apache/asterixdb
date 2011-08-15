@@ -27,7 +27,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableRunnable;
+import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
 public class AdminConsoleHandler extends AbstractHandler {
     private ClusterControllerService ccs;
@@ -51,7 +51,7 @@ public class AdminConsoleHandler extends AbstractHandler {
         writer.println("<h2>Node Controllers</h2>");
         writer.println("<table><tr><td>Node Id</td><td>Host</td></tr>");
         try {
-            ccs.getJobQueue().scheduleAndSync(new SynchronizableRunnable() {
+            ccs.getJobQueue().scheduleAndSync(new SynchronizableEvent() {
                 @Override
                 protected void doRun() throws Exception {
                     for (Map.Entry<String, NodeControllerState> e : ccs.getNodeMap().entrySet()) {

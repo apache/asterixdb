@@ -17,9 +17,9 @@ package edu.uci.ics.hyracks.dataflow.std.union;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -39,9 +39,9 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        UnionActivityNode uba = new UnionActivityNode();
-        builder.addTask(uba);
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        UnionActivityNode uba = new UnionActivityNode(new ActivityId(getOperatorId(), 0));
+        builder.addActivity(uba);
         for (int i = 0; i < inputArity; ++i) {
             builder.addSourceEdge(i, uba, i);
         }
@@ -51,22 +51,17 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
     private class UnionActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public UnionActivityNode() {
+        public UnionActivityNode(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
                 throws HyracksDataException {
             RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             return new UnionOperator(ctx, inRecordDesc);
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return UnionAllOperatorDescriptor.this;
-        }
-
     }
 
     private class UnionOperator extends AbstractUnaryOutputOperatorNodePushable {
@@ -74,7 +69,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
 
         private int nClosed;
 
-        public UnionOperator(IHyracksStageletContext ctx, RecordDescriptor inRecordDesc) {
+        public UnionOperator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc) {
             nOpened = 0;
             nClosed = 0;
         }

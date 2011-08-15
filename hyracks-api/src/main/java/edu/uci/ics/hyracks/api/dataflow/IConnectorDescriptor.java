@@ -15,19 +15,20 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 import java.io.Serializable;
+import java.util.BitSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
+import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 
 /**
  * Connector that connects operators in a Job.
@@ -60,8 +61,8 @@ public interface IConnectorDescriptor extends Serializable {
      * @return data writer.
      * @throws Exception
      */
-    public IFrameWriter createSendSideWriter(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
-            IEndpointDataWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
+    public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
+            IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException;
 
     /**
@@ -71,20 +72,17 @@ public interface IConnectorDescriptor extends Serializable {
      *            Context
      * @param recordDesc
      *            Job plan
-     * @param demux
-     *            Connection Demultiplexer
-     * @param index
+     * @param receiverIndex
      *            ordinal index of the data consumer partition
      * @param nProducerPartitions
      *            Number of partitions of the producing operator.
      * @param nConsumerPartitions
      *            Number of partitions of the consuming operator.
-     * @return data reader
+     * @return partition collector
      * @throws HyracksDataException
      */
-    public IFrameReader createReceiveSideReader(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
-            IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
-            throws HyracksDataException;
+    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
+            int receiverIndex, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException;
 
     /**
      * Contribute any scheduling constraints imposed by this connector
@@ -94,8 +92,14 @@ public interface IConnectorDescriptor extends Serializable {
      * @param plan
      *            - Job Plan
      */
-    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
             ICCApplicationContext appCtx);
+
+    /**
+     * Indicate which consumer partitions may receive data from the given producer partition.
+     */
+    public void indicateTargetPartitions(int nProducerPartitions, int nConsumerPartitions, int producerIndex,
+            BitSet targetBitmap);
 
     /**
      * Translate this connector descriptor to JSON.

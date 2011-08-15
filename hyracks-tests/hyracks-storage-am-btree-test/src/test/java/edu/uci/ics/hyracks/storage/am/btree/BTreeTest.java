@@ -23,7 +23,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
@@ -73,7 +73,7 @@ public class BTreeTest extends AbstractBTreeTest {
     private static final int NUM_PAGES = 10;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     // FIXED-LENGTH KEY TEST
     // create a B-tree with one fixed-length "key" field and one fixed-length
@@ -175,8 +175,8 @@ public class BTreeTest extends AbstractBTreeTest {
 
         int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
         LOGGER.info("MAXPAGE: " + maxPage);
-        LOGGER.info(btree.printStats());        
-        
+        LOGGER.info(btree.printStats());
+
         long end = System.currentTimeMillis();
         long duration = end - start;
         LOGGER.info("DURATION: " + duration);

@@ -14,16 +14,16 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
 public class TestTreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIndex> {
     private static final long serialVersionUID = 1L;
-    
-	@Override
-	public IndexRegistry<ITreeIndex> getRegistry(IHyracksStageletContext ctx) {
-		return TestStorageManagerComponentHolder.getTreeIndexRegistry(ctx);
-	}
+
+    @Override
+    public IndexRegistry<ITreeIndex> getRegistry(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getTreeIndexRegistry(ctx);
+    }
 }
