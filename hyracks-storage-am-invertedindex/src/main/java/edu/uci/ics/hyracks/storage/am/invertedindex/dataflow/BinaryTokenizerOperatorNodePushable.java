@@ -27,7 +27,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
 public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
@@ -85,7 +86,8 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
                     builder.reset();
                     try {
-                        tokenizer.writeToken(builderDos);
+                        IToken token = tokenizer.getToken();
+                        token.serializeToken(builderDos);
                         builder.addFieldEndOffset();
                     } catch (IOException e) {
                         throw new HyracksDataException(e.getMessage());

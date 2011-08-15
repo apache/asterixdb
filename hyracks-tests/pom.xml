@@ -2,17 +2,19 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-tests</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.1.8-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.1.8-SNAPSHOT</version>
   </parent>
 
   <modules>
+    <module>hyracks-storage-common-test</module>
     <module>hyracks-storage-am-btree-test</module>
     <module>hyracks-storage-am-invertedindex-test</module>
+    <module>hyracks-storage-am-rtree-test</module>
   </modules>
 </project>

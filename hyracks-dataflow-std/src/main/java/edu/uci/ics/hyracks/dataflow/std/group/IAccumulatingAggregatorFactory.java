@@ -23,7 +23,4 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface IAccumulatingAggregatorFactory extends Serializable {
     IAccumulatingAggregator createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException;
-
-    ISpillableAccumulatingAggregator createSpillableAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
 }

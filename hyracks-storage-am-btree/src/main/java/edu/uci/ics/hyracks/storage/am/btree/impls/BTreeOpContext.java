@@ -15,41 +15,46 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 
-public final class BTreeOpContext {
-    public final BTreeOp op;
+public final class BTreeOpContext implements IndexOpContext {
+    public final IndexOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
-    public final IBTreeMetaDataFrame metaFrame;
-    public IBTreeCursor cursor;
+    public final ITreeIndexMetaDataFrame metaFrame;
+    public ITreeIndexCursor cursor;
+    public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
-    public final SplitKey splitKey;
+    public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
     public final IntArrayList pageLsns; // used like a stack
     public final IntArrayList smPages;
     public final IntArrayList freePages;
 
-    public BTreeOpContext(BTreeOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-            IBTreeMetaDataFrame metaFrame, int treeHeightHint) {
+    public BTreeOpContext(IndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
         this.op = op;
         this.leafFrame = leafFrame;
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
 
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
-        if (op != BTreeOp.BTO_SEARCH) {
+        if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
             smPages = new IntArrayList(treeHeightHint, treeHeightHint);
             freePages = new IntArrayList(treeHeightHint, treeHeightHint);
             pred = new RangePredicate(true, null, null, true, true, null, null);
-            splitKey = new SplitKey(leafFrame.getTupleWriter().createTupleReference());
+            splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
         } else {
             smPages = null;
             freePages = null;
             splitKey = null;
+            cursorInitialState = new BTreeCursorInitialState(null);
         }
     }
 

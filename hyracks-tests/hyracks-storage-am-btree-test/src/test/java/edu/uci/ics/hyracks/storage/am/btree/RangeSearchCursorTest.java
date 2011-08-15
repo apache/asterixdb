@@ -45,27 +45,27 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeCursor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.MetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.NSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOp;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -73,18 +73,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class RangeSearchCursorTest extends AbstractBTreeTest {
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
-	private static final int HYRACKS_FRAME_SIZE = 128;
-
-	public class BufferAllocator implements ICacheMemoryAllocator {
-		@Override
-		public ByteBuffer[] allocate(int pageSize, int numPages) {
-			ByteBuffer[] buffers = new ByteBuffer[numPages];
-			for (int i = 0; i < numPages; ++i) {
-				buffers[i] = ByteBuffer.allocate(pageSize);
-			}
-			return buffers;
-		}
-	}
+	private static final int MAX_OPEN_FILES = 10;
+	private static final int HYRACKS_FRAME_SIZE = 128;	
 
 	// declare fields
 	int fieldCount = 2;
@@ -92,15 +82,15 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 			typeTraits);
-	IBTreeLeafFrameFactory leafFrameFactory = new NSMLeafFrameFactory(
+	ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 			tupleWriterFactory);
-	IBTreeInteriorFrameFactory interiorFrameFactory = new NSMInteriorFrameFactory(
+	ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
 			tupleWriterFactory);
-	IBTreeMetaDataFrameFactory metaFrameFactory = new MetaDataFrameFactory();
+	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-	IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
-	IBTreeInteriorFrame interiorFrame = interiorFrameFactory.getFrame();
-	IBTreeMetaDataFrame metaFrame = metaFrameFactory.getFrame();
+	IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+	IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
     IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 	ByteBuffer frame = ctx.allocateFrame();
@@ -126,9 +116,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void uniqueIndexTest() throws Exception {
 
-		System.out.println("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -146,7 +136,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
@@ -154,7 +146,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -199,8 +191,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
 
-		// System.out.println("STARTING SEARCH TESTS");
-
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
 				maxSearchKey, true, true, true, false);
@@ -229,9 +219,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void nonUniqueIndexTest() throws Exception {
 
-		System.out.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -251,7 +241,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
@@ -259,7 +251,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -300,8 +292,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
-
-		// System.out.println("STARTING SEARCH TESTS");
 
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
@@ -331,14 +321,13 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 	@Test
 	public void nonUniqueFieldPrefixIndexTest() throws Exception {
 
-		System.out
-				.println("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
 
-		IBTreeLeafFrameFactory leafFrameFactory = new FieldPrefixNSMLeafFrameFactory(
+		ITreeIndexFrameFactory leafFrameFactory = new BTreeFieldPrefixNSMLeafFrameFactory(
 				tupleWriterFactory);
-		IBTreeLeafFrame leafFrame = leafFrameFactory.getFrame();
+		IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
 
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -358,7 +347,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		BTree btree = new BTree(bufferCache, interiorFrameFactory,
+		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);		
+		
+		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
 				leafFrameFactory, cmp);
 		btree.create(fileId, leafFrame, metaFrame);
 		btree.open(fileId);
@@ -366,7 +357,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
 		DataOutput dos = tb.getDataOutput();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(BTreeOp.BTO_INSERT,
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
 				leafFrame, interiorFrame, metaFrame);
 
 		// generate keys
@@ -407,8 +398,6 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		int minSearchKey = -100;
 		int maxSearchKey = 100;
-
-		// System.out.println("STARTING SEARCH TESTS");
 
 		// forward searches
 		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
@@ -534,21 +523,19 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		for (int i = minKey; i < maxKey; i++) {
 			for (int j = minKey; j < maxKey; j++) {
 
-				// if(i != -100 || j != 1) continue;
-
 				results.clear();
 				expectedResults.clear();
 
 				int lowKey = i;
 				int highKey = j;
 
-				IBTreeCursor rangeCursor = new RangeSearchCursor(leafFrame);
+				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator(), btree.getMultiComparator()
 								.getTypeTraits());
 				BTreeOpContext searchOpCtx = btree.createOpContext(
-						BTreeOp.BTO_SEARCH, leafFrame, interiorFrame, null);
+						IndexOp.SEARCH, leafFrame, interiorFrame, null);
 				btree.search(rangeCursor, rangePred, searchOpCtx);
 
 				try {
@@ -587,29 +574,31 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 						else
 							u = ')';
 
-						System.out.println("RANGE: " + l + " " + lowKey + " , "
+						LOGGER.info("RANGE: " + l + " " + lowKey + " , "
 								+ highKey + " " + u);
-						for (Integer r : expectedResults)
-							System.out.print(r + " ");
-						System.out.println();
+						StringBuilder strBuilder = new StringBuilder();
+						for (Integer r : expectedResults) {
+							strBuilder.append(r + " ");
+						}
+						LOGGER.info(strBuilder.toString());
 					}
 				}
 
 				if (results.size() == expectedResults.size()) {
 					for (int k = 0; k < results.size(); k++) {
 						if (!results.get(k).equals(expectedResults.get(k))) {
-							System.out.println("DIFFERENT RESULTS AT: i=" + i
+						    LOGGER.info("DIFFERENT RESULTS AT: i=" + i
 									+ " j=" + j + " k=" + k);
-							System.out.println(results.get(k) + " "
+						    LOGGER.info(results.get(k) + " "
 									+ expectedResults.get(k));
 							return false;
 						}
 					}
 				} else {
-					System.out.println("UNEQUAL NUMBER OF RESULTS AT: i=" + i
+				    LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i
 							+ " j=" + j);
-					System.out.println("RESULTS: " + results.size());
-					System.out.println("EXPECTED RESULTS: "
+				    LOGGER.info("RESULTS: " + results.size());
+				    LOGGER.info("EXPECTED RESULTS: "
 							+ expectedResults.size());
 					return false;
 				}

@@ -36,13 +36,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.hash.IntegerBinaryHashFunctionFa
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.normalizers.IntegerNormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.FloatParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregators.CountAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.CountAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.IFieldValueResultingAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregators.IntSumAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregators.MultiAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.MultiAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -55,8 +60,9 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.FrameFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.ExternalHashGroupOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableGroupingTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 
@@ -112,7 +118,7 @@ public class ExternalGroupClient {
         for (int i = 0; i < 3; i++) {
             long start = System.currentTimeMillis();
             job = createJob(parseFileSplits(options.inFileSplits), parseFileSplits(options.outFileSplits, i % 2),
-                    options.htSize, options.sbSize, options.framesLimit, options.sortOutput, i % 2, options.outPlain);
+                    options.htSize, options.sbSize, options.framesLimit, options.sortOutput, i % 3, options.outPlain);
 
             System.out.print(i + "\t" + (System.currentTimeMillis() - start));
             start = System.currentTimeMillis();
@@ -195,14 +201,22 @@ public class ExternalGroupClient {
 
         switch (alg) {
             case 0: // External hash group
-                grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, framesLimit, false,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
+                grouper = new ExternalGroupOperatorDescriptor(
+                        spec,
+                        keys,
+                        framesLimit,
+                        new IBinaryComparatorFactory[] {
                         // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
-                                new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
-                        htSize);
+                        IntegerBinaryComparatorFactory.INSTANCE },
+                        new IntegerNormalizedKeyComputerFactory(),
+                        new MultiAggregatorDescriptorFactory(
+                                new IAggregatorDescriptorFactory[] { new CountAggregatorDescriptorFactory() }),
+                        new MultiAggregatorDescriptorFactory(
+                                new IAggregatorDescriptorFactory[] { new IntSumAggregatorDescriptorFactory(keys.length) }),
+                        outDesc, new HashSpillableGroupingTableFactory(new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }), htSize), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 
@@ -258,14 +272,22 @@ public class ExternalGroupClient {
                 spec.connect(scanConn, fileScanner, 0, grouper, 0);
                 break;
             default:
-                grouper = new ExternalHashGroupOperatorDescriptor(spec, keys, framesLimit, false,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
+                grouper = new ExternalGroupOperatorDescriptor(
+                        spec,
+                        keys,
+                        framesLimit,
+                        new IBinaryComparatorFactory[] {
                         // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
-                                new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
-                        htSize);
+                        IntegerBinaryComparatorFactory.INSTANCE },
+                        new IntegerNormalizedKeyComputerFactory(),
+                        new MultiAggregatorDescriptorFactory(
+                                new IAggregatorDescriptorFactory[] { new CountAggregatorDescriptorFactory() }),
+                        new MultiAggregatorDescriptorFactory(
+                                new IAggregatorDescriptorFactory[] { new IntSumAggregatorDescriptorFactory(keys.length) }),
+                        outDesc, new HashSpillableGroupingTableFactory(new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] {
+                                // IntegerBinaryHashFunctionFactory.INSTANCE,
+                                IntegerBinaryHashFunctionFactory.INSTANCE }), htSize), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 

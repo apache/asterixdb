@@ -39,15 +39,14 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeTupleWriter;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.FieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.btree.tuples.TypeAwareTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -58,24 +57,14 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
 	private static final int PAGE_SIZE = 32768; // 32K
 	private static final int NUM_PAGES = 40;
+	private static final int MAX_OPEN_FILES = 10;
 	private static final int HYRACKS_FRAME_SIZE = 128;
 	private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-	
-	public class BufferAllocator implements ICacheMemoryAllocator {
-		@Override
-		public ByteBuffer[] allocate(int pageSize, int numPages) {
-			ByteBuffer[] buffers = new ByteBuffer[numPages];
-			for (int i = 0; i < numPages; ++i) {
-				buffers[i] = ByteBuffer.allocate(pageSize);
-			}
-			return buffers;
-		}
-	}
-
+		
     private ITupleReference createTuple(IHyracksTaskContext ctx, int f0,
 			int f1, int f2, boolean print) throws HyracksDataException {
 		if (print)
-			System.out.println("CREATING: " + f0 + " " + f1 + " " + f2);
+		    LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);		
 
 		ByteBuffer buf = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -112,7 +101,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 	@Test
 	public void test01() throws Exception {
 		
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES);
+		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
 		IBufferCache bufferCache = TestStorageManagerComponentHolder
 				.getBufferCache(ctx);
 		IFileMapProvider fmp = TestStorageManagerComponentHolder
@@ -154,8 +143,8 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 		try {
 
 			IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
-			IBTreeTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-			FieldPrefixNSMLeafFrame frame = new FieldPrefixNSMLeafFrame(
+			ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
+			BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(
 					tupleWriter);
 			frame.setPage(page);
 			frame.initBuffer((byte) 0);
@@ -176,7 +165,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 			for (int i = 0; i < numRecords; i++) {
 
 				if ((i + 1) % 100 == 0)
-					print("INSERTING " + (i + 1) + " / " + numRecords + "\n");
+					LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
 
 				int a = rnd.nextInt() % smallMax;
 				int b = rnd.nextInt() % smallMax;
@@ -184,7 +173,8 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
 				ITupleReference tuple = createTuple(ctx, a, b, c, false);
 				try {
-					frame.insert(tuple, cmp);
+					int targetTupleIndex = frame.findTupleIndex(tuple, cmp);
+					frame.insert(tuple, cmp, targetTupleIndex);
 				} catch (BTreeException e) {
 					e.printStackTrace();
 				} catch (Exception e) {
@@ -215,7 +205,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 			for (int i = 0; i < numRecords; i++) {
 
 				if ((i + 1) % 100 == 0)
-					print("DELETING " + (i + 1) + " / " + numRecords + "\n");
+					LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
 
 				ITupleReference tuple = createTuple(ctx,
 						savedFields[i][0], savedFields[i][1],

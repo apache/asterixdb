@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
 
 public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -44,7 +45,7 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
         @Override
         public void writeData(Object[] data) throws HyracksDataException {
             for (int i = 0; i < data.length; ++i) {
-                System.err.print(String.valueOf(data[i]));
+                System.err.print(StringSerializationUtils.toString(data[i]));
                 System.err.print(", ");
             }
             System.err.println();

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.1.8-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <build>
@@ -71,8 +71,10 @@
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>
     <module>hyracks-storage-common</module>
+    <module>hyracks-storage-am-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
+    <module>hyracks-storage-am-rtree</module>
     <module>hyracks-test-support</module>
     <module>hyracks-tests</module>
     <module>hyracks-server</module>

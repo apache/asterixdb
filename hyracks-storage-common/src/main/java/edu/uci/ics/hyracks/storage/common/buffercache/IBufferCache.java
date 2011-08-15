@@ -26,6 +26,8 @@ public interface IBufferCache {
 
     public void deleteFile(int fileId) throws HyracksDataException;
 
+    public ICachedPage tryPin(long dpid) throws HyracksDataException;
+
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
     public void unpin(ICachedPage page) throws HyracksDataException;
