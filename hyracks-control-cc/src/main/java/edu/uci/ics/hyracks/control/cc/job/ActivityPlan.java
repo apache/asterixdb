@@ -14,25 +14,26 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.util.Map;
+import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+public class ActivityPlan {
+    private final ActivityPartitionDetails apd;
 
-public class ActivityClusterPlan {
-    private final Map<ActivityId, ActivityPlan> activityPlanMap;
+    private Task[] tasks;
 
-    private final TaskCluster[] taskClusters;
-
-    public ActivityClusterPlan(TaskCluster[] taskClusters, Map<ActivityId, ActivityPlan> activityPlanMap) {
-        this.activityPlanMap = activityPlanMap;
-        this.taskClusters = taskClusters;
+    public ActivityPlan(ActivityPartitionDetails apd) {
+        this.apd = apd;
     }
 
-    public Map<ActivityId, ActivityPlan> getActivityPlanMap() {
-        return activityPlanMap;
+    public ActivityPartitionDetails getActivityPartitionDetails() {
+        return apd;
     }
 
-    public TaskCluster[] getTaskClusters() {
-        return taskClusters;
+    public Task[] getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Task[] tasks) {
+        this.tasks = tasks;
     }
 }

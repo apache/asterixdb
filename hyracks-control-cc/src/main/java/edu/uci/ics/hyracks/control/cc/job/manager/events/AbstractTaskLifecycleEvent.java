@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.job.ActivityPlan;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
@@ -51,8 +52,8 @@ public abstract class AbstractTaskLifecycleEvent extends AbstractEvent {
             Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterMap();
             ActivityCluster ac = activityClusterMap.get(tid.getActivityId());
             if (ac != null) {
-                Map<ActivityId, Task[]> taskStateMap = ac.getPlan().getTaskMap();
-                Task[] taskStates = taskStateMap.get(tid.getActivityId());
+                Map<ActivityId, ActivityPlan> taskStateMap = ac.getPlan().getActivityPlanMap();
+                Task[] taskStates = taskStateMap.get(tid.getActivityId()).getTasks();
                 if (taskStates != null && taskStates.length > tid.getPartition()) {
                     Task ts = taskStates[tid.getPartition()];
                     TaskCluster tc = ts.getTaskCluster();

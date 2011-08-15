@@ -392,7 +392,7 @@ public class JobScheduler {
                 tads = new ArrayList<TaskAttemptDescriptor>();
                 taskAttemptMap.put(nodeId, tads);
             }
-            ActivityPartitionDetails apd = ts.getActivityPartitionDetails();
+            ActivityPartitionDetails apd = ts.getActivityPlan().getActivityPartitionDetails();
             tads.add(new TaskAttemptDescriptor(taskAttempt.getTaskAttemptId(), apd.getPartitionCount(), apd
                     .getInputPartitionCounts(), apd.getOutputPartitionCounts()));
         }
@@ -405,7 +405,7 @@ public class JobScheduler {
     private static String findLocationOfBlocker(JobRun jobRun, JobActivityGraph jag, TaskId tid) {
         ActivityId blockerAID = tid.getActivityId();
         ActivityCluster blockerAC = jobRun.getActivityClusterMap().get(blockerAID);
-        Task[] blockerTasks = blockerAC.getPlan().getTaskMap().get(blockerAID);
+        Task[] blockerTasks = blockerAC.getPlan().getActivityPlanMap().get(blockerAID).getTasks();
         List<TaskClusterAttempt> tcAttempts = blockerTasks[tid.getPartition()].getTaskCluster().getAttempts();
         if (tcAttempts == null || tcAttempts.isEmpty()) {
             return null;

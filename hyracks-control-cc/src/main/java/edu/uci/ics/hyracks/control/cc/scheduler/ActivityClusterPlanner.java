@@ -41,9 +41,11 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.ActivityClusterPlan;
+import edu.uci.ics.hyracks.control.cc.job.ActivityPlan;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
+import edu.uci.ics.hyracks.control.cc.job.TaskClusterId;
 
 public class ActivityClusterPlanner {
     private static final Logger LOGGER = Logger.getLogger(ActivityClusterPlanner.class.getName());
@@ -61,7 +63,7 @@ public class ActivityClusterPlanner {
         JobRun jobRun = scheduler.getJobRun();
         Map<ActivityId, ActivityPartitionDetails> pcMap = computePartitionCounts(ac);
 
-        Map<ActivityId, Task[]> taskMap = new HashMap<ActivityId, Task[]>();
+        Map<ActivityId, ActivityPlan> activityPlanMap = new HashMap<ActivityId, ActivityPlan>();
         Set<ActivityId> activities = ac.getActivities();
 
         Map<TaskId, Set<TaskId>> taskClusterMap = new HashMap<TaskId, Set<TaskId>>();
@@ -72,15 +74,16 @@ public class ActivityClusterPlanner {
             getDependencyActivityIds(depAnIds, anId);
             ActivityPartitionDetails apd = pcMap.get(anId);
             Task[] tasks = new Task[apd.getPartitionCount()];
+            ActivityPlan activityPlan = new ActivityPlan(apd);
             for (int i = 0; i < tasks.length; ++i) {
                 TaskId tid = new TaskId(anId, i);
-                tasks[i] = new Task(tid, apd);
+                tasks[i] = new Task(tid, activityPlan);
                 for (ActivityId danId : depAnIds) {
                     ActivityCluster dAC = jobRun.getActivityClusterMap().get(danId);
                     ActivityClusterPlan dACP = dAC.getPlan();
                     assert dACP != null : "IllegalStateEncountered: Dependent AC is being planned without a plan for dependency AC: Encountered no plan for ActivityID "
                             + danId;
-                    Task[] dATasks = dACP.getTaskMap().get(danId);
+                    Task[] dATasks = dACP.getActivityPlanMap().get(danId).getTasks();
                     assert dATasks != null : "IllegalStateEncountered: Dependent AC is being planned without a plan for dependency AC: Encountered no plan for ActivityID "
                             + danId;
                     assert dATasks.length == tasks.length : "Dependency activity partitioned differently from dependent: "
@@ -94,24 +97,25 @@ public class ActivityClusterPlanner {
                 cluster.add(tid);
                 taskClusterMap.put(tid, cluster);
             }
-            taskMap.put(anId, tasks);
+            activityPlan.setTasks(tasks);
+            activityPlanMap.put(anId, activityPlan);
         }
 
-        Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = assignConnectorPolicy(ac, taskMap, pcMap);
+        Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = assignConnectorPolicy(ac, activityPlanMap);
         scheduler.getJobRun().getConnectorPolicyMap().putAll(connectorPolicies);
 
         Map<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>> taskConnectivity = new HashMap<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>>();
         JobActivityGraph jag = jobRun.getJobActivityGraph();
         BitSet targetBitmap = new BitSet();
         for (ActivityId ac1 : activities) {
-            Task[] ac1TaskStates = taskMap.get(ac1);
+            Task[] ac1TaskStates = activityPlanMap.get(ac1).getTasks();
             int nProducers = ac1TaskStates.length;
             List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
                     ActivityId ac2 = jag.getConsumerActivity(cdId);
-                    Task[] ac2TaskStates = taskMap.get(ac2);
+                    Task[] ac2TaskStates = activityPlanMap.get(ac2).getTasks();
                     int nConsumers = ac2TaskStates.length;
                     for (int i = 0; i < nProducers; ++i) {
                         c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
@@ -164,15 +168,17 @@ public class ActivityClusterPlanner {
 
         Set<Set<TaskId>> clusters = new HashSet<Set<TaskId>>(taskClusterMap.values());
         Set<TaskCluster> tcSet = new HashSet<TaskCluster>();
+        int counter = 0;
         for (Set<TaskId> cluster : clusters) {
             Set<Task> taskStates = new HashSet<Task>();
             for (TaskId tid : cluster) {
-                taskStates.add(taskMap.get(tid.getActivityId())[tid.getPartition()]);
+                taskStates.add(activityPlanMap.get(tid.getActivityId()).getTasks()[tid.getPartition()]);
             }
-            TaskCluster tc = new TaskCluster(ac, taskStates.toArray(new Task[taskStates.size()]));
+            TaskCluster tc = new TaskCluster(new TaskClusterId(ac.getActivityClusterId(), counter++), ac,
+                    taskStates.toArray(new Task[taskStates.size()]));
             tcSet.add(tc);
             for (TaskId tid : cluster) {
-                taskMap.get(tid.getActivityId())[tid.getPartition()].setTaskCluster(tc);
+                activityPlanMap.get(tid.getActivityId()).getTasks()[tid.getPartition()].setTaskCluster(tc);
             }
         }
         TaskCluster[] taskClusters = tcSet.toArray(new TaskCluster[tcSet.size()]);
@@ -184,7 +190,7 @@ public class ActivityClusterPlanner {
                 List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(tid);
                 if (cInfoList != null) {
                     for (Pair<TaskId, ConnectorDescriptorId> p : cInfoList) {
-                        Task targetTS = taskMap.get(p.first.getActivityId())[p.first.getPartition()];
+                        Task targetTS = activityPlanMap.get(p.first.getActivityId()).getTasks()[p.first.getPartition()];
                         TaskCluster targetTC = targetTS.getTaskCluster();
                         if (targetTC != tc) {
                             ConnectorDescriptorId cdId = p.second;
@@ -213,13 +219,13 @@ public class ActivityClusterPlanner {
             }
         }
 
-        ac.setPlan(new ActivityClusterPlan(taskClusters, taskMap));
+        ac.setPlan(new ActivityClusterPlan(taskClusters, activityPlanMap));
     }
 
     private TaskCluster getTaskCluster(TaskId tid) {
         ActivityCluster ac = scheduler.getJobRun().getActivityClusterMap().get(tid.getActivityId());
         ActivityClusterPlan acp = ac.getPlan();
-        Task[] tasks = acp.getTaskMap().get(tid.getActivityId());
+        Task[] tasks = acp.getActivityPlanMap().get(tid.getActivityId()).getTasks();
         Task task = tasks[tid.getPartition()];
         assert task.getTaskId().equals(tid);
         return task.getTaskCluster();
@@ -234,20 +240,20 @@ public class ActivityClusterPlanner {
     }
 
     private Map<ConnectorDescriptorId, IConnectorPolicy> assignConnectorPolicy(ActivityCluster ac,
-            Map<ActivityId, Task[]> taskMap, Map<ActivityId, ActivityPartitionDetails> pcMap) {
+            Map<ActivityId, ActivityPlan> taskMap) {
         JobActivityGraph jag = scheduler.getJobRun().getJobActivityGraph();
         Map<ConnectorDescriptorId, IConnectorPolicy> cPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
         Set<ActivityId> activities = ac.getActivities();
         BitSet targetBitmap = new BitSet();
         for (ActivityId a1 : activities) {
-            Task[] ac1TaskStates = taskMap.get(a1);
+            Task[] ac1TaskStates = taskMap.get(a1).getTasks();
             int nProducers = ac1TaskStates.length;
             List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(a1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
                     ActivityId a2 = jag.getConsumerActivity(cdId);
-                    Task[] ac2TaskStates = taskMap.get(a2);
+                    Task[] ac2TaskStates = taskMap.get(a2).getTasks();
                     int nConsumers = ac2TaskStates.length;
 
                     int[] fanouts = new int[nProducers];

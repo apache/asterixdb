@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 public class GetJobSpecificationJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private JSONObject spec;
+    private JSONObject json;
 
     public GetJobSpecificationJSONEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
@@ -35,13 +35,13 @@ public class GetJobSpecificationJSONEvent extends SynchronizableEvent {
     protected void doRun() throws Exception {
         JobRun run = ccs.getRunMap().get(jobId);
         if (run == null) {
-            spec = new JSONObject();
+            json = new JSONObject();
             return;
         }
-        spec = run.getJobActivityGraph().getJobSpecification().toJSON();
+        json = run.getJobActivityGraph().getJobSpecification().toJSON();
     }
 
-    public JSONObject getSpecification() {
-        return spec;
+    public JSONObject getJSON() {
+        return json;
     }
 }

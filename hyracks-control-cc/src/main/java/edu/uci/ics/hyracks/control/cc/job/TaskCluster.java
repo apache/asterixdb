@@ -23,6 +23,8 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class TaskCluster {
+    private final TaskClusterId taskClusterId;
+
     private final ActivityCluster ac;
 
     private final Task[] tasks;
@@ -37,7 +39,8 @@ public class TaskCluster {
 
     private final List<TaskClusterAttempt> taskClusterAttempts;
 
-    public TaskCluster(ActivityCluster ac, Task[] tasks) {
+    public TaskCluster(TaskClusterId taskClusterId, ActivityCluster ac, Task[] tasks) {
+        this.taskClusterId = taskClusterId;
         this.ac = ac;
         this.tasks = tasks;
         producedPartitions = new HashSet<PartitionId>();
@@ -45,6 +48,10 @@ public class TaskCluster {
         dependencyTaskClusters = new HashSet<TaskCluster>();
         dependentTaskClusters = new HashSet<TaskCluster>();
         taskClusterAttempts = new ArrayList<TaskClusterAttempt>();
+    }
+
+    public TaskClusterId getTaskClusterId() {
+        return taskClusterId;
     }
 
     public ActivityCluster getActivityCluster() {

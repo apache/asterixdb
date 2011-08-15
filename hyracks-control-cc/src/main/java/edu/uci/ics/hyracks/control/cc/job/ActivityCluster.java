@@ -28,6 +28,8 @@ public class ActivityCluster {
 
     private final Set<ActivityCluster> dependents;
 
+    private ActivityClusterId id;
+
     private ActivityClusterPlan acp;
 
     public ActivityCluster(JobRun jobRun, Set<ActivityId> activities) {
@@ -59,6 +61,14 @@ public class ActivityCluster {
 
     public JobRun getJobRun() {
         return jobRun;
+    }
+
+    public ActivityClusterId getActivityClusterId() {
+        return id;
+    }
+
+    public void setActivityClusterId(ActivityClusterId id) {
+        this.id = id;
     }
 
     public int getMaxTaskClusterAttempts() {

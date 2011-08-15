@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
@@ -200,5 +204,60 @@ public class JobActivityGraph implements Serializable {
         buffer.append("Blocked->Blocker: " + blocked2blockerMap);
         buffer.append('\n');
         return buffer.toString();
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject jplan = new JSONObject();
+
+        jplan.put("type", "plan");
+        jplan.put("flags", jobFlags.toString());
+
+        JSONArray jans = new JSONArray();
+        for (IActivity an : activityNodes.values()) {
+            JSONObject jan = new JSONObject();
+            jan.put("type", "activity");
+            jan.put("id", an.getActivityId().toString());
+            jan.put("java-class", an.getClass().getName());
+            jan.put("operator-id", an.getActivityId().getOperatorDescriptorId().toString());
+
+            List<IConnectorDescriptor> inputs = getActivityInputConnectorDescriptors(an.getActivityId());
+            if (inputs != null) {
+                JSONArray jInputs = new JSONArray();
+                for (int i = 0; i < inputs.size(); ++i) {
+                    JSONObject jInput = new JSONObject();
+                    jInput.put("type", "activity-input");
+                    jInput.put("input-port", i);
+                    jInput.put("connector-id", inputs.get(i).getConnectorId().toString());
+                    jInputs.put(jInput);
+                }
+                jan.put("inputs", jInputs);
+            }
+
+            List<IConnectorDescriptor> outputs = getActivityOutputConnectorDescriptors(an.getActivityId());
+            if (outputs != null) {
+                JSONArray jOutputs = new JSONArray();
+                for (int i = 0; i < outputs.size(); ++i) {
+                    JSONObject jOutput = new JSONObject();
+                    jOutput.put("type", "activity-output");
+                    jOutput.put("output-port", i);
+                    jOutput.put("connector-id", outputs.get(i).getConnectorId().toString());
+                    jOutputs.put(jOutput);
+                }
+                jan.put("outputs", jOutputs);
+            }
+
+            Set<ActivityId> blockers = getBlocked2BlockerMap().get(an.getActivityId());
+            if (blockers != null) {
+                JSONArray jDeps = new JSONArray();
+                for (ActivityId blocker : blockers) {
+                    jDeps.put(blocker.toString());
+                }
+                jan.put("depends-on", jDeps);
+            }
+            jans.put(jan);
+        }
+        jplan.put("activities", jans);
+
+        return jplan;
     }
 }

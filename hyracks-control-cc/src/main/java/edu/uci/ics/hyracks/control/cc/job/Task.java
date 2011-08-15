@@ -18,12 +18,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 
 public class Task {
     private final TaskId taskId;
 
-    private final ActivityPartitionDetails apd;
+    private final ActivityPlan activityPlan;
 
     private final Set<TaskId> dependencies;
 
@@ -31,9 +30,9 @@ public class Task {
 
     private TaskCluster taskCluster;
 
-    public Task(TaskId taskId, ActivityPartitionDetails apd) {
+    public Task(TaskId taskId, ActivityPlan activityPlan) {
         this.taskId = taskId;
-        this.apd = apd;
+        this.activityPlan = activityPlan;
         this.dependencies = new HashSet<TaskId>();
         this.dependents = new HashSet<TaskId>();
     }
@@ -42,8 +41,8 @@ public class Task {
         return taskId;
     }
 
-    public ActivityPartitionDetails getActivityPartitionDetails() {
-        return apd;
+    public ActivityPlan getActivityPlan() {
+        return activityPlan;
     }
 
     public Set<TaskId> getDependencies() {
@@ -64,6 +63,6 @@ public class Task {
 
     @Override
     public String toString() {
-        return taskId + "(" + apd + ")";
+        return String.valueOf(taskId);
     }
 }

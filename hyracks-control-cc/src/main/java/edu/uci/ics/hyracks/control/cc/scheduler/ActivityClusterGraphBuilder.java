@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.job.ActivityClusterId;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 
 public class ActivityClusterGraphBuilder {
@@ -123,7 +124,9 @@ public class ActivityClusterGraphBuilder {
             }
         }
         Set<ActivityCluster> roots = new HashSet<ActivityCluster>();
+        int idCounter = 0;
         for (ActivityCluster s : stages) {
+            s.setActivityClusterId(new ActivityClusterId(idCounter++));
             if (s.getDependents().isEmpty()) {
                 roots.add(s);
             }
