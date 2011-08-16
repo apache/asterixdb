@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobActivityGraphJSONEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobProfileJSONEvent;
+import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobRunJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSpecificationJSONEvent;
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSummariesJSONEvent;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
@@ -57,10 +57,10 @@ public class RESTAPIFunction implements IJSONOutputFunction {
                     GetJobActivityGraphJSONEvent gjage = new GetJobActivityGraphJSONEvent(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjage);
                     result.put("result", gjage.getJSON());
-                } else if ("profile".equalsIgnoreCase(arguments[1])) {
-                    GetJobProfileJSONEvent gjpe = new GetJobProfileJSONEvent(ccs, jobId);
-                    ccs.getJobQueue().scheduleAndSync(gjpe);
-                    result.put("result", gjpe.getJSON());
+                } else if ("job-run".equalsIgnoreCase(arguments[1])) {
+                    GetJobRunJSONEvent gjre = new GetJobRunJSONEvent(ccs, jobId);
+                    ccs.getJobQueue().scheduleAndSync(gjre);
+                    result.put("result", gjre.getJSON());
                 }
 
                 break;

@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -29,6 +30,8 @@ import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 
 public class PartitionMatchMaker {
+    private static final Logger LOGGER = Logger.getLogger(PartitionMatchMaker.class.getName());
+
     private final Map<PartitionId, List<PartitionDescriptor>> partitionDescriptors;
 
     private final Map<PartitionId, List<PartitionRequest>> partitionRequests;
@@ -164,6 +167,7 @@ public class PartitionMatchMaker {
     }
 
     public void removeUncommittedPartitions(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
+        LOGGER.info("Removing uncommitted partitions: " + partitionIds);
         IEntryFilter<PartitionDescriptor> filter = new IEntryFilter<PartitionDescriptor>() {
             @Override
             public boolean matches(PartitionDescriptor o) {
@@ -182,6 +186,7 @@ public class PartitionMatchMaker {
     }
 
     public void removePartitionRequests(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
+        LOGGER.info("Removing partition requests: " + partitionIds);
         IEntryFilter<PartitionRequest> filter = new IEntryFilter<PartitionRequest>() {
             @Override
             public boolean matches(PartitionRequest o) {

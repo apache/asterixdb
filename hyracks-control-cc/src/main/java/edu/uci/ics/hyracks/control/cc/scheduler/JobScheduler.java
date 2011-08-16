@@ -466,22 +466,23 @@ public class JobScheduler {
     }
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt) {
+        LOGGER.info("Aborting task cluster: " + tcAttempt.getAttempt());
         Set<TaskAttemptId> abortTaskIds = new HashSet<TaskAttemptId>();
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<String, List<TaskAttemptId>>();
         for (TaskAttempt ta : tcAttempt.getTaskAttempts()) {
             TaskAttemptId taId = ta.getTaskAttemptId();
             abortTaskIds.add(taId);
-            if (ta.getStatus() == TaskAttempt.TaskStatus.RUNNING) {
-                ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
-                List<TaskAttemptId> abortTaskAttempts = abortTaskAttemptMap.get(ta.getNodeId());
-                if (abortTaskAttempts == null) {
-                    abortTaskAttempts = new ArrayList<TaskAttemptId>();
-                    abortTaskAttemptMap.put(ta.getNodeId(), abortTaskAttempts);
-                }
-                abortTaskAttempts.add(taId);
+            LOGGER.info("Checking " + taId + ": " + ta.getStatus());
+            ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
+            List<TaskAttemptId> abortTaskAttempts = abortTaskAttemptMap.get(ta.getNodeId());
+            if (abortTaskAttempts == null) {
+                abortTaskAttempts = new ArrayList<TaskAttemptId>();
+                abortTaskAttemptMap.put(ta.getNodeId(), abortTaskAttempts);
             }
+            abortTaskAttempts.add(taId);
         }
         final JobId jobId = jobRun.getJobId();
+        LOGGER.info("Abort map for job: " + jobId + ": " + abortTaskAttemptMap);
         for (Map.Entry<String, List<TaskAttemptId>> e : abortTaskAttemptMap.entrySet()) {
             final NodeControllerState node = ccs.getNodeMap().get(e.getKey());
             final List<TaskAttemptId> abortTaskAttempts = e.getValue();
@@ -517,8 +518,10 @@ public class JobScheduler {
 
         for (TaskCluster tc : doomedTaskClusters) {
             TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
-            abortTaskCluster(tca);
-            tca.setStatus(TaskClusterAttempt.TaskClusterStatus.ABORTED);
+            if (tca != null) {
+                abortTaskCluster(tca);
+                tca.setStatus(TaskClusterAttempt.TaskClusterStatus.ABORTED);
+            }
         }
     }
 
@@ -595,24 +598,21 @@ public class JobScheduler {
      */
     public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, Exception exception) {
         try {
+            LOGGER.info("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();
             TaskCluster tc = ta.getTaskState().getTaskCluster();
             TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
             if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
-                TaskAttempt.TaskStatus taStatus = ta.getStatus();
-                if (taStatus == TaskAttempt.TaskStatus.RUNNING) {
-                    ta.setStatus(TaskAttempt.TaskStatus.FAILED, exception);
-                    abortTaskCluster(lastAttempt);
-                    lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
-                    abortDoomedTaskClusters();
-                    if (lastAttempt.getAttempt() >= ac.getMaxTaskClusterAttempts()) {
-                        abortJob(null);
-                        return;
-                    }
-                    startRunnableActivityClusters();
-                } else {
-                    LOGGER.warning("Spurious task failure notification: " + taId + " Current state = " + taStatus);
+                LOGGER.info("Marking TaskAttempt " + ta.getTaskAttemptId() + " as failed");
+                ta.setStatus(TaskAttempt.TaskStatus.FAILED, exception);
+                abortTaskCluster(lastAttempt);
+                lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
+                abortDoomedTaskClusters();
+                if (lastAttempt.getAttempt() >= ac.getMaxTaskClusterAttempts()) {
+                    abortJob(null);
+                    return;
                 }
+                startRunnableActivityClusters();
             } else {
                 LOGGER.warning("Ignoring task failure notification: " + taId + " -- Current last attempt = "
                         + lastAttempt);
