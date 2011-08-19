@@ -471,15 +471,18 @@ public class JobScheduler {
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<String, List<TaskAttemptId>>();
         for (TaskAttempt ta : tcAttempt.getTaskAttempts()) {
             TaskAttemptId taId = ta.getTaskAttemptId();
+            TaskAttempt.TaskStatus status = ta.getStatus();
             abortTaskIds.add(taId);
             LOGGER.info("Checking " + taId + ": " + ta.getStatus());
-            ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
-            List<TaskAttemptId> abortTaskAttempts = abortTaskAttemptMap.get(ta.getNodeId());
-            if (abortTaskAttempts == null) {
-                abortTaskAttempts = new ArrayList<TaskAttemptId>();
-                abortTaskAttemptMap.put(ta.getNodeId(), abortTaskAttempts);
+            if (status == TaskAttempt.TaskStatus.RUNNING || status == TaskAttempt.TaskStatus.COMPLETED) {
+                ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
+                List<TaskAttemptId> abortTaskAttempts = abortTaskAttemptMap.get(ta.getNodeId());
+                if (abortTaskAttempts == null) {
+                    abortTaskAttempts = new ArrayList<TaskAttemptId>();
+                    abortTaskAttemptMap.put(ta.getNodeId(), abortTaskAttempts);
+                }
+                abortTaskAttempts.add(taId);
             }
-            abortTaskAttempts.add(taId);
         }
         final JobId jobId = jobRun.getJobId();
         LOGGER.info("Abort map for job: " + jobId + ": " + abortTaskAttemptMap);
