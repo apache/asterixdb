@@ -26,7 +26,7 @@ public class IntegerSerializerDeserializer implements ISerializerDeserializer<In
 
     public static final IntegerSerializerDeserializer INSTANCE = new IntegerSerializerDeserializer();
 
-    private IntegerSerializerDeserializer() {
+    protected IntegerSerializerDeserializer() {
     }
 
     @Override

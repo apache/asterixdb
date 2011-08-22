@@ -26,7 +26,7 @@ public class DoubleSerializerDeserializer implements ISerializerDeserializer<Dou
 
     public static final DoubleSerializerDeserializer INSTANCE = new DoubleSerializerDeserializer();
 
-    private DoubleSerializerDeserializer() {
+    protected DoubleSerializerDeserializer() {
     }
 
     @Override

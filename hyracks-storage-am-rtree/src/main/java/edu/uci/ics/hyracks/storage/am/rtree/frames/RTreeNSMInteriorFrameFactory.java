@@ -15,23 +15,30 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 
 public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
-    private static final long serialVersionUID = 1L;
-    private ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private int keyFieldCount;
+	private static final long serialVersionUID = 1L;
+	private ITreeIndexTupleWriterFactory tupleWriterFactory;
+	private ISerializerDeserializer[] recDescSers;
+	private int keyFieldCount;
 
-    public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
-        this.tupleWriterFactory = tupleWriterFactory;
-        this.keyFieldCount = keyFieldCount;
-    }
+	public RTreeNSMInteriorFrameFactory(
+			ITreeIndexTupleWriterFactory tupleWriterFactory,
+			ISerializerDeserializer[] recDescSers, int keyFieldCount) {
+		this.tupleWriterFactory = tupleWriterFactory;
+		this.recDescSers = recDescSers;
+		this.keyFieldCount = keyFieldCount;
+	}
 
-    @Override
-    public IRTreeInteriorFrame createFrame() {
-        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
-    }
+	@Override
+	public IRTreeInteriorFrame createFrame() {
+		return new RTreeNSMInteriorFrame(
+				tupleWriterFactory.createTupleWriter(), recDescSers,
+				keyFieldCount);
+	}
 }

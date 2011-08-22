@@ -26,7 +26,7 @@ public class FloatSerializerDeserializer implements ISerializerDeserializer<Floa
 
     public static final FloatSerializerDeserializer INSTANCE = new FloatSerializerDeserializer();
 
-    private FloatSerializerDeserializer() {
+    protected FloatSerializerDeserializer() {
     }
 
     @Override
