@@ -100,9 +100,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 keySearchComparators[i] = rtree.getCmp().getComparators()[i];
             }
             cmp = new MultiComparator(rtree.getCmp().getTypeTraits(), keySearchComparators);
-
             searchPred = new SearchPredicate(searchKey, cmp);
-            accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
             writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
             tb = new ArrayTupleBuilder(rtree.getCmp().getFieldCount());

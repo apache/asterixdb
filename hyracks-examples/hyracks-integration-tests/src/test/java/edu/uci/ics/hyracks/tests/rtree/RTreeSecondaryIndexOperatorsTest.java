@@ -71,7 +71,7 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
-public class RTreeOperatorsTest extends AbstractIntegrationTest {
+public class RTreeSecondaryIndexOperatorsTest extends AbstractIntegrationTest {
 	static {
 		TestStorageManagerComponentHolder.init(8192, 20, 20);
 	}
@@ -185,7 +185,7 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
 					secondaryFileName))) });
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 		// field, type and key declarations for primary R-tree index
 		primaryTypeTraits[0] = new TypeTrait(8);
 		primaryTypeTraits[1] = new TypeTrait(8);
@@ -220,9 +220,12 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
 		secondaryComparatorFactories[1] = secondaryComparatorFactories[0];
 		secondaryComparatorFactories[2] = secondaryComparatorFactories[0];
 		secondaryComparatorFactories[3] = secondaryComparatorFactories[0];
+		
+		loadPrimaryIndexTest();
+		loadPrimaryBTreeIndexTest();
+		loadSecondaryIndexTest();
 	}
 
-	@Test
 	public void loadPrimaryBTreeIndexTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
 
@@ -295,7 +298,6 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
 		runTest(spec);
 	}
 
-	@Test
 	public void loadPrimaryIndexTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
 
@@ -339,7 +341,6 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
 		runTest(spec);
 	}
 
-	@Test
 	public void loadSecondaryIndexTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
 
