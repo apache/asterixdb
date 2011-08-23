@@ -65,12 +65,7 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
             }
 
             @Override
-            public void flush() throws HyracksDataException {
-                try {
-                    out.flush();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
+            public void fail() throws HyracksDataException {
             }
 
             @Override

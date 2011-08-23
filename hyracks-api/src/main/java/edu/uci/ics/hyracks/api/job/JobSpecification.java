@@ -73,6 +73,7 @@ public class JobSpecification implements Serializable {
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
+        maxAttempts = 5;
     }
 
     public OperatorDescriptorId createOperatorDescriptorId() {

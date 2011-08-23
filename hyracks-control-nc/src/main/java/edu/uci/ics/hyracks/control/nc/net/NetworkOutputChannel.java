@@ -42,6 +42,8 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
 
     private boolean eosSent;
 
+    private boolean failed;
+
     private ByteBuffer currentBuffer;
 
     public NetworkOutputChannel(IHyracksRootContext ctx, int nBuffers) {
@@ -55,7 +57,7 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
 
     @Override
     public synchronized boolean dispatchNetworkEvent() throws IOException {
-        if (aborted) {
+        if (failed || aborted) {
             eos = true;
             return true;
         } else if (key.isWritable()) {
@@ -154,15 +156,15 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
-
+    public void fail() throws HyracksDataException {
+        failed = true;
     }
 
     @Override
     public synchronized void close() throws HyracksDataException {
         eos = true;
         key.interestOps(SelectionKey.OP_WRITE);
-        key.selector().wakeup();        
+        key.selector().wakeup();
     }
 
     @Override

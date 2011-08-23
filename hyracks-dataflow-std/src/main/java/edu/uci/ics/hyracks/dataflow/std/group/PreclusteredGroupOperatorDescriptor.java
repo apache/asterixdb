@@ -78,8 +78,8 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             }
 
             @Override
-            public void flush() throws HyracksDataException {
-                pgw.flush();
+            public void fail() throws HyracksDataException {
+                pgw.fail();
             }
 
             @Override

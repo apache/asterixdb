@@ -90,6 +90,11 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
     }
 
     @Override
+    public void fail() throws HyracksDataException {
+        writer.fail();
+    }
+
+    @Override
     public void setDataWriter(int index, IOpenableDataWriter<Object[]> writer) {
         if (index != 0) {
             throw new IllegalArgumentException();

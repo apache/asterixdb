@@ -94,16 +94,9 @@ public class PartitionDataWriter implements IFrameWriter {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
         for (int i = 0; i < appenders.length; ++i) {
-            FrameTupleAppender appender = appenders[i];
-            if (appender.getTupleCount() > 0) {
-                ByteBuffer buffer = appender.getBuffer();
-                IFrameWriter frameWriter = pWriters[i];
-                flushFrame(buffer, frameWriter);
-                pWriters[i].flush();
-                appender.reset(buffer, true);
-            }
+            pWriters[i].fail();
         }
     }
 }

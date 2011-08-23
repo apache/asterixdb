@@ -120,6 +120,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
+        writer.fail();
     }
 }

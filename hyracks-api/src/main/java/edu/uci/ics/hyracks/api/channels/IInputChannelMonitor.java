@@ -15,6 +15,8 @@
 package edu.uci.ics.hyracks.api.channels;
 
 public interface IInputChannelMonitor {
+    public void notifyFailure(IInputChannel channel);
+
     public void notifyDataAvailability(IInputChannel channel, int nFrames);
 
     public void notifyEndOfStream(IInputChannel channel);

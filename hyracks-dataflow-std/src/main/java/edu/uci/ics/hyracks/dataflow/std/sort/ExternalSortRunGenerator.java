@@ -84,7 +84,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
     }
 
     public FrameSorter getFrameSorter() {

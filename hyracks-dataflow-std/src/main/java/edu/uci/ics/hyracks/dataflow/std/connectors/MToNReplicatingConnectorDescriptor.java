@@ -55,6 +55,13 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
             }
 
             @Override
+            public void fail() throws HyracksDataException {
+                for (int i = 0; i < epWriters.length; ++i) {
+                    epWriters[i].fail();
+                }
+            }
+
+            @Override
             public void close() throws HyracksDataException {
                 for (int i = 0; i < epWriters.length; ++i) {
                     epWriters[i].close();
@@ -65,13 +72,6 @@ public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDes
             public void open() throws HyracksDataException {
                 for (int i = 0; i < epWriters.length; ++i) {
                     epWriters[i].open();
-                }
-            }
-
-            @Override
-            public void flush() throws HyracksDataException {
-                for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].flush();
                 }
             }
         };

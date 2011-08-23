@@ -112,9 +112,8 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
-        FrameUtils.flushFrame(appender.getBuffer(), writer);
-        appender.reset(appender.getBuffer(), true);
+    public void fail() throws HyracksDataException {
+        writer.fail();
     }
 
     @Override

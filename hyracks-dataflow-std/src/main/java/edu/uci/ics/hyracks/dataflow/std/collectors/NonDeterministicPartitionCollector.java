@@ -45,6 +45,8 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
 
     private final BitSet eosSenders;
 
+    private final BitSet failSenders;
+
     private BitSet closedSenders;
 
     private int lastReadSender;
@@ -57,6 +59,7 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
         reader = new FrameReader();
         channels = new IInputChannel[nSenderPartitions];
         eosSenders = new BitSet(nSenderPartitions);
+        failSenders = new BitSet(nSenderPartitions);
         closedSenders = new BitSet(nSenderPartitions);
         closedSenders.or(expectedPartitions);
         closedSenders.flip(0, nSenderPartitions);
@@ -128,6 +131,9 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                         }
                         return;
                     }
+                    if (!failSenders.isEmpty()) {
+                        throw new HyracksDataException("Failure occurred on input");
+                    }
                     for (int i = eosSenders.nextSetBit(0); i >= 0; i = eosSenders.nextSetBit(i)) {
                         channels[i].close();
                         eosSenders.clear(i);
@@ -157,6 +163,16 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                         channels[i] = null;
                     }
                 }
+            }
+        }
+
+        @Override
+        public void notifyFailure(IInputChannel channel) {
+            synchronized (NonDeterministicPartitionCollector.this) {
+                PartitionId pid = (PartitionId) channel.getAttachment();
+                int senderIndex = pid.getSenderIndex();
+                failSenders.set(senderIndex);
+                NonDeterministicPartitionCollector.this.notifyAll();
             }
         }
 

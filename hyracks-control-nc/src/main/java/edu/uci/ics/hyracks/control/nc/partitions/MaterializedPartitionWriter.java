@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.control.nc.partitions;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
@@ -29,6 +31,8 @@ import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 
 public class MaterializedPartitionWriter implements IFrameWriter {
+    private static final Logger LOGGER = Logger.getLogger(MaterializedPartitionWriter.class.getName());
+
     protected final IHyracksRootContext ctx;
 
     protected final PartitionManager manager;
@@ -45,6 +49,8 @@ public class MaterializedPartitionWriter implements IFrameWriter {
 
     private long size;
 
+    private boolean failed;
+
     public MaterializedPartitionWriter(IHyracksRootContext ctx, PartitionManager manager, PartitionId pid,
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
@@ -56,10 +62,14 @@ public class MaterializedPartitionWriter implements IFrameWriter {
 
     @Override
     public void open() throws HyracksDataException {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("open(" + pid + " by " + taId);
+        }
         fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString());
         handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         size = 0;
+        failed = false;
     }
 
     @Override
@@ -68,14 +78,20 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
+        failed = true;
     }
 
     @Override
     public void close() throws HyracksDataException {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("close(" + pid + " by " + taId);
+        }
         ctx.getIOManager().close(handle);
-        manager.registerPartition(pid, taId,
-                new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()),
-                PartitionState.COMMITTED);
+        if (!failed) {
+            manager.registerPartition(pid, taId,
+                    new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()),
+                    PartitionState.COMMITTED);
+        }
     }
 }

@@ -98,4 +98,9 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         buffer.limit(buffer.capacity());
         frameWriter.nextFrame(buffer);
     }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        frameWriter.fail();
+    }
 }

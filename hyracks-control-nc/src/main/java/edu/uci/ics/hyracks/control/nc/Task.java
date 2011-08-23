@@ -73,8 +73,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private volatile boolean aborted;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName,
-            Executor executor) {
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor) {
         this.joblet = joblet;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
@@ -82,13 +81,13 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
-//        this.inputGlobalVariables = inputGlobalVariables;
+        //        this.inputGlobalVariables = inputGlobalVariables;
         inputGlobalVariables = Collections.emptyMap();
         outputVariables = new HashMap<MultipartName, Object>();
         outputVariableDescriptorMap = new HashMap<MultipartName, WorkflowVariableDescriptor>();
-//        for (WorkflowVariableDescriptor wvd : outputVariableDescriptors) {
-//            outputVariableDescriptorMap.put(wvd.getName(), wvd);
-//        }
+        //        for (WorkflowVariableDescriptor wvd : outputVariableDescriptors) {
+        //            outputVariableDescriptorMap.put(wvd.getName(), wvd);
+        //        }
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -270,19 +269,19 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 reader.open();
                 try {
                     writer.open();
-                    try {
-                        ByteBuffer buffer = allocateFrame();
-                        while (reader.nextFrame(buffer)) {
-                            if (aborted) {
-                                return;
-                            }
-                            buffer.flip();
-                            writer.nextFrame(buffer);
-                            buffer.compact();
+                    ByteBuffer buffer = allocateFrame();
+                    while (reader.nextFrame(buffer)) {
+                        if (aborted) {
+                            return;
                         }
-                    } finally {
-                        writer.close();
+                        buffer.flip();
+                        writer.nextFrame(buffer);
+                        buffer.compact();
                     }
+                    writer.close();
+                } catch (Exception e) {
+                    writer.fail();
+                    throw e;
                 } finally {
                     reader.close();
                 }

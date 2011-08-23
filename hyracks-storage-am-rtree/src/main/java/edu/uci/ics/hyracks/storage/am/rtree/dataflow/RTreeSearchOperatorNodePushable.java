@@ -175,9 +175,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     }
 
     @Override
-    public void flush() throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(writeBuffer, writer);
-        }
+    public void fail() throws HyracksDataException {
+        writer.fail();
     }
 }

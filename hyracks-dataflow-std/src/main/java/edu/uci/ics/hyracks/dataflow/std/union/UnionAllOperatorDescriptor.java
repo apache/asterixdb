@@ -69,6 +69,8 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
 
         private int nClosed;
 
+        private boolean failed;
+
         public UnionOperator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc) {
             nOpened = 0;
             nClosed = 0;
@@ -99,9 +101,12 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                     synchronized (UnionOperator.this) {
-                        writer.flush();
+                        if (failed) {
+                            writer.fail();
+                        }
+                        failed = true;
                     }
                 }
 

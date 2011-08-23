@@ -178,10 +178,13 @@ public class SortMergePartitionCollector extends AbstractPartitionCollector {
 
         private boolean eos;
 
+        private boolean failed;
+
         public InputChannelFrameReader(IInputChannel channel) {
             this.channel = channel;
             availableFrames = 0;
             eos = false;
+            failed = false;
         }
 
         @Override
@@ -191,14 +194,17 @@ public class SortMergePartitionCollector extends AbstractPartitionCollector {
         @Override
         public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
             synchronized (this) {
-                while (!eos && availableFrames <= 0) {
+                while (!failed && !eos && availableFrames <= 0) {
                     try {
                         wait();
                     } catch (InterruptedException e) {
                         throw new HyracksDataException(e);
                     }
                 }
-                if (availableFrames <=0 && eos) {
+                if (failed) {
+                    throw new HyracksDataException("Failure occurred on input");
+                }
+                if (availableFrames <= 0 && eos) {
                     return false;
                 }
                 --availableFrames;
@@ -212,6 +218,12 @@ public class SortMergePartitionCollector extends AbstractPartitionCollector {
         @Override
         public void close() throws HyracksDataException {
 
+        }
+
+        @Override
+        public synchronized void notifyFailure(IInputChannel channel) {
+            failed = true;
+            notifyAll();
         }
 
         @Override

@@ -43,6 +43,10 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
         }
 
         @Override
+        public void fail() throws HyracksDataException {
+        }
+
+        @Override
         public void writeData(Object[] data) throws HyracksDataException {
             for (int i = 0; i < data.length; ++i) {
                 System.err.print(StringSerializationUtils.toString(data[i]));

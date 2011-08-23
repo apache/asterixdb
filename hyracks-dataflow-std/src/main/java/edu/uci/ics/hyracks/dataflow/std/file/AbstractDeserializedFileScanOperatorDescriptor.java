@@ -64,28 +64,31 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
         public void open() throws HyracksDataException {
             FileSplit split = splits[index];
             RecordDescriptor desc = recordDescriptors[0];
+            IRecordReader reader;
             try {
-                IRecordReader reader = createRecordReader(split.getLocalFile().getFile(), desc);
-                if (desc == null) {
-                    desc = recordDescriptors[0];
-                }
-                writer.open();
-                try {
-                    while (true) {
-                        Object[] record = new Object[desc.getFields().length];
-                        if (!reader.read(record)) {
-                            break;
-                        }
-                        writer.writeData(record);
-                    }
-                } finally {
-                    reader.close();
-                    writer.close();
-                }
+                reader = createRecordReader(split.getLocalFile().getFile(), desc);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
-
+            if (desc == null) {
+                desc = recordDescriptors[0];
+            }
+            writer.open();
+            try {
+                while (true) {
+                    Object[] record = new Object[desc.getFields().length];
+                    if (!reader.read(record)) {
+                        break;
+                    }
+                    writer.writeData(record);
+                }
+            } catch (Exception e) {
+                writer.fail();
+                throw new HyracksDataException(e);
+            } finally {
+                reader.close();
+                writer.close();
+            }
         }
 
         @Override
@@ -96,6 +99,11 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
         @Override
         public void writeData(Object[] data) throws HyracksDataException {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void fail() throws HyracksDataException {
+            // do nothing
         }
     }
 

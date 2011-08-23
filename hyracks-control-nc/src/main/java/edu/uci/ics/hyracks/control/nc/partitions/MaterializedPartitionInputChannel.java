@@ -120,7 +120,7 @@ public class MaterializedPartitionInputChannel implements IInputChannel {
         }
 
         @Override
-        public void flush() throws HyracksDataException {
+        public void fail() throws HyracksDataException {
 
         }
 

@@ -33,8 +33,12 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
 
         @Override
         public void close() throws HyracksDataException {
-            // writer.writeData(null);
             writer.close();
+        }
+
+        @Override
+        public void fail() throws HyracksDataException {
+            writer.fail();
         }
 
         @Override

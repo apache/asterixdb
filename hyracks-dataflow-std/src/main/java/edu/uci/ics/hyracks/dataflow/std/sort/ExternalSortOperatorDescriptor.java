@@ -109,8 +109,8 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
-                    runGen.flush();
+                public void fail() throws HyracksDataException {
+                    runGen.fail();
                 }
             };
             return op;

@@ -26,10 +26,18 @@ public interface IDataWriter<T> {
      * Pushes data to the acceptor.
      * 
      * @param data
-     *            - Data pushed to the acceptor. <code>null</code> indicates the end of stream.
+     *            - Data pushed to the acceptor. <code>null</code> indicates the
+     *            end of stream.
      * @throws HyracksDataException
      */
     public void writeData(T data) throws HyracksDataException;
+
+    /**
+     * Indicates that the stream has failed.
+     * 
+     * @throws HyracksDataException
+     */
+    public void fail() throws HyracksDataException;
 
     /**
      * Closes this writer.

@@ -63,7 +63,8 @@ public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOp
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
+        delegate.fail();
     }
 
     @Override

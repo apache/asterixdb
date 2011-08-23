@@ -84,6 +84,6 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
     }
 }

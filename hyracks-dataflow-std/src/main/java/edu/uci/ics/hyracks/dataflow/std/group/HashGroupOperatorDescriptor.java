@@ -106,7 +106,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
             };
         }

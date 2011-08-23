@@ -147,7 +147,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
             };
             return op;
@@ -186,8 +186,8 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
-                    writer.flush();
+                public void fail() throws HyracksDataException {
+                    writer.fail();
                 }
             };
             return op;

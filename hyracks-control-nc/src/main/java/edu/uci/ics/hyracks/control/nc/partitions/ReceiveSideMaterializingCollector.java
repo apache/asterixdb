@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -86,10 +87,18 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
 
         private boolean eos;
 
+        private boolean failed;
+
         public PartitionWriter(PartitionChannel pc) {
             this.pc = pc;
             nAvailableFrames = 0;
             eos = false;
+        }
+
+        @Override
+        public synchronized void notifyFailure(IInputChannel channel) {
+            failed = true;
+            notifyAll();
         }
 
         @Override
@@ -121,6 +130,8 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                         channel.recycleBuffer(buffer);
                     } else if (eos) {
                         break;
+                    } else if (failed) {
+                        throw new HyracksDataException("Failure occurred on input");
                     } else {
                         try {
                             wait();

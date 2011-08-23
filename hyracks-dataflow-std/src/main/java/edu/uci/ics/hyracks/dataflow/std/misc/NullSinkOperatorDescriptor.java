@@ -49,7 +49,7 @@ public class NullSinkOperatorDescriptor extends AbstractSingleActivityOperatorDe
             }
 
             @Override
-            public void flush() throws HyracksDataException {
+            public void fail() throws HyracksDataException {
             }
         };
     }

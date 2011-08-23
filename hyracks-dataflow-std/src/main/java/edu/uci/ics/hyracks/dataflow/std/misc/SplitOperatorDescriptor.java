@@ -39,7 +39,10 @@ public class SplitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
             }
 
             @Override
-            public void flush() throws HyracksDataException {
+            public void fail() throws HyracksDataException {
+                for (IFrameWriter writer : writers) {
+                    writer.fail();
+                }
             }
 
             @Override

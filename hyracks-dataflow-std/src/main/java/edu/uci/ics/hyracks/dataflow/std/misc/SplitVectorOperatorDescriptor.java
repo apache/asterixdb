@@ -71,6 +71,11 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void writeData(Object[] data) throws HyracksDataException {
                     buffer.add(data);
                 }
+
+                @Override
+                public void fail() throws HyracksDataException {
+
+                }
             };
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
                     getOperatorId(), 0));
@@ -116,6 +121,11 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                         writer.writeData(buffer.get(step * (i + 1) - 1));
                     }
                     writer.close();
+                }
+
+                @Override
+                public void fail() throws HyracksDataException {
+                    writer.fail();
                 }
             };
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(

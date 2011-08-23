@@ -55,6 +55,10 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
         }
 
         @Override
+        public void fail() throws HyracksDataException {
+        }
+
+        @Override
         public void writeData(Object[] data) throws HyracksDataException {
             try {
                 writer.write(data);

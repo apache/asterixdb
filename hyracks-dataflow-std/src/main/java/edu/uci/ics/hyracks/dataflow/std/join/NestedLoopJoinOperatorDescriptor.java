@@ -103,7 +103,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
             };
             return op;
@@ -143,8 +143,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
-                    writer.flush();
+                public void fail() throws HyracksDataException {
+                    writer.fail();
                 }
             };
             return op;

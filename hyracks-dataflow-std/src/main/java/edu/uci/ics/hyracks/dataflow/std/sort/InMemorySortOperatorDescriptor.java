@@ -99,7 +99,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
             };
             return op;

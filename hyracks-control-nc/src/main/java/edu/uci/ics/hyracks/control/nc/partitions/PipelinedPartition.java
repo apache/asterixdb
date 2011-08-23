@@ -32,6 +32,8 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     private IFrameWriter delegate;
 
+    private boolean failed;
+
     public PipelinedPartition(PartitionManager manager, PartitionId pid, TaskAttemptId taId) {
         this.manager = manager;
         this.pid = pid;
@@ -57,6 +59,7 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
     @Override
     public synchronized void open() throws HyracksDataException {
         manager.registerPartition(pid, taId, this, PartitionState.STARTED);
+        failed = false;
         while (delegate == null) {
             try {
                 wait();
@@ -73,13 +76,16 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
     }
 
     @Override
-    public void flush() throws HyracksDataException {
-        delegate.flush();
+    public void fail() throws HyracksDataException {
+        failed = true;
+        delegate.fail();
     }
 
     @Override
     public void close() throws HyracksDataException {
-        manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
+        if (!failed) {
+            manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
+        }
         delegate.close();
     }
 }

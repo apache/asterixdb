@@ -295,7 +295,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
 
                 private void closeWriter(int i) throws HyracksDataException {
@@ -501,11 +501,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     env.set(NUM_PARTITION, null);
                 }
 
-                @Override
-                public void flush() throws HyracksDataException {
-                    writer.flush();
-                }
-
                 private void closeWriter(int i) throws HyracksDataException {
                     RunFileWriter writer = probeWriters[i];
                     if (writer != null) {
@@ -522,6 +517,11 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         probeWriters[i] = writer;
                     }
                     writer.nextFrame(head);
+                }
+
+                @Override
+                public void fail() throws HyracksDataException {
+                    writer.fail();
                 }
             };
             return op;
