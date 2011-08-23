@@ -112,14 +112,20 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                     RunFileWriter out = (RunFileWriter) env.get(MATERIALIZED_FILE);
                     RunFileReader in = out.createReader();
                     writer.open();
-                    in.open();
-                    while (in.nextFrame(frame)) {
-                        frame.flip();
-                        writer.nextFrame(frame);
-                        frame.clear();
+                    try {
+                        in.open();
+                        while (in.nextFrame(frame)) {
+                            frame.flip();
+                            writer.nextFrame(frame);
+                            frame.clear();
+                        }
+                        in.close();
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
                     }
-                    in.close();
-                    writer.close();
                 }
 
                 @Override

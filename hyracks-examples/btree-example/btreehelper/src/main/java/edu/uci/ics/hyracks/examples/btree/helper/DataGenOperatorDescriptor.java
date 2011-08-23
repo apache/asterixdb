@@ -96,6 +96,9 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
                         }
                     }
                     FrameUtils.flushFrame(outputFrame, writer);
+                } catch (Exception e) {
+                    writer.fail();
+                    throw new HyracksDataException(e);
                 } finally {
                     writer.close();
                 }

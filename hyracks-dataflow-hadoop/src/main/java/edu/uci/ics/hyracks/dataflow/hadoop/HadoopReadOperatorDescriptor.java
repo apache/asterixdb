@@ -194,26 +194,33 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                             (Class<? extends Writable>) hadoopRecordReader.createValue().getClass());
                     int nFields = outputRecordDescriptor.getFields().length;
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(nFields);
-                    while (hadoopRecordReader.next(key, value)) {
-                        tb.reset();
-                        switch (nFields) {
-                            case 2:
-                                tb.addField(outputRecordDescriptor.getFields()[0], key);
-                            case 1:
-                                tb.addField(outputRecordDescriptor.getFields()[1], value);
-                        }
-                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            FrameUtils.flushFrame(outBuffer, writer);
-                            appender.reset(outBuffer, true);
+                    writer.open();
+                    try {
+                        while (hadoopRecordReader.next(key, value)) {
+                            tb.reset();
+                            switch (nFields) {
+                                case 2:
+                                    tb.addField(outputRecordDescriptor.getFields()[0], key);
+                                case 1:
+                                    tb.addField(outputRecordDescriptor.getFields()[1], value);
+                            }
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                throw new IllegalStateException();
+                                FrameUtils.flushFrame(outBuffer, writer);
+                                appender.reset(outBuffer, true);
+                                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                                    throw new IllegalStateException();
+                                }
                             }
                         }
+                        if (appender.getTupleCount() > 0) {
+                            FrameUtils.flushFrame(outBuffer, writer);
+                        }
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
                     }
-                    if (appender.getTupleCount() > 0) {
-                        FrameUtils.flushFrame(outBuffer, writer);
-                    }
-                    writer.close();
                     hadoopRecordReader.close();
                 } catch (InstantiationException e) {
                     throw new HyracksDataException(e);

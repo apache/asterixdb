@@ -79,6 +79,9 @@ public class ExternalSortRunMerger {
                     }
                 }
             }
+        } catch (Exception e) {
+            writer.fail();
+            throw new HyracksDataException(e);
         } finally {
             writer.close();
         }

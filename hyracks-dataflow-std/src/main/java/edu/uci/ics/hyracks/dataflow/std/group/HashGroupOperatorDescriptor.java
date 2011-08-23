@@ -127,8 +127,14 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void initialize() throws HyracksDataException {
                     GroupingHashTable table = (GroupingHashTable) env.get(HASHTABLE);
                     writer.open();
-                    table.write(writer);
-                    writer.close();
+                    try {
+                        table.write(writer);
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
+                    }
                     env.set(HASHTABLE, null);
                 }
             };

@@ -120,9 +120,15 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void initialize() throws HyracksDataException {
                     writer.open();
-                    FrameSorter frameSorter = (FrameSorter) env.get(FRAMESORTER);
-                    frameSorter.flushFrames(writer);
-                    writer.close();
+                    try {
+                        FrameSorter frameSorter = (FrameSorter) env.get(FRAMESORTER);
+                        frameSorter.flushFrames(writer);
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
+                    }
                     env.set(FRAMESORTER, null);
                 }
             };

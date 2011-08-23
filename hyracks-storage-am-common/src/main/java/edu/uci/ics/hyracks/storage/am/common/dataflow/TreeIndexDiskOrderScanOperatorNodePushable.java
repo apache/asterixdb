@@ -52,7 +52,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
         try {
 
             treeIndexOpHelper.init();
-
+            writer.open();
             try {
                 treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame, diskOrderScanOpCtx);
 
@@ -86,6 +86,9 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                 if (appender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(frame, writer);
                 }
+            } catch (Exception e) {
+                writer.fail();
+                throw new HyracksDataException(e);
             } finally {
                 cursor.close();
                 writer.close();

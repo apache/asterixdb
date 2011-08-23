@@ -265,43 +265,50 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                     writer.open();// open for probe
 
-                    ByteBuffer buffer = ctx.allocateFrame();// input
-                    // buffer
-                    int tableSize = (int) (numPartitions * recordsPerFrame * factor);
-                    for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
-                        RunFileWriter buildWriter = buildWriters[partitionid];
-                        RunFileWriter probeWriter = probeWriters[partitionid];
-                        if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
-                            continue;
-                        }
-                        joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(), rd0),
-                                hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                                new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1);
+                    try {
 
-                        // build
-                        if (buildWriter != null) {
-                            RunFileReader buildReader = buildWriter.createReader();
-                            buildReader.open();
-                            while (buildReader.nextFrame(buffer)) {
-                                ByteBuffer copyBuffer = ctx.allocateFrame();
-                                FrameUtils.copy(buffer, copyBuffer);
-                                joiner.build(copyBuffer);
+                        ByteBuffer buffer = ctx.allocateFrame();// input
+                        // buffer
+                        int tableSize = (int) (numPartitions * recordsPerFrame * factor);
+                        for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
+                            RunFileWriter buildWriter = buildWriters[partitionid];
+                            RunFileWriter probeWriter = probeWriters[partitionid];
+                            if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
+                                continue;
+                            }
+                            joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(),
+                                    rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
+                                    new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1);
+
+                            // build
+                            if (buildWriter != null) {
+                                RunFileReader buildReader = buildWriter.createReader();
+                                buildReader.open();
+                                while (buildReader.nextFrame(buffer)) {
+                                    ByteBuffer copyBuffer = ctx.allocateFrame();
+                                    FrameUtils.copy(buffer, copyBuffer);
+                                    joiner.build(copyBuffer);
+                                    buffer.clear();
+                                }
+                                buildReader.close();
+                            }
+
+                            // probe
+                            RunFileReader probeReader = probeWriter.createReader();
+                            probeReader.open();
+                            while (probeReader.nextFrame(buffer)) {
+                                joiner.join(buffer, writer);
                                 buffer.clear();
                             }
-                            buildReader.close();
+                            probeReader.close();
+                            joiner.closeJoin(writer);
                         }
-
-                        // probe
-                        RunFileReader probeReader = probeWriter.createReader();
-                        probeReader.open();
-                        while (probeReader.nextFrame(buffer)) {
-                            joiner.join(buffer, writer);
-                            buffer.clear();
-                        }
-                        probeReader.close();
-                        joiner.closeJoin(writer);
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
                     }
-                    writer.close();
                 }
 
                 @Override

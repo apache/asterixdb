@@ -300,6 +300,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             long end = System.currentTimeMillis();
                             System.out.println("merge time " + (end - start));
                         }
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
                     } finally {
                         writer.close();
                     }

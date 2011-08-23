@@ -430,9 +430,11 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 try {
                     readMapOp.mapInput();
                 } catch (Exception e) {
+                    writer.fail();
                     throw new HyracksDataException(e);
+                } finally {
+                    readMapOp.close();
                 }
-                readMapOp.close();
             }
         };
     }
