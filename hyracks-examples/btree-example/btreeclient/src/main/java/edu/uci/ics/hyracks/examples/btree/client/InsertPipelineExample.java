@@ -156,12 +156,12 @@ public class InsertPipelineExample {
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
-        
+
         // create operator descriptor
-        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation,
-                IndexOp.INSERT, opHelperFactory);
+        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+                spec, recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider,
+                primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories,
+                null, primaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -187,10 +187,10 @@ public class InsertPipelineExample {
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
                 options.secondaryBTreeName);
         // create operator descriptor
-        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories,
-                secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+                spec, recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider,
+                secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
+                secondaryComparatorFactories, null, secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator

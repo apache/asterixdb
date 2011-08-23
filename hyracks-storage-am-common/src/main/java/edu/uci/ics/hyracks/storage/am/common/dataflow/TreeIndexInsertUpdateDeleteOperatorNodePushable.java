@@ -28,95 +28,104 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
-public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final TreeIndexOpHelper treeIndexOpHelper;
-    private FrameTupleAccessor accessor;
-    private final IRecordDescriptorProvider recordDescProvider;
-    private final IndexOp op;
-    private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-    private ByteBuffer writeBuffer;
-    private IndexOpContext opCtx;
+public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
+		AbstractUnaryInputUnaryOutputOperatorNodePushable {
+	private final TreeIndexOpHelper treeIndexOpHelper;
+	private FrameTupleAccessor accessor;
+	private final IRecordDescriptorProvider recordDescProvider;
+	private final IndexOp op;
+	private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+	private ByteBuffer writeBuffer;
+	private IndexOpContext opCtx;
 
-    public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.OPEN);
-        this.recordDescProvider = recordDescProvider;
-        this.op = op;
-        tuple.setFieldPermutation(fieldPermutation);
-    }
+	public TreeIndexInsertUpdateDeleteOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
+			IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
+			IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
+				.createTreeIndexOpHelper(opDesc, ctx, partition,
+						IndexHelperOpenMode.OPEN);
+		this.recordDescProvider = recordDescProvider;
+		this.op = op;
+		tuple.setFieldPermutation(fieldPermutation);
+	}
 
-    @Override
-    public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
-                .getOperatorDescriptor();
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
-        writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-        writer.open();
-        try {
-            treeIndexOpHelper.init();
-            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
-            opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op, treeIndexOpHelper.getLeafFrame(),
-                    treeIndexOpHelper.getInteriorFrame(), new LIFOMetaDataFrame());
-        } catch (Exception e) {
-            // cleanup in case of failure
-            treeIndexOpHelper.deinit();
-            throw new HyracksDataException(e);
-        }
-    }
+	@Override
+	public void open() throws HyracksDataException {
+		AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
+				.getOperatorDescriptor();
+		RecordDescriptor inputRecDesc = recordDescProvider
+				.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+		accessor = new FrameTupleAccessor(treeIndexOpHelper
+				.getHyracksTaskContext().getFrameSize(), inputRecDesc);
+		writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
+		writer.open();
+		try {
+			treeIndexOpHelper.init();
+			treeIndexOpHelper.getTreeIndex().open(
+					treeIndexOpHelper.getIndexFileId());
+			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op,
+					treeIndexOpHelper.getLeafFrame(),
+					treeIndexOpHelper.getInteriorFrame(),
+					new LIFOMetaDataFrame());
+		} catch (Exception e) {
+			// cleanup in case of failure
+			treeIndexOpHelper.deinit();
+			throw new HyracksDataException(e);
+		}
+	}
 
-    @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        final ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
-        accessor.reset(buffer);
+	@Override
+	public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+		final ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
+		accessor.reset(buffer);
 
-        int tupleCount = accessor.getTupleCount();
-        for (int i = 0; i < tupleCount; i++) {
-            tuple.reset(accessor, i);
-            try {
-                switch (op) {
+		int tupleCount = accessor.getTupleCount();
+		for (int i = 0; i < tupleCount; i++) {
+			tuple.reset(accessor, i);
+			try {
+				switch (op) {
 
-                    case INSERT: {
-                        treeIndex.insert(tuple, opCtx);
-                    }
-                        break;
+				case INSERT: {
+					treeIndex.insert(tuple, opCtx);
+				}
+					break;
 
-                    case DELETE: {
-                        treeIndex.delete(tuple, opCtx);
-                    }
-                        break;
+				case DELETE: {
+					treeIndex.delete(tuple, opCtx);
+				}
+					break;
 
-                    default: {
-                        throw new HyracksDataException("Unsupported operation " + op
-                                + " in tree index InsertUpdateDelete operator");
-                    }
+				default: {
+					throw new HyracksDataException("Unsupported operation "
+							+ op + " in tree index InsertUpdateDelete operator");
+				}
 
-                }
+				}
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new HyracksDataException(e);
-            }
-        }
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new HyracksDataException(e);
+			}
+		}
 
-        // pass a copy of the frame to next op
-        System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());
-        FrameUtils.flushFrame(writeBuffer, writer);
-    }
+		// pass a copy of the frame to next op
+		System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0,
+				buffer.capacity());
+		FrameUtils.flushFrame(writeBuffer, writer);
+	}
 
-    @Override
-    public void close() throws HyracksDataException {
-        try {
-            writer.close();
-        } finally {
-            treeIndexOpHelper.deinit();
-        }
-    }
+	@Override
+	public void close() throws HyracksDataException {
+		try {
+			writer.close();
+		} finally {
+			treeIndexOpHelper.deinit();
+		}
+	}
 
-    @Override
-    public void fail() throws HyracksDataException {
-        writer.fail();
-    }
+	@Override
+	public void fail() throws HyracksDataException {
+		writer.fail();
+	}
 }

@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -34,23 +35,33 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 // 2. create file mappings (FileMappingProvider)
 // 3. register tree index instance (IndexRegistry)
 
-public class TreeIndexFileEnlistmentOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexFileEnlistmentOperatorDescriptor extends
+		AbstractTreeIndexOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public TreeIndexFileEnlistmentOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
-            IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, 0, 0, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
-    }
+	public TreeIndexFileEnlistmentOperatorDescriptor(JobSpecification spec,
+			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
+			IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+			IFileSplitProvider fileSplitProvider,
+			ITreeIndexFrameFactory interiorFrameFactory,
+			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
+			IBinaryComparatorFactory[] comparatorFactories,
+			IPrimitiveValueProviderFactory[] valueProviderFactories,
+			ITreeIndexOpHelperFactory opHelperFactory) {
+		super(spec, 0, 0, recDesc, storageManager, treeIndexRegistryProvider,
+				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
+				typeTraits, comparatorFactories, valueProviderFactories,
+				opHelperFactory);
+	}
 
-    @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int partitions) throws HyracksDataException {
-        return new TreeIndexFileEnlistmentOperatorNodePushable(this, ctx, partition);
-    }
+	@Override
+	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+			IOperatorEnvironment env,
+			IRecordDescriptorProvider recordDescProvider, int partition,
+			int partitions) throws HyracksDataException {
+		return new TreeIndexFileEnlistmentOperatorNodePushable(this, ctx,
+				partition);
+	}
 
 }

@@ -154,12 +154,12 @@ public class PrimaryIndexBulkLoadExample {
         // tuple
         int[] fieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input tuple
                                                  // to field 0 of B-Tree tuple,
-                                                 // etc.                
+                                                 // etc.
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
-        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, storageManager,
-                treeIndexRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory, typeTraits,
-                comparatorFactories, fieldPermutation, 0.7f, opHelperFactory);
+        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+                storageManager, treeIndexRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory,
+                typeTraits, comparatorFactories, null, fieldPermutation, 0.7f, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 
         // distribute the records from the datagen via hashing to the bulk load

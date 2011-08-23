@@ -12,23 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IGenericPrimitiveSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 
-public class FloatGenericPrimitiveSerializerDeserializer extends
-		FloatSerializerDeserializer implements
-		IGenericPrimitiveSerializerDeserializer<Float> {
-
+public class FloatPrimitiveValueProviderFactory implements
+		IPrimitiveValueProviderFactory {
 	private static final long serialVersionUID = 1L;
 
-	public static final FloatGenericPrimitiveSerializerDeserializer INSTANCE = new FloatGenericPrimitiveSerializerDeserializer();
+	public static final FloatPrimitiveValueProviderFactory INSTANCE = new FloatPrimitiveValueProviderFactory();
 
-	@Override
-	public double getValue(byte[] bytes, int offset) {
-		return FloatSerializerDeserializer.getFloat(bytes, offset);
+	private FloatPrimitiveValueProviderFactory() {
 	}
 
+	@Override
+	public IPrimitiveValueProvider createPrimitiveValueProvider() {
+		return new IPrimitiveValueProvider() {
+			@Override
+			public double getValue(byte[] bytes, int offset) {
+				return FloatSerializerDeserializer.getFloat(bytes, offset);
+			}
+		};
+	}
 }

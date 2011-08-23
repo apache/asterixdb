@@ -26,64 +26,73 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
-public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
-    private float fillFactor;
-    private final TreeIndexOpHelper treeIndexOpHelper;
-    private FrameTupleAccessor accessor;
-    private IIndexBulkLoadContext bulkLoadCtx;
+public class TreeIndexBulkLoadOperatorNodePushable extends
+		AbstractUnaryInputSinkOperatorNodePushable {
+	private float fillFactor;
+	private final TreeIndexOpHelper treeIndexOpHelper;
+	private FrameTupleAccessor accessor;
+	private IIndexBulkLoadContext bulkLoadCtx;
 
-    private IRecordDescriptorProvider recordDescProvider;
+	private IRecordDescriptorProvider recordDescProvider;
 
-    private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+	private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.CREATE);
-        this.fillFactor = fillFactor;
-        this.recordDescProvider = recordDescProvider;
-        tuple.setFieldPermutation(fieldPermutation);
-    }
+	public TreeIndexBulkLoadOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
+			IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
+			float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
+				.createTreeIndexOpHelper(opDesc, ctx, partition,
+						IndexHelperOpenMode.CREATE);
+		this.fillFactor = fillFactor;
+		this.recordDescProvider = recordDescProvider;
+		tuple.setFieldPermutation(fieldPermutation);
+	}
 
-    @Override
-    public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
-                .getOperatorDescriptor();
-        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
-        ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
-        try {
-            treeIndexOpHelper.init();
-            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
-            bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(fillFactor, treeIndexOpHelper.getLeafFrame(),
-                    treeIndexOpHelper.getInteriorFrame(), metaFrame);
-        } catch (Exception e) {
-            // cleanup in case of failure
-            treeIndexOpHelper.deinit();
-            throw new HyracksDataException(e);
-        }
-    }
+	@Override
+	public void open() throws HyracksDataException {
+		AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
+				.getOperatorDescriptor();
+		RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(
+				opDesc.getOperatorId(), 0);
+		accessor = new FrameTupleAccessor(treeIndexOpHelper
+				.getHyracksTaskContext().getFrameSize(), recDesc);
+		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
+		try {
+			treeIndexOpHelper.init();
+			treeIndexOpHelper.getTreeIndex().open(
+					treeIndexOpHelper.getIndexFileId());
+			bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(
+					fillFactor, treeIndexOpHelper.getLeafFrame(),
+					treeIndexOpHelper.getInteriorFrame(), metaFrame);
+		} catch (Exception e) {
+			// cleanup in case of failure
+			treeIndexOpHelper.deinit();
+			throw new HyracksDataException(e);
+		}
+	}
 
-    @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        accessor.reset(buffer);
-        int tupleCount = accessor.getTupleCount();
-        for (int i = 0; i < tupleCount; i++) {
-            tuple.reset(accessor, i);
-            treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(bulkLoadCtx, tuple);
-        }
-    }
+	@Override
+	public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+		accessor.reset(buffer);
+		int tupleCount = accessor.getTupleCount();
+		for (int i = 0; i < tupleCount; i++) {
+			tuple.reset(accessor, i);
+			treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(bulkLoadCtx,
+					tuple);
+		}
+	}
 
-    @Override
-    public void close() throws HyracksDataException {
-        try {
-            treeIndexOpHelper.getTreeIndex().endBulkLoad(bulkLoadCtx);
-        } finally {
-            treeIndexOpHelper.deinit();
-        }
-    }
+	@Override
+	public void close() throws HyracksDataException {
+		try {
+			treeIndexOpHelper.getTreeIndex().endBulkLoad(bulkLoadCtx);
+		} finally {
+			treeIndexOpHelper.deinit();
+		}
+	}
 
-    @Override
-    public void fail() throws HyracksDataException {
-    }
+	@Override
+	public void fail() throws HyracksDataException {
+	}
 }

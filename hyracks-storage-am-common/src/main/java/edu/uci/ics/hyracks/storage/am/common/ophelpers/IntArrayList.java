@@ -16,74 +16,74 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 public class IntArrayList {
-    private int[] data;
-    private int size;
-    private int first;
-    private final int growth;
+	private int[] data;
+	private int size;
+	private int first;
+	private final int growth;
 
-    public IntArrayList(int initialCapacity, int growth) {
-        data = new int[initialCapacity];
-        size = 0;
-        first = 0;
-        this.growth = growth;
-    }
+	public IntArrayList(int initialCapacity, int growth) {
+		data = new int[initialCapacity];
+		size = 0;
+		first = 0;
+		this.growth = growth;
+	}
 
-    public int size() {
-        return size;
-    }
+	public int size() {
+		return size;
+	}
 
-    public int first() {
-        return first;
-    }
+	public int first() {
+		return first;
+	}
 
-    public void add(int i) {
-        if (size == data.length) {
-            int[] newData = new int[data.length + growth];
-            System.arraycopy(data, 0, newData, 0, data.length);
-            data = newData;
-        }
+	public void add(int i) {
+		if (size == data.length) {
+			int[] newData = new int[data.length + growth];
+			System.arraycopy(data, 0, newData, 0, data.length);
+			data = newData;
+		}
 
-        data[size++] = i;
-    }
+		data[size++] = i;
+	}
 
-    public void removeLast() {
-        if (size > 0)
-            size--;
-    }
+	public void removeLast() {
+		if (size > 0)
+			size--;
+	}
 
-    // WARNING: caller is responsible for checking size > 0
-    public int getLast() {
-        return data[size - 1];
-    }
+	// WARNING: caller is responsible for checking size > 0
+	public int getLast() {
+		return data[size - 1];
+	}
 
-    public int get(int i) {
-        return data[i];
-    }
+	public int get(int i) {
+		return data[i];
+	}
 
-    // WARNING: caller is responsible for checking i < size
-    public void set(int i, int value) {
-        data[i] = value;
+	// WARNING: caller is responsible for checking i < size
+	public void set(int i, int value) {
+		data[i] = value;
 
-    }
+	}
 
-    public int getFirst() {
-        return data[first];
-    }
+	public int getFirst() {
+		return data[first];
+	}
 
-    public void moveFirst() {
-        first++;
-    }
+	public void moveFirst() {
+		first++;
+	}
 
-    public void clear() {
-        size = 0;
-        first = 0;
-    }
+	public void clear() {
+		size = 0;
+		first = 0;
+	}
 
-    public boolean isLast() {
-        return size == first;
-    }
+	public boolean isLast() {
+		return size == first;
+	}
 
-    public boolean isEmpty() {
-        return size == 0;
-    }
+	public boolean isEmpty() {
+		return size == 0;
+	}
 }

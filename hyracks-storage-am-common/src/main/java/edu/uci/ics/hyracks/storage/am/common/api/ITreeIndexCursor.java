@@ -20,21 +20,22 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexCursor {
-    public void reset();
+	public void reset();
 
-    public boolean hasNext() throws Exception;
+	public boolean hasNext() throws Exception;
 
-    public void next() throws Exception;
+	public void next() throws Exception;
 
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws Exception;
+	public void open(ICursorInitialState initialState,
+			ISearchPredicate searchPred) throws Exception;
 
-    public ICachedPage getPage();
+	public ICachedPage getPage();
 
-    public void close() throws Exception;
+	public void close() throws Exception;
 
-    public void setBufferCache(IBufferCache bufferCache);
+	public void setBufferCache(IBufferCache bufferCache);
 
-    public void setFileId(int fileId);
+	public void setFileId(int fileId);
 
-    public ITupleReference getTuple();
+	public ITupleReference getTuple();
 }

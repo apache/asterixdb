@@ -20,5 +20,5 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 public interface IIndexRegistryProvider<IndexType> extends Serializable {
-    public IndexRegistry<IndexType> getRegistry(IHyracksTaskContext ctx);
+	public IndexRegistry<IndexType> getRegistry(IHyracksTaskContext ctx);
 }

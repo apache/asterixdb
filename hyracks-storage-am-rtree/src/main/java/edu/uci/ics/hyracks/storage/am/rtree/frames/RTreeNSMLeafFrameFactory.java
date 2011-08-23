@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -24,20 +23,21 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
 	private static final long serialVersionUID = 1L;
 	private ITreeIndexTupleWriterFactory tupleWriterFactory;
-	private ISerializerDeserializer[] recDescSers;
 	private int keyFieldCount;
 
 	public RTreeNSMLeafFrameFactory(
-			ITreeIndexTupleWriterFactory tupleWriterFactory,
-			ISerializerDeserializer[] recDescSers, int keyFieldCount) {
+			ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
 		this.tupleWriterFactory = tupleWriterFactory;
-		this.recDescSers = recDescSers;
+		if (keyFieldCount % 2 != 0) {
+			throw new IllegalArgumentException(
+					"The key has different number of dimensions.");
+		}
 		this.keyFieldCount = keyFieldCount;
 	}
 
 	@Override
 	public IRTreeLeafFrame createFrame() {
 		return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(),
-				recDescSers, keyFieldCount);
+				keyFieldCount);
 	}
 }

@@ -31,77 +31,91 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
-public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private final TreeIndexOpHelper treeIndexOpHelper;
+public class TreeIndexDiskOrderScanOperatorNodePushable extends
+		AbstractUnaryOutputSourceOperatorNodePushable {
+	private final TreeIndexOpHelper treeIndexOpHelper;
 
-    public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.OPEN);
-    }
+	public TreeIndexDiskOrderScanOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
+			IHyracksTaskContext ctx, int partition) {
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
+				.createTreeIndexOpHelper(opDesc, ctx, partition,
+						IndexHelperOpenMode.OPEN);
+	}
 
-    @Override
-    public void initialize() throws HyracksDataException {
+	@Override
+	public void initialize() throws HyracksDataException {
 
-        ITreeIndexFrame cursorFrame = treeIndexOpHelper.getOperatorDescriptor().getTreeIndexLeafFactory().createFrame();
-        ITreeIndexCursor cursor = treeIndexOpHelper.createDiskOrderScanCursor(cursorFrame);
-        ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
+		ITreeIndexFrame cursorFrame = treeIndexOpHelper.getOperatorDescriptor()
+				.getTreeIndexLeafFactory().createFrame();
+		ITreeIndexCursor cursor = treeIndexOpHelper
+				.createDiskOrderScanCursor(cursorFrame);
+		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 
-        IndexOpContext diskOrderScanOpCtx = treeIndexOpHelper.getTreeIndex().createOpContext(IndexOp.DISKORDERSCAN,
-                cursorFrame, null, null);
-        try {
+		IndexOpContext diskOrderScanOpCtx = treeIndexOpHelper
+				.getTreeIndex()
+				.createOpContext(IndexOp.DISKORDERSCAN, cursorFrame, null, null);
+		try {
 
-            treeIndexOpHelper.init();
-            writer.open();
-            try {
-                treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame, diskOrderScanOpCtx);
+			treeIndexOpHelper.init();
+			writer.open();
+			try {
+				treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor,
+						cursorFrame, metaFrame, diskOrderScanOpCtx);
 
-                int fieldCount = treeIndexOpHelper.getTreeIndex().getFieldCount();
-                ByteBuffer frame = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext()
-                        .getFrameSize());
-                appender.reset(frame, true);
-                ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
-                DataOutput dos = tb.getDataOutput();
+				int fieldCount = treeIndexOpHelper.getTreeIndex()
+						.getFieldCount();
+				ByteBuffer frame = treeIndexOpHelper.getHyracksTaskContext()
+						.allocateFrame();
+				FrameTupleAppender appender = new FrameTupleAppender(
+						treeIndexOpHelper.getHyracksTaskContext()
+								.getFrameSize());
+				appender.reset(frame, true);
+				ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+				DataOutput dos = tb.getDataOutput();
 
-                while (cursor.hasNext()) {
-                    tb.reset();
-                    cursor.next();
+				while (cursor.hasNext()) {
+					tb.reset();
+					cursor.next();
 
-                    ITupleReference frameTuple = cursor.getTuple();
-                    for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-                        dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-                        tb.addFieldEndOffset();
-                    }
+					ITupleReference frameTuple = cursor.getTuple();
+					for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+						dos.write(frameTuple.getFieldData(i),
+								frameTuple.getFieldStart(i),
+								frameTuple.getFieldLength(i));
+						tb.addFieldEndOffset();
+					}
 
-                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        FrameUtils.flushFrame(frame, writer);
-                        appender.reset(frame, true);
-                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            throw new IllegalStateException();
-                        }
-                    }
-                }
+					if (!appender.append(tb.getFieldEndOffsets(),
+							tb.getByteArray(), 0, tb.getSize())) {
+						FrameUtils.flushFrame(frame, writer);
+						appender.reset(frame, true);
+						if (!appender.append(tb.getFieldEndOffsets(),
+								tb.getByteArray(), 0, tb.getSize())) {
+							throw new IllegalStateException();
+						}
+					}
+				}
 
-                if (appender.getTupleCount() > 0) {
-                    FrameUtils.flushFrame(frame, writer);
-                }
-            } catch (Exception e) {
-                writer.fail();
-                throw new HyracksDataException(e);
-            } finally {
-                cursor.close();
-                writer.close();
-            }
+				if (appender.getTupleCount() > 0) {
+					FrameUtils.flushFrame(frame, writer);
+				}
+			} catch (Exception e) {
+				writer.fail();
+				throw new HyracksDataException(e);
+			} finally {
+				cursor.close();
+				writer.close();
+			}
 
-        } catch (Exception e) {
-            deinitialize();
-            throw new HyracksDataException(e);
-        }
-    }
+		} catch (Exception e) {
+			deinitialize();
+			throw new HyracksDataException(e);
+		}
+	}
 
-    @Override
-    public void deinitialize() throws HyracksDataException {
-        treeIndexOpHelper.deinit();
-    }
+	@Override
+	public void deinitialize() throws HyracksDataException {
+		treeIndexOpHelper.deinit();
+	}
 }

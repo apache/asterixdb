@@ -23,18 +23,20 @@ import org.junit.AfterClass;
 
 public abstract class AbstractRTreeTest {
 
-    protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected final static String tmpDir = System.getProperty("java.io.tmpdir");
-    protected final static String sep = System.getProperty("file.separator");
-    protected final static String fileName = tmpDir + sep + simpleDateFormat.format(new Date());
+	protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+			"ddMMyy-hhmmssSS");
+	protected final static String tmpDir = System.getProperty("java.io.tmpdir");
+	protected final static String sep = System.getProperty("file.separator");
+	protected final static String fileName = tmpDir + sep
+			+ simpleDateFormat.format(new Date());
 
-    protected void print(String str) {
-        System.err.print(str);
-    }
+	protected void print(String str) {
+		System.err.print(str);
+	}
 
-    @AfterClass
-    public static void cleanup() throws Exception {
-        File f = new File(fileName);
-        f.deleteOnExit();
-    }
+	@AfterClass
+	public static void cleanup() throws Exception {
+		File f = new File(fileName);
+		f.deleteOnExit();
+	}
 }

@@ -30,147 +30,170 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class TreeIndexOpHelper {
 
-    protected ITreeIndexFrame interiorFrame;
-    protected ITreeIndexFrame leafFrame;
-    protected MultiComparator cmp;
+	protected ITreeIndexFrame interiorFrame;
+	protected ITreeIndexFrame leafFrame;
+	protected MultiComparator cmp;
 
-    protected ITreeIndex treeIndex;
-    protected int indexFileId = -1;
-    protected int partition;
+	protected ITreeIndex treeIndex;
+	protected int indexFileId = -1;
+	protected int partition;
 
-    protected ITreeIndexOperatorDescriptorHelper opDesc;
-    protected IHyracksTaskContext ctx;
+	protected ITreeIndexOperatorDescriptorHelper opDesc;
+	protected IHyracksTaskContext ctx;
 
-    protected IndexHelperOpenMode mode;
+	protected IndexHelperOpenMode mode;
 
-    public TreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, final IHyracksTaskContext ctx, int partition,
-            IndexHelperOpenMode mode) {
-        this.opDesc = opDesc;
-        this.ctx = ctx;
-        this.mode = mode;
-        this.partition = partition;
-    }
+	public TreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc,
+			final IHyracksTaskContext ctx, int partition,
+			IndexHelperOpenMode mode) {
+		this.opDesc = opDesc;
+		this.ctx = ctx;
+		this.mode = mode;
+		this.partition = partition;
+	}
 
-    public void init() throws HyracksDataException {
-        IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
-        IFileSplitProvider fileSplitProvider = opDesc.getTreeIndexFileSplitProvider();
+	public void init() throws HyracksDataException {
+		IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(
+				ctx);
+		IFileMapProvider fileMapProvider = opDesc.getStorageManager()
+				.getFileMapProvider(ctx);
+		IFileSplitProvider fileSplitProvider = opDesc
+				.getTreeIndexFileSplitProvider();
 
-        FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-        boolean fileIsMapped = fileMapProvider.isMapped(f);
+		FileReference f = fileSplitProvider.getFileSplits()[partition]
+				.getLocalFile();
+		boolean fileIsMapped = fileMapProvider.isMapped(f);
 
-        switch (mode) {
+		switch (mode) {
 
-            case OPEN: {
-                if (!fileIsMapped) {
-                    throw new HyracksDataException("Trying to open tree index from unmapped file " + f.toString());
-                }
-            }
-                break;
+		case OPEN: {
+			if (!fileIsMapped) {
+				throw new HyracksDataException(
+						"Trying to open tree index from unmapped file "
+								+ f.toString());
+			}
+		}
+			break;
 
-            case CREATE:
-            case ENLIST: {
-                if (!fileIsMapped) {
-                    bufferCache.createFile(f);
-                }
-            }
-                break;
+		case CREATE:
+		case ENLIST: {
+			if (!fileIsMapped) {
+				bufferCache.createFile(f);
+			}
+		}
+			break;
 
-        }
+		}
 
-        int fileId = fileMapProvider.lookupFileId(f);
-        try {
-            bufferCache.openFile(fileId);
-        } catch (HyracksDataException e) {
-            // revert state of buffer cache since file failed to open
-            if (!fileIsMapped) {
-                bufferCache.deleteFile(fileId);
-            }
-            throw e;
-        }
+		int fileId = fileMapProvider.lookupFileId(f);
+		try {
+			bufferCache.openFile(fileId);
+		} catch (HyracksDataException e) {
+			// revert state of buffer cache since file failed to open
+			if (!fileIsMapped) {
+				bufferCache.deleteFile(fileId);
+			}
+			throw e;
+		}
 
-        // only set indexFileId member when openFile() succeeds,
-        // otherwise deinit() will try to close the file that failed to open
-        indexFileId = fileId;
+		// only set indexFileId member when openFile() succeeds,
+		// otherwise deinit() will try to close the file that failed to open
+		indexFileId = fileId;
 
-        interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
-        leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
+		interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
+		leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
 
-        IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
-        treeIndex = treeIndexRegistry.get(indexFileId);
-        if (treeIndex == null) {
+		IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc
+				.getTreeIndexRegistryProvider().getRegistry(ctx);
+		treeIndex = treeIndexRegistry.get(indexFileId);
+		if (treeIndex == null) {
 
-            // create new tree and register it
-            treeIndexRegistry.lock();
-            try {
-                // check if tree has already been registered by another thread
-                treeIndex = treeIndexRegistry.get(indexFileId);
-                if (treeIndex == null) {
-                    // this thread should create and register the tree
+			// create new tree and register it
+			treeIndexRegistry.lock();
+			try {
+				// check if tree has already been registered by another thread
+				treeIndex = treeIndexRegistry.get(indexFileId);
+				if (treeIndex == null) {
+					// this thread should create and register the tree
 
-                    IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
-                    for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
-                        comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
-                    }
+					IBinaryComparator[] comparators = new IBinaryComparator[opDesc
+							.getTreeIndexComparatorFactories().length];
+					for (int i = 0; i < opDesc
+							.getTreeIndexComparatorFactories().length; i++) {
+						comparators[i] = opDesc
+								.getTreeIndexComparatorFactories()[i]
+								.createBinaryComparator();
+					}
 
-                    cmp = new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
+					cmp = createMultiComparator(comparators);
 
-                    treeIndex = createTreeIndex();
-                    if (mode == IndexHelperOpenMode.CREATE) {
-                        ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                                .createFrame();
-                        try {
-                            treeIndex.create(indexFileId, leafFrame, metaFrame);
-                        } catch (Exception e) {
-                            throw new HyracksDataException(e);
-                        }
-                    }
-                    treeIndex.open(indexFileId);
-                    treeIndexRegistry.register(indexFileId, treeIndex);
-                }
-            } finally {
-                treeIndexRegistry.unlock();
-            }
-        }
-    }
+					treeIndex = createTreeIndex();
+					if (mode == IndexHelperOpenMode.CREATE) {
+						ITreeIndexMetaDataFrame metaFrame = treeIndex
+								.getFreePageManager().getMetaDataFrameFactory()
+								.createFrame();
+						try {
+							treeIndex.create(indexFileId, leafFrame, metaFrame);
+						} catch (Exception e) {
+							throw new HyracksDataException(e);
+						}
+					}
+					treeIndex.open(indexFileId);
+					treeIndexRegistry.register(indexFileId, treeIndex);
+				}
+			} finally {
+				treeIndexRegistry.unlock();
+			}
+		}
+	}
 
-    // MUST be overridden
-    public ITreeIndex createTreeIndex() throws HyracksDataException {
-        throw new HyracksDataException("createTreeIndex Operation not implemented.");
-    }
+	// MUST be overridden
+	public ITreeIndex createTreeIndex() throws HyracksDataException {
+		throw new HyracksDataException(
+				"createTreeIndex Operation not implemented.");
+	}
 
-    public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame) throws HyracksDataException {
-        return new TreeDiskOrderScanCursor(leafFrame);
-    }
+	// MUST be overridden
+	public MultiComparator createMultiComparator(IBinaryComparator[] comparators)
+			throws HyracksDataException {
+		throw new HyracksDataException(
+				"createComparator Operation not implemented.");
+	}
 
-    public void deinit() throws HyracksDataException {
-        if (indexFileId != -1) {
-            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            bufferCache.closeFile(indexFileId);
-        }
-    }
+	public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame)
+			throws HyracksDataException {
+		return new TreeDiskOrderScanCursor(leafFrame);
+	}
 
-    public ITreeIndex getTreeIndex() {
-        return treeIndex;
-    }
+	public void deinit() throws HyracksDataException {
+		if (indexFileId != -1) {
+			IBufferCache bufferCache = opDesc.getStorageManager()
+					.getBufferCache(ctx);
+			bufferCache.closeFile(indexFileId);
+		}
+	}
 
-    public IHyracksTaskContext getHyracksTaskContext() {
-        return ctx;
-    }
+	public ITreeIndex getTreeIndex() {
+		return treeIndex;
+	}
 
-    public ITreeIndexOperatorDescriptorHelper getOperatorDescriptor() {
-        return opDesc;
-    }
+	public IHyracksTaskContext getHyracksTaskContext() {
+		return ctx;
+	}
 
-    public ITreeIndexFrame getLeafFrame() {
-        return leafFrame;
-    }
+	public ITreeIndexOperatorDescriptorHelper getOperatorDescriptor() {
+		return opDesc;
+	}
 
-    public ITreeIndexFrame getInteriorFrame() {
-        return interiorFrame;
-    }
+	public ITreeIndexFrame getLeafFrame() {
+		return leafFrame;
+	}
 
-    public int getIndexFileId() {
-        return indexFileId;
-    }
+	public ITreeIndexFrame getInteriorFrame() {
+		return interiorFrame;
+	}
+
+	public int getIndexFileId() {
+		return indexFileId;
+	}
 }

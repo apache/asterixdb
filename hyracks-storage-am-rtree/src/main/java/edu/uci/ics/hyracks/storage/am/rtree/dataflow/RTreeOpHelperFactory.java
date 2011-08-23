@@ -23,11 +23,12 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 
 public class RTreeOpHelperFactory implements ITreeIndexOpHelperFactory {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    public TreeIndexOpHelper createTreeIndexOpHelper(ITreeIndexOperatorDescriptorHelper opDesc,
-            IHyracksTaskContext ctx, int partition, IndexHelperOpenMode mode) {
-        return new RTreeOpHelper(opDesc, ctx, partition, mode);
-    }
+	@Override
+	public TreeIndexOpHelper createTreeIndexOpHelper(
+			ITreeIndexOperatorDescriptorHelper opDesc, IHyracksTaskContext ctx,
+			int partition, IndexHelperOpenMode mode) {
+		return new RTreeOpHelper(opDesc, ctx, partition, mode);
+	}
 }

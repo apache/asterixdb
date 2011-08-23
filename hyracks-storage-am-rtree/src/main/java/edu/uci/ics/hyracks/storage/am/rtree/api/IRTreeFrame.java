@@ -25,24 +25,23 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 
-    public ITreeIndexTupleReference createTupleReference();
+	public ITreeIndexTupleReference createTupleReference();
 
-    public void generateDist(ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end);
+	public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
 
-    public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
+	public void insert(ITupleReference tuple, MultiComparator cmp,
+			int tupleIndex) throws Exception;
 
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
+	public void delete(int tupleIndex, MultiComparator cmp) throws Exception;
 
-    public void delete(int tupleIndex, MultiComparator cmp) throws Exception;
+	public int getPageNsn();
 
-    public int getPageNsn();
+	public void setPageNsn(int pageNsn);
 
-    public void setPageNsn(int pageNsn);
+	public int getRightPage();
 
-    public int getRightPage();
+	public void setRightPage(int rightPage);
 
-    public void setRightPage(int rightPage);
-
-    public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
+	public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
 
 }

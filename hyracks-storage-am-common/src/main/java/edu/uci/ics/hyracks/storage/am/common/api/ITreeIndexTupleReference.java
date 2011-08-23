@@ -20,11 +20,11 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITreeIndexTupleReference extends ITupleReference {
-    public void setFieldCount(int fieldCount);
+	public void setFieldCount(int fieldCount);
 
-    public void setFieldCount(int fieldStartIndex, int fieldCount);
+	public void setFieldCount(int fieldStartIndex, int fieldCount);
 
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset);
+	public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset);
 
-    public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
+	public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
 }

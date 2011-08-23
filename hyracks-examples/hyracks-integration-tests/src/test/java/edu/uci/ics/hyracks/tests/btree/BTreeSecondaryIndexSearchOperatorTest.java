@@ -62,7 +62,8 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
-public class BTreeSecondaryOperatorsTest extends AbstractIntegrationTest {
+public class BTreeSecondaryIndexSearchOperatorTest extends
+		AbstractIntegrationTest {
 	static {
 		TestStorageManagerComponentHolder.init(8192, 20, 20);
 	}
@@ -201,7 +202,7 @@ public class BTreeSecondaryOperatorsTest extends AbstractIntegrationTest {
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, fieldPermutation, 0.7f,
+				primaryComparatorFactories, null, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeBulkLoad, NC1_ID);
@@ -267,7 +268,7 @@ public class BTreeSecondaryOperatorsTest extends AbstractIntegrationTest {
 				spec, storageManager, treeIndexRegistryProvider,
 				secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
 				secondaryLeafFrameFactory, secondaryTypeTraits,
-				secondaryComparatorFactories, fieldPermutation, 0.7f,
+				secondaryComparatorFactories, null, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryBtreeBulkLoad, NC1_ID);

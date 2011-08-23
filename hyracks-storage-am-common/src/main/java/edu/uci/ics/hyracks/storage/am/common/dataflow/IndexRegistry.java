@@ -21,33 +21,33 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class IndexRegistry<IndexType> {
 
-    private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
-    private Lock registryLock = new ReentrantLock();
+	private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
+	private Lock registryLock = new ReentrantLock();
 
-    public IndexType get(int fileId) {
-        return map.get(fileId);
-    }
+	public IndexType get(int fileId) {
+		return map.get(fileId);
+	}
 
-    public void lock() {
-        registryLock.lock();
-    }
+	public void lock() {
+		registryLock.lock();
+	}
 
-    public void unlock() {
-        registryLock.unlock();
-    }
+	public void unlock() {
+		registryLock.unlock();
+	}
 
-    public void register(int fileId, IndexType index) {
-        map.put(fileId, index);
-    }
+	public void register(int fileId, IndexType index) {
+		map.put(fileId, index);
+	}
 
-    public void unregister(int fileId) {
-        try {
-            map.remove(fileId);
-        } catch (Exception e) {
-        }
-    }
+	public void unregister(int fileId) {
+		try {
+			map.remove(fileId);
+		} catch (Exception e) {
+		}
+	}
 
-    public int size() {
-        return map.size();
-    }
+	public int size() {
+		return map.size();
+	}
 }

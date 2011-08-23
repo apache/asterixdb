@@ -110,9 +110,9 @@ public class PrimaryIndexEnlistFilesExample {
 
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
-        TreeIndexFileEnlistmentOperatorDescriptor fileEnlistmentOp = new TreeIndexFileEnlistmentOperatorDescriptor(spec,
-                recDesc, storageManager, treeIndexRegistryProvider, btreeSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
+        TreeIndexFileEnlistmentOperatorDescriptor fileEnlistmentOp = new TreeIndexFileEnlistmentOperatorDescriptor(
+                spec, recDesc, storageManager, treeIndexRegistryProvider, btreeSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories, null, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, fileEnlistmentOp, splitNCs);
 
         spec.addRoot(fileEnlistmentOp);

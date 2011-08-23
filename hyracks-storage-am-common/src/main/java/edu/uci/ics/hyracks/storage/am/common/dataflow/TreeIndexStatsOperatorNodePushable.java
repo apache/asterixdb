@@ -24,55 +24,65 @@ import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class TreeIndexStatsOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final TreeIndexOpHelper treeIndexOpHelper;
-    private final IHyracksTaskContext ctx;
-    private TreeIndexStatsGatherer statsGatherer;
+public class TreeIndexStatsOperatorNodePushable extends
+		AbstractOperatorNodePushable {
+	private final TreeIndexOpHelper treeIndexOpHelper;
+	private final IHyracksTaskContext ctx;
+	private TreeIndexStatsGatherer statsGatherer;
 
-    public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.CREATE);
-        this.ctx = ctx;
-    }
+	public TreeIndexStatsOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
+			IHyracksTaskContext ctx, int partition) {
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
+				.createTreeIndexOpHelper(opDesc, ctx, partition,
+						IndexHelperOpenMode.CREATE);
+		this.ctx = ctx;
+	}
 
-    @Override
-    public void deinitialize() throws HyracksDataException {
-    }
+	@Override
+	public void deinitialize() throws HyracksDataException {
+	}
 
-    @Override
-    public int getInputArity() {
-        return 0;
-    }
+	@Override
+	public int getInputArity() {
+		return 0;
+	}
 
-    @Override
-    public IFrameWriter getInputFrameWriter(int index) {
-        return null;
-    }
+	@Override
+	public IFrameWriter getInputFrameWriter(int index) {
+		return null;
+	}
 
-    @Override
-    public void initialize() throws HyracksDataException {
-        try {
-            treeIndexOpHelper.init();
-            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
+	@Override
+	public void initialize() throws HyracksDataException {
+		try {
+			treeIndexOpHelper.init();
+			treeIndexOpHelper.getTreeIndex().open(
+					treeIndexOpHelper.getIndexFileId());
 
-            ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
-            IBufferCache bufferCache = treeIndexOpHelper.getOperatorDescriptor().getStorageManager()
-                    .getBufferCache(ctx);
+			ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
+			IBufferCache bufferCache = treeIndexOpHelper
+					.getOperatorDescriptor().getStorageManager()
+					.getBufferCache(ctx);
 
-            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(),
-                    treeIndexOpHelper.getIndexFileId(), treeIndex.getRootPageId());
-            TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
-                    .getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                    .createFrame());
-            System.err.println(stats.toString());
-        } catch (Exception e) {
-            treeIndexOpHelper.deinit();
-            throw new HyracksDataException(e);
-        }
-    }
+			statsGatherer = new TreeIndexStatsGatherer(bufferCache,
+					treeIndex.getFreePageManager(),
+					treeIndexOpHelper.getIndexFileId(),
+					treeIndex.getRootPageId());
+			TreeIndexStats stats = statsGatherer.gatherStats(treeIndex
+					.getLeafFrameFactory().createFrame(), treeIndex
+					.getInteriorFrameFactory().createFrame(), treeIndex
+					.getFreePageManager().getMetaDataFrameFactory()
+					.createFrame());
+			System.err.println(stats.toString());
+		} catch (Exception e) {
+			treeIndexOpHelper.deinit();
+			throw new HyracksDataException(e);
+		}
+	}
 
-    @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-    }
+	@Override
+	public void setOutputFrameWriter(int index, IFrameWriter writer,
+			RecordDescriptor recordDesc) {
+	}
 }

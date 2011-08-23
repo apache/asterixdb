@@ -17,21 +17,14 @@ package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IGenericPrimitiveSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.DoubleGenericPrimitiveSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.FloatGenericPrimitiveSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.IntegerGenericPrimitiveSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
@@ -50,35 +43,17 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	protected TupleEntryArrayList tupleEntries2; // used for split
 
 	protected Rectangle[] rec;
-	protected IGenericPrimitiveSerializerDeserializer[] recDescSers;
 
 	protected static final double splitFactor = 0.4;
 	protected static final int nearMinimumOverlapFactor = 32;
 	private static final double doubleEpsilon = computeDoubleEpsilon();
 	private static final int numTuplesEntries = 100;
 
-	public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter,
-			ISerializerDeserializer[] recDescSers, int keyFieldCount) {
+	public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
 		super(tupleWriter, new UnorderedSlotManager());
 		this.tuples = new ITreeIndexTupleReference[keyFieldCount];
-		this.recDescSers = new IGenericPrimitiveSerializerDeserializer[keyFieldCount];
 		for (int i = 0; i < keyFieldCount; i++) {
 			this.tuples[i] = tupleWriter.createTupleReference();
-
-			if (recDescSers[i].getClass().equals(
-					IntegerSerializerDeserializer.INSTANCE.getClass())) {
-				this.recDescSers[i] = IntegerGenericPrimitiveSerializerDeserializer.INSTANCE;
-			} else if (recDescSers[i].getClass().equals(
-					FloatSerializerDeserializer.INSTANCE.getClass())) {
-				this.recDescSers[i] = FloatGenericPrimitiveSerializerDeserializer.INSTANCE;
-			} else if (recDescSers[i].getClass().equals(
-					DoubleSerializerDeserializer.INSTANCE.getClass())) {
-				this.recDescSers[i] = DoubleGenericPrimitiveSerializerDeserializer.INSTANCE;
-			} else {
-				throw new RuntimeException(
-						"Key type not supported. The supported key types are int, float, and double ");
-
-			}
 		}
 		cmpFrameTuple = tupleWriter.createTupleReference();
 
@@ -88,7 +63,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 				numTuplesEntries);
 		rec = new Rectangle[4];
 		for (int i = 0; i < 4; i++) {
-			rec[i] = new Rectangle(keyFieldCount / 2, this.recDescSers);
+			rec[i] = new Rectangle(keyFieldCount / 2);
 		}
 	}
 
@@ -166,21 +141,22 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	public void generateDist(ITupleReference tuple,
-			TupleEntryArrayList entries, Rectangle rec, int start, int end) {
+			TupleEntryArrayList entries, Rectangle rec, int start, int end,
+			MultiComparator cmp) {
 		int j = 0;
 		while (entries.get(j).getTupleIndex() == -1) {
 			j++;
 		}
 		frameTuple.resetByTupleIndex(this, entries.get(j).getTupleIndex());
-		rec.set(frameTuple);
+		rec.set(frameTuple, cmp);
 		for (int i = start; i < end; ++i) {
 			if (i != j) {
 				if (entries.get(i).getTupleIndex() != -1) {
 					frameTuple.resetByTupleIndex(this, entries.get(i)
 							.getTupleIndex());
-					rec.enlarge(frameTuple);
+					rec.enlarge(frameTuple, cmp);
 				} else {
-					rec.enlarge(tuple);
+					rec.enlarge(tuple, cmp);
 				}
 			}
 		}

@@ -21,40 +21,44 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 
-public class TreeIndexFileEnlistmentOperatorNodePushable extends AbstractOperatorNodePushable {
+public class TreeIndexFileEnlistmentOperatorNodePushable extends
+		AbstractOperatorNodePushable {
 
-    private final TreeIndexOpHelper treeIndexOpHelper;
+	private final TreeIndexOpHelper treeIndexOpHelper;
 
-    public TreeIndexFileEnlistmentOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.ENLIST);
-    }
+	public TreeIndexFileEnlistmentOperatorNodePushable(
+			AbstractTreeIndexOperatorDescriptor opDesc,
+			IHyracksTaskContext ctx, int partition) {
+		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
+				.createTreeIndexOpHelper(opDesc, ctx, partition,
+						IndexHelperOpenMode.ENLIST);
+	}
 
-    @Override
-    public void deinitialize() throws HyracksDataException {
-    }
+	@Override
+	public void deinitialize() throws HyracksDataException {
+	}
 
-    @Override
-    public int getInputArity() {
-        return 0;
-    }
+	@Override
+	public int getInputArity() {
+		return 0;
+	}
 
-    @Override
-    public IFrameWriter getInputFrameWriter(int index) {
-        return null;
-    }
+	@Override
+	public IFrameWriter getInputFrameWriter(int index) {
+		return null;
+	}
 
-    @Override
-    public void initialize() throws HyracksDataException {
-        try {
-            treeIndexOpHelper.init();
-        } finally {
-            treeIndexOpHelper.deinit();
-        }
-    }
+	@Override
+	public void initialize() throws HyracksDataException {
+		try {
+			treeIndexOpHelper.init();
+		} finally {
+			treeIndexOpHelper.deinit();
+		}
+	}
 
-    @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-    }
+	@Override
+	public void setOutputFrameWriter(int index, IFrameWriter writer,
+			RecordDescriptor recordDesc) {
+	}
 }

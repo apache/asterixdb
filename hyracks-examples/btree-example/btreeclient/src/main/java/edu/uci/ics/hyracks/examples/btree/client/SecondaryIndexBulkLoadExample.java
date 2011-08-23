@@ -96,7 +96,7 @@ public class SecondaryIndexBulkLoadExample {
         JobSpecification spec = new JobSpecification();
 
         String[] splitNCs = options.ncs.split(",");
-        
+
         IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = TreeIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
@@ -125,8 +125,8 @@ public class SecondaryIndexBulkLoadExample {
         // use a disk-order scan to read primary index
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
-        TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec, recDesc,
-                storageManager, treeIndexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
+        TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec,
+                recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeScanOp, splitNCs);
 
@@ -157,9 +157,10 @@ public class SecondaryIndexBulkLoadExample {
         // tuple
         int[] fieldPermutation = { 1, 0 };
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
-        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, storageManager,
-                treeIndexRegistryProvider, btreeSplitProvider, secondaryInteriorFrameFactory, secondaryLeafFrameFactory,
-                secondaryTypeTraits, comparatorFactories, fieldPermutation, 0.7f, opHelperFactory);
+        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+                storageManager, treeIndexRegistryProvider, btreeSplitProvider, secondaryInteriorFrameFactory,
+                secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, null, fieldPermutation, 0.7f,
+                opHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 
         // connect the ops

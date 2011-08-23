@@ -55,7 +55,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -63,7 +62,7 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
-public class BTreePrimaryIndexOperatorsTest extends AbstractIntegrationTest {
+public class BTreePrimaryIndexScanOperatorTest extends AbstractIntegrationTest {
 	static {
 		TestStorageManagerComponentHolder.init(8192, 20, 20);
 	}
@@ -116,7 +115,7 @@ public class BTreePrimaryIndexOperatorsTest extends AbstractIntegrationTest {
 		primaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 		primaryTypeTraits[5] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 		primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-		
+
 		loadPrimaryIndexTest();
 	}
 
@@ -169,7 +168,7 @@ public class BTreePrimaryIndexOperatorsTest extends AbstractIntegrationTest {
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, fieldPermutation, 0.7f,
+				primaryComparatorFactories, null, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeBulkLoad, NC1_ID);
@@ -181,22 +180,6 @@ public class BTreePrimaryIndexOperatorsTest extends AbstractIntegrationTest {
 				primaryBtreeBulkLoad, 0);
 
 		spec.addRoot(primaryBtreeBulkLoad);
-		runTest(spec);
-	}
-
-	@Test
-	public void showPrimaryIndexStats() throws Exception {
-		JobSpecification spec = new JobSpecification();
-
-		TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(
-				spec, storageManager, treeIndexRegistryProvider,
-				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
-				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, opHelperFactory);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				primaryStatsOp, NC1_ID);
-
-		spec.addRoot(primaryStatsOp);
 		runTest(spec);
 	}
 
@@ -247,60 +230,6 @@ public class BTreePrimaryIndexOperatorsTest extends AbstractIntegrationTest {
 		spec.addRoot(printer);
 		runTest(spec);
 	}
-
-	@Test
-	public void searchPrimaryIndexTest() throws Exception {
-		JobSpecification spec = new JobSpecification();
-
-		// build tuple containing low and high search key
-		// high key and low key
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
-		DataOutput dos = tb.getDataOutput();
-
-		tb.reset();
-		// low key
-		UTF8StringSerializerDeserializer.INSTANCE.serialize("100", dos);
-		tb.addFieldEndOffset();
-		// high key
-		UTF8StringSerializerDeserializer.INSTANCE.serialize("200", dos);
-		tb.addFieldEndOffset();
-
-		ISerializerDeserializer[] keyRecDescSers = {
-				UTF8StringSerializerDeserializer.INSTANCE,
-				UTF8StringSerializerDeserializer.INSTANCE };
-		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-
-		ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(
-				spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-				tb.getSize());
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				keyProviderOp, NC1_ID);
-
-		int[] lowKeyFields = { 0 };
-		int[] highKeyFields = { 1 };
-
-		BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(
-				spec, primaryRecDesc, storageManager,
-				treeIndexRegistryProvider, primaryBtreeSplitProvider,
-				primaryInteriorFrameFactory, primaryLeafFrameFactory,
-				primaryTypeTraits, primaryComparatorFactories, true,
-				lowKeyFields, highKeyFields, true, true, opHelperFactory);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				primaryBtreeSearchOp, NC1_ID);
-
-		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer,
-				NC1_ID);
-
-		spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0,
-				primaryBtreeSearchOp, 0);
-		spec.connect(new OneToOneConnectorDescriptor(spec),
-				primaryBtreeSearchOp, 0, printer, 0);
-
-		spec.addRoot(printer);
-		runTest(spec);
-	}
-
 
 	@AfterClass
 	public static void cleanup() throws Exception {

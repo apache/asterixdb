@@ -13,18 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.tuples;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-
-public class SimpleTupleWriterFactory implements ITreeIndexTupleWriterFactory {
-
-	private static final long serialVersionUID = 1L;
-
-	@Override
-	public ITreeIndexTupleWriter createTupleWriter() {
-		return new SimpleTupleWriter();
-	}
-
+public interface IPrimitiveValueProvider {
+	public double getValue(byte[] bytes, int offset);
 }
