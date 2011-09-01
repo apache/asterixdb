@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-storage-common-test</artifactId>
-  <version>0.1.7.1</version>
+  <version>0.1.8-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
-    <version>0.1.7.1</version>
+    <version>0.1.8-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -34,19 +34,19 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.1.7.1</version>
+  		<version>0.1.8-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
-  		<version>0.1.7.1</version>
+  		<version>0.1.8-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.1.7.1</version>
+  		<version>0.1.8-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>test</scope>
   	</dependency>
