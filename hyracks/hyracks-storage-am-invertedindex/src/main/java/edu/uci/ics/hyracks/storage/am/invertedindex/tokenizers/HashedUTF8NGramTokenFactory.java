@@ -21,18 +21,18 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
 public class HashedUTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public HashedUTF8NGramTokenFactory() {
-		super();
-	}
+    public HashedUTF8NGramTokenFactory() {
+        super();
+    }
 
-	public HashedUTF8NGramTokenFactory(byte tokenTypeTag, byte countTypeTag) {
-		super(tokenTypeTag, countTypeTag);
-	}
+    public HashedUTF8NGramTokenFactory(byte tokenTypeTag, byte countTypeTag) {
+        super(tokenTypeTag, countTypeTag);
+    }
 
-	@Override
-	public IToken createToken() {
-		return new HashedUTF8NGramToken(tokenTypeTag, countTypeTag);
-	}
+    @Override
+    public IToken createToken() {
+        return new HashedUTF8NGramToken(tokenTypeTag, countTypeTag);
+    }
 }

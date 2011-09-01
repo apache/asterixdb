@@ -175,8 +175,8 @@ public class BTreeTest extends AbstractBTreeTest {
 
         int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
         LOGGER.info("MAXPAGE: " + maxPage);
-        LOGGER.info(btree.printStats());        
-        
+        LOGGER.info(btree.printStats());
+
         long end = System.currentTimeMillis();
         long duration = end - start;
         LOGGER.info("DURATION: " + duration);

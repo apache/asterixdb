@@ -256,6 +256,16 @@ public class RTree implements ITreeIndex {
         ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
         ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
+        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        for (int i = 0; i < maxFieldPos; i++) {
+            int j = maxFieldPos + i;
+            int c = cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
+                    tuple.getFieldLength(i), tuple.getFieldData(j), tuple.getFieldStart(j), tuple.getFieldLength(j));
+            if (c > 0) {
+                throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
+            }
+        }
+
         ICachedPage leafNode = findLeaf(ctx);
 
         int pageId = ctx.pathList.getLastPageId();
@@ -879,7 +889,7 @@ public class RTree implements ITreeIndex {
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
             ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
         if (loaded)
-            throw new HyracksDataException("Trying to bulk-load RTree but has RTree already been loaded.");
+            throw new HyracksDataException("Trying to bulk-load RTree but RTree has already been loaded.");
 
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IRTreeFrame) leafFrame, (IRTreeFrame) interiorFrame,
                 metaFrame);

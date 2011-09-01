@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -56,6 +57,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -104,7 +106,14 @@ public class SearchCursorTest extends AbstractRTreeTest {
         typeTraits[3] = new TypeTrait(8);
         typeTraits[4] = new TypeTrait(4);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        // declare value providers
+        IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
+        valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
+        valueProviders[1] = valueProviders[0];
+        valueProviders[2] = valueProviders[0];
+        valueProviders[3] = valueProviders[0];
+
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps, valueProviders);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 

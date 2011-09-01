@@ -53,17 +53,18 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -71,7 +72,7 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
-public class RTreeOperatorsTest extends AbstractIntegrationTest {
+public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTest {
     static {
         TestStorageManagerComponentHolder.init(8192, 20, 20);
     }
@@ -89,9 +90,11 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
     private int primaryKeyFieldCount = 4;
     private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
     private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
+    private IPrimitiveValueProviderFactory[] primaryValueProviderFactories = new IPrimitiveValueProviderFactory[primaryKeyFieldCount];
 
     private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
             primaryTypeTraits);
+
     private ITreeIndexFrameFactory primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
             primaryTupleWriterFactory, primaryKeyFieldCount);
     private ITreeIndexFrameFactory primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(primaryTupleWriterFactory,
@@ -138,8 +141,11 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
     private ITypeTrait[] secondaryTypeTraits = new ITypeTrait[secondaryFieldCount];
     private int secondaryKeyFieldCount = 4;
     private IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyFieldCount];
+    private IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = new IPrimitiveValueProviderFactory[secondaryKeyFieldCount];
+
     private RTreeTypeAwareTupleWriterFactory secondaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
             secondaryTypeTraits);
+
     private ITreeIndexFrameFactory secondaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
             secondaryTupleWriterFactory, secondaryKeyFieldCount);
     private ITreeIndexFrameFactory secondaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
@@ -157,7 +163,7 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
             UTF8StringSerializerDeserializer.INSTANCE });
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         // field, type and key declarations for primary R-tree index
         primaryTypeTraits[0] = new TypeTrait(8);
         primaryTypeTraits[1] = new TypeTrait(8);
@@ -168,6 +174,10 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         primaryComparatorFactories[1] = primaryComparatorFactories[0];
         primaryComparatorFactories[2] = primaryComparatorFactories[0];
         primaryComparatorFactories[3] = primaryComparatorFactories[0];
+        primaryValueProviderFactories[0] = DoublePrimitiveValueProviderFactory.INSTANCE;
+        primaryValueProviderFactories[1] = primaryValueProviderFactories[0];
+        primaryValueProviderFactories[2] = primaryValueProviderFactories[0];
+        primaryValueProviderFactories[3] = primaryValueProviderFactories[0];
 
         // field, type and key declarations for primary B-tree index
         primaryBTreeTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
@@ -192,9 +202,16 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         secondaryComparatorFactories[1] = secondaryComparatorFactories[0];
         secondaryComparatorFactories[2] = secondaryComparatorFactories[0];
         secondaryComparatorFactories[3] = secondaryComparatorFactories[0];
+        secondaryValueProviderFactories[0] = DoublePrimitiveValueProviderFactory.INSTANCE;
+        secondaryValueProviderFactories[1] = secondaryValueProviderFactories[0];
+        secondaryValueProviderFactories[2] = secondaryValueProviderFactories[0];
+        secondaryValueProviderFactories[3] = secondaryValueProviderFactories[0];
+
+        loadPrimaryIndexTest();
+        loadPrimaryBTreeIndexTest();
+        loadSecondaryIndexTest();
     }
 
-    @Test
     public void loadPrimaryBTreeIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -227,7 +244,7 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
         TreeIndexBulkLoadOperatorDescriptor primaryBTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, treeIndexRegistryProvider, primaryBTreeSplitProvider, primaryBTreeInteriorFrameFactory,
-                primaryBTreeLeafFrameFactory, primaryBTreeTypeTraits, primaryBTreeComparatorFactories,
+                primaryBTreeLeafFrameFactory, primaryBTreeTypeTraits, primaryBTreeComparatorFactories, null,
                 fieldPermutation, 0.7f, bTreeopHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBTreeBulkLoad, NC1_ID);
 
@@ -239,7 +256,6 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         runTest(spec);
     }
 
-    @Test
     public void loadPrimaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -260,8 +276,8 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         int[] fieldPermutation = { 0, 1, 2, 3, 4 };
         TreeIndexBulkLoadOperatorDescriptor primaryRTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, treeIndexRegistryProvider, primaryRTreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
-                opHelperFactory);
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories,
+                secondaryValueProviderFactories, fieldPermutation, 0.7f, opHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryRTreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), objScanner, 0, primaryRTreeBulkLoad, 0);
@@ -270,7 +286,6 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         runTest(spec);
     }
 
-    @Test
     public void loadSecondaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -304,71 +319,14 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         int[] fieldPermutation = { 6, 7, 8, 9, 0 };
         TreeIndexBulkLoadOperatorDescriptor secondaryRTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, treeIndexRegistryProvider, secondaryRTreeSplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, fieldPermutation, 0.7f,
-                opHelperFactory);
+                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories,
+                secondaryValueProviderFactories, fieldPermutation, 0.7f, opHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryRTreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryBTreeSearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryBTreeSearchOp, 0, secondaryRTreeBulkLoad, 0);
 
         spec.addRoot(secondaryRTreeBulkLoad);
-        runTest(spec);
-    }
-
-    @Test
-    public void showPrimaryIndexStats() throws Exception {
-        JobSpecification spec = new JobSpecification();
-
-        TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                treeIndexRegistryProvider, primaryRTreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, opHelperFactory);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
-
-        spec.addRoot(primaryStatsOp);
-        runTest(spec);
-    }
-
-    @Test
-    public void searchPrimaryIndexTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
-
-        // build tuple
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount);
-        DataOutput dos = tb.getDataOutput();
-
-        tb.reset();
-        DoubleSerializerDeserializer.INSTANCE.serialize(61.2894, dos);
-        tb.addFieldEndOffset();
-        DoubleSerializerDeserializer.INSTANCE.serialize(-149.624, dos);
-        tb.addFieldEndOffset();
-        DoubleSerializerDeserializer.INSTANCE.serialize(61.8894, dos);
-        tb.addFieldEndOffset();
-        DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
-        tb.addFieldEndOffset();
-
-        ISerializerDeserializer[] keyRecDescSers = { DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE };
-        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-
-        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
-                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
-
-        int[] keyFields = { 0, 1, 2, 3 };
-
-        RTreeSearchOperatorDescriptor primaryRTreeSearchOp = new RTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeIndexRegistryProvider, primaryRTreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, keyFields, opHelperFactory);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryRTreeSearchOp, NC1_ID);
-
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryRTreeSearchOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), primaryRTreeSearchOp, 0, printer, 0);
-
-        spec.addRoot(printer);
         runTest(spec);
     }
 
@@ -404,7 +362,7 @@ public class RTreeOperatorsTest extends AbstractIntegrationTest {
         RTreeSearchOperatorDescriptor secondaryRTreeSearchOp = new RTreeSearchOperatorDescriptor(spec,
                 secondaryRecDesc, storageManager, treeIndexRegistryProvider, secondaryRTreeSplitProvider,
                 secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, keyFields, opHelperFactory);
+                secondaryComparatorFactories, secondaryValueProviderFactories, keyFields, opHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryRTreeSearchOp, NC1_ID);
 
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);

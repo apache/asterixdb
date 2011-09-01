@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
@@ -41,9 +42,10 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] keyFields, ITreeIndexOpHelperFactory opHelperFactory) {
+            IBinaryComparatorFactory[] comparatorFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            int[] keyFields, ITreeIndexOpHelperFactory opHelperFactory) {
         super(spec, 1, 1, recDesc, storageManager, treeIndexRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, opHelperFactory);
+                leafFrameFactory, typeTraits, comparatorFactories, valueProviderFactories, opHelperFactory);
         this.keyFields = keyFields;
     }
 

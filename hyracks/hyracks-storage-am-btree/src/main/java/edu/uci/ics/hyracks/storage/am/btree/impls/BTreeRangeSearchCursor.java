@@ -66,8 +66,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             bufferCache.unpin(page);
         }
         tupleIndex = 0;
-		page = null;
-		pred = null;
+        page = null;
+        pred = null;
     }
 
     public ITupleReference getTuple() {
@@ -87,7 +87,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         bufferCache.unpin(page);
 
         page = nextLeaf;
-        frame.setPage(page);       
+        frame.setPage(page);
     }
 
     @Override
@@ -224,10 +224,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public void reset() {
         try {
-			close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}		
+            close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

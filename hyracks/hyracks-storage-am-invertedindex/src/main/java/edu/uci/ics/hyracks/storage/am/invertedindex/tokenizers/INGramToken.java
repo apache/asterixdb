@@ -20,9 +20,9 @@
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
 public interface INGramToken {
-	public int getNumPostChars();
+    public int getNumPostChars();
 
-	public int getNumPreChars();
+    public int getNumPreChars();
 
-	public void setNumPrePostChars(int numPreChars, int numPostChars);
+    public void setNumPrePostChars(int numPreChars, int numPostChars);
 }

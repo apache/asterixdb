@@ -20,11 +20,11 @@
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
 public interface IBinaryTokenizer {
-	public IToken getToken();
+    public IToken getToken();
 
-	public boolean hasNext();
+    public boolean hasNext();
 
-	public void next();
+    public void next();
 
-	public void reset(byte[] data, int start, int length);
+    public void reset(byte[] data, int start, int length);
 }

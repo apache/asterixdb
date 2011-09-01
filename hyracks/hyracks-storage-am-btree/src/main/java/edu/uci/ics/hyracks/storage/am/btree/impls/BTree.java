@@ -1151,7 +1151,7 @@ public class BTree implements ITreeIndex {
             ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
 
         if (loaded)
-            throw new HyracksDataException("Trying to bulk-load BTree but has BTree already been loaded.");
+            throw new HyracksDataException("Trying to bulk-load BTree but BTree has already been loaded.");
 
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame) leafFrame,
                 (IBTreeInteriorFrame) interiorFrame, metaFrame);

@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IBTreeLeafFrame extends ITreeIndexFrame {
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
-    
+
     public void setNextLeaf(int nextPage);
 
     public int getNextLeaf();

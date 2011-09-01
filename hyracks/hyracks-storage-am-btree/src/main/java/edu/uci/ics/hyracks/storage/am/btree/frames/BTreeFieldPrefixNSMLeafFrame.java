@@ -168,12 +168,12 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             slotManager.setSlot(sortedTupleOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
             freeSpace += tupleLength;
         }
-        
+
         buf.putInt(freeSpaceOff, freeSpace);
         int totalFreeSpace = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
         buf.putInt(totalFreeSpaceOff, totalFreeSpace);
-        
+
         return false;
     }
 
@@ -192,9 +192,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
                 frameTuple.setFieldCount(cmp.getFieldCount());
                 frameTuple.resetByTupleIndex(this, tupleIndex);
 
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1, cmp
-                        .getFieldCount()
-                        - cmp.getKeyFieldCount());
+                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1,
+                        cmp.getFieldCount() - cmp.getKeyFieldCount());
                 if (comparison != 0) {
                     throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
                 }
@@ -293,12 +292,12 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
-    	return slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-    			FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        return slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
+                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
     }
-    
+
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {        
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
         int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
         int numPrefixFields = 0;
@@ -348,8 +347,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         for (int i = 0; i < tupleCount; i++) {
             frameTuple.resetByTupleIndex(this, i);
             for (int j = 0; j < cmp.getKeyFieldCount(); j++) {
-                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j), frameTuple
-                        .getFieldStart(j), frameTuple.getFieldLength(j));
+                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j),
+                        frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
                 DataInput dataIn = new DataInputStream(inStream);
                 Object o = fields[j].deserialize(dataIn);
                 strBuilder.append(o.toString() + " ");
@@ -386,7 +385,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
     }
-    
+
     @Override
     public boolean isInterior() {
         return buf.get(levelOff) > 0;
@@ -461,7 +460,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
 
         frameTuple.setFieldCount(cmp.getFieldCount());
-        
+
         ByteBuffer right = rf.getBuffer();
         int tupleCount = getTupleCount();
         int prefixTupleCount = getPrefixTupleCount();
@@ -658,7 +657,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-	public int getPageHeaderSize() {
-		return nextLeafOff;
-	}
+    public int getPageHeaderSize() {
+        return nextLeafOff;
+    }
 }

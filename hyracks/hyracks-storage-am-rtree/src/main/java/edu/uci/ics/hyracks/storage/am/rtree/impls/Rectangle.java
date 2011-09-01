@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class Rectangle {
     private int dim;
@@ -49,23 +49,23 @@ public class Rectangle {
         high[i] = value;
     }
 
-    public void set(ITupleReference tuple) {
+    public void set(ITupleReference tuple, MultiComparator cmp) {
         for (int i = 0; i < getDim(); i++) {
             int j = i + getDim();
-            setLow(i, DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i), tuple.getFieldStart(i)));
-            setHigh(i, DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j), tuple.getFieldStart(j)));
+            setLow(i, cmp.getValueProviders()[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i)));
+            setHigh(i, cmp.getValueProviders()[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j)));
         }
     }
 
-    public void enlarge(ITupleReference tupleToBeInserted) {
+    public void enlarge(ITupleReference tupleToBeInserted, MultiComparator cmp) {
         for (int i = 0; i < getDim(); i++) {
             int j = getDim() + i;
-            double low = DoubleSerializerDeserializer.getDouble(tupleToBeInserted.getFieldData(i),
+            double low = cmp.getValueProviders()[i].getValue(tupleToBeInserted.getFieldData(i),
                     tupleToBeInserted.getFieldStart(i));
             if (getLow(i) > low) {
                 setLow(i, low);
             }
-            double high = DoubleSerializerDeserializer.getDouble(tupleToBeInserted.getFieldData(j),
+            double high = cmp.getValueProviders()[j].getValue(tupleToBeInserted.getFieldData(j),
                     tupleToBeInserted.getFieldStart(j));
             if (getHigh(i) < high) {
                 setHigh(i, high);
@@ -82,24 +82,6 @@ public class Rectangle {
         return margin;
     }
 
-    public double overlappedArea(ITupleReference tuple) {
-        double area = 1.0;
-        double f1, f2;
-
-        for (int i = 0; i < getDim(); i++) {
-            int j = getDim() + i;
-            double low = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i), tuple.getFieldStart(i));
-            double high = DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j), tuple.getFieldStart(j));
-            if (getLow(i) > high || getHigh(i) < low) {
-                return 0.0;
-            }
-            f1 = Math.max(getLow(i), low);
-            f2 = Math.min(getHigh(i), high);
-            area *= f2 - f1;
-        }
-        return area;
-    }
-
     public double overlappedArea(Rectangle rec) {
         double area = 1.0;
         double f1, f2;
@@ -112,16 +94,6 @@ public class Rectangle {
             f1 = Math.max(getLow(i), rec.getLow(i));
             f2 = Math.min(getHigh(i), rec.getHigh(i));
             area *= f2 - f1;
-        }
-        return area;
-    }
-
-    public double area(ITupleReference tuple) {
-        double area = 1.0;
-        for (int i = 0; i < getDim(); i++) {
-            int j = getDim() + i;
-            area *= DoubleSerializerDeserializer.getDouble(tuple.getFieldData(j), tuple.getFieldStart(j))
-                    - DoubleSerializerDeserializer.getDouble(tuple.getFieldData(i), tuple.getFieldStart(i));
         }
         return area;
     }

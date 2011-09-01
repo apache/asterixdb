@@ -16,8 +16,10 @@
 package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptorHelper;
@@ -30,8 +32,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class RTreeOpHelper extends TreeIndexOpHelper {
-
-    protected MultiComparator interiorCmp;
 
     public RTreeOpHelper(ITreeIndexOperatorDescriptorHelper opDesc, IHyracksStageletContext ctx, int partition,
             IndexHelperOpenMode mode) {
@@ -46,5 +46,14 @@ public class RTreeOpHelper extends TreeIndexOpHelper {
 
         return new RTree(bufferCache, freePageManager, opDesc.getTreeIndexInteriorFactory(),
                 opDesc.getTreeIndexLeafFactory(), cmp);
+    }
+
+    public MultiComparator createMultiComparator(IBinaryComparator[] comparators) throws HyracksDataException {
+        IPrimitiveValueProvider[] keyValueProvider = new IPrimitiveValueProvider[opDesc
+                .getTreeIndexValueProviderFactories().length];
+        for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
+            keyValueProvider[i] = opDesc.getTreeIndexValueProviderFactories()[i].createPrimitiveValueProvider();
+        }
+        return new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators, keyValueProvider);
     }
 }

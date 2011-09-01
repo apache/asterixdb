@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
@@ -137,20 +136,21 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         return ret;
     }
 
-    public void generateDist(ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end) {
+    public void generateDist(ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end,
+            MultiComparator cmp) {
         int j = 0;
         while (entries.get(j).getTupleIndex() == -1) {
             j++;
         }
         frameTuple.resetByTupleIndex(this, entries.get(j).getTupleIndex());
-        rec.set(frameTuple);
+        rec.set(frameTuple, cmp);
         for (int i = start; i < end; ++i) {
             if (i != j) {
                 if (entries.get(i).getTupleIndex() != -1) {
                     frameTuple.resetByTupleIndex(this, entries.get(i).getTupleIndex());
-                    rec.enlarge(frameTuple);
+                    rec.enlarge(frameTuple, cmp);
                 } else {
-                    rec.enlarge(tuple);
+                    rec.enlarge(tuple, cmp);
                 }
             }
         }

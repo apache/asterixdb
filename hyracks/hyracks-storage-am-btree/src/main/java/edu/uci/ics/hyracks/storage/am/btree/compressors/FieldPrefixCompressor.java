@@ -182,8 +182,8 @@ public class FieldPrefixCompressor implements IFrameCompressor {
                     // + " " + keyPartitions.get(kpIndex).lastRecSlotNum +
                     // " FIELDSTOCOMPRESS: " + numFieldsToCompress);
 
-                    FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference(tupleWriter
-                            .createTupleReference());
+                    FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference(
+                            tupleWriter.createTupleReference());
                     prevTuple.setFieldCount(fieldCount);
 
                     FieldPrefixTupleReference tuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
@@ -312,9 +312,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
 
         // copy new tuple and new slots into original page
         int freeSpaceAfterInit = frame.getOrigFreeSpaceOff();
-        System
-                .arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace
-                        - freeSpaceAfterInit);
+        System.arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace - freeSpaceAfterInit);
 
         // copy prefix slots
         int slotOffRunner = buf.capacity() - slotManager.getSlotSize();
@@ -338,7 +336,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         // System.out.println("PREFIXSLOTS BEF: " +
         // frame.getNumPrefixRecords());
         // System.out.println("PREFIXSLOTS AFT: " + newPrefixSlots.length);
-        //        
+        //
         // System.out.println("FREESPACE BEF: " + frame.getFreeSpaceOff());
         // System.out.println("FREESPACE AFT: " + recordFreeSpace);
         // System.out.println("PREFIXES: " + newPrefixSlots.length + " / " +

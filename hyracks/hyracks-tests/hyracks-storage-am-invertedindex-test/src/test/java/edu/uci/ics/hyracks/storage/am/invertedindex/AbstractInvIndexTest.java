@@ -22,22 +22,19 @@ import java.util.logging.Logger;
 
 public abstract class AbstractInvIndexTest {
 
-	protected static final Logger LOGGER = Logger
-			.getLogger(AbstractInvIndexTest.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(AbstractInvIndexTest.class.getName());
 
-	protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-			"ddMMyy-hhmmssSS");
-	protected final static String tmpDir = System.getProperty("java.io.tmpdir");
-	protected final static String sep = System.getProperty("file.separator");
-	protected final static String baseFileName = tmpDir + sep
-			+ simpleDateFormat.format(new Date());
-	protected final static String btreeFileName = baseFileName + "btree";
-	protected final static String invListsFileName = baseFileName + "invlists";
+    protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
+    protected final static String tmpDir = System.getProperty("java.io.tmpdir");
+    protected final static String sep = System.getProperty("file.separator");
+    protected final static String baseFileName = tmpDir + sep + simpleDateFormat.format(new Date());
+    protected final static String btreeFileName = baseFileName + "btree";
+    protected final static String invListsFileName = baseFileName + "invlists";
 
-	public static void tearDown() {
-		File btreeFile = new File(btreeFileName);
-		btreeFile.deleteOnExit();
-		File invListsFile = new File(invListsFileName);
-		invListsFile.deleteOnExit();
-	}
+    public static void tearDown() {
+        File btreeFile = new File(btreeFileName);
+        btreeFile.deleteOnExit();
+        File invListsFile = new File(invListsFileName);
+        invListsFile.deleteOnExit();
+    }
 }

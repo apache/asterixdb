@@ -55,186 +55,171 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
-	private static final int PAGE_SIZE = 32768; // 32K
-	private static final int NUM_PAGES = 40;
-	private static final int MAX_OPEN_FILES = 10;
-	private static final int HYRACKS_FRAME_SIZE = 128;
-	private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-		
-	private ITupleReference createTuple(IHyracksStageletContext ctx, int f0,
-			int f1, int f2, boolean print) throws HyracksDataException {
-		if (print)
-		    LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);		
+    private static final int PAGE_SIZE = 32768; // 32K
+    private static final int NUM_PAGES = 40;
+    private static final int MAX_OPEN_FILES = 10;
+    private static final int HYRACKS_FRAME_SIZE = 128;
+    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
-		ByteBuffer buf = ctx.allocateFrame();
-		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
-		DataOutput dos = tb.getDataOutput();
+    private ITupleReference createTuple(IHyracksStageletContext ctx, int f0, int f1, int f2, boolean print)
+            throws HyracksDataException {
+        if (print)
+            LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);
 
-		ISerializerDeserializer[] recDescSers = {
-				IntegerSerializerDeserializer.INSTANCE,
-				IntegerSerializerDeserializer.INSTANCE,
-				IntegerSerializerDeserializer.INSTANCE };
-		RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-		IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx
-				.getFrameSize(), recDesc);
-		accessor.reset(buf);
-		FrameTupleReference tuple = new FrameTupleReference();
+        ByteBuffer buf = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
+        DataOutput dos = tb.getDataOutput();
 
-		tb.reset();
-		IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
-		tb.addFieldEndOffset();
-		IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
-		tb.addFieldEndOffset();
-		IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
-		tb.addFieldEndOffset();
+        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        accessor.reset(buf);
+        FrameTupleReference tuple = new FrameTupleReference();
 
-		appender.reset(buf, true);
-		appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb
-				.getSize());
+        tb.reset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+        tb.addFieldEndOffset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+        tb.addFieldEndOffset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
+        tb.addFieldEndOffset();
 
-		tuple.reset(accessor, 0);
+        appender.reset(buf, true);
+        appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
 
-		return tuple;
-	}
+        tuple.reset(accessor, 0);
 
-	@Test
-	public void test01() throws Exception {
-		
-		TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-		IBufferCache bufferCache = TestStorageManagerComponentHolder
-				.getBufferCache(ctx);
-		IFileMapProvider fmp = TestStorageManagerComponentHolder
-				.getFileMapProvider(ctx);
-		FileReference file = new FileReference(new File(fileName));
-		bufferCache.createFile(file);
-		int fileId = fmp.lookupFileId(file);
-		bufferCache.openFile(fileId);
+        return tuple;
+    }
 
-		// declare fields
-		int fieldCount = 3;
-		ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-		typeTraits[0] = new TypeTrait(4);
-		typeTraits[1] = new TypeTrait(4);
-		typeTraits[2] = new TypeTrait(4);
+    @Test
+    public void test01() throws Exception {
 
-		// declare keys
-		int keyFieldCount = 3;
-		IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-		cmps[0] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
-		cmps[1] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
-		cmps[2] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        FileReference file = new FileReference(new File(fileName));
+        bufferCache.createFile(file);
+        int fileId = fmp.lookupFileId(file);
+        bufferCache.openFile(fileId);
 
-		// just for printing
-		ISerializerDeserializer[] sers = {
-				IntegerSerializerDeserializer.INSTANCE,
-				IntegerSerializerDeserializer.INSTANCE,
-				IntegerSerializerDeserializer.INSTANCE };
+        // declare fields
+        int fieldCount = 3;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(4);
+        typeTraits[1] = new TypeTrait(4);
+        typeTraits[2] = new TypeTrait(4);
 
-		Random rnd = new Random();
-		rnd.setSeed(50);
+        // declare keys
+        int keyFieldCount = 3;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-		ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(
-				fileId, 0), false);
-		try {
+        // just for printing
+        ISerializerDeserializer[] sers = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
-			IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
-			ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-			BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(
-					tupleWriter);
-			frame.setPage(page);
-			frame.initBuffer((byte) 0);
-			slotManager.setFrame(frame);
-			frame.setPrefixTupleCount(0);
+        Random rnd = new Random();
+        rnd.setSeed(50);
 
-			String before = new String();
-			String after = new String();
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, 0), false);
+        try {
 
-			int compactFreq = 5;
-			int compressFreq = 5;
-			int smallMax = 10;
-			int numRecords = 1000;
+            IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
+            ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
+            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
+            frame.setPage(page);
+            frame.initBuffer((byte) 0);
+            slotManager.setFrame(frame);
+            frame.setPrefixTupleCount(0);
 
-			int[][] savedFields = new int[numRecords][3];
+            String before = new String();
+            String after = new String();
 
-			// insert records with random calls to compact and compress
-			for (int i = 0; i < numRecords; i++) {
+            int compactFreq = 5;
+            int compressFreq = 5;
+            int smallMax = 10;
+            int numRecords = 1000;
 
-				if ((i + 1) % 100 == 0)
-					LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
+            int[][] savedFields = new int[numRecords][3];
 
-				int a = rnd.nextInt() % smallMax;
-				int b = rnd.nextInt() % smallMax;
-				int c = i;
+            // insert records with random calls to compact and compress
+            for (int i = 0; i < numRecords; i++) {
 
-				ITupleReference tuple = createTuple(ctx, a, b, c, false);
-				try {
-					int targetTupleIndex = frame.findTupleIndex(tuple, cmp);
-					frame.insert(tuple, cmp, targetTupleIndex);
-				} catch (BTreeException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+                if ((i + 1) % 100 == 0)
+                    LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
 
-				savedFields[i][0] = a;
-				savedFields[i][1] = b;
-				savedFields[i][2] = c;
+                int a = rnd.nextInt() % smallMax;
+                int b = rnd.nextInt() % smallMax;
+                int c = i;
 
-				if (rnd.nextInt() % compactFreq == 0) {
-					before = frame.printKeys(cmp, sers);
-					frame.compact(cmp);
-					after = frame.printKeys(cmp, sers);
-					Assert.assertEquals(before, after);
-				}
+                ITupleReference tuple = createTuple(ctx, a, b, c, false);
+                try {
+                    int targetTupleIndex = frame.findTupleIndex(tuple, cmp);
+                    frame.insert(tuple, cmp, targetTupleIndex);
+                } catch (BTreeException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-				if (rnd.nextInt() % compressFreq == 0) {
-					before = frame.printKeys(cmp, sers);
-					frame.compress(cmp);
-					after = frame.printKeys(cmp, sers);
-					Assert.assertEquals(before, after);
-				}
+                savedFields[i][0] = a;
+                savedFields[i][1] = b;
+                savedFields[i][2] = c;
 
-			}
+                if (rnd.nextInt() % compactFreq == 0) {
+                    before = frame.printKeys(cmp, sers);
+                    frame.compact(cmp);
+                    after = frame.printKeys(cmp, sers);
+                    Assert.assertEquals(before, after);
+                }
 
-			// delete records with random calls to compact and compress
-			for (int i = 0; i < numRecords; i++) {
+                if (rnd.nextInt() % compressFreq == 0) {
+                    before = frame.printKeys(cmp, sers);
+                    frame.compress(cmp);
+                    after = frame.printKeys(cmp, sers);
+                    Assert.assertEquals(before, after);
+                }
 
-				if ((i + 1) % 100 == 0)
-					LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
+            }
 
-				ITupleReference tuple = createTuple(ctx,
-						savedFields[i][0], savedFields[i][1],
-						savedFields[i][2], false);
-				try {
-					frame.delete(tuple, cmp, true);
-				} catch (Exception e) {
-				}
+            // delete records with random calls to compact and compress
+            for (int i = 0; i < numRecords; i++) {
 
-				if (rnd.nextInt() % compactFreq == 0) {
-					before = frame.printKeys(cmp, sers);
-					frame.compact(cmp);
-					after = frame.printKeys(cmp, sers);
-					Assert.assertEquals(before, after);
-				}
+                if ((i + 1) % 100 == 0)
+                    LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
 
-				if (rnd.nextInt() % compressFreq == 0) {
-					before = frame.printKeys(cmp, sers);
-					frame.compress(cmp);
-					after = frame.printKeys(cmp, sers);
-					Assert.assertEquals(before, after);
-				}
-			}
+                ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
+                try {
+                    frame.delete(tuple, cmp, true);
+                } catch (Exception e) {
+                }
 
-		} finally {
-			bufferCache.unpin(page);
-		}
+                if (rnd.nextInt() % compactFreq == 0) {
+                    before = frame.printKeys(cmp, sers);
+                    frame.compact(cmp);
+                    after = frame.printKeys(cmp, sers);
+                    Assert.assertEquals(before, after);
+                }
 
-		bufferCache.closeFile(fileId);
-		bufferCache.close();
-	}
+                if (rnd.nextInt() % compressFreq == 0) {
+                    before = frame.printKeys(cmp, sers);
+                    frame.compress(cmp);
+                    after = frame.printKeys(cmp, sers);
+                    Assert.assertEquals(before, after);
+                }
+            }
+
+        } finally {
+            bufferCache.unpin(page);
+        }
+
+        bufferCache.closeFile(fileId);
+        bufferCache.close();
+    }
 }

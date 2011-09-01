@@ -29,7 +29,7 @@ public class BTreeSplitKey implements ISplitKey {
     public BTreeSplitKey(ITreeIndexTupleReference tuple) {
         this.tuple = tuple;
     }
-    
+
     public void initData(int keySize) {
         // try to reuse existing memory from a lower-level split if possible
         this.keySize = keySize;

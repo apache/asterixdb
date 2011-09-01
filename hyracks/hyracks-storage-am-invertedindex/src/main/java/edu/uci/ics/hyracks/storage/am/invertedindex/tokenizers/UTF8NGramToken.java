@@ -26,61 +26,60 @@ import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
 public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
-	public final static char PRECHAR = '#';
+    public final static char PRECHAR = '#';
 
-	public final static char POSTCHAR = '$';
+    public final static char POSTCHAR = '$';
 
-	protected int numPreChars;
-	protected int numPostChars;
+    protected int numPreChars;
+    protected int numPostChars;
 
-	public UTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
-		super(tokenTypeTag, countTypeTag);
-	}
+    public UTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
+        super(tokenTypeTag, countTypeTag);
+    }
 
-	@Override
-	public int getNumPostChars() {
-		return numPreChars;
-	}
+    @Override
+    public int getNumPostChars() {
+        return numPreChars;
+    }
 
-	@Override
-	public int getNumPreChars() {
-		return numPostChars;
-	}
+    @Override
+    public int getNumPreChars() {
+        return numPostChars;
+    }
 
-	@Override
-	public void serializeToken(DataOutput dos) throws IOException {
-		handleTokenTypeTag(dos);
+    @Override
+    public void serializeToken(DataOutput dos) throws IOException {
+        handleTokenTypeTag(dos);
 
-		// regular chars
-		int numRegChars = tokenLength - numPreChars - numPostChars;
+        // regular chars
+        int numRegChars = tokenLength - numPreChars - numPostChars;
 
-		// assuming pre and post char need 1-byte each in utf8
-		int tokenUTF8Len = getLowerCaseUTF8Len(numRegChars) + numPreChars
-				+ numPostChars;
+        // assuming pre and post char need 1-byte each in utf8
+        int tokenUTF8Len = getLowerCaseUTF8Len(numRegChars) + numPreChars + numPostChars;
 
-		// write utf8 length indicator
-		StringUtils.writeUTF8Len(tokenUTF8Len, dos);
+        // write utf8 length indicator
+        StringUtils.writeUTF8Len(tokenUTF8Len, dos);
 
-		// pre chars
-		for (int i = 0; i < numPreChars; i++) {
-			StringUtils.writeCharAsModifiedUTF8(PRECHAR, dos);
-		}
+        // pre chars
+        for (int i = 0; i < numPreChars; i++) {
+            StringUtils.writeCharAsModifiedUTF8(PRECHAR, dos);
+        }
 
-		int pos = start;
-		for (int i = 0; i < numRegChars; i++) {
-			char c = StringUtils.toLowerCase(StringUtils.charAt(data, pos));
-			StringUtils.writeCharAsModifiedUTF8(c, dos);
-			pos += StringUtils.charSize(data, pos);
-		}
+        int pos = start;
+        for (int i = 0; i < numRegChars; i++) {
+            char c = StringUtils.toLowerCase(StringUtils.charAt(data, pos));
+            StringUtils.writeCharAsModifiedUTF8(c, dos);
+            pos += StringUtils.charSize(data, pos);
+        }
 
-		// post chars
-		for (int i = 0; i < numPostChars; i++) {
-			StringUtils.writeCharAsModifiedUTF8(POSTCHAR, dos);
-		}
-	}
+        // post chars
+        for (int i = 0; i < numPostChars; i++) {
+            StringUtils.writeCharAsModifiedUTF8(POSTCHAR, dos);
+        }
+    }
 
-	public void setNumPrePostChars(int numPreChars, int numPostChars) {
-		this.numPreChars = numPreChars;
-		this.numPostChars = numPostChars;
-	}
+    public void setNumPrePostChars(int numPreChars, int numPostChars) {
+        this.numPreChars = numPreChars;
+        this.numPostChars = numPostChars;
+    }
 }

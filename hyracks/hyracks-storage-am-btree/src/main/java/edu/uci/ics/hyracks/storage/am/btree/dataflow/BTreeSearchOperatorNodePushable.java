@@ -69,7 +69,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksStageletContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.OPEN);
+        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
+                IndexHelperOpenMode.OPEN);
         this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
@@ -91,12 +92,12 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
 
         cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame)cursorFrame);
+        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame);
 
         try {
 
             treeIndexOpHelper.init();
-            btree = (BTree)treeIndexOpHelper.getTreeIndex();
+            btree = (BTree) treeIndexOpHelper.getTreeIndex();
 
             // construct range predicate
 
@@ -136,8 +137,8 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            opCtx = btree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(), treeIndexOpHelper
-                    .getInteriorFrame(), null);
+            opCtx = btree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(),
+                    treeIndexOpHelper.getInteriorFrame(), null);
 
         } catch (Exception e) {
             treeIndexOpHelper.deinit();

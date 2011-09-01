@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
@@ -92,6 +93,11 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     @Override
     public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
         return btreeComparatorFactories;
+    }
+
+    @Override
+    public IPrimitiveValueProviderFactory[] getTreeIndexValueProviderFactories() {
+        return null;
     }
 
     @Override

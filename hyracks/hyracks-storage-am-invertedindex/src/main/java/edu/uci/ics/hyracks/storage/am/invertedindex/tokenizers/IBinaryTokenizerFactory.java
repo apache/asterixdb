@@ -22,5 +22,5 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 import java.io.Serializable;
 
 public interface IBinaryTokenizerFactory extends Serializable {
-	public IBinaryTokenizer createTokenizer();
+    public IBinaryTokenizer createTokenizer();
 }

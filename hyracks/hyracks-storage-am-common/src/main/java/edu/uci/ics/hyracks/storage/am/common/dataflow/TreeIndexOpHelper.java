@@ -113,7 +113,7 @@ public abstract class TreeIndexOpHelper {
                         comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
                     }
 
-                    cmp = new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
+                    cmp = createMultiComparator(comparators);
 
                     treeIndex = createTreeIndex();
                     if (mode == IndexHelperOpenMode.CREATE) {
@@ -137,6 +137,11 @@ public abstract class TreeIndexOpHelper {
     // MUST be overridden
     public ITreeIndex createTreeIndex() throws HyracksDataException {
         throw new HyracksDataException("createTreeIndex Operation not implemented.");
+    }
+
+    // MUST be overridden
+    public MultiComparator createMultiComparator(IBinaryComparator[] comparators) throws HyracksDataException {
+        throw new HyracksDataException("createComparator Operation not implemented.");
     }
 
     public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame) throws HyracksDataException {

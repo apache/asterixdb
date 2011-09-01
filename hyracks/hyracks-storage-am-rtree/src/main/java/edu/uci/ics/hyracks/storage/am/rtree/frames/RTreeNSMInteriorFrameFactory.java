@@ -27,6 +27,9 @@ public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
     public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
         this.tupleWriterFactory = tupleWriterFactory;
+        if (keyFieldCount % 2 != 0) {
+            throw new IllegalArgumentException("The key has different number of dimensions.");
+        }
         this.keyFieldCount = keyFieldCount;
     }
 

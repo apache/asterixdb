@@ -27,8 +27,6 @@ public interface IRTreeFrame extends ITreeIndexFrame {
 
     public ITreeIndexTupleReference createTupleReference();
 
-    public void generateDist(ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end);
-
     public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
 
     public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;

@@ -42,181 +42,173 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFact
 
 public class WordTokenizerTest {
 
-	private String text = "Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.";
-	private byte[] inputBuffer;
+    private String text = "Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.";
+    private byte[] inputBuffer;
 
-	private ArrayList<String> expectedUTF8Tokens = new ArrayList<String>();
-	private ArrayList<Integer> expectedHashedUTF8Tokens = new ArrayList<Integer>();
-	private ArrayList<Integer> expectedCountedHashedUTF8Tokens = new ArrayList<Integer>();
+    private ArrayList<String> expectedUTF8Tokens = new ArrayList<String>();
+    private ArrayList<Integer> expectedHashedUTF8Tokens = new ArrayList<Integer>();
+    private ArrayList<Integer> expectedCountedHashedUTF8Tokens = new ArrayList<Integer>();
 
-	@Before
-	public void init() throws IOException {
-		// serialize text into bytes
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutput dos = new DataOutputStream(baos);
-		dos.writeUTF(text);
-		inputBuffer = baos.toByteArray();
+    @Before
+    public void init() throws IOException {
+        // serialize text into bytes
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutput dos = new DataOutputStream(baos);
+        dos.writeUTF(text);
+        inputBuffer = baos.toByteArray();
 
-		// init expected string tokens
-		expectedUTF8Tokens.add("hello");
-		expectedUTF8Tokens.add("world");
-		expectedUTF8Tokens.add("i");
-		expectedUTF8Tokens.add("would");
-		expectedUTF8Tokens.add("like");
-		expectedUTF8Tokens.add("to");
-		expectedUTF8Tokens.add("inform");
-		expectedUTF8Tokens.add("you");
-		expectedUTF8Tokens.add("of");
-		expectedUTF8Tokens.add("the");
-		expectedUTF8Tokens.add("importance");
-		expectedUTF8Tokens.add("of");
-		expectedUTF8Tokens.add("foo");
-		expectedUTF8Tokens.add("bar");
-		expectedUTF8Tokens.add("yes");
-		expectedUTF8Tokens.add("foo");
-		expectedUTF8Tokens.add("bar");
-		expectedUTF8Tokens.add("jürgen");
+        // init expected string tokens
+        expectedUTF8Tokens.add("hello");
+        expectedUTF8Tokens.add("world");
+        expectedUTF8Tokens.add("i");
+        expectedUTF8Tokens.add("would");
+        expectedUTF8Tokens.add("like");
+        expectedUTF8Tokens.add("to");
+        expectedUTF8Tokens.add("inform");
+        expectedUTF8Tokens.add("you");
+        expectedUTF8Tokens.add("of");
+        expectedUTF8Tokens.add("the");
+        expectedUTF8Tokens.add("importance");
+        expectedUTF8Tokens.add("of");
+        expectedUTF8Tokens.add("foo");
+        expectedUTF8Tokens.add("bar");
+        expectedUTF8Tokens.add("yes");
+        expectedUTF8Tokens.add("foo");
+        expectedUTF8Tokens.add("bar");
+        expectedUTF8Tokens.add("jürgen");
 
-		// hashed tokens ignoring token count
-		for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
-			int hash = tokenHash(expectedUTF8Tokens.get(i), 1);
-			expectedHashedUTF8Tokens.add(hash);
-		}
+        // hashed tokens ignoring token count
+        for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
+            int hash = tokenHash(expectedUTF8Tokens.get(i), 1);
+            expectedHashedUTF8Tokens.add(hash);
+        }
 
-		// hashed tokens using token count
-		HashMap<String, Integer> tokenCounts = new HashMap<String, Integer>();
-		for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
-			Integer count = tokenCounts.get(expectedUTF8Tokens.get(i));
-			if (count == null) {
-				count = 1;
-				tokenCounts.put(expectedUTF8Tokens.get(i), count);
-			} else {
-				count++;
-			}
+        // hashed tokens using token count
+        HashMap<String, Integer> tokenCounts = new HashMap<String, Integer>();
+        for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
+            Integer count = tokenCounts.get(expectedUTF8Tokens.get(i));
+            if (count == null) {
+                count = 1;
+                tokenCounts.put(expectedUTF8Tokens.get(i), count);
+            } else {
+                count++;
+            }
 
-			int hash = tokenHash(expectedUTF8Tokens.get(i), count);
-			expectedCountedHashedUTF8Tokens.add(hash);
-		}
-	}
+            int hash = tokenHash(expectedUTF8Tokens.get(i), count);
+            expectedCountedHashedUTF8Tokens.add(hash);
+        }
+    }
 
-	@Test
-	public void testWordTokenizerWithCountedHashedUTF8Tokens()
-			throws IOException {
+    @Test
+    public void testWordTokenizerWithCountedHashedUTF8Tokens() throws IOException {
 
-		HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
-		DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(
-				false, false, tokenFactory);
+        HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
+        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(false, false,
+                tokenFactory);
 
-		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-		int tokenCount = 0;
+        int tokenCount = 0;
 
-		while (tokenizer.hasNext()) {
-			tokenizer.next();
+        while (tokenizer.hasNext()) {
+            tokenizer.next();
 
-			// serialize token
-			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-			DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            // serialize token
+            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+            DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-			IToken token = tokenizer.getToken();
-			token.serializeToken(tokenDos);
+            IToken token = tokenizer.getToken();
+            token.serializeToken(tokenDos);
 
-			// deserialize token
-			ByteArrayInputStream bais = new ByteArrayInputStream(
-					tokenBaos.toByteArray());
-			DataInput in = new DataInputStream(bais);
+            // deserialize token
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            DataInput in = new DataInputStream(bais);
 
-			Integer hashedToken = in.readInt();
+            Integer hashedToken = in.readInt();
 
-			// System.out.println(hashedToken);
+            // System.out.println(hashedToken);
 
-			Assert.assertEquals(hashedToken,
-					expectedCountedHashedUTF8Tokens.get(tokenCount));
+            Assert.assertEquals(hashedToken, expectedCountedHashedUTF8Tokens.get(tokenCount));
 
-			tokenCount++;
-		}
-	}
+            tokenCount++;
+        }
+    }
 
-	@Test
-	public void testWordTokenizerWithHashedUTF8Tokens() throws IOException {
+    @Test
+    public void testWordTokenizerWithHashedUTF8Tokens() throws IOException {
 
-		HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
-		DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(
-				true, false, tokenFactory);
+        HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
+        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
-		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-		int tokenCount = 0;
+        int tokenCount = 0;
 
-		while (tokenizer.hasNext()) {
-			tokenizer.next();
+        while (tokenizer.hasNext()) {
+            tokenizer.next();
 
-			// serialize token
-			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-			DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            // serialize token
+            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+            DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-			IToken token = tokenizer.getToken();
-			token.serializeToken(tokenDos);
+            IToken token = tokenizer.getToken();
+            token.serializeToken(tokenDos);
 
-			// deserialize token
-			ByteArrayInputStream bais = new ByteArrayInputStream(
-					tokenBaos.toByteArray());
-			DataInput in = new DataInputStream(bais);
+            // deserialize token
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            DataInput in = new DataInputStream(bais);
 
-			Integer hashedToken = in.readInt();
+            Integer hashedToken = in.readInt();
 
-			// System.out.println(hashedToken);
+            // System.out.println(hashedToken);
 
-			Assert.assertEquals(expectedHashedUTF8Tokens.get(tokenCount),
-					hashedToken);
+            Assert.assertEquals(expectedHashedUTF8Tokens.get(tokenCount), hashedToken);
 
-			tokenCount++;
-		}
-	}
+            tokenCount++;
+        }
+    }
 
-	@Test
-	public void testWordTokenizerWithUTF8Tokens() throws IOException {
+    @Test
+    public void testWordTokenizerWithUTF8Tokens() throws IOException {
 
-		UTF8WordTokenFactory tokenFactory = new UTF8WordTokenFactory();
-		DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(
-				true, false, tokenFactory);
+        UTF8WordTokenFactory tokenFactory = new UTF8WordTokenFactory();
+        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
-		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-		int tokenCount = 0;
+        int tokenCount = 0;
 
-		while (tokenizer.hasNext()) {
-			tokenizer.next();
+        while (tokenizer.hasNext()) {
+            tokenizer.next();
 
-			// serialize hashed token
-			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-			DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            // serialize hashed token
+            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+            DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-			IToken token = tokenizer.getToken();
-			token.serializeToken(tokenDos);
+            IToken token = tokenizer.getToken();
+            token.serializeToken(tokenDos);
 
-			// deserialize token
-			ByteArrayInputStream bais = new ByteArrayInputStream(
-					tokenBaos.toByteArray());
-			DataInput in = new DataInputStream(bais);
+            // deserialize token
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            DataInput in = new DataInputStream(bais);
 
-			String strToken = in.readUTF();
+            String strToken = in.readUTF();
 
-			// System.out.println(strToken);
+            // System.out.println(strToken);
 
-			Assert.assertEquals(expectedUTF8Tokens.get(tokenCount), strToken);
+            Assert.assertEquals(expectedUTF8Tokens.get(tokenCount), strToken);
 
-			tokenCount++;
-		}
-	}
+            tokenCount++;
+        }
+    }
 
-	// JAQL
-	public int tokenHash(String token, int tokenCount) {
-		int h = AbstractUTF8Token.GOLDEN_RATIO_32;
-		for (int i = 0; i < token.length(); i++) {
-			h ^= token.charAt(i);
-			h *= AbstractUTF8Token.GOLDEN_RATIO_32;
-		}
-		return h + tokenCount;
-	}
+    // JAQL
+    public int tokenHash(String token, int tokenCount) {
+        int h = AbstractUTF8Token.GOLDEN_RATIO_32;
+        for (int i = 0; i < token.length(); i++) {
+            h ^= token.charAt(i);
+            h *= AbstractUTF8Token.GOLDEN_RATIO_32;
+        }
+        return h + tokenCount;
+    }
 }

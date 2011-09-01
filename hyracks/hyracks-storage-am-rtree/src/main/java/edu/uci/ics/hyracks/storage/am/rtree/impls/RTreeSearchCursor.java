@@ -174,6 +174,17 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         cmp = pred.getLowKeyComparator();
         searchKey = pred.getSearchKey();
 
+        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        for (int i = 0; i < maxFieldPos; i++) {
+            int j = maxFieldPos + i;
+            int c = cmp.getComparators()[i].compare(searchKey.getFieldData(i), searchKey.getFieldStart(i),
+                    searchKey.getFieldLength(i), searchKey.getFieldData(j), searchKey.getFieldStart(j),
+                    searchKey.getFieldLength(j));
+            if (c > 0) {
+                throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
+            }
+        }
+
         pathList.add(this.rootPage, -1, -1);
         frameTuple.setFieldCount(cmp.getFieldCount());
         tupleIndex = 0;

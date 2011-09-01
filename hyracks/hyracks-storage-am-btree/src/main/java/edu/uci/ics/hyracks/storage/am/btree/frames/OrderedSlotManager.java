@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class OrderedSlotManager extends AbstractSlotManager {
-    
-	@Override
+
+    @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
         if (frame.getTupleCount() <= 0)
@@ -38,12 +38,12 @@ public class OrderedSlotManager extends AbstractSlotManager {
         int mid;
         int begin = 0;
         int end = frame.getTupleCount() - 1;
-        
+
         while (begin <= end) {
             mid = (begin + end) / 2;
-            frameTuple.resetByTupleIndex(frame, mid);            
-            
-            int cmp = multiCmp.compare(searchKey, frameTuple);            
+            frameTuple.resetByTupleIndex(frame, mid);
+
+            int cmp = multiCmp.compare(searchKey, frameTuple);
             if (cmp < 0) {
                 end = mid - 1;
             } else if (cmp > 0) {
@@ -81,7 +81,7 @@ public class OrderedSlotManager extends AbstractSlotManager {
                 return -1;
         }
     }
-    
+
     @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotOff(tupleIndex);
