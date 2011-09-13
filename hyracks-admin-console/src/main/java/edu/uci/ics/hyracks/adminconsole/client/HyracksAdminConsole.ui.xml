@@ -1,0 +1,44 @@
+<!DOCTYPE ui:UiBinder
+  SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent"
+>
+<ui:UiBinder
+  xmlns:ui='urn:ui:com.google.gwt.uibinder'
+  xmlns:g='urn:import:com.google.gwt.user.client.ui'
+  xmlns:hac.panels='urn:import:edu.uci.ics.hyracks.adminconsole.client.panels'>
+
+  <g:DockLayoutPanel unit='EM'>
+    <g:north size='5'>
+      <hac.panels:TopPanel ui:field='topPanel' />
+    </g:north>
+
+    <g:center>
+      <g:TabLayoutPanel barUnit="EM" barHeight="2">
+        <g:tab>
+          <g:header>
+            Dashboard
+          </g:header>
+          <hac.panels:DashboardPanel ui:field='dashboardPanel' />
+        </g:tab>
+        <g:tab>
+          <g:header>
+            Applications
+          </g:header>
+          <hac.panels:ApplicationsPanel ui:field='applicationsPanel' />
+        </g:tab>
+        <g:tab>
+          <g:header>
+            Node Controllers
+          </g:header>
+          <hac.panels:NodeControllersPanel ui:field='nodeControllersPanel' />
+        </g:tab>
+        <g:tab>
+          <g:header>
+            Jobs
+          </g:header>
+          <hac.panels:JobsPanel ui:field='jobsPanel' />
+        </g:tab>
+      </g:TabLayoutPanel>
+    </g:center>
+  </g:DockLayoutPanel>
+
+</ui:UiBinder>

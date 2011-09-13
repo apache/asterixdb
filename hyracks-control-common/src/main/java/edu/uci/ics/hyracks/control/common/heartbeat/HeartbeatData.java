@@ -12,20 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.controllers;
+package edu.uci.ics.hyracks.control.common.heartbeat;
 
 import java.io.Serializable;
 
-public class NodeCapability implements Serializable {
+public class HeartbeatData implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int cpuCount;
-
-    public int getCPUCount() {
-        return cpuCount;
-    }
-
-    public void setCPUCount(int cpuCount) {
-        this.cpuCount = cpuCount;
-    }
+    public long heapInitSize;
+    public long heapUsedSize;
+    public long heapCommittedSize;
+    public long heapMaxSize;
+    public long nonheapInitSize;
+    public long nonheapUsedSize;
+    public long nonheapCommittedSize;
+    public long nonheapMaxSize;
+    public int threadCount;
+    public int peakThreadCount;
+    public long totalStartedThreadCount;
+    public double systemLoadAverage;
 }

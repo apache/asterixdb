@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -66,9 +65,9 @@ import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
-import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
@@ -196,9 +195,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public NodeParameters registerNode(NodeRegistration reg) throws Exception {
         INodeController nodeController = reg.getNodeController();
         String id = reg.getNodeId();
-        NCConfig ncConfig = reg.getNCConfig();
-        NetworkAddress dataPort = reg.getDataPort();
-        NodeControllerState state = new NodeControllerState(nodeController, ncConfig, dataPort);
+        NodeControllerState state = new NodeControllerState(nodeController, reg);
         jobQueue.scheduleAndSync(new RegisterNodeEvent(this, id, state));
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
@@ -259,8 +256,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public synchronized void nodeHeartbeat(String id) throws Exception {
-        jobQueue.schedule(new NodeHeartbeatEvent(this, id));
+    public synchronized void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
+        jobQueue.schedule(new NodeHeartbeatEvent(this, id, hbData));
     }
 
     @Override

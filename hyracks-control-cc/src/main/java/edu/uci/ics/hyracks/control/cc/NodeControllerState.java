@@ -17,12 +17,19 @@ package edu.uci.ics.hyracks.control.cc;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
+import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 
 public class NodeControllerState {
+    private static final int RRD_SIZE = 720;
+
     private final INodeController nodeController;
 
     private final NCConfig ncConfig;
@@ -31,17 +38,84 @@ public class NodeControllerState {
 
     private final Set<JobId> activeJobIds;
 
+    private final String osName;
+
+    private final String arch;
+
+    private final String osVersion;
+
+    private final int nProcessors;
+
+    private final long[] hbTime;
+
+    private final long[] heapInitSize;
+
+    private final long[] heapUsedSize;
+
+    private final long[] heapCommittedSize;
+
+    private final long[] heapMaxSize;
+
+    private final long[] nonheapInitSize;
+
+    private final long[] nonheapUsedSize;
+
+    private final long[] nonheapCommittedSize;
+
+    private final long[] nonheapMaxSize;
+
+    private final int[] threadCount;
+
+    private final int[] peakThreadCount;
+
+    private final double[] systemLoadAverage;
+
+    private int rrdPtr;
+
     private int lastHeartbeatDuration;
 
-    public NodeControllerState(INodeController nodeController, NCConfig ncConfig, NetworkAddress dataPort) {
+    public NodeControllerState(INodeController nodeController, NodeRegistration reg) {
         this.nodeController = nodeController;
-        this.ncConfig = ncConfig;
-        this.dataPort = dataPort;
+        ncConfig = reg.getNCConfig();
+        dataPort = reg.getDataPort();
         activeJobIds = new HashSet<JobId>();
+
+        osName = reg.getOSName();
+        arch = reg.getArch();
+        osVersion = reg.getOSVersion();
+        nProcessors = reg.getNProcessors();
+
+        hbTime = new long[RRD_SIZE];
+        heapInitSize = new long[RRD_SIZE];
+        heapUsedSize = new long[RRD_SIZE];
+        heapCommittedSize = new long[RRD_SIZE];
+        heapMaxSize = new long[RRD_SIZE];
+        nonheapInitSize = new long[RRD_SIZE];
+        nonheapUsedSize = new long[RRD_SIZE];
+        nonheapCommittedSize = new long[RRD_SIZE];
+        nonheapMaxSize = new long[RRD_SIZE];
+        threadCount = new int[RRD_SIZE];
+        peakThreadCount = new int[RRD_SIZE];
+        systemLoadAverage = new double[RRD_SIZE];
+        rrdPtr = 0;
     }
 
-    public void notifyHeartbeat() {
+    public void notifyHeartbeat(HeartbeatData hbData) {
         lastHeartbeatDuration = 0;
+
+        hbTime[rrdPtr] = System.currentTimeMillis();
+        heapInitSize[rrdPtr] = hbData.heapInitSize;
+        heapUsedSize[rrdPtr] = hbData.heapUsedSize;
+        heapCommittedSize[rrdPtr] = hbData.heapCommittedSize;
+        heapMaxSize[rrdPtr] = hbData.heapMaxSize;
+        nonheapInitSize[rrdPtr] = hbData.nonheapInitSize;
+        nonheapUsedSize[rrdPtr] = hbData.nonheapUsedSize;
+        nonheapCommittedSize[rrdPtr] = hbData.nonheapCommittedSize;
+        nonheapMaxSize[rrdPtr] = hbData.nonheapMaxSize;
+        threadCount[rrdPtr] = hbData.threadCount;
+        peakThreadCount[rrdPtr] = hbData.peakThreadCount;
+        systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
+        rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
     public int incrementLastHeartbeatDuration() {
@@ -66,5 +140,39 @@ public class NodeControllerState {
 
     public NetworkAddress getDataPort() {
         return dataPort;
+    }
+
+    public JSONObject toSummaryJSON() throws JSONException {
+        JSONObject o = new JSONObject();
+        o.put("node-id", ncConfig.nodeId);
+        o.put("heap-used", heapUsedSize[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
+        o.put("system-load-average", systemLoadAverage[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
+
+        return o;
+    }
+
+    public JSONObject toDetailedJSON() throws JSONException {
+        JSONObject o = new JSONObject();
+
+        o.put("node-id", ncConfig.nodeId);
+        o.put("os-name", osName);
+        o.put("arch", arch);
+        o.put("os-version", osVersion);
+        o.put("num-processors", nProcessors);
+        o.put("rrd-ptr", rrdPtr);
+        o.put("heartbeat-times", hbTime);
+        o.put("heap-init-sizes", heapInitSize);
+        o.put("heap-used-sizes", heapUsedSize);
+        o.put("heap-committed-sizes", heapCommittedSize);
+        o.put("heap-max-sizes", heapMaxSize);
+        o.put("nonheap-init-sizes", nonheapInitSize);
+        o.put("nonheap-used-sizes", nonheapUsedSize);
+        o.put("nonheap-committed-sizes", nonheapCommittedSize);
+        o.put("nonheap-max-sizes", nonheapMaxSize);
+        o.put("thread-counts", threadCount);
+        o.put("peak-thread-counts", peakThreadCount);
+        o.put("system-load-averages", systemLoadAverage);
+
+        return o;
     }
 }

@@ -34,7 +34,14 @@
   	<dependency>
   		<groupId>org.eclipse.jetty</groupId>
   		<artifactId>jetty-server</artifactId>
-  		<version>8.0.0.M1</version>
+  		<version>8.0.0.RC0</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.eclipse.jetty</groupId>
+  		<artifactId>jetty-webapp</artifactId>
+  		<version>8.0.0.RC0</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

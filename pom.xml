@@ -49,6 +49,10 @@
       <id>hyracks-public</id>
       <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
     </repository>
+    <repository>
+      <id>jboss-public</id>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -67,6 +71,7 @@
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control-common</module>
+    <module>hyracks-admin-console</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>

@@ -35,7 +35,11 @@ public class GetJobSummariesJSONEvent extends SynchronizableEvent {
         for (JobRun run : ccs.getRunMap().values()) {
             JSONObject jo = new JSONObject();
             jo.put("type", "job-summary");
-            jo.put("id", run.getJobId().toString());
+            jo.put("job-id", run.getJobId().toString());
+            jo.put("application-name", run.getJobActivityGraph().getApplicationName());
+            jo.put("create-time", run.getCreateTime());
+            jo.put("start-time", run.getCreateTime());
+            jo.put("end-time", run.getCreateTime());
             jo.put("status", run.getStatus().toString());
             summaries.put(jo);
         }

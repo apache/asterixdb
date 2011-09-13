@@ -30,11 +30,24 @@ public final class NodeRegistration implements Serializable {
 
     private final NetworkAddress dataPort;
 
-    public NodeRegistration(INodeController nc, String nodeId, NCConfig ncConfig, NetworkAddress dataPort) {
+    private final String osName;
+
+    private final String arch;
+
+    private final String osVersion;
+
+    private final int nProcessors;
+
+    public NodeRegistration(INodeController nc, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
+            String osName, String arch, String osVersion, int nProcessors) {
         this.nc = nc;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
         this.dataPort = dataPort;
+        this.osName = osName;
+        this.arch = arch;
+        this.osVersion = osVersion;
+        this.nProcessors = nProcessors;
     }
 
     public INodeController getNodeController() {
@@ -51,5 +64,21 @@ public final class NodeRegistration implements Serializable {
 
     public NetworkAddress getDataPort() {
         return dataPort;
+    }
+
+    public String getOSName() {
+        return osName;
+    }
+
+    public String getArch() {
+        return arch;
+    }
+
+    public String getOSVersion() {
+        return osVersion;
+    }
+
+    public int getNProcessors() {
+        return nProcessors;
     }
 }

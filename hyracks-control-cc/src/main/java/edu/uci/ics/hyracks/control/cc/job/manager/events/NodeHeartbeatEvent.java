@@ -20,14 +20,17 @@ import java.util.logging.Level;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 
 public class NodeHeartbeatEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final String nodeId;
+    private final HeartbeatData hbData;
 
-    public NodeHeartbeatEvent(ClusterControllerService ccs, String nodeId) {
+    public NodeHeartbeatEvent(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
         this.ccs = ccs;
         this.nodeId = nodeId;
+        this.hbData = hbData;
     }
 
     @Override
@@ -35,7 +38,7 @@ public class NodeHeartbeatEvent extends SynchronizableEvent {
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         NodeControllerState state = nodeMap.get(nodeId);
         if (state != null) {
-            state.notifyHeartbeat();
+            state.notifyHeartbeat(hbData);
         }
     }
 

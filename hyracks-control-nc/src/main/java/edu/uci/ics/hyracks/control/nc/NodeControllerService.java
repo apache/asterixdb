@@ -18,6 +18,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.rmi.registry.LocateRegistry;
@@ -75,9 +81,9 @@ import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
-import edu.uci.ics.hyracks.control.common.controllers.NodeCapability;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
@@ -103,8 +109,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final IHyracksRootContext ctx;
 
-    private final NodeCapability nodeCapability;
-
     private final PartitionManager partitionManager;
 
     private final ConnectionManager connectionManager;
@@ -123,6 +127,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final Map<String, NCApplicationContext> applications;
 
+    private final MemoryMXBean memoryMXBean;
+
+    private final ThreadMXBean threadMXBean;
+
+    private final RuntimeMXBean runtimeMXBean;
+
+    private final OperatingSystemMXBean osMXBean;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -131,7 +143,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (id == null) {
             throw new Exception("id not set");
         }
-        nodeCapability = computeNodeCapability();
         connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
         partitionManager = new PartitionManager(this);
         connectionManager.setPartitionRequestListener(partitionManager);
@@ -141,6 +152,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
         applications = new Hashtable<String, NCApplicationContext>();
+        memoryMXBean = ManagementFactory.getMemoryMXBean();
+        threadMXBean = ManagementFactory.getThreadMXBean();
+        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        osMXBean = ManagementFactory.getOperatingSystemMXBean();
     }
 
     public IHyracksRootContext getRootContext() {
@@ -164,7 +179,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
         IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
         this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
-                .getNetworkAddress()));
+                .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
+                .getAvailableProcessors()));
 
         // Schedule heartbeat generator.
         timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod());
@@ -190,11 +206,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return id;
     }
 
-    @Override
-    public NodeCapability getNodeCapability() throws Exception {
-        return nodeCapability;
-    }
-
     public ConnectionManager getConnectionManager() {
         return connectionManager;
     }
@@ -205,12 +216,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     public IClusterController getClusterController() {
         return ccs;
-    }
-
-    private static NodeCapability computeNodeCapability() {
-        NodeCapability nc = new NodeCapability();
-        nc.setCPUCount(Runtime.getRuntime().availableProcessors());
-        return nc;
     }
 
     private static InetAddress getIpAddress(NCConfig ncConfig) throws Exception {
@@ -411,14 +416,31 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     private class HeartbeatTask extends TimerTask {
         private IClusterController cc;
 
+        private final HeartbeatData hbData;
+
         public HeartbeatTask(IClusterController cc) {
             this.cc = cc;
+            hbData = new HeartbeatData();
         }
 
         @Override
         public void run() {
+            MemoryUsage heapUsage = memoryMXBean.getHeapMemoryUsage();
+            hbData.heapInitSize = heapUsage.getInit();
+            hbData.heapUsedSize = heapUsage.getUsed();
+            hbData.heapCommittedSize = heapUsage.getCommitted();
+            hbData.heapMaxSize = heapUsage.getMax();
+            MemoryUsage nonheapUsage = memoryMXBean.getNonHeapMemoryUsage();
+            hbData.nonheapInitSize = nonheapUsage.getInit();
+            hbData.nonheapUsedSize = nonheapUsage.getUsed();
+            hbData.nonheapCommittedSize = nonheapUsage.getCommitted();
+            hbData.nonheapMaxSize = nonheapUsage.getMax();
+            hbData.threadCount = threadMXBean.getThreadCount();
+            hbData.peakThreadCount = threadMXBean.getPeakThreadCount();
+            hbData.totalStartedThreadCount = threadMXBean.getTotalStartedThreadCount();
+            hbData.systemLoadAverage = osMXBean.getSystemLoadAverage();
             try {
-                cc.nodeHeartbeat(id);
+                cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
                 e.printStackTrace();
             }

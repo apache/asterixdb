@@ -1,0 +1,18 @@
+<!DOCTYPE ui:UiBinder
+  SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent"
+>
+<ui:UiBinder
+  xmlns:ui='urn:ui:com.google.gwt.uibinder'
+  xmlns:g='urn:import:com.google.gwt.user.client.ui'
+  xmlns:widgets='urn:import:edu.uci.ics.hyracks.adminconsole.client.widgets'>
+  <g:SplitLayoutPanel ui:field="split">
+    <g:west size="300">
+      <g:ScrollPanel>
+        <widgets:NodesTableWidget ui:field="nodes" width="100%"></widgets:NodesTableWidget>
+      </g:ScrollPanel>    
+    </g:west>
+    <g:center>
+      <g:HTML ui:field="details"></g:HTML>
+    </g:center>
+  </g:SplitLayoutPanel>
+</ui:UiBinder>

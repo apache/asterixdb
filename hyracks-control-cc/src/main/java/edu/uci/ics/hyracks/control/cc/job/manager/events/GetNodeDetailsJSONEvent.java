@@ -14,26 +14,33 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
-public class GetNodeEvent extends SynchronizableEvent {
+public class GetNodeDetailsJSONEvent extends SynchronizableEvent {
     private final ClusterControllerService ccs;
     private final String nodeId;
-    private NodeControllerState state;
+    private JSONObject detail;
 
-    public GetNodeEvent(ClusterControllerService ccs, String nodeId) {
+    public GetNodeDetailsJSONEvent(ClusterControllerService ccs, String nodeId) {
         this.ccs = ccs;
         this.nodeId = nodeId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        state = ccs.getNodeMap().get(nodeId);
+        NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
+        if (ncs == null) {
+            detail = new JSONObject();
+            return;
+        }
+        detail = ncs.toDetailedJSON();
     }
 
-    public NodeControllerState getNodeState() {
-        return state;
+    public JSONObject getDetail() {
+        return detail;
     }
 }

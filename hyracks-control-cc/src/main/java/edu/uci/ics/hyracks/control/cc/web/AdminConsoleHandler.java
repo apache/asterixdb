@@ -15,8 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.web;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
+import java.net.URL;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,51 +25,21 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 
 public class AdminConsoleHandler extends AbstractHandler {
-    private ClusterControllerService ccs;
-
     public AdminConsoleHandler(ClusterControllerService ccs) {
-        this.ccs = ccs;
     }
 
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        if (!"/".equals(target)) {
-            return;
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            response.getWriter().println("No Administration Console found.");
         }
-        response.setContentType("text/html;charset=utf-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-        baseRequest.setHandled(true);
-        final PrintWriter writer = response.getWriter();
-        writer.println("<html><head><title>Hyracks Admin Console</title></head><body>");
-        writer.println("<h1>Hyracks Admin Console</h1>");
-        writer.println("<h2>Node Controllers</h2>");
-        writer.println("<table><tr><td>Node Id</td><td>Host</td></tr>");
-        try {
-            ccs.getJobQueue().scheduleAndSync(new SynchronizableEvent() {
-                @Override
-                protected void doRun() throws Exception {
-                    for (Map.Entry<String, NodeControllerState> e : ccs.getNodeMap().entrySet()) {
-                        try {
-                            writer.print("<tr><td>");
-                            writer.print(e.getKey());
-                            writer.print("</td><td>");
-                            writer.print(e.getValue().getLastHeartbeatDuration());
-                            writer.print("</td></tr>");
-                        } catch (Exception ex) {
-                        }
-                    }
-                }
-            });
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
-        writer.println("</table>");
-        writer.println("</body></html>");
-        writer.flush();
+
+        URL url = new URL(request.getRequestURL().toString());
+        String ccLoc = url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
+        response.sendRedirect("/console?cclocation=" + ccLoc);
     }
 }

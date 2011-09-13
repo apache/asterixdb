@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.web;
 
+import java.io.File;
+import java.util.logging.Logger;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -21,12 +24,15 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.web.util.JSONOutputRequestHandler;
 import edu.uci.ics.hyracks.control.cc.web.util.RoutingHandler;
 
 public class WebServer {
+    private final static Logger LOGGER = Logger.getLogger(WebServer.class.getName());
+
     private final ClusterControllerService ccs;
     private final Server server;
     private final SelectChannelConnector connector;
@@ -48,17 +54,30 @@ public class WebServer {
     private void addHandlers() {
         ContextHandler handler = new ContextHandler("/rest");
         RoutingHandler rh = new RoutingHandler();
-        rh.addHandler("jobs", new JSONOutputRequestHandler(new RESTAPIFunction(ccs)));
+        rh.addHandler("jobs", new JSONOutputRequestHandler(new JobsRESTAPIFunction(ccs)));
+        rh.addHandler("nodes", new JSONOutputRequestHandler(new NodesRESTAPIFunction(ccs)));
         handler.setHandler(rh);
         addHandler(handler);
 
-        handler = new ContextHandler("/admin");
+        handler = new ContextHandler("/adminconsole");
         handler.setHandler(new AdminConsoleHandler(ccs));
         addHandler(handler);
 
         handler = new ContextHandler("/applications");
         handler.setHandler(new ApplicationInstallationHandler(ccs));
         addHandler(handler);
+
+        String basedir = System.getProperty("basedir");
+        if (basedir != null) {
+            File warFile = new File(basedir, "console/hyracks-admin-console.war");
+            LOGGER.info("Looking for admin console binary in: " + warFile.getAbsolutePath());
+            if (warFile.exists()) {
+                WebAppContext waCtx = new WebAppContext();
+                waCtx.setContextPath("/console");
+                waCtx.setWar(warFile.getAbsolutePath());
+                addHandler(waCtx);
+            }
+        }
     }
 
     public void setPort(int port) {

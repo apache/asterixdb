@@ -24,10 +24,10 @@ import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSpecificationJSON
 import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSummariesJSONEvent;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
 
-public class RESTAPIFunction implements IJSONOutputFunction {
+public class JobsRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;
 
-    public RESTAPIFunction(ClusterControllerService ccs) {
+    public JobsRESTAPIFunction(ClusterControllerService ccs) {
         this.ccs = ccs;
     }
 

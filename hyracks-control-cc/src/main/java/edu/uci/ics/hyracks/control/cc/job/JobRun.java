@@ -59,6 +59,12 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private JobScheduler js;
 
+    private long createTime;
+
+    private long startTime;
+
+    private long endTime;
+
     private JobStatus status;
 
     private Exception exception;
@@ -93,6 +99,30 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public synchronized JobStatus getStatus() {
         return status;
+    }
+
+    public long getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
     }
 
     public synchronized Exception getException() {
@@ -145,6 +175,9 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
+        result.put("create-time", getCreateTime());
+        result.put("start-time", getCreateTime());
+        result.put("end-time", getCreateTime());
 
         JSONArray aClusters = new JSONArray();
         for (ActivityCluster ac : activityClusters) {
