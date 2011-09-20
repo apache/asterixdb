@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -61,6 +63,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
 
+    private final Map<TaskId, ITaskState> taskStateMap;
+
     private final Map<TaskAttemptId, Task> taskMap;
 
     private final Map<String, Counter> counterMap;
@@ -77,6 +81,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jobId = jobId;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
+        taskStateMap = new HashMap<TaskId, ITaskState>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
         localVariableMap = new HashMap<MultipartName, Object>();
@@ -119,27 +124,25 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         localVariableMap.put(name, value);
     }
 
-    private static final class OperatorEnvironmentImpl implements IOperatorEnvironment {
+    private final class OperatorEnvironmentImpl implements IOperatorEnvironment {
         private final String nodeId;
-        private final Map<String, Object> map;
 
         public OperatorEnvironmentImpl(String nodeId) {
             this.nodeId = nodeId;
-            map = new HashMap<String, Object>();
-        }
-
-        @Override
-        public Object get(String name) {
-            return map.get(name);
-        }
-
-        @Override
-        public void set(String name, Object value) {
-            map.put(name, value);
         }
 
         public String toString() {
             return super.toString() + "@" + nodeId;
+        }
+
+        @Override
+        public void setTaskState(ITaskState taskState) {
+            taskStateMap.put(taskState.getTaskId(), taskState);
+        }
+
+        @Override
+        public ITaskState getTaskState(TaskId taskId) {
+            return taskStateMap.get(taskId);
         }
     }
 

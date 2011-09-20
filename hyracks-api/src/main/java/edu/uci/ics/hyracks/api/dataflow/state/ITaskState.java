@@ -12,13 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job;
+package edu.uci.ics.hyracks.api.dataflow.state;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.job.JobId;
 
-public interface IOperatorEnvironment {
-    public void setTaskState(ITaskState taskState);
+public interface ITaskState {
+    public JobId getJobId();
 
-    public ITaskState getTaskState(TaskId taskId);
+    public TaskId getTaskId();
+
+    public long getMemoryOccupancy();
+
+    public void toBytes(DataOutput out) throws IOException;
+
+    public void fromBytes(DataInput in) throws IOException;
 }

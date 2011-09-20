@@ -14,27 +14,35 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String HASHTABLE = "hashtable";
+    private static final int HASH_BUILD_ACTIVITY_ID = 0;
+
+    private static final int OUTPUT_ACTIVITY_ID = 1;
 
     private static final long serialVersionUID = 1L;
 
@@ -58,15 +66,36 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, 0));
+        HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, HASH_BUILD_ACTIVITY_ID));
         builder.addActivity(ha);
 
-        OutputActivity oa = new OutputActivity(new ActivityId(odId, 1));
+        OutputActivity oa = new OutputActivity(new ActivityId(odId, OUTPUT_ACTIVITY_ID));
         builder.addActivity(oa);
 
         builder.addSourceEdge(0, ha, 0);
         builder.addTargetEdge(0, oa, 0);
         builder.addBlockingEdge(ha, oa);
+    }
+
+    public static class HashBuildActivityState extends AbstractTaskState {
+        private GroupingHashTable table;
+
+        public HashBuildActivityState() {
+        }
+
+        private HashBuildActivityState(JobId jobId, TaskId tId) {
+            super(jobId, tId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+
+        }
     }
 
     private class HashBuildActivity extends AbstractActivityNode {
@@ -78,15 +107,17 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+                final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             return new AbstractUnaryInputSinkOperatorNodePushable() {
-                private GroupingHashTable table;
+                private HashBuildActivityState state;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    table = new GroupingHashTable(ctx, keys, comparatorFactories, tpcf, aggregatorFactory,
+                    state = new HashBuildActivityState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
+                    state.table = new GroupingHashTable(ctx, keys, comparatorFactories, tpcf, aggregatorFactory,
                             recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
                             tableSize);
                 }
@@ -96,13 +127,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                     accessor.reset(buffer);
                     int tupleCount = accessor.getTupleCount();
                     for (int i = 0; i < tupleCount; ++i) {
-                        table.insert(accessor, i);
+                        state.table.insert(accessor, i);
                     }
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    env.set(HASHTABLE, table);
+                    env.setTaskState(state);
                 }
 
                 @Override
@@ -121,11 +152,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    GroupingHashTable table = (GroupingHashTable) env.get(HASHTABLE);
+                    HashBuildActivityState buildState = (HashBuildActivityState) env.getTaskState(new TaskId(
+                            new ActivityId(getOperatorId(), HASH_BUILD_ACTIVITY_ID), partition));
+                    GroupingHashTable table = buildState.table;
                     writer.open();
                     try {
                         table.write(writer);
@@ -135,7 +168,6 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                     } finally {
                         writer.close();
                     }
-                    env.set(HASHTABLE, null);
                 }
             };
         }

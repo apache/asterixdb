@@ -14,28 +14,36 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String FRAMESORTER = "framesorter";
-
     private static final long serialVersionUID = 1L;
+
+    private static final int SORT_ACTIVITY_ID = 0;
+    private static final int MERGE_ACTIVITY_ID = 1;
+
     private final int[] sortFields;
     private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
     private IBinaryComparatorFactory[] comparatorFactories;
@@ -57,8 +65,8 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        SortActivity sa = new SortActivity(new ActivityId(odId, 0));
-        MergeActivity ma = new MergeActivity(new ActivityId(odId, 1));
+        SortActivity sa = new SortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
+        MergeActivity ma = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
         builder.addActivity(sa);
         builder.addSourceEdge(0, sa, 0);
@@ -67,6 +75,25 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         builder.addTargetEdge(0, ma, 0);
 
         builder.addBlockingEdge(sa, ma);
+    }
+
+    public static class SortTaskState extends AbstractTaskState {
+        private FrameSorter frameSorter;
+
+        public SortTaskState() {
+        }
+
+        private SortTaskState(JobId jobId, TaskId taskId) {
+            super(jobId, taskId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+        }
     }
 
     private class SortActivity extends AbstractActivityNode {
@@ -78,24 +105,27 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-            final FrameSorter frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory,
-                    comparatorFactories, recordDescriptors[0]);
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
+                private SortTaskState state;
+
                 @Override
                 public void open() throws HyracksDataException {
-                    frameSorter.reset();
+                    state = new SortTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
+                    state.frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory,
+                            comparatorFactories, recordDescriptors[0]);
+                    state.frameSorter.reset();
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    frameSorter.insertFrame(buffer);
+                    state.frameSorter.insertFrame(buffer);
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    frameSorter.sortFrames();
-                    env.set(FRAMESORTER, frameSorter);
+                    state.frameSorter.sortFrames();
+                    env.setTaskState(state);
                 }
 
                 @Override
@@ -115,21 +145,21 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
                     writer.open();
                     try {
-                        FrameSorter frameSorter = (FrameSorter) env.get(FRAMESORTER);
-                        frameSorter.flushFrames(writer);
+                        SortTaskState state = (SortTaskState) env.getTaskState(new TaskId(new ActivityId(
+                                getOperatorId(), SORT_ACTIVITY_ID), partition));
+                        state.frameSorter.flushFrames(writer);
                     } catch (Exception e) {
                         writer.fail();
                         throw new HyracksDataException(e);
                     } finally {
                         writer.close();
                     }
-                    env.set(FRAMESORTER, null);
                 }
             };
             return op;

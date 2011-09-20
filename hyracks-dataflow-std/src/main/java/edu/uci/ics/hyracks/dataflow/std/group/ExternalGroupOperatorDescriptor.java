@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
@@ -35,6 +38,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -46,21 +50,18 @@ import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
 public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor {
+    private static final int AGGREGATE_ACTIVITY_ID = 0;
+
+    private static final int MERGE_ACTIVITY_ID = 1;
+
     private static final long serialVersionUID = 1L;
-    /**
-     * The input frame identifier (in the job environment)
-     */
-    private static final String GROUPTABLES = "gtables";
-    /**
-     * The runs files identifier (in the job environment)
-     */
-    private static final String RUNS = "runs";
     private final int[] keyFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory firstNormalizerFactory;
@@ -102,8 +103,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), 0));
-        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, 1));
+        AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID));
+        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
         builder.addActivity(aggregateAct);
         builder.addSourceEdge(0, aggregateAct, 0);
@@ -112,6 +113,29 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         builder.addTargetEdge(0, mergeAct, 0);
 
         builder.addBlockingEdge(aggregateAct, mergeAct);
+    }
+
+    public static class AggregateActivityState extends AbstractTaskState {
+        private LinkedList<RunFileReader> runs;
+
+        private ISpillableTable gTable;
+
+        public AggregateActivityState() {
+        }
+
+        private AggregateActivityState(JobId jobId, TaskId tId) {
+            super(jobId, tId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private class AggregateActivity extends AbstractActivityNode {
@@ -123,25 +147,23 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
-            final ISpillableTable gTable = spillableTableFactory.buildSpillableTable(ctx, keyFields,
-                    comparatorFactories, firstNormalizerFactory, aggregatorFactory,
-                    recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
-                    ExternalGroupOperatorDescriptor.this.framesLimit);
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
-
-                /**
-                 * Run files
-                 */
-                private LinkedList<RunFileReader> runs;
+                private AggregateActivityState state;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    runs = new LinkedList<RunFileReader>();
-                    gTable.reset();
+                    state = new AggregateActivityState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
+                    state.runs = new LinkedList<RunFileReader>();
+                    state.gTable = spillableTableFactory.buildSpillableTable(ctx, keyFields, comparatorFactories,
+                            firstNormalizerFactory, aggregatorFactory,
+                            recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
+                            ExternalGroupOperatorDescriptor.this.framesLimit);
+                    state.gTable.reset();
                 }
 
                 @Override
@@ -153,9 +175,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          * If the group table is too large, flush the table into
                          * a run file.
                          */
-                        if (!gTable.insert(accessor, i)) {
+                        if (!state.gTable.insert(accessor, i)) {
                             flushFramesToRun();
-                            if (!gTable.insert(accessor, i))
+                            if (!state.gTable.insert(accessor, i))
                                 throw new HyracksDataException(
                                         "Failed to insert a new buffer into the aggregate operator!");
                         }
@@ -169,21 +191,17 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void close() throws HyracksDataException {
-                    if (gTable.getFrameCount() >= 0) {
-                        if (runs.size() <= 0) {
-                            /**
-                             * All in memory
-                             */
-                            env.set(GROUPTABLES, gTable);
-                        } else {
+                    if (state.gTable.getFrameCount() >= 0) {
+                        if (state.runs.size() > 0) {
                             /**
                              * flush the memory into the run file.
                              */
                             flushFramesToRun();
-                            gTable.close();
+                            state.gTable.close();
+                            state.gTable = null;
                         }
                     }
-                    env.set(RUNS, runs);
+                    env.setTaskState(state);
                 }
 
                 private void flushFramesToRun() throws HyracksDataException {
@@ -197,15 +215,15 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     RunFileWriter writer = new RunFileWriter(runFile, ctx.getIOManager());
                     writer.open();
                     try {
-                        gTable.sortFrames();
-                        gTable.flushFrames(writer, true);
+                        state.gTable.sortFrames();
+                        state.gTable.flushFrames(writer, true);
                     } catch (Exception ex) {
                         throw new HyracksDataException(ex);
                     } finally {
                         writer.close();
                     }
-                    gTable.reset();
-                    runs.add(((RunFileWriter) writer).createReader());
+                    state.gTable.reset();
+                    state.runs.add(((RunFileWriter) writer).createReader());
                 }
             };
             return op;
@@ -221,7 +239,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -252,10 +270,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                  */
                 private ByteBuffer outFrame, writerFrame;
 
-                /**
-                 * List of the run files to be merged
-                 */
                 private LinkedList<RunFileReader> runs;
+
+                private AggregateActivityState aggState;
 
                 /**
                  * how many frames to be read ahead once
@@ -270,21 +287,21 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private ArrayTupleBuilder finalTupleBuilder;
                 private FrameTupleAppender writerFrameAppender;
 
-                @SuppressWarnings("unchecked")
                 public void initialize() throws HyracksDataException {
-                    runs = (LinkedList<RunFileReader>) env.get(RUNS);
+                    aggState = (AggregateActivityState) env.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                            AGGREGATE_ACTIVITY_ID), partition));
+                    runs = aggState.runs;
                     writer.open();
                     try {
                         if (runs.size() <= 0) {
-                            ISpillableTable gTable = (ISpillableTable) env.get(GROUPTABLES);
+                            ISpillableTable gTable = aggState.gTable;
                             if (gTable != null) {
                                 if (isOutputSorted)
                                     gTable.sortFrames();
                                 gTable.flushFrames(writer, false);
                             }
-                            env.set(GROUPTABLES, null);
                         } else {
-                            long start = System.currentTimeMillis();
+                            runs = new LinkedList<RunFileReader>(runs);
                             inFrames = new ArrayList<ByteBuffer>();
                             outFrame = ctx.allocateFrame();
                             outFrameAppender.reset(outFrame, true);
@@ -297,8 +314,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                 }
                             }
                             inFrames.clear();
-                            long end = System.currentTimeMillis();
-                            System.out.println("merge time " + (end - start));
                         }
                     } catch (Exception e) {
                         writer.fail();
@@ -306,7 +321,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     } finally {
                         writer.close();
                     }
-                    env.set(RUNS, null);
                 }
 
                 private void doPass(LinkedList<RunFileReader> runs) throws HyracksDataException {
