@@ -227,7 +227,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
         frameTuple.setFieldCount(cmp.getFieldCount());
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
-        int bytesWritten = tupleWriter.writeTuple(tuple, buf, buf.getInt(freeSpaceOff));
+        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
 
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);

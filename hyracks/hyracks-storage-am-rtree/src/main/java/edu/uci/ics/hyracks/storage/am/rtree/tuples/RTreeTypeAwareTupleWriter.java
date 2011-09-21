@@ -27,8 +27,8 @@ public class RTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
         super(typeTraits);
     }
 
-    public int writeTupleFields(ITreeIndexTupleReference[] refs, int startField, ByteBuffer targetBuf, int targetOff) {
-        int runner = targetOff;
+    public int writeTupleFields(ITreeIndexTupleReference[] refs, int startField, ByteBuffer targetBuf, int targetOff) {        
+    	int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(refs.length);
         // write null indicator bits
         for (int i = 0; i < nullFlagsBytes; i++) {

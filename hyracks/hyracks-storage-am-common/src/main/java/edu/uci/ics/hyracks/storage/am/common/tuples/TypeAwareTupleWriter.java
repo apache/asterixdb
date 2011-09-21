@@ -56,15 +56,20 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
     @Override
     public int writeTuple(ITupleReference tuple, ByteBuffer targetBuf, int targetOff) {
+        return writeTuple(tuple, targetBuf.array(), targetOff);
+    }
+
+    @Override
+    public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(tuple);
         // write null indicator bits
         for (int i = 0; i < nullFlagsBytes; i++) {
-            targetBuf.put(runner++, (byte) 0);
+        	targetBuf[runner++] = (byte) 0;
         }
 
         // write field slots for variable length fields
-        encDec.reset(targetBuf.array(), runner);
+        encDec.reset(targetBuf, runner);
         for (int i = 0; i < tuple.getFieldCount(); i++) {
             if (typeTraits[i].getStaticallyKnownDataLength() == ITypeTrait.VARIABLE_LENGTH) {
                 encDec.encode(tuple.getFieldLength(i));
@@ -74,14 +79,14 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
         // write data fields
         for (int i = 0; i < tuple.getFieldCount(); i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner,
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner,
                     tuple.getFieldLength(i));
             runner += tuple.getFieldLength(i);
         }
 
         return runner - targetOff;
     }
-
+    
     @Override
     public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
             int targetOff) {

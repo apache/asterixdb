@@ -36,6 +36,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     public TypeAwareTupleReference(ITypeTrait[] typeTraits) {
         this.typeTraits = typeTraits;
         this.fieldStartIndex = 0;
+        setFieldCount(typeTraits.length);
     }
 
     @Override

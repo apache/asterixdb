@@ -28,9 +28,8 @@ public class RTreeTypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFa
         this.typeTraits = typeTraits;
     }
 
-    @Override
+    @Override    
     public ITreeIndexTupleWriter createTupleWriter() {
         return new RTreeTypeAwareTupleWriter(typeTraits);
     }
-
 }

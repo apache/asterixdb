@@ -4,4 +4,5 @@ import java.io.Serializable;
 
 public interface ITreeIndexFrameFactory extends Serializable {
     public ITreeIndexFrame createFrame();
+    public ITreeIndexTupleWriterFactory getTupleWriterFactory();
 }

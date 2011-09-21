@@ -157,7 +157,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 int a = rnd.nextInt() % smallMax;
                 int b = rnd.nextInt() % smallMax;
                 int c = i;
-
+                
                 ITupleReference tuple = createTuple(ctx, a, b, c, false);
                 try {
                     int targetTupleIndex = frame.findTupleIndex(tuple, cmp);
@@ -173,7 +173,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 savedFields[i][2] = c;
 
                 if (rnd.nextInt() % compactFreq == 0) {
-                    before = frame.printKeys(cmp, sers);
+                    before = frame.printKeys(cmp, sers);                    
                     frame.compact(cmp);
                     after = frame.printKeys(cmp, sers);
                     Assert.assertEquals(before, after);

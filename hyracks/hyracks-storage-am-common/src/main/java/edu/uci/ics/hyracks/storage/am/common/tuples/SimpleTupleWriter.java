@@ -67,6 +67,13 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 
         return runner - targetOff;
     }
+    
+    @Override
+	public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
+		// TODO Implement this.
+    	System.out.println("IN HERE HUHUHU");
+		return -1;
+	}
 
     @Override
     public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
@@ -106,5 +113,5 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 
     protected int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {
         return numFields * 2;
-    }
+    }	
 }

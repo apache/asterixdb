@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
-    private ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private int keyFieldCount;
+    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private final int keyFieldCount;
 
     public RTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
         this.tupleWriterFactory = tupleWriterFactory;
@@ -37,4 +37,9 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
     public IRTreeLeafFrame createFrame() {
         return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
     }
+
+	@Override
+	public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+		return tupleWriterFactory;
+	}
 }

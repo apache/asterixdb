@@ -283,7 +283,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             tupleIndex = findTupleByPointer(tuple, cmp);
         }
         if (tupleIndex != -1) {
-            tupleWriter.writeTuple(tuple, buf, getTupleOffset(tupleIndex));
+            tupleWriter.writeTuple(tuple, buf.array(), getTupleOffset(tupleIndex));
         }
     }
 

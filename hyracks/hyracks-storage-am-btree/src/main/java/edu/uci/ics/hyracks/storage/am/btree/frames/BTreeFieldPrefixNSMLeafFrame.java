@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
@@ -292,8 +293,18 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        return slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
+            frameTuple.setFieldCount(cmp.getFieldCount());
+            frameTuple.resetByTupleIndex(this, tupleIndex);
+            int comparison = cmp.fieldRangeCompare(tuple, frameTuple, 0, cmp.getKeyFieldCount());
+            if (comparison == 0) {
+                throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
+            }
+        }
+        return slot;
     }
 
     @Override
@@ -521,7 +532,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
                     int bytesWritten = 0;
                     if (lastPrefixSlotNum != prefixSlotNum) {
-                        bytesWritten = tupleWriter.writeTuple(framePrefixTuple, right, freeSpace);
+                        bytesWritten = tupleWriter.writeTuple(framePrefixTuple, right.array(), freeSpace);
                         int newPrefixSlot = rf.slotManager
                                 .encodeSlotFields(framePrefixTuple.getFieldCount(), freeSpace);
                         int prefixSlotOff = rf.slotManager.getPrefixSlotOff(prefixSlotNum);

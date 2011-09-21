@@ -60,7 +60,6 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -313,8 +312,6 @@ public class BTreeTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
@@ -499,9 +496,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
-        // TypeAwareTupleWriterFactory tupleWriterFactory = new
-        // TypeAwareTupleWriterFactory(typeTraits);
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
@@ -674,8 +669,6 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -836,8 +829,6 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -991,8 +982,6 @@ public class BTreeTest extends AbstractBTreeTest {
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
