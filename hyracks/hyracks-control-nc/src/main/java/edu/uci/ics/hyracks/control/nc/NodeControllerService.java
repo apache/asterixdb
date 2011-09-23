@@ -73,6 +73,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.api.job.IJobletEventListener;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobPlan;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -231,7 +233,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 }
             };
 
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, attempt, appCtx);
+            final Joblet joblet = getOrCreateLocalJoblet(jobId, attempt, appCtx, plan);
 
             Stagelet stagelet = new Stagelet(joblet, stageId, attempt, id);
             joblet.setStagelet(stageId, stagelet);
@@ -441,11 +443,18 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return ji;
     }
 
-    private Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx) throws Exception {
+    private Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx, JobPlan plan)
+            throws Exception {
         synchronized (jobletMap) {
             Joblet ji = jobletMap.get(jobId);
             if (ji == null || ji.getAttempt() != attempt) {
                 ji = new Joblet(this, jobId, attempt, appCtx);
+                IJobletEventListenerFactory jelf = plan.getJobSpecification().getJobletEventListenerFactory();
+                if (jelf != null) {
+                    IJobletEventListener listener = jelf.createListener(ji);
+                    ji.setJobletEventListener(listener);
+                    listener.jobletStart();
+                }
                 jobletMap.put(jobId, ji);
             }
             return ji;
@@ -463,6 +472,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
+            IJobletEventListener listener = joblet.getJobletEventListener();
+            if (listener != null) {
+                listener.jobletFinish();
+            }
             joblet.close();
         }
         connectionManager.dumpStats();

@@ -55,6 +55,8 @@ public class JobSpecification implements Serializable {
 
     private int maxAttempts;
 
+    private IJobletEventListenerFactory jobletEventListenerFactory;
+
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
@@ -187,6 +189,14 @@ public class JobSpecification implements Serializable {
 
     public Set<ConstraintExpression> getUserConstraints() {
         return userConstraints;
+    }
+
+    public IJobletEventListenerFactory getJobletEventListenerFactory() {
+        return jobletEventListenerFactory;
+    }
+
+    public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
+        this.jobletEventListenerFactory = jobletEventListenerFactory;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

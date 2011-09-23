@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
@@ -60,6 +61,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final IWorkspaceFileFactory fileFactory;
+
+    private IJobletEventListener jobletEventListener;
 
     public Joblet(NodeControllerService nodeController, UUID jobId, int attempt, INCApplicationContext appCtx) {
         this.nodeController = nodeController;
@@ -209,5 +212,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             }
             return counter;
         }
+    }
+
+    public IJobletEventListener getJobletEventListener() {
+        return jobletEventListener;
+    }
+
+    public void setJobletEventListener(IJobletEventListener jobletEventListener) {
+        this.jobletEventListener = jobletEventListener;
     }
 }
