@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.cc.job.manager.events;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class StageletFailureEvent implements Runnable {
         List<JobAttempt> attempts = run.getAttempts();
         JobAttempt ja = attempts.get(attempt);
         final Set<String> targetNodes = new HashSet<String>(ja.getParticipatingNodeIds());
-        Map<String, NodeControllerState> nodeMap = new HashMap<String, NodeControllerState>();
+        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         for (String nodeId : targetNodes) {
             NodeControllerState ncState = nodeMap.get(nodeId);
             if (ncState != null) {
