@@ -466,7 +466,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void cleanUpJob(UUID jobId) throws Exception {
+    public void cleanUpJob(UUID jobId, boolean success) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
@@ -474,7 +474,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (joblet != null) {
             IJobletEventListener listener = joblet.getJobletEventListener();
             if (listener != null) {
-                listener.jobletFinish();
+                listener.jobletFinish(success);
             }
             joblet.close();
         }

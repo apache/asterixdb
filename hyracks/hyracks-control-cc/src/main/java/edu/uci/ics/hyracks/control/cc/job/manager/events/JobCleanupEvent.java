@@ -49,7 +49,7 @@ public class JobCleanupEvent implements Runnable {
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
         for (String n : targetNodes) {
-            jcns[i++] = new JobCompleteNotifier(n, jobId);
+            jcns[i++] = new JobCompleteNotifier(n, jobId, status == JobStatus.TERMINATED);
         }
         ccs.getExecutor().execute(new Runnable() {
             @Override

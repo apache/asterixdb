@@ -30,16 +30,12 @@ import edu.uci.ics.hyracks.control.cc.job.manager.JobLifecycleHelper;
 public class StageletFailureEvent implements Runnable {
     private final ClusterControllerService ccs;
     private final UUID jobId;
-    private final UUID stageId;
     private final int attempt;
-    private final String nodeId;
 
     public StageletFailureEvent(ClusterControllerService ccs, UUID jobId, UUID stageId, int attempt, String nodeId) {
         this.ccs = ccs;
         this.jobId = jobId;
-        this.stageId = stageId;
         this.attempt = attempt;
-        this.nodeId = nodeId;
     }
 
     @Override
@@ -50,7 +46,10 @@ public class StageletFailureEvent implements Runnable {
         final Set<String> targetNodes = new HashSet<String>(ja.getParticipatingNodeIds());
         Map<String, NodeControllerState> nodeMap = new HashMap<String, NodeControllerState>();
         for (String nodeId : targetNodes) {
-            nodeMap.get(nodeId).getActiveJobIds().remove(jobId);
+            NodeControllerState ncState = nodeMap.get(nodeId);
+            if (ncState != null) {
+                ncState.getActiveJobIds().remove(jobId);
+            }
         }
         ccs.getExecutor().execute(new Runnable() {
             @Override

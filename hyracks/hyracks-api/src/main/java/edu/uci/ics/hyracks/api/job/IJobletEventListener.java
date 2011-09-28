@@ -17,5 +17,5 @@ package edu.uci.ics.hyracks.api.job;
 public interface IJobletEventListener {
     public void jobletStart();
 
-    public void jobletFinish();
+    public void jobletFinish(boolean success);
 }
