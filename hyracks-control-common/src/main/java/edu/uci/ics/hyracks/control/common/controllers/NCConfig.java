@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.common.controllers;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
@@ -47,4 +48,27 @@ public class NCConfig implements Serializable {
 
     @Option(name = "-dcache-client-path", usage = "Sets the path to store the files retrieved from the DCache server (default /tmp/dcache-client)")
     public String dcacheClientPath = "/tmp/dcache-client";
+
+    public void toCommandLine(List<String> cList) {
+        cList.add("-cc-host");
+        cList.add(ccHost);
+        cList.add("-cc-port");
+        cList.add(String.valueOf(ccPort));
+        cList.add("-node-id");
+        cList.add(nodeId);
+        cList.add("-data-ip-address");
+        cList.add(dataIPAddress);
+        cList.add("-frame-size");
+        cList.add(String.valueOf(frameSize));
+        cList.add("-iodevices");
+        cList.add(ioDevices);
+        cList.add("-dcache-client-servers");
+        cList.add(dcacheClientServers);
+        if (dcacheClientServerLocal != null) {
+            cList.add("-dcache-client-server-local");
+            cList.add(dcacheClientServerLocal);
+        }
+        cList.add("-dcache-client-path");
+        cList.add(dcacheClientPath);
+    }
 }
