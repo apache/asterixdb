@@ -64,8 +64,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private IJobletEventListener jobletEventListener;
     
-    private int nPendingOperators;
-
     public Joblet(NodeControllerService nodeController, UUID jobId, int attempt, INCApplicationContext appCtx) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
@@ -76,7 +74,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         counterMap = new Hashtable<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new ManagedWorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
-        nPendingOperators = 0;
     }
 
     @Override
@@ -223,22 +220,5 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public void setJobletEventListener(IJobletEventListener jobletEventListener) {
         this.jobletEventListener = jobletEventListener;
-    }
-
-    public synchronized void incrementOperatorCount() {
-        ++nPendingOperators;
-    }
-
-    public synchronized void decrementOperatorCount() {
-        --nPendingOperators;
-        if (nPendingOperators == 0) {
-            notifyAll();
-        }
-    }
-    
-    public synchronized void waitForPendingOperators() throws InterruptedException {
-        while(nPendingOperators > 0) {
-            wait();
-        }
     }
 }

@@ -117,35 +117,30 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
     public void installRunnable(final OperatorInstanceId opIId) {
         pendingOperators.add(opIId);
         final OperatorRunnable hon = honMap.get(opIId);
-        joblet.incrementOperatorCount();
         joblet.getExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    try {
-                        waitUntilStarted();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    if (abort) {
-                        return;
-                    }
-                    try {
-                        LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                                + opIId.getPartition() + "(" + hon + ")" + ": STARTED");
-                        hon.run();
-                        LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                                + opIId.getPartition() + "(" + hon + ")" + ": FINISHED");
-                        notifyOperatorCompletion(opIId);
-                    } catch (Exception e) {
-                        LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
-                                + opIId.getPartition() + "(" + hon + ")" + ": ABORTED");
-                        e.printStackTrace();
-                        notifyOperatorFailure(opIId);
-                    }
-                } finally {
-                    joblet.decrementOperatorCount();
+                    waitUntilStarted();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                if (abort) {
+                    return;
+                }
+                try {
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + "(" + hon + ")" + ": STARTED");
+                    hon.run();
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + "(" + hon + ")" + ": FINISHED");
+                    notifyOperatorCompletion(opIId);
+                } catch (Exception e) {
+                    LOGGER.log(Level.INFO, joblet.getJobId() + ":" + stageId + ":" + opIId.getOperatorId() + ":"
+                            + opIId.getPartition() + "(" + hon + ")" + ": ABORTED");
+                    e.printStackTrace();
+                    notifyOperatorFailure(opIId);
                 }
             }
         });
