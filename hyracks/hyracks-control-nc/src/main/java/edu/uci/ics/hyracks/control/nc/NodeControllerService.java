@@ -583,17 +583,17 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         Joblet ji = jobletMap.get(jobId);
         if (ji != null) {
             if (ji.getAttempt() == attempt) {
+                for (Stagelet stagelet : ji.getStageletMap().values()) {
+                    stagelet.abort();
+                    stagelet.close();
+                    connectionManager.abortConnections(jobId, stagelet.getStageId());
+                }
                 Joblet joblet = jobletMap.remove(jobId);
                 joblet.waitForPendingOperators();
                 IJobletEventListener listener = joblet.getJobletEventListener();
                 if (listener != null) {
                     listener.jobletFinish(false);
                 }
-            }
-            for (Stagelet stagelet : ji.getStageletMap().values()) {
-                stagelet.abort();
-                stagelet.close();
-                connectionManager.abortConnections(jobId, stagelet.getStageId());
             }
         }
     }
