@@ -472,6 +472,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         }
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
+            joblet.waitForPendingOperators();
             IJobletEventListener listener = joblet.getJobletEventListener();
             if (listener != null) {
                 listener.jobletFinish(success);
@@ -583,6 +584,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (ji != null) {
             if (ji.getAttempt() == attempt) {
                 Joblet joblet = jobletMap.remove(jobId);
+                joblet.waitForPendingOperators();
                 IJobletEventListener listener = joblet.getJobletEventListener();
                 if (listener != null) {
                     listener.jobletFinish(false);
