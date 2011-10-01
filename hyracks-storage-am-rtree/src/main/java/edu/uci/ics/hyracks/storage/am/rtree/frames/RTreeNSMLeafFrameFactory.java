@@ -21,23 +21,25 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
 public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
-	private static final long serialVersionUID = 1L;
-	private ITreeIndexTupleWriterFactory tupleWriterFactory;
-	private int keyFieldCount;
+    private static final long serialVersionUID = 1L;
+    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private final int keyFieldCount;
 
-	public RTreeNSMLeafFrameFactory(
-			ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
-		this.tupleWriterFactory = tupleWriterFactory;
-		if (keyFieldCount % 2 != 0) {
-			throw new IllegalArgumentException(
-					"The key has different number of dimensions.");
-		}
-		this.keyFieldCount = keyFieldCount;
-	}
+    public RTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
+        this.tupleWriterFactory = tupleWriterFactory;
+        if (keyFieldCount % 2 != 0) {
+            throw new IllegalArgumentException("The key has different number of dimensions.");
+        }
+        this.keyFieldCount = keyFieldCount;
+    }
+
+    @Override
+    public IRTreeLeafFrame createFrame() {
+        return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
+    }
 
 	@Override
-	public IRTreeLeafFrame createFrame() {
-		return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(),
-				keyFieldCount);
+	public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+		return tupleWriterFactory;
 	}
 }

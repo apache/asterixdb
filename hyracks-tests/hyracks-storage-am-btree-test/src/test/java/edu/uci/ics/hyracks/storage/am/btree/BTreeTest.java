@@ -15,9 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.Test;
@@ -29,6 +33,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -107,7 +112,7 @@ public class BTreeTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);        
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
@@ -313,9 +318,8 @@ public class BTreeTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        //ITreeIndexFrameFactory leafFrameFactory = new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
@@ -499,9 +503,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
-        // TypeAwareTupleWriterFactory tupleWriterFactory = new
-        // TypeAwareTupleWriterFactory(typeTraits);
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
@@ -674,8 +676,6 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -804,12 +804,216 @@ public class BTreeTest extends AbstractBTreeTest {
         bufferCache.close();
     }
 
+    
+    private void orderedScan(BTree btree, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] recDescSers) throws Exception {
+        // try a simple index scan
+        LOGGER.info("ORDERED SCAN:");
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        btree.search(scanCursor, nullPred, searchOpCtx);
+        StringBuilder scanResults = new StringBuilder();
+        try {
+            while (scanCursor.hasNext()) {
+                scanCursor.next();
+                ITupleReference frameTuple = scanCursor.getTuple();
+                String rec = btree.getMultiComparator().printTuple(frameTuple, recDescSers);
+                scanResults.append("\n" + rec);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            scanCursor.close();
+        }
+        LOGGER.info(scanResults.toString());
+    }
+    
+    // Assuming exactly two BTree fields.
+    private void compareActualAndExpected(ITreeIndexCursor actualCursor, Map<String, String> expectedValues, ISerializerDeserializer[] fieldSerdes) throws Exception {
+        while (actualCursor.hasNext()) {
+            actualCursor.next();
+            ITupleReference tuple = actualCursor.getTuple();
+            String f0 = (String) deserializeField(tuple, 0, fieldSerdes[0]);
+            String f1 = (String) deserializeField(tuple, 1, fieldSerdes[1]);
+            String expected = expectedValues.get(f0);
+            if (!expected.equals(f1)) {
+                throw new Exception("FAILED: " + f0 + " " + f1 + " " + expected);
+            }
+        }
+    }
+    
+    private Object deserializeField(ITupleReference tuple, int fIdx, ISerializerDeserializer serde) throws HyracksDataException {
+        DataInputStream in = new DataInputStream(new ByteArrayInputStream(tuple.getFieldData(fIdx), tuple.getFieldStart(fIdx), tuple.getFieldLength(fIdx)));
+        return serde.deserialize(in);
+    }
+    
+    // UPDATE TEST
+    // create a B-tree with one variable-length "key" field and one
+    // variable-length "value" field
+    // fill B-tree with random values using insertions, then update entries
+    // one-by-one
+    // repeat procedure a few times on same B-tree
+    @Test
+    public void test05() throws Exception {
+
+        LOGGER.info("DELETION TEST");
+
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        FileReference file = new FileReference(new File(fileName));
+        bufferCache.createFile(file);
+        int fileId = fmp.lookupFileId(file);
+        bufferCache.openFile(fileId);
+
+        // declare fields
+        int fieldCount = 2;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+        typeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+
+        // declare keys
+        int keyFieldCount = 1;
+        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
+        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+
+        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+
+        //TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+        SimpleTupleWriterFactory tupleWriterFactory = new SimpleTupleWriterFactory();
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
+
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+
+        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
+        btree.create(fileId, leafFrame, metaFrame);
+        btree.open(fileId);
+
+        Random rnd = new Random();
+        rnd.setSeed(50);
+
+        ByteBuffer frame = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        DataOutput dos = tb.getDataOutput();
+
+        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE };
+        RecordDescriptor recDesc = new RecordDescriptor(fieldSerdes);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        accessor.reset(frame);
+        FrameTupleReference tuple = new FrameTupleReference();
+
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext updateOpCtx = btree.createOpContext(IndexOp.UPDATE, leafFrame, interiorFrame, metaFrame);
+
+        Map<String, String> expectedValues = new HashMap<String, String>();
+        
+        LOGGER.info("INSERTING INTO BTREE");
+        int maxLength = 10;
+        int ins = 10000;
+        // Only remember the keys.
+        String[] f0s = new String[ins];
+        for (int i = 0; i < ins; i++) {
+            String f0 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+            String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+
+            f0s[i] = f0;
+
+            tb.reset();
+            UTF8StringSerializerDeserializer.INSTANCE.serialize(f0, dos);
+            tb.addFieldEndOffset();
+            UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+            tb.addFieldEndOffset();
+
+            appender.reset(frame, true);
+            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+
+            tuple.reset(accessor, 0);
+
+            if (i % 1000 == 0) {
+                LOGGER.info("INSERTING " + i);
+            }
+            try {
+                btree.insert(tuple, insertOpCtx);
+                expectedValues.put(f0, f1);
+            } catch (TreeIndexException e) {
+                // e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        ITreeIndexCursor insertCheckCursor = new BTreeRangeSearchCursor(leafFrame);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        btree.search(insertCheckCursor, nullPred, searchOpCtx);
+        try {
+            compareActualAndExpected(insertCheckCursor, expectedValues, fieldSerdes);
+        } finally {
+            insertCheckCursor.close();
+        }
+        
+        int runs = 3;
+        for (int run = 0; run < runs; run++) {
+
+            LOGGER.info("UPDATE TEST RUN: " + (run + 1) + "/" + runs);
+
+            LOGGER.info("UPDATING BTREE");
+            for (int i = 0; i < ins; i++) {
+                // Generate a new random value for f1.
+                String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
+                
+                tb.reset();
+                UTF8StringSerializerDeserializer.INSTANCE.serialize(f0s[i], dos);
+                tb.addFieldEndOffset();
+                UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
+                tb.addFieldEndOffset();
+
+                appender.reset(frame, true);
+                appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+
+                tuple.reset(accessor, 0);
+
+                if (i % 1000 == 0) {
+                    LOGGER.info("UPDATING " + i);
+                }
+
+                try {
+                    btree.update(tuple, updateOpCtx);
+                    expectedValues.put(f0s[i], f1);
+                } catch (TreeIndexException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            ITreeIndexCursor updateCheckCursor = new BTreeRangeSearchCursor(leafFrame);
+            btree.search(updateCheckCursor, nullPred, searchOpCtx);
+            try {
+                compareActualAndExpected(updateCheckCursor, expectedValues, fieldSerdes);
+            } finally {
+                updateCheckCursor.close();
+            }
+        }
+
+        btree.close();
+        bufferCache.closeFile(fileId);
+        bufferCache.close();
+    }
+    
     // BULK LOAD TEST
     // insert 100,000 records in bulk
     // B-tree has a composite key to "simulate" non-unique index creation
     // do range search
     @Test
-    public void test05() throws Exception {
+    public void test06() throws Exception {
 
         LOGGER.info("BULK LOAD TEST");
 
@@ -836,8 +1040,6 @@ public class BTreeTest extends AbstractBTreeTest {
 
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -965,7 +1167,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // demo for Arjun to show easy support of intersection queries on
     // time-intervals
     @Test
-    public void test06() throws Exception {
+    public void test07() throws Exception {
 
         LOGGER.info("TIME-INTERVAL INTERSECTION DEMO");
 
@@ -991,8 +1193,6 @@ public class BTreeTest extends AbstractBTreeTest {
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
-        // SimpleTupleWriterFactory tupleWriterFactory = new
-        // SimpleTupleWriterFactory();
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);

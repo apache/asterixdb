@@ -43,18 +43,18 @@ public final class BTreeOpContext implements IndexOpContext {
         this.leafFrame = leafFrame;
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
-
         pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
-        if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
+        if (op == IndexOp.SEARCH || op == IndexOp.DISKORDERSCAN) {
+            smPages = null;
+            freePages = null;
+            splitKey = null;
+            cursorInitialState = new BTreeCursorInitialState(null);            
+        } else {
+            // Insert, update or delete operation.
             smPages = new IntArrayList(treeHeightHint, treeHeightHint);
             freePages = new IntArrayList(treeHeightHint, treeHeightHint);
             pred = new RangePredicate(true, null, null, true, true, null, null);
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
-        } else {
-            smPages = null;
-            freePages = null;
-            splitKey = null;
-            cursorInitialState = new BTreeCursorInitialState(null);
         }
     }
 

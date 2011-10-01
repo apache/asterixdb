@@ -90,4 +90,10 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset) {
         frame = null;
     }
+
+    @Override
+    public int getTupleSize() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }
