@@ -438,14 +438,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         si.setEndpointList(null);
     }
 
-    private Joblet getLocalJoblet(UUID jobId) throws Exception {
+    private synchronized Joblet getLocalJoblet(UUID jobId) throws Exception {
         Joblet ji = jobletMap.get(jobId);
         return ji;
     }
 
     private Joblet getOrCreateLocalJoblet(UUID jobId, int attempt, INCApplicationContext appCtx, JobPlan plan)
             throws Exception {
-        synchronized (jobletMap) {
+        synchronized (this) {
             Joblet ji = jobletMap.get(jobId);
             if (ji == null || ji.getAttempt() != attempt) {
                 ji = new Joblet(this, jobId, attempt, appCtx);
@@ -470,8 +470,12 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
-        Joblet joblet = jobletMap.remove(jobId);
+        Joblet joblet;
+        synchronized (this) {
+            joblet = jobletMap.remove(jobId);
+        }
         if (joblet != null) {
+            joblet.waitForPendingOperators();
             IJobletEventListener listener = joblet.getJobletEventListener();
             if (listener != null) {
                 listener.jobletFinish(success);
@@ -483,7 +487,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     @Override
     public void startStage(UUID jobId, UUID stageId) throws Exception {
-        Joblet ji = jobletMap.get(jobId);
+        Joblet ji;
+        synchronized (this) {
+            ji = jobletMap.get(jobId);
+        }
         if (ji != null) {
             Stagelet s = ji.getStagelet(stageId);
             if (s != null) {
@@ -579,18 +586,24 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Aborting Job: " + jobId + ":" + attempt);
         }
-        Joblet ji = jobletMap.get(jobId);
+        Joblet ji;
+        synchronized (this) {
+            ji = jobletMap.get(jobId);
+        }
         if (ji != null) {
             if (ji.getAttempt() == attempt) {
-                Joblet joblet = jobletMap.remove(jobId);
-                IJobletEventListener listener = joblet.getJobletEventListener();
-                if (listener != null) {
-                    listener.jobletFinish(false);
-                }
                 for (Stagelet stagelet : ji.getStageletMap().values()) {
                     stagelet.abort();
                     stagelet.close();
                     connectionManager.abortConnections(jobId, stagelet.getStageId());
+                }
+                synchronized (this) {
+                    jobletMap.remove(jobId);
+                }
+                ji.waitForPendingOperators();
+                IJobletEventListener listener = ji.getJobletEventListener();
+                if (listener != null) {
+                    listener.jobletFinish(false);
                 }
             }
         }

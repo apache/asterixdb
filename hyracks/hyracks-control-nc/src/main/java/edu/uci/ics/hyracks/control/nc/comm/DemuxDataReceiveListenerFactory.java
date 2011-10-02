@@ -95,11 +95,12 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
     }
 
     @Override
-    public synchronized IConnectionEntry findNextReadyEntry(int lastReadSender) {
+    public synchronized IConnectionEntry findNextReadyEntry(int lastReadSender) throws HyracksDataException {
         while (openSenderCount > 0 && readyBits.isEmpty()) {
             try {
                 wait();
             } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
             }
         }
         lastReadSender = readyBits.nextSetBit(lastReadSender);

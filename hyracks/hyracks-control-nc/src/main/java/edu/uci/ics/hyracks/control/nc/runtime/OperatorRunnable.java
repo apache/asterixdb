@@ -15,6 +15,8 @@
 package edu.uci.ics.hyracks.control.nc.runtime;
 
 import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
@@ -31,7 +33,8 @@ public class OperatorRunnable implements Runnable {
     private final int nInputs;
     private final Executor executor;
     private IFrameReader[] readers;
-    private volatile boolean abort;
+    private boolean abort;
+    private Set<Thread> opThreads;
 
     public OperatorRunnable(IHyracksStageletContext ctx, IOperatorNodePushable opNode, int nInputs, Executor executor) {
         this.ctx = ctx;
@@ -39,6 +42,7 @@ public class OperatorRunnable implements Runnable {
         this.nInputs = nInputs;
         this.executor = executor;
         readers = new IFrameReader[nInputs];
+        opThreads = new HashSet<Thread>();
     }
 
     public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
@@ -49,8 +53,30 @@ public class OperatorRunnable implements Runnable {
         this.readers[inputIdx] = reader;
     }
 
-    public void abort() {
+    public synchronized void abort() {
+        if (abort) {
+            return;
+        }
         abort = true;
+        for (Thread t : opThreads) {
+            t.interrupt();
+        }
+    }
+
+    private synchronized boolean aborted() {
+        return abort;
+    }
+
+    private synchronized void addOperatorThread(Thread t) {
+        if (abort) {
+            t.interrupt();
+            return;
+        }
+        opThreads.add(t);
+    }
+
+    private synchronized void removeOperatorThread(Thread t) {
+        opThreads.add(t);
     }
 
     @Override
@@ -66,7 +92,9 @@ public class OperatorRunnable implements Runnable {
                     executor.execute(new Runnable() {
                         public void run() {
                             try {
-                                pushFrames(reader, writer);
+                                if (!aborted()) {
+                                    pushFrames(reader, writer);
+                                }
                             } catch (HyracksDataException e) {
                             } finally {
                                 sem.release();
@@ -87,19 +115,27 @@ public class OperatorRunnable implements Runnable {
     }
 
     private void pushFrames(IFrameReader reader, IFrameWriter writer) throws HyracksDataException {
-        ByteBuffer buffer = ctx.allocateFrame();
-        writer.open();
-        reader.open();
-        while (reader.nextFrame(buffer)) {
-            if (abort) {
-                break;
+        addOperatorThread(Thread.currentThread());
+        try {
+            ByteBuffer buffer = ctx.allocateFrame();
+            writer.open();
+            reader.open();
+            while (reader.nextFrame(buffer)) {
+                if (aborted()) {
+                    break;
+                }
+                buffer.flip();
+                writer.nextFrame(buffer);
+                buffer.compact();
             }
-            buffer.flip();
-            writer.nextFrame(buffer);
-            buffer.compact();
+            reader.close();
+            writer.close();
+        } finally {
+            removeOperatorThread(Thread.currentThread());
+            if (Thread.interrupted()) {
+                throw new HyracksDataException("Thread interrupted");
+            }
         }
-        reader.close();
-        writer.close();
     }
 
     @Override

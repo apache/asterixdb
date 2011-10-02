@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IConnectionEntry;
 import edu.uci.ics.hyracks.api.comm.IDataReceiveListener;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class ConnectionEntry implements IConnectionEntry {
     private static final Logger LOGGER = Logger.getLogger(ConnectionEntry.class.getName());
@@ -111,12 +112,13 @@ public class ConnectionEntry implements IConnectionEntry {
     }
 
     @Override
-    public synchronized void write(ByteBuffer buffer) {
+    public synchronized void write(ByteBuffer buffer) throws HyracksDataException {
         while (buffer.remaining() > 0) {
             while (writeBuffer.remaining() <= 0) {
                 try {
                     wait();
                 } catch (InterruptedException e) {
+                    throw new HyracksDataException(e);
                 }
             }
             int oldLimit = buffer.limit();
