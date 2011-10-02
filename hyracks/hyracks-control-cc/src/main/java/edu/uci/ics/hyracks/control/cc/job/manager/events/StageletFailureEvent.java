@@ -50,11 +50,6 @@ public class StageletFailureEvent implements Runnable {
                 ncState.getActiveJobIds().remove(jobId);
             }
         }
-        ccs.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
-            }
-        });
+        JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
     }
 }

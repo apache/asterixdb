@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.job;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,11 +29,13 @@ public class JobRun implements IJobStatusConditionVariable {
     private final List<JobAttempt> attempts;
     private JobStatus status;
     private Set<ConstraintExpression> constraints;
+    private Set<Integer> abortedAttempts;
 
     public JobRun(JobPlan plan, Set<ConstraintExpression> constraints) {
         this.plan = plan;
         attempts = new ArrayList<JobAttempt>();
         this.constraints = constraints;
+        abortedAttempts = new HashSet<Integer>();
     }
 
     public JobPlan getJobPlan() {
@@ -68,5 +71,9 @@ public class JobRun implements IJobStatusConditionVariable {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
             wait();
         }
+    }
+
+    public synchronized boolean registerAbort(int attempt) {
+        return abortedAttempts.add(attempt);
     }
 }

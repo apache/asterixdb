@@ -56,11 +56,6 @@ public class JobAbortEvent implements Runnable {
             }
         }
 
-        ccs.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
-            }
-        });
+        JobLifecycleHelper.abortJob(ccs, jobId, attempt, targetNodes);
     }
 }
