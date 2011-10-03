@@ -96,4 +96,8 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
         // TODO Auto-generated method stub
         return 0;
     }
+    
+    public int getNumPrefixFields() {
+        return numPrefixFields;
+    }
 }

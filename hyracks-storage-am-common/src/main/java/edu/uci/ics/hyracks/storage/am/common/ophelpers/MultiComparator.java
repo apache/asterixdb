@@ -86,7 +86,7 @@ public class MultiComparator {
 	public String printTuple(ITupleReference tuple,
 			ISerializerDeserializer[] fields) throws HyracksDataException {
 		StringBuilder strBuilder = new StringBuilder();
-		for (int i = 0; i < tuple.getFieldCount(); i++) {
+		for (int i = 0; i < fields.length; i++) {
 			ByteArrayInputStream inStream = new ByteArrayInputStream(
 					tuple.getFieldData(i), tuple.getFieldStart(i),
 					tuple.getFieldLength(i));

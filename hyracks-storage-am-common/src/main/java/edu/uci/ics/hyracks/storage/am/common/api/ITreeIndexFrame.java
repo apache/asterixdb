@@ -101,4 +101,6 @@ public interface ITreeIndexFrame {
     public ITreeIndexTupleWriter getTupleWriter();
 
     public int getPageHeaderSize();
+    
+    public ITreeIndexTupleReference createTupleReference();
 }

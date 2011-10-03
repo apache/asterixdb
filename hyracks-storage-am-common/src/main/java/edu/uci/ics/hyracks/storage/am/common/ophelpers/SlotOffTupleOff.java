@@ -30,4 +30,9 @@ public class SlotOffTupleOff implements Comparable<SlotOffTupleOff> {
 	public int compareTo(SlotOffTupleOff o) {
 		return tupleOff - o.tupleOff;
 	}
+	
+	@Override 
+	public String toString() {
+		return tupleIndex + " " + slotOff + " " + tupleOff;
+	}
 }

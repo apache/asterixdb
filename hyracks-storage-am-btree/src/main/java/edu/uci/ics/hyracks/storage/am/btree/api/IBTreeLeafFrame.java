@@ -32,9 +32,7 @@ public interface IBTreeLeafFrame extends ITreeIndexFrame {
 
     public void setPrevLeaf(int prevPage);
 
-    public int getPrevLeaf();
-
-    public ITreeIndexTupleReference createTupleReference();
+    public int getPrevLeaf();    
 
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp);

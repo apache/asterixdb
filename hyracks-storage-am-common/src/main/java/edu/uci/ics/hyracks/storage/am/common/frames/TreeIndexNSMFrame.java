@@ -353,7 +353,13 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         frameTuple.setFieldCount(fieldCount);
     }
 
+    @Override
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
+    }
+    
+    @Override
+    public ITreeIndexTupleReference createTupleReference() {
+    	return tupleWriter.createTupleReference();
     }
 }

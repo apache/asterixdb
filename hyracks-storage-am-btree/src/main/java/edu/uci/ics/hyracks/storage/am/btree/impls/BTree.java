@@ -16,14 +16,17 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
@@ -32,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -40,6 +44,8 @@ import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -169,6 +175,77 @@ public class BTree implements ITreeIndex {
         ctx.freePages.clear();
     }
 
+    public void sanityCheck(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
+        sanityCheck(rootPage, null, false, leafFrame, interiorFrame, fields);
+    }
+    
+    public void sanityCheck(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
+            IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
+
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        node.acquireReadLatch();
+
+        try {
+            if (parent != null && unpin == true) {
+                parent.releaseReadLatch();
+                bufferCache.unpin(parent);
+            }
+            interiorFrame.setPage(node);
+            if (interiorFrame.isLeaf()) {
+                leafFrame.setPage(node);
+                ITreeIndexTupleReference tupleA = leafFrame.createTupleReference();
+                ITreeIndexTupleReference tupleB = leafFrame.createTupleReference();
+                int tupleCount = leafFrame.getTupleCount();
+                for (int i = 1; i < tupleCount; i++) {
+                    tupleA.setFieldCount(cmp.getFieldCount());
+                    tupleB.setFieldCount(cmp.getFieldCount());
+                    tupleA.resetByTupleIndex(leafFrame, i-1);
+                    tupleB.resetByTupleIndex(leafFrame, i);                    
+                    int c = cmp.compare(tupleA, tupleB);
+                    if (c >= 0) {
+                        throw new Exception("Failed sanity check in leaf node: " + c + "\n" + leafFrame.printKeys(cmp, fields));
+                    }
+                }
+                TypeAwareTupleWriter printerWriter = new TypeAwareTupleWriter(cmp.getTypeTraits());
+                ISerializerDeserializer[] serdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE }; 
+                FieldPrefixTupleReference printTuple = new FieldPrefixTupleReference(printerWriter.createTupleReference());
+                for (int i = 0; i < tupleCount; i++) {
+                    printTuple.setFieldCount(cmp.getFieldCount());
+                    printTuple.resetByTupleIndex(leafFrame, i);
+                    String tupleString = cmp.printTuple(printTuple, serdes);
+                    //System.out.println(tupleString + " | " + printTuple.getNumPrefixFields());
+                }
+                
+            } else {
+                ITreeIndexTupleReference tupleA = interiorFrame.createTupleReference();
+                ITreeIndexTupleReference tupleB = interiorFrame.createTupleReference();
+                int tupleCount = interiorFrame.getTupleCount();
+                for (int i = 1; i < tupleCount; i++) {
+                    tupleA.resetByTupleIndex(interiorFrame, i-1);
+                    tupleB.resetByTupleIndex(interiorFrame, i);
+                    int c = cmp.compare(tupleA, tupleB);
+                    if (c >= 0) {
+                        throw new Exception("Failed sanity check in interior node: " + c);
+                    }
+                }
+            }
+
+            if (!interiorFrame.isLeaf()) {
+                ArrayList<Integer> children = ((BTreeNSMInteriorFrame) (interiorFrame)).getChildren(cmp);
+                for (int i = 0; i < children.size(); i++) {
+                    sanityCheck(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, fields);
+                }
+            } else {
+                node.releaseReadLatch();
+                bufferCache.unpin(node);
+            }
+        } catch (Exception e) {
+            node.releaseReadLatch();
+            bufferCache.unpin(node);
+            throw e;
+        }
+    }
+    
     public void printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fields)
             throws Exception {
         printTree(rootPage, null, false, leafFrame, interiorFrame, fields);
@@ -466,12 +543,15 @@ public class BTree implements ITreeIndex {
                 break;
             }
             case INSUFFICIENT_SPACE: {
-                // System.out.println("INSUFFICIENT_SPACE");
+                //System.out.println("INSUFFICIENT_SPACE");                                
                 // Try compressing the page first and see if there is space available.
-                long start = System.currentTimeMillis();
+                long start = System.currentTimeMillis();                
                 boolean reCompressed = ctx.leafFrame.compress(cmp);
+                //System.out.println("COMPRESSING: " + reCompressed);
                 long end = System.currentTimeMillis();
                 if (reCompressed) {
+                    // Compression could have changed the target tuple index, find it again.
+                    targetTupleIndex = ctx.leafFrame.findTupleIndex(tuple, cmp, true);
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
                 }
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
@@ -839,7 +919,7 @@ public class BTree implements ITreeIndex {
     }
 
     private final void acquireLatch(ICachedPage node, IndexOp op, boolean isLeaf) {
-        if (isLeaf && (op.equals(IndexOp.INSERT) || op.equals(IndexOp.DELETE) || op.equals(IndexOp.UPDATE))) {
+        if (isLeaf && (op == IndexOp.INSERT || op == IndexOp.DELETE || op == IndexOp.UPDATE)) {
             node.acquireWriteLatch();
             writeLatchesAcquired++;
         } else {
@@ -849,7 +929,7 @@ public class BTree implements ITreeIndex {
     }
 
     private final void releaseLatch(ICachedPage node, IndexOp op, boolean isLeaf) {
-        if (isLeaf && (op.equals(IndexOp.INSERT) || op.equals(IndexOp.DELETE) || op.equals(IndexOp.UPDATE))) {
+        if (isLeaf && (op == IndexOp.INSERT || op == IndexOp.DELETE || op == IndexOp.UPDATE)) {
             node.releaseWriteLatch();
             writeLatchesReleased++;
         } else {
@@ -944,7 +1024,7 @@ public class BTree implements ITreeIndex {
                                         if (ctx.op == IndexOp.DELETE) {
                                             deleteInterior(node, pageId, ctx.pred.getLowKey(), ctx);                                            
                                         } else {
-                                            // Insert or update op. Both can cause split keys to propagate upwards.
+                                            // Insert or update op. Both can cause split keys to propagate upwards.                                            
                                             insertInterior(node, pageId, ctx.splitKey.getTuple(), ctx);
                                         }
                                     } finally {
@@ -1013,7 +1093,6 @@ public class BTree implements ITreeIndex {
         } catch (TreeIndexException e) {
             // System.out.println("BTREE EXCEPTION");
             // System.out.println(e.getMessage());
-            // e.printStackTrace();
             if (!e.getHandled()) {
                 releaseLatch(node, ctx.op, unsafeIsLeaf);
                 bufferCache.unpin(node);
@@ -1024,7 +1103,6 @@ public class BTree implements ITreeIndex {
         } catch (Exception e) { // this could be caused, e.g. by a
             // failure to pin a new node during a split
             System.out.println("ASTERIX EXCEPTION");
-            e.printStackTrace();
             releaseLatch(node, ctx.op, unsafeIsLeaf);
             bufferCache.unpin(node);
             unpins++;
