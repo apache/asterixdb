@@ -58,38 +58,21 @@ public abstract class TreeIndexOpHelper {
 
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         boolean fileIsMapped = fileMapProvider.isMapped(f);
-
-        switch (mode) {
-
-            case OPEN: {
-                if (!fileIsMapped) {
-                    throw new HyracksDataException("Trying to open tree index from unmapped file " + f.toString());
-                }
-            }
-                break;
-
-            case CREATE:
-            case ENLIST: {
-                if (!fileIsMapped) {
-                    bufferCache.createFile(f);
-                }
-            }
-                break;
-
+        if (!fileIsMapped) {
+            bufferCache.createFile(f);
         }
-
         int fileId = fileMapProvider.lookupFileId(f);
         try {
             bufferCache.openFile(fileId);
         } catch (HyracksDataException e) {
-            // revert state of buffer cache since file failed to open
+            // Revert state of buffer cache since file failed to open.
             if (!fileIsMapped) {
                 bufferCache.deleteFile(fileId);
             }
             throw e;
         }
 
-        // only set indexFileId member when openFile() succeeds,
+        // Only set indexFileId member when openFile() succeeds,
         // otherwise deinit() will try to close the file that failed to open
         indexFileId = fileId;
 
@@ -97,40 +80,33 @@ public abstract class TreeIndexOpHelper {
         leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
 
         IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
-        treeIndex = treeIndexRegistry.get(indexFileId);
-        if (treeIndex == null) {
-
-            // create new tree and register it
-            treeIndexRegistry.lock();
-            try {
-                // check if tree has already been registered by another thread
-                treeIndex = treeIndexRegistry.get(indexFileId);
-                if (treeIndex == null) {
-                    // this thread should create and register the tree
-
-                    IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
-                    for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
-                        comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
-                    }
-
-                    cmp = createMultiComparator(comparators);
-
-                    treeIndex = createTreeIndex();
-                    if (mode == IndexHelperOpenMode.CREATE) {
-                        ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                                .createFrame();
-                        try {
-                            treeIndex.create(indexFileId, leafFrame, metaFrame);
-                        } catch (Exception e) {
-                            throw new HyracksDataException(e);
-                        }
-                    }
-                    treeIndex.open(indexFileId);
-                    treeIndexRegistry.register(indexFileId, treeIndex);
-                }
-            } finally {
-                treeIndexRegistry.unlock();
+        // Create new tree and register it.
+        treeIndexRegistry.lock();
+        try {
+            // Check if tree has already been registered by another thread.
+            treeIndex = treeIndexRegistry.get(indexFileId);
+            if (treeIndex != null) {
+                return;
             }
+            IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
+            for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
+                comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
+            }
+            cmp = createMultiComparator(comparators);
+            treeIndex = createTreeIndex();
+            if (mode == IndexHelperOpenMode.CREATE) {
+                ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
+                        .createFrame();
+                try {
+                    treeIndex.create(indexFileId, leafFrame, metaFrame);
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            treeIndex.open(indexFileId);
+            treeIndexRegistry.register(indexFileId, treeIndex);
+        } finally {
+            treeIndexRegistry.unlock();
         }
     }
 
