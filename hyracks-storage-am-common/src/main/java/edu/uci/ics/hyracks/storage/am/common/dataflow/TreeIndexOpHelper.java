@@ -59,7 +59,7 @@ public abstract class TreeIndexOpHelper {
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         boolean fileIsMapped = fileMapProvider.isMapped(f);
         if (!fileIsMapped) {
-        	bufferCache.createFile(f);
+            bufferCache.createFile(f);
         }
         int fileId = fileMapProvider.lookupFileId(f);
         try {
@@ -80,36 +80,33 @@ public abstract class TreeIndexOpHelper {
         leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
 
         IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
-        treeIndex = treeIndexRegistry.get(indexFileId);
-        if (treeIndex == null) {
-            // Create new tree and register it.
-            treeIndexRegistry.lock();
-            try {
-                // Check if tree has already been registered by another thread.
-                treeIndex = treeIndexRegistry.get(indexFileId);
-                if (treeIndex == null) {
-                    // This thread should create and register the tree.
-                    IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
-                    for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
-                        comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
-                    }
-                    cmp = createMultiComparator(comparators);
-                    treeIndex = createTreeIndex();
-                    if (mode == IndexHelperOpenMode.CREATE) {
-                        ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                                .createFrame();
-                        try {
-                            treeIndex.create(indexFileId, leafFrame, metaFrame);
-                        } catch (Exception e) {
-                            throw new HyracksDataException(e);
-                        }
-                    }
-                    treeIndex.open(indexFileId);
-                    treeIndexRegistry.register(indexFileId, treeIndex);
-                }
-            } finally {
-                treeIndexRegistry.unlock();
+        // Create new tree and register it.
+        treeIndexRegistry.lock();
+        try {
+            // Check if tree has already been registered by another thread.
+            treeIndex = treeIndexRegistry.get(indexFileId);
+            if (treeIndex != null) {
+                return;
             }
+            IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
+            for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
+                comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
+            }
+            cmp = createMultiComparator(comparators);
+            treeIndex = createTreeIndex();
+            if (mode == IndexHelperOpenMode.CREATE) {
+                ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
+                        .createFrame();
+                try {
+                    treeIndex.create(indexFileId, leafFrame, metaFrame);
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            treeIndex.open(indexFileId);
+            treeIndexRegistry.register(indexFileId, treeIndex);
+        } finally {
+            treeIndexRegistry.unlock();
         }
     }
 
