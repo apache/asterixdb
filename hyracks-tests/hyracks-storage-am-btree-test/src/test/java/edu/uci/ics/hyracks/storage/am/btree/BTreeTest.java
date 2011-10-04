@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
@@ -84,7 +85,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // "value" field
     // fill B-tree with random values using insertions (not bulk load)
     // perform ordered scan and range search
-    //@Test
+    @Test
     public void test01() throws Exception {
 
         LOGGER.info("FIXED-LENGTH KEY TEST");
@@ -163,13 +164,16 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
+            ArrayTupleReference t = new ArrayTupleReference();
+            t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+            
             if (i % 1000 == 0) {
                 long end = System.currentTimeMillis();
                 LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
             }
 
             try {
-                btree.insert(tuple, insertOpCtx);
+                btree.insert(t, insertOpCtx);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
@@ -288,7 +292,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // fixed-length "value" field
     // fill B-tree with random values using insertions (not bulk load)
     // perform ordered scan and range search
-    @Test
+    //@Test
     public void test02() throws Exception {
 
         LOGGER.info("COMPOSITE KEY TEST");
@@ -366,7 +370,7 @@ public class BTreeTest extends AbstractBTreeTest {
             tb.addFieldEndOffset();
             IntegerSerializerDeserializer.INSTANCE.serialize(f2, dos);
             tb.addFieldEndOffset();
-
+            
             appender.reset(frame, true);
             appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
 
@@ -859,7 +863,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // fill B-tree with random values using insertions, then update entries
     // one-by-one
     // repeat procedure a few times on same B-tree
-    //@Test
+    @Test
     public void test05() throws Exception {
 
         LOGGER.info("DELETION TEST");
@@ -937,6 +941,9 @@ public class BTreeTest extends AbstractBTreeTest {
             UTF8StringSerializerDeserializer.INSTANCE.serialize(f1, dos);
             tb.addFieldEndOffset();
 
+            ArrayTupleReference t = new ArrayTupleReference();
+            t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+            
             appender.reset(frame, true);
             appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
 
@@ -946,7 +953,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 LOGGER.info("INSERTING " + i);
             }
             try {
-                btree.insert(tuple, insertOpCtx);
+                btree.insert(t, insertOpCtx);
                 expectedValues.put(f0, f1);
             } catch (TreeIndexException e) {
                 // e.printStackTrace();
@@ -989,8 +996,11 @@ public class BTreeTest extends AbstractBTreeTest {
                     LOGGER.info("UPDATING " + i);
                 }
 
+                ArrayTupleReference t = new ArrayTupleReference();
+                t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+                
                 try {
-                    btree.update(tuple, updateOpCtx);
+                    btree.update(t, updateOpCtx);
                     expectedValues.put(f0s[i], f1);
                 } catch (TreeIndexException e) {
                     e.printStackTrace();
@@ -1311,7 +1321,8 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                // TODO: fix me.
+                //print(rec + "\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
