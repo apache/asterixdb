@@ -178,7 +178,7 @@ public class ConnectionManager {
         pendingConnectionReceivers.remove(id);
     }
 
-    public synchronized void abortConnections(UUID jobId, UUID stageId) {
+    public void abortConnections(UUID jobId, UUID stageId) {
         List<IConnectionEntry> abortConnections = new ArrayList<IConnectionEntry>();
         synchronized (this) {
             for (IConnectionEntry ce : connections) {
