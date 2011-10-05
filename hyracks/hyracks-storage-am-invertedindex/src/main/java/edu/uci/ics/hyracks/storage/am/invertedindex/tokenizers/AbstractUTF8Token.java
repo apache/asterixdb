@@ -59,7 +59,7 @@ public abstract class AbstractUTF8Token implements IToken {
         int lowerCaseUTF8Len = 0;
         int pos = start;
         for (int i = 0; i < size; i++) {
-            char c = StringUtils.toLowerCase(StringUtils.charAt(data, pos));
+            char c = Character.toLowerCase(StringUtils.charAt(data, pos));
             lowerCaseUTF8Len += StringUtils.getModifiedUTF8Len(c);
             pos += StringUtils.charSize(data, pos);
         }

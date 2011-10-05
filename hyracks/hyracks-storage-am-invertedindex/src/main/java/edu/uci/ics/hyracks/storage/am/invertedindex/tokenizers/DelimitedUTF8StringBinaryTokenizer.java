@@ -60,8 +60,7 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
                     int currLength = 0;
                     while (currLength < tokenLength) {
                         // case insensitive comparison
-                        if (StringUtils.toLowerCase(StringUtils.charAt(data, currentTokenStart + offset)) != StringUtils
-                                .toLowerCase(StringUtils.charAt(data, tokenStart + offset))) {
+                        if (Character.toLowerCase(StringUtils.charAt(data, currentTokenStart + offset)) != Character.toLowerCase(StringUtils.charAt(data, tokenStart + offset))) {
                             tokenCount--;
                             break;
                         }

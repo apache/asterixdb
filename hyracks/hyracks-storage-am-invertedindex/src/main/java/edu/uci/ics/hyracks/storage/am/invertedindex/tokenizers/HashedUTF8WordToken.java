@@ -67,7 +67,7 @@ public class HashedUTF8WordToken extends UTF8WordToken {
         int pos = start;
         hash = GOLDEN_RATIO_32;
         for (int i = 0; i < tokenLength; i++) {
-            hash ^= StringUtils.toLowerCase(StringUtils.charAt(data, pos));
+            hash ^= Character.toLowerCase(StringUtils.charAt(data, pos));
             hash *= GOLDEN_RATIO_32;
             pos += StringUtils.charSize(data, pos);
         }

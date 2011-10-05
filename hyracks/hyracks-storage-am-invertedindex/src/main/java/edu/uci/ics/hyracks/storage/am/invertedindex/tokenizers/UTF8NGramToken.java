@@ -67,7 +67,7 @@ public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
         int pos = start;
         for (int i = 0; i < numRegChars; i++) {
-            char c = StringUtils.toLowerCase(StringUtils.charAt(data, pos));
+            char c = Character.toLowerCase(StringUtils.charAt(data, pos));
             StringUtils.writeCharAsModifiedUTF8(c, dos);
             pos += StringUtils.charSize(data, pos);
         }

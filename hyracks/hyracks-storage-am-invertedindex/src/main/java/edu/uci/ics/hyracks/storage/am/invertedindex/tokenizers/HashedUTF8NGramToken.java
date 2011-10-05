@@ -45,7 +45,7 @@ public class HashedUTF8NGramToken extends UTF8NGramToken {
         int numRegGrams = tokenLength - numPreChars - numPostChars;
         int pos = start;
         for (int i = 0; i < numRegGrams; i++) {
-            hash ^= StringUtils.toLowerCase(StringUtils.charAt(data, pos));
+            hash ^= Character.toLowerCase(StringUtils.charAt(data, pos));
             hash *= GOLDEN_RATIO_32;
             pos += StringUtils.charSize(data, pos);
         }
