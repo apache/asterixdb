@@ -22,23 +22,21 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.sync.LatchType;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class StorageManagerTest extends AbstractBTreeTest {
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
     private static final int MAX_OPEN_FILES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 128;
-    private IHyracksTaskContext ctx = TestUtils.create(32768);
+    private static final int HYRACKS_FRAME_SIZE = 32768;
 
     public class PinnedLatchedPage {
         public final ICachedPage page;
@@ -254,5 +252,21 @@ public class StorageManagerTest extends AbstractBTreeTest {
         worker.join();
 
         bufferCache.close();
+    }
+    
+    public int getPageSize() {
+        return PAGE_SIZE;
+    }
+    
+    public int getNumPages() {
+        return NUM_PAGES;
+    }
+    
+    public int getHyracksFrameSize() {
+        return HYRACKS_FRAME_SIZE;
+    }
+    
+    public int getMaxOpenFiles() {
+        return MAX_OPEN_FILES;
     }
 }

@@ -92,7 +92,10 @@ public class MultiComparator {
 					tuple.getFieldLength(i));
 			DataInput dataIn = new DataInputStream(inStream);
 			Object o = fields[i].deserialize(dataIn);
-			strBuilder.append(o.toString() + " ");
+			strBuilder.append(o.toString());
+			if (i != fields.length - 1) {
+				strBuilder.append(" ");
+			}
 		}
 		return strBuilder.toString();
 	}

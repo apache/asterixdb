@@ -114,7 +114,6 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 			page.releaseReadLatch();
 			bufferCache.unpin(page);
 		}
-
 		page = initialState.getPage();
 		tupleIndex = 0;
 		frame.setPage(page);

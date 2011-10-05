@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
+import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
@@ -59,7 +60,6 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
     private static final int NUM_PAGES = 40;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     private ITupleReference createTuple(IHyracksTaskContext ctx, int f0, int f1, int f2, boolean print)
             throws HyracksDataException {
@@ -97,14 +97,6 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
     @Test
     public void test01() throws Exception {
 
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
-
         // declare fields
         int fieldCount = 3;
         ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
@@ -127,7 +119,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, 0), false);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), false);
         try {
 
             IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
@@ -218,8 +210,21 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         } finally {
             bufferCache.unpin(page);
         }
-
-        bufferCache.closeFile(fileId);
-        bufferCache.close();
+    }
+    
+    public int getPageSize() {
+        return PAGE_SIZE;
+    }
+    
+    public int getNumPages() {
+        return NUM_PAGES;
+    }
+    
+    public int getHyracksFrameSize() {
+        return HYRACKS_FRAME_SIZE;
+    }
+    
+    public int getMaxOpenFiles() {
+        return MAX_OPEN_FILES;
     }
 }

@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.btree;
+package edu.uci.ics.hyracks.storage.am.btree.util;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -36,8 +36,8 @@ public abstract class AbstractBTreeTest {
     @Before
     public void setUp() throws HyracksDataException {
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
+        ctx = TestUtils.create(getHyracksFrameSize());
+        TestStorageManagerComponentHolder.init(getPageSize(), getNumPages(), getMaxOpenFiles());
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         FileReference file = new FileReference(new File(fileName));
