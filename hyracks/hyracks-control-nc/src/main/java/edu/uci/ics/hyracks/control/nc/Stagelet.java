@@ -109,6 +109,7 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
 
     public synchronized void abort() {
         this.abort = true;
+        notifyAll();
         for (OperatorRunnable r : honMap.values()) {
             r.abort();
         }
