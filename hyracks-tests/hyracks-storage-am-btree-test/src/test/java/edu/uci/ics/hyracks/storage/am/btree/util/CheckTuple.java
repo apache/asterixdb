@@ -47,6 +47,10 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
         return (T)tuple[idx];
     }
     
+    public void set(int idx, T e) {
+        tuple[idx] = e;
+    }
+    
     public int size() {
         return tuple.length;
     }

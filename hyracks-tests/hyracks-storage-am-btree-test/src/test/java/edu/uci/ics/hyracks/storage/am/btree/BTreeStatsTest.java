@@ -150,7 +150,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
                 btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-        LOGGER.info(stats.toString());
+        LOGGER.info("\n" + stats.toString());
 
         TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager,
                 fileId);

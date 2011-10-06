@@ -3,6 +3,7 @@ package edu.uci.ics.hyracks.storage.am.btree.util;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -18,20 +19,22 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public abstract class AbstractBTreeTest {
     protected static final Logger LOGGER = Logger.getLogger(AbstractBTreeTest.class.getName());
-
+    public static final long RANDOM_SEED = 50;
+    
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    
+        
     protected IHyracksTaskContext ctx; 
     protected IBufferCache bufferCache;
     protected int btreeFileId;
     
+    protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String tmpDir = System.getProperty("java.io.tmpdir");
     protected final static String sep = System.getProperty("file.separator");
-    protected String fileName;
+    protected String fileName;    
     
     @Before
     public void setUp() throws HyracksDataException {
@@ -44,6 +47,7 @@ public abstract class AbstractBTreeTest {
         bufferCache.createFile(file);
         btreeFileId = fmp.lookupFileId(file);
         bufferCache.openFile(btreeFileId);
+        rnd.setSeed(RANDOM_SEED);
     }
     
     @After

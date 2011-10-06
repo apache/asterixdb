@@ -46,7 +46,7 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public void setFieldCount(int fieldStartIndex, int fieldCount) {
-        // not implemented
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
@@ -88,13 +88,25 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     // unsupported operation
     @Override
     public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset) {
-        frame = null;
+        throw new UnsupportedOperationException("Resetting this type of frame by offset is not supported.");
     }
 
     @Override
     public int getTupleSize() {
-        // TODO Auto-generated method stub
-        return 0;
+        return getSuffixTupleSize() + getPrefixTupleSize();
+    }
+    
+    public int getSuffixTupleSize() {
+        helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
+        helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
+        return helperTuple.getTupleSize();
+    }
+    
+    public int getPrefixTupleSize() {
+        if (numPrefixFields == 0) return 0;
+        helperTuple.setFieldCount(numPrefixFields);
+        helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
+        return helperTuple.getTupleSize();
     }
     
     public int getNumPrefixFields() {

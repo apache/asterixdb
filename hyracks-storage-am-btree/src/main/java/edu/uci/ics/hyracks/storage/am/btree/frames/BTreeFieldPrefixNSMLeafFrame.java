@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
@@ -67,8 +67,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
     public IFrameCompressor compressor;
-    public IPrefixSlotManager slotManager; // TODO: should be protected, but
-    // will trigger some refactoring
+    // TODO: Should be protected, but will trigger some refactoring.
+    public IPrefixSlotManager slotManager;
 
     private ITreeIndexTupleWriter tupleWriter;
 
@@ -258,11 +258,98 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference tuple, int oldTupleIndex, MultiComparator cmp) {
-        // TODO Auto-generated method stub
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
+        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
+        int numPrefixFields = 0;
+        if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+            int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
+            int prefixSlot = buf.getInt(prefixSlotOff);
+            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
+        } else {
+            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
+        }
+
+        int freeSpace = buf.getInt(freeSpaceOff);
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields,
+                tuple.getFieldCount() - numPrefixFields, buf, freeSpace);
+
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+    }
+    
+    @Override
+    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex, MultiComparator cmp) {
+        int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        // TODO: Do we need to set the field count here?
+        //frameTuple.setFieldCount(cmp.getFieldCount());
+        
+        int oldTupleBytes = 0;
+        int newTupleBytes = 0;
+        
+        int numPrefixFields = frameTuple.getNumPrefixFields();
+        int numFields = frameTuple.getFieldCount();
+        if (numPrefixFields != 0) {
+            // Check the space requirements for updating the suffix of the original tuple.            
+            oldTupleBytes = frameTuple.getSuffixTupleSize();
+            newTupleBytes = tupleWriter.bytesRequired(newTuple, numPrefixFields, numFields - numPrefixFields); 
+        } else {
+            // The original tuple is uncompressed.
+            oldTupleBytes = frameTuple.getTupleSize();
+            newTupleBytes = tupleWriter.bytesRequired(newTuple);
+        }
+        
+        int additionalBytesRequired = newTupleBytes - oldTupleBytes;
+        // Enough space for an in-place update?
+        if (additionalBytesRequired <= 0) {
+            return FrameOpSpaceStatus.SUFFICIENT_INPLACE_SPACE;
+        }
+        
+        int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
+                - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
+        
+        // Enough space if we delete the old tuple and insert the new one without compaction? 
+        if (newTupleBytes <= freeContiguous) {
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        }
+        // Enough space if we delete the old tuple and compact?
+        if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
+        }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
+    @Override
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) throws Exception {
+        int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
+        int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
+        int tupleSlot = buf.getInt(tupleSlotOff);
+        int prefixSlotNum = slotManager.decodeFirstSlotField(tupleSlot);
+        int suffixTupleStartOff = slotManager.decodeSecondSlotField(tupleSlot);                
+        
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        int numFields = frameTuple.getFieldCount();
+        int numPrefixFields = frameTuple.getNumPrefixFields();
+        int oldTupleBytes = frameTuple.getSuffixTupleSize();
+        int bytesWritten = 0;        
+        
+        if (inPlace) {
+            // Overwrite the old tuple suffix in place.
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, numFields - numPrefixFields, buf, suffixTupleStartOff);
+        } else {
+            // Insert the new tuple suffix at the end of the free space, and change the slot value (effectively "deleting" the old tuple).
+            int newSuffixTupleStartOff = buf.getInt(freeSpaceOff);
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, numFields - numPrefixFields, buf, newSuffixTupleStartOff);
+            // Update slot value using the same prefix slot num.
+            slotManager.setSlot(tupleSlotOff, slotManager.encodeSlotFields(prefixSlotNum, newSuffixTupleStartOff));
+            // Update contiguous free space pointer.
+            buf.putInt(freeSpaceOff, newSuffixTupleStartOff + bytesWritten);
+        }
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
+    }
+    
     protected void resetSpaceParams() {
         buf.putInt(freeSpaceOff, getOrigFreeSpaceOff());
         buf.putInt(totalFreeSpaceOff, getOrigTotalFreeSpace());
@@ -309,34 +396,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return slot;
     }
 
-    @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
-        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
-        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
-        int numPrefixFields = 0;
-        if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
-            int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
-            int prefixSlot = buf.getInt(prefixSlotOff);
-            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-        } else {
-            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
-        }
-
-        int freeSpace = buf.getInt(freeSpaceOff);
-        int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields,
-                tuple.getFieldCount() - numPrefixFields, buf, freeSpace);
-
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
-    }
-
-    @Override
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-    
     @Override
     public void printHeader() {
         // TODO Auto-generated method stub

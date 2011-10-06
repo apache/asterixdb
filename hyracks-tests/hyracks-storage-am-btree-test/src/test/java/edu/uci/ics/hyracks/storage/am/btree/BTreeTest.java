@@ -293,7 +293,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // fixed-length "value" field
     // fill B-tree with random values using insertions (not bulk load)
     // perform ordered scan and range search
-    //@Test
+    @Test
     public void test02() throws Exception {
 
         LOGGER.info("COMPOSITE KEY TEST");
@@ -391,7 +391,6 @@ public class BTreeTest extends AbstractBTreeTest {
             //System.out.println("---------------------------------");
         }
 
-        /*
         long end = System.currentTimeMillis();
         long duration = end - start;
         LOGGER.info("DURATION: " + duration);
@@ -468,7 +467,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                LOGGER.info(rec);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -476,7 +475,6 @@ public class BTreeTest extends AbstractBTreeTest {
             rangeCursor.close();
         }
 
-        */
 
         btree.close();
         bufferCache.closeFile(fileId);
@@ -488,7 +486,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // variable-length "value" field
     // fill B-tree with random values using insertions (not bulk load)
     // perform ordered scan and range search
-    //@Test
+    @Test
     public void test03() throws Exception {
 
         LOGGER.info("VARIABLE-LENGTH KEY TEST");
@@ -661,7 +659,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // fill B-tree with random values using insertions, then delete entries
     // one-by-one
     // repeat procedure a few times on same B-tree
-    //@Test
+    @Test
     public void test04() throws Exception {
 
         LOGGER.info("DELETION TEST");
@@ -1028,7 +1026,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // insert 100,000 records in bulk
     // B-tree has a composite key to "simulate" non-unique index creation
     // do range search
-    //@Test
+    @Test
     public void test06() throws Exception {
 
         LOGGER.info("BULK LOAD TEST");

@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 
 public final class BTreeOpContext implements IndexOpContext {
-    public final IndexOp op;
+    public IndexOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
@@ -66,5 +66,9 @@ public final class BTreeOpContext implements IndexOpContext {
         if (smPages != null)
             smPages.clear();
         opRestarts = 0;
+    }
+    
+    public void setIndexOp(IndexOp op) {
+        this.op = op;
     }
 }

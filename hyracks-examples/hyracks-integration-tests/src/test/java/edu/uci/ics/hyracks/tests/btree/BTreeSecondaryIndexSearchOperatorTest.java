@@ -361,7 +361,6 @@ public class BTreeSecondaryIndexSearchOperatorTest extends
 	public static void cleanup() throws Exception {
 		File primary = new File(primaryFileName);
 		primary.deleteOnExit();
-
 		File secondary = new File(secondaryFileName);
 		secondary.deleteOnExit();
 	}

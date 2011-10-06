@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package edu.uci.ics.hyracks.storage.am.btree.exceptions;
 
 public class BTreeDuplicateKeyException extends BTreeException {
     private static final long serialVersionUID = 1L;

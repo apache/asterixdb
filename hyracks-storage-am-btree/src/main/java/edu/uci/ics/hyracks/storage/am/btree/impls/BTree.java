@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -26,7 +25,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
@@ -44,7 +44,6 @@ import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -121,36 +120,13 @@ public class BTree implements ITreeIndex {
 
     @Override
     public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
-
-        if (created)
-            return;
-
         treeLatch.writeLock().lock();
         try {
-
-            // check if another thread beat us to it
-            if (created)
+            if (created) {
                 return;
-
-            freePageManager.init(metaFrame, rootPage);
-
-            // initialize root page
-            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-            pins++;
-
-            rootNode.acquireWriteLatch();
-            writeLatchesAcquired++;
-            try {
-                leafFrame.setPage(rootNode);
-                leafFrame.initBuffer((byte) 0);
-            } finally {
-                rootNode.releaseWriteLatch();
-                writeLatchesReleased++;
-                bufferCache.unpin(rootNode);
-                unpins++;
             }
-            currentLevel = 0;
-
+            freePageManager.init(metaFrame, rootPage);
+            initRoot(leafFrame, true);
             created = true;
         } finally {
             treeLatch.writeLock().unlock();
@@ -381,14 +357,14 @@ public class BTree implements ITreeIndex {
         ctx.interiorFrame.setPage(originalPage);
     }
 
-    private void reinitRoot(BTreeOpContext ctx) throws HyracksDataException {
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+    private void initRoot(ITreeIndexFrame leafFrame, boolean firstInit) throws HyracksDataException {
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), firstInit);
         pins++;
         rootNode.acquireWriteLatch();
         writeLatchesAcquired++;
         try {
-            ctx.leafFrame.setPage(rootNode);
-            ctx.leafFrame.initBuffer((byte) 0);
+            leafFrame.setPage(rootNode);
+            leafFrame.initBuffer((byte) 0);
             currentLevel = 0; // debug
         } finally {
             rootNode.releaseWriteLatch();
@@ -489,7 +465,7 @@ public class BTree implements ITreeIndex {
             if (ctx.splitKey.getBuffer() != null) {
                 if (ctx.op == IndexOp.DELETE) {
                     // Reset level of root to zero.
-                    reinitRoot(ctx);
+                    initRoot(ctx.leafFrame, false);
                 } else {
                     // Insert or update op. Create a new root.
                     createNewRoot(ctx);
@@ -510,6 +486,12 @@ public class BTree implements ITreeIndex {
 
     @Override
     public void update(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+        // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
+        // This call only allows updating of non-key fields.
+        // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
+        if (cmp.getFieldCount() == cmp.getKeyFieldCount()) {
+            throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
+        }
         insertUpdateOrDelete(tuple, ictx);
     }
     
@@ -806,7 +788,7 @@ public class BTree implements ITreeIndex {
                     treeLatchesAcquired++;
 
                     try {
-                        ctx.leafFrame.delete(tuple, cmp, true);
+                        ctx.leafFrame.delete(tuple, cmp, false);
                         // to propagate the deletion we only need to make the
                         // splitKey != null
                         // we can reuse data to identify which key to delete in
@@ -879,7 +861,7 @@ public class BTree implements ITreeIndex {
                 }
             }
         } else { // leaf will not become empty
-            ctx.leafFrame.delete(tuple, cmp, true);
+            ctx.leafFrame.delete(tuple, cmp, false);
             node.releaseWriteLatch();
             writeLatchesReleased++;
             bufferCache.unpin(node);
