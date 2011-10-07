@@ -125,12 +125,18 @@ public class BTree implements ITreeIndex {
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();
-        cursor.setBufferCache(bufferCache);
-        cursor.setFileId(fileId);
-        cursor.setCurrentPageId(currentPageId);
-        cursor.setMaxPageId(maxPageId);
-        ctx.cursorInitialState.setPage(page);
-        cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
+        try {
+            cursor.setBufferCache(bufferCache);
+            cursor.setFileId(fileId);
+            cursor.setCurrentPageId(currentPageId);
+            cursor.setMaxPageId(maxPageId);
+            ctx.cursorInitialState.setPage(page);
+            cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
+        } catch (Exception e) {
+            page.releaseReadLatch();
+            bufferCache.unpin(page);
+            throw new HyracksDataException(e);
+        }
     }
 
     public void search(ITreeIndexCursor cursor, RangePredicate pred, BTreeOpContext ctx) throws Exception {

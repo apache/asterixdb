@@ -24,11 +24,15 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class OrderedSlotManager extends AbstractSlotManager {
     
+    private final int HIGHEST_TUPLE_INDEX = -1;
+    private final int ERROR_TUPLE_INDEX = -2;
+    
 	@Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
-        if (frame.getTupleCount() <= 0)
+        if (frame.getTupleCount() <= 0) {
             return -1;
+        }
 
         int mid;
         int begin = 0;
@@ -45,42 +49,52 @@ public class OrderedSlotManager extends AbstractSlotManager {
                 begin = mid + 1;
             } else {
                 if (mode == FindTupleMode.EXCLUSIVE) {
-                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY)
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
                         begin = mid + 1;
-                    else
+                    } else {
                         end = mid - 1;
+                    }
                 } else {
-                    return mid;
+                    if (mode == FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS) {
+                        return ERROR_TUPLE_INDEX;
+                    } else {
+                        return mid;
+                    }
                 }
             }
         }
 
-        if (mode == FindTupleMode.EXACT)
-            return -1;
+        if (mode == FindTupleMode.EXACT) {
+            return ERROR_TUPLE_INDEX;
+        }
 
         if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
-            if (begin > frame.getTupleCount() - 1)
-                return -1;
+            if (begin > frame.getTupleCount() - 1) {
+                return HIGHEST_TUPLE_INDEX;
+            }
             frameTuple.resetByTupleIndex(frame, begin);
-            if (multiCmp.compare(searchKey, frameTuple) < 0)
+            if (multiCmp.compare(searchKey, frameTuple) < 0) {
                 return begin;
-            else
-                return -1;
+            } else {
+                return HIGHEST_TUPLE_INDEX;
+            }
         } else {
-            if (end < 0)
-                return -1;
+            if (end < 0) {
+                return HIGHEST_TUPLE_INDEX;
+            }
             frameTuple.resetByTupleIndex(frame, end);
-            if (multiCmp.compare(searchKey, frameTuple) > 0)
+            if (multiCmp.compare(searchKey, frameTuple) > 0) {
                 return end;
-            else
-                return -1;
+            } else {
+                return HIGHEST_TUPLE_INDEX;
+            }
         }
     }
     
     @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotOff(tupleIndex);
-        if (tupleIndex < 0) {
+        if (tupleIndex == HIGHEST_TUPLE_INDEX) {
             slotOff = getSlotEndOff() - slotSize;
             setSlot(slotOff, tupleOff);
             return slotOff;
@@ -92,5 +106,15 @@ public class OrderedSlotManager extends AbstractSlotManager {
             setSlot(slotOff, tupleOff);
             return slotOff;
         }
+    }
+
+    @Override
+    public boolean isHighestTupleIndex(int tupleIndex) {
+        return tupleIndex == HIGHEST_TUPLE_INDEX;
+    }
+
+    @Override
+    public boolean isErrorTupleIndex(int tupleIndex) {
+        return tupleIndex == ERROR_TUPLE_INDEX;
     }
 }

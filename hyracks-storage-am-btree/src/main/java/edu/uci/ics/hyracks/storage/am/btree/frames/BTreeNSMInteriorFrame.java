@@ -82,23 +82,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        int slotOff = slotManager.getSlotOff(tupleIndex);
-        boolean isDuplicate = true;
-
-        // TODO: We may not need to check for duplicates in interior nodes.
-        if (tupleIndex < 0)
-            isDuplicate = false; // greater than all existing keys
-        else {
-            frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
-            if (cmp.compare(tuple, frameTuple) != 0)
-                isDuplicate = false;
-        }
-        if (isDuplicate) {
-            throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
-        }
-        return tupleIndex;
     }
     
     @Override
@@ -303,7 +288,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
-        if (tupleIndex < 0) {
+        if (slotManager.isHighestTupleIndex(tupleIndex)) {
             return buf.getInt(rightLeafOff);
         } else {
             int origTupleOff = slotManager.getTupleOff(slotOff);
@@ -342,13 +327,10 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        //int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
-        //        FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff;
         int keySize;
-
-        if (tupleIndex < 0) {
+        if (slotManager.isHighestTupleIndex(tupleIndex)) {
             tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
             frameTuple.resetByTupleOffset(buf, tupleOff);
             keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
