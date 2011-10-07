@@ -139,8 +139,6 @@ public class WordTokenizerTest {
 
             Integer hashedToken = in.readInt();
 
-            // System.out.println(hashedToken);
-
             Assert.assertEquals(hashedToken, expectedCountedHashedUTF8Tokens.get(tokenCount));
 
             tokenCount++;
@@ -172,8 +170,6 @@ public class WordTokenizerTest {
             DataInput in = new DataInputStream(bais);
 
             Integer hashedToken = in.readInt();
-
-            // System.out.println(hashedToken);
 
             Assert.assertEquals(expectedHashedUTF8Tokens.get(tokenCount), hashedToken);
 
@@ -207,23 +203,19 @@ public class WordTokenizerTest {
 
             String strToken = in.readUTF();
 
-            // System.out.println(strToken);
-
             Assert.assertEquals(expectedUTF8Tokens.get(tokenCount), strToken);
 
             tokenCount++;
         }
     }
 
-    // JAQL
+    // JAQL Hash
     public int tokenHash(String token, int tokenCount) {
         int h = AbstractUTF8Token.GOLDEN_RATIO_32;
         for (int i = 0; i < token.length(); i++) {
-            System.out.print((int)token.charAt(i) + " ");
         	h ^= token.charAt(i);
             h *= AbstractUTF8Token.GOLDEN_RATIO_32;
         }
-        System.out.println("CHK");
         return h + tokenCount;
     }
 }
