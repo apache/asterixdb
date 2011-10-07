@@ -370,8 +370,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
@@ -387,11 +387,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
+        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
             throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
         }
         return slot;
@@ -399,11 +399,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
+        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         return slot;

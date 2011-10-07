@@ -44,8 +44,8 @@ public class OrderedSlotManager extends AbstractSlotManager {
             } else if (cmp > 0) {
                 begin = mid + 1;
             } else {
-                if (mode == FindTupleMode.FTM_EXCLUSIVE) {
-                    if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY)
+                if (mode == FindTupleMode.EXCLUSIVE) {
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY)
                         begin = mid + 1;
                     else
                         end = mid - 1;
@@ -55,10 +55,10 @@ public class OrderedSlotManager extends AbstractSlotManager {
             }
         }
 
-        if (mode == FindTupleMode.FTM_EXACT)
+        if (mode == FindTupleMode.EXACT)
             return -1;
 
-        if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) {
+        if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
             if (begin > frame.getTupleCount() - 1)
                 return -1;
             frameTuple.resetByTupleIndex(frame, begin);

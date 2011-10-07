@@ -101,8 +101,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
                 prefixBegin = prefixMid + 1;
                 tuplePrefixSlotNumUbound = prefixMid + 1;
             } else {
-                if (mode == FindTupleMode.FTM_EXCLUSIVE) {
-                    if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY)
+                if (mode == FindTupleMode.EXCLUSIVE) {
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY)
                         prefixBegin = prefixMid + 1;
                     else
                         prefixEnd = prefixMid - 1;
@@ -153,8 +153,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
             else if (cmp > 0)
                 tupleBegin = tupleMid + 1;
             else {
-                if (mode == FindTupleMode.FTM_EXCLUSIVE) {
-                    if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY)
+                if (mode == FindTupleMode.EXCLUSIVE) {
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY)
                         tupleBegin = tupleMid + 1;
                     else
                         tupleEnd = tupleMid - 1;
@@ -167,12 +167,12 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         // System.out.println("RECS: " + recBegin + " " + recMid + " " +
         // recEnd);
 
-        if (mode == FindTupleMode.FTM_EXACT)
+        if (mode == FindTupleMode.EXACT)
             return encodeSlotFields(prefixMatch, GREATEST_SLOT);
 
         // do final comparison to determine whether the search key is greater
         // than all keys or in between some existing keys
-        if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) {
+        if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
             if (tupleBegin > frame.getTupleCount() - 1)
                 return encodeSlotFields(prefixMatch, GREATEST_SLOT);
             frameTuple.resetByTupleIndex(frame, tupleBegin);

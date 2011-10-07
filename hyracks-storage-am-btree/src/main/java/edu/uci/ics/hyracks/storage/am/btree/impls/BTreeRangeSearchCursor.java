@@ -196,18 +196,18 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
 
         // init
-        lowKeyFtm = FindTupleMode.FTM_EXCLUSIVE;
+        lowKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.lowKeyInclusive) {
-            lowKeyFtp = FindTupleNoExactMatchPolicy.FTP_LOWER_KEY;
+            lowKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         } else {
-            lowKeyFtp = FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY;
+            lowKeyFtp = FindTupleNoExactMatchPolicy.HIGHER_KEY;
         }
 
-        highKeyFtm = FindTupleMode.FTM_EXCLUSIVE;
+        highKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.highKeyInclusive) {
-            highKeyFtp = FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY;
+            highKeyFtp = FindTupleNoExactMatchPolicy.HIGHER_KEY;
         } else {
-            highKeyFtp = FindTupleNoExactMatchPolicy.FTP_LOWER_KEY;
+            highKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         }
 
         if (pred.isForward()) {

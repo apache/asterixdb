@@ -82,8 +82,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         boolean isDuplicate = true;
 
@@ -104,8 +104,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
     
     @Override
@@ -284,9 +284,9 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
                 return getLeftmostChildPageId(srcCmp);
             }
             if (pred.isLowKeyInclusive())
-                fsm = FindTupleMode.FTM_INCLUSIVE;
+                fsm = FindTupleMode.INCLUSIVE;
             else
-                fsm = FindTupleMode.FTM_EXCLUSIVE;
+                fsm = FindTupleMode.EXCLUSIVE;
             targetCmp = pred.getLowKeyComparator();
         } else {
             tuple = pred.getHighKey();
@@ -294,14 +294,14 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
                 return getRightmostChildPageId(srcCmp);
             }
             if (pred.isHighKeyInclusive())
-                fsm = FindTupleMode.FTM_EXCLUSIVE;
+                fsm = FindTupleMode.EXCLUSIVE;
             else
-                fsm = FindTupleMode.FTM_INCLUSIVE;
+                fsm = FindTupleMode.INCLUSIVE;
             targetCmp = pred.getHighKeyComparator();
         }
 
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         if (tupleIndex < 0) {
             return buf.getInt(rightLeafOff);
