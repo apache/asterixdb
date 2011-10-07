@@ -165,42 +165,27 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-
+    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         frameTuple.setFieldCount(cmp.getFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        // TODO: Fix me.
+        //int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
+        //        FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
-        if (tupleIndex < 0) {
-            throw new TreeIndexException("Key to be deleted does not exist.");
-        } else {
-            if (exactDelete) {
-                // check the non-key columns for equality by byte-by-byte
-                // comparison
-                int tupleOff = slotManager.getTupleOff(slotOff);
-                frameTuple.resetByTupleOffset(buf, tupleOff);
+        //if (tupleIndex < 0) {
+        //    throw new TreeIndexException("Key to be deleted does not exist.");
+        //}
+        int tupleOff = slotManager.getTupleOff(slotOff);
+        frameTuple.resetByTupleOffset(buf, tupleOff);
+        int tupleSize = tupleWriter.bytesRequired(frameTuple);
 
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1,
-                        cmp.getFieldCount() - cmp.getKeyFieldCount());
-                if (comparison != 0) {
-                    throw new TreeIndexException(
-                            "Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
-                }
-            }
+        // perform deletion (we just do a memcpy to overwrite the slot)
+        int slotStartOff = slotManager.getSlotEndOff();
+        int length = slotOff - slotStartOff;
+        System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
 
-            int tupleOff = slotManager.getTupleOff(slotOff);
-            frameTuple.resetByTupleOffset(buf, tupleOff);
-            int tupleSize = tupleWriter.bytesRequired(frameTuple);
-
-            // perform deletion (we just do a memcpy to overwrite the slot)
-            int slotStartOff = slotManager.getSlotEndOff();
-            int length = slotOff - slotStartOff;
-            System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
-
-            // maintain space information
-            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
-        }
+        // maintain space information
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
     }
 
     @Override
@@ -247,14 +232,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp, boolean throwIfKeyExists) throws Exception {
-        frameTuple.setFieldCount(cmp.getFieldCount());
-        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-    }
-
-    @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
@@ -263,7 +241,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) throws Exception {
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) {
     	frameTuple.resetByTupleIndex(this, oldTupleIndex);
 		int oldTupleBytes = frameTuple.getTupleSize();
 		int slotOff = slotManager.getSlotOff(oldTupleIndex);

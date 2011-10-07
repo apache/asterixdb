@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
@@ -40,6 +41,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
@@ -179,51 +181,40 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    public void delete(ITupleReference tuple, MultiComparator cmp, int slot) {
+        // TODO: Fixme.
+        //int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
+        //        FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
-            throw new BTreeException("Key to be deleted does not exist.");
+        //if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
+        //    throw new BTreeException("Key to be deleted does not exist.");
+        //}
+        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
+        int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
+
+        // perform deletion (we just do a memcpy to overwrite the slot)
+        int slotEndOff = slotManager.getTupleSlotEndOff();
+        int length = tupleSlotOff - slotEndOff;
+        System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
+
+        // maintain space information, get size of tuple suffix (suffix
+        // could be entire tuple)
+        int tupleSize = 0;
+        int suffixFieldStart = 0;
+        if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+            suffixFieldStart = 0;
+            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
         } else {
-            int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
-            int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
-
-            if (exactDelete) {
-                frameTuple.setFieldCount(cmp.getFieldCount());
-                frameTuple.resetByTupleIndex(this, tupleIndex);
-
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1,
-                        cmp.getFieldCount() - cmp.getKeyFieldCount());
-                if (comparison != 0) {
-                    throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
-                }
-            }
-
-            // perform deletion (we just do a memcpy to overwrite the slot)
-            int slotEndOff = slotManager.getTupleSlotEndOff();
-            int length = tupleSlotOff - slotEndOff;
-            System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
-
-            // maintain space information, get size of tuple suffix (suffix
-            // could be entire tuple)
-            int tupleSize = 0;
-            int suffixFieldStart = 0;
-            if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
-                suffixFieldStart = 0;
-                buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
-            } else {
-                int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
-                suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot);
-            }
-
-            frameTuple.resetByTupleIndex(this, tupleIndex);
-            tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount()
-                    - suffixFieldStart);
-
-            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
+            int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
+            suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot);
         }
+
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount()
+                - suffixFieldStart);
+
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
     }
 
     @Override
@@ -258,7 +249,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
         int numPrefixFields = 0;
@@ -322,7 +313,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) throws Exception {
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) {
         int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
         int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
         int tupleSlot = buf.getInt(tupleSlotOff);
@@ -378,12 +369,10 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp, boolean throwIfKeyExists) throws Exception {
+    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-        if (!throwIfKeyExists) {
-            return slot;
-        }
+        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
             frameTuple.setFieldCount(cmp.getFieldCount());
@@ -395,7 +384,31 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         }
         return slot;
     }
-
+    
+    @Override
+    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
+                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
+            throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
+        }
+        return slot;
+    }
+    
+    @Override
+    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
+                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
+            throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+        }
+        return slot;
+    }
+    
     @Override
     public void printHeader() {
         // TODO Auto-generated method stub
@@ -642,8 +655,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         rightFrame.compact(cmp);
 
         // insert last key
-        // TODO: can we avoid checking for duplicates here?
-        int targetTupleIndex = targetFrame.findTupleIndex(tuple, cmp, true);
+        int targetTupleIndex = targetFrame.findInsertTupleIndex(tuple, cmp);
         targetFrame.insert(tuple, cmp, targetTupleIndex);
 
         // set split key to be highest value in left page

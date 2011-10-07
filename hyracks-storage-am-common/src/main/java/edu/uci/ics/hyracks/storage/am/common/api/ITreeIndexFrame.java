@@ -31,13 +31,17 @@ public interface ITreeIndexFrame {
 
     public ByteBuffer getBuffer();
 
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp, boolean throwIfKeyExists) throws Exception;
+    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
+    
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
 
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
+    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
+    
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);
 
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) throws Exception;
-
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
+    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
+    
+    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
 
     // returns true if slots were modified, false otherwise
     public boolean compact(MultiComparator cmp);

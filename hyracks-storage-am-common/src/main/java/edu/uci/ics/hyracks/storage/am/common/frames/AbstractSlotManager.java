@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class AbstractSlotManager implements ISlotManager {
-
+	
 	protected static final int slotSize = 4;
 	protected ITreeIndexFrame frame;
 

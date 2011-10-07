@@ -101,7 +101,7 @@ public class BTreeTestUtils {
     }
     
     public static void checkOrderedScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Ordered Scan:");
+        LOGGER.info("Testing Ordered Scan.");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         BTreeOpContext searchOpCtx = testCtx.btree.createOpContext(IndexOp.SEARCH, testCtx.leafFrame, testCtx.interiorFrame, null);
@@ -128,7 +128,7 @@ public class BTreeTestUtils {
     }
     
     public static void checkDiskOrderScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Disk-Order Scan:");
+        LOGGER.info("Testing Disk-Order Scan.");
         ITreeIndexCursor diskOrderCursor = new TreeDiskOrderScanCursor(testCtx.leafFrame);
         BTreeOpContext diskOrderScanOpCtx = testCtx.btree.createOpContext(IndexOp.DISKORDERSCAN, testCtx.leafFrame, null, null);
         testCtx.btree.diskOrderScan(diskOrderCursor, testCtx.leafFrame, testCtx.metaFrame, diskOrderScanOpCtx);
@@ -155,7 +155,7 @@ public class BTreeTestUtils {
     }
     
     public static void checkRangeSearch(BTreeTestContext testCtx, ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive, boolean highKeyInclusive) throws Exception {
-        LOGGER.info("Testing Range Search:");
+        LOGGER.info("Testing Range Search.");
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), highKey);
         ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
@@ -196,7 +196,7 @@ public class BTreeTestUtils {
     }
     
     public static void checkPointSearches(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Point Searches On All Expected Keys:");        
+        LOGGER.info("Testing Point Searches On All Expected Keys.");        
         ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
         
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
@@ -264,18 +264,6 @@ public class BTreeTestUtils {
             }
         }
         return expectedSubset;
-    }
-    
-    private static String printCursorResults(BTree btree, ITreeIndexCursor cursor, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException, Exception {
-        StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append("\n");
-        while (cursor.hasNext()) {
-            cursor.next();
-            ITupleReference frameTuple = cursor.getTuple();
-            String tupleString = btree.getMultiComparator().printTuple(frameTuple, fieldSerdes);
-            strBuilder.append(tupleString + "\n");
-        }
-        return strBuilder.toString();
     }
     
     public static void insertIntTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {

@@ -27,11 +27,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
@@ -77,13 +79,11 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp, boolean throwIfKeyExists) throws Exception {
+    @Override
+    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
                 FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
-        if (!throwIfKeyExists) {
-            return tupleIndex;
-        }
         int slotOff = slotManager.getSlotOff(tupleIndex);
         boolean isDuplicate = true;
 
@@ -96,13 +96,26 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
                 isDuplicate = false;
         }
         if (isDuplicate) {
-            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into interior node.");
+            throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         return tupleIndex;
     }
+    
+    @Override
+    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
+                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    }
+    
+    @Override
+    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+        // TODO: Maybe craft the interface such that this is not possible?
+        throw new UnsupportedOperationException("Cannot update tuples in interior node.");
+    }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         int slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
         int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
@@ -206,8 +219,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         compact(cmp);
 
         // insert key
-        // TODO: can we avoid checking for duplicates here?
-        int targetTupleIndex = targetFrame.findTupleIndex(savedSplitKey.getTuple(), cmp, true);
+        int targetTupleIndex = targetFrame.findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
         targetFrame.insert(savedSplitKey.getTuple(), cmp, targetTupleIndex);
 
         return 0;
@@ -328,10 +340,10 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
+    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+        //int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+        //        FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff;
         int keySize;

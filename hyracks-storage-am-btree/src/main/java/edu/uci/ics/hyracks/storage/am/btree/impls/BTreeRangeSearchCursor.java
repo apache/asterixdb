@@ -141,7 +141,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         tupleIndex += tupleIndexInc;
     }
 
-    private int getLowKeyIndex() {
+    private int getLowKeyIndex() throws HyracksDataException {
         int index;
         if (lowKey == null)
             index = 0;
@@ -157,7 +157,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return index;
     }
 
-    private int getHighKeyIndex() {
+    private int getHighKeyIndex() throws HyracksDataException {
         int index;
         if (highKey == null)
             index = frame.getTupleCount() - 1;

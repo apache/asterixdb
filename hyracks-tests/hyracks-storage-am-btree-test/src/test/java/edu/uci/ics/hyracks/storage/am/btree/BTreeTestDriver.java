@@ -28,10 +28,10 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference highKey = TupleUtils.createIntegerTuple(1000);
         
         runTest(fieldSerdes, 1, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, null, null);
-        runTest(fieldSerdes, 1, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, null, null);
+        //runTest(fieldSerdes, 1, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, null, null);
     }
     
-    @Test
+    //@Test
     public void twoIntKeys() throws Exception {        
         LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys.");
         
@@ -49,7 +49,7 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
     }
     
-    @Test
+    //@Test
     public void twoIntKeysAndValues() throws Exception {        
         LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys And Values.");
         
@@ -67,7 +67,7 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
     }        
     
-    @Test
+    //@Test
     public void oneStringKeyAndValue() throws Exception {        
         LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
         
@@ -81,7 +81,7 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         runTest(fieldSerdes, 1, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, null, null);
     }
     
-    @Test
+    //@Test
     public void twoStringKeys() throws Exception {        
         LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
         
@@ -99,7 +99,7 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
     }
     
-    @Test
+    //@Test
     public void twoStringKeysAndValues() throws Exception {        
         LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");
         
