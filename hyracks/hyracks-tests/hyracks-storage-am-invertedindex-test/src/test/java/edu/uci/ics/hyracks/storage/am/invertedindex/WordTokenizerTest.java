@@ -49,6 +49,36 @@ public class WordTokenizerTest {
     private ArrayList<Integer> expectedHashedUTF8Tokens = new ArrayList<Integer>();
     private ArrayList<Integer> expectedCountedHashedUTF8Tokens = new ArrayList<Integer>();
 
+    private boolean isSeparator(char c) {
+        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER || Character.getType(c) == Character.OTHER_NUMBER);
+    }
+    
+    private void tokenize(String text, ArrayList<String> tokens) {
+    	String lowerCaseText = text.toLowerCase();
+    	int startIx = 0;
+    	
+    	// Skip separators at beginning of string.
+    	while(isSeparator(lowerCaseText.charAt(startIx))) {
+    		startIx++;
+    	}
+    	while(startIx < lowerCaseText.length()) {
+    		while(startIx < lowerCaseText.length() && isSeparator(lowerCaseText.charAt(startIx))) {
+        	    startIx++;
+        	}
+    		int tokenStart = startIx;
+    		
+    		while(startIx < lowerCaseText.length() && !isSeparator(lowerCaseText.charAt(startIx))) {
+        	    startIx++;
+        	}
+    		int tokenEnd = startIx;
+    		
+    		// Emit token.
+    		String token = lowerCaseText.substring(tokenStart, tokenEnd);
+    		
+    		tokens.add(token);
+    	}
+    }
+    
     @Before
     public void init() throws IOException {
         // serialize text into bytes
@@ -56,27 +86,10 @@ public class WordTokenizerTest {
         DataOutput dos = new DataOutputStream(baos);
         dos.writeUTF(text);
         inputBuffer = baos.toByteArray();
-
+        
         // init expected string tokens
-        expectedUTF8Tokens.add("hello");
-        expectedUTF8Tokens.add("world");
-        expectedUTF8Tokens.add("i");
-        expectedUTF8Tokens.add("would");
-        expectedUTF8Tokens.add("like");
-        expectedUTF8Tokens.add("to");
-        expectedUTF8Tokens.add("inform");
-        expectedUTF8Tokens.add("you");
-        expectedUTF8Tokens.add("of");
-        expectedUTF8Tokens.add("the");
-        expectedUTF8Tokens.add("importance");
-        expectedUTF8Tokens.add("of");
-        expectedUTF8Tokens.add("foo");
-        expectedUTF8Tokens.add("bar");
-        expectedUTF8Tokens.add("yes");
-        expectedUTF8Tokens.add("foo");
-        expectedUTF8Tokens.add("bar");
-        expectedUTF8Tokens.add("jürgen");
-
+        tokenize(text, expectedUTF8Tokens);
+        
         // hashed tokens ignoring token count
         for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
             int hash = tokenHash(expectedUTF8Tokens.get(i), 1);
@@ -206,9 +219,11 @@ public class WordTokenizerTest {
     public int tokenHash(String token, int tokenCount) {
         int h = AbstractUTF8Token.GOLDEN_RATIO_32;
         for (int i = 0; i < token.length(); i++) {
-            h ^= token.charAt(i);
+            System.out.print((int)token.charAt(i) + " ");
+        	h ^= token.charAt(i);
             h *= AbstractUTF8Token.GOLDEN_RATIO_32;
         }
+        System.out.println("CHK");
         return h + tokenCount;
     }
 }
