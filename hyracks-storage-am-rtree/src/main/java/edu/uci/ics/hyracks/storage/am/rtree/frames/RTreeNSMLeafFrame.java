@@ -67,10 +67,6 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     @Override
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
 
-        // TODO: ALEX CHANGES
-    	//rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
-        //frameTuple.setFieldCount(cmp.getFieldCount());
-
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
         RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
