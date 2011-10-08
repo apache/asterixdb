@@ -27,7 +27,7 @@ public class TreeIndexStatsOperatorDescriptor extends
 			ITreeIndexOpHelperFactory opHelperFactory) {
 		super(spec, 0, 0, null, storageManager, treeIndexRegistryProvider,
 				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, comparatorFactories, null, opHelperFactory);
+				typeTraits, comparatorFactories, opHelperFactory);
 	}
 
 	@Override

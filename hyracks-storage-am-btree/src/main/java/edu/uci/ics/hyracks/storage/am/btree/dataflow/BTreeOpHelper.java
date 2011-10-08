@@ -30,8 +30,8 @@ public class BTreeOpHelper extends TreeIndexOpHelper {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0,
                 metaDataFrameFactory);
-        return new BTree(bufferCache, freePageManager, opDesc.getTreeIndexInteriorFactory(),
-                opDesc.getTreeIndexLeafFactory(), cmp);
+        return new BTree(bufferCache, opDesc.getTreeIndexFieldCount(), cmp, freePageManager, opDesc.getTreeIndexInteriorFactory(),
+                opDesc.getTreeIndexLeafFactory());
     }
 
     public MultiComparator createMultiComparator(IBinaryComparator[] comparators) throws HyracksDataException {

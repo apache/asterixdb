@@ -92,7 +92,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(fileId, leafFrame, metaFrame);
         btree.open(fileId);
 

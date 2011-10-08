@@ -206,7 +206,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, null, fieldPermutation, 0.7f,
+				primaryComparatorFactories, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeBulkLoad, NC1_ID);
@@ -272,7 +272,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
 				secondaryLeafFrameFactory, secondaryTypeTraits,
-				secondaryComparatorFactories, null, fieldPermutation, 0.7f,
+				secondaryComparatorFactories, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryBtreeBulkLoad, NC1_ID);
@@ -330,7 +330,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends
 				spec, ordersDesc, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, null, primaryFieldPermutation,
+				primaryComparatorFactories, primaryFieldPermutation,
 				IndexOp.INSERT, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeInsertOp, NC1_ID);
@@ -341,7 +341,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends
 				spec, ordersDesc, storageManager, treeIndexRegistryProvider,
 				secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
 				secondaryLeafFrameFactory, secondaryTypeTraits,
-				secondaryComparatorFactories, null, fieldPermutationB,
+				secondaryComparatorFactories, fieldPermutationB,
 				IndexOp.INSERT, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryInsertOp, NC1_ID);

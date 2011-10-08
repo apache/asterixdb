@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -35,7 +34,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	protected final IFileSplitProvider fileSplitProvider;
 
 	protected final IBinaryComparatorFactory[] comparatorFactories;
-	protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
 
 	protected final ITreeIndexFrameFactory interiorFrameFactory;
 	protected final ITreeIndexFrameFactory leafFrameFactory;
@@ -55,7 +53,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 			ITreeIndexFrameFactory interiorFrameFactory,
 			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
-			IPrimitiveValueProviderFactory[] valueProviderFactories,
 			ITreeIndexOpHelperFactory opHelperFactory) {
 		super(spec, inputArity, outputArity);
 		this.fileSplitProvider = fileSplitProvider;
@@ -65,7 +62,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 		this.leafFrameFactory = leafFrameFactory;
 		this.typeTraits = typeTraits;
 		this.comparatorFactories = comparatorFactories;
-		this.valueProviderFactories = valueProviderFactories;
 		this.opHelperFactory = opHelperFactory;
 		if (outputArity > 0)
 			recordDescriptors[0] = recDesc;
@@ -87,10 +83,10 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	}
 
 	@Override
-	public IPrimitiveValueProviderFactory[] getTreeIndexValueProviderFactories() {
-		return valueProviderFactories;
+	public int getTreeIndexFieldCount() {
+		return typeTraits.length;
 	}
-
+	
 	@Override
 	public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
 		return interiorFrameFactory;

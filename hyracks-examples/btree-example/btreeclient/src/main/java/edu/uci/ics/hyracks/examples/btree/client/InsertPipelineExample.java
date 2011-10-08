@@ -161,7 +161,7 @@ public class InsertPipelineExample {
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider,
                 primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories,
-                null, primaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+                primaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -190,7 +190,7 @@ public class InsertPipelineExample {
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider,
                 secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, null, secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator

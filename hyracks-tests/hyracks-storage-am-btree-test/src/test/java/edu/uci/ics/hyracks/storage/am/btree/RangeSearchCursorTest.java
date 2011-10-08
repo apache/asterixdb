@@ -97,8 +97,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
-		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
-				leafFrameFactory, cmp);
+		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 
@@ -179,8 +178,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
-		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
-				leafFrameFactory, cmp);
+		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 
@@ -262,8 +260,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);		
 		
-		BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory,
-				leafFrameFactory, cmp);
+		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 

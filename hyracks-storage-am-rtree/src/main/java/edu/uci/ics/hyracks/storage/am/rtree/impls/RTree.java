@@ -63,6 +63,7 @@ public class RTree implements ITreeIndex {
     private final SearchPredicate diskOrderScanPredicate;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
+    private final int fieldCount;
     private final MultiComparator cmp;
 
     public int rootSplits = 0;
@@ -75,13 +76,15 @@ public class RTree implements ITreeIndex {
     public AtomicLong unpins = new AtomicLong();
     public byte currentLevel = 0;
 
-    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp) {
+    // TODO: is MultiComparator needed at all?
+    public RTree(IBufferCache bufferCache, int fieldCount, MultiComparator cmp, IFreePageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
+        this.fieldCount = fieldCount;
+        this.cmp = cmp;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
-        this.cmp = cmp;
+        this.leafFrameFactory = leafFrameFactory;        
         globalNsn = new AtomicInteger();
         this.treeLatch = new ReentrantReadWriteLock(true);
         this.diskOrderScanPredicate = new SearchPredicate(null, cmp);
@@ -933,7 +936,7 @@ public class RTree implements ITreeIndex {
 
     @Override
     public int getFieldCount() {
-        return cmp.getFieldCount();
+        return fieldCount;
     }
 
     @Override

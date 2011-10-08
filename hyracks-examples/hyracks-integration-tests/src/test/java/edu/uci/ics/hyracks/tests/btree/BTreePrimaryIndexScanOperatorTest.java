@@ -168,7 +168,7 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractIntegrationTest {
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, null, fieldPermutation, 0.7f,
+				primaryComparatorFactories, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeBulkLoad, NC1_ID);

@@ -21,10 +21,13 @@ import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -44,9 +47,11 @@ import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
     private static final int childPtrSize = 4;
-
-    public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
-        super(tupleWriter, keyFieldCount);
+    private static IBinaryComparator childPtrCmp = IntegerBinaryComparatorFactory.INSTANCE
+			.createBinaryComparator();
+    
+    public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
+        super(tupleWriter, keyValueProviders);
     }
 
     @Override
@@ -289,11 +294,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     private int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
-        return cmp.getIntCmp().compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1),
+    	return childPtrCmp.compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1),
                 getChildPointerOff(tupleA, cmp), childPtrSize, tupleB.getFieldData(cmp.getKeyFieldCount() - 1),
                 getChildPointerOff(tupleB, cmp), childPtrSize);
     }
-
+    
     @Override
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
@@ -314,16 +319,16 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             for (int k = 0; k < getTupleCount(); ++k) {
 
                 frameTuple.resetByTupleIndex(this, k);
-                double LowerKey = cmp.getValueProviders()[i].getValue(frameTuple.getFieldData(i),
+                double LowerKey = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
                         frameTuple.getFieldStart(i));
-                double UpperKey = cmp.getValueProviders()[j].getValue(frameTuple.getFieldData(j),
+                double UpperKey = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
                         frameTuple.getFieldStart(j));
 
                 tupleEntries1.add(k, LowerKey);
                 tupleEntries2.add(k, UpperKey);
             }
-            double LowerKey = cmp.getValueProviders()[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
-            double UpperKey = cmp.getValueProviders()[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
+            double LowerKey = keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
+            double UpperKey = keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
 
             tupleEntries1.add(-1, LowerKey);
             tupleEntries2.add(-1, UpperKey);
@@ -360,11 +365,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
         for (int i = 0; i < getTupleCount(); ++i) {
             frameTuple.resetByTupleIndex(this, i);
-            double key = cmp.getValueProviders()[splitAxis + sortOrder].getValue(
+            double key = keyValueProviders[splitAxis + sortOrder].getValue(
                     frameTuple.getFieldData(splitAxis + sortOrder), frameTuple.getFieldStart(splitAxis + sortOrder));
             tupleEntries1.add(i, key);
         }
-        double key = cmp.getValueProviders()[splitAxis + sortOrder].getValue(tuple.getFieldData(splitAxis + sortOrder),
+        double key = keyValueProviders[splitAxis + sortOrder].getValue(tuple.getFieldData(splitAxis + sortOrder),
                 tuple.getFieldStart(splitAxis + sortOrder));
         tupleEntries1.add(-1, key);
         tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
@@ -527,9 +532,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                         tuple1.getFieldLength(i), tupleToBeInserted.getFieldData(i),
                         tupleToBeInserted.getFieldStart(i), tupleToBeInserted.getFieldLength(i));
                 if (c < 0) {
-                    pLow1 = cmp.getValueProviders()[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
+                    pLow1 = keyValueProviders[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
                 } else {
-                    pLow1 = cmp.getValueProviders()[i].getValue(tupleToBeInserted.getFieldData(i),
+                    pLow1 = keyValueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
                             tupleToBeInserted.getFieldStart(i));
                 }
 
@@ -537,18 +542,18 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                         tuple1.getFieldLength(j), tupleToBeInserted.getFieldData(j),
                         tupleToBeInserted.getFieldStart(j), tupleToBeInserted.getFieldLength(j));
                 if (c > 0) {
-                    pHigh1 = cmp.getValueProviders()[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
+                    pHigh1 = keyValueProviders[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
                 } else {
-                    pHigh1 = cmp.getValueProviders()[j].getValue(tupleToBeInserted.getFieldData(j),
+                    pHigh1 = keyValueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
                             tupleToBeInserted.getFieldStart(j));
                 }
             } else {
-                pLow1 = cmp.getValueProviders()[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
-                pHigh1 = cmp.getValueProviders()[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
+                pLow1 = keyValueProviders[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
+                pHigh1 = keyValueProviders[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
             }
 
-            double pLow2 = cmp.getValueProviders()[i].getValue(tuple2.getFieldData(i), tuple2.getFieldStart(i));
-            double pHigh2 = cmp.getValueProviders()[j].getValue(tuple2.getFieldData(j), tuple2.getFieldStart(j));
+            double pLow2 = keyValueProviders[i].getValue(tuple2.getFieldData(i), tuple2.getFieldStart(i));
+            double pHigh2 = keyValueProviders[j].getValue(tuple2.getFieldData(j), tuple2.getFieldStart(j));
 
             if (pLow1 > pHigh2 || pHigh1 < pLow2) {
                 return 0.0;
@@ -573,9 +578,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                     tuple.getFieldLength(i), tupleToBeInserted.getFieldData(i), tupleToBeInserted.getFieldStart(i),
                     tupleToBeInserted.getFieldLength(i));
             if (c < 0) {
-                pLow = cmp.getValueProviders()[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
+                pLow = keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
             } else {
-                pLow = cmp.getValueProviders()[i].getValue(tupleToBeInserted.getFieldData(i),
+                pLow = keyValueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
                         tupleToBeInserted.getFieldStart(i));
             }
 
@@ -583,9 +588,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                     tupleToBeInserted.getFieldData(j), tupleToBeInserted.getFieldStart(j),
                     tupleToBeInserted.getFieldLength(j));
             if (c > 0) {
-                pHigh = cmp.getValueProviders()[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
+                pHigh = keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
             } else {
-                pHigh = cmp.getValueProviders()[j].getValue(tupleToBeInserted.getFieldData(j),
+                pHigh = keyValueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
                         tupleToBeInserted.getFieldStart(j));
             }
             areaAfterEnlarge *= pHigh - pLow;
@@ -598,8 +603,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
-            area *= cmp.getValueProviders()[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j))
-                    - cmp.getValueProviders()[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
+            area *= keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j))
+                    - keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
         }
         return area;
     }

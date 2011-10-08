@@ -96,13 +96,13 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
     
     @Override
-    public IPrimitiveValueProviderFactory[] getTreeIndexValueProviderFactories() {
-        return null;
-    }
-
-    @Override
     public ITypeTrait[] getTreeIndexTypeTraits() {
         return btreeTypeTraits;
+    }
+    
+    @Override
+    public int getTreeIndexFieldCount() {
+        return btreeTypeTraits.length;
     }
 
     @Override

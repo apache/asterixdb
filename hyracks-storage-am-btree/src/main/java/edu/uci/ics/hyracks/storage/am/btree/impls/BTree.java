@@ -54,7 +54,7 @@ public class BTree implements ITreeIndex {
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
     // Fixed root page.
-    private final static int rootPage = 1;    
+    private final static int rootPage = 1;
         
     private boolean created = false;
 
@@ -62,17 +62,19 @@ public class BTree implements ITreeIndex {
     private final IBufferCache bufferCache;    
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
+    private final int fieldCount;
     private final MultiComparator cmp;
     private final ReadWriteLock treeLatch;
     private final RangePredicate diskOrderScanPredicate;
     private int fileId;
 
-    public BTree(IBufferCache bufferCache, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp) {
+    public BTree(IBufferCache bufferCache, int fieldCount, MultiComparator cmp, IFreePageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
-        this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
+        this.fieldCount = fieldCount;
         this.cmp = cmp;
+        this.interiorFrameFactory = interiorFrameFactory;
+        this.leafFrameFactory = leafFrameFactory;        
         this.freePageManager = freePageManager;
         this.treeLatch = new ReentrantReadWriteLock(true);
         this.diskOrderScanPredicate = new RangePredicate(true, null, null, true, true, cmp, cmp);
@@ -295,7 +297,7 @@ public class BTree implements ITreeIndex {
         // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // This call only allows updating of non-key fields.
         // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
-        if (getFieldCount() == cmp.getKeyFieldCount()) {
+        if (fieldCount == cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
         insertUpdateOrDelete(tuple, ictx);
@@ -928,7 +930,7 @@ public class BTree implements ITreeIndex {
     	
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame)leafFrame,
                 (IBTreeInteriorFrame)interiorFrame, metaFrame);
-        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(getFieldCount());
+        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(fieldCount);
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
     }
@@ -1037,7 +1039,7 @@ public class BTree implements ITreeIndex {
 
     @Override
     public int getFieldCount() {
-        return cmp.getFieldCount();
+        return fieldCount;
     }
 
     @Override

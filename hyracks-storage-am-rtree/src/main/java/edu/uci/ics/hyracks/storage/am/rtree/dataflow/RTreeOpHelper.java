@@ -45,20 +45,13 @@ public class RTreeOpHelper extends TreeIndexOpHelper {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, indexFileId, 0, metaDataFrameFactory);
 
-		return new RTree(bufferCache, freePageManager,
-				opDesc.getTreeIndexInteriorFactory(),
-				opDesc.getTreeIndexLeafFactory(), cmp);
+		return new RTree(bufferCache, opDesc.getTreeIndexFieldCount(), cmp,
+				freePageManager, opDesc.getTreeIndexInteriorFactory(),
+				opDesc.getTreeIndexLeafFactory());
 	}
 
 	public MultiComparator createMultiComparator(IBinaryComparator[] comparators)
 			throws HyracksDataException {
-		IPrimitiveValueProvider[] keyValueProvider = new IPrimitiveValueProvider[opDesc
-				.getTreeIndexValueProviderFactories().length];
-		for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
-			keyValueProvider[i] = opDesc.getTreeIndexValueProviderFactories()[i]
-					.createPrimitiveValueProvider();
-		}
-		return new MultiComparator(opDesc.getTreeIndexTypeTraits(),
-				comparators, keyValueProvider);
+		return new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
 	}
 }

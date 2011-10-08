@@ -66,6 +66,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -97,10 +98,8 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 			primaryTypeTraits);
 
-	private ITreeIndexFrameFactory primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-			primaryTupleWriterFactory, primaryKeyFieldCount);
-	private ITreeIndexFrameFactory primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-			primaryTupleWriterFactory, primaryKeyFieldCount);
+	private ITreeIndexFrameFactory primaryInteriorFrameFactory;
+	private ITreeIndexFrameFactory primaryLeafFrameFactory;
 
 	private static String primaryRTreeName = "primary"
 			+ simpleDateFormat.format(new Date());
@@ -163,10 +162,8 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	private RTreeTypeAwareTupleWriterFactory secondaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 			secondaryTypeTraits);
 
-	private ITreeIndexFrameFactory secondaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-			secondaryTupleWriterFactory, secondaryKeyFieldCount);
-	private ITreeIndexFrameFactory secondaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-			secondaryTupleWriterFactory, secondaryKeyFieldCount);
+	private ITreeIndexFrameFactory secondaryInteriorFrameFactory;
+	private ITreeIndexFrameFactory secondaryLeafFrameFactory;
 
 	private static String secondaryRTreeName = "secondary"
 			+ simpleDateFormat.format(new Date());
@@ -197,11 +194,15 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 		primaryComparatorFactories[1] = primaryComparatorFactories[0];
 		primaryComparatorFactories[2] = primaryComparatorFactories[0];
 		primaryComparatorFactories[3] = primaryComparatorFactories[0];
-		primaryValueProviderFactories[0] = DoublePrimitiveValueProviderFactory.INSTANCE;
-		primaryValueProviderFactories[1] = primaryValueProviderFactories[0];
-		primaryValueProviderFactories[2] = primaryValueProviderFactories[0];
-		primaryValueProviderFactories[3] = primaryValueProviderFactories[0];
 
+		IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
+				.comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
+		
+		primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+				primaryTupleWriterFactory, primaryValueProviderFactories);
+		primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
+				primaryTupleWriterFactory, primaryValueProviderFactories);
+		
 		// field, type and key declarations for primary B-tree index
 		primaryBTreeTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 		primaryBTreeTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
@@ -230,6 +231,14 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 		secondaryValueProviderFactories[2] = secondaryValueProviderFactories[0];
 		secondaryValueProviderFactories[3] = secondaryValueProviderFactories[0];
 
+		IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = RTreeUtils
+				.comparatorFactoriesToPrimitiveValueProviderFactories(secondaryComparatorFactories);
+		
+		secondaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+				secondaryTupleWriterFactory, secondaryValueProviderFactories);
+		secondaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
+				secondaryTupleWriterFactory, secondaryValueProviderFactories);
+		
 		loadPrimaryIndexTest();
 		loadPrimaryBTreeIndexTest();
 		loadSecondaryIndexTest();
@@ -292,7 +301,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBTreeSplitProvider, primaryBTreeInteriorFrameFactory,
 				primaryBTreeLeafFrameFactory, primaryBTreeTypeTraits,
-				primaryBTreeComparatorFactories, null, fieldPermutation, 0.7f,
+				primaryBTreeComparatorFactories, fieldPermutation, 0.7f,
 				bTreeopHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBTreeBulkLoad, NC1_ID);
@@ -338,7 +347,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryRTreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, secondaryValueProviderFactories,
+				primaryComparatorFactories,
 				fieldPermutation, 0.7f, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryRTreeBulkLoad, NC1_ID);
@@ -391,7 +400,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				secondaryRTreeSplitProvider, secondaryInteriorFrameFactory,
 				secondaryLeafFrameFactory, secondaryTypeTraits,
-				secondaryComparatorFactories, secondaryValueProviderFactories,
+				secondaryComparatorFactories,
 				fieldPermutation, 0.7f, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryRTreeBulkLoad, NC1_ID);
@@ -443,7 +452,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 				treeIndexRegistryProvider, secondaryRTreeSplitProvider,
 				secondaryInteriorFrameFactory, secondaryLeafFrameFactory,
 				secondaryTypeTraits, secondaryComparatorFactories,
-				secondaryValueProviderFactories, keyFields, opHelperFactory);
+				keyFields, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryRTreeSearchOp, NC1_ID);
 

@@ -27,7 +27,7 @@ public class BTreeUtils {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
+        BTree btree = new BTree(bufferCache, typeTraits.length, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
         return btree;
     }
     

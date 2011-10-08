@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.common.data.comparators;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class IntegerBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
@@ -28,13 +27,6 @@ public class IntegerBinaryComparatorFactory implements IBinaryComparatorFactory 
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int v1 = IntegerSerializerDeserializer.getInt(b1, s1);
-                int v2 = IntegerSerializerDeserializer.getInt(b2, s2);
-                return v1 < v2 ? -1 : (v1 > v2 ? 1 : 0);
-            }
-        };
+        return new IntegerBinaryComparator();
     }
 }

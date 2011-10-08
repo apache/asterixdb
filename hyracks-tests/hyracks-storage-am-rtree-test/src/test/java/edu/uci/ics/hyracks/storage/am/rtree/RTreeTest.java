@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -61,6 +62,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderF
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -110,24 +112,18 @@ public class RTreeTest extends AbstractRTreeTest {
 		typeTraits[5] = new TypeTrait(4);
 		typeTraits[6] = new TypeTrait(8);
 
-		// declare value providers
-		IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-		valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE
-				.createPrimitiveValueProvider();
-		valueProviders[1] = valueProviders[0];
-		valueProviders[2] = valueProviders[0];
-		valueProviders[3] = valueProviders[0];
+		// create value providers
+		IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.comparatorsToPrimitiveValueProviderFactories(cmps); 
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps,
-				valueProviders);
+		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 				typeTraits);
 
 		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -137,8 +133,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, fileId, 0, metaFrameFactory);
 
-		RTree rtree = new RTree(bufferCache, freePageManager,
-				interiorFrameFactory, leafFrameFactory, cmp);
+		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
+				interiorFrameFactory, leafFrameFactory);
 		rtree.create(fileId, leafFrame, metaFrame);
 		rtree.open(fileId);
 
@@ -298,24 +294,18 @@ public class RTreeTest extends AbstractRTreeTest {
 		typeTraits[5] = new TypeTrait(4);
 		typeTraits[6] = new TypeTrait(8);
 
-		// declare value providers
-		IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-		valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE
-				.createPrimitiveValueProvider();
-		valueProviders[1] = valueProviders[0];
-		valueProviders[2] = valueProviders[0];
-		valueProviders[3] = valueProviders[0];
+		// create value providers
+		IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.comparatorsToPrimitiveValueProviderFactories(cmps); 
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps,
-				valueProviders);
+		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 				typeTraits);
 
 		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -325,8 +315,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, fileId, 0, metaFrameFactory);
 
-		RTree rtree = new RTree(bufferCache, freePageManager,
-				interiorFrameFactory, leafFrameFactory, cmp);
+		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
+				interiorFrameFactory, leafFrameFactory);
 		rtree.create(fileId, leafFrame, metaFrame);
 		rtree.open(fileId);
 
@@ -522,26 +512,18 @@ public class RTreeTest extends AbstractRTreeTest {
 		typeTraits[7] = new TypeTrait(4);
 		typeTraits[8] = new TypeTrait(8);
 
-		// declare value providers
-		IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-		valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE
-				.createPrimitiveValueProvider();
-		valueProviders[1] = valueProviders[0];
-		valueProviders[2] = valueProviders[0];
-		valueProviders[3] = valueProviders[0];
-		valueProviders[4] = valueProviders[0];
-		valueProviders[5] = valueProviders[0];
+		// create value providers
+		IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.comparatorsToPrimitiveValueProviderFactories(cmps); 
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps,
-				valueProviders);
+		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 				typeTraits);
 
 		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -551,8 +533,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, fileId, 0, metaFrameFactory);
 
-		RTree rtree = new RTree(bufferCache, freePageManager,
-				interiorFrameFactory, leafFrameFactory, cmp);
+		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
+				interiorFrameFactory, leafFrameFactory);
 		rtree.create(fileId, leafFrame, metaFrame);
 		rtree.open(fileId);
 
@@ -721,24 +703,18 @@ public class RTreeTest extends AbstractRTreeTest {
 		typeTraits[5] = new TypeTrait(4);
 		typeTraits[6] = new TypeTrait(8);
 
-		// declare value providers
-		IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-		valueProviders[0] = IntegerPrimitiveValueProviderFactory.INSTANCE
-				.createPrimitiveValueProvider();
-		valueProviders[1] = valueProviders[0];
-		valueProviders[2] = valueProviders[0];
-		valueProviders[3] = valueProviders[0];
+		// create value providers
+		IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.comparatorsToPrimitiveValueProviderFactories(cmps); 
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps,
-				valueProviders);
+		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
 
 		RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 				typeTraits);
 
 		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				tupleWriterFactory, keyFieldCount);
+				tupleWriterFactory, valueProviderFactories);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 		ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -748,8 +724,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(
 				bufferCache, fileId, 0, metaFrameFactory);
 
-		RTree rtree = new RTree(bufferCache, freePageManager,
-				interiorFrameFactory, leafFrameFactory, cmp);
+		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
+				interiorFrameFactory, leafFrameFactory);
 		rtree.create(fileId, leafFrame, metaFrame);
 		rtree.open(fileId);
 

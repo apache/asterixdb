@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -31,8 +32,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
 public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame {
 
-    public RTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
-        super(tupleWriter, keyFieldCount);
+    public RTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
+        super(tupleWriter, keyValueProviders);
     }
 
     @Override
@@ -84,16 +85,16 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
                 frameTuple.resetByTupleIndex(this, k);
 
-                double LowerKey = cmp.getValueProviders()[i].getValue(frameTuple.getFieldData(i),
+                double LowerKey = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
                         frameTuple.getFieldStart(i));
-                double UpperKey = cmp.getValueProviders()[j].getValue(frameTuple.getFieldData(j),
+                double UpperKey = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
                         frameTuple.getFieldStart(j));
 
                 tupleEntries1.add(k, LowerKey);
                 tupleEntries2.add(k, UpperKey);
             }
-            double LowerKey = cmp.getValueProviders()[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
-            double UpperKey = cmp.getValueProviders()[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
+            double LowerKey = keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
+            double UpperKey = keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
 
             tupleEntries1.add(-1, LowerKey);
             tupleEntries2.add(-1, UpperKey);
@@ -130,11 +131,11 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
         for (int i = 0; i < getTupleCount(); ++i) {
             frameTuple.resetByTupleIndex(this, i);
-            double key = cmp.getValueProviders()[splitAxis + sortOrder].getValue(
+            double key = keyValueProviders[splitAxis + sortOrder].getValue(
                     frameTuple.getFieldData(splitAxis + sortOrder), frameTuple.getFieldStart(splitAxis + sortOrder));
             tupleEntries1.add(i, key);
         }
-        double key = cmp.getValueProviders()[splitAxis + sortOrder].getValue(tuple.getFieldData(splitAxis + sortOrder),
+        double key = keyValueProviders[splitAxis + sortOrder].getValue(tuple.getFieldData(splitAxis + sortOrder),
                 tuple.getFieldStart(splitAxis + sortOrder));
         tupleEntries1.add(-1, key);
         tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount() + 1);
