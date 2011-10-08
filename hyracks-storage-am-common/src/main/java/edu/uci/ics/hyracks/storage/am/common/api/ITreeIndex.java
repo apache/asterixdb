@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public interface ITreeIndex {
 	// init:
@@ -32,16 +31,16 @@ public interface ITreeIndex {
 
 	// operations:
 
-	public void insert(ITupleReference tuple, IndexOpContext ictx)
+	public void insert(ITupleReference tuple, IIndexOpContext ictx)
 			throws HyracksDataException, TreeIndexException;
 
-	public void update(ITupleReference tuple, IndexOpContext ictx)
+	public void update(ITupleReference tuple, IIndexOpContext ictx)
 			throws HyracksDataException, TreeIndexException;
 
-	public void delete(ITupleReference tuple, IndexOpContext ictx)
+	public void delete(ITupleReference tuple, IIndexOpContext ictx)
 			throws HyracksDataException, TreeIndexException;
 
-	public IndexOpContext createOpContext(IndexOp op,
+	public IIndexOpContext createOpContext(IndexOp op,
 			ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
 			ITreeIndexMetaDataFrame metaFrame);
 
@@ -49,7 +48,7 @@ public interface ITreeIndex {
 
 	public IIndexBulkLoadContext beginBulkLoad(float fillFactor,
 			ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-			ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException;
+			ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException, HyracksDataException;
 
 	public void bulkLoadAddTuple(IIndexBulkLoadContext ictx,
 			ITupleReference tuple) throws HyracksDataException;
@@ -60,7 +59,7 @@ public interface ITreeIndex {
 	// search:
 	public void diskOrderScan(ITreeIndexCursor icursor,
 			ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-			IndexOpContext ictx) throws HyracksDataException;
+			IIndexOpContext ictx) throws HyracksDataException;
 
 	// utility:
 

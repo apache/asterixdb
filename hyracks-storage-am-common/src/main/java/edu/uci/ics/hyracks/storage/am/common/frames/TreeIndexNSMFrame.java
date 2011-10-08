@@ -324,11 +324,6 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void setPageTupleFieldCount(int fieldCount) {
-        frameTuple.setFieldCount(fieldCount);
-    }
-
-    @Override
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }

@@ -27,9 +27,9 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends
 		AbstractUnaryOutputSourceOperatorNodePushable {
@@ -52,7 +52,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends
 				.createDiskOrderScanCursor(cursorFrame);
 		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 
-		IndexOpContext diskOrderScanOpCtx = treeIndexOpHelper
+		IIndexOpContext diskOrderScanOpCtx = treeIndexOpHelper
 				.getTreeIndex()
 				.createOpContext(IndexOp.DISKORDERSCAN, cursorFrame, null, null);
 		try {

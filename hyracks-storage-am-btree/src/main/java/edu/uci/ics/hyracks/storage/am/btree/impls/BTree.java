@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableExcepti
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -40,7 +41,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -56,7 +56,6 @@ public class BTree implements ITreeIndex {
     private final static int rootPage = 1;    
         
     private boolean created = false;
-    private boolean loaded = false;
 
     private final IFreePageManager freePageManager;
     private final IBufferCache bufferCache;    
@@ -95,7 +94,7 @@ public class BTree implements ITreeIndex {
 
     @Override
     public void open(int fileId) {
-        this.fileId = fileId;
+    	this.fileId = fileId;
     }
 
     @Override
@@ -115,7 +114,7 @@ public class BTree implements ITreeIndex {
     
     @Override
     public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-            IndexOpContext ictx) throws HyracksDataException {
+            IIndexOpContext ictx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         BTreeOpContext ctx = (BTreeOpContext) ictx;
         ctx.reset();
@@ -246,7 +245,7 @@ public class BTree implements ITreeIndex {
         }
     }
     
-    private void insertUpdateOrDelete(ITupleReference tuple, IndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    private void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         BTreeOpContext ctx = (BTreeOpContext) ictx;
         ctx.reset();
         ctx.pred.setLowKeyComparator(cmp);
@@ -284,12 +283,12 @@ public class BTree implements ITreeIndex {
     }
     
     @Override
-    public void insert(ITupleReference tuple, IndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         insertUpdateOrDelete(tuple, ictx);
     }
 
     @Override
-    public void update(ITupleReference tuple, IndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    public void update(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // This call only allows updating of non-key fields.
         // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
@@ -300,13 +299,13 @@ public class BTree implements ITreeIndex {
     }
     
     @Override
-    public void delete(ITupleReference tuple, IndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         insertUpdateOrDelete(tuple, ictx);
     }
     
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
+        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
         int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
@@ -363,7 +362,7 @@ public class BTree implements ITreeIndex {
                 IBTreeLeafFrame rightFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
                 rightFrame.setPage(rightNode);
                 rightFrame.initBuffer((byte) 0);
-                rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
+                //rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
                 int ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
 
@@ -417,7 +416,7 @@ public class BTree implements ITreeIndex {
     
     private void updateLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
+        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
         int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(tuple, cmp);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex, cmp);
         switch (spaceStatus) {
@@ -463,7 +462,6 @@ public class BTree implements ITreeIndex {
     private void insertInterior(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx)
             throws Exception {
         ctx.interiorFrame.setPage(node);
-        ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
         int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple, cmp);
         FrameOpSpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
@@ -475,7 +473,6 @@ public class BTree implements ITreeIndex {
                     ITreeIndexFrame rightFrame = interiorFrameFactory.createFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
-                    rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
                     // instead of creating a new split key, use the existing
                     // splitKey
                     int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), cmp, ctx.splitKey);
@@ -923,12 +920,14 @@ public class BTree implements ITreeIndex {
     // assumes btree has been created and opened
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
-            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        if (loaded) {
-            throw new HyracksDataException("Trying to bulk-load BTree but BTree has already been loaded.");
-        }
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame) leafFrame,
-                (IBTreeInteriorFrame) interiorFrame, metaFrame);
+            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException, HyracksDataException {
+        
+    	if (!isEmptyTree((IBTreeLeafFrame)leafFrame)) {
+    		throw new BTreeException("Trying to Bulk-load a non-empty BTree.");
+    	}
+    	
+        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame)leafFrame,
+                (IBTreeInteriorFrame)interiorFrame, metaFrame);
         ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFieldCount());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
@@ -1008,7 +1007,6 @@ public class BTree implements ITreeIndex {
                 bufferCache.unpin(ctx.nodeFrontiers.get(i).page);
             }
         }
-        loaded = true;
     }
 
     @Override
@@ -1053,6 +1051,22 @@ public class BTree implements ITreeIndex {
         try {
             leafFrame.setPage(rootNode);
             return leafFrame.getLevel();
+        } finally {
+            rootNode.releaseReadLatch();
+            bufferCache.unpin(rootNode);
+        }
+    }
+    
+    public boolean isEmptyTree(IBTreeLeafFrame leafFrame) throws HyracksDataException {
+    	ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+        rootNode.acquireReadLatch();
+        try {
+            leafFrame.setPage(rootNode);
+            if (leafFrame.getLevel() == 0 && leafFrame.getTupleCount() == 0) {
+            	return true;
+            } else {
+            	return false;
+            }
         } finally {
             rootNode.releaseReadLatch();
             bufferCache.unpin(rootNode);

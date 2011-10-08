@@ -18,12 +18,12 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
-public final class RTreeOpContext implements IndexOpContext {
+public final class RTreeOpContext implements IIndexOpContext {
 	public final IndexOp op;
 	public final IRTreeInteriorFrame interiorFrame;
 	public final IRTreeLeafFrame leafFrame;

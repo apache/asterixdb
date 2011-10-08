@@ -25,12 +25,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-    public void setPage(ICachedPage page);
-
-    public ICachedPage getPage();
-
-    public ByteBuffer getBuffer();
-
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
     
     public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
@@ -65,6 +59,12 @@ public interface ITreeIndexFrame {
 
     public int getPageLsn();
 
+    public void setPage(ICachedPage page);
+
+    public ICachedPage getPage();
+
+    public ByteBuffer getBuffer();
+    
     // for debugging
     public void printHeader();
 
@@ -88,14 +88,12 @@ public interface ITreeIndexFrame {
 
     public void setLevel(byte level);
 
-    public boolean getSmFlag(); // structure modification flag
+    // structure modification flag
+    public boolean getSmFlag();
 
     public void setSmFlag(boolean smFlag);
 
     public int getSlotSize();
-
-    // TODO: should be removed after new tuple format
-    public void setPageTupleFieldCount(int fieldCount);
 
     // for debugging
     public int getFreeSpaceOff();

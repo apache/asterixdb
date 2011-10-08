@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
@@ -65,7 +66,7 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 		loadData();
 	}
 
-	public void loadData() throws HyracksDataException {
+	public void loadData() throws HyracksDataException, TreeIndexException {
 		tokens.add("compilers");
 		tokens.add("computer");
 		tokens.add("databases");

@@ -715,10 +715,10 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return slotManager.getSlotSize();
     }
 
-    @Override
-    public void setPageTupleFieldCount(int fieldCount) {
-        frameTuple.setFieldCount(fieldCount);
-    }
+    //@Override
+    //public void setPageTupleFieldCount(int fieldCount) {
+    //    frameTuple.setFieldCount(fieldCount);
+    //}
 
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;

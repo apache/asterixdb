@@ -31,11 +31,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -246,7 +246,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void insert(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
@@ -638,7 +638,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void delete(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
@@ -870,7 +870,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void update(ITupleReference tuple, IndexOpContext ictx) throws Exception {
+    public void update(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
         throw new Exception("RTree Update not implemented.");
     }
 
@@ -912,7 +912,7 @@ public class RTree implements ITreeIndex {
 
     @Override
     public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-            IndexOpContext ictx) throws HyracksDataException {
+            IIndexOpContext ictx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();

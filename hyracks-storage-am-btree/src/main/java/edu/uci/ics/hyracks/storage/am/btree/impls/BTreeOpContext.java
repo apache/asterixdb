@@ -19,11 +19,11 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 
-public final class BTreeOpContext implements IndexOpContext {
+public final class BTreeOpContext implements IIndexOpContext {
     public IndexOp op;
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;

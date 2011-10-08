@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -388,7 +389,7 @@ public class BTreeTestUtils {
         bulkLoadCheckTuples(testCtx, numTuples);
     }
     
-    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException {
+    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException {
         int numFields = testCtx.getFieldCount();
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(numFields);
         ArrayTupleReference tuple = new ArrayTupleReference();

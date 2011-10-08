@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
@@ -74,7 +75,7 @@ public class InvertedIndex {
     }
 
     public BulkLoadContext beginBulkLoad(IInvertedListBuilder invListBuilder, int hyracksFrameSize,
-            float btreeFillFactor) throws HyracksDataException {
+            float btreeFillFactor) throws HyracksDataException, TreeIndexException {
         BulkLoadContext ctx = new BulkLoadContext(invListBuilder, hyracksFrameSize, btreeFillFactor);
         ctx.init(rootPageId, fileId);
         return ctx;
@@ -260,7 +261,7 @@ public class InvertedIndex {
             this.btreeFillFactor = btreeFillFactor;
         }
 
-        public void init(int startPageId, int fileId) throws HyracksDataException {
+        public void init(int startPageId, int fileId) throws HyracksDataException, TreeIndexException {
             btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR,
                     btree.getLeafFrameFactory().createFrame(), btree.getInteriorFrameFactory().createFrame(), btree
                             .getFreePageManager().getMetaDataFrameFactory().createFrame());

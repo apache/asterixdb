@@ -24,9 +24,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 		AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -36,7 +36,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 	private final IndexOp op;
 	private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 	private ByteBuffer writeBuffer;
-	private IndexOpContext opCtx;
+	private IIndexOpContext opCtx;
 
 	public TreeIndexInsertUpdateDeleteOperatorNodePushable(
 			AbstractTreeIndexOperatorDescriptor opDesc,
