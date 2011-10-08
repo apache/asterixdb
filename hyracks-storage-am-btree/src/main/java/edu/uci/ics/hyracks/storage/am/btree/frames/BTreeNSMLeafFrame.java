@@ -73,7 +73,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is an exact match.
-        if (slotManager.isErrorTupleIndex(tupleIndex)) {
+        if (tupleIndex == slotManager.getErrorIndicator()) {
             throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
         }
         return tupleIndex;
@@ -85,7 +85,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
-        if (slotManager.isErrorTupleIndex(tupleIndex)) {
+        if (tupleIndex == slotManager.getErrorIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
         }        
         return tupleIndex;
@@ -97,7 +97,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
-        if (slotManager.isErrorTupleIndex(tupleIndex)) {
+        if (tupleIndex == slotManager.getErrorIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }        
         return tupleIndex;
@@ -124,8 +124,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
 
         frameTuple.setFieldCount(cmp.getFieldCount());
 
@@ -165,7 +164,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         compact(cmp);
 
         // insert last key
-        int targetTupleIndex = targetFrame.findInsertTupleIndex(tuple, cmp);
+        int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
         targetFrame.insert(tuple, cmp, targetTupleIndex);
 
         // set split key to be highest value in left page
@@ -200,5 +199,20 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public int getPageHeaderSize() {
         return nextLeafOff;
+    }
+
+    // TODO: can we put these into a common AbstractFrame or something?
+    @Override
+    public boolean getSmFlag() {
+        return buf.get(smFlagOff) != 0;
+    }
+
+    // TODO: can we put these into a common AbstractFrame or something?
+    @Override
+    public void setSmFlag(boolean smFlag) {
+        if (smFlag)
+            buf.put(smFlagOff, (byte) 1);
+        else
+            buf.put(smFlagOff, (byte) 0);
     }
 }

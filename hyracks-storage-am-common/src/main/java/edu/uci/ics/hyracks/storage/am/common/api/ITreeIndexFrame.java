@@ -25,15 +25,9 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex);    
     
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
-
-    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
-    
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);
-
-    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
     
     public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
 
@@ -71,8 +65,7 @@ public interface ITreeIndexFrame {
     public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
 
     // TODO; what if tuples more than half-page size?
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception;
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException;
 
     public ISlotManager getSlotManager();
 
@@ -87,11 +80,6 @@ public interface ITreeIndexFrame {
     public byte getLevel();
 
     public void setLevel(byte level);
-
-    // structure modification flag
-    public boolean getSmFlag();
-
-    public void setSmFlag(boolean smFlag);
 
     public int getSlotSize();
 

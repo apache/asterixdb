@@ -25,9 +25,9 @@ public interface ISlotManager {
 			ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
 			FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
 
-	public boolean isHighestTupleIndex(int tupleIndex);
+	public int getGreatestKeyIndicator();
 	
-	public boolean isErrorTupleIndex(int tupleIndex);
+	public int getErrorIndicator();
 
 	public void setFrame(ITreeIndexFrame frame);
 	

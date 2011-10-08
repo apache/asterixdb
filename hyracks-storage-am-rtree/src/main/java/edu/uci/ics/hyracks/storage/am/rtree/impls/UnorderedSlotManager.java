@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 
 public class UnorderedSlotManager extends AbstractSlotManager {
+	
 	@Override
 	public int findTupleIndex(ITupleReference searchKey,
 			ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,

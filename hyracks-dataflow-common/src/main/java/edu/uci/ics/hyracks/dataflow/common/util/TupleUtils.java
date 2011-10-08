@@ -15,6 +15,9 @@
 
 package edu.uci.ics.hyracks.dataflow.common.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -60,5 +63,22 @@ public class TupleUtils {
         ArrayTupleReference tuple = new ArrayTupleReference();
         createIntegerTuple(tupleBuilder, tuple, fields);
         return tuple;
-    }    
+    }
+    
+    public static String printTuple(ITupleReference tuple,
+            ISerializerDeserializer[] fields) throws HyracksDataException {
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < fields.length; i++) {
+            ByteArrayInputStream inStream = new ByteArrayInputStream(
+                    tuple.getFieldData(i), tuple.getFieldStart(i),
+                    tuple.getFieldLength(i));
+            DataInput dataIn = new DataInputStream(inStream);
+            Object o = fields[i].deserialize(dataIn);
+            strBuilder.append(o.toString());
+            if (i != fields.length - 1) {
+                strBuilder.append(" ");
+            }
+        }
+        return strBuilder.toString();
+    }
 }

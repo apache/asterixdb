@@ -45,6 +45,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryCompara
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -200,7 +201,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -218,7 +219,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -273,7 +274,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -405,7 +406,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -465,7 +466,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -583,7 +584,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -638,7 +639,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -825,7 +826,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = btree.getMultiComparator().printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 scanResults.append("\n" + rec);
             }
         } catch (Exception e) {
@@ -1162,7 +1163,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {
@@ -1318,7 +1319,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 // TODO: fix me.
                 //print(rec + "\n");
             }
@@ -1379,7 +1380,7 @@ public class BTreeTest extends AbstractBTreeTest {
             while (rangeCursor.hasNext()) {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
                 LOGGER.info(rec);
             }
         } catch (Exception e) {

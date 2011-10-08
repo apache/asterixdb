@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -239,7 +240,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
-				String rec = cmp.printTuple(frameTuple, recDescSers);
+				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
 				print(rec + "\n");
 			}
 		} catch (Exception e) {
@@ -662,7 +663,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
-				String rec = cmp.printTuple(frameTuple, recDescSers);
+				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
 				print(rec + "\n");
 			}
 		} catch (Exception e) {
@@ -850,7 +851,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
-				String rec = cmp.printTuple(frameTuple, recDescSers);
+				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
 				print(rec + "\n");
 			}
 		} catch (Exception e) {

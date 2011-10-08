@@ -15,21 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 
 public class MultiComparator {
-
-	private static final long serialVersionUID = 1L;
 
 	private IBinaryComparator[] cmps = null;
 	private ITypeTrait[] typeTraits;
@@ -81,23 +73,6 @@ public class MultiComparator {
 				return 1;
 		}
 		return 0;
-	}
-
-	public String printTuple(ITupleReference tuple,
-			ISerializerDeserializer[] fields) throws HyracksDataException {
-		StringBuilder strBuilder = new StringBuilder();
-		for (int i = 0; i < fields.length; i++) {
-			ByteArrayInputStream inStream = new ByteArrayInputStream(
-					tuple.getFieldData(i), tuple.getFieldStart(i),
-					tuple.getFieldLength(i));
-			DataInput dataIn = new DataInputStream(inStream);
-			Object o = fields[i].deserialize(dataIn);
-			strBuilder.append(o.toString());
-			if (i != fields.length - 1) {
-				strBuilder.append(" ");
-			}
-		}
-		return strBuilder.toString();
 	}
 
 	public IBinaryComparator[] getComparators() {

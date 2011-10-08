@@ -87,19 +87,6 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public boolean getSmFlag() {
-        return buf.get(smFlagOff) != 0;
-    }
-
-    @Override
-    public void setSmFlag(boolean smFlag) {
-        if (smFlag)
-            buf.put(smFlagOff, (byte) 1);
-        else
-            buf.put(smFlagOff, (byte) 0);
-    }
-
-    @Override
     public int getFreeSpaceOff() {
         return buf.getInt(freeSpaceOff);
     }

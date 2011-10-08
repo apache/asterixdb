@@ -26,13 +26,14 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -196,7 +197,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws Exception {
+    public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
         if (created)
             return;
 
@@ -246,15 +247,15 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
+    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.splitKey.getRightTuple().setFieldCount(cmp.getKeyFieldCount());
-        ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-        ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
+        //ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
+        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
@@ -286,7 +287,7 @@ public class RTree implements ITreeIndex {
         incrementUnpins();
     }
 
-    public ICachedPage findLeaf(RTreeOpContext ctx) throws Exception {
+    public ICachedPage findLeaf(RTreeOpContext ctx) throws HyracksDataException {
         int pageId = rootPage;
         boolean writeLatched = false;
         ICachedPage node = null;
@@ -396,7 +397,7 @@ public class RTree implements ITreeIndex {
     }
 
     private void insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
-            throws Exception {
+            throws HyracksDataException, TreeIndexException {
     	FrameOpSpaceStatus spaceStatus;
         if (!isLeaf) {
             spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
@@ -451,7 +452,7 @@ public class RTree implements ITreeIndex {
                         rightFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
-                        rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
+                        //rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
                         ret = ctx.interiorFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
                         ctx.interiorFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
@@ -465,7 +466,7 @@ public class RTree implements ITreeIndex {
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
-                        rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
+                        //rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
                         ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
@@ -529,7 +530,7 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void updateParentForInsert(RTreeOpContext ctx) throws Exception {
+    public void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
         incrementPins();
@@ -585,7 +586,7 @@ public class RTree implements ITreeIndex {
         updateParentForInsert(ctx);
     }
 
-    public void findPath(RTreeOpContext ctx) throws Exception {
+    public void findPath(RTreeOpContext ctx) throws HyracksDataException {
         int pageId = rootPage;
         int parentIndex = -1;
         int parentLsn = 0;
@@ -630,7 +631,7 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void fillPath(RTreeOpContext ctx, int pageIndex) throws Exception {
+    public void fillPath(RTreeOpContext ctx, int pageIndex) {
         if (pageIndex != -1) {
             fillPath(ctx, ctx.traverseList.getPageIndex(pageIndex));
             ctx.pathList.add(ctx.traverseList.getPageId(pageIndex), ctx.traverseList.getPageLsn(pageIndex), -1);
@@ -638,14 +639,14 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
+    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
-        ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-        ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
+        //ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
+        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
         int tupleIndex = findTupleToDelete(ctx);
 
@@ -669,7 +670,7 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void updateParentForDelete(RTreeOpContext ctx) throws Exception {
+    public void updateParentForDelete(RTreeOpContext ctx) throws HyracksDataException {
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
         incrementPins();
@@ -745,7 +746,7 @@ public class RTree implements ITreeIndex {
         updateParentForDelete(ctx);
     }
 
-    public int findTupleToDelete(RTreeOpContext ctx) throws Exception {
+    public int findTupleToDelete(RTreeOpContext ctx) throws HyracksDataException {
 
         ctx.traverseList.add(rootPage, -1, -1);
         ctx.pathList.add(rootPage, -1, ctx.traverseList.size() - 1);
@@ -831,7 +832,7 @@ public class RTree implements ITreeIndex {
         return -1;
     }
 
-    public void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws Exception {
+    public void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws HyracksDataException {
         ctx.leafFrame.delete(tupleIndex, cmp);
         incrementGlobalNsn();
         ctx.leafFrame.setPageLsn(getGlobalNsn());
@@ -870,8 +871,8 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void update(ITupleReference tuple, IIndexOpContext ictx) throws Exception {
-        throw new Exception("RTree Update not implemented.");
+    public void update(ITupleReference tuple, IIndexOpContext ictx) {
+        throw new UnsupportedOperationException("RTree Update not implemented.");
     }
 
     public final class BulkLoadContext implements IIndexBulkLoadContext {

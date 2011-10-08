@@ -144,8 +144,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
         // before doing anything check if key already exists
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
 
@@ -200,7 +199,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         compact(cmp);
 
         // insert key
-        int targetTupleIndex = targetFrame.findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
+        int targetTupleIndex = ((BTreeNSMInteriorFrame)targetFrame).findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
         targetFrame.insert(savedSplitKey.getTuple(), cmp, targetTupleIndex);
 
         return 0;
@@ -284,7 +283,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
-        if (slotManager.isHighestTupleIndex(tupleIndex)) {
+        if (tupleIndex == slotManager.getGreatestKeyIndicator()) {
             return buf.getInt(rightLeafOff);
         } else {
             int origTupleOff = slotManager.getTupleOff(slotOff);
@@ -326,7 +325,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff;
         int keySize;
-        if (slotManager.isHighestTupleIndex(tupleIndex)) {
+        if (tupleIndex == slotManager.getGreatestKeyIndicator()) {
             tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
             frameTuple.resetByTupleOffset(buf, tupleOff);
             keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
@@ -444,5 +443,20 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public int getPageHeaderSize() {
         return rightLeafOff;
+    }
+    
+    // TODO: can we put these into a common AbstractFrame or something?
+    @Override
+    public boolean getSmFlag() {
+        return buf.get(smFlagOff) != 0;
+    }
+
+    // TODO: can we put these into a common AbstractFrame or something?
+    @Override
+    public void setSmFlag(boolean smFlag) {
+        if (smFlag)
+            buf.put(smFlagOff, (byte) 1);
+        else
+            buf.put(smFlagOff, (byte) 0);
     }
 }

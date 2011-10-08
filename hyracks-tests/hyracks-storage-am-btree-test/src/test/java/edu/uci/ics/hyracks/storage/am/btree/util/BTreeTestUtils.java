@@ -287,7 +287,7 @@ public class BTreeTestUtils {
                 tupleValues[j] = j;
             }
             TupleUtils.createIntegerTuple(testCtx.tupleBuilder, testCtx.tuple, tupleValues);
-            if ((i + 1) % (numTuples / 10) == 0) {
+            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                 LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
             }
             try {
@@ -311,7 +311,7 @@ public class BTreeTestUtils {
         BTreeOpContext insertOpCtx = testCtx.btree.createOpContext(IndexOp.INSERT, testCtx.leafFrame, testCtx.interiorFrame, testCtx.metaFrame);
         Object[] tupleValues = new Object[numFields];
         for (int i = 0; i < numTuples; i++) {
-            if ((i + 1) % (numTuples / 10) == 0) {
+            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                 LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
             }
             // Set keys.
@@ -419,7 +419,7 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / 10) == 0) {
+            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                 LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
@@ -457,7 +457,7 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / 10) == 0) {
+            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                 LOGGER.info("Updating Tuple " + (i + 1) + "/" + numTuples);
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);

@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -64,11 +65,11 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
 
-        rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
-        frameTuple.setFieldCount(cmp.getFieldCount());
+        // TODO: ALEX CHANGES
+    	//rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
+        //frameTuple.setFieldCount(cmp.getFieldCount());
 
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -224,7 +225,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
+    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
         frameTuple.setFieldCount(cmp.getFieldCount());
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
@@ -235,7 +236,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public void delete(int tupleIndex, MultiComparator cmp) throws Exception {
+    public void delete(int tupleIndex, MultiComparator cmp) {
         frameTuple.setFieldCount(cmp.getFieldCount());
         int slotOff = slotManager.getSlotOff(tupleIndex);
 

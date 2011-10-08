@@ -369,17 +369,12 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.INCLUSIVE,
+    	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
-            frameTuple.setFieldCount(cmp.getFieldCount());
-            frameTuple.resetByTupleIndex(this, tupleIndex);
-            int comparison = cmp.fieldRangeCompare(tuple, frameTuple, 0, cmp.getKeyFieldCount());
-            if (comparison == 0) {
-                throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
-            }
+        // Error indicator is set if there is an exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
+            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
         }
         return slot;
     }
@@ -388,11 +383,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
+        // Error indicator is set if there is no exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
-        }
+        }    
         return slot;
     }
     
@@ -400,11 +395,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        // TODO: Push this check into findSlot, and distinguish between greatest slot and errors.
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
+        // Error indicator is set if there is no exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
-        }
+        }    
         return slot;
     }
     
@@ -528,7 +523,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             prefixSlotNum = buf.getInt(prefixTupleCountOff) - 1;
         else
             buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
-        int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_SLOT);
+        int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_KEY_INDICATOR);
         slotManager.insertSlot(insSlot, freeSpace);
 
         // update page metadata
@@ -539,7 +534,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
+    		throws TreeIndexException {
 
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
 
@@ -654,7 +649,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         rightFrame.compact(cmp);
 
         // insert last key
-        int targetTupleIndex = targetFrame.findInsertTupleIndex(tuple, cmp);
+        int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
         targetFrame.insert(tuple, cmp, targetTupleIndex);
 
         // set split key to be highest value in left page
@@ -715,11 +710,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return slotManager.getSlotSize();
     }
 
-    //@Override
-    //public void setPageTupleFieldCount(int fieldCount) {
-    //    frameTuple.setFieldCount(fieldCount);
-    //}
-
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
@@ -734,7 +724,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
         int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT)
+        // TODO: Revisit this one. Maybe there is a cleaner way to solve this in the RangeSearchCursor.
+        if (tupleIndex == FieldPrefixSlotManager.GREATEST_KEY_INDICATOR || tupleIndex == FieldPrefixSlotManager.ERROR_INDICATOR)
             return -1;
         else
             return tupleIndex;

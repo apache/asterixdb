@@ -17,13 +17,12 @@ package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public interface IBTreeLeafFrame extends ITreeIndexFrame {
+public interface IBTreeLeafFrame extends IBTreeFrame {
     public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
     
     public void setNextLeaf(int nextPage);

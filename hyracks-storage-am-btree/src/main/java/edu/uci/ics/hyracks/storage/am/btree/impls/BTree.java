@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
@@ -119,7 +120,7 @@ public class BTree implements ITreeIndex {
         BTreeOpContext ctx = (BTreeOpContext) ictx;
         ctx.reset();
 
-        int currentPageId = rootPage + 1;
+        int currentPageId = rootPage;
         int maxPageId = freePageManager.getMaxPage(metaFrame);
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
@@ -143,10 +144,12 @@ public class BTree implements ITreeIndex {
         ctx.pred = pred;
         ctx.cursor = cursor;
         // simple index scan
-        if (ctx.pred.getLowKeyComparator() == null)
+        if (ctx.pred.getLowKeyComparator() == null) {
             ctx.pred.setLowKeyComparator(cmp);
-        if (ctx.pred.getHighKeyComparator() == null)
+        }
+        if (ctx.pred.getHighKeyComparator() == null) {
             ctx.pred.setHighKeyComparator(cmp);
+        }
         // we use this loop to deal with possibly multiple operation restarts
         // due to ongoing structure modifications during the descent
         boolean repeatOp = true;
@@ -253,7 +256,7 @@ public class BTree implements ITreeIndex {
         ctx.pred.setLowKey(tuple, true);
         ctx.pred.setHighKey(tuple, true);
         ctx.splitKey.reset();
-        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());        
+        ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         // We use this loop to deal with possibly multiple operation restarts
         // due to ongoing structure modifications during the descent.
         boolean repeatOp = true;
@@ -359,10 +362,9 @@ public class BTree implements ITreeIndex {
                     true);
             rightNode.acquireWriteLatch();
             try {
-                IBTreeLeafFrame rightFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+                IBTreeLeafFrame rightFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
                 rightFrame.setPage(rightNode);
                 rightFrame.initBuffer((byte) 0);
-                //rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
                 int ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
 
@@ -470,7 +472,7 @@ public class BTree implements ITreeIndex {
                 ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
                 rightNode.acquireWriteLatch();
                 try {
-                    ITreeIndexFrame rightFrame = interiorFrameFactory.createFrame();
+                    IBTreeFrame rightFrame = (IBTreeFrame)interiorFrameFactory.createFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                     // instead of creating a new split key, use the existing

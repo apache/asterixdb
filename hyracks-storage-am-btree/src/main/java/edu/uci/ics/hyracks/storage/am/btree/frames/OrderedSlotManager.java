@@ -24,9 +24,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class OrderedSlotManager extends AbstractSlotManager {
     
-    private final int HIGHEST_TUPLE_INDEX = -1;
-    private final int ERROR_TUPLE_INDEX = -2;
-    
 	@Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
@@ -56,7 +53,7 @@ public class OrderedSlotManager extends AbstractSlotManager {
                     }
                 } else {
                     if (mode == FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS) {
-                        return ERROR_TUPLE_INDEX;
+                        return ERROR_INDICATOR;
                     } else {
                         return mid;
                     }
@@ -65,28 +62,28 @@ public class OrderedSlotManager extends AbstractSlotManager {
         }
 
         if (mode == FindTupleMode.EXACT) {
-            return ERROR_TUPLE_INDEX;
+            return ERROR_INDICATOR;
         }
 
         if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
             if (begin > frame.getTupleCount() - 1) {
-                return HIGHEST_TUPLE_INDEX;
+                return GREATEST_KEY_INDICATOR;
             }
             frameTuple.resetByTupleIndex(frame, begin);
             if (multiCmp.compare(searchKey, frameTuple) < 0) {
                 return begin;
             } else {
-                return HIGHEST_TUPLE_INDEX;
+                return GREATEST_KEY_INDICATOR;
             }
         } else {
             if (end < 0) {
-                return HIGHEST_TUPLE_INDEX;
+                return GREATEST_KEY_INDICATOR;
             }
             frameTuple.resetByTupleIndex(frame, end);
             if (multiCmp.compare(searchKey, frameTuple) > 0) {
                 return end;
             } else {
-                return HIGHEST_TUPLE_INDEX;
+                return GREATEST_KEY_INDICATOR;
             }
         }
     }
@@ -94,7 +91,7 @@ public class OrderedSlotManager extends AbstractSlotManager {
     @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotOff(tupleIndex);
-        if (tupleIndex == HIGHEST_TUPLE_INDEX) {
+        if (tupleIndex == GREATEST_KEY_INDICATOR) {
             slotOff = getSlotEndOff() - slotSize;
             setSlot(slotOff, tupleOff);
             return slotOff;
@@ -106,15 +103,5 @@ public class OrderedSlotManager extends AbstractSlotManager {
             setSlot(slotOff, tupleOff);
             return slotOff;
         }
-    }
-
-    @Override
-    public boolean isHighestTupleIndex(int tupleIndex) {
-        return tupleIndex == HIGHEST_TUPLE_INDEX;
-    }
-
-    @Override
-    public boolean isErrorTupleIndex(int tupleIndex) {
-        return tupleIndex == ERROR_TUPLE_INDEX;
     }
 }
