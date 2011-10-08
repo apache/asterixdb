@@ -21,19 +21,17 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
-public class FieldPrefixCompressor implements IFrameCompressor {
+public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
     // minimum ratio of uncompressed tuples to total tuple to consider
     // re-compression
@@ -52,8 +50,9 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     }
 
     @Override
-    public boolean compress(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception {
-        int tupleCount = frame.getTupleCount();
+    public boolean compress(ITreeIndexFrame indexFrame, MultiComparator cmp) throws Exception {
+        BTreeFieldPrefixNSMLeafFrame frame = (BTreeFieldPrefixNSMLeafFrame)indexFrame;
+    	int tupleCount = frame.getTupleCount();
         if (tupleCount <= 0) {
             frame.setPrefixTupleCount(0);
             frame.setFreeSpaceOff(frame.getOrigFreeSpaceOff());

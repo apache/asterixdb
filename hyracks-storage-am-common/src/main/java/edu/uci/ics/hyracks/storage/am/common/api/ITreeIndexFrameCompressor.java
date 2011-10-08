@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public interface IFrameCompressor {
-    public boolean compress(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception;
+public interface ITreeIndexFrameCompressor {
+    public boolean compress(ITreeIndexFrame frame, MultiComparator cmp) throws Exception;
 }

@@ -53,6 +53,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
         this.slotManager = slotManager;
+        this.slotManager.setFrame(this);
     }
 
     @Override
@@ -112,7 +113,6 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public void setPage(ICachedPage page) {
         this.page = page;
         this.buf = page.getBuffer();
-        slotManager.setFrame(this);
     }
 
     @Override

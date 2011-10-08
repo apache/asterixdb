@@ -202,17 +202,14 @@ public class BTree implements ITreeIndex {
         // make sure the root is always at the same level
         ICachedPage leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()),
                 false);
-        // TODO: Think about whether latching is really required.
         leftNode.acquireWriteLatch();
         try {
             ICachedPage rightNode = bufferCache.pin(
                     BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getRightPage()), false);
-            // TODO: Think about whether latching is really required.
             rightNode.acquireWriteLatch();
             try {
                 int newLeftId = freePageManager.getFreePage(ctx.metaFrame);
                 ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId), true);
-                // TODO: Think about whether latching is really required.
                 newLeftNode.acquireWriteLatch();
                 try {
                     // copy left child to new left child
@@ -527,9 +524,7 @@ public class BTree implements ITreeIndex {
     // TODO: to avoid latch deadlock, must modify cursor to detect empty leaves
     private void deleteLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple, cmp);
-        
         // Will this leaf become empty?
         if (ctx.leafFrame.getTupleCount() == 1) {
             IBTreeLeafFrame siblingFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();

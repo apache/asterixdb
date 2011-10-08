@@ -26,8 +26,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -44,16 +42,14 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
 
     private static final int rightLeafOff = smFlagOff + 1;
-
     private static final int childPtrSize = 4;
 
     // private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
     private ITreeIndexTupleReference cmpFrameTuple;
 
-    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
-        super(tupleWriter, new OrderedSlotManager());
+    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {        
+    	super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
-
     }
 
     private int getLeftChildPageOff(ITupleReference tuple, MultiComparator cmp) {

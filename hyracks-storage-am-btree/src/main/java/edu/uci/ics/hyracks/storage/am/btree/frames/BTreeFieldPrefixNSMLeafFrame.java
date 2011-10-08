@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
@@ -38,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -67,7 +67,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
-    public IFrameCompressor compressor;
+    public ITreeIndexFrameCompressor compressor;
     // TODO: Should be protected, but will trigger some refactoring.
     public IPrefixSlotManager slotManager;
 
