@@ -37,13 +37,11 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
     @Override
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) {
-        frameTuple.setFieldCount(cmp.getFieldCount());
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
     }
 
     @Override
     public boolean intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
-        frameTuple.setFieldCount(cmp.getFieldCount());
         frameTuple.resetByTupleIndex(this, tupleIndex);
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
@@ -222,7 +220,6 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
     @Override
     public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
-        frameTuple.setFieldCount(cmp.getFieldCount());
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
 
@@ -233,7 +230,6 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
     @Override
     public void delete(int tupleIndex, MultiComparator cmp) {
-        frameTuple.setFieldCount(cmp.getFieldCount());
         int slotOff = slotManager.getSlotOff(tupleIndex);
 
         int tupleOff = slotManager.getTupleOff(slotOff);
@@ -253,7 +249,6 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     @Override
     public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp) {
         for (int i = 0; i < tuples.length; i++) {
-            tuples[i].setFieldCount(cmp.getFieldCount());
             tuples[i].resetByTupleIndex(this, 0);
         }
 

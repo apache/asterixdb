@@ -440,7 +440,7 @@ public class BTreeTestUtils {
     
     @SuppressWarnings("unchecked")
     public static void updateTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int fieldCount = testCtx.btree.getMultiComparator().getFieldCount();
+        int fieldCount = testCtx.btree.getFieldCount();
         int keyFieldCount = testCtx.btree.getMultiComparator().getKeyFieldCount();
         // This is a noop because we can only update non-key fields.
         if (fieldCount == keyFieldCount) {

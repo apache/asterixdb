@@ -67,6 +67,9 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
+
+    private final int fieldCount;
+    
     public ITreeIndexFrameCompressor compressor;
     // TODO: Should be protected, but will trigger some refactoring.
     public IPrefixSlotManager slotManager;
@@ -80,6 +83,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
+        this.fieldCount = typeTraits.length;
         this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
         this.slotManager = new FieldPrefixSlotManager();
         this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
@@ -119,8 +123,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     @Override
     public boolean compact(MultiComparator cmp) {
         resetSpaceParams();
-
-        frameTuple.setFieldCount(cmp.getFieldCount());
 
         int tupleCount = buf.getInt(tupleCountOff);
 
@@ -536,9 +538,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
     		throws TreeIndexException {
 
-        BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
-
-        frameTuple.setFieldCount(cmp.getFieldCount());
+        BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame)rightFrame;
 
         ByteBuffer right = rf.getBuffer();
         int tupleCount = getTupleCount();

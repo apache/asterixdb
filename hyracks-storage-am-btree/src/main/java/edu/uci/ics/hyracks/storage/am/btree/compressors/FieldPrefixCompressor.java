@@ -70,7 +70,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
             return false;
 
         IBinaryComparator[] cmps = cmp.getComparators();
-        int fieldCount = cmp.getFieldCount();
+        int fieldCount = typeTraits.length;
 
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
@@ -372,8 +372,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
     private ArrayList<KeyPartition> getKeyPartitions(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp,
             int occurrenceThreshold) {
         IBinaryComparator[] cmps = cmp.getComparators();
-        //int fieldCount = cmp.getKeyFieldCount();
-        int fieldCount = cmp.getFieldCount();
+        int fieldCount = typeTraits.length;
 
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();

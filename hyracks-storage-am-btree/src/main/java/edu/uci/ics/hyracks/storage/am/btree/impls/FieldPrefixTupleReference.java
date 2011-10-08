@@ -17,6 +17,7 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     public FieldPrefixTupleReference(ITreeIndexTupleReference helperTuple) {
         this.helperTuple = helperTuple;
+        this.fieldCount = helperTuple.getFieldCount();
     }
 
     @Override

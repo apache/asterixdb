@@ -79,8 +79,6 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         if (frame.getTupleCount() <= 0)
             encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_KEY_INDICATOR);
 
-        frameTuple.setFieldCount(multiCmp.getFieldCount());
-
         int prefixMid;
         int prefixBegin = 0;
         int prefixEnd = frame.getPrefixTupleCount() - 1;

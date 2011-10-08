@@ -145,7 +145,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
 		DataOutput dos = tb.getDataOutput();
 
 		@SuppressWarnings("rawtypes")

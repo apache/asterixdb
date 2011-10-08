@@ -192,7 +192,6 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 		}
 
 		pathList.add(this.rootPage, -1, -1);
-		frameTuple.setFieldCount(cmp.getFieldCount());
 		tupleIndex = 0;
 		fetchNextLeafPage();
 	}

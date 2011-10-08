@@ -59,7 +59,7 @@ public class UnorderedSlotManager extends AbstractSlotManager {
 					break;
 				}
 			}
-			int remainingFieldCount = multiCmp.getFieldCount()
+			int remainingFieldCount = frameTuple.getFieldCount()
 					- multiCmp.getKeyFieldCount();
 			for (int j = multiCmp.getKeyFieldCount(); j < multiCmp
 					.getKeyFieldCount() + remainingFieldCount; j++) {

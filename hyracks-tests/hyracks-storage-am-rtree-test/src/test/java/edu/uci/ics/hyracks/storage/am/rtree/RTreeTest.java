@@ -67,7 +67,6 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class RTreeTest extends AbstractRTreeTest {
-
 	private static final int PAGE_SIZE = 256;
 	private static final int NUM_PAGES = 10;
 	private static final int MAX_OPEN_FILES = 10;
@@ -145,7 +144,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
 		DataOutput dos = tb.getDataOutput();
 
 		@SuppressWarnings("rawtypes")
@@ -333,7 +332,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
 		DataOutput dos = tb.getDataOutput();
 
 		@SuppressWarnings("rawtypes")
@@ -559,7 +558,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
 		DataOutput dos = tb.getDataOutput();
 
 		@SuppressWarnings("rawtypes")
@@ -756,7 +755,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
 		FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
 		DataOutput dos = tb.getDataOutput();
 
 		@SuppressWarnings("rawtypes")

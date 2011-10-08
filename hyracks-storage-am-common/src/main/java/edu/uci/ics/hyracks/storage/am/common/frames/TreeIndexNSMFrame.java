@@ -115,8 +115,6 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     @Override
     public boolean compact(MultiComparator cmp) {
         resetSpaceParams();
-        frameTuple.setFieldCount(cmp.getFieldCount());
-
         int tupleCount = buf.getInt(tupleCountOff);
         int freeSpace = buf.getInt(freeSpaceOff);
 
@@ -150,14 +148,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
-        frameTuple.setFieldCount(cmp.getFieldCount());
-        // TODO: Fix me.
-        //int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.FTM_EXACT,
-        //        FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
-        //if (tupleIndex < 0) {
-        //    throw new TreeIndexException("Key to be deleted does not exist.");
-        //}
         int tupleOff = slotManager.getTupleOff(slotOff);
         frameTuple.resetByTupleOffset(buf, tupleOff);
         int tupleSize = tupleWriter.bytesRequired(frameTuple);
@@ -190,7 +181,6 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     @Override
     public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex, MultiComparator cmp) {
     	frameTuple.resetByTupleIndex(this, oldTupleIndex);
-    	frameTuple.setFieldCount(cmp.getFieldCount());
     	int oldTupleBytes = frameTuple.getTupleSize();
     	int newTupleBytes = tupleWriter.bytesRequired(newTuple);
     	int additionalBytesRequired = newTupleBytes - oldTupleBytes;

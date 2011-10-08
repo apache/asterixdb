@@ -254,8 +254,6 @@ public class RTree implements ITreeIndex {
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
         ctx.splitKey.getRightTuple().setFieldCount(cmp.getKeyFieldCount());
-        //ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
@@ -466,7 +464,6 @@ public class RTree implements ITreeIndex {
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
-                        //rightFrame.setPageTupleFieldCount(cmp.getFieldCount());
                         ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
@@ -645,8 +642,6 @@ public class RTree implements ITreeIndex {
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
-        //ctx.interiorFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
 
         int tupleIndex = findTupleToDelete(ctx);
 

@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -35,7 +34,6 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 	private ICachedPage page = null;
 	private ITreeIndexFrame frame = null;
 	private IBufferCache bufferCache = null;
-	private int fieldCount;
 	
 	private ITreeIndexTupleReference frameTuple;
 
@@ -119,9 +117,6 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 		page = initialState.getPage();
 		tupleIndex = 0;		
 		frame.setPage(page);
-		MultiComparator lowKeyCmp = searchPred.getLowKeyComparator();
-		fieldCount = lowKeyCmp.getFieldCount();
-		frameTuple.setFieldCount(fieldCount);
 		positionToNextLeaf(false);
 	}
 

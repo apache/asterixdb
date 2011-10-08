@@ -295,7 +295,7 @@ public class BTree implements ITreeIndex {
         // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // This call only allows updating of non-key fields.
         // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
-        if (cmp.getFieldCount() == cmp.getKeyFieldCount()) {
+        if (getFieldCount() == cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
         insertUpdateOrDelete(tuple, ictx);
@@ -308,7 +308,6 @@ public class BTree implements ITreeIndex {
     
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
         int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
@@ -418,7 +417,6 @@ public class BTree implements ITreeIndex {
     
     private void updateLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        //ctx.leafFrame.setPageTupleFieldCount(cmp.getFieldCount());
         int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(tuple, cmp);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex, cmp);
         switch (spaceStatus) {
@@ -930,7 +928,7 @@ public class BTree implements ITreeIndex {
     	
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame)leafFrame,
                 (IBTreeInteriorFrame)interiorFrame, metaFrame);
-        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(cmp.getFieldCount());
+        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(getFieldCount());
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
     }

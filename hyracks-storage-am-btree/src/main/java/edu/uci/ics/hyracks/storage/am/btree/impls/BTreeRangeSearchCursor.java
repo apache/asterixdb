@@ -56,7 +56,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
-        this.frameTuple = frame.createTupleReference();
+        this.frameTuple = frame.createTupleReference();        
     }
 
     @Override
@@ -190,10 +190,6 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
         lowKey = pred.getLowKey();
         highKey = pred.getHighKey();
-
-        // field count must be identical for lowKeyCmp and highKeyCmp (key count
-        // may be different)
-        frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
 
         // init
         lowKeyFtm = FindTupleMode.EXCLUSIVE;

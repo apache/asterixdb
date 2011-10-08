@@ -102,7 +102,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
 	    ArrayTupleReference tuple = new ArrayTupleReference();
 
 		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
@@ -184,7 +184,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
 		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
@@ -267,7 +267,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		btree.create(btreeFileId, leafFrame, metaFrame);
 		btree.open(btreeFileId);
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(cmp.getFieldCount());
+		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
 		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,

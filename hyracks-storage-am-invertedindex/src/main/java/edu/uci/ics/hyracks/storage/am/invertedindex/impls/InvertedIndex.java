@@ -248,7 +248,7 @@ public class InvertedIndex {
             this.invListBuilder = invListBuilder;
             this.tokenCmp = btree.getMultiComparator();
             this.btreeTupleBuffer = ByteBuffer.allocate(hyracksFrameSize);
-            this.btreeTupleBuilder = new ArrayTupleBuilder(tokenCmp.getFieldCount());
+            this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
             this.btreeTupleAppender = new FrameTupleAppender(hyracksFrameSize);
             // TODO: serde never used, only need correct number of fields
             // tuple contains (token, start page, end page, start offset, num

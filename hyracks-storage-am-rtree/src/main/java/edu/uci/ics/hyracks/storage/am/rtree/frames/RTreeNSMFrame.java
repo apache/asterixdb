@@ -199,7 +199,6 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	public void computeMBR(ISplitKey splitKey, MultiComparator cmp) {
 		RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
 		RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
-		frameTuple.setFieldCount(cmp.getFieldCount());
 
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByTupleOffset(buf, tupleOff);

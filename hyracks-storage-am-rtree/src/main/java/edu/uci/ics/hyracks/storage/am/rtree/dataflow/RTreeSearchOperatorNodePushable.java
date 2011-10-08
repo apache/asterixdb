@@ -111,7 +111,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 searchPred = new SearchPredicate(searchKey, cmp);
 
                 writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-                tb = new ArrayTupleBuilder(rtree.getCmp().getFieldCount());
+                tb = new ArrayTupleBuilder(rtree.getFieldCount());
                 dos = tb.getDataOutput();
                 appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
                 appender.reset(writeBuffer, true);
