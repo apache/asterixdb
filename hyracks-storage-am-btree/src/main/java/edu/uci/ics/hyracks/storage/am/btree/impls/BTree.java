@@ -87,6 +87,7 @@ public class BTree implements ITreeIndex {
             if (created) {
                 return;
             }
+            this.fileId = fileId;
             freePageManager.init(metaFrame, rootPage);
             initRoot(leafFrame, true);
             created = true;

@@ -100,6 +100,7 @@ public abstract class TreeIndexOpHelper {
                 try {
                     treeIndex.create(indexFileId, leafFrame, metaFrame);
                 } catch (Exception e) {
+                	e.printStackTrace();
                     throw new HyracksDataException(e);
                 }
             }

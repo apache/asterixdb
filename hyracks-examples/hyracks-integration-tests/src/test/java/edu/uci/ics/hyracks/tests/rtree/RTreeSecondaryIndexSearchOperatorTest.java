@@ -93,7 +93,6 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	private int primaryKeyFieldCount = 4;
 	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
 	private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
-	private IPrimitiveValueProviderFactory[] primaryValueProviderFactories = new IPrimitiveValueProviderFactory[primaryKeyFieldCount];
 
 	private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 			primaryTypeTraits);
