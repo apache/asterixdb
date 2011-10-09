@@ -65,7 +65,7 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
 
     private boolean started;
 
-    private volatile boolean abort;
+    private boolean abort;
 
     private final Set<OperatorInstanceId> pendingOperators;
 
@@ -109,10 +109,14 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
 
     public synchronized void abort() {
         this.abort = true;
-        notifyAll();
         for (OperatorRunnable r : honMap.values()) {
             r.abort();
         }
+        notifyAll();
+    }
+    
+    private synchronized boolean aborted() {
+        return abort;
     }
 
     public void installRunnable(final OperatorInstanceId opIId) {
@@ -126,10 +130,10 @@ public class Stagelet implements IHyracksStageletContext, ICounterContext {
                     try {
                         waitUntilStarted();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
                         return;
                     }
-                    if (abort) {
+                    if (aborted()) {
                         return;
                     }
                     try {
