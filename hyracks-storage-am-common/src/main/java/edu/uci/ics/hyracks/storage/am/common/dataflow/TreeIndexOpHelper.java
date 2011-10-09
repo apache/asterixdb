@@ -92,7 +92,7 @@ public abstract class TreeIndexOpHelper {
             for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
                 comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
             }
-            cmp = createMultiComparator(comparators);
+            cmp = new MultiComparator(comparators);
             treeIndex = createTreeIndex();
             if (mode == IndexHelperOpenMode.CREATE) {
                 ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()

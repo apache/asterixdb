@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -26,7 +25,6 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
@@ -47,10 +45,5 @@ public class RTreeOpHelper extends TreeIndexOpHelper {
 		return new RTree(bufferCache, opDesc.getTreeIndexFieldCount(), cmp,
 				freePageManager, opDesc.getTreeIndexInteriorFactory(),
 				opDesc.getTreeIndexLeafFactory());
-	}
-
-	public MultiComparator createMultiComparator(IBinaryComparator[] comparators)
-			throws HyracksDataException {
-		return new MultiComparator(comparators);
 	}
 }
