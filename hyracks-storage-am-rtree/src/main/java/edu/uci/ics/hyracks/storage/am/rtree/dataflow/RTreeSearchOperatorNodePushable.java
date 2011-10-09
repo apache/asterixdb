@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
@@ -101,7 +100,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                     keySearchComparators[i] = rtree.getCmp().getComparators()[i];
                 }
 
-                cmp = new MultiComparator(rtree.getCmp().getTypeTraits(), keySearchComparators);
+                cmp = new MultiComparator(keySearchComparators);
 
                 searchPred = new SearchPredicate(searchKey, cmp);
 

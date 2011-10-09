@@ -123,7 +123,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator btreeCmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator btreeCmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -148,9 +148,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
         invListBinCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator invListCmp = new MultiComparator(invListTypeTraits, invListBinCmps);
+        MultiComparator invListCmp = new MultiComparator(invListBinCmps);
 
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListCmp);
+        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
         invIndex.open(invListsFileId);
 
         Random rnd = new Random();

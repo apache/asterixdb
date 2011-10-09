@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptorHelper;
@@ -52,6 +51,6 @@ public class RTreeOpHelper extends TreeIndexOpHelper {
 
 	public MultiComparator createMultiComparator(IBinaryComparator[] comparators)
 			throws HyracksDataException {
-		return new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
+		return new MultiComparator(comparators);
 	}
 }

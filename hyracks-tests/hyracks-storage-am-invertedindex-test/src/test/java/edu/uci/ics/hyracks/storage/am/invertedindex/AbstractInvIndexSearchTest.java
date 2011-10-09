@@ -71,7 +71,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     // declare btree keys
     protected int btreeKeyFieldCount = 1;
     protected IBinaryComparator[] btreeBinCmps = new IBinaryComparator[btreeKeyFieldCount];
-    protected MultiComparator btreeCmp = new MultiComparator(typeTraits, btreeBinCmps);
+    protected MultiComparator btreeCmp = new MultiComparator(btreeBinCmps);
 
     // btree frame factories
     protected TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
@@ -97,7 +97,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
     protected int invListKeys = 1;
     protected IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
-    protected MultiComparator invListCmp = new MultiComparator(invListTypeTraits, invListBinCmps);
+    protected MultiComparator invListCmp = new MultiComparator(invListBinCmps);
 
     protected InvertedIndex invIndex;
 
@@ -181,7 +181,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         invListTypeTraits[0] = new TypeTrait(4);
         invListBinCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        invIndex = new InvertedIndex(bufferCache, btree, invListCmp);
+        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
         invIndex.open(invListsFileId);
 
         rnd.setSeed(50);

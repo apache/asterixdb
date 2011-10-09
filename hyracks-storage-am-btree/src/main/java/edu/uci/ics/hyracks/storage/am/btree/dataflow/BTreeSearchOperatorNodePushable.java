@@ -101,6 +101,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
             // construct range predicate
 
+            // TODO: Can we construct the multicmps using helper methods?
             int lowKeySearchFields = btree.getMultiComparator().getComparators().length;
             int highKeySearchFields = btree.getMultiComparator().getComparators().length;
             if (lowKey != null)
@@ -112,7 +113,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             for (int i = 0; i < lowKeySearchFields; i++) {
                 lowKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
             }
-            lowKeySearchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(), lowKeySearchComparators);
+            lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
 
             if (lowKeySearchFields == highKeySearchFields) {
                 highKeySearchCmp = lowKeySearchCmp;
@@ -121,8 +122,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 for (int i = 0; i < highKeySearchFields; i++) {
                     highKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
                 }
-                highKeySearchCmp = new MultiComparator(btree.getMultiComparator().getTypeTraits(),
-                        highKeySearchComparators);
+                highKeySearchCmp = new MultiComparator(highKeySearchComparators);
 
             }
 

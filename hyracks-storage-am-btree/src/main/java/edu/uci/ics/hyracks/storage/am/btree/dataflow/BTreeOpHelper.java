@@ -34,7 +34,8 @@ public class BTreeOpHelper extends TreeIndexOpHelper {
                 opDesc.getTreeIndexLeafFactory());
     }
 
+    // TODO: Is there still a need for this?
     public MultiComparator createMultiComparator(IBinaryComparator[] comparators) throws HyracksDataException {
-        return new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
+        return new MultiComparator(comparators);
     }
 }

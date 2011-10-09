@@ -79,7 +79,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);

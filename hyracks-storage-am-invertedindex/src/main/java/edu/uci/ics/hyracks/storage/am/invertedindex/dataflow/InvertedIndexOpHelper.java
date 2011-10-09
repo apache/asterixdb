@@ -108,7 +108,7 @@ public final class InvertedIndexOpHelper {
                         comparators[i] = opDesc.getInvIndexComparatorFactories()[i].createBinaryComparator();
                     }
 
-                    MultiComparator cmp = new MultiComparator(opDesc.getInvIndexTypeTraits(), comparators);
+                    MultiComparator cmp = new MultiComparator(comparators);
 
                     // assumes btree has already been registered
                     IFileSplitProvider btreeFileSplitProvider = opDesc.getTreeIndexFileSplitProvider();
@@ -123,7 +123,7 @@ public final class InvertedIndexOpHelper {
                     int btreeFileId = fileMapProvider.lookupFileId(f);
                     BTree btree = (BTree) treeIndexRegistry.get(btreeFileId);
 
-                    invIndex = new InvertedIndex(bufferCache, btree, cmp);
+                    invIndex = new InvertedIndex(bufferCache, btree, opDesc.getInvIndexTypeTraits(), cmp);
                     invIndex.open(invIndexFileId);
                     invIndexRegistry.register(invIndexFileId, invIndex);
                 }

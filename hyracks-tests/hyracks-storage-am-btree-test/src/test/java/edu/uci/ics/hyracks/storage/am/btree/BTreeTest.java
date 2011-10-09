@@ -111,7 +111,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);        
@@ -265,7 +265,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
@@ -319,7 +319,7 @@ public class BTreeTest extends AbstractBTreeTest {
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -451,7 +451,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps); // use
+        MultiComparator searchCmp = new MultiComparator(searchCmps); // use
         // only
         // a
         // single
@@ -510,7 +510,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -630,7 +630,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);
@@ -683,7 +683,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -886,7 +886,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -1052,7 +1052,7 @@ public class BTreeTest extends AbstractBTreeTest {
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -1152,7 +1152,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         // TODO: check when searching backwards
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
@@ -1205,7 +1205,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -1371,7 +1371,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IBinaryComparator[] searchCmps = new IBinaryComparator[2];
         searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         searchCmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
         btree.search(rangeCursor, rangePred, searchOpCtx);

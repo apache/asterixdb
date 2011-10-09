@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -54,14 +55,16 @@ public class InvertedIndex {
     private int rootPageId = 0;
     private IBufferCache bufferCache;
     private int fileId;
+    private final ITypeTrait[] typeTraits;
     private final MultiComparator invListCmp;
     private final int numTokenFields;
     private final int numInvListKeys;
 
-    public InvertedIndex(IBufferCache bufferCache, BTree btree, MultiComparator invListCmp) {
+    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTrait[] typeTraits, MultiComparator invListCmp) {
         this.bufferCache = bufferCache;
         this.btree = btree;
         this.invListCmp = invListCmp;
+        this.typeTraits = typeTraits;
         this.numTokenFields = btree.getMultiComparator().getKeyFieldCount();
         this.numInvListKeys = invListCmp.getKeyFieldCount();
     }
@@ -219,6 +222,10 @@ public class InvertedIndex {
     public MultiComparator getInvListElementCmp() {
         return invListCmp;
     }
+    
+    public ITypeTrait[] getTypeTraits() {
+        return typeTraits;
+    }
 
     public BTree getBTree() {
         return btree;
@@ -236,8 +243,7 @@ public class InvertedIndex {
         private int currentInvListStartPageId;
         private int currentInvListStartOffset;
         private final ByteArrayAccessibleOutputStream currentInvListTokenBaaos = new ByteArrayAccessibleOutputStream();
-        private final FixedSizeTupleReference currentInvListToken = new FixedSizeTupleReference(
-                invListCmp.getTypeTraits());
+        private final FixedSizeTupleReference currentInvListToken = new FixedSizeTupleReference(typeTraits);
 
         private int currentPageId;
         private ICachedPage currentPage;

@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparat
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -58,7 +57,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -115,7 +113,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 		// create value providers
 		IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.comparatorsToPrimitiveValueProviderFactories(cmps); 
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+		MultiComparator cmp = new MultiComparator(cmps);
 
 		RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 				typeTraits);

@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeUtils {
     public static BTree createBTree(IBufferCache bufferCache, int btreeFileId, ITypeTrait[] typeTraits, IBinaryComparator[] cmps, BTreeLeafFrameType leafType) throws BTreeException {
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -32,14 +32,17 @@ public class BTreeUtils {
     }
     
     public static MultiComparator getSearchMultiComparator(MultiComparator btreeCmp, ITupleReference searchKey) {
-        if (btreeCmp.getKeyFieldCount() == searchKey.getFieldCount()) {
+        if (searchKey == null) {
+        	return btreeCmp;
+        }
+    	if (btreeCmp.getKeyFieldCount() == searchKey.getFieldCount()) {
             return btreeCmp;
         }
         IBinaryComparator[] cmps = new IBinaryComparator[searchKey.getFieldCount()];
         for (int i = 0; i < searchKey.getFieldCount(); i++) {
             cmps[i] = btreeCmp.getComparators()[i];
         }
-        return new MultiComparator(btreeCmp.getTypeTraits(), cmps);
+        return new MultiComparator(cmps);
     }
     
     public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType) throws BTreeException {

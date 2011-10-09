@@ -93,7 +93,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
 		cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+		MultiComparator cmp = new MultiComparator(cmps);
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
@@ -174,7 +174,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmps[1] = IntegerBinaryComparatorFactory.INSTANCE
 				.createBinaryComparator();
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+		MultiComparator cmp = new MultiComparator(cmps);
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
@@ -256,7 +256,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmps[1] = IntegerBinaryComparatorFactory.INSTANCE
 				.createBinaryComparator();
 
-		MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+		MultiComparator cmp = new MultiComparator(cmps);
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);		
 		
@@ -324,8 +324,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	public RangePredicate createRangePredicate(int lk, int hk,
 			boolean isForward, boolean lowKeyInclusive,
-			boolean highKeyInclusive, MultiComparator cmp,
-			ITypeTrait[] typeTraits) throws HyracksDataException {
+			boolean highKeyInclusive, MultiComparator cmp) throws HyracksDataException {
 
 		// create tuplereferences for search keys
 		ITupleReference lowKey = TupleUtils.createIntegerTuple(lk);
@@ -334,7 +333,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IBinaryComparator[] searchCmps = new IBinaryComparator[1];
 		searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE
 				.createBinaryComparator();
-		MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+		MultiComparator searchCmp = new MultiComparator(searchCmps);
 
 		RangePredicate rangePred = new RangePredicate(isForward, lowKey,
 				highKey, lowKeyInclusive, highKeyInclusive, searchCmp,
@@ -402,8 +401,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
-						btree.getMultiComparator(), btree.getMultiComparator()
-								.getTypeTraits());
+						btree.getMultiComparator());
 				BTreeOpContext searchOpCtx = btree.createOpContext(
 						IndexOp.SEARCH, leafFrame, interiorFrame, null);
 				btree.search(rangeCursor, rangePred, searchOpCtx);

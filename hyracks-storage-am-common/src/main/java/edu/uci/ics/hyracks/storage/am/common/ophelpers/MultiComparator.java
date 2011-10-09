@@ -16,17 +16,13 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 
 public class MultiComparator {
 
-	private IBinaryComparator[] cmps = null;
-	private ITypeTrait[] typeTraits;
+	private final IBinaryComparator[] cmps;
 
-	public MultiComparator(ITypeTrait[] typeTraits, IBinaryComparator[] cmps) {
-		this.typeTraits = typeTraits;
+	public MultiComparator(IBinaryComparator[] cmps) {
 		this.cmps = cmps;
 	}
 
@@ -65,17 +61,5 @@ public class MultiComparator {
 
 	public int getKeyFieldCount() {
 		return cmps.length;
-	}
-
-	public void setComparators(IBinaryComparator[] cmps) {
-		this.cmps = cmps;
-	}
-
-	public int getFieldCount() {
-		return typeTraits.length;
-	}
-
-	public ITypeTrait[] getTypeTraits() {
-		return typeTraits;
 	}
 }

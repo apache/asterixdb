@@ -104,7 +104,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing
         ISerializerDeserializer[] sers = { IntegerSerializerDeserializer.INSTANCE,
