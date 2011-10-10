@@ -163,7 +163,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
                 if (rnd.nextInt() % compressFreq == 0) {
                     before = frame.printKeys(cmp, sers);
-                    frame.compress(cmp);
+                    frame.compress();
                     after = frame.printKeys(cmp, sers);
                     Assert.assertEquals(before, after);
                 }
@@ -192,7 +192,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
                 if (rnd.nextInt() % compressFreq == 0) {
                     before = frame.printKeys(cmp, sers);
-                    frame.compress(cmp);
+                    frame.compress();
                     after = frame.printKeys(cmp, sers);
                     Assert.assertEquals(before, after);
                 }

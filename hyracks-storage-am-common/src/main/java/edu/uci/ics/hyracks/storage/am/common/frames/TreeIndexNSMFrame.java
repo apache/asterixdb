@@ -291,7 +291,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public boolean compress(MultiComparator cmp) {
+    public boolean compress() {
         return false;
     }
 

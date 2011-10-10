@@ -330,7 +330,7 @@ public class BTree implements ITreeIndex {
             }
             case INSUFFICIENT_SPACE: {
                 // Try compressing the page first and see if there is space available.
-                boolean reCompressed = ctx.leafFrame.compress(cmp);
+                boolean reCompressed = ctx.leafFrame.compress();
                 if (reCompressed) {
                     // Compression could have changed the target tuple index, find it again.
                     targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
@@ -445,7 +445,7 @@ public class BTree implements ITreeIndex {
             case INSUFFICIENT_SPACE: {
                 // Delete the old tuple, and try compressing the page to make space available.
                 ctx.leafFrame.delete(tuple, oldTupleIndex);
-                ctx.leafFrame.compress(cmp);
+                ctx.leafFrame.compress();
                 // We need to insert the new tuple, so check if there is space.
                 spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);                
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
@@ -947,7 +947,7 @@ public class BTree implements ITreeIndex {
 
         // try to free space by compression
         if (spaceUsed + spaceNeeded > ctx.leafMaxBytes) {
-            leafFrame.compress(cmp);
+            leafFrame.compress();
             spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
         }
 

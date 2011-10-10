@@ -68,14 +68,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
 
-    private final int fieldCount;
-    
     public ITreeIndexFrameCompressor compressor;
     // TODO: Should be protected, but will trigger some refactoring.
     public IPrefixSlotManager slotManager;
 
     private ITreeIndexTupleWriter tupleWriter;
-
+    private MultiComparator cmp;
+    
     private FieldPrefixTupleReference frameTuple;
     private FieldPrefixPrefixTupleReference framePrefixTuple;
 
@@ -83,9 +82,9 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
-        this.fieldCount = typeTraits.length;
         this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
         this.slotManager = new FieldPrefixSlotManager(cmp);
+        this.cmp = cmp;
         this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
     }
 
@@ -107,7 +106,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public boolean compress(MultiComparator cmp) throws HyracksDataException {
+    public boolean compress() throws HyracksDataException {
         try {
             return compressor.compress(this, cmp);
         } catch (Exception e) {

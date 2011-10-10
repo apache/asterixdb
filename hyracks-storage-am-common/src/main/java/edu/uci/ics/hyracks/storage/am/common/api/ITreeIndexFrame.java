@@ -39,7 +39,7 @@ public interface ITreeIndexFrame {
     // returns true if slots were modified, false otherwise
     public boolean compact();
 
-    public boolean compress(MultiComparator cmp) throws HyracksDataException;
+    public boolean compress() throws HyracksDataException;
 
     public void initBuffer(byte level);
 
