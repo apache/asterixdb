@@ -454,7 +454,7 @@ public class RTree implements ITreeIndex {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         //rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-                        ret = ctx.interiorFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
+                        ret = ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.interiorFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
                         incrementGlobalNsn();
@@ -467,7 +467,7 @@ public class RTree implements ITreeIndex {
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
-                        ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
+                        ret = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
                         incrementGlobalNsn();
@@ -720,7 +720,7 @@ public class RTree implements ITreeIndex {
 
                 ctx.splitKey.reset();
                 if (!ctx.pathList.isEmpty()) {
-                    ctx.interiorFrame.computeMBR(ctx.splitKey, cmp);
+                    ctx.interiorFrame.computeMBR(ctx.splitKey);
                     ctx.splitKey.setLeftPage(parentId);
                 }
             } else {
@@ -837,7 +837,7 @@ public class RTree implements ITreeIndex {
 
         // if the page is empty, just leave it there for future inserts
         if (pageId != rootPage && ctx.leafFrame.getTupleCount() > 0) {
-            ctx.leafFrame.computeMBR(ctx.splitKey, cmp);
+            ctx.leafFrame.computeMBR(ctx.splitKey);
             ctx.splitKey.setLeftPage(pageId);
         }
     }

@@ -144,8 +144,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	public void generateDist(ITupleReference tuple,
-			TupleEntryArrayList entries, Rectangle rec, int start, int end,
-			MultiComparator cmp) {
+			TupleEntryArrayList entries, Rectangle rec, int start, int end) {
 		int j = 0;
 		while (entries.get(j).getTupleIndex() == -1) {
 			j++;
@@ -170,28 +169,20 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 		return tupleWriter.createTupleReference();
 	}
 
-	public void adjustMBRImpl(ITreeIndexTupleReference[] tuples,
-			MultiComparator cmp) {
-		int maxFieldPos = cmp.getKeyFieldCount() / 2;
+	public void adjustMBRImpl(ITreeIndexTupleReference[] tuples) {
+		int maxFieldPos = keyValueProviders.length / 2;
 		for (int i = 1; i < getTupleCount(); i++) {
 			frameTuple.resetByTupleIndex(this, i);
 			for (int j = 0; j < maxFieldPos; j++) {
 				int k = maxFieldPos + j;
-				int c = cmp.getComparators()[j].compare(
-						frameTuple.getFieldData(j),
-						frameTuple.getFieldStart(j),
-						frameTuple.getFieldLength(j),
-						tuples[j].getFieldData(j), tuples[j].getFieldStart(j),
-						tuples[j].getFieldLength(j));
-				if (c < 0) {
+				double valA = keyValueProviders[j].getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
+				double valB = keyValueProviders[j].getValue(tuples[j].getFieldData(j), tuples[j].getFieldStart(j));
+				if (valA < valB) {
 					tuples[j].resetByTupleIndex(this, i);
 				}
-				c = cmp.getComparators()[k].compare(frameTuple.getFieldData(k),
-						frameTuple.getFieldStart(k),
-						frameTuple.getFieldLength(k),
-						tuples[k].getFieldData(k), tuples[k].getFieldStart(k),
-						tuples[k].getFieldLength(k));
-				if (c > 0) {
+				valA = keyValueProviders[k].getValue(frameTuple.getFieldData(k), frameTuple.getFieldStart(k));
+				valB = keyValueProviders[k].getValue(tuples[k].getFieldData(k), tuples[k].getFieldStart(k));
+				if (valA > valB) {
 					tuples[k].resetByTupleIndex(this, i);
 				}
 			}
@@ -199,17 +190,17 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	@Override
-	public void computeMBR(ISplitKey splitKey, MultiComparator cmp) {
+	public void computeMBR(ISplitKey splitKey) {
 		RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
 		RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
 
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByTupleOffset(buf, tupleOff);
 		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0,
-				cmp.getKeyFieldCount());
+				keyValueProviders.length);
 
 		splitKey.initData(splitKeySize);
-		this.adjustMBR(tuples, cmp);
+		this.adjustMBR(tuples);
 		rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0,
 				rTreeSplitKey.getLeftPageBuffer(), 0);
 		rTreeSplitKey.getLeftTuple().resetByTupleOffset(

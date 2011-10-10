@@ -64,7 +64,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
 
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -78,7 +78,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         double minMargin = Double.MAX_VALUE;
         int splitAxis = 0, sortOrder = 0;
 
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        int maxFieldPos = keyValueProviders.length / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
             for (int k = 0; k < getTupleCount(); ++k) {
@@ -107,10 +107,10 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
             for (int k = 1; k <= splitDistribution; ++k) {
                 int d = m - 1 + k;
 
-                generateDist(tuple, tupleEntries1, rec[0], 0, d, cmp);
-                generateDist(tuple, tupleEntries2, rec[1], 0, d, cmp);
-                generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1, cmp);
-                generateDist(tuple, tupleEntries2, rec[3], d, getTupleCount() + 1, cmp);
+                generateDist(tuple, tupleEntries1, rec[0], 0, d);
+                generateDist(tuple, tupleEntries2, rec[1], 0, d);
+                generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1);
+                generateDist(tuple, tupleEntries2, rec[3], d, getTupleCount() + 1);
 
                 // calculate the margin of the distributions
                 lowerMargin += rec[0].margin() + rec[2].margin();
@@ -146,8 +146,8 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         for (int i = 1; i <= splitDistribution; ++i) {
             int d = m - 1 + i;
 
-            generateDist(tuple, tupleEntries1, rec[0], 0, d, cmp);
-            generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1, cmp);
+            generateDist(tuple, tupleEntries1, rec[0], 0, d);
+            generateDist(tuple, tupleEntries1, rec[2], d, getTupleCount() + 1);
 
             double overlap = rec[0].overlappedArea(rec[2]);
             if (overlap < minOverlap) {
@@ -202,14 +202,14 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
         frameTuple.resetByTupleOffset(buf, tupleOff);
-        int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
+        int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, keyValueProviders.length);
 
         splitKey.initData(splitKeySize);
-        this.adjustMBR(tuples, cmp);
+        this.adjustMBR(tuples);
         rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0, rTreeSplitKey.getLeftPageBuffer(), 0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
 
-        ((IRTreeFrame) rightFrame).adjustMBR(((RTreeNSMFrame) rightFrame).getTuples(), cmp);
+        ((IRTreeFrame) rightFrame).adjustMBR(((RTreeNSMFrame) rightFrame).getTuples());
         rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
@@ -248,11 +248,10 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp) {
+    public void adjustMBR(ITreeIndexTupleReference[] tuples) {
         for (int i = 0; i < tuples.length; i++) {
             tuples[i].resetByTupleIndex(this, 0);
         }
-
-        adjustMBRImpl(tuples, cmp);
+        adjustMBRImpl(tuples);
     }
 }

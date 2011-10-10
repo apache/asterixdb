@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 
-	public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
+	public void computeMBR(ISplitKey splitKey);
 
 	public void delete(int tupleIndex, MultiComparator cmp);
 
@@ -34,6 +34,6 @@ public interface IRTreeFrame extends ITreeIndexFrame {
 
 	public void setRightPage(int rightPage);
 
-	public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
+	public void adjustMBR(ITreeIndexTupleReference[] tuples);
 
 }
