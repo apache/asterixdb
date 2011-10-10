@@ -174,8 +174,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int getBestChildPageId(MultiComparator cmp) {
-        return buf.getInt(getChildPointerOff(frameTuple, cmp));
+    public int getBestChildPageId() {
+        return buf.getInt(getChildPointerOff(frameTuple));
     }
 
     @Override
@@ -210,7 +210,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                 return -1;
             }
         }
-        return buf.getInt(getChildPointerOff(frameTuple, cmp));
+        return buf.getInt(getChildPointerOff(frameTuple));
     }
 
     @Override
@@ -224,7 +224,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                 return i;
             } else {
                 int pageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(cmp.getKeyFieldCount() - 1),
-                        getChildPointerOff(frameTuple, cmp));
+                        getChildPointerOff(frameTuple));
                 traverseList.add(pageId, -1, parentIndex);
             }
         }
@@ -295,8 +295,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     private int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
     	return childPtrCmp.compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1),
-                getChildPointerOff(tupleA, cmp), childPtrSize, tupleB.getFieldData(cmp.getKeyFieldCount() - 1),
-                getChildPointerOff(tupleB, cmp), childPtrSize);
+                getChildPointerOff(tupleA), childPtrSize, tupleB.getFieldData(cmp.getKeyFieldCount() - 1),
+                getChildPointerOff(tupleB), childPtrSize);
     }
     
     @Override
@@ -409,13 +409,13 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         for (int i = startIndex; i < endIndex; i++) {
             if (tupleEntries1.get(i).getTupleIndex() != -1) {
                 frameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
-                rightFrame.insert(frameTuple, cmp, -1);
+                rightFrame.insert(frameTuple, -1);
                 ((UnorderedSlotManager) slotManager).modifySlot(
                         slotManager.getSlotOff(tupleEntries1.get(i).getTupleIndex()), -1);
                 totalBytes += tupleWriter.bytesRequired(frameTuple) + childPtrSize;
                 numOfDeletedTuples++;
             } else {
-                rightFrame.insert(tuple, cmp, -1);
+                rightFrame.insert(tuple, -1);
                 tupleInserted = true;
             }
         }
@@ -431,7 +431,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         compact(cmp);
 
         if (!tupleInserted) {
-            insert(tuple, cmp, -1);
+            insert(tuple, -1);
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -453,17 +453,17 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         return 0;
     }
 
-    private int getChildPointerOff(ITupleReference tuple, MultiComparator cmp) {
-        return tuple.getFieldStart(cmp.getKeyFieldCount() - 1) + tuple.getFieldLength(cmp.getKeyFieldCount() - 1);
+    private int getChildPointerOff(ITupleReference tuple) {
+        return tuple.getFieldStart(tuple.getFieldCount() - 1) + tuple.getFieldLength(tuple.getFieldCount() - 1);
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+    public void insert(ITupleReference tuple, int tupleIndex) {
+        frameTuple.setFieldCount(tuple.getFieldCount());
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
-        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
-        System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tuple, cmp), buf.array(),
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf, freeSpace);
+        System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getChildPointerOff(tuple), buf.array(),
                 freeSpace + bytesWritten, childPtrSize);
         int tupleSize = bytesWritten + childPtrSize;
 

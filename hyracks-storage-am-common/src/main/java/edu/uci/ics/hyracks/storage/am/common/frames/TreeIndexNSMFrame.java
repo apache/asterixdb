@@ -206,7 +206,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void insert(ITupleReference tuple, int tupleIndex) {
         slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);

@@ -201,7 +201,7 @@ public class InvertedIndex {
         // reset tuple reference
         ctx.btreeFrameTupleReference.reset(ctx.btreeFrameTupleAccessor, 0);
 
-        btree.bulkLoadAddTuple(ctx.btreeBulkLoadCtx, ctx.btreeFrameTupleReference);
+        btree.bulkLoadAddTuple(ctx.btreeFrameTupleReference, ctx.btreeBulkLoadCtx);
     }
 
     public void endBulkLoad(BulkLoadContext ctx) throws HyracksDataException {

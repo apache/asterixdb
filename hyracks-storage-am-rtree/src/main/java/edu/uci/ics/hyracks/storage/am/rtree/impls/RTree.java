@@ -353,7 +353,7 @@ public class RTree implements ITreeIndex {
             if (!isLeaf) {
                 // findBestChild must be called *before* getBestChildPageId
                 ctx.interiorFrame.findBestChild(ctx.getTuple(), cmp);
-                int childPageId = ctx.interiorFrame.getBestChildPageId(cmp);
+                int childPageId = ctx.interiorFrame.getBestChildPageId();
 
                 if (!writeLatched) {
                     node.releaseReadLatch();
@@ -409,11 +409,11 @@ public class RTree implements ITreeIndex {
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
                 if (!isLeaf) {
-                    ctx.interiorFrame.insert(tuple, cmp, -1);
+                    ctx.interiorFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.interiorFrame.setPageLsn(getGlobalNsn());
                 } else {
-                    ctx.leafFrame.insert(tuple, cmp, -1);
+                    ctx.leafFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.leafFrame.setPageLsn(getGlobalNsn());
                 }
@@ -424,12 +424,12 @@ public class RTree implements ITreeIndex {
             case SUFFICIENT_SPACE: {
                 if (!isLeaf) {
                     ctx.interiorFrame.compact(cmp);
-                    ctx.interiorFrame.insert(tuple, cmp, -1);
+                    ctx.interiorFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.interiorFrame.setPageLsn(getGlobalNsn());
                 } else {
                     ctx.leafFrame.compact(cmp);
-                    ctx.leafFrame.insert(tuple, cmp, -1);
+                    ctx.leafFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.leafFrame.setPageLsn(getGlobalNsn());
                 }
@@ -503,8 +503,8 @@ public class RTree implements ITreeIndex {
 
                             ctx.splitKey.setLeftPage(newLeftId);
 
-                            ctx.interiorFrame.insert(ctx.splitKey.getLeftTuple(), cmp, -1);
-                            ctx.interiorFrame.insert(ctx.splitKey.getRightTuple(), cmp, -1);
+                            ctx.interiorFrame.insert(ctx.splitKey.getLeftTuple(), -1);
+                            ctx.interiorFrame.insert(ctx.splitKey.getRightTuple(), -1);
 
                             incrementGlobalNsn();
                             int newNsn = getGlobalNsn();
@@ -896,7 +896,7 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void bulkLoadAddTuple(IIndexBulkLoadContext ictx, ITupleReference tuple) throws HyracksDataException {
+    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
         try {
             insert(tuple, ((BulkLoadContext) ictx).insertOpCtx);
         } catch (Exception e) {

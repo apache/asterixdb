@@ -26,7 +26,7 @@ public interface ITreeIndex {
 			ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException;
 
 	public void open(int indexFileId);
-	
+
 	public void close();
 
 	// operations:
@@ -48,10 +48,11 @@ public interface ITreeIndex {
 
 	public IIndexBulkLoadContext beginBulkLoad(float fillFactor,
 			ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-			ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException, HyracksDataException;
+			ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException,
+			HyracksDataException;
 
-	public void bulkLoadAddTuple(IIndexBulkLoadContext ictx,
-			ITupleReference tuple) throws HyracksDataException;
+	public void bulkLoadAddTuple(ITupleReference tuple,
+			IIndexBulkLoadContext ictx) throws HyracksDataException;
 
 	public void endBulkLoad(IIndexBulkLoadContext ictx)
 			throws HyracksDataException;

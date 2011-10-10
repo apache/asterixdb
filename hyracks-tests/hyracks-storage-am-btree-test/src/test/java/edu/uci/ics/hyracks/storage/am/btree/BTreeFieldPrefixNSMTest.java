@@ -147,7 +147,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 ITupleReference tuple = createTuple(ctx, a, b, c, false);
                 try {
                     int targetTupleIndex = frame.findInsertTupleIndex(tuple, cmp);
-                    frame.insert(tuple, cmp, targetTupleIndex);
+                    frame.insert(tuple, targetTupleIndex);
                 } catch (BTreeException e) {
                     e.printStackTrace();
                 } catch (Exception e) {

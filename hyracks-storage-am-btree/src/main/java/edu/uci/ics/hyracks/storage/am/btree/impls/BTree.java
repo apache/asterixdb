@@ -236,7 +236,7 @@ public class BTree implements ITreeIndex {
                     // in unsetSmPages
                     ctx.splitKey.setLeftPage(newLeftId);
                     int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple(), cmp);
-                    ctx.interiorFrame.insert(ctx.splitKey.getTuple(), cmp, targetTupleIndex);
+                    ctx.interiorFrame.insert(ctx.splitKey.getTuple(), targetTupleIndex);
                 } finally {
                     newLeftNode.releaseWriteLatch();
                     bufferCache.unpin(newLeftNode);
@@ -315,7 +315,7 @@ public class BTree implements ITreeIndex {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
-                ctx.leafFrame.insert(tuple, cmp, targetTupleIndex);
+                ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
             }
@@ -324,7 +324,7 @@ public class BTree implements ITreeIndex {
                 if (slotsChanged) {
                     targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
                 }
-                ctx.leafFrame.insert(tuple, cmp, targetTupleIndex);
+                ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
             }
@@ -337,7 +337,7 @@ public class BTree implements ITreeIndex {
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
                 }
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
-                    ctx.leafFrame.insert(tuple, cmp, targetTupleIndex);
+                    ctx.leafFrame.insert(tuple, targetTupleIndex);
                     ctx.splitKey.reset();
                 } else {
                     performLeafSplit(pageId, tuple, ctx);
@@ -438,7 +438,7 @@ public class BTree implements ITreeIndex {
                 ctx.leafFrame.delete(tuple, cmp, oldTupleIndex);
                 ctx.leafFrame.compact(cmp);
                 int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
-                ctx.leafFrame.insert(tuple, cmp, targetTupleIndex);
+                ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
             }                
@@ -450,7 +450,7 @@ public class BTree implements ITreeIndex {
                 spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);                
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
                     int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
-                    ctx.leafFrame.insert(tuple, cmp, targetTupleIndex);
+                    ctx.leafFrame.insert(tuple, targetTupleIndex);
                     ctx.splitKey.reset();
                 } else {
                     performLeafSplit(pageId, tuple, ctx);
@@ -504,7 +504,7 @@ public class BTree implements ITreeIndex {
             }                
 
             case SUFFICIENT_CONTIGUOUS_SPACE: {
-                ctx.interiorFrame.insert(tuple, cmp, targetTupleIndex);
+                ctx.interiorFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
             }
@@ -514,7 +514,7 @@ public class BTree implements ITreeIndex {
                 if (slotsChanged) {
                     targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple, cmp);
                 }
-                ctx.interiorFrame.insert(tuple, cmp, targetTupleIndex);
+                ctx.interiorFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
             }
@@ -937,7 +937,7 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public void bulkLoadAddTuple(IIndexBulkLoadContext ictx, ITupleReference tuple) throws HyracksDataException {
+    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
         BulkLoadContext ctx = (BulkLoadContext) ictx;
         NodeFrontier leafFrontier = ctx.nodeFrontiers.get(0);
         IBTreeLeafFrame leafFrame = ctx.leafFrame;

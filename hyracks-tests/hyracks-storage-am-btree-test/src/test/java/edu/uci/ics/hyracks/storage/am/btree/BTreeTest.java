@@ -1105,7 +1105,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            btree.bulkLoadAddTuple(bulkLoadCtx, tuple);
+            btree.bulkLoadAddTuple(tuple, bulkLoadCtx);
         }
 
         btree.endBulkLoad(bulkLoadCtx);

@@ -78,8 +78,8 @@ public class TreeIndexBulkLoadOperatorNodePushable extends
 		int tupleCount = accessor.getTupleCount();
 		for (int i = 0; i < tupleCount; i++) {
 			tuple.reset(accessor, i);
-			treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(bulkLoadCtx,
-					tuple);
+			treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(tuple,
+					bulkLoadCtx);
 		}
 	}
 

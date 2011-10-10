@@ -401,7 +401,7 @@ public class BTreeTestUtils {
                 LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, testCtx.fieldSerdes);
-            testCtx.btree.bulkLoadAddTuple(bulkLoadCtx, tuple);
+            testCtx.btree.bulkLoadAddTuple(tuple, bulkLoadCtx);
             c++;
         }
         testCtx.btree.endBulkLoad(bulkLoadCtx);

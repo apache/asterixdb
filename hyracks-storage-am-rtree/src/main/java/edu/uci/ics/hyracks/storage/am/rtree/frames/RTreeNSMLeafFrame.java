@@ -175,13 +175,13 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         for (int i = startIndex; i < endIndex; i++) {
             if (tupleEntries1.get(i).getTupleIndex() != -1) {
                 frameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
-                rightFrame.insert(frameTuple, cmp, -1);
+                rightFrame.insert(frameTuple, -1);
                 ((UnorderedSlotManager) slotManager).modifySlot(
                         slotManager.getSlotOff(tupleEntries1.get(i).getTupleIndex()), -1);
                 totalBytes += tupleWriter.bytesRequired(frameTuple);
                 numOfDeletedTuples++;
             } else {
-                rightFrame.insert(tuple, cmp, -1);
+                rightFrame.insert(tuple, -1);
                 tupleInserted = true;
             }
         }
@@ -197,7 +197,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         compact(cmp);
 
         if (!tupleInserted) {
-            insert(tuple, cmp, -1);
+            insert(tuple, -1);
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -220,7 +220,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void insert(ITupleReference tuple, int tupleIndex) {
         slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
 

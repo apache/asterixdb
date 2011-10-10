@@ -101,7 +101,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void insert(ITupleReference tuple, int tupleIndex) {
         slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
@@ -159,7 +159,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
         // insert last key
         int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
-        targetFrame.insert(tuple, cmp, targetTupleIndex);
+        targetFrame.insert(tuple, targetTupleIndex);
 
         // set split key to be highest value in left page
         tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());

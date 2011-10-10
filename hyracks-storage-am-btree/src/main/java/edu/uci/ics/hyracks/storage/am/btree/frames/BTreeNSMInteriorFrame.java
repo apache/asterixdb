@@ -52,8 +52,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         cmpFrameTuple = tupleWriter.createTupleReference();
     }
 
-    private int getLeftChildPageOff(ITupleReference tuple, MultiComparator cmp) {
-        return tuple.getFieldStart(cmp.getKeyFieldCount() - 1) + tuple.getFieldLength(cmp.getKeyFieldCount() - 1);
+    private int getLeftChildPageOff(ITupleReference tuple) {
+        return tuple.getFieldStart(tuple.getFieldCount() - 1) + tuple.getFieldLength(tuple.getFieldCount() - 1);
     }
 
     @Override
@@ -96,11 +96,11 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void insert(ITupleReference tuple, int tupleIndex) {
         int slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
-        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
-        System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp), buf.array(),
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf, freeSpace);
+        System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple), buf.array(),
                 freeSpace + bytesWritten, childPtrSize);
         int tupleSize = bytesWritten + childPtrSize;
 
@@ -110,7 +110,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // did insert into the rightmost slot?
         if (slotOff == slotManager.getSlotEndOff()) {
-            System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp)
+            System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple)
                     + childPtrSize, buf.array(), rightLeafOff, childPtrSize);
         } else {
             // if slotOff has a right (slot-)neighbor then update its child
@@ -122,8 +122,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             if (buf.getInt(tupleCountOff) > 1) {
                 int rightNeighborOff = slotOff - slotManager.getSlotSize();
                 frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
-                System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize, buf.array(),
-                        getLeftChildPageOff(frameTuple, cmp), childPtrSize);
+                System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple) + childPtrSize, buf.array(),
+                        getLeftChildPageOff(frameTuple), childPtrSize);
             }
         }
     }
@@ -133,13 +133,13 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int freeSpace = buf.getInt(freeSpaceOff);
         slotManager.insertSlot(-1, freeSpace);
         int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), buf, freeSpace);
-        System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple, cmp), buf.array(),
+        System.arraycopy(tuple.getFieldData(cmp.getKeyFieldCount() - 1), getLeftChildPageOff(tuple), buf.array(),
                 freeSpace + bytesWritten, childPtrSize);
         int tupleSize = bytesWritten + childPtrSize;
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + tupleSize);
         buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - tupleSize - slotManager.getSlotSize());
-        System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple, cmp) + childPtrSize, buf.array(),
+        System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple) + childPtrSize, buf.array(),
                 rightLeafOff, childPtrSize);
     }
 
@@ -191,7 +191,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         int deleteTupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
         frameTuple.resetByTupleOffset(buf, deleteTupleOff);
-        buf.putInt(rightLeafOff, buf.getInt(getLeftChildPageOff(frameTuple, cmp)));
+        buf.putInt(rightLeafOff, buf.getInt(getLeftChildPageOff(frameTuple)));
         buf.putInt(tupleCountOff, tuplesToLeft - 1);
 
         // compact both pages
@@ -200,7 +200,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // insert key
         int targetTupleIndex = ((BTreeNSMInteriorFrame)targetFrame).findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
-        targetFrame.insert(savedSplitKey.getTuple(), cmp, targetTupleIndex);
+        targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
 
         return 0;
     }
@@ -314,7 +314,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             }
 
             frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
-            int childPageOff = getLeftChildPageOff(frameTuple, srcCmp);
+            int childPageOff = getLeftChildPageOff(frameTuple);
             return buf.getInt(childPageOff);
         }
     }
@@ -359,7 +359,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotStartOff());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.resetByTupleOffset(buf, tupleOff);
-        int childPageOff = getLeftChildPageOff(frameTuple, cmp);
+        int childPageOff = getLeftChildPageOff(frameTuple);
         return buf.getInt(childPageOff);
     }
 

@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex);    
+    public void insert(ITupleReference tuple, int tupleIndex);    
     
     public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
     

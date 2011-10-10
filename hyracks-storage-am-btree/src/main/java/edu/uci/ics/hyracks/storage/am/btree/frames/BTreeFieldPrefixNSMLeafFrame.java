@@ -250,7 +250,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void insert(ITupleReference tuple, int tupleIndex) {
         int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
         int numPrefixFields = 0;
@@ -650,7 +650,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         // insert last key
         int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
-        targetFrame.insert(tuple, cmp, targetTupleIndex);
+        targetFrame.insert(tuple, targetTupleIndex);
 
         // set split key to be highest value in left page
         frameTuple.resetByTupleIndex(this, getTupleCount() - 1);
