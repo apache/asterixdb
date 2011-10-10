@@ -368,7 +368,7 @@ public class BTree implements ITreeIndex {
                 rightFrame.setPage(rightNode);
                 rightFrame.initBuffer((byte) 0);
 
-                int ret = ctx.leafFrame.split(rightFrame, tuple, cmp, ctx.splitKey);
+                int ret = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
 
                 ctx.smPages.add(pageId);
                 ctx.smPages.add(rightPageId);
@@ -478,7 +478,7 @@ public class BTree implements ITreeIndex {
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                     // instead of creating a new split key, use the existing
                     // splitKey
-                    int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), cmp, ctx.splitKey);
+                    int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), ctx.splitKey);
 
                     ctx.smPages.add(pageId);
                     ctx.smPages.add(rightPageId);

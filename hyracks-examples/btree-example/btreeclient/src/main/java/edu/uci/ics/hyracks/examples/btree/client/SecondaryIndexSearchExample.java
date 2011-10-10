@@ -122,8 +122,8 @@ public class SecondaryIndexSearchExample {
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
         ITreeIndexFrameFactory secondaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                secondaryTupleWriterFactory, secondaryComparatorFactories.length);
-        ITreeIndexFrameFactory secondaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(secondaryTupleWriterFactory);
+                secondaryTupleWriterFactory, secondaryComparatorFactories);
+        ITreeIndexFrameFactory secondaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(secondaryTupleWriterFactory, secondaryComparatorFactories);
 
         // schema of tuples coming out of primary index
         RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -139,8 +139,8 @@ public class SecondaryIndexSearchExample {
 
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
-        ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory, primaryComparatorFactories.length);
-        ITreeIndexFrameFactory primaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(primaryTupleWriterFactory);
+        ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory, primaryComparatorFactories);
+        ITreeIndexFrameFactory primaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(primaryTupleWriterFactory, primaryComparatorFactories);
 
         // comparators for btree, note that we only need a comparator for the
         // non-unique key

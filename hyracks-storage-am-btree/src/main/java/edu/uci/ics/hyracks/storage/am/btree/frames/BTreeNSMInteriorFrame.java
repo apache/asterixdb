@@ -45,12 +45,14 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     private static final int childPtrSize = 4;    
     
     private final ITreeIndexTupleReference cmpFrameTuple;
-
-    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {        
+    private final MultiComparator cmp;
+    
+    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, MultiComparator cmp) {        
     	super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
-        cmpFrameTuple.setFieldCount(keyFieldCount);
-        frameTuple.setFieldCount(keyFieldCount);
+        cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
+        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+        this.cmp = cmp;
     }
 
     private int getLeftChildPageOff(ITupleReference tuple) {
@@ -143,10 +145,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException {
-        // before doing anything check if key already exists
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
-
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = buf.getInt(tupleCountOff);
 

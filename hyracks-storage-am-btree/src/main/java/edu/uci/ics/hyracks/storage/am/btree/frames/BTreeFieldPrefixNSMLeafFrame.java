@@ -68,15 +68,15 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
 
-    public ITreeIndexFrameCompressor compressor;
+    public final ITreeIndexFrameCompressor compressor;
     // TODO: Should be protected, but will trigger some refactoring.
-    public IPrefixSlotManager slotManager;
+    public final IPrefixSlotManager slotManager;
 
-    private ITreeIndexTupleWriter tupleWriter;
-    private MultiComparator cmp;
+    private final ITreeIndexTupleWriter tupleWriter;
+    private final MultiComparator cmp;
     
-    private FieldPrefixTupleReference frameTuple;
-    private FieldPrefixPrefixTupleReference framePrefixTuple;
+    private final FieldPrefixTupleReference frameTuple;
+    private final FieldPrefixPrefixTupleReference framePrefixTuple;
 
     public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, MultiComparator cmp) {
         this.tupleWriter = tupleWriter;
@@ -528,7 +528,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
     		throws TreeIndexException {
 
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame)rightFrame;

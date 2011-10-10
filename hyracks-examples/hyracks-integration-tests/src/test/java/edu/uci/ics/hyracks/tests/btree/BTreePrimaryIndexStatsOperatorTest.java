@@ -79,9 +79,9 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 	private TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(
 			primaryTypeTraits);
 	private ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			primaryTupleWriterFactory, primaryComparatorFactories.length);
+			primaryTupleWriterFactory, primaryComparatorFactories);
 	private ITreeIndexFrameFactory primaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(
-			primaryTupleWriterFactory);
+			primaryTupleWriterFactory, primaryComparatorFactories);
 
 	private static String primaryBtreeName = "primary"
 			+ simpleDateFormat.format(new Date());

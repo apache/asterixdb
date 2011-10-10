@@ -25,7 +25,7 @@ public class BTreeUtils {
     	MultiComparator cmp = createMultiComparator(cmpFactories);
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType, cmpFactories);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory, cmpFactories.length);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory, cmpFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
         BTree btree = new BTree(bufferCache, typeTraits.length, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
@@ -49,7 +49,7 @@ public class BTreeUtils {
     public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType, IBinaryComparatorFactory[] cmpFactories) throws BTreeException {
         switch(leafType) {
             case REGULAR_NSM: {
-                return new BTreeNSMLeafFrameFactory(tupleWriterFactory);                
+                return new BTreeNSMLeafFrameFactory(tupleWriterFactory, cmpFactories);                
             }
             case FIELD_PREFIX_COMPRESSED_NSM: {
                 return new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory, cmpFactories);

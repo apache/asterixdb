@@ -65,7 +65,7 @@ public interface ITreeIndexFrame {
     public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
 
     // TODO; what if tuples more than half-page size?
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey) throws TreeIndexException;
+    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
 
     public ISlotManager getSlotManager();
 

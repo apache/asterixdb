@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -67,15 +66,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
 			typeTraits);
-	ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-			tupleWriterFactory);
-	// TODO: Hardcoded the keyFieldCount here (1). FIx this in a nicer way.
-	ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			tupleWriterFactory, 1);
 	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-	IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-	IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
 	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
 	Random rnd = new Random(50);
@@ -93,11 +84,19 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		// declare keys
 		int keyFieldCount = 1;
-		IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-		cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = new MultiComparator(cmps);
+		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
+		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
+	            tupleWriterFactory, cmpFactories);
+	    ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
+	            tupleWriterFactory, cmpFactories);
+		
+	    IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+	    IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+	    
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
@@ -171,14 +170,20 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 		// declare keys
 		int keyFieldCount = 2;
-		IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-		cmps[0] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
-		cmps[1] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
+		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = new MultiComparator(cmps);
+		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
+                tupleWriterFactory, cmpFactories);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
+                tupleWriterFactory, cmpFactories);
+
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+        
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
@@ -253,11 +258,15 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE	;			
 
-		ITreeIndexFrameFactory leafFrameFactory = new BTreeFieldPrefixNSMLeafFrameFactory(
-                tupleWriterFactory, cmpFactories);
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-		
 		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
+                tupleWriterFactory, cmpFactories);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
+                tupleWriterFactory, cmpFactories);
+
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
 
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);		
 		
