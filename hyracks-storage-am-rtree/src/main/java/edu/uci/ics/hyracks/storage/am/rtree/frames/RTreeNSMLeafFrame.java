@@ -193,8 +193,8 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
                 + (slotManager.getSlotSize() * numOfDeletedTuples));
 
         // compact both pages
-        rightFrame.compact(cmp);
-        compact(cmp);
+        rightFrame.compact();
+        compact();
 
         if (!tupleInserted) {
             insert(tuple, -1);

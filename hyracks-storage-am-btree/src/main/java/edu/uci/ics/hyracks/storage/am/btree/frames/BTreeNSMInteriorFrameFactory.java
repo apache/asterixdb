@@ -23,14 +23,16 @@ public class BTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private final int keyFieldCount;
 
-    public BTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    public BTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
         this.tupleWriterFactory = tupleWriterFactory;
+        this.keyFieldCount = keyFieldCount;
     }
 
     @Override
     public IBTreeInteriorFrame createFrame() {
-        return new BTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter());
+        return new BTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
     }
 
     @Override

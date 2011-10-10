@@ -154,8 +154,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         buf.putInt(tupleCountOff, tuplesToLeft);
 
         // compact both pages
-        rightFrame.compact(cmp);
-        compact(cmp);
+        rightFrame.compact();
+        compact();
 
         // insert last key
         int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);

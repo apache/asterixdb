@@ -42,14 +42,15 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeInteriorFrame {
 
     private static final int rightLeafOff = smFlagOff + 1;
-    private static final int childPtrSize = 4;
+    private static final int childPtrSize = 4;    
+    
+    private final ITreeIndexTupleReference cmpFrameTuple;
 
-    // private SimpleTupleReference cmpFrameTuple = new SimpleTupleReference();
-    private ITreeIndexTupleReference cmpFrameTuple;
-
-    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {        
+    public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {        
     	super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
+        cmpFrameTuple.setFieldCount(keyFieldCount);
+        frameTuple.setFieldCount(keyFieldCount);
     }
 
     private int getLeftChildPageOff(ITupleReference tuple) {
@@ -77,14 +78,12 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
     @Override
     public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
     
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
@@ -195,8 +194,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         buf.putInt(tupleCountOff, tuplesToLeft - 1);
 
         // compact both pages
-        rightFrame.compact(cmp);
-        compact(cmp);
+        rightFrame.compact();
+        compact();
 
         // insert key
         int targetTupleIndex = ((BTreeNSMInteriorFrame)targetFrame).findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
@@ -206,10 +205,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public boolean compact(MultiComparator cmp) {
+    public boolean compact() {
         resetSpaceParams();
-
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
 
         int tupleCount = buf.getInt(tupleCountOff);
         int freeSpace = buf.getInt(freeSpaceOff);

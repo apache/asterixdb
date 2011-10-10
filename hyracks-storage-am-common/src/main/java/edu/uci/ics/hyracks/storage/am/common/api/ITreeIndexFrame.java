@@ -37,7 +37,7 @@ public interface ITreeIndexFrame {
     public void delete(ITupleReference tuple, int tupleIndex);
 
     // returns true if slots were modified, false otherwise
-    public boolean compact(MultiComparator cmp);
+    public boolean compact();
 
     public boolean compress(MultiComparator cmp) throws HyracksDataException;
 

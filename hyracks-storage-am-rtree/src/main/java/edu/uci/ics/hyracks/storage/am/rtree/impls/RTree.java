@@ -423,12 +423,12 @@ public class RTree implements ITreeIndex {
 
             case SUFFICIENT_SPACE: {
                 if (!isLeaf) {
-                    ctx.interiorFrame.compact(cmp);
+                    ctx.interiorFrame.compact();
                     ctx.interiorFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.interiorFrame.setPageLsn(getGlobalNsn());
                 } else {
-                    ctx.leafFrame.compact(cmp);
+                    ctx.leafFrame.compact();
                     ctx.leafFrame.insert(tuple, -1);
                     incrementGlobalNsn();
                     ctx.leafFrame.setPageLsn(getGlobalNsn());

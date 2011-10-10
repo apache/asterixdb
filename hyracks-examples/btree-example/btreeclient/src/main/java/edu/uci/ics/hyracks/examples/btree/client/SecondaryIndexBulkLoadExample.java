@@ -117,9 +117,14 @@ public class SecondaryIndexBulkLoadExample {
         primaryTypeTraits[2] = new TypeTrait(4);
         primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 
+        // comparators for sort fields and BTree fields
+        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[2];
+        comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        comparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+        
         // create factories and providers for primary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
-        ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory);
+        ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory, comparatorFactories.length);
         ITreeIndexFrameFactory primaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(primaryTupleWriterFactory);
 
         // use a disk-order scan to read primary index
@@ -133,10 +138,6 @@ public class SecondaryIndexBulkLoadExample {
         // sort the tuples as preparation for bulk load into secondary index
         // fields to sort on
         int[] sortFields = { 1, 0 };
-        // comparators for sort fields
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[2];
-        comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-        comparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields,
                 comparatorFactories, recDesc);
         JobHelper.createPartitionConstraint(spec, sorter, splitNCs);
@@ -150,7 +151,7 @@ public class SecondaryIndexBulkLoadExample {
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
         ITreeIndexFrameFactory secondaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                secondaryTupleWriterFactory);
+                secondaryTupleWriterFactory, comparatorFactories.length);
         ITreeIndexFrameFactory secondaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(secondaryTupleWriterFactory);
 
         // the B-Tree expects its keyfields to be at the front of its input

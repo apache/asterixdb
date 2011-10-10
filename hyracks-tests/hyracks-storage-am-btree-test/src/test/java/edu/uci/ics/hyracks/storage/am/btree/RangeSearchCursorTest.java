@@ -69,8 +69,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 			typeTraits);
 	ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 			tupleWriterFactory);
+	// TODO: Hardcoded the keyFieldCount here (1). FIx this in a nicer way.
 	ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			tupleWriterFactory);
+			tupleWriterFactory, 1);
 	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
 	IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();

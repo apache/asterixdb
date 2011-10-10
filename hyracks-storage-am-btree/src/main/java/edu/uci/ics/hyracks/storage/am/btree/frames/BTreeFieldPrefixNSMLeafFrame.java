@@ -121,7 +121,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     // 3. prefix tuple are sorted (last prefix tuple is at highest offset)
     // this procedure will not move prefix tuples
     @Override
-    public boolean compact(MultiComparator cmp) {
+    public boolean compact() {
         resetSpaceParams();
 
         int tupleCount = buf.getInt(tupleCountOff);
@@ -639,8 +639,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         buf.putInt(prefixTupleCountOff, prefixesToLeft);
 
         // compact both pages
-        compact(cmp);
-        rightFrame.compact(cmp);
+        compact();
+        rightFrame.compact();
 
         // insert last key
         int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);

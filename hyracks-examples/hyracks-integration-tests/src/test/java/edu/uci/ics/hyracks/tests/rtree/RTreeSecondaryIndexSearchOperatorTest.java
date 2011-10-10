@@ -125,7 +125,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	private TypeAwareTupleWriterFactory primaryBTreeTupleWriterFactory = new TypeAwareTupleWriterFactory(
 			primaryBTreeTypeTraits);
 	private ITreeIndexFrameFactory primaryBTreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			primaryBTreeTupleWriterFactory);
+			primaryBTreeTupleWriterFactory, primaryBTreeComparatorFactories.length);
 	private ITreeIndexFrameFactory primaryBTreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(
 			primaryBTreeTupleWriterFactory);
 

@@ -320,7 +320,7 @@ public class BTree implements ITreeIndex {
                 break;
             }
             case SUFFICIENT_SPACE: {
-                boolean slotsChanged = ctx.leafFrame.compact(cmp);
+                boolean slotsChanged = ctx.leafFrame.compact();
                 if (slotsChanged) {
                     targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
                 }
@@ -436,7 +436,7 @@ public class BTree implements ITreeIndex {
             case SUFFICIENT_SPACE: {
                 // Delete the old tuple, compact the frame, and insert the new tuple.
                 ctx.leafFrame.delete(tuple, oldTupleIndex);
-                ctx.leafFrame.compact(cmp);
+                ctx.leafFrame.compact();
                 int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
@@ -510,7 +510,7 @@ public class BTree implements ITreeIndex {
             }
 
             case SUFFICIENT_SPACE: {
-                boolean slotsChanged = ctx.interiorFrame.compact(cmp);
+                boolean slotsChanged = ctx.interiorFrame.compact();
                 if (slotsChanged) {
                     targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple, cmp);
                 }

@@ -83,7 +83,7 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractIntegrationTest {
 	private TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(
 			primaryTypeTraits);
 	private ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			primaryTupleWriterFactory);
+			primaryTupleWriterFactory, primaryComparatorFactories.length);
 	private ITreeIndexFrameFactory primaryLeafFrameFactory = new BTreeNSMLeafFrameFactory(
 			primaryTupleWriterFactory);
 
