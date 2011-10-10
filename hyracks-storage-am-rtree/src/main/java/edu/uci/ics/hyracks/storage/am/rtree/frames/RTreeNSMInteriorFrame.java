@@ -268,7 +268,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         int bytesRequired = tupleWriter.bytesRequired(tuple) + childPtrSize; // for
                                                                              // the
                                                                              // child

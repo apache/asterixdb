@@ -37,10 +37,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -116,12 +114,10 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), false);
         try {
 
-            IPrefixSlotManager slotManager = new FieldPrefixSlotManager();
             ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
+            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter, cmp);
             frame.setPage(page);
             frame.initBuffer((byte) 0);
-            slotManager.setFrame(frame);
             frame.setPrefixTupleCount(0);
 
             String before = new String();
@@ -183,7 +179,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
                 try {
                     int tupleIndex = frame.findDeleteTupleIndex(tuple, cmp);
-                    frame.delete(tuple, cmp, tupleIndex);
+                    frame.delete(tuple, tupleIndex);
                 } catch (Exception e) {
                 }
 

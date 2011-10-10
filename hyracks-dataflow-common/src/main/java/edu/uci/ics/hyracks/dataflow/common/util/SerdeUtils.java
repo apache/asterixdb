@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.dataflow.common.util;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
@@ -84,6 +85,36 @@ public class SerdeUtils {
         }
         if (serde instanceof UTF8StringSerializerDeserializer) {
             return UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        }
+        throw new UnsupportedOperationException("Binary comparator for + " + serde.toString() + " not implemented.");
+    }
+    
+    public static IBinaryComparatorFactory[] serdesToComparatorFactories(ISerializerDeserializer[] serdes, int numSerdes) {
+        IBinaryComparatorFactory[] comparatorsFactories = new IBinaryComparatorFactory[numSerdes];
+        for (int i = 0; i < numSerdes; i++) {
+            comparatorsFactories[i] = serdeToComparatorFactory(serdes[i]);
+        }
+        return comparatorsFactories;
+    }
+
+    public static IBinaryComparatorFactory serdeToComparatorFactory(ISerializerDeserializer serde) {
+        if (serde instanceof IntegerSerializerDeserializer) {
+            return IntegerBinaryComparatorFactory.INSTANCE;
+        }
+        if (serde instanceof Integer64SerializerDeserializer) {
+            throw new UnsupportedOperationException("Binary comparator factory for Integer64 not implemented.");
+        }
+        if (serde instanceof FloatSerializerDeserializer) {
+            return FloatBinaryComparatorFactory.INSTANCE;
+        }
+        if (serde instanceof DoubleSerializerDeserializer) {
+            return DoubleBinaryComparatorFactory.INSTANCE;
+        }
+        if (serde instanceof BooleanSerializerDeserializer) {
+            throw new UnsupportedOperationException("Binary comparator factory for Boolean not implemented.");
+        }
+        if (serde instanceof UTF8StringSerializerDeserializer) {
+            return UTF8StringBinaryComparatorFactory.INSTANCE;
         }
         throw new UnsupportedOperationException("Binary comparator for + " + serde.toString() + " not implemented.");
     }

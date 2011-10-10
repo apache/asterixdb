@@ -15,22 +15,28 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-
-    public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    private final IBinaryComparatorFactory[] cmpFactories;
+    
+    public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, IBinaryComparatorFactory[] cmpFactories) {
         this.tupleWriterFactory = tupleWriterFactory;
+        this.cmpFactories = cmpFactories;
     }
 
     @Override
     public IBTreeLeafFrame createFrame() {
-        return new BTreeFieldPrefixNSMLeafFrame(tupleWriterFactory.createTupleWriter());
+    	MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+        return new BTreeFieldPrefixNSMLeafFrame(tupleWriterFactory.createTupleWriter(), cmp);
     }
 
     @Override

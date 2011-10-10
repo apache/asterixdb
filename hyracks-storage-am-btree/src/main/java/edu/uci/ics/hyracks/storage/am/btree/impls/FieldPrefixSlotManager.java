@@ -36,7 +36,12 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 
     private ByteBuffer buf;
     private BTreeFieldPrefixNSMLeafFrame frame;
-
+    private final MultiComparator cmp;
+    
+    public FieldPrefixSlotManager(MultiComparator cmp) {
+    	this.cmp = cmp;
+    }
+    
     public int decodeFirstSlotField(int slot) {
         return (slot & 0xFF000000) >>> 24;
     }
@@ -50,7 +55,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     // returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
-    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp) {
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple) {
         int prefixMid;
         int prefixBegin = 0;
         int prefixEnd = frame.getPrefixTupleCount() - 1;
@@ -59,10 +64,10 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
             while (prefixBegin <= prefixEnd) {
                 prefixMid = (prefixBegin + prefixEnd) / 2;
                 framePrefixTuple.resetByTupleIndex(frame, prefixMid);
-                int cmp = multiCmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
-                if (cmp < 0)
+                int cmpVal = cmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount());
+                if (cmpVal < 0)
                     prefixEnd = prefixMid - 1;
-                else if (cmp > 0)
+                else if (cmpVal > 0)
                     prefixBegin = prefixMid + 1;
                 else
                     return prefixMid;

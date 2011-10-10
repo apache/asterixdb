@@ -147,7 +147,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
+    public void delete(ITupleReference tuple, int tupleIndex) {
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff = slotManager.getTupleOff(slotOff);
         frameTuple.resetByTupleOffset(buf, tupleOff);
@@ -164,7 +164,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
         // Enough space in the contiguous space region?
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) 
@@ -179,7 +179,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex) {
     	frameTuple.resetByTupleIndex(this, oldTupleIndex);
     	int oldTupleBytes = frameTuple.getTupleSize();
     	int newTupleBytes = tupleWriter.bytesRequired(newTuple);

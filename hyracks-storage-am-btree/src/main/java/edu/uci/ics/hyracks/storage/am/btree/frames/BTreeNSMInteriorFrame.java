@@ -63,7 +63,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         int bytesRequired = tupleWriter.bytesRequired(tuple) + 8; // for the two
         // childpointers
         if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
@@ -320,22 +320,21 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex) {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+    public void delete(ITupleReference tuple, int tupleIndex) {
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff;
         int keySize;
         if (tupleIndex == slotManager.getGreatestKeyIndicator()) {
             tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
+            keySize = tupleWriter.bytesRequired(frameTuple, 0, tuple.getFieldCount());
 
             // copy new rightmost pointer
             System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);
         } else {
             tupleOff = slotManager.getTupleOff(slotOff);
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            keySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
+            keySize = tupleWriter.bytesRequired(frameTuple, 0, tuple.getFieldCount());
             // perform deletion (we just do a memcpy to overwrite the slot)
             int slotStartOff = slotManager.getSlotEndOff();
             int length = slotOff - slotStartOff;

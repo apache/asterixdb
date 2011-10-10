@@ -401,9 +401,9 @@ public class RTree implements ITreeIndex {
             throws HyracksDataException, TreeIndexException {
     	FrameOpSpaceStatus spaceStatus;
         if (!isLeaf) {
-            spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple, cmp);
+            spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple);
         } else {
-            spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple, cmp);
+            spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         }
 
         switch (spaceStatus) {

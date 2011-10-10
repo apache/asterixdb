@@ -25,11 +25,16 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-    public void insert(ITupleReference tuple, int tupleIndex);    
+
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple);
+	
+	public void insert(ITupleReference tuple, int tupleIndex);    
     
-    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
+	public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex);
+	
+	public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
     
-    public void delete(ITupleReference tuple, MultiComparator cmp, int tupleIndex);
+    public void delete(ITupleReference tuple, int tupleIndex);
 
     // returns true if slots were modified, false otherwise
     public boolean compact(MultiComparator cmp);
@@ -39,11 +44,6 @@ public interface ITreeIndexFrame {
     public void initBuffer(byte level);
 
     public int getTupleCount();
-
-    // assumption: page must be write-latched at this point
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
-
-    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex, MultiComparator cmp);
 
     public int getTupleOffset(int slotNum);
 
