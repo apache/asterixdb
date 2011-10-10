@@ -15,28 +15,22 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private final IBinaryComparatorFactory[] cmpFactories;
     
-    public BTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, IBinaryComparatorFactory[] cmpFactories) {
+    public BTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
-        this.cmpFactories = cmpFactories;
     }
 
     @Override
     public IBTreeLeafFrame createFrame() {
-    	MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
-        return new BTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), cmp);
+        return new BTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter());
     }
 
     @Override

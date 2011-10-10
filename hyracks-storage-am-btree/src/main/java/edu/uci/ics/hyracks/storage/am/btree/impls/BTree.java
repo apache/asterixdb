@@ -364,9 +364,10 @@ public class BTree implements ITreeIndex {
                     true);
             rightNode.acquireWriteLatch();
             try {
-                IBTreeLeafFrame rightFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+                IBTreeLeafFrame rightFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();                
                 rightFrame.setPage(rightNode);
                 rightFrame.initBuffer((byte) 0);
+                rightFrame.setMultiComparator(cmp);
 
                 int ret = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
 
@@ -476,6 +477,7 @@ public class BTree implements ITreeIndex {
                     IBTreeFrame rightFrame = (IBTreeFrame)interiorFrameFactory.createFrame();
                     rightFrame.setPage(rightNode);
                     rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
+                    rightFrame.setMultiComparator(cmp);
                     // instead of creating a new split key, use the existing
                     // splitKey
                     int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), ctx.splitKey);
@@ -528,6 +530,7 @@ public class BTree implements ITreeIndex {
         // Will this leaf become empty?
         if (ctx.leafFrame.getTupleCount() == 1) {
             IBTreeLeafFrame siblingFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+            siblingFrame.setMultiComparator(cmp);
             ICachedPage leftNode = null;
             ICachedPage rightNode = null;
             int nextLeaf = ctx.leafFrame.getNextLeaf();
@@ -835,8 +838,11 @@ public class BTree implements ITreeIndex {
         private final ITreeIndexTupleWriter tupleWriter;
 
         public BulkLoadContext(float fillFactor, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-                ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+                ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) throws HyracksDataException {
 
+        	leafFrame.setMultiComparator(cmp);
+        	interiorFrame.setMultiComparator(cmp);
+        	
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             tupleWriter = leafFrame.getTupleWriter();
 
@@ -930,7 +936,7 @@ public class BTree implements ITreeIndex {
     	}
     	
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame)leafFrame,
-                (IBTreeInteriorFrame)interiorFrame, metaFrame);
+                (IBTreeInteriorFrame)interiorFrame, metaFrame, cmp);
         ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(fieldCount);
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
@@ -1015,7 +1021,7 @@ public class BTree implements ITreeIndex {
     @Override
     public BTreeOpContext createOpContext(IndexOp op, ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame) {
-        return new BTreeOpContext(op, (IBTreeLeafFrame) leafFrame, (IBTreeInteriorFrame) interiorFrame, metaFrame, 6);
+        return new BTreeOpContext(op, (IBTreeLeafFrame) leafFrame, (IBTreeInteriorFrame) interiorFrame, metaFrame, 6, cmp);
     }
 
     public ITreeIndexFrameFactory getInteriorFrameFactory() {

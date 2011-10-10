@@ -90,9 +90,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
 		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-	            tupleWriterFactory, cmpFactories);
+	            tupleWriterFactory);
 	    ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-	            tupleWriterFactory, cmpFactories);
+	            tupleWriterFactory);
 		
 	    IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
 	    IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
@@ -177,9 +177,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-                tupleWriterFactory, cmpFactories);
+                tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                tupleWriterFactory, cmpFactories);
+                tupleWriterFactory);
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
         IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
@@ -261,9 +261,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-                tupleWriterFactory, cmpFactories);
+                tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                tupleWriterFactory, cmpFactories);
+                tupleWriterFactory);
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
         IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();

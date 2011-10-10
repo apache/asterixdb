@@ -36,11 +36,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 
     private ByteBuffer buf;
     private BTreeFieldPrefixNSMLeafFrame frame;
-    private final MultiComparator cmp;
-    
-    public FieldPrefixSlotManager(MultiComparator cmp) {
-    	this.cmp = cmp;
-    }
+    private MultiComparator cmp;
     
     public int decodeFirstSlotField(int slot) {
         return (slot & 0xFF000000) >>> 24;
@@ -300,5 +296,9 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
 	@Override
 	public int getSlotOff(int tupleIndex) {
 		throw new UnsupportedOperationException("Not implemented.");
+	}
+	
+	public void setMultiComparator(MultiComparator cmp) {
+		this.cmp = cmp;
 	}
 }

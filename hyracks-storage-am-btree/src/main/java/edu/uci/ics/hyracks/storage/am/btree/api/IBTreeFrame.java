@@ -11,4 +11,5 @@ public interface IBTreeFrame extends ITreeIndexFrame {
 	public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException;
     public boolean getSmFlag();
     public void setSmFlag(boolean smFlag);
+    public void setMultiComparator(MultiComparator cmp);
 }

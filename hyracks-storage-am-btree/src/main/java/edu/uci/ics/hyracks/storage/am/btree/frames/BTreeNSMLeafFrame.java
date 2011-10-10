@@ -35,11 +35,10 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     protected static final int prevLeafOff = smFlagOff + 1;
     protected static final int nextLeafOff = prevLeafOff + 4;
-    private final MultiComparator cmp;
+    private MultiComparator cmp;
     
-    public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, MultiComparator cmp) {
+    public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter, new OrderedSlotManager());
-        this.cmp = cmp;
     }
 
     @Override
@@ -211,4 +210,9 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         else
             buf.put(smFlagOff, (byte) 0);
     }
+    
+	@Override
+	public void setMultiComparator(MultiComparator cmp) {
+		this.cmp = cmp;
+	}
 }

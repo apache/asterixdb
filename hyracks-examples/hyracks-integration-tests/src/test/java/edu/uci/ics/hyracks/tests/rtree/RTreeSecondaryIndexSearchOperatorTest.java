@@ -125,9 +125,9 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	private TypeAwareTupleWriterFactory primaryBTreeTupleWriterFactory = new TypeAwareTupleWriterFactory(
 			primaryBTreeTypeTraits);
 	private ITreeIndexFrameFactory primaryBTreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
-			primaryBTreeTupleWriterFactory, primaryBTreeComparatorFactories);
+			primaryBTreeTupleWriterFactory);
 	private ITreeIndexFrameFactory primaryBTreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(
-			primaryBTreeTupleWriterFactory, primaryBTreeComparatorFactories);
+			primaryBTreeTupleWriterFactory);
 
 	private static String primaryBTreeName = "primaryBTree"
 			+ simpleDateFormat.format(new Date());

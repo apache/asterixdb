@@ -15,28 +15,22 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private final IBinaryComparatorFactory[] cmpFactories;
 
-    public BTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, IBinaryComparatorFactory[] cmpFactories) {
+    public BTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
-        this.cmpFactories = cmpFactories;
     }
 
     @Override
     public IBTreeInteriorFrame createFrame() {
-    	MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
-        return new BTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), cmp);
+        return new BTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter());
     }
 
     @Override

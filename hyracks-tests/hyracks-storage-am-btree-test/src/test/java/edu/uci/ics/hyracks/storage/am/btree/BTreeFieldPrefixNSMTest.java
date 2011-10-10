@@ -115,7 +115,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         try {
 
             ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter, cmp);
+            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
             frame.setPage(page);
             frame.initBuffer((byte) 0);
             frame.setPrefixTupleCount(0);

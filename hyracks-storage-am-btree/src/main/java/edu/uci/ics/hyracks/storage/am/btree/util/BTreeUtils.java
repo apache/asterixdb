@@ -21,11 +21,11 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeUtils {
-    public static BTree createBTree(IBufferCache bufferCache, int btreeFileId, ITypeTrait[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType) throws BTreeException {
-    	MultiComparator cmp = createMultiComparator(cmpFactories);
+    public static BTree createBTree(IBufferCache bufferCache, int btreeFileId, ITypeTrait[] typeTraits, IBinaryComparator[] cmps, BTreeLeafFrameType leafType) throws BTreeException {
+    	MultiComparator cmp = new MultiComparator(cmps);
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType, cmpFactories);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory, cmpFactories);
+        ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
         BTree btree = new BTree(bufferCache, typeTraits.length, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
@@ -46,13 +46,13 @@ public class BTreeUtils {
         return new MultiComparator(cmps);
     }
     
-    public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType, IBinaryComparatorFactory[] cmpFactories) throws BTreeException {
+    public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType) throws BTreeException {
         switch(leafType) {
             case REGULAR_NSM: {
-                return new BTreeNSMLeafFrameFactory(tupleWriterFactory, cmpFactories);                
+                return new BTreeNSMLeafFrameFactory(tupleWriterFactory);                
             }
             case FIELD_PREFIX_COMPRESSED_NSM: {
-                return new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory, cmpFactories);
+                return new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
             }
             default: {
                 throw new BTreeException("Unknown BTreeLeafFrameType: " + leafType.toString());

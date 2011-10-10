@@ -73,18 +73,17 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public final IPrefixSlotManager slotManager;
 
     private final ITreeIndexTupleWriter tupleWriter;
-    private final MultiComparator cmp;
+    private MultiComparator cmp;
     
     private final FieldPrefixTupleReference frameTuple;
     private final FieldPrefixPrefixTupleReference framePrefixTuple;
 
-    public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, MultiComparator cmp) {
+    public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
         this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
-        this.slotManager = new FieldPrefixSlotManager(cmp);
-        this.cmp = cmp;
+        this.slotManager = new FieldPrefixSlotManager();
         this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
     }
 
@@ -728,4 +727,10 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int getPageHeaderSize() {
         return nextLeafOff;
     }
+
+	@Override
+	public void setMultiComparator(MultiComparator cmp) {
+		this.cmp = cmp;
+		this.slotManager.setMultiComparator(cmp);
+	}
 }

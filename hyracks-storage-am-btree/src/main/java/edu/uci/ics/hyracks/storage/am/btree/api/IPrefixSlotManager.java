@@ -78,4 +78,6 @@ public interface IPrefixSlotManager extends ISlotManager {
 
     // functions for testing
     public void setPrefixSlot(int tupleIndex, int slot);
+    
+    public void setMultiComparator(MultiComparator cmp);
 }
