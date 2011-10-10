@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.common.utility;
+package edu.uci.ics.hyracks.storage.am.common.util;
 
 import java.text.DecimalFormat;
 

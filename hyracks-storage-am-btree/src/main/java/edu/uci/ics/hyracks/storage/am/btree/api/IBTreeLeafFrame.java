@@ -23,8 +23,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IBTreeLeafFrame extends IBTreeFrame {
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
-    
     public void setNextLeaf(int nextPage);
 
     public int getNextLeaf();

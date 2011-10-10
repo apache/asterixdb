@@ -117,7 +117,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         resetSpaceParams();
         int tupleCount = buf.getInt(tupleCountOff);
         int freeSpace = buf.getInt(freeSpaceOff);
-
+		// Sort the slots by the tuple offset they point to.
         ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
         sortedTupleOffs.ensureCapacity(tupleCount);
         for (int i = 0; i < tupleCount; i++) {
@@ -126,23 +126,21 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
             sortedTupleOffs.add(new SlotOffTupleOff(i, slotOff, tupleOff));
         }
         Collections.sort(sortedTupleOffs);
-
+        // Iterate over the sorted slots, and move their corresponding tuples to
+     	// the left, reclaiming free space.
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
             frameTuple.resetByTupleOffset(buf, tupleOff);
-
             int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                     + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1);
             int tupleLength = tupleEndOff - tupleOff;
             System.arraycopy(buf.array(), tupleOff, buf.array(), freeSpace, tupleLength);
-
             slotManager.setSlot(sortedTupleOffs.get(i).slotOff, freeSpace);
             freeSpace += tupleLength;
         }
-
+		// Update contiguous free space pointer and total free space indicator.
         buf.putInt(freeSpaceOff, freeSpace);
         buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
-
         return false;
     }
 

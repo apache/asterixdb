@@ -20,8 +20,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class TreeIndexStatsOperatorNodePushable extends

@@ -706,7 +706,7 @@ public class BTree implements ITreeIndex {
                     // the descent.
                     boolean repeatOp = true;
                     while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
-                        int childPageId = ctx.interiorFrame.getChildPageId(ctx.pred, cmp);
+                        int childPageId = ctx.interiorFrame.getChildPageId(ctx.pred);
                         performOp(childPageId, node, ctx);
 
                         if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {
@@ -908,7 +908,7 @@ public class BTree implements ITreeIndex {
             ctx.splitKey.getTuple().resetByTupleOffset(ctx.splitKey.getBuffer(), 0);
             ctx.splitKey.setLeftPage(frontier.pageId);
 
-            ctx.interiorFrame.deleteGreatest(cmp);
+            ctx.interiorFrame.deleteGreatest();
 
             frontier.page.releaseWriteLatch();
             bufferCache.unpin(frontier.page);

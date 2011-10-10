@@ -78,7 +78,7 @@ public class TupleUtils {
             if (i != fields.length - 1) {
                 strBuilder.append(" ");
             }
-        }
+        }        
         return strBuilder.toString();
     }
 }
