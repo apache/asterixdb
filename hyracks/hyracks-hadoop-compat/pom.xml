@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-hadoop-compat</artifactId>
-  <version>0.1.8-SNAPSHOT</version>
+  <version>0.1.8</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.1.8-SNAPSHOT</version>
+    <version>0.1.8</version>
   </parent>
 
   <build>
@@ -79,7 +79,7 @@
     <dependency>
     	<groupId>edu.uci.ics.hyracks</groupId>
     	<artifactId>hyracks-dataflow-hadoop</artifactId>
-    	<version>0.1.8-SNAPSHOT</version>
+    	<version>0.1.8</version>
     	<type>jar</type>
     	<scope>compile</scope>
     </dependency>
