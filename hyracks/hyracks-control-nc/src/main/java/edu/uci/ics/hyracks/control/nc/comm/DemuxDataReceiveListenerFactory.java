@@ -100,6 +100,7 @@ public class DemuxDataReceiveListenerFactory implements IDataReceiveListenerFact
             try {
                 wait();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new HyracksDataException(e);
             }
         }
