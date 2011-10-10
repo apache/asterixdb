@@ -33,5 +33,5 @@ public class CCConfig {
     public int profileDumpPeriod = 0;
 
     @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
-    public int defaultMaxJobAttempts = 5;
+    public int defaultMaxJobAttempts = 0;
 }
