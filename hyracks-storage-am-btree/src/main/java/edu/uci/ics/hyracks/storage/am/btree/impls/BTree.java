@@ -900,8 +900,7 @@ public class BTree implements ITreeIndex {
             BTreeSplitKey copyKey = ctx.splitKey.duplicate(ctx.leafFrame.getTupleWriter().createTupleReference());
             tuple = copyKey.getTuple();
 
-            frontier.lastTuple.resetByTupleOffset(frontier.page.getBuffer(),
-                    ctx.interiorFrame.getTupleOffset(ctx.interiorFrame.getTupleCount() - 1));
+            frontier.lastTuple.resetByTupleIndex(ctx.interiorFrame, ctx.interiorFrame.getTupleCount() - 1);
             int splitKeySize = ctx.tupleWriter.bytesRequired(frontier.lastTuple, 0, cmp.getKeyFieldCount());
             ctx.splitKey.initData(splitKeySize);
             ctx.tupleWriter

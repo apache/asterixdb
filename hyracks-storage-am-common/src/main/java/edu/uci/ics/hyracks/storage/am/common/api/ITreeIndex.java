@@ -19,6 +19,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
+/**
+ * Interface implemented by tree-based index structures, describing their
+ * supported operations. Indexes implementing this interface can easily reuse
+ * the tree index operators for dataflow.
+ */
 public interface ITreeIndex {
 	// init:
 
@@ -66,12 +71,12 @@ public interface ITreeIndex {
 
 	public IFreePageManager getFreePageManager();
 
-	public int getRootPageId();
-
 	public ITreeIndexFrameFactory getLeafFrameFactory();
 
 	public ITreeIndexFrameFactory getInteriorFrameFactory();
 
+	public int getRootPageId();
+	
 	public int getFieldCount();
 
 	public IndexType getIndexType();

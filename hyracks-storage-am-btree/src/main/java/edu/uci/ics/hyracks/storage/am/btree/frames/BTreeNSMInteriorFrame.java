@@ -52,10 +52,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         cmpFrameTuple = tupleWriter.createTupleReference();
     }
 
-    private int getLeftChildPageOff(ITupleReference tuple) {
-        return tuple.getFieldStart(tuple.getFieldCount() - 1) + tuple.getFieldLength(tuple.getFieldCount() - 1);
-    }
-
     @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
@@ -64,15 +60,15 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
     @Override
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
-        int bytesRequired = tupleWriter.bytesRequired(tuple) + 8; // for the two
-        // childpointers
-        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
-                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
+    	// Tuple bytes + child pointer + slot.
+    	int bytesRequired = tupleWriter.bytesRequired(tuple) + childPtrSize + slotManager.getSlotSize();
+        if (bytesRequired <= getFreeContiguousSpace()) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-        else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
+        }
+        if (bytesRequired <= getTotalFreeSpace()) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
-        else
-            return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
+        }
+        return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     @Override
@@ -89,7 +85,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     
     @Override
     public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
-        // TODO: Maybe craft the interface such that this is not possible?
         throw new UnsupportedOperationException("Cannot update tuples in interior node.");
     }
 
@@ -148,7 +143,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
         ITreeIndexFrame targetFrame = null;
-        frameTuple.resetByTupleOffset(buf, getTupleOffset(tuplesToLeft - 1));
+        frameTuple.resetByTupleIndex(this, tuplesToLeft - 1);
         if (cmp.compare(tuple, frameTuple) <= 0) {
             targetFrame = this;
         } else {
@@ -435,6 +430,10 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     @Override
     public int getPageHeaderSize() {
         return rightLeafOff;
+    }
+    
+    private int getLeftChildPageOff(ITupleReference tuple) {
+        return tuple.getFieldStart(tuple.getFieldCount() - 1) + tuple.getFieldLength(tuple.getFieldCount() - 1);
     }
     
     // TODO: can we put these into a common AbstractFrame or something?

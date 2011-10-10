@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
 
+	public void initBuffer(byte level);
+	
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple);
 	
 	public void insert(ITupleReference tuple, int tupleIndex);    
@@ -39,9 +41,8 @@ public interface ITreeIndexFrame {
     // returns true if slots were modified, false otherwise
     public boolean compact();
 
+    // returns true if compressed.
     public boolean compress() throws HyracksDataException;
-
-    public void initBuffer(byte level);
 
     public int getTupleCount();
 

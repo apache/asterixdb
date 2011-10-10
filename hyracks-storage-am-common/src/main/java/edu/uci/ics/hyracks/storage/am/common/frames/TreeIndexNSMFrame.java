@@ -309,4 +309,9 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public ITreeIndexTupleReference createTupleReference() {
     	return tupleWriter.createTupleReference();
     }
+    
+	public int getFreeContiguousSpace() {
+		return buf.capacity() - getFreeSpaceOff()
+				- (getTupleCount() * slotManager.getSlotSize());
+	}
 }
