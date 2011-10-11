@@ -50,16 +50,16 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected static final int pageLsnOff = 0; // 0
-    protected static final int tupleCountOff = pageLsnOff + 4; // 4
-    protected static final int freeSpaceOff = tupleCountOff + 4; // 8
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 12
-    protected static final int levelOff = totalFreeSpaceOff + 4; // 16
-    protected static final int smFlagOff = levelOff + 1; // 17
-    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 18
-    protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 21
+    protected static final int tupleCountOff = pageLsnOff + 8; // 8
+    protected static final int freeSpaceOff = tupleCountOff + 4; // 12
+    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
+    protected static final int levelOff = totalFreeSpaceOff + 4; // 20
+    protected static final int smFlagOff = levelOff + 1; // 24
+    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 25
+    protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 26
 
-    protected static final int prevLeafOff = prefixTupleCountOff + 4; // 22
-    protected static final int nextLeafOff = prevLeafOff + 4; // 26
+    protected static final int prevLeafOff = prefixTupleCountOff + 4; // 30
+    protected static final int nextLeafOff = prevLeafOff + 4; // 34
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -335,7 +335,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public void initBuffer(byte level) {
-        buf.putInt(pageLsnOff, 0);
+        buf.putLong(pageLsnOff, 0);
         // during creation
         buf.putInt(tupleCountOff, 0);
         resetSpaceParams();
@@ -414,13 +414,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int getPageLsn() {
-        return buf.getInt(pageLsnOff);
+    public long getPageLsn() {
+        return buf.getLong(pageLsnOff);
     }
 
     @Override
-    public void setPageLsn(int pageLsn) {
-        buf.putInt(pageLsnOff, pageLsn);
+    public void setPageLsn(long pageLsn) {
+        buf.putLong(pageLsnOff, pageLsn);
     }
 
     @Override

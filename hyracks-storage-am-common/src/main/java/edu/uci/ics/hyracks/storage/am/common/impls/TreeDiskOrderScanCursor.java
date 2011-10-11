@@ -91,7 +91,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 		if (tupleIndex >= frame.getTupleCount()) {
 			boolean nextLeafExists = positionToNextLeaf(true);
 			if (nextLeafExists) {
-				frameTuple.resetByTupleIndex(frame, tupleIndex);				
+				frameTuple.resetByTupleIndex(frame, tupleIndex);
 				return true;
 			} else {
 				return false;

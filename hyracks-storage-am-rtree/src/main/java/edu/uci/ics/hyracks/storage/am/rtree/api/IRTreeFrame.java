@@ -26,9 +26,9 @@ public interface IRTreeFrame extends ITreeIndexFrame {
 
 	public void delete(int tupleIndex, MultiComparator cmp);
 
-	public int getPageNsn();
+	public long getPageNsn();
 
-	public void setPageNsn(int pageNsn);
+	public void setPageNsn(long pageNsn);
 
 	public int getRightPage();
 

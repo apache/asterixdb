@@ -95,13 +95,13 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	@Override
-	public void setPageNsn(int pageNsn) {
-		buf.putInt(pageNsnOff, pageNsn);
+	public void setPageNsn(long pageNsn) {
+		buf.putLong(pageNsnOff, pageNsn);
 	}
 
 	@Override
-	public int getPageNsn() {
-		return buf.getInt(pageNsnOff);
+	public long getPageNsn() {
+		return buf.getLong(pageNsnOff);
 	}
 
 	@Override

@@ -48,9 +48,9 @@ public interface ITreeIndexFrame {
 
     public int getTotalFreeSpace();
 
-    public void setPageLsn(int pageLsn);
+    public void setPageLsn(long pageLsn);
 
-    public int getPageLsn();
+    public long getPageLsn();
 
     public void setPage(ICachedPage page);
 

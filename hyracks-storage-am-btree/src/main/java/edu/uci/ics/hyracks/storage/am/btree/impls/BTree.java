@@ -52,7 +52,7 @@ public class BTree implements ITreeIndex {
 
     public static final float DEFAULT_FILL_FACTOR = 0.7f;
 
-    private final static int RESTART_OP = Integer.MIN_VALUE;
+    private final static long RESTART_OP = Long.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
     private final static int rootPage = 1;
         

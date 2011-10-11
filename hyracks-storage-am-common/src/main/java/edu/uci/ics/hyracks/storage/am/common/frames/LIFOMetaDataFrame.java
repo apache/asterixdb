@@ -27,11 +27,11 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
-	protected static final int tupleCountOff = 0;
-	protected static final int freeSpaceOff = tupleCountOff + 4;
-	protected static final int maxPageOff = freeSpaceOff + 4;
-	protected static final int dummyFieldOff = maxPageOff + 4;
-	protected static final byte levelOff = dummyFieldOff + 4;
+	protected static final int tupleCountOff = 0; // 0
+	protected static final int freeSpaceOff = tupleCountOff + 8; // 8 
+	protected static final int maxPageOff = freeSpaceOff + 4; // 12
+	protected static final int dummyFieldOff = maxPageOff + 4; // 16
+	protected static final byte levelOff = dummyFieldOff + 4; // 20
 	protected static final byte nextPageOff = levelOff + 1;
 
 	protected ICachedPage page = null;

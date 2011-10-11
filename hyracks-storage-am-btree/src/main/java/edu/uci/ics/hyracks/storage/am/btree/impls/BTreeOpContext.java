@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public final class BTreeOpContext implements IIndexOpContext {
@@ -34,7 +35,7 @@ public final class BTreeOpContext implements IIndexOpContext {
     public RangePredicate pred;
     public final BTreeSplitKey splitKey;
     public int opRestarts = 0;
-    public final IntArrayList pageLsns; // used like a stack
+    public final LongArrayList pageLsns; // used like a stack
     public final IntArrayList smPages;
     public final IntArrayList freePages;
 
@@ -50,7 +51,7 @@ public final class BTreeOpContext implements IIndexOpContext {
         }
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
-        this.pageLsns = new IntArrayList(treeHeightHint, treeHeightHint);
+        this.pageLsns = new LongArrayList(treeHeightHint, treeHeightHint);
         if (op == IndexOp.SEARCH || op == IndexOp.DISKORDERSCAN) {
             smPages = null;
             freePages = null;

@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -53,7 +52,7 @@ public class RTree implements ITreeIndex {
     private boolean loaded = false;
     private final int rootPage = 1; // the root page never changes
 
-    private final AtomicInteger globalNsn; // Global node sequence number
+    private final AtomicLong globalNsn; // Global node sequence number
     private int numOfPages = 1;
     private final ReadWriteLock treeLatch;
 
@@ -86,7 +85,7 @@ public class RTree implements ITreeIndex {
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;        
-        globalNsn = new AtomicInteger();
+        globalNsn = new AtomicLong();
         this.treeLatch = new ReentrantReadWriteLock(true);
         this.diskOrderScanPredicate = new SearchPredicate(null, cmp);
     }
@@ -95,7 +94,7 @@ public class RTree implements ITreeIndex {
         globalNsn.incrementAndGet();
     }
 
-    public int getGlobalNsn() {
+    public long getGlobalNsn() {
         return globalNsn.get();
     }
 
@@ -294,7 +293,7 @@ public class RTree implements ITreeIndex {
         boolean writeLatched = false;
         ICachedPage node = null;
         boolean isLeaf = false;
-        int pageLsn = 0, parentLsn = 0;
+        long pageLsn = 0, parentLsn = 0;
 
         while (true) {
             if (!writeLatched) {
@@ -457,7 +456,7 @@ public class RTree implements ITreeIndex {
                         ctx.interiorFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
                         incrementGlobalNsn();
-                        int newNsn = getGlobalNsn();
+                        long newNsn = getGlobalNsn();
                         rightFrame.setPageLsn(newNsn);
                         ctx.interiorFrame.setPageNsn(newNsn);
                         ctx.interiorFrame.setPageLsn(newNsn);
@@ -470,7 +469,7 @@ public class RTree implements ITreeIndex {
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
                         incrementGlobalNsn();
-                        int newNsn = getGlobalNsn();
+                        long newNsn = getGlobalNsn();
                         rightFrame.setPageLsn(newNsn);
                         ctx.leafFrame.setPageNsn(newNsn);
                         ctx.leafFrame.setPageLsn(newNsn);
@@ -502,7 +501,7 @@ public class RTree implements ITreeIndex {
                             ctx.interiorFrame.insert(ctx.splitKey.getRightTuple(), -1);
 
                             incrementGlobalNsn();
-                            int newNsn = getGlobalNsn();
+                            long newNsn = getGlobalNsn();
                             ctx.interiorFrame.setPageLsn(newNsn);
                             ctx.interiorFrame.setPageNsn(newNsn);
                         } finally {
@@ -584,8 +583,9 @@ public class RTree implements ITreeIndex {
     public void findPath(RTreeOpContext ctx) throws HyracksDataException {
         int pageId = rootPage;
         int parentIndex = -1;
-        int parentLsn = 0;
-        int pageLsn, pageIndex;
+        long parentLsn = 0;
+        long pageLsn;
+        int pageIndex;
         ctx.traverseList.add(pageId, -1, parentIndex);
         while (!ctx.traverseList.isLast()) {
             pageId = ctx.traverseList.getFirstPageId();
@@ -746,7 +746,7 @@ public class RTree implements ITreeIndex {
 
         while (!ctx.pathList.isEmpty()) {
             int pageId = ctx.pathList.getLastPageId();
-            int parentLsn = ctx.pathList.getLastPageLsn();
+            long parentLsn = ctx.pathList.getLastPageLsn();
             int pageIndex = ctx.pathList.getLastPageIndex();
             ctx.pathList.moveLast();
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
@@ -755,7 +755,7 @@ public class RTree implements ITreeIndex {
             incrementReadLatchesAcquired();
             ctx.interiorFrame.setPage(node);
             boolean isLeaf = ctx.interiorFrame.isLeaf();
-            int pageLsn = ctx.interiorFrame.getPageLsn();
+            long pageLsn = ctx.interiorFrame.getPageLsn();
             int parentIndex = ctx.traverseList.getPageIndex(pageIndex);
             ctx.traverseList.setPageLsn(pageIndex, pageLsn);
 

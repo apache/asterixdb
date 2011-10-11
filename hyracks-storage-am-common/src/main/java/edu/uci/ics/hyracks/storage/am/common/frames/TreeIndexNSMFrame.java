@@ -30,11 +30,11 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     protected static final int pageLsnOff = 0; // 0
-    protected static final int tupleCountOff = pageLsnOff + 4; // 4
-    protected static final int freeSpaceOff = tupleCountOff + 4; // 8
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
-    protected static final byte levelOff = totalFreeSpaceOff + 4;
-    protected static final byte smFlagOff = levelOff + 1;
+    protected static final int tupleCountOff = pageLsnOff + 8; // 8
+    protected static final int freeSpaceOff = tupleCountOff + 4; // 12
+    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 20
+    protected static final byte levelOff = totalFreeSpaceOff + 4; // 24
+    protected static final byte smFlagOff = levelOff + 1; // 25
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -52,7 +52,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public void initBuffer(byte level) {
-        buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn
+        buf.putLong(pageLsnOff, 0); // TODO: might to set to a different lsn
         // during creation
         buf.putInt(tupleCountOff, 0);
         resetSpaceParams();
@@ -248,13 +248,13 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public int getPageLsn() {
-        return buf.getInt(pageLsnOff);
+    public long getPageLsn() {
+        return buf.getLong(pageLsnOff);
     }
 
     @Override
-    public void setPageLsn(int pageLsn) {
-        buf.putInt(pageLsnOff, pageLsn);
+    public void setPageLsn(long pageLsn) {
+        buf.putLong(pageLsnOff, pageLsn);
     }
 
     @Override
