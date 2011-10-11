@@ -236,7 +236,7 @@ public class BTree implements ITreeIndex {
                     ctx.interiorFrame.setSmFlag(true); // will be cleared later
                     // in unsetSmPages
                     ctx.splitKey.setLeftPage(newLeftId);
-                    int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple(), cmp);
+                    int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple());
                     ctx.interiorFrame.insert(ctx.splitKey.getTuple(), targetTupleIndex);
                 } finally {
                     newLeftNode.releaseWriteLatch();
@@ -312,7 +312,7 @@ public class BTree implements ITreeIndex {
     
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
+        int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
@@ -323,7 +323,7 @@ public class BTree implements ITreeIndex {
             case SUFFICIENT_SPACE: {
                 boolean slotsChanged = ctx.leafFrame.compact();
                 if (slotsChanged) {
-                    targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
+                    targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                 }
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
@@ -334,7 +334,7 @@ public class BTree implements ITreeIndex {
                 boolean reCompressed = ctx.leafFrame.compress();
                 if (reCompressed) {
                     // Compression could have changed the target tuple index, find it again.
-                    targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
+                    targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
                 }
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
@@ -369,8 +369,7 @@ public class BTree implements ITreeIndex {
                 rightFrame.setPage(rightNode);
                 rightFrame.initBuffer((byte) 0);
                 rightFrame.setMultiComparator(cmp);
-
-                int ret = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
+                ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
 
                 ctx.smPages.add(pageId);
                 ctx.smPages.add(rightPageId);
@@ -388,11 +387,8 @@ public class BTree implements ITreeIndex {
                 rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
                 ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
 
-                if (ret != 0) {
-                    ctx.splitKey.reset();
-                } else {
-                    ctx.splitKey.setPages(pageId, rightPageId);
-                }
+                ctx.splitKey.setPages(pageId, rightPageId);
+                
                 if (rightSibling != null) {
                     rightSibling.acquireWriteLatch();
                     try {
@@ -422,7 +418,7 @@ public class BTree implements ITreeIndex {
     
     private void updateLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(tuple, cmp);
+        int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(tuple);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex);
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
@@ -439,7 +435,7 @@ public class BTree implements ITreeIndex {
                 // Delete the old tuple, compact the frame, and insert the new tuple.
                 ctx.leafFrame.delete(tuple, oldTupleIndex);
                 ctx.leafFrame.compact();
-                int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
+                int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
@@ -451,7 +447,7 @@ public class BTree implements ITreeIndex {
                 // We need to insert the new tuple, so check if there is space.
                 spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);                
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
-                    int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple, cmp);
+                    int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                     ctx.leafFrame.insert(tuple, targetTupleIndex);
                     ctx.splitKey.reset();
                 } else {
@@ -467,7 +463,7 @@ public class BTree implements ITreeIndex {
     private void insertInterior(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx)
             throws Exception {
         ctx.interiorFrame.setPage(node);
-        int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple, cmp);
+        int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple);
         FrameOpSpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case INSUFFICIENT_SPACE: {
@@ -481,7 +477,7 @@ public class BTree implements ITreeIndex {
                     rightFrame.setMultiComparator(cmp);
                     // instead of creating a new split key, use the existing
                     // splitKey
-                    int ret = ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), ctx.splitKey);
+                    ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), ctx.splitKey);
 
                     ctx.smPages.add(pageId);
                     ctx.smPages.add(rightPageId);
@@ -494,11 +490,7 @@ public class BTree implements ITreeIndex {
                     rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
                     ctx.interiorFrame.setPageLsn(ctx.interiorFrame.getPageLsn() + 1);
 
-                    if (ret != 0) {
-                        ctx.splitKey.reset();
-                    } else {
-                        ctx.splitKey.setPages(pageId, rightPageId);
-                    }
+                    ctx.splitKey.setPages(pageId, rightPageId);
                 } finally {
                     rightNode.releaseWriteLatch();
                     bufferCache.unpin(rightNode);
@@ -515,7 +507,7 @@ public class BTree implements ITreeIndex {
             case SUFFICIENT_SPACE: {
                 boolean slotsChanged = ctx.interiorFrame.compact();
                 if (slotsChanged) {
-                    targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple, cmp);
+                    targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(tuple);
                 }
                 ctx.interiorFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
@@ -527,7 +519,7 @@ public class BTree implements ITreeIndex {
     // TODO: to avoid latch deadlock, must modify cursor to detect empty leaves
     private void deleteLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
-        int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple, cmp);
+        int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
         // Will this leaf become empty?
         if (ctx.leafFrame.getTupleCount() == 1) {
             IBTreeLeafFrame siblingFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -619,7 +611,7 @@ public class BTree implements ITreeIndex {
             throws Exception {
         ctx.interiorFrame.setPage(node);
 
-        int tupleIndex = ctx.interiorFrame.findDeleteTupleIndex(tuple, cmp);
+        int tupleIndex = ctx.interiorFrame.findDeleteTupleIndex(tuple);
         
         // this means there is only a child pointer but no key, this case
         // propagates the split
@@ -923,7 +915,7 @@ public class BTree implements ITreeIndex {
             ctx.interiorFrame.setPage(frontier.page);
             ctx.interiorFrame.initBuffer((byte) level);
         }
-        ctx.interiorFrame.insertSorted(tuple, cmp);
+        ctx.interiorFrame.insertSorted(tuple);
     }
 
     // assumes btree has been created and opened
@@ -984,7 +976,7 @@ public class BTree implements ITreeIndex {
         }
 
         leafFrame.setPage(leafFrontier.page);
-        leafFrame.insertSorted(tuple, cmp);
+        leafFrame.insertSorted(tuple);
     }
 
     @Override

@@ -19,7 +19,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -56,7 +55,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
@@ -106,7 +105,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
     
     @Override
-    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
@@ -160,12 +159,12 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
     
     @Override
-    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         throw new UnsupportedOperationException("Cannot update tuples in interior node.");
     }
 
     @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
+    public void insertSorted(ITupleReference tuple) {
         int freeSpace = buf.getInt(freeSpaceOff);
         slotManager.insertSlot(slotManager.getGreatestKeyIndicator(), freeSpace);
         int bytesWritten = tupleWriter.writeTuple(tuple, buf, freeSpace);
@@ -180,9 +179,11 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
+        
+        // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
         ITreeIndexFrame targetFrame = null;
         frameTuple.resetByTupleIndex(this, tuplesToLeft - 1);
@@ -232,10 +233,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // Insert the saved split key.
         int targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame)
-                .findInsertTupleIndex(savedSplitKey.getTuple(), cmp);
+                .findInsertTupleIndex(savedSplitKey.getTuple());
         targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
-
-        return 0;
     }
 
     @Override

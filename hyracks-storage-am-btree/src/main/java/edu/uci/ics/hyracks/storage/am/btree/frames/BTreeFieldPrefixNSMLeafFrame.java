@@ -356,7 +356,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
     	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
@@ -368,7 +368,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
-    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
@@ -380,7 +380,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
-    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
@@ -470,7 +470,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
+    public void insertSorted(ITupleReference tuple) {
         int freeSpace = buf.getInt(freeSpaceOff);
         int fieldsToTruncate = 0;
 
@@ -501,7 +501,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
     		throws TreeIndexException {
 
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame)rightFrame;
@@ -510,6 +510,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleCount = getTupleCount();
         int prefixTupleCount = getPrefixTupleCount();
 
+        // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft;
         int midSlotNum = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
@@ -615,7 +616,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         rightFrame.compact();
 
         // insert last key
-        int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
+        int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple);
         targetFrame.insert(tuple, targetTupleIndex);
 
         // set split key to be highest value in left page
@@ -625,8 +626,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-
-        return 0;
     }
 
     @Override

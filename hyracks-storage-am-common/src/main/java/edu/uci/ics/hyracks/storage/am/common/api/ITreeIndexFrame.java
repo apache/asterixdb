@@ -61,7 +61,7 @@ public interface ITreeIndexFrame {
     // for debugging
     public void printHeader();
 
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
 
     public ISlotManager getSlotManager();
 

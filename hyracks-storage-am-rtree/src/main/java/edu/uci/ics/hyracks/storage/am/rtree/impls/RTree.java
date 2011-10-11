@@ -447,15 +447,13 @@ public class RTree implements ITreeIndex {
 
                 try {
                     IRTreeFrame rightFrame;
-                    int ret;
                     numOfPages++; // debug
                     if (!isLeaf) {
                         splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
                         rightFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
-                        //rightFrame.setPageTupleFieldCount(cmp.getKeyFieldCount());
-                        ret = ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey);
+                        ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.interiorFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
                         incrementGlobalNsn();
@@ -468,7 +466,7 @@ public class RTree implements ITreeIndex {
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
-                        ret = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
+                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                         rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
                         incrementGlobalNsn();
@@ -477,11 +475,7 @@ public class RTree implements ITreeIndex {
                         ctx.leafFrame.setPageNsn(newNsn);
                         ctx.leafFrame.setPageLsn(newNsn);
                     }
-                    if (ret != 0) {
-                        ctx.splitKey.reset();
-                    } else {
-                        ctx.splitKey.setPages(pageId, rightPageId);
-                    }
+                    ctx.splitKey.setPages(pageId, rightPageId);
                     if (pageId == rootPage) {
                         rootSplits++; // debug
                         splitsByLevel[currentLevel]++;

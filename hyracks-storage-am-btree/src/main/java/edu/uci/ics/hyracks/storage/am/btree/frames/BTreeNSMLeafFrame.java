@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
@@ -69,7 +68,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public int findInsertTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is an exact match.
@@ -80,7 +79,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
     
     @Override
-    public int findUpdateTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
@@ -91,7 +90,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
     
     @Override
-    public int findDeleteTupleIndex(ITupleReference tuple, MultiComparator cmp) throws TreeIndexException {
+    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
@@ -103,8 +102,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
-        slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
+        slotManager.insertSlot(tupleIndex, freeSpace);        
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
@@ -112,21 +111,17 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
-        int freeSpace = buf.getInt(freeSpaceOff);
-        slotManager.insertSlot(-1, freeSpace);
-        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+    public void insertSorted(ITupleReference tuple) {
+        insert(tuple, slotManager.getGreatestKeyIndicator());
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
-
         int tuplesToLeft;
+        
+        // Find split point, and determine into which frame the new tuple should be inserted into.
         int mid = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
@@ -140,10 +135,10 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         }
         int tuplesToRight = tupleCount - tuplesToLeft;
 
-        // copy entire page
+        // Copy entire page.
         System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
 
-        // on right page we need to copy rightmost slots to left
+        // On the right page we need to copy rightmost slots to the left.
         int src = rightFrame.getSlotManager().getSlotEndOff();
         int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft
                 * rightFrame.getSlotManager().getSlotSize();
@@ -151,27 +146,24 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         System.arraycopy(right.array(), src, right.array(), dest, length);
         right.putInt(tupleCountOff, tuplesToRight);
 
-        // on left page only change the tupleCount indicator
+        // On left page only change the tupleCount indicator.
         buf.putInt(tupleCountOff, tuplesToLeft);
 
-        // compact both pages
+        // Compact both pages.
         rightFrame.compact();
         compact();
 
-        // insert last key
-        int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple, cmp);
+        // Insert the new tuple.
+        int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple);
         targetFrame.insert(tuple, targetTupleIndex);
 
-        // set split key to be highest value in left page
+        // Set the split key to be highest key in the left page.
         tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
         frameTuple.resetByTupleOffset(buf, tupleOff);
-
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-
-        return 0;
     }
 
     @Override
