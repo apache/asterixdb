@@ -118,10 +118,10 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
         ByteBuffer right = rightFrame.getBuffer();
-        int tupleCount = getTupleCount();
-        int tuplesToLeft;
+        int tupleCount = getTupleCount();        
         
         // Find split point, and determine into which frame the new tuple should be inserted into.
+        int tuplesToLeft;
         int mid = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
@@ -188,19 +188,18 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         return nextLeafOff;
     }
 
-    // TODO: can we put these into a common AbstractFrame or something?
     @Override
     public boolean getSmFlag() {
         return buf.get(smFlagOff) != 0;
     }
 
-    // TODO: can we put these into a common AbstractFrame or something?
     @Override
     public void setSmFlag(boolean smFlag) {
-        if (smFlag)
+        if (smFlag) {
             buf.put(smFlagOff, (byte) 1);
-        else
+        } else {
             buf.put(smFlagOff, (byte) 0);
+        }
     }
     
 	@Override

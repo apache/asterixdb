@@ -54,7 +54,6 @@ public class BTree implements ITreeIndex {
 
     private final static int RESTART_OP = Integer.MIN_VALUE;
     private final static int MAX_RESTARTS = 10;
-    // Fixed root page.
     private final static int rootPage = 1;
         
     private boolean created = false;
@@ -109,7 +108,7 @@ public class BTree implements ITreeIndex {
 
     private void addFreePages(BTreeOpContext ctx) throws HyracksDataException {
         for (int i = 0; i < ctx.freePages.size(); i++) {
-            // root page is special, don't add it to free pages
+            // Root page is special, never add it to free pages.
             if (ctx.freePages.get(i) != rootPage) {
                 freePageManager.addFreePage(ctx.metaFrame, ctx.freePages.get(i));
             }
@@ -205,7 +204,7 @@ public class BTree implements ITreeIndex {
     }
     
     private void createNewRoot(BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        // make sure the root is always at the same level
+        // Make sure the root is always in the same page.
         ICachedPage leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()),
                 false);
         leftNode.acquireWriteLatch();
@@ -218,23 +217,21 @@ public class BTree implements ITreeIndex {
                 ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId), true);
                 newLeftNode.acquireWriteLatch();
                 try {
-                    // copy left child to new left child
+                    // Copy left child to new left child.
                     System.arraycopy(leftNode.getBuffer().array(), 0, newLeftNode.getBuffer().array(), 0, newLeftNode
                             .getBuffer().capacity());
                     ctx.interiorFrame.setPage(newLeftNode);
                     ctx.interiorFrame.setSmFlag(false);
-
-                    // change sibling pointer if children are leaves
+                    // Change sibling pointer if children are leaves.
                     ctx.leafFrame.setPage(rightNode);
                     if (ctx.leafFrame.isLeaf()) {
                         ctx.leafFrame.setPrevLeaf(newLeftId);
                     }
-
-                    // initialize new root (leftNode becomes new root)
+                    // Initialize new root (leftNode becomes new root).
                     ctx.interiorFrame.setPage(leftNode);
                     ctx.interiorFrame.initBuffer((byte) (ctx.leafFrame.getLevel() + 1));
-                    ctx.interiorFrame.setSmFlag(true); // will be cleared later
-                    // in unsetSmPages
+                    // Will be cleared later in unsetSmPages.
+                    ctx.interiorFrame.setSmFlag(true);
                     ctx.splitKey.setLeftPage(newLeftId);
                     int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple());
                     ctx.interiorFrame.insert(ctx.splitKey.getTuple(), targetTupleIndex);
@@ -296,8 +293,8 @@ public class BTree implements ITreeIndex {
 
     @Override
     public void update(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
-        // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // This call only allows updating of non-key fields.
+        // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
         if (fieldCount == cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
@@ -392,10 +389,7 @@ public class BTree implements ITreeIndex {
                 if (rightSibling != null) {
                     rightSibling.acquireWriteLatch();
                     try {
-                        // reuse
-                        // rightFrame
-                        // for
-                        // modification
+                        // Reuse rightFrame for modification.
                         rightFrame.setPage(rightSibling);
                         rightFrame.setPrevLeaf(rightPageId);
                     } finally {
@@ -478,12 +472,10 @@ public class BTree implements ITreeIndex {
                     // instead of creating a new split key, use the existing
                     // splitKey
                     ctx.interiorFrame.split(rightFrame, ctx.splitKey.getTuple(), ctx.splitKey);
-
                     ctx.smPages.add(pageId);
                     ctx.smPages.add(rightPageId);
                     ctx.interiorFrame.setSmFlag(true);
                     rightFrame.setSmFlag(true);
-
                     // TODO: we just use increasing numbers as pageLsn, we
                     // should tie this together with the LogManager and
                     // TransactionManager
@@ -516,94 +508,94 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    // TODO: to avoid latch deadlock, must modify cursor to detect empty leaves
     private void deleteLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
         ctx.leafFrame.setPage(node);
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
+
         // Will this leaf become empty?
-        if (ctx.leafFrame.getTupleCount() == 1) {
-            IBTreeLeafFrame siblingFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
-            siblingFrame.setMultiComparator(cmp);
-            ICachedPage leftNode = null;
-            ICachedPage rightNode = null;
-            int nextLeaf = ctx.leafFrame.getNextLeaf();
-            int prevLeaf = ctx.leafFrame.getPrevLeaf();
-            if (prevLeaf > 0) {
-                leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, prevLeaf), false);
-            }
-            try {
-                if (nextLeaf > 0) {
-                    rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), false);
-                }
-                try {
-                    treeLatch.writeLock().lock();
-                    try {
-                        ctx.leafFrame.delete(tuple, tupleIndex);
-                        // to propagate the deletion we only need to make the
-                        // splitKey != null
-                        // we can reuse data to identify which key to delete in
-                        // the parent
-                        ctx.splitKey.initData(1);
-                    } catch (Exception e) {
-                        // don't propagate deletion upwards if deletion at this
-                        // level fails
-                        ctx.splitKey.reset();
-                        throw e;
-                    }
-
-                    // TODO: Tie together with logging.
-                    ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
-                    ctx.leafFrame.setLevel(freePageManager.getFreePageLevelIndicator());
-
-                    ctx.smPages.add(pageId);
-                    ctx.leafFrame.setSmFlag(true);
-
-                    node.releaseWriteLatch();
-                    bufferCache.unpin(node);
-
-                    if (leftNode != null) {
-                        leftNode.acquireWriteLatch();
-                        try {
-                            siblingFrame.setPage(leftNode);
-                            siblingFrame.setNextLeaf(nextLeaf);
-                            // TODO: Tie together with logging.
-                            siblingFrame.setPageLsn(siblingFrame.getPageLsn() + 1);
-                        } finally {
-                            leftNode.releaseWriteLatch();
-                        }
-                    }
-
-                    if (rightNode != null) {
-                        rightNode.acquireWriteLatch();
-                        try {
-                            siblingFrame.setPage(rightNode);
-                            siblingFrame.setPrevLeaf(prevLeaf);
-                            // TODO: Tie together with logging.
-                            siblingFrame.setPageLsn(siblingFrame.getPageLsn() + 1);
-                        } finally {
-                            rightNode.releaseWriteLatch();
-                        }
-                    }
-                    // Register pageId as a free.
-                    ctx.freePages.add(pageId);
-                } catch (Exception e) {
-                    treeLatch.writeLock().unlock();
-                    throw e;
-                } finally {
-                    if (rightNode != null) {
-                        bufferCache.unpin(rightNode);
-                    }
-                }
-            } finally {
-                if (leftNode != null) {
-                    bufferCache.unpin(leftNode);
-                }
-            }
-        } else {
-            // Leaf will not become empty
+        if (ctx.leafFrame.getTupleCount() != 1) {
+            // Leaf will not become empty.
             ctx.leafFrame.delete(tuple, tupleIndex);
             node.releaseWriteLatch();
             bufferCache.unpin(node);
+            return;
+        }
+        
+        // Leaf will become empty. 
+        IBTreeLeafFrame siblingFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        siblingFrame.setMultiComparator(cmp);
+        ICachedPage leftNode = null;
+        ICachedPage rightNode = null;
+        int nextLeaf = ctx.leafFrame.getNextLeaf();
+        int prevLeaf = ctx.leafFrame.getPrevLeaf();
+        if (prevLeaf > 0) {
+            leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, prevLeaf), false);
+        }
+        try {
+            if (nextLeaf > 0) {
+                rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), false);
+            }
+            try {
+                treeLatch.writeLock().lock();
+                try {
+                    ctx.leafFrame.delete(tuple, tupleIndex);
+                    // To propagate the deletion we only need to make the
+                    // splitKey != null.
+                    // Reuse data to identify which key to delete in the parent.
+                    ctx.splitKey.initData(1);
+                } catch (Exception e) {
+                    // Don't propagate deletion.
+                    ctx.splitKey.reset();
+                    throw e;
+                }
+
+                // TODO: Tie together with logging.
+                ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
+                ctx.leafFrame.setLevel(freePageManager.getFreePageLevelIndicator());
+
+                ctx.smPages.add(pageId);
+                ctx.leafFrame.setSmFlag(true);
+
+                node.releaseWriteLatch();
+                bufferCache.unpin(node);
+
+                if (leftNode != null) {
+                    leftNode.acquireWriteLatch();
+                    try {
+                        siblingFrame.setPage(leftNode);
+                        siblingFrame.setNextLeaf(nextLeaf);
+                        // TODO: Tie together with logging.
+                        siblingFrame.setPageLsn(siblingFrame.getPageLsn() + 1);
+                    } finally {
+                        leftNode.releaseWriteLatch();
+                    }
+                }
+
+                if (rightNode != null) {
+                    rightNode.acquireWriteLatch();
+                    try {
+                        siblingFrame.setPage(rightNode);
+                        siblingFrame.setPrevLeaf(prevLeaf);
+                        // TODO: Tie together with logging.
+                        siblingFrame.setPageLsn(siblingFrame.getPageLsn() + 1);
+                    } finally {
+                        rightNode.releaseWriteLatch();
+                    }
+                }
+                // Register pageId as a free.
+                ctx.freePages.add(pageId);
+            } catch (Exception e) {
+                treeLatch.writeLock().unlock();
+                throw e;
+            } finally {
+                if (rightNode != null) {
+                    bufferCache.unpin(rightNode);
+                }
+            }
+        } finally {
+            if (leftNode != null) {
+                bufferCache.unpin(leftNode);
+            }
         }
     }
 
