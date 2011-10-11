@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -105,7 +106,7 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing
-        ISerializerDeserializer[] sers = { IntegerSerializerDeserializer.INSTANCE,
+        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         Random rnd = new Random();
@@ -156,16 +157,16 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 savedFields[i][2] = c;
 
                 if (rnd.nextInt() % compactFreq == 0) {
-                    before = frame.printKeys(cmp, sers);                    
+                    before = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     frame.compact();
-                    after = frame.printKeys(cmp, sers);
+                    after = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     Assert.assertEquals(before, after);
                 }
 
                 if (rnd.nextInt() % compressFreq == 0) {
-                    before = frame.printKeys(cmp, sers);
+                    before = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     frame.compress();
-                    after = frame.printKeys(cmp, sers);
+                    after = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     Assert.assertEquals(before, after);
                 }
 
@@ -185,16 +186,16 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
                 }
 
                 if (rnd.nextInt() % compactFreq == 0) {
-                    before = frame.printKeys(cmp, sers);
+                    before = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     frame.compact();
-                    after = frame.printKeys(cmp, sers);
+                    after = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     Assert.assertEquals(before, after);
                 }
 
                 if (rnd.nextInt() % compressFreq == 0) {
-                    before = frame.printKeys(cmp, sers);
+                    before = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     frame.compress();
-                    after = frame.printKeys(cmp, sers);
+                    after = TreeIndexUtils.printFrameTuples(frame, fieldSerdes);
                     Assert.assertEquals(before, after);
                 }
             }

@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -141,13 +142,13 @@ public class RTree implements ITreeIndex {
         return strBuilder.toString();
     }
 
-    public void printTree(IRTreeFrame leafFrame, IRTreeFrame interiorFrame, ISerializerDeserializer[] fields)
+    public void printTree(IRTreeFrame leafFrame, IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes)
             throws Exception {
-        printTree(rootPage, null, false, leafFrame, interiorFrame, fields);
+        printTree(rootPage, null, false, leafFrame, interiorFrame, keySerdes);
     }
 
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeFrame leafFrame,
-            IRTreeFrame interiorFrame, ISerializerDeserializer[] fields) throws Exception {
+            IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes) throws Exception {
 
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         incrementPins();
@@ -173,16 +174,16 @@ public class RTree implements ITreeIndex {
             String keyString;
             if (interiorFrame.isLeaf()) {
                 leafFrame.setPage(node);
-                keyString = leafFrame.printKeys(cmp, fields);
+                keyString = TreeIndexUtils.printFrameTuples(leafFrame, keySerdes);
             } else {
-                keyString = interiorFrame.printKeys(cmp, fields);
+                keyString = TreeIndexUtils.printFrameTuples(interiorFrame, keySerdes);
             }
 
             System.out.format(keyString);
             if (!interiorFrame.isLeaf()) {
                 ArrayList<Integer> children = ((RTreeNSMFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {
-                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, fields);
+                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, keySerdes);
                 }
             } else {
                 node.releaseReadLatch();

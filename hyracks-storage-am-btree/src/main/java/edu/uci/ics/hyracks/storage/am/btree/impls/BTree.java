@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -1082,17 +1083,17 @@ public class BTree implements ITreeIndex {
     }
     
     @SuppressWarnings("rawtypes") 
-    public String printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] fieldSerdes)
+    public String printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] keySerdes)
             throws Exception {
         byte treeHeight = getTreeHeight(leafFrame);
         StringBuilder strBuilder = new StringBuilder();
-        printTree(rootPage, null, false, leafFrame, interiorFrame, treeHeight, fieldSerdes, strBuilder);
+        printTree(rootPage, null, false, leafFrame, interiorFrame, treeHeight, keySerdes, strBuilder);
         return strBuilder.toString();
     }
 
     @SuppressWarnings("rawtypes") 
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
-            IBTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] fieldSerdes, StringBuilder strBuilder) throws Exception {
+            IBTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] keySerdes, StringBuilder strBuilder) throws Exception {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         node.acquireReadLatch();
         try {
@@ -1111,16 +1112,16 @@ public class BTree implements ITreeIndex {
             String keyString;
             if (interiorFrame.isLeaf()) {
                 leafFrame.setPage(node);
-                keyString = leafFrame.printKeys(cmp, fieldSerdes);
+                keyString = TreeIndexUtils.printFrameTuples(leafFrame, keySerdes);
             } else {
-                keyString = interiorFrame.printKeys(cmp, fieldSerdes);
+                keyString = TreeIndexUtils.printFrameTuples(interiorFrame, keySerdes);
             }
 
             strBuilder.append(keyString);
             if (!interiorFrame.isLeaf()) {
                 ArrayList<Integer> children = ((BTreeNSMInteriorFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {
-                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, treeHeight, fieldSerdes, strBuilder);
+                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, treeHeight, keySerdes, strBuilder);
                 }
             } else {
                 node.releaseReadLatch();

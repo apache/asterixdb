@@ -15,14 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -267,8 +263,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex) {
         int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
         frameTuple.resetByTupleIndex(this, tupleIndex);
-        // TODO: Do we need to set the field count here?
-        //frameTuple.setFieldCount(cmp.getFieldCount());
         
         int oldTupleBytes = 0;
         int newTupleBytes = 0;
@@ -341,7 +335,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public void initBuffer(byte level) {
-        buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn
+        buf.putInt(pageLsnOff, 0);
         // during creation
         buf.putInt(tupleCountOff, 0);
         resetSpaceParams();
@@ -410,26 +404,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     public ISlotManager getSlotManager() {
         return null;
-    }
-
-    @Override
-    public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException {
-        StringBuilder strBuilder = new StringBuilder();
-        int tupleCount = buf.getInt(tupleCountOff);
-        frameTuple.setFieldCount(fields.length);
-        for (int i = 0; i < tupleCount; i++) {
-            frameTuple.resetByTupleIndex(this, i);
-            for (int j = 0; j < cmp.getKeyFieldCount(); j++) {
-                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j),
-                        frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
-                DataInput dataIn = new DataInputStream(inStream);
-                Object o = fields[j].deserialize(dataIn);
-                strBuilder.append(o.toString() + " ");
-            }
-            strBuilder.append(" | ");
-        }
-        strBuilder.append("\n");
-        return strBuilder.toString();
     }
 
     @Override
