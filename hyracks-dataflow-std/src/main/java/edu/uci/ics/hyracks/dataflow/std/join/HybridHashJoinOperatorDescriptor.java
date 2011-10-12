@@ -51,6 +51,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
+import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
@@ -306,10 +308,11 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)
                             .createPartitioner();
                     int tableSize = (int) (state.memoryForHashtable * recordsPerFrame * factor);
+                    ISerializableTable table = new SerializableHashTable(tableSize, ctx);
                     state.joiner = new InMemoryHashJoin(ctx, tableSize,
                             new FrameTupleAccessor(ctx.getFrameSize(), rd0), hpc0, new FrameTupleAccessor(
                                     ctx.getFrameSize(), rd1), hpc1, new FrameTuplePairComparator(keys0, keys1,
-                                    comparators), isLeftOuter, nullWriters1);
+                                    comparators), isLeftOuter, nullWriters1, table);
                     bufferForPartitions = new ByteBuffer[state.nPartitions];
                     state.fWriters = new RunFileWriter[state.nPartitions];
                     for (int i = 0; i < state.nPartitions; i++) {
@@ -487,11 +490,11 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                             if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
                                 continue;
                             }
-
+                            ISerializableTable table = new SerializableHashTable(tableSize, ctx);
                             InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
                                     ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1),
                                     hpcRep1, new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
-                                    nullWriters1);
+                                    nullWriters1, table);
 
                             if (buildWriter != null) {
                                 RunFileReader buildReader = buildWriter.createReader();

@@ -50,6 +50,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
+import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int RPARTITION_ACTIVITY_ID = 0;
@@ -304,15 +306,18 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                         ByteBuffer buffer = ctx.allocateFrame();// input
                         // buffer
                         int tableSize = (int) (numPartitions * recordsPerFrame * factor);
+                        ISerializableTable table = new SerializableHashTable(tableSize, ctx);
+                        
                         for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
                             RunFileWriter buildWriter = buildWriters[partitionid];
                             RunFileWriter probeWriter = probeWriters[partitionid];
                             if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
                                 continue;
                             }
+                            table.reset();
                             joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(),
                                     rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                                    new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1);
+                                    new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table);
 
                             // build
                             if (buildWriter != null) {
