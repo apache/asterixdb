@@ -195,7 +195,7 @@ public abstract class ApplicationContext implements IApplicationContext {
     }
 
     @Override
-    public Serializable getDestributedState() {
+    public Serializable getDistributedState() {
         return distributedState;
     }
 

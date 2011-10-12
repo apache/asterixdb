@@ -48,7 +48,7 @@ public class ApplicationStartEvent extends AbstractEvent {
         try {
             appCtx.initializeClassPath();
             appCtx.initialize();
-            final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDestributedState());
+            final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDistributedState());
             final boolean deployHar = appCtx.containsHar();
             List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
             for (final String nodeId : ccs.getNodeMap().keySet()) {
