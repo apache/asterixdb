@@ -38,7 +38,6 @@ import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
@@ -69,8 +68,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final Map<String, Counter> counterMap;
 
-    private final Map<MultipartName, Object> localVariableMap;
-
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final IWorkspaceFileFactory fileFactory;
@@ -84,7 +81,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         taskStateMap = new HashMap<TaskId, ITaskState>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
-        localVariableMap = new HashMap<MultipartName, Object>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
     }
@@ -111,17 +107,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public Map<TaskAttemptId, Task> getTaskMap() {
         return taskMap;
-    }
-
-    public synchronized Object lookupLocalVariable(MultipartName name) throws HyracksDataException {
-        if (!localVariableMap.containsKey(name)) {
-            throw new HyracksDataException("Unknown variable: " + name);
-        }
-        return localVariableMap.get(name);
-    }
-
-    public synchronized void setLocalVariable(MultipartName name, Object value) {
-        localVariableMap.put(name, value);
     }
 
     private final class OperatorEnvironmentImpl implements IOperatorEnvironment {
@@ -154,12 +139,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         taskMap.remove(task);
         TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
         task.dumpProfile(taskProfile);
-        nodeController.notifyTaskComplete(jobId, task.getTaskAttemptId(), taskProfile);
+        nodeController.getClusterController().notifyTaskComplete(jobId, task.getTaskAttemptId(),
+                nodeController.getId(), taskProfile);
     }
 
-    public synchronized void notifyTaskFailed(Task task, Exception exception) {
+    public synchronized void notifyTaskFailed(Task task, Exception exception) throws Exception {
         taskMap.remove(task);
-        nodeController.notifyTaskFailed(jobId, task.getTaskAttemptId(), exception);
+        nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), nodeController.getId(),
+                exception);
     }
 
     public NodeControllerService getNodeController() {

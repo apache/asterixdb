@@ -32,9 +32,9 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     protected static final int pageLsnOff = 0; // 0
     protected static final int tupleCountOff = pageLsnOff + 8; // 8
     protected static final int freeSpaceOff = tupleCountOff + 4; // 12
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 20
-    protected static final byte levelOff = totalFreeSpaceOff + 4; // 24
-    protected static final byte smFlagOff = levelOff + 1; // 25
+    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
+    protected static final int levelOff = totalFreeSpaceOff + 4; // 20
+    protected static final int smFlagOff = levelOff + 1; // 21
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -228,9 +228,15 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
-    public void printHeader() {
-        // TODO Auto-generated method stub
-
+    public String printHeader() {
+    	StringBuilder strBuilder = new StringBuilder();
+    	strBuilder.append("pageLsnOff:        " + pageLsnOff + "\n");
+    	strBuilder.append("tupleCountOff:     " + tupleCountOff + "\n");
+    	strBuilder.append("freeSpaceOff:      " + freeSpaceOff + "\n");
+    	strBuilder.append("totalFreeSpaceOff: " + totalFreeSpaceOff + "\n");
+    	strBuilder.append("levelOff:          " + levelOff + "\n");
+    	strBuilder.append("smFlagOff:         " + smFlagOff + "\n");
+    	return strBuilder.toString();
     }
 
     @Override

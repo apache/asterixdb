@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.common.controllers;
 
+import java.util.List;
+
 import org.kohsuke.args4j.Option;
 
 public class CCConfig {
@@ -34,4 +36,19 @@ public class CCConfig {
 
     @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
     public int defaultMaxJobAttempts = 5;
+
+    public void toCommandLine(List<String> cList) {
+        cList.add("-port");
+        cList.add(String.valueOf(port));
+        cList.add("-http-port");
+        cList.add(String.valueOf(httpPort));
+        cList.add("-heartbeat-period");
+        cList.add(String.valueOf(heartbeatPeriod));
+        cList.add("-max-heartbeat-lapse-periods");
+        cList.add(String.valueOf(maxHeartbeatLapsePeriods));
+        cList.add("-profile-dump-period");
+        cList.add(String.valueOf(profileDumpPeriod));
+        cList.add("-default-max-job-attempts");
+        cList.add(String.valueOf(defaultMaxJobAttempts));
+    }
 }

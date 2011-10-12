@@ -59,7 +59,7 @@ public interface ITreeIndexFrame {
     public ByteBuffer getBuffer();
     
     // for debugging
-    public void printHeader();
+    public String printHeader();
 
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
 

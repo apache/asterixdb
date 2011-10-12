@@ -136,7 +136,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                         try {
                             wait();
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            throw new HyracksDataException(e);
                         }
                     }
                 }

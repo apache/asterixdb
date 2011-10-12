@@ -42,24 +42,22 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ApplicationDestroyEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ApplicationStartEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobStatusConditionVariableEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobStatusEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCreateEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.JobStartEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.NodeHeartbeatEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterNodeEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionAvailibilityEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionRequestEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RemoveDeadNodesEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ReportProfilesEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskCompleteEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskFailureEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.UnregisterNodeEvent;
-import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
-import edu.uci.ics.hyracks.control.cc.jobqueue.JobQueue;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
+import edu.uci.ics.hyracks.control.cc.work.JobCreateWork;
+import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
+import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
+import edu.uci.ics.hyracks.control.cc.work.RegisterNodeWork;
+import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionAvailibilityWork;
+import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionRequestWork;
+import edu.uci.ics.hyracks.control.cc.work.RemoveDeadNodesWork;
+import edu.uci.ics.hyracks.control.cc.work.ReportProfilesWork;
+import edu.uci.ics.hyracks.control.cc.work.TaskCompleteWork;
+import edu.uci.ics.hyracks.control.cc.work.TaskFailureWork;
+import edu.uci.ics.hyracks.control.cc.work.UnregisterNodeWork;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
@@ -72,6 +70,8 @@ import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
+import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
         IHyracksClientInterface {
@@ -95,7 +95,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final Map<JobId, JobRun> runMap;
 
-    private final JobQueue jobQueue;
+    private final WorkQueue jobQueue;
 
     private final Executor taskExecutor;
 
@@ -117,7 +117,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
         runMap = new HashMap<JobId, JobRun>();
-        jobQueue = new JobQueue();
+        jobQueue = new WorkQueue();
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
         ccContext = new ICCContext() {
@@ -158,7 +158,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return runMap;
     }
 
-    public JobQueue getJobQueue() {
+    public WorkQueue getJobQueue() {
         return jobQueue;
     }
 
@@ -185,7 +185,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         JobId jobId = createJobId();
-        JobCreateEvent jce = new JobCreateEvent(this, jobId, appName, jobSpec, jobFlags);
+        JobCreateWork jce = new JobCreateWork(this, jobId, appName, jobSpec, jobFlags);
         jobQueue.schedule(jce);
         jce.sync();
         return jobId;
@@ -196,7 +196,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         INodeController nodeController = reg.getNodeController();
         String id = reg.getNodeId();
         NodeControllerState state = new NodeControllerState(nodeController, reg);
-        jobQueue.scheduleAndSync(new RegisterNodeEvent(this, id, state));
+        jobQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
@@ -209,40 +209,40 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void unregisterNode(INodeController nodeController) throws Exception {
         String id = nodeController.getId();
-        jobQueue.scheduleAndSync(new UnregisterNodeEvent(this, id));
+        jobQueue.scheduleAndSync(new UnregisterNodeWork(this, id));
         LOGGER.log(Level.INFO, "Unregistered INodeController");
     }
 
     @Override
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
-        TaskCompleteEvent sce = new TaskCompleteEvent(this, jobId, taskId, nodeId);
+        TaskCompleteWork sce = new TaskCompleteWork(this, jobId, taskId, nodeId);
         jobQueue.schedule(sce);
     }
 
     @Override
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception exception)
             throws Exception {
-        TaskFailureEvent tfe = new TaskFailureEvent(this, jobId, taskId, nodeId, exception);
+        TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, exception);
         jobQueue.schedule(tfe);
     }
 
     @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
-        GetJobStatusEvent gse = new GetJobStatusEvent(this, jobId);
+        GetJobStatusWork gse = new GetJobStatusWork(this, jobId);
         jobQueue.scheduleAndSync(gse);
         return gse.getStatus();
     }
 
     @Override
     public void start(JobId jobId) throws Exception {
-        JobStartEvent jse = new JobStartEvent(this, jobId);
+        JobStartWork jse = new JobStartWork(this, jobId);
         jobQueue.schedule(jse);
     }
 
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
-        GetJobStatusConditionVariableEvent e = new GetJobStatusConditionVariableEvent(this, jobId);
+        GetJobStatusConditionVariableWork e = new GetJobStatusConditionVariableWork(this, jobId);
         jobQueue.scheduleAndSync(e);
         IJobStatusConditionVariable var = e.getConditionVariable();
         if (var != null) {
@@ -252,12 +252,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception {
-        jobQueue.schedule(new ReportProfilesEvent(this, profiles));
+        jobQueue.schedule(new ReportProfilesWork(this, profiles));
     }
 
     @Override
     public synchronized void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
-        jobQueue.schedule(new NodeHeartbeatEvent(this, id, hbData));
+        jobQueue.schedule(new NodeHeartbeatWork(this, id, hbData));
     }
 
     @Override
@@ -274,14 +274,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void destroyApplication(String appName) throws Exception {
         FutureValue fv = new FutureValue();
-        jobQueue.schedule(new ApplicationDestroyEvent(this, appName, fv));
+        jobQueue.schedule(new ApplicationDestroyWork(this, appName, fv));
         fv.get();
     }
 
     @Override
     public void startApplication(final String appName) throws Exception {
         FutureValue fv = new FutureValue();
-        jobQueue.schedule(new ApplicationStartEvent(this, appName, fv));
+        jobQueue.schedule(new ApplicationStartWork(this, appName, fv));
         fv.get();
     }
 
@@ -292,18 +292,18 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) {
-        jobQueue.schedule(new RegisterPartitionAvailibilityEvent(this, partitionDescriptor));
+        jobQueue.schedule(new RegisterPartitionAvailibilityWork(this, partitionDescriptor));
     }
 
     @Override
     public void registerPartitionRequest(PartitionRequest partitionRequest) {
-        jobQueue.schedule(new RegisterPartitionRequestEvent(this, partitionRequest));
+        jobQueue.schedule(new RegisterPartitionRequestWork(this, partitionRequest));
     }
 
     private class DeadNodeSweeper extends TimerTask {
         @Override
         public void run() {
-            jobQueue.schedule(new RemoveDeadNodesEvent(ClusterControllerService.this));
+            jobQueue.schedule(new RemoveDeadNodesWork(ClusterControllerService.this));
         }
     }
 }

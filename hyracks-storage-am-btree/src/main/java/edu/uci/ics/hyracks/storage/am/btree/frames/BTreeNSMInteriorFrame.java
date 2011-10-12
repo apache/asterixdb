@@ -118,7 +118,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         if (tupleIndex == slotManager.getGreatestKeyIndicator()) {
             tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            keySize = tupleWriter.bytesRequired(frameTuple, 0, tuple.getFieldCount());
+            keySize = frameTuple.getTupleSize();
             // Copy new rightmost pointer.
             System.arraycopy(buf.array(), tupleOff + keySize, buf.array(), rightLeafOff, childPtrSize);
         } else {
@@ -408,6 +408,13 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         this.cmp = cmp;
         cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
+    }
+    
+    @Override
+    public ITreeIndexTupleReference createTupleReference() {
+        ITreeIndexTupleReference tuple = tupleWriter.createTupleReference();
+        tuple.setFieldCount(cmp.getKeyFieldCount());
+        return tuple;
     }
     
     // For debugging.

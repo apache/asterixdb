@@ -54,8 +54,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     protected static final int freeSpaceOff = tupleCountOff + 4; // 12
     protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
     protected static final int levelOff = totalFreeSpaceOff + 4; // 20
-    protected static final int smFlagOff = levelOff + 1; // 24
-    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 25
+    protected static final int smFlagOff = levelOff + 1; // 21
+    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 22
     protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 26
 
     protected static final int prevLeafOff = prefixTupleCountOff + 4; // 30
@@ -392,9 +392,19 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
-    public void printHeader() {
-        // TODO Auto-generated method stub
-
+    public String printHeader() {
+        StringBuilder strBuilder = new StringBuilder();
+        strBuilder.append("pageLsnOff:                " + pageLsnOff + "\n");
+        strBuilder.append("tupleCountOff:             " + tupleCountOff + "\n");
+        strBuilder.append("freeSpaceOff:              " + freeSpaceOff + "\n");
+        strBuilder.append("totalFreeSpaceOff:         " + totalFreeSpaceOff + "\n");
+        strBuilder.append("levelOff:                  " + levelOff + "\n");
+        strBuilder.append("smFlagOff:                 " + smFlagOff + "\n");
+        strBuilder.append("uncompressedTupleCountOff: " + uncompressedTupleCountOff + "\n");
+        strBuilder.append("prefixTupleCountOff:       " + prefixTupleCountOff + "\n");
+        strBuilder.append("prevLeafOff:               " + prevLeafOff + "\n");
+        strBuilder.append("nextLeafOff:               " + nextLeafOff + "\n");
+        return strBuilder.toString();
     }
 
     @Override

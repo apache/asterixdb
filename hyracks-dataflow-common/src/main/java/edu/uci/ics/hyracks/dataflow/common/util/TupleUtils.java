@@ -68,7 +68,8 @@ public class TupleUtils {
     public static String printTuple(ITupleReference tuple,
             ISerializerDeserializer[] fields) throws HyracksDataException {
         StringBuilder strBuilder = new StringBuilder();
-        for (int i = 0; i < fields.length; i++) {
+        int numPrintFields = Math.min(tuple.getFieldCount(), fields.length);
+        for (int i = 0; i < numPrintFields; i++) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(
                     tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i));

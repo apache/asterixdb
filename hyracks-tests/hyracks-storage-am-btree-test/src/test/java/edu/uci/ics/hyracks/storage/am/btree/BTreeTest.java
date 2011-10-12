@@ -726,6 +726,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
             LOGGER.info("INSERTING INTO BTREE");
             int maxLength = 10;
+            //int ins = 16;
             int ins = 10000;
             String[] f0s = new String[ins];
             String[] f1s = new String[ins];
@@ -757,16 +758,14 @@ public class BTreeTest extends AbstractBTreeTest {
                     btree.insert(tuple, insertOpCtx);
                     insDone++;
                 } catch (TreeIndexException e) {
-                    // e.printStackTrace();
+                    //e.printStackTrace();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 insDoneCmp[i] = insDone;
             }
-            // btree.printTree();
-            // btree.printStats();
-
+            
             LOGGER.info("DELETING FROM BTREE");
             int delDone = 0;
             for (int i = 0; i < ins; i++) {
@@ -790,7 +789,7 @@ public class BTreeTest extends AbstractBTreeTest {
                     btree.delete(tuple, deleteOpCtx);
                     delDone++;
                 } catch (TreeIndexException e) {
-                    // e.printStackTrace();
+                    //e.printStackTrace();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1181,7 +1180,7 @@ public class BTreeTest extends AbstractBTreeTest {
     // TIME-INTERVAL INTERSECTION DEMO FOR EVENT PEOPLE
     // demo for Arjun to show easy support of intersection queries on
     // time-intervals
-    //@Test
+    @Test
     public void test07() throws Exception {
 
         LOGGER.info("TIME-INTERVAL INTERSECTION DEMO");

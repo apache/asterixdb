@@ -14,8 +14,23 @@
  */
 package edu.uci.ics.hyracks.api.application;
 
+/**
+ * Base class of {@link ICCBootstrap} and {@link INCBootstrap}.
+ * 
+ * @author vinayakb
+ */
 public interface IBootstrap {
+    /**
+     * Method called to start the application at a Hyracks CC or NC node.
+     * 
+     * @throws Exception
+     */
     public void start() throws Exception;
 
+    /**
+     * Method called to shutdown the application at a Hyracks CC or NC node.
+     * 
+     * @throws Exception
+     */
     public void stop() throws Exception;
 }

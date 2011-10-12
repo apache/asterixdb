@@ -30,7 +30,7 @@ public class TreeIndexUtils {
 			tuple.resetByTupleIndex(frame, i);
 			String tupleString = TupleUtils.printTuple(tuple, fieldSerdes);
 			strBuilder.append(tupleString);
-			if (i != tuple.getFieldCount() - 1) {
+			if (i != frame.getTupleCount() - 1) {
 				strBuilder.append(" | ");
 			}
 		}

@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexMetaDataFrame {
-	public void initBuffer(int level);
+	public void initBuffer(byte level);
 
 	public void setPage(ICachedPage page);
 

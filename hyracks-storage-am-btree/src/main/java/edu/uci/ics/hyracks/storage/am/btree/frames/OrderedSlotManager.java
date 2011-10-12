@@ -28,7 +28,7 @@ public class OrderedSlotManager extends AbstractSlotManager {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
         if (frame.getTupleCount() <= 0) {
-            return -1;
+            return GREATEST_KEY_INDICATOR;
         }
 
         int mid;

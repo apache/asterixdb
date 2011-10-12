@@ -513,7 +513,7 @@ public class BTree implements ITreeIndex {
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
 
         // Will this leaf become empty?
-        if (ctx.leafFrame.getTupleCount() != 1) {
+        if (ctx.leafFrame.getTupleCount() > 1) {
             // Leaf will not become empty.
             ctx.leafFrame.delete(tuple, tupleIndex);
             node.releaseWriteLatch();
@@ -623,12 +623,10 @@ public class BTree implements ITreeIndex {
 
         } else {
             ctx.interiorFrame.delete(tuple, tupleIndex);
-            ctx.interiorFrame.setPageLsn(ctx.interiorFrame.getPageLsn() + 1); // TODO:
-            // tie
-            // together
-            // with
-            // logging
-            ctx.splitKey.reset(); // don't propagate deletion
+            // TODO: Tie together with logging.
+            ctx.interiorFrame.setPageLsn(ctx.interiorFrame.getPageLsn() + 1);
+            // Don't propagate deletion.
+            ctx.splitKey.reset();
         }
     }
 
@@ -665,6 +663,12 @@ public class BTree implements ITreeIndex {
     private void performOp(int pageId, ICachedPage parent, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         ctx.interiorFrame.setPage(node);
+        
+        //System.out.println("PAGEID: " + pageId);
+        //System.out.println("NODE:   " + node);
+        //System.out.println("LEVEL:  " + ctx.interiorFrame.getLevel() + " " + ctx.interiorFrame.isLeaf());
+        //System.out.println("-------------------------");
+        
         // this check performs an unprotected read in the page
         // the following could happen: TODO fill out
         boolean unsafeIsLeaf = ctx.interiorFrame.isLeaf();
@@ -1088,7 +1092,7 @@ public class BTree implements ITreeIndex {
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
             strBuilder.append(String.format("%1d ", level));
-            strBuilder.append(String.format("%3d ", pageId));
+            strBuilder.append(String.format("%3d ", pageId) + ": ");
             for (int i = 0; i < treeHeight - level; i++) {
                 strBuilder.append("    ");
             }
@@ -1101,7 +1105,7 @@ public class BTree implements ITreeIndex {
                 keyString = TreeIndexUtils.printFrameTuples(interiorFrame, keySerdes);
             }
 
-            strBuilder.append(keyString);
+            strBuilder.append(keyString + "\n");
             if (!interiorFrame.isLeaf()) {
                 ArrayList<Integer> children = ((BTreeNSMInteriorFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {

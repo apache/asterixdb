@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
@@ -48,7 +49,7 @@ public class ExternalSortRunMerger {
             IFrameWriter writer) {
         this.ctx = ctx;
         this.frameSorter = frameSorter;
-        this.runs = runs;
+        this.runs = new LinkedList<IFrameReader>(runs);
         this.sortFields = sortFields;
         this.comparators = comparators;
         this.recordDesc = recordDesc;
