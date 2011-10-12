@@ -14,36 +14,34 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.util.Map;
-import java.util.logging.Level;
+import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class NodeHeartbeatEvent extends SynchronizableWork {
+public class GetJobRunJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final String nodeId;
-    private final HeartbeatData hbData;
+    private final JobId jobId;
+    private JSONObject json;
 
-    public NodeHeartbeatEvent(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
+    public GetJobRunJSONWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
-        this.nodeId = nodeId;
-        this.hbData = hbData;
+        this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        NodeControllerState state = nodeMap.get(nodeId);
-        if (state != null) {
-            state.notifyHeartbeat(hbData);
+        JobRun run = ccs.getRunMap().get(jobId);
+        if (run == null) {
+            json = new JSONObject();
+            return;
         }
+        json = run.toJSON();
     }
 
-    @Override
-    public Level logLevel() {
-        return Level.FINEST;
+    public JSONObject getJSON() {
+        return json;
     }
 }

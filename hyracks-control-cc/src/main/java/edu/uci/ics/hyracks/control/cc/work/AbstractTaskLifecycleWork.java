@@ -31,13 +31,13 @@ import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public abstract class AbstractTaskLifecycleEvent extends AbstractWork {
+public abstract class AbstractTaskLifecycleWork extends AbstractWork {
     protected final ClusterControllerService ccs;
     protected final JobId jobId;
     protected final TaskAttemptId taId;
     protected final String nodeId;
 
-    public AbstractTaskLifecycleEvent(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
+    public AbstractTaskLifecycleWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.taId = taId;

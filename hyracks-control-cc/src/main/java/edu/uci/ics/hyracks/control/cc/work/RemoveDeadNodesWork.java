@@ -26,12 +26,12 @@ import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class RemoveDeadNodesEvent extends AbstractWork {
-    private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesEvent.class.getName());
+public class RemoveDeadNodesWork extends AbstractWork {
+    private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesWork.class.getName());
 
     private final ClusterControllerService ccs;
 
-    public RemoveDeadNodesEvent(ClusterControllerService ccs) {
+    public RemoveDeadNodesWork(ClusterControllerService ccs) {
         this.ccs = ccs;
     }
 

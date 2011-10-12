@@ -14,39 +14,24 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class RegisterNodeEvent extends SynchronizableWork {
+public class UnregisterNodeWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final String nodeId;
-    private final NodeControllerState state;
 
-    public RegisterNodeEvent(ClusterControllerService ccs, String nodeId, NodeControllerState state) {
+    public UnregisterNodeWork(ClusterControllerService ccs, String nodeId) {
         this.ccs = ccs;
         this.nodeId = nodeId;
-        this.state = state;
     }
 
     @Override
     protected void doRun() throws Exception {
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        if (nodeMap.containsKey(nodeId)) {
-            throw new Exception("Node with this name already registered.");
-        }
-        nodeMap.put(nodeId, state);
-        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
-        String ipAddress = state.getNCConfig().dataIPAddress;
-        Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
-        if (nodes == null) {
-            nodes = new HashSet<String>();
-            ipAddressNodeNameMap.put(ipAddress, nodes);
-        }
-        nodes.add(nodeId);
+        nodeMap.remove(nodeId);
     }
 }

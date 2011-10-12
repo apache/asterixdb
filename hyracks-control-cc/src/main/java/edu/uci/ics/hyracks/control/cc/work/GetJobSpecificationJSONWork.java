@@ -14,38 +14,34 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobSummariesJSONEvent extends SynchronizableWork {
+public class GetJobSpecificationJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private JSONArray summaries;
+    private final JobId jobId;
+    private JSONObject json;
 
-    public GetJobSummariesJSONEvent(ClusterControllerService ccs) {
+    public GetJobSpecificationJSONWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
+        this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        summaries = new JSONArray();
-        for (JobRun run : ccs.getRunMap().values()) {
-            JSONObject jo = new JSONObject();
-            jo.put("type", "job-summary");
-            jo.put("job-id", run.getJobId().toString());
-            jo.put("application-name", run.getJobActivityGraph().getApplicationName());
-            jo.put("create-time", run.getCreateTime());
-            jo.put("start-time", run.getCreateTime());
-            jo.put("end-time", run.getCreateTime());
-            jo.put("status", run.getStatus().toString());
-            summaries.put(jo);
+        JobRun run = ccs.getRunMap().get(jobId);
+        if (run == null) {
+            json = new JSONObject();
+            return;
         }
+        json = run.getJobActivityGraph().getJobSpecification().toJSON();
     }
 
-    public JSONArray getSummaries() {
-        return summaries;
+    public JSONObject getJSON() {
+        return json;
     }
 }

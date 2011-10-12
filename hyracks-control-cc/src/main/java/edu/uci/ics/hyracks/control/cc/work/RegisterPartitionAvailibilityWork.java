@@ -26,11 +26,11 @@ import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class RegisterPartitionAvailibilityEvent extends AbstractWork {
+public class RegisterPartitionAvailibilityWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final PartitionDescriptor partitionDescriptor;
 
-    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionDescriptor partitionDescriptor) {
+    public RegisterPartitionAvailibilityWork(ClusterControllerService ccs, PartitionDescriptor partitionDescriptor) {
         this.ccs = ccs;
         this.partitionDescriptor = partitionDescriptor;
     }

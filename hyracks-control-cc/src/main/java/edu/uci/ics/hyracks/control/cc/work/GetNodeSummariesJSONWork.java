@@ -14,24 +14,29 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.util.Map;
+import org.json.JSONArray;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class UnregisterNodeEvent extends SynchronizableWork {
+public class GetNodeSummariesJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final String nodeId;
+    private JSONArray summaries;
 
-    public UnregisterNodeEvent(ClusterControllerService ccs, String nodeId) {
+    public GetNodeSummariesJSONWork(ClusterControllerService ccs) {
         this.ccs = ccs;
-        this.nodeId = nodeId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        nodeMap.remove(nodeId);
+        summaries = new JSONArray();
+        for (NodeControllerState ncs : ccs.getNodeMap().values()) {
+            summaries.put(ncs.toSummaryJSON());
+        }
+    }
+
+    public JSONArray getSummaries() {
+        return summaries;
     }
 }

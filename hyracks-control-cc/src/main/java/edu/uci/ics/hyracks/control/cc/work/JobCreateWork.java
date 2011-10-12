@@ -32,14 +32,14 @@ import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
 import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class JobCreateEvent extends SynchronizableWork {
+public class JobCreateWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final byte[] jobSpec;
     private final EnumSet<JobFlag> jobFlags;
     private final JobId jobId;
     private final String appName;
 
-    public JobCreateEvent(ClusterControllerService ccs, JobId jobId, String appName, byte[] jobSpec,
+    public JobCreateWork(ClusterControllerService ccs, JobId jobId, String appName, byte[] jobSpec,
             EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
         this.ccs = ccs;

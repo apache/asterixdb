@@ -27,13 +27,13 @@ import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class JobCleanupEvent extends AbstractWork {
+public class JobCleanupWork extends AbstractWork {
     private ClusterControllerService ccs;
     private JobId jobId;
     private JobStatus status;
     private Exception exception;
 
-    public JobCleanupEvent(ClusterControllerService ccs, JobId jobId, JobStatus status, Exception exception) {
+    public JobCleanupWork(ClusterControllerService ccs, JobId jobId, JobStatus status, Exception exception) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.status = status;

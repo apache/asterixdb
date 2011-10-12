@@ -14,35 +14,36 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobStatus;
+import java.util.Map;
+import java.util.logging.Level;
+
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class JobStartEvent extends SynchronizableWork {
+public class NodeHeartbeatWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
+    private final String nodeId;
+    private final HeartbeatData hbData;
 
-    public JobStartEvent(ClusterControllerService ccs, JobId jobId) {
+    public NodeHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
         this.ccs = ccs;
-        this.jobId = jobId;
+        this.nodeId = nodeId;
+        this.hbData = hbData;
     }
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
-        if (run == null) {
-            throw new Exception("Unable to find job with id = " + jobId);
+        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
+        NodeControllerState state = nodeMap.get(nodeId);
+        if (state != null) {
+            state.notifyHeartbeat(hbData);
         }
-        if (run.getStatus() != JobStatus.INITIALIZED) {
-            throw new Exception("Job already started");
-        }
-        run.setStatus(JobStatus.RUNNING, null);
-        try {
-            run.getScheduler().startJob();
-        } catch (Exception e) {
-            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, run.getJobId(), JobStatus.FAILURE, e));
-        }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.FINEST;
     }
 }

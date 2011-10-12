@@ -16,32 +16,31 @@ package edu.uci.ics.hyracks.control.cc.work;
 
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobRunJSONEvent extends SynchronizableWork {
+public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
-    private JSONObject json;
+    private final String nodeId;
+    private JSONObject detail;
 
-    public GetJobRunJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId) {
         this.ccs = ccs;
-        this.jobId = jobId;
+        this.nodeId = nodeId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
-        if (run == null) {
-            json = new JSONObject();
+        NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
+        if (ncs == null) {
+            detail = new JSONObject();
             return;
         }
-        json = run.toJSON();
+        detail = ncs.toDetailedJSON();
     }
 
-    public JSONObject getJSON() {
-        return json;
+    public JSONObject getDetail() {
+        return detail;
     }
 }

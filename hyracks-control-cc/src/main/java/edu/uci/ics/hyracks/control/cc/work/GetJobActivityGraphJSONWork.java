@@ -21,25 +21,24 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobProfileJSONEvent extends SynchronizableWork {
+public class GetJobActivityGraphJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
     private JSONObject json;
 
-    public GetJobProfileJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetJobActivityGraphJSONWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        json = new JSONObject();
-        JobRun jobRun = ccs.getRunMap().get(jobId);
-        if (jobRun == null) {
+        JobRun run = ccs.getRunMap().get(jobId);
+        if (run == null) {
             json = new JSONObject();
             return;
         }
-        json = jobRun.getJobProfile().toJSON();
+        json = run.getJobActivityGraph().toJSON();
     }
 
     public JSONObject getJSON() {

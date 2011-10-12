@@ -14,34 +14,27 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import org.json.JSONObject;
-
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobSpecificationJSONEvent extends SynchronizableWork {
+public class GetJobStatusConditionVariableWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private JSONObject json;
+    private IJobStatusConditionVariable cVar;
 
-    public GetJobSpecificationJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetJobStatusConditionVariableWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
-        if (run == null) {
-            json = new JSONObject();
-            return;
-        }
-        json = run.getJobActivityGraph().getJobSpecification().toJSON();
+        cVar = ccs.getRunMap().get(jobId);
     }
 
-    public JSONObject getJSON() {
-        return json;
+    public IJobStatusConditionVariable getConditionVariable() {
+        return cVar;
     }
 }

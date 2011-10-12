@@ -19,10 +19,10 @@ import org.json.JSONObject;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
-import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONEvent;
-import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONEvent;
-import edu.uci.ics.hyracks.control.cc.work.GetJobSpecificationJSONEvent;
-import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobSpecificationJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONWork;
 
 public class JobsRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;
@@ -40,7 +40,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                     break;
                 }
             case 0: {
-                GetJobSummariesJSONEvent gjse = new GetJobSummariesJSONEvent(ccs);
+                GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs);
                 ccs.getJobQueue().scheduleAndSync(gjse);
                 result.put("result", gjse.getSummaries());
                 break;
@@ -50,15 +50,15 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                 JobId jobId = JobId.parse(arguments[0]);
 
                 if ("job-specification".equalsIgnoreCase(arguments[1])) {
-                    GetJobSpecificationJSONEvent gjse = new GetJobSpecificationJSONEvent(ccs, jobId);
+                    GetJobSpecificationJSONWork gjse = new GetJobSpecificationJSONWork(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjse);
                     result.put("result", gjse.getJSON());
                 } else if ("job-activity-graph".equalsIgnoreCase(arguments[1])) {
-                    GetJobActivityGraphJSONEvent gjage = new GetJobActivityGraphJSONEvent(ccs, jobId);
+                    GetJobActivityGraphJSONWork gjage = new GetJobActivityGraphJSONWork(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjage);
                     result.put("result", gjage.getJSON());
                 } else if ("job-run".equalsIgnoreCase(arguments[1])) {
-                    GetJobRunJSONEvent gjre = new GetJobRunJSONEvent(ccs, jobId);
+                    GetJobRunJSONWork gjre = new GetJobRunJSONWork(ccs, jobId);
                     ccs.getJobQueue().scheduleAndSync(gjre);
                     result.put("result", gjre.getJSON());
                 }

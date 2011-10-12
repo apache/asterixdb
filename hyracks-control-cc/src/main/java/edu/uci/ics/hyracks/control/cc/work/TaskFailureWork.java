@@ -20,10 +20,10 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
-public class TaskFailureEvent extends AbstractTaskLifecycleEvent {
+public class TaskFailureWork extends AbstractTaskLifecycleWork {
     private final Exception exception;
 
-    public TaskFailureEvent(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
+    public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
             Exception exception) {
         super(ccs, jobId, taId, nodeId);
         this.exception = exception;

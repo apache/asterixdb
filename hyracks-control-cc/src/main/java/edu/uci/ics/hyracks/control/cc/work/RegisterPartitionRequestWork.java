@@ -24,11 +24,11 @@ import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class RegisterPartitionRequestEvent extends AbstractWork {
+public class RegisterPartitionRequestWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final PartitionRequest partitionRequest;
 
-    public RegisterPartitionRequestEvent(ClusterControllerService ccs, PartitionRequest partitionRequest) {
+    public RegisterPartitionRequestWork(ClusterControllerService ccs, PartitionRequest partitionRequest) {
         this.ccs = ccs;
         this.partitionRequest = partitionRequest;
     }

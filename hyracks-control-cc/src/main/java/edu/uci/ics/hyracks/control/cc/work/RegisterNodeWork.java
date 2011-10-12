@@ -14,29 +14,39 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import org.json.JSONArray;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetNodeSummariesJSONEvent extends SynchronizableWork {
+public class RegisterNodeWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private JSONArray summaries;
+    private final String nodeId;
+    private final NodeControllerState state;
 
-    public GetNodeSummariesJSONEvent(ClusterControllerService ccs) {
+    public RegisterNodeWork(ClusterControllerService ccs, String nodeId, NodeControllerState state) {
         this.ccs = ccs;
+        this.nodeId = nodeId;
+        this.state = state;
     }
 
     @Override
     protected void doRun() throws Exception {
-        summaries = new JSONArray();
-        for (NodeControllerState ncs : ccs.getNodeMap().values()) {
-            summaries.put(ncs.toSummaryJSON());
+        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
+        if (nodeMap.containsKey(nodeId)) {
+            throw new Exception("Node with this name already registered.");
         }
-    }
-
-    public JSONArray getSummaries() {
-        return summaries;
+        nodeMap.put(nodeId, state);
+        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
+        String ipAddress = state.getNCConfig().dataIPAddress;
+        Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
+        if (nodes == null) {
+            nodes = new HashSet<String>();
+            ipAddressNodeNameMap.put(ipAddress, nodes);
+        }
+        nodes.add(nodeId);
     }
 }

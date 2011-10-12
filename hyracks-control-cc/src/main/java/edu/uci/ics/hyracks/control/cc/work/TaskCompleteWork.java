@@ -21,8 +21,8 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
-public class TaskCompleteEvent extends AbstractTaskLifecycleEvent {
-    public TaskCompleteEvent(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
+public class TaskCompleteWork extends AbstractTaskLifecycleWork {
+    public TaskCompleteWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
         super(ccs, jobId, taId, nodeId);
     }
 

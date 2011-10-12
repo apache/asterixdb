@@ -18,8 +18,8 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
-import edu.uci.ics.hyracks.control.cc.work.GetNodeDetailsJSONEvent;
-import edu.uci.ics.hyracks.control.cc.work.GetNodeSummariesJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetNodeDetailsJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetNodeSummariesJSONWork;
 
 public class NodesRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;
@@ -34,12 +34,12 @@ public class NodesRESTAPIFunction implements IJSONOutputFunction {
         switch (arguments.length) {
             case 1: {
                 if ("".equals(arguments[0])) {
-                    GetNodeSummariesJSONEvent gnse = new GetNodeSummariesJSONEvent(ccs);
+                    GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs);
                     ccs.getJobQueue().scheduleAndSync(gnse);
                     result.put("result", gnse.getSummaries());
                 } else {
                     String nodeId = arguments[0];
-                    GetNodeDetailsJSONEvent gnde = new GetNodeDetailsJSONEvent(ccs, nodeId);
+                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs, nodeId);
                     ccs.getJobQueue().scheduleAndSync(gnde);
                     result.put("result", gnde.getDetail());
                 }

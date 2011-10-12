@@ -14,27 +14,35 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class GetJobStatusConditionVariableEvent extends SynchronizableWork {
+public class ReportProfilesWork extends AbstractWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
-    private IJobStatusConditionVariable cVar;
+    private final List<JobProfile> profiles;
 
-    public GetJobStatusConditionVariableEvent(ClusterControllerService ccs, JobId jobId) {
+    public ReportProfilesWork(ClusterControllerService ccs, List<JobProfile> profiles) {
         this.ccs = ccs;
-        this.jobId = jobId;
+        this.profiles = profiles;
     }
 
     @Override
-    protected void doRun() throws Exception {
-        cVar = ccs.getRunMap().get(jobId);
+    public void run() {
+        Map<JobId, JobRun> runMap = ccs.getRunMap();
+        for (JobProfile profile : profiles) {
+            JobRun run = runMap.get(profile.getJobId());
+        }
     }
 
-    public IJobStatusConditionVariable getConditionVariable() {
-        return cVar;
+    @Override
+    public Level logLevel() {
+        return Level.FINEST;
     }
 }
