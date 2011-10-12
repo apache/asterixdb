@@ -12,35 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetNodeDetailsJSONEvent extends SynchronizableEvent {
+public class GetJobProfileJSONEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final String nodeId;
-    private JSONObject detail;
+    private final JobId jobId;
+    private JSONObject json;
 
-    public GetNodeDetailsJSONEvent(ClusterControllerService ccs, String nodeId) {
+    public GetJobProfileJSONEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
-        this.nodeId = nodeId;
+        this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
-        if (ncs == null) {
-            detail = new JSONObject();
+        json = new JSONObject();
+        JobRun jobRun = ccs.getRunMap().get(jobId);
+        if (jobRun == null) {
+            json = new JSONObject();
             return;
         }
-        detail = ncs.toDetailedJSON();
+        json = jobRun.getJobProfile().toJSON();
     }
 
-    public JSONObject getDetail() {
-        return detail;
+    public JSONObject getJSON() {
+        return json;
     }
 }

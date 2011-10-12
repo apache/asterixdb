@@ -12,31 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.jobqueue;
+package edu.uci.ics.hyracks.control.common.work;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-public class JobQueue {
-    private static final Logger LOGGER = Logger.getLogger(JobQueue.class.getName());
+public class WorkQueue {
+    private static final Logger LOGGER = Logger.getLogger(WorkQueue.class.getName());
 
-    private final LinkedBlockingQueue<AbstractEvent> queue;
+    private final LinkedBlockingQueue<AbstractWork> queue;
     private final JobThread thread;
 
-    public JobQueue() {
-        queue = new LinkedBlockingQueue<AbstractEvent>();
+    public WorkQueue() {
+        queue = new LinkedBlockingQueue<AbstractWork>();
         thread = new JobThread();
         thread.start();
     }
 
-    public void schedule(AbstractEvent event) {
+    public void schedule(AbstractWork event) {
         if (LOGGER.isLoggable(event.logLevel())) {
             LOGGER.info("Scheduling: " + event);
         }
         queue.offer(event);
     }
 
-    public void scheduleAndSync(SynchronizableEvent sRunnable) throws Exception {
+    public void scheduleAndSync(SynchronizableWork sRunnable) throws Exception {
         schedule(sRunnable);
         sRunnable.sync();
     }

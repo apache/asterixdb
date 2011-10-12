@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.jobqueue;
+package edu.uci.ics.hyracks.control.common.work;
 
 import java.util.logging.Level;
 
-public abstract class AbstractEvent implements Runnable {
+public abstract class AbstractWork implements Runnable {
     public Level logLevel() {
         return Level.INFO;
     }

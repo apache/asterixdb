@@ -12,38 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Map;
-import java.util.logging.Level;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
-import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class NodeHeartbeatEvent extends SynchronizableEvent {
+public class UnregisterNodeEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final String nodeId;
-    private final HeartbeatData hbData;
 
-    public NodeHeartbeatEvent(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
+    public UnregisterNodeEvent(ClusterControllerService ccs, String nodeId) {
         this.ccs = ccs;
         this.nodeId = nodeId;
-        this.hbData = hbData;
     }
 
     @Override
     protected void doRun() throws Exception {
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        NodeControllerState state = nodeMap.get(nodeId);
-        if (state != null) {
-            state.notifyHeartbeat(hbData);
-        }
-    }
-
-    @Override
-    public Level logLevel() {
-        return Level.FINEST;
+        nodeMap.remove(nodeId);
     }
 }

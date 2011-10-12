@@ -17,9 +17,9 @@ package edu.uci.ics.hyracks.control.cc.web;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetNodeDetailsJSONEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetNodeSummariesJSONEvent;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
+import edu.uci.ics.hyracks.control.cc.work.GetNodeDetailsJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetNodeSummariesJSONEvent;
 
 public class NodesRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;

@@ -12,36 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
-import org.json.JSONObject;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class GetJobActivityGraphJSONEvent extends SynchronizableEvent {
+public class ReportProfilesEvent extends AbstractWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
-    private JSONObject json;
+    private final List<JobProfile> profiles;
 
-    public GetJobActivityGraphJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public ReportProfilesEvent(ClusterControllerService ccs, List<JobProfile> profiles) {
         this.ccs = ccs;
-        this.jobId = jobId;
+        this.profiles = profiles;
     }
 
     @Override
-    protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
-        if (run == null) {
-            json = new JSONObject();
-            return;
+    public void run() {
+        Map<JobId, JobRun> runMap = ccs.getRunMap();
+        for (JobProfile profile : profiles) {
+            JobRun run = runMap.get(profile.getJobId());
         }
-        json = run.getJobActivityGraph().toJSON();
     }
 
-    public JSONObject getJSON() {
-        return json;
+    @Override
+    public Level logLevel() {
+        return Level.FINEST;
     }
 }

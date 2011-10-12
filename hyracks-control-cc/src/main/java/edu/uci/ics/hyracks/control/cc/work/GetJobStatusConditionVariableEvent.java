@@ -12,37 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
-
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class ReportProfilesEvent extends AbstractEvent {
+public class GetJobStatusConditionVariableEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final List<JobProfile> profiles;
+    private final JobId jobId;
+    private IJobStatusConditionVariable cVar;
 
-    public ReportProfilesEvent(ClusterControllerService ccs, List<JobProfile> profiles) {
+    public GetJobStatusConditionVariableEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
-        this.profiles = profiles;
+        this.jobId = jobId;
     }
 
     @Override
-    public void run() {
-        Map<JobId, JobRun> runMap = ccs.getRunMap();
-        for (JobProfile profile : profiles) {
-            JobRun run = runMap.get(profile.getJobId());
-        }
+    protected void doRun() throws Exception {
+        cVar = ccs.getRunMap().get(jobId);
     }
 
-    @Override
-    public Level logLevel() {
-        return Level.FINEST;
+    public IJobStatusConditionVariable getConditionVariable() {
+        return cVar;
     }
 }

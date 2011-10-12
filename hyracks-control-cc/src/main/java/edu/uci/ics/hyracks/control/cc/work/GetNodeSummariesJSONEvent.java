@@ -12,37 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
 
-import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobProfileJSONEvent extends SynchronizableEvent {
+public class GetNodeSummariesJSONEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
-    private JSONObject json;
+    private JSONArray summaries;
 
-    public GetJobProfileJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetNodeSummariesJSONEvent(ClusterControllerService ccs) {
         this.ccs = ccs;
-        this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        json = new JSONObject();
-        JobRun jobRun = ccs.getRunMap().get(jobId);
-        if (jobRun == null) {
-            json = new JSONObject();
-            return;
+        summaries = new JSONArray();
+        for (NodeControllerState ncs : ccs.getNodeMap().values()) {
+            summaries.put(ncs.toSummaryJSON());
         }
-        json = jobRun.getJobProfile().toJSON();
     }
 
-    public JSONObject getJSON() {
-        return json;
+    public JSONArray getSummaries() {
+        return summaries;
     }
 }

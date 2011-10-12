@@ -12,46 +12,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
-
-import java.util.List;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionUtils;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class RegisterPartitionAvailibilityEvent extends AbstractEvent {
+public class RegisterPartitionRequestEvent extends AbstractWork {
     private final ClusterControllerService ccs;
-    private final PartitionDescriptor partitionDescriptor;
+    private final PartitionRequest partitionRequest;
 
-    public RegisterPartitionAvailibilityEvent(ClusterControllerService ccs, PartitionDescriptor partitionDescriptor) {
+    public RegisterPartitionRequestEvent(ClusterControllerService ccs, PartitionRequest partitionRequest) {
         this.ccs = ccs;
-        this.partitionDescriptor = partitionDescriptor;
+        this.partitionRequest = partitionRequest;
     }
 
     @Override
     public void run() {
-        final PartitionId pid = partitionDescriptor.getPartitionId();
+        PartitionId pid = partitionRequest.getPartitionId();
         JobRun run = ccs.getRunMap().get(pid.getJobId());
         if (run == null) {
             return;
         }
         PartitionMatchMaker pmm = run.getPartitionMatchMaker();
-        List<Pair<PartitionDescriptor, PartitionRequest>> matches = pmm
-                .registerPartitionDescriptor(partitionDescriptor);
-        for (Pair<PartitionDescriptor, PartitionRequest> match : matches) {
+        Pair<PartitionDescriptor, PartitionRequest> match = pmm.matchPartitionRequest(partitionRequest);
+        if (match != null) {
             PartitionUtils.reportPartitionMatch(ccs, pid, match);
         }
     }
 
     @Override
     public String toString() {
-        return "PartitionAvailable@" + partitionDescriptor;
+        return "PartitionRequest@" + partitionRequest;
     }
 }

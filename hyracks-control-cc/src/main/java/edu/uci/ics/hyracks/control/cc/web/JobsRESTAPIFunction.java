@@ -18,11 +18,11 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobActivityGraphJSONEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobRunJSONEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSpecificationJSONEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobSummariesJSONEvent;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
+import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobSpecificationJSONEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONEvent;
 
 public class JobsRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;

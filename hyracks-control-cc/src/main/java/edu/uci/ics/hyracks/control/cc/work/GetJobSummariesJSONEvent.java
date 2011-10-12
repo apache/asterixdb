@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobSummariesJSONEvent extends SynchronizableEvent {
+public class GetJobSummariesJSONEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private JSONArray summaries;
 

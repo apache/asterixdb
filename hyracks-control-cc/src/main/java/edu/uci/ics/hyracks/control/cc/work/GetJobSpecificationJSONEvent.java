@@ -12,19 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
+
+import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class JobStartEvent extends SynchronizableEvent {
+public class GetJobSpecificationJSONEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
+    private JSONObject json;
 
-    public JobStartEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetJobSpecificationJSONEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
@@ -33,16 +35,13 @@ public class JobStartEvent extends SynchronizableEvent {
     protected void doRun() throws Exception {
         JobRun run = ccs.getRunMap().get(jobId);
         if (run == null) {
-            throw new Exception("Unable to find job with id = " + jobId);
+            json = new JSONObject();
+            return;
         }
-        if (run.getStatus() != JobStatus.INITIALIZED) {
-            throw new Exception("Job already started");
-        }
-        run.setStatus(JobStatus.RUNNING, null);
-        try {
-            run.getScheduler().startJob();
-        } catch (Exception e) {
-            ccs.getJobQueue().schedule(new JobCleanupEvent(ccs, run.getJobId(), JobStatus.FAILURE, e));
-        }
+        json = run.getJobActivityGraph().getJobSpecification().toJSON();
+    }
+
+    public JSONObject getJSON() {
+        return json;
     }
 }

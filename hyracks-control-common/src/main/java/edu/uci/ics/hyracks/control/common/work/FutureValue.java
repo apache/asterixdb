@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.jobqueue;
+package edu.uci.ics.hyracks.control.common.work;
 
 public class FutureValue {
     private boolean done;

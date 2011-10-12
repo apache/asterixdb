@@ -12,29 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
+
+import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobStatusConditionVariableEvent extends SynchronizableEvent {
+public class GetJobRunJSONEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private IJobStatusConditionVariable cVar;
+    private JSONObject json;
 
-    public GetJobStatusConditionVariableEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetJobRunJSONEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        cVar = ccs.getRunMap().get(jobId);
+        JobRun run = ccs.getRunMap().get(jobId);
+        if (run == null) {
+            json = new JSONObject();
+            return;
+        }
+        json = run.toJSON();
     }
 
-    public IJobStatusConditionVariable getConditionVariable() {
-        return cVar;
+    public JSONObject getJSON() {
+        return json;
     }
 }

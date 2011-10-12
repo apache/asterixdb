@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Set;
 
@@ -23,11 +23,11 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class JobCleanupEvent extends AbstractEvent {
+public class JobCleanupEvent extends AbstractWork {
     private ClusterControllerService ccs;
     private JobId jobId;
     private JobStatus status;
@@ -63,7 +63,7 @@ public class JobCleanupEvent extends AbstractEvent {
                         e.printStackTrace();
                     }
                 }
-                ccs.getJobQueue().schedule(new AbstractEvent() {
+                ccs.getJobQueue().schedule(new AbstractWork() {
                     @Override
                     public void run() {
                         CCApplicationContext appCtx = ccs.getApplicationMap().get(

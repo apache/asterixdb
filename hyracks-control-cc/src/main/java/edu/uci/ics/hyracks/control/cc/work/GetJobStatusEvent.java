@@ -12,21 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
-
-import org.json.JSONObject;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobRunJSONEvent extends SynchronizableEvent {
+public class GetJobStatusEvent extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private JSONObject json;
+    private JobStatus status;
 
-    public GetJobRunJSONEvent(ClusterControllerService ccs, JobId jobId) {
+    public GetJobStatusEvent(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
@@ -34,14 +33,10 @@ public class GetJobRunJSONEvent extends SynchronizableEvent {
     @Override
     protected void doRun() throws Exception {
         JobRun run = ccs.getRunMap().get(jobId);
-        if (run == null) {
-            json = new JSONObject();
-            return;
-        }
-        json = run.toJSON();
+        status = run == null ? null : run.getStatus();
     }
 
-    public JSONObject getJSON() {
-        return json;
+    public JobStatus getStatus() {
+        return status;
     }
 }

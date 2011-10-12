@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job.manager.events;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.List;
 import java.util.Map;
@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
-import edu.uci.ics.hyracks.control.cc.jobqueue.AbstractEvent;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public abstract class AbstractTaskLifecycleEvent extends AbstractEvent {
+public abstract class AbstractTaskLifecycleEvent extends AbstractWork {
     protected final ClusterControllerService ccs;
     protected final JobId jobId;
     protected final TaskAttemptId taId;

@@ -42,24 +42,22 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ApplicationDestroyEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ApplicationStartEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobStatusConditionVariableEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.GetJobStatusEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.JobCreateEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.JobStartEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.NodeHeartbeatEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterNodeEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionAvailibilityEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RegisterPartitionRequestEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.RemoveDeadNodesEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.ReportProfilesEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskCompleteEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.TaskFailureEvent;
-import edu.uci.ics.hyracks.control.cc.job.manager.events.UnregisterNodeEvent;
-import edu.uci.ics.hyracks.control.cc.jobqueue.FutureValue;
-import edu.uci.ics.hyracks.control.cc.jobqueue.JobQueue;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyEvent;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationStartEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableEvent;
+import edu.uci.ics.hyracks.control.cc.work.GetJobStatusEvent;
+import edu.uci.ics.hyracks.control.cc.work.JobCreateEvent;
+import edu.uci.ics.hyracks.control.cc.work.JobStartEvent;
+import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatEvent;
+import edu.uci.ics.hyracks.control.cc.work.RegisterNodeEvent;
+import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionAvailibilityEvent;
+import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionRequestEvent;
+import edu.uci.ics.hyracks.control.cc.work.RemoveDeadNodesEvent;
+import edu.uci.ics.hyracks.control.cc.work.ReportProfilesEvent;
+import edu.uci.ics.hyracks.control.cc.work.TaskCompleteEvent;
+import edu.uci.ics.hyracks.control.cc.work.TaskFailureEvent;
+import edu.uci.ics.hyracks.control.cc.work.UnregisterNodeEvent;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
@@ -72,6 +70,8 @@ import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
+import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
         IHyracksClientInterface {
@@ -95,7 +95,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final Map<JobId, JobRun> runMap;
 
-    private final JobQueue jobQueue;
+    private final WorkQueue jobQueue;
 
     private final Executor taskExecutor;
 
@@ -117,7 +117,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
         runMap = new HashMap<JobId, JobRun>();
-        jobQueue = new JobQueue();
+        jobQueue = new WorkQueue();
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
         ccContext = new ICCContext() {
@@ -158,7 +158,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return runMap;
     }
 
-    public JobQueue getJobQueue() {
+    public WorkQueue getJobQueue() {
         return jobQueue;
     }
 
