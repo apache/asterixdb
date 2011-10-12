@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -26,7 +25,6 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -36,9 +34,7 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
-import edu.uci.ics.hyracks.api.workflow.variables.WorkflowVariableDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -61,12 +57,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Map<String, Counter> counterMap;
 
-    private final Map<MultipartName, Object> inputGlobalVariables;
-
-    private final Map<MultipartName, Object> outputVariables;
-
-    private final Map<MultipartName, WorkflowVariableDescriptor> outputVariableDescriptorMap;
-
     private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
@@ -81,13 +71,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
-        //        this.inputGlobalVariables = inputGlobalVariables;
-        inputGlobalVariables = Collections.emptyMap();
-        outputVariables = new HashMap<MultipartName, Object>();
-        outputVariableDescriptorMap = new HashMap<MultipartName, WorkflowVariableDescriptor>();
-        //        for (WorkflowVariableDescriptor wvd : outputVariableDescriptors) {
-        //            outputVariableDescriptorMap.put(wvd.getName(), wvd);
-        //        }
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -123,28 +106,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public void registerDeallocatable(IDeallocatable deallocatable) {
         deallocatableRegistry.registerDeallocatable(deallocatable);
-    }
-
-    @Override
-    public Object lookupGlobalVariable(ActivityId producerActivity, int partition, String varName)
-            throws HyracksDataException {
-        MultipartName var = new MultipartName(producerActivity, partition, varName);
-        if (!inputGlobalVariables.containsKey(var)) {
-            throw new HyracksDataException("Unknown Variable: " + var);
-        }
-        return inputGlobalVariables.get(var);
-    }
-
-    @Override
-    public Object lookupLocalVariable(ActivityId producerActivity, int partition, String varName)
-            throws HyracksDataException {
-        return joblet.lookupLocalVariable(new MultipartName(producerActivity, partition, varName));
-    }
-
-    @Override
-    public void setVariable(String name, Object value) {
-        outputVariables.put(new MultipartName(taskAttemptId.getTaskId().getActivityId(), taskAttemptId.getTaskId()
-                .getPartition(), name), value);
     }
 
     public void close() {
@@ -228,23 +189,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 }
             } finally {
                 operator.deinitialize();
-            }
-            Map<MultipartName, Object> outputGlobalVariables = new HashMap<MultipartName, Object>();
-            for (Map.Entry<MultipartName, Object> e : outputVariables.entrySet()) {
-                MultipartName varName = e.getKey();
-                WorkflowVariableDescriptor wvd = outputVariableDescriptorMap.get(varName);
-                if (wvd == null) {
-                    throw new HyracksDataException("Unknown variable found: " + varName);
-                }
-                switch (wvd.getScope()) {
-                    case LOCAL:
-                        joblet.setLocalVariable(varName, e.getValue());
-                        break;
-
-                    case GLOBAL:
-                        outputGlobalVariables.put(varName, e.getValue());
-                        break;
-                }
             }
             joblet.notifyTaskComplete(this);
         } catch (Exception e) {
