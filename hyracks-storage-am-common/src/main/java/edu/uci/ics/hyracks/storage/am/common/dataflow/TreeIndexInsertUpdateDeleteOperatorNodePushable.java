@@ -23,9 +23,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
@@ -64,10 +63,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 			treeIndexOpHelper.init();
 			treeIndexOpHelper.getTreeIndex().open(
 					treeIndexOpHelper.getIndexFileId());
-			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op,
-					treeIndexOpHelper.getLeafFrame(),
-					treeIndexOpHelper.getInteriorFrame(),
-					new LIFOMetaDataFrame());
+			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op);
 		} catch (Exception e) {
 			// cleanup in case of failure
 			treeIndexOpHelper.deinit();

@@ -32,15 +32,10 @@ public interface ITreeIndex {
 	 * 
 	 * @param indexFileId
 	 *            The file id to use for this index.
-	 * @param leafFrame
-	 *            Leaf frame to use for initializing the root.
-	 * @param metaFrame
-	 *            Metadata frame to use for initializing metadata information.
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 */
-	public void create(int indexFileId, ITreeIndexFrame leafFrame,
-			ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException;
+	public void create(int indexFileId) throws HyracksDataException;
 
 	/**
 	 * Opens the tree index backed by the given file id.
@@ -60,22 +55,16 @@ public interface ITreeIndex {
 	 * (insert/delete/update/search/diskorderscan). An operation context
 	 * maintains a cache of objects used during the traversal of the tree index.
 	 * The context is intended to be reused for multiple subsequent operations
-	 * by the same user/thread.
+	 * by the same user/thread. An index operation context is stateful, and
+	 * therefore, should not be shared among two threads.
 	 * 
 	 * @param indexOp
 	 *            Intended index operation.
-	 * @param leafFrame
-	 *            Leaf frame for interpreting leaf pages.
-	 * @param interiorFrame
-	 *            Interior frame for interpreting interior pages.
-	 * @param metaFrame
-	 *            Metadata frame for interpreting metadata pages.
+	 * 
 	 * @returns IITreeIndexOpContext Operation context for the desired index
 	 *          operation.
 	 */
-	public IIndexOpContext createOpContext(IndexOp op,
-			ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-			ITreeIndexMetaDataFrame metaFrame);
+	public IIndexOpContext createOpContext(IndexOp op);
 	
 	/**
 	 * Inserts the given tuple into the index using an existing operation
@@ -132,21 +121,13 @@ public interface ITreeIndex {
 	 * 
 	 * @param fillFactor
 	 *            Desired fill factor in [0, 1.0].
-	 * @param leafFrame
-	 *            Leaf frame for filling leaf pages.
-	 * @param interiorFrame
-	 *            Interior frame for filling interior pages.
-	 * @param metaFrame
-	 *            Metadata frame for accessing metadata pages.
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 * @throws TreeIndexException
 	 *             If the tree is not empty.
 	 * @returns A new context for bulk loading, required for appending tuples.
 	 */
-	public IIndexBulkLoadContext beginBulkLoad(float fillFactor,
-			ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-			ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException,
+	public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException,
 			HyracksDataException;
 
 	/**
@@ -177,18 +158,14 @@ public interface ITreeIndex {
 	 * Open the given cursor for a disk-order scan, positioning the cursor to
 	 * the first leaf tuple.
 	 * 
-	 * @param leafFrame
-	 *            Leaf frame for interpreting leaf pages.
-	 * @param metaFrame
-	 *            Metadata frame for interpreting metadata pages.
+	 * @param icursor
+	 *            Cursor to be opened for disk-order scanning.
 	 * @param ictx
 	 *            Existing operation context.
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 */
-	public void diskOrderScan(ITreeIndexCursor icursor,
-			ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-			IIndexOpContext ictx) throws HyracksDataException;
+	public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException;
 	
 	/**
 	 * @return The index's leaf frame factory.

@@ -132,7 +132,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
 				interiorFrameFactory, leafFrameFactory);
-		rtree.create(fileId, leafFrame, metaFrame);
+		rtree.create(fileId);
 		rtree.open(fileId);
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
@@ -155,8 +155,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -224,10 +223,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(
-				IndexOp.DISKORDERSCAN, leafFrame, null, null);
-		rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame,
-				diskOrderScanOpCtx);
+		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
+		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
@@ -314,7 +311,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
 				interiorFrameFactory, leafFrameFactory);
-		rtree.create(fileId, leafFrame, metaFrame);
+		rtree.create(fileId);
 		rtree.open(fileId);
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
@@ -337,8 +334,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -400,8 +396,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		String rtreeStats = rtree.printStats();
 		print(rtreeStats);
 
-		RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE);
 		rnd.setSeed(50);
 		for (int i = 0; i < 5000; i++) {
 
@@ -532,7 +527,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
 				interiorFrameFactory, leafFrameFactory);
-		rtree.create(fileId, leafFrame, metaFrame);
+		rtree.create(fileId);
 		rtree.open(fileId);
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
@@ -557,8 +552,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -633,10 +627,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(
-				IndexOp.DISKORDERSCAN, leafFrame, null, null);
-		rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame,
-				diskOrderScanOpCtx);
+		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
+		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
@@ -723,7 +715,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
 		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
 				interiorFrameFactory, leafFrameFactory);
-		rtree.create(fileId, leafFrame, metaFrame);
+		rtree.create(fileId);
 		rtree.open(fileId);
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
@@ -746,8 +738,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -815,10 +806,8 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(
-				IndexOp.DISKORDERSCAN, leafFrame, null, null);
-		rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame,
-				diskOrderScanOpCtx);
+		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
+		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();

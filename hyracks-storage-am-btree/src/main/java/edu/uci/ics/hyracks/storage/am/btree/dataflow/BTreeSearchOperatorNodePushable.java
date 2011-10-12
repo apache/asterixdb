@@ -135,8 +135,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            opCtx = btree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(),
-                    treeIndexOpHelper.getInteriorFrame(), null);
+            opCtx = btree.createOpContext(IndexOp.SEARCH);
 
         } catch (Exception e) {
             treeIndexOpHelper.deinit();

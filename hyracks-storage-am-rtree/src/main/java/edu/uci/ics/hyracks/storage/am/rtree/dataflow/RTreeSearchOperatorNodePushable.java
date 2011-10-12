@@ -110,8 +110,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
                 appender.reset(writeBuffer, true);
 
-                opCtx = rtree.createOpContext(IndexOp.SEARCH, treeIndexOpHelper.getLeafFrame(),
-                        treeIndexOpHelper.getInteriorFrame(), null);
+                opCtx = rtree.createOpContext(IndexOp.SEARCH);
             } catch (Exception e) {
                 writer.fail();
                 throw e;

@@ -124,7 +124,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         } else {
             tupleOff = slotManager.getTupleOff(slotOff);
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            keySize = tupleWriter.bytesRequired(frameTuple, 0, tuple.getFieldCount());
+            keySize = frameTuple.getTupleSize();
             // Perform deletion (we just do a memcpy to overwrite the slot).
             int slotStartOff = slotManager.getSlotEndOff();
             int length = slotOff - slotStartOff;

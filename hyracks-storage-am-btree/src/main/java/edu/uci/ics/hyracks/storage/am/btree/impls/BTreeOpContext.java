@@ -26,22 +26,22 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public final class BTreeOpContext implements IIndexOpContext {
-    public final IndexOp op;
+    private final int INIT_ARRAYLIST_SIZE = 6;    
     public final IBTreeLeafFrame leafFrame;
     public final IBTreeInteriorFrame interiorFrame;
     public final ITreeIndexMetaDataFrame metaFrame;
+    public IndexOp op;
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
-    public final BTreeSplitKey splitKey;
+    public BTreeSplitKey splitKey;
     public int opRestarts = 0;
-    public final LongArrayList pageLsns; // used like a stack
-    public final IntArrayList smPages;
-    public final IntArrayList freePages;
+    public LongArrayList pageLsns;
+    public IntArrayList smPages;
+    public IntArrayList freePages;
 
     public BTreeOpContext(IndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame, int treeHeightHint, MultiComparator cmp) {
-        this.op = op;
+            ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {        
         if (leafFrame != null) {
         	leafFrame.setMultiComparator(cmp);
         }
@@ -51,19 +51,8 @@ public final class BTreeOpContext implements IIndexOpContext {
         }
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
-        this.pageLsns = new LongArrayList(treeHeightHint, treeHeightHint);
-        if (op == IndexOp.SEARCH || op == IndexOp.DISKORDERSCAN) {
-            smPages = null;
-            freePages = null;
-            splitKey = null;
-            cursorInitialState = new BTreeCursorInitialState(null);            
-        } else {
-            // Insert, update or delete operation.
-            smPages = new IntArrayList(treeHeightHint, treeHeightHint);
-            freePages = new IntArrayList(treeHeightHint, treeHeightHint);
-            pred = new RangePredicate(true, null, null, true, true, null, null);
-            splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
-        }
+        this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
+        reset(op);
     }
 
     public void reset() {
@@ -74,5 +63,29 @@ public final class BTreeOpContext implements IIndexOpContext {
         if (smPages != null)
             smPages.clear();
         opRestarts = 0;
+    }
+
+    @Override
+    public void reset(IndexOp newOp) {
+        if (newOp == IndexOp.SEARCH || newOp == IndexOp.DISKORDERSCAN) {
+            if (cursorInitialState == null) {
+                cursorInitialState = new BTreeCursorInitialState(null);
+            }
+        } else {
+            // Insert, update or delete operation.
+            if (smPages == null) {
+                smPages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
+            }
+            if (freePages == null) {
+                freePages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
+            }
+            if (pred == null) {
+                pred = new RangePredicate(true, null, null, true, true, null, null);
+            }
+            if (splitKey == null) {
+                splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
+            }
+        }
+        this.op = newOp;
     }
 }

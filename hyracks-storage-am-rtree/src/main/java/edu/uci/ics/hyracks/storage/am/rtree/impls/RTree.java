@@ -200,16 +200,15 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        if (created)
-            return;
-
+    public void create(int fileId) throws HyracksDataException {
         treeLatch.writeLock().lock();
         try {
-            // check if another thread beat us to it
-            if (created)
+            if (created) {
                 return;
+            }
 
+            ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
+            ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
             freePageManager.init(metaFrame, rootPage);
 
             // initialize root page
@@ -243,11 +242,13 @@ public class RTree implements ITreeIndex {
         fileId = -1;
     }
 
-    @Override
-    public RTreeOpContext createOpContext(IndexOp op, ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame) {
-        return new RTreeOpContext(op, (IRTreeLeafFrame) leafFrame, (IRTreeInteriorFrame) interiorFrame, metaFrame, 8);
-    }
+	@Override
+	public RTreeOpContext createOpContext(IndexOp op) {
+		return new RTreeOpContext(op,
+				(IRTreeLeafFrame) leafFrameFactory.createFrame(),
+				(IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
+				freePageManager.getMetaDataFrameFactory().createFrame(), 8);
+	}
 
     @Override
     public void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
@@ -874,19 +875,18 @@ public class RTree implements ITreeIndex {
 
         public BulkLoadContext(float fillFactor, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
                 ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-
-            insertOpCtx = createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+            insertOpCtx = createOpContext(IndexOp.INSERT);
         }
     }
 
     @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
-            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        if (loaded)
+    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws HyracksDataException {
+        if (loaded) {
             throw new HyracksDataException("Trying to bulk-load RTree but RTree has already been loaded.");
+        }
 
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IRTreeFrame) leafFrame, (IRTreeFrame) interiorFrame,
-                metaFrame);
+        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IRTreeFrame) leafFrameFactory.createFrame(), (IRTreeFrame) interiorFrameFactory.createFrame(),
+                freePageManager.getMetaDataFrameFactory().createFrame());
         return ctx;
     }
 
@@ -905,14 +905,13 @@ public class RTree implements ITreeIndex {
     }
 
     @Override
-    public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-            IIndexOpContext ictx) throws HyracksDataException {
+    public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
 
         int currentPageId = rootPage + 1;
-        int maxPageId = freePageManager.getMaxPage(metaFrame);
+        int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();

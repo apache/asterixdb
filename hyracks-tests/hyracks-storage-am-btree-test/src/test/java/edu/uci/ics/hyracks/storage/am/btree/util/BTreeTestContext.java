@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
@@ -37,15 +38,17 @@ public final class BTreeTestContext {
     public final ArrayTupleBuilder tupleBuilder;
     public final ArrayTupleReference tuple = new ArrayTupleReference();
     public final TreeSet<CheckTuple> checkTuples = new TreeSet<CheckTuple>();
+    public final BTreeOpContext opCtx;
     
     public BTreeTestContext(IBufferCache bufferCache, ISerializerDeserializer[] fieldSerdes, BTree btree, IBTreeLeafFrame leafFrame,
-            IBTreeInteriorFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) {
+            IBTreeInteriorFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame, BTreeOpContext opCtx) {
         this.bufferCache = bufferCache;
         this.fieldSerdes = fieldSerdes;
         this.btree = btree;
         this.leafFrame = leafFrame;
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
+        this.opCtx = opCtx;
         this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
     }
     

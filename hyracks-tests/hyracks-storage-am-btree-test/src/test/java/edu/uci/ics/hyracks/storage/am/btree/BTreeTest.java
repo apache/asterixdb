@@ -127,7 +127,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -149,7 +149,7 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
         // 10000
         for (int i = 0; i < 10000; i++) {
@@ -197,7 +197,7 @@ public class BTreeTest extends AbstractBTreeTest {
         LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(scanCursor, nullPred, searchOpCtx);
         try {
             while (scanCursor.hasNext()) {
@@ -215,8 +215,8 @@ public class BTreeTest extends AbstractBTreeTest {
         // disk-order scan
         LOGGER.info("DISK-ORDER SCAN:");
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
-        BTreeOpContext diskOrderScanOpCtx = btree.createOpContext(IndexOp.DISKORDERSCAN, leafFrame, null, null);
-        btree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
+        BTreeOpContext diskOrderScanOpCtx = btree.createOpContext(IndexOp.DISKORDERSCAN);
+        btree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
@@ -335,7 +335,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -357,7 +357,7 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
         
         // Magic test number: 3029. 6398. 4875.
         for (int i = 0; i < 10000; i++) {
@@ -400,7 +400,7 @@ public class BTreeTest extends AbstractBTreeTest {
         LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(scanCursor, nullPred, searchOpCtx);
 
         try {
@@ -525,7 +525,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -543,7 +543,7 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
         int maxLength = 10; // max string length to be generated
         for (int i = 0; i < 10000; i++) {
 
@@ -578,7 +578,7 @@ public class BTreeTest extends AbstractBTreeTest {
         LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(scanCursor, nullPred, searchOpCtx);
 
         try {
@@ -698,7 +698,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -716,8 +716,8 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
-        BTreeOpContext deleteOpCtx = btree.createOpContext(IndexOp.DELETE, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        BTreeOpContext deleteOpCtx = btree.createOpContext(IndexOp.DELETE);
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -819,7 +819,7 @@ public class BTreeTest extends AbstractBTreeTest {
         LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(scanCursor, nullPred, searchOpCtx);
         StringBuilder scanResults = new StringBuilder();
         try {
@@ -900,7 +900,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -918,8 +918,8 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
-        BTreeOpContext updateOpCtx = btree.createOpContext(IndexOp.UPDATE, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        BTreeOpContext updateOpCtx = btree.createOpContext(IndexOp.UPDATE);
 
         Map<String, String> expectedValues = new HashMap<String, String>();
         
@@ -962,7 +962,7 @@ public class BTreeTest extends AbstractBTreeTest {
         }
         ITreeIndexCursor insertCheckCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(insertCheckCursor, nullPred, searchOpCtx);
         try {
             compareActualAndExpected(insertCheckCursor, expectedValues, fieldSerdes);
@@ -1066,7 +1066,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -1084,7 +1084,7 @@ public class BTreeTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        IIndexBulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f, leafFrame, interiorFrame, metaFrame);
+        IIndexBulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f);
 
         // generate sorted records
         int ins = 100000;
@@ -1156,7 +1156,7 @@ public class BTreeTest extends AbstractBTreeTest {
 
         // TODO: check when searching backwards
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(rangeCursor, rangePred, searchOpCtx);
 
         try {
@@ -1220,7 +1220,7 @@ public class BTreeTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(fileId, leafFrame, metaFrame);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -1273,7 +1273,7 @@ public class BTreeTest extends AbstractBTreeTest {
         intervals[9][0] = 20;
         intervals[9][1] = 35;
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
         // int exceptionCount = 0;
         for (int i = 0; i < intervalCount; i++) {
@@ -1313,7 +1313,7 @@ public class BTreeTest extends AbstractBTreeTest {
         LOGGER.info("ORDERED SCAN:");
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
         btree.search(scanCursor, nullPred, searchOpCtx);
 
         try {

@@ -134,7 +134,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 		RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager,
 				interiorFrameFactory, leafFrameFactory);
-		rtree.create(fileId, leafFrame, metaFrame);
+		rtree.create(fileId);
 		rtree.open(fileId);
 
 		ByteBuffer hyracksFrame = ctx.allocateFrame();
@@ -155,8 +155,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -243,8 +242,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 					interiorFrame, leafFrame);
 			SearchPredicate searchPredicate = new SearchPredicate(tuple, cmp);
 
-			RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH,
-					leafFrame, interiorFrame, metaFrame);
+			RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH);
 			rtree.search(searchCursor, searchPredicate, searchOpCtx);
 
 			ArrayList<Integer> results = new ArrayList<Integer>();

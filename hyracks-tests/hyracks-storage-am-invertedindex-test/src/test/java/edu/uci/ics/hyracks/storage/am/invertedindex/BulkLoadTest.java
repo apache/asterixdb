@@ -137,7 +137,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, fieldCount, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-        btree.create(btreeFileId, leafFrame, metaFrame);
+        btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         int invListFields = 1;
@@ -241,7 +241,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFrameTupleAccessor tokenAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), tokenRecDesc);
         tokenAccessor.reset(frame);
 
-        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH);
 
         // verify created inverted lists one-by-one
         for (int i = 0; i < tokens.size(); i++) {

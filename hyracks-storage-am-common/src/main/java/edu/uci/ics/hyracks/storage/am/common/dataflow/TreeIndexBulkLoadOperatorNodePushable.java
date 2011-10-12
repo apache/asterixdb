@@ -23,8 +23,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends
 		AbstractUnaryInputSinkOperatorNodePushable {
@@ -57,14 +55,11 @@ public class TreeIndexBulkLoadOperatorNodePushable extends
 				opDesc.getOperatorId(), 0);
 		accessor = new FrameTupleAccessor(treeIndexOpHelper
 				.getHyracksTaskContext().getFrameSize(), recDesc);
-		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
 		try {
 			treeIndexOpHelper.init();
 			treeIndexOpHelper.getTreeIndex().open(
 					treeIndexOpHelper.getIndexFileId());
-			bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(
-					fillFactor, treeIndexOpHelper.getLeafFrame(),
-					treeIndexOpHelper.getInteriorFrame(), metaFrame);
+			bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(fillFactor);
 		} catch (Exception e) {
 			// cleanup in case of failure
 			treeIndexOpHelper.deinit();

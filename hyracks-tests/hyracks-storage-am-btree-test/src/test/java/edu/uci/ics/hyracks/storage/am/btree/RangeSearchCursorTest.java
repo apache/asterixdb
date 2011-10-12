@@ -100,14 +100,13 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId, leafFrame, metaFrame);
+		btree.create(btreeFileId);
 		btree.open(btreeFileId);
 
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
 	    ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
 		// generate keys
 		int numKeys = 50;
@@ -187,14 +186,13 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 		
 		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId, leafFrame, metaFrame);
+		btree.create(btreeFileId);
 		btree.open(btreeFileId);
 
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
 		// generate keys
 		int numKeys = 50;
@@ -271,14 +269,13 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);		
 		
 		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId, leafFrame, metaFrame);
+		btree.create(btreeFileId);
 		btree.open(btreeFileId);
 
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT,
-				leafFrame, interiorFrame, metaFrame);
+		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
 		// generate keys
 		int numKeys = 50;
@@ -412,8 +409,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator());
-				BTreeOpContext searchOpCtx = btree.createOpContext(
-						IndexOp.SEARCH, leafFrame, interiorFrame, null);
+				BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
 				btree.search(rangeCursor, rangePred, searchOpCtx);
 
 				try {

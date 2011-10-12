@@ -268,9 +268,7 @@ public class InvertedIndex {
         }
 
         public void init(int startPageId, int fileId) throws HyracksDataException, TreeIndexException {
-            btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR,
-                    btree.getLeafFrameFactory().createFrame(), btree.getInteriorFrameFactory().createFrame(), btree
-                            .getFreePageManager().getMetaDataFrameFactory().createFrame());
+            btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();

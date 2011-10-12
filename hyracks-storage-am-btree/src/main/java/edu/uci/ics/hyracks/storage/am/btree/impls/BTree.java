@@ -81,12 +81,14 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public void create(int fileId, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+    public void create(int fileId) throws HyracksDataException {
         treeLatch.writeLock().lock();
         try {
             if (created) {
                 return;
             }
+            ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
+            ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
             this.fileId = fileId;
             freePageManager.init(metaFrame, rootPage);
             initRoot(leafFrame, true);
@@ -117,14 +119,13 @@ public class BTree implements ITreeIndex {
     }
     
     @Override
-    public void diskOrderScan(ITreeIndexCursor icursor, ITreeIndexFrame leafFrame, ITreeIndexMetaDataFrame metaFrame,
-            IIndexOpContext ictx) throws HyracksDataException {
+    public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         BTreeOpContext ctx = (BTreeOpContext) ictx;
         ctx.reset();
 
         int currentPageId = rootPage;
-        int maxPageId = freePageManager.getMaxPage(metaFrame);
+        int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();
@@ -916,15 +917,14 @@ public class BTree implements ITreeIndex {
 
     // assumes btree has been created and opened
     @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor, ITreeIndexFrame leafFrame,
-            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame) throws TreeIndexException, HyracksDataException {
-        
-    	if (!isEmptyTree((IBTreeLeafFrame)leafFrame)) {
+    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
+    	if (!isEmptyTree(leafFrame)) {
     		throw new BTreeException("Trying to Bulk-load a non-empty BTree.");
     	}
     	
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IBTreeLeafFrame)leafFrame,
-                (IBTreeInteriorFrame)interiorFrame, metaFrame, cmp);
+        BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame,
+                (IBTreeInteriorFrame)interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory().createFrame(), cmp);
         ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(fieldCount);
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
@@ -1007,11 +1007,12 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public BTreeOpContext createOpContext(IndexOp op, ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame) {
-        return new BTreeOpContext(op, (IBTreeLeafFrame) leafFrame, (IBTreeInteriorFrame) interiorFrame, metaFrame, 6, cmp);
+    public BTreeOpContext createOpContext(IndexOp op) {
+        return new BTreeOpContext(op, (IBTreeLeafFrame) leafFrameFactory.createFrame(),
+                (IBTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
+                        .createFrame(), cmp);
     }
-
+    
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }

@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -76,9 +75,6 @@ public abstract class TreeIndexOpHelper {
         // otherwise deinit() will try to close the file that failed to open
         indexFileId = fileId;
 
-        interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
-        leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-
         IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
         // Create new tree and register it.
         treeIndexRegistry.lock();
@@ -95,10 +91,8 @@ public abstract class TreeIndexOpHelper {
             cmp = new MultiComparator(comparators);
             treeIndex = createTreeIndex();
             if (mode == IndexHelperOpenMode.CREATE) {
-                ITreeIndexMetaDataFrame metaFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                        .createFrame();
                 try {
-                    treeIndex.create(indexFileId, leafFrame, metaFrame);
+                    treeIndex.create(indexFileId);
                 } catch (Exception e) {
                 	e.printStackTrace();
                     throw new HyracksDataException(e);
@@ -142,14 +136,6 @@ public abstract class TreeIndexOpHelper {
 
     public ITreeIndexOperatorDescriptorHelper getOperatorDescriptor() {
         return opDesc;
-    }
-
-    public ITreeIndexFrame getLeafFrame() {
-        return leafFrame;
-    }
-
-    public ITreeIndexFrame getInteriorFrame() {
-        return interiorFrame;
     }
 
     public int getIndexFileId() {

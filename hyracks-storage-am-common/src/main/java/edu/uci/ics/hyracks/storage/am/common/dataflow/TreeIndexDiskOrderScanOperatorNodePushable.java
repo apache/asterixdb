@@ -24,11 +24,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends
@@ -50,18 +48,14 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends
 				.getTreeIndexLeafFactory().createFrame();
 		ITreeIndexCursor cursor = treeIndexOpHelper
 				.createDiskOrderScanCursor(cursorFrame);
-		ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
-
-		IIndexOpContext diskOrderScanOpCtx = treeIndexOpHelper
-				.getTreeIndex()
-				.createOpContext(IndexOp.DISKORDERSCAN, cursorFrame, null, null);
+		IIndexOpContext diskOrderScanOpCtx = treeIndexOpHelper.getTreeIndex()
+				.createOpContext(IndexOp.DISKORDERSCAN);
 		try {
 
 			treeIndexOpHelper.init();
 			writer.open();
 			try {
-				treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor,
-						cursorFrame, metaFrame, diskOrderScanOpCtx);
+				treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, diskOrderScanOpCtx);
 
 				int fieldCount = treeIndexOpHelper.getTreeIndex()
 						.getFieldCount();

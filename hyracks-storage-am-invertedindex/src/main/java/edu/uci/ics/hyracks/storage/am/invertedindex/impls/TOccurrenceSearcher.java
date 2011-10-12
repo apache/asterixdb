@@ -107,7 +107,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         invListFieldsWithCount[invListFields.length] = new TypeTrait(4);
         invListKeyLength = tmp;
 
-        btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH);
 
         resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), invListFieldsWithCount);
         resultFrameTupleAcc = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), invListFieldsWithCount);
