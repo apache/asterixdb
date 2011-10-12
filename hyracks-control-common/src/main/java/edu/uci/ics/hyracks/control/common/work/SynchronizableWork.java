@@ -45,7 +45,7 @@ public abstract class SynchronizableWork extends AbstractWork {
             try {
                 wait();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw e;
             }
         }
         if (e != null) {

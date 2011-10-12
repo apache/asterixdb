@@ -249,7 +249,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             joblet.notifyTaskComplete(this);
         } catch (Exception e) {
             e.printStackTrace();
-            joblet.notifyTaskFailed(this, e);
+            try {
+                joblet.notifyTaskFailed(this, e);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         } finally {
             ct.setName(threadName);
             close();
