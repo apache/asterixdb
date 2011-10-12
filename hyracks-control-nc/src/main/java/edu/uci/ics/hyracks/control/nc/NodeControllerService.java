@@ -57,7 +57,7 @@ import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
@@ -65,6 +65,7 @@ import edu.uci.ics.hyracks.control.nc.net.ConnectionManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
+import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobWork;
 import edu.uci.ics.hyracks.control.nc.work.CreateApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.DestroyApplicationWork;
@@ -324,24 +325,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         @Override
         public void run() {
             try {
-                List<JobProfile> profiles;
-                synchronized (NodeControllerService.this) {
-                    profiles = new ArrayList<JobProfile>();
-                    for (Joblet ji : jobletMap.values()) {
-                        profiles.add(new JobProfile(ji.getJobId()));
-                    }
-                }
-                for (JobProfile jProfile : profiles) {
-                    Joblet ji;
-                    JobletProfile jobletProfile = new JobletProfile(id);
-                    synchronized (NodeControllerService.this) {
-                        ji = jobletMap.get(jProfile.getJobId());
-                    }
-                    if (ji != null) {
-                        ji.dumpProfile(jobletProfile);
-                        jProfile.getJobletProfiles().put(id, jobletProfile);
-                    }
-                }
+                FutureValue fv = new FutureValue();
+                BuildJobProfilesWork bjpw = new BuildJobProfilesWork(NodeControllerService.this, fv);
+                queue.scheduleAndSync(bjpw);
+                List<JobProfile> profiles = (List<JobProfile>) fv.get();
                 if (!profiles.isEmpty()) {
                     cc.reportProfile(id, profiles);
                 }
