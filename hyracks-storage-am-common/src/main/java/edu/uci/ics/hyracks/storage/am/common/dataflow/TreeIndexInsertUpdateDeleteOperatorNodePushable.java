@@ -84,23 +84,28 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 
 				case INSERT: {
 					treeIndex.insert(tuple, opCtx);
-				}
 					break;
+				}
 
+				case UPDATE: {
+					treeIndex.update(tuple, opCtx);
+					break;
+				}
+				
 				case DELETE: {
 					treeIndex.delete(tuple, opCtx);
-				}
 					break;
-
+				}
+					
 				default: {
 					throw new HyracksDataException("Unsupported operation "
 							+ op + " in tree index InsertUpdateDelete operator");
 				}
 
 				}
-
+			} catch (HyracksDataException e) {
+				throw e;
 			} catch (Exception e) {
-				e.printStackTrace();
 				throw new HyracksDataException(e);
 			}
 		}

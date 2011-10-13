@@ -410,7 +410,7 @@ public class BTreeTestUtils {
     public static void deleteTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
         ArrayTupleBuilder deleteTupleBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
         ArrayTupleReference deleteTuple = new ArrayTupleReference();
-        int numCheckTuples = testCtx.checkTuples.size();
+        int numCheckTuples = testCtx.checkTuples.size();        
         testCtx.opCtx.reset(IndexOp.DELETE);
         // Copy CheckTuple references into array, so we can randomly pick from there.
         CheckTuple[] checkTuples = new CheckTuple[numCheckTuples];
