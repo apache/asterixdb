@@ -16,31 +16,30 @@
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
-public final class RTreeOpContext implements IndexOpContext {
-	public final IndexOp op;
+public final class RTreeOpContext implements IIndexOpContext {
 	public final IRTreeInteriorFrame interiorFrame;
 	public final IRTreeLeafFrame leafFrame;
+	public IndexOp op;
 	public ITreeIndexCursor cursor;
 	public RTreeCursorInitialState cursorInitialState;
-	public final ITreeIndexMetaDataFrame metaFrame;
-	public final RTreeSplitKey splitKey;
+	public ITreeIndexMetaDataFrame metaFrame;
+	public RTreeSplitKey splitKey;
 	public ITupleReference tuple;
-	public final PathList pathList; // used to record the pageIds and pageLsns
-									// of the visited pages
-	public final PathList traverseList; // used for traversing the tree
+	public PathList pathList; // used to record the pageIds and pageLsns
+								// of the visited pages
+	public PathList traverseList; // used for traversing the tree
 	private static final int initTraverseListSize = 100;
 
 	public RTreeOpContext(IndexOp op, IRTreeLeafFrame leafFrame,
 			IRTreeInteriorFrame interiorFrame,
 			ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
-		this.op = op;
 		this.interiorFrame = interiorFrame;
 		this.leafFrame = leafFrame;
 		this.metaFrame = metaFrame;
@@ -73,5 +72,26 @@ public final class RTreeOpContext implements IndexOpContext {
 		if (traverseList != null) {
 			traverseList.clear();
 		}
+	}
+
+	@Override
+	public void reset(IndexOp newOp) {
+		if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
+			if (splitKey == null) {
+				splitKey = new RTreeSplitKey(interiorFrame.getTupleWriter()
+						.createTupleReference(), interiorFrame.getTupleWriter()
+						.createTupleReference());
+			}
+			if (traverseList == null) {
+				traverseList = new PathList(initTraverseListSize,
+						initTraverseListSize);
+			}
+
+		} else {
+			if (cursorInitialState == null) {
+				cursorInitialState = new RTreeCursorInitialState(pathList, 1);
+			}
+		}
+		this.op = newOp;
 	}
 }

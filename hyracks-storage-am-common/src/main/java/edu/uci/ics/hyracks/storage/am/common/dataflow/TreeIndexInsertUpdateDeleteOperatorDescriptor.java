@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -46,12 +45,11 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
 			ITreeIndexFrameFactory interiorFrameFactory,
 			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
-			IPrimitiveValueProviderFactory[] valueProviderFactories,
 			int[] fieldPermutation, IndexOp op,
 			ITreeIndexOpHelperFactory opHelperFactory) {
 		super(spec, 1, 1, recDesc, storageManager, treeIndexRegistryProvider,
 				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, comparatorFactories, valueProviderFactories,
+				typeTraits, comparatorFactories,
 				opHelperFactory);
 		this.fieldPermutation = fieldPermutation;
 		this.op = op;

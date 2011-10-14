@@ -1,7 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -12,7 +11,6 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeOpHelper extends TreeIndexOpHelper {
@@ -30,11 +28,7 @@ public class BTreeOpHelper extends TreeIndexOpHelper {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0,
                 metaDataFrameFactory);
-        return new BTree(bufferCache, freePageManager, opDesc.getTreeIndexInteriorFactory(),
-                opDesc.getTreeIndexLeafFactory(), cmp);
-    }
-
-    public MultiComparator createMultiComparator(IBinaryComparator[] comparators) throws HyracksDataException {
-        return new MultiComparator(opDesc.getTreeIndexTypeTraits(), comparators);
+        return new BTree(bufferCache, opDesc.getTreeIndexFieldCount(), cmp, freePageManager, opDesc.getTreeIndexInteriorFactory(),
+                opDesc.getTreeIndexLeafFactory());
     }
 }

@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.common.data.comparators;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
 public class UTF8StringBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
@@ -28,30 +27,6 @@ public class UTF8StringBinaryComparatorFactory implements IBinaryComparatorFacto
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int utflen1 = StringUtils.getUTFLen(b1, s1);
-                int utflen2 = StringUtils.getUTFLen(b2, s2);
-
-                int c1 = 0;
-                int c2 = 0;
-
-                int s1Start = s1 + 2;
-                int s2Start = s2 + 2;
-
-                while (c1 < utflen1 && c2 < utflen2) {
-                    char ch1 = StringUtils.charAt(b1, s1Start + c1);
-                    char ch2 = StringUtils.charAt(b2, s2Start + c2);
-
-                    if (ch1 != ch2) {
-                        return ch1 - ch2;
-                    }
-                    c1 += StringUtils.charSize(b1, s1Start + c1);
-                    c2 += StringUtils.charSize(b2, s2Start + c2);
-                }
-                return utflen1 - utflen2;
-            }
-        };
+        return new UTF8StringBinaryComparator();
     }
 }

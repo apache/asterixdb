@@ -41,7 +41,7 @@ public class TreeIndexDiskOrderScanOperatorDescriptor extends
 			ITreeIndexOpHelperFactory opHelperFactory) {
 		super(spec, 0, 1, recDesc, storageManager, treeIndexRegistryProvider,
 				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, null, null, opHelperFactory);
+				typeTraits, null, opHelperFactory);
 	}
 
 	@Override

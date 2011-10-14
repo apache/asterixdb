@@ -90,7 +90,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 		}
 		while (!pathList.isEmpty()) {
 			int pageId = pathList.getLastPageId();
-			int parentLsn = pathList.getLastPageLsn();
+			long parentLsn = pathList.getLastPageLsn();
 			pathList.moveLast();
 			ICachedPage node = bufferCache.pin(
 					BufferedFileHandle.getDiskPageId(fileId, pageId), false);
@@ -99,7 +99,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 			readLatched = true;
 			interiorFrame.setPage(node);
 			boolean isLeaf = interiorFrame.isLeaf();
-			int pageLsn = interiorFrame.getPageLsn();
+			long pageLsn = interiorFrame.getPageLsn();
 
 			if (pageId != rootPage && parentLsn < interiorFrame.getPageNsn()) {
 				// Concurrent split detected, we need to visit the right page
@@ -192,7 +192,6 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 		}
 
 		pathList.add(this.rootPage, -1, -1);
-		frameTuple.setFieldCount(cmp.getFieldCount());
 		tupleIndex = 0;
 		fetchNextLeafPage();
 	}

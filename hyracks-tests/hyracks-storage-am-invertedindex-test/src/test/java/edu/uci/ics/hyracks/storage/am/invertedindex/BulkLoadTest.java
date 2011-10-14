@@ -123,7 +123,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator btreeCmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator btreeCmp = new MultiComparator(cmps);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -136,8 +136,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, btreeCmp);
-        btree.create(btreeFileId, leafFrame, metaFrame);
+        BTree btree = new BTree(bufferCache, fieldCount, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         int invListFields = 1;
@@ -148,9 +148,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
         invListBinCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        MultiComparator invListCmp = new MultiComparator(invListTypeTraits, invListBinCmps);
+        MultiComparator invListCmp = new MultiComparator(invListBinCmps);
 
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListCmp);
+        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
         invIndex.open(invListsFileId);
 
         Random rnd = new Random();
@@ -241,7 +241,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFrameTupleAccessor tokenAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), tokenRecDesc);
         tokenAccessor.reset(frame);
 
-        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH);
 
         // verify created inverted lists one-by-one
         for (int i = 0; i < tokens.size(); i++) {

@@ -23,7 +23,7 @@ public interface IRTreeInteriorFrame extends IRTreeFrame {
 
 	public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
 
-	public int getBestChildPageId(MultiComparator cmp);
+	public int getBestChildPageId();
 
 	public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex,
 			MultiComparator cmp);

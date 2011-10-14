@@ -56,7 +56,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame) {
         this.frame = frame;
-        this.frameTuple = frame.createTupleReference();
+        this.frameTuple = frame.createTupleReference();        
     }
 
     @Override
@@ -141,7 +141,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         tupleIndex += tupleIndexInc;
     }
 
-    private int getLowKeyIndex() {
+    private int getLowKeyIndex() throws HyracksDataException {
         int index;
         if (lowKey == null)
             index = 0;
@@ -157,7 +157,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return index;
     }
 
-    private int getHighKeyIndex() {
+    private int getHighKeyIndex() throws HyracksDataException {
         int index;
         if (highKey == null)
             index = frame.getTupleCount() - 1;
@@ -191,23 +191,19 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         lowKey = pred.getLowKey();
         highKey = pred.getHighKey();
 
-        // field count must be identical for lowKeyCmp and highKeyCmp (key count
-        // may be different)
-        frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
-
         // init
-        lowKeyFtm = FindTupleMode.FTM_EXCLUSIVE;
+        lowKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.lowKeyInclusive) {
-            lowKeyFtp = FindTupleNoExactMatchPolicy.FTP_LOWER_KEY;
+            lowKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         } else {
-            lowKeyFtp = FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY;
+            lowKeyFtp = FindTupleNoExactMatchPolicy.HIGHER_KEY;
         }
 
-        highKeyFtm = FindTupleMode.FTM_EXCLUSIVE;
+        highKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.highKeyInclusive) {
-            highKeyFtp = FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY;
+            highKeyFtp = FindTupleNoExactMatchPolicy.HIGHER_KEY;
         } else {
-            highKeyFtp = FindTupleNoExactMatchPolicy.FTP_LOWER_KEY;
+            highKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         }
 
         if (pred.isForward()) {

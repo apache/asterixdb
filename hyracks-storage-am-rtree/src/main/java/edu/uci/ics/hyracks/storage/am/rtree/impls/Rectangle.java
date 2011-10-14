@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 
 public class Rectangle {
 	private int dim;
@@ -49,26 +49,26 @@ public class Rectangle {
 		high[i] = value;
 	}
 
-	public void set(ITupleReference tuple, MultiComparator cmp) {
+	public void set(ITupleReference tuple, IPrimitiveValueProvider[] valueProviders) {
 		for (int i = 0; i < getDim(); i++) {
 			int j = i + getDim();
-			setLow(i, cmp.getValueProviders()[i].getValue(
+			setLow(i, valueProviders[i].getValue(
 					tuple.getFieldData(i), tuple.getFieldStart(i)));
-			setHigh(i, cmp.getValueProviders()[j].getValue(
+			setHigh(i, valueProviders[j].getValue(
 					tuple.getFieldData(j), tuple.getFieldStart(j)));
 		}
 	}
 
-	public void enlarge(ITupleReference tupleToBeInserted, MultiComparator cmp) {
+	public void enlarge(ITupleReference tupleToBeInserted, IPrimitiveValueProvider[] valueProviders) {
 		for (int i = 0; i < getDim(); i++) {
 			int j = getDim() + i;
-			double low = cmp.getValueProviders()[i].getValue(
+			double low = valueProviders[i].getValue(
 					tupleToBeInserted.getFieldData(i),
 					tupleToBeInserted.getFieldStart(i));
 			if (getLow(i) > low) {
 				setLow(i, low);
 			}
-			double high = cmp.getValueProviders()[j].getValue(
+			double high = valueProviders[j].getValue(
 					tupleToBeInserted.getFieldData(j),
 					tupleToBeInserted.getFieldStart(j));
 			if (getHigh(i) < high) {

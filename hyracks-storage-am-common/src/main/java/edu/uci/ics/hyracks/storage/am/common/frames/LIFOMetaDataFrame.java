@@ -27,12 +27,11 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
-	protected static final int tupleCountOff = 0;
-	protected static final int freeSpaceOff = tupleCountOff + 4;
-	protected static final int maxPageOff = freeSpaceOff + 4;
-	protected static final int dummyFieldOff = maxPageOff + 4;
-	protected static final byte levelOff = dummyFieldOff + 4;
-	protected static final byte nextPageOff = levelOff + 1;
+	protected static final int tupleCountOff = 0; //0
+	protected static final int freeSpaceOff = tupleCountOff + 4; //4
+	protected static final int maxPageOff = freeSpaceOff + 4; //8
+	protected static final int levelOff = maxPageOff + 12; //20
+	protected static final int nextPageOff = levelOff + 1; // 21
 
 	protected ICachedPage page = null;
 	protected ByteBuffer buf = null;
@@ -96,10 +95,11 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 	}
 
 	@Override
-	public void initBuffer(int level) {
-		buf.putInt(freeSpaceOff, nextPageOff + 4);
+	public void initBuffer(byte level) {
 		buf.putInt(tupleCountOff, 0);
-		buf.putInt(levelOff, level);
+		buf.putInt(freeSpaceOff, nextPageOff + 4);
+		//buf.putInt(maxPageOff, -1);
+		buf.put(levelOff, level);
 		buf.putInt(nextPageOff, -1);
 	}
 

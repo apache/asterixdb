@@ -22,15 +22,16 @@ import java.util.Comparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
-public class FieldPrefixCompressor implements IFrameCompressor {
+public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
     // minimum ratio of uncompressed tuples to total tuple to consider
     // re-compression
@@ -49,8 +50,9 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     }
 
     @Override
-    public boolean compress(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp) throws Exception {
-        int tupleCount = frame.getTupleCount();
+    public boolean compress(ITreeIndexFrame indexFrame, MultiComparator cmp) throws Exception {
+        BTreeFieldPrefixNSMLeafFrame frame = (BTreeFieldPrefixNSMLeafFrame)indexFrame;
+    	int tupleCount = frame.getTupleCount();
         if (tupleCount <= 0) {
             frame.setPrefixTupleCount(0);
             frame.setFreeSpaceOff(frame.getOrigFreeSpaceOff());
@@ -58,13 +60,17 @@ public class FieldPrefixCompressor implements IFrameCompressor {
             return false;
         }
 
+        if (cmp.getKeyFieldCount() == 1) {
+            return false;
+        }
+        
         int uncompressedTupleCount = frame.getUncompressedTupleCount();
         float ratio = (float) uncompressedTupleCount / (float) tupleCount;
         if (ratio < ratioThreshold)
             return false;
 
         IBinaryComparator[] cmps = cmp.getComparators();
-        int fieldCount = cmp.getKeyFieldCount();
+        int fieldCount = typeTraits.length;
 
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
@@ -102,7 +108,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
 
         // we use a greedy heuristic to solve this "knapsack"-like problem
         // (every keyPartition has a space savings and a number of slots
-        // required, but we the number of slots are constrained by
+        // required, but the number of slots are constrained by
         // MAX_PREFIX_SLOTS)
         // we sort the keyPartitions by maxBenefitMinusCost / prefixSlotsNeeded
         // and later choose the top MAX_PREFIX_SLOTS
@@ -161,7 +167,6 @@ public class FieldPrefixCompressor implements IFrameCompressor {
         uncompressedTupleCount = 0;
 
         TypeAwareTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-
         FieldPrefixTupleReference tupleToWrite = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
         tupleToWrite.setFieldCount(fieldCount);
 
@@ -312,8 +317,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
 
         // copy new tuple and new slots into original page
         int freeSpaceAfterInit = frame.getOrigFreeSpaceOff();
-        System
-                .arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace
+        System.arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace
                         - freeSpaceAfterInit);
 
         // copy prefix slots
@@ -368,7 +372,7 @@ public class FieldPrefixCompressor implements IFrameCompressor {
     private ArrayList<KeyPartition> getKeyPartitions(BTreeFieldPrefixNSMLeafFrame frame, MultiComparator cmp,
             int occurrenceThreshold) {
         IBinaryComparator[] cmps = cmp.getComparators();
-        int fieldCount = cmp.getKeyFieldCount();
+        int fieldCount = typeTraits.length;
 
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();

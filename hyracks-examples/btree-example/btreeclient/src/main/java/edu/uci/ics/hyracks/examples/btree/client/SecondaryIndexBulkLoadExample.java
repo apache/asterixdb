@@ -117,6 +117,11 @@ public class SecondaryIndexBulkLoadExample {
         primaryTypeTraits[2] = new TypeTrait(4);
         primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 
+        // comparators for sort fields and BTree fields
+        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[2];
+        comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        comparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+        
         // create factories and providers for primary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
         ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory);
@@ -133,10 +138,6 @@ public class SecondaryIndexBulkLoadExample {
         // sort the tuples as preparation for bulk load into secondary index
         // fields to sort on
         int[] sortFields = { 1, 0 };
-        // comparators for sort fields
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[2];
-        comparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-        comparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields,
                 comparatorFactories, recDesc);
         JobHelper.createPartitionConstraint(spec, sorter, splitNCs);
@@ -159,7 +160,7 @@ public class SecondaryIndexBulkLoadExample {
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, treeIndexRegistryProvider, btreeSplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, null, fieldPermutation, 0.7f,
+                secondaryLeafFrameFactory, secondaryTypeTraits, comparatorFactories, fieldPermutation, 0.7f,
                 opHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 

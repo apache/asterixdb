@@ -16,15 +16,16 @@
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 
 public class PathList {
 	private IntArrayList pageIds;
-	private IntArrayList pageLsns;
+	private LongArrayList pageLsns;
 	private IntArrayList pageIndexes;
 
 	public PathList(int initialCapacity, int growth) {
 		pageIds = new IntArrayList(initialCapacity, growth);
-		pageLsns = new IntArrayList(initialCapacity, growth);
+		pageLsns = new LongArrayList(initialCapacity, growth);
 		pageIndexes = new IntArrayList(initialCapacity, growth);
 	}
 
@@ -36,7 +37,7 @@ public class PathList {
 		return pageIds.first();
 	}
 
-	public void add(int pageId, int pageLsn, int pageIndex) {
+	public void add(int pageId, long pageLsn, int pageIndex) {
 		pageIds.add(pageId);
 		pageLsns.add(pageLsn);
 		pageIndexes.add(pageIndex);
@@ -46,7 +47,7 @@ public class PathList {
 		return pageIds.getFirst();
 	}
 
-	public int getFirstPageLsn() {
+	public long getFirstPageLsn() {
 		return pageLsns.getFirst();
 	}
 
@@ -58,7 +59,7 @@ public class PathList {
 		return pageIds.getLast();
 	}
 
-	public int getLastPageLsn() {
+	public long getLastPageLsn() {
 		return pageLsns.getLast();
 	}
 
@@ -70,7 +71,7 @@ public class PathList {
 		return pageIds.get(i);
 	}
 
-	public int getPageLsn(int i) {
+	public long getPageLsn(int i) {
 		return pageLsns.get(i);
 	}
 
@@ -78,7 +79,7 @@ public class PathList {
 		return pageIndexes.get(i);
 	}
 
-	public void setPageLsn(int i, int pageLsn) {
+	public void setPageLsn(int i, long pageLsn) {
 		pageLsns.set(i, pageLsn);
 	}
 

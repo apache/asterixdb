@@ -16,5 +16,5 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 public enum FindTupleMode {
-	FTM_INCLUSIVE, FTM_EXCLUSIVE, FTM_EXACT
+	INCLUSIVE, EXCLUSIVE, EXCLUSIVE_ERROR_IF_EXISTS, EXACT
 }

@@ -202,7 +202,7 @@ public class BTreeSecondaryIndexSearchOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryBtreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, null, fieldPermutation, 0.7f,
+				primaryComparatorFactories, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBtreeBulkLoad, NC1_ID);
@@ -268,7 +268,7 @@ public class BTreeSecondaryIndexSearchOperatorTest extends
 				spec, storageManager, treeIndexRegistryProvider,
 				secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
 				secondaryLeafFrameFactory, secondaryTypeTraits,
-				secondaryComparatorFactories, null, fieldPermutation, 0.7f,
+				secondaryComparatorFactories, fieldPermutation, 0.7f,
 				opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				secondaryBtreeBulkLoad, NC1_ID);
@@ -361,7 +361,6 @@ public class BTreeSecondaryIndexSearchOperatorTest extends
 	public static void cleanup() throws Exception {
 		File primary = new File(primaryFileName);
 		primary.deleteOnExit();
-
 		File secondary = new File(secondaryFileName);
 		secondary.deleteOnExit();
 	}

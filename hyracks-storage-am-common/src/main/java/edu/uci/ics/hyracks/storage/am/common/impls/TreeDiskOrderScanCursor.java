@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -30,17 +29,17 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
 	private int tupleIndex = 0;
 	private int fileId = -1;
-	int currentPageId = -1;
-	int maxPageId = -1;
+	private int currentPageId = -1;
+	private int maxPageId = -1;
 	private ICachedPage page = null;
 	private ITreeIndexFrame frame = null;
 	private IBufferCache bufferCache = null;
-
+	
 	private ITreeIndexTupleReference frameTuple;
 
 	public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
-		this.frame = frame;
-		this.frameTuple = frame.getTupleWriter().createTupleReference();
+		this.frame = frame;		
+		this.frameTuple = frame.createTupleReference();
 	}
 
 	@Override
@@ -62,8 +61,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
 	private boolean positionToNextLeaf(boolean skipCurrent)
 			throws HyracksDataException {
-		while ((frame.getLevel() != 0 || skipCurrent)
-				&& (currentPageId <= maxPageId) || (frame.getTupleCount() == 0)) {
+		while ((frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId)) {
 			currentPageId++;
 
 			ICachedPage nextPage = bufferCache.pin(
@@ -86,7 +84,10 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 	}
 
 	@Override
-	public boolean hasNext() throws Exception {
+	public boolean hasNext() throws Exception {		
+		if (currentPageId > maxPageId) {
+			return false;
+		}
 		if (tupleIndex >= frame.getTupleCount()) {
 			boolean nextLeafExists = positionToNextLeaf(true);
 			if (nextLeafExists) {
@@ -95,9 +96,8 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 			} else {
 				return false;
 			}
-		}
-
-		frameTuple.resetByTupleIndex(frame, tupleIndex);
+		}		
+		frameTuple.resetByTupleIndex(frame, tupleIndex);		
 		return true;
 	}
 
@@ -114,17 +114,10 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 			page.releaseReadLatch();
 			bufferCache.unpin(page);
 		}
-
 		page = initialState.getPage();
-		tupleIndex = 0;
+		tupleIndex = 0;		
 		frame.setPage(page);
-		MultiComparator lowKeyCmp = searchPred.getLowKeyComparator();
-		frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
-		boolean leafExists = positionToNextLeaf(false);
-		if (!leafExists) {
-			throw new HyracksDataException(
-					"Failed to open disk-order scan cursor for tree index. Traget tree index has no leaves.");
-		}
+		positionToNextLeaf(false);
 	}
 
 	@Override

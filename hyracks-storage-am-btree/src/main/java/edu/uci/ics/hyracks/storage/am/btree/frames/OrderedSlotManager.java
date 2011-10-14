@@ -15,12 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.frames.AbstractSlotManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
@@ -32,8 +27,9 @@ public class OrderedSlotManager extends AbstractSlotManager {
 	@Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
-        if (frame.getTupleCount() <= 0)
-            return -1;
+        if (frame.getTupleCount() <= 0) {
+            return GREATEST_KEY_INDICATOR;
+        }
 
         int mid;
         int begin = 0;
@@ -49,43 +45,53 @@ public class OrderedSlotManager extends AbstractSlotManager {
             } else if (cmp > 0) {
                 begin = mid + 1;
             } else {
-                if (mode == FindTupleMode.FTM_EXCLUSIVE) {
-                    if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY)
+                if (mode == FindTupleMode.EXCLUSIVE) {
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
                         begin = mid + 1;
-                    else
+                    } else {
                         end = mid - 1;
+                    }
                 } else {
-                    return mid;
+                    if (mode == FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS) {
+                        return ERROR_INDICATOR;
+                    } else {
+                        return mid;
+                    }
                 }
             }
         }
 
-        if (mode == FindTupleMode.FTM_EXACT)
-            return -1;
+        if (mode == FindTupleMode.EXACT) {
+            return ERROR_INDICATOR;
+        }
 
-        if (matchPolicy == FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY) {
-            if (begin > frame.getTupleCount() - 1)
-                return -1;
+        if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
+            if (begin > frame.getTupleCount() - 1) {
+                return GREATEST_KEY_INDICATOR;
+            }
             frameTuple.resetByTupleIndex(frame, begin);
-            if (multiCmp.compare(searchKey, frameTuple) < 0)
+            if (multiCmp.compare(searchKey, frameTuple) < 0) {
                 return begin;
-            else
-                return -1;
+            } else {
+                return GREATEST_KEY_INDICATOR;
+            }
         } else {
-            if (end < 0)
-                return -1;
+            if (end < 0) {
+                return GREATEST_KEY_INDICATOR;
+            }
             frameTuple.resetByTupleIndex(frame, end);
-            if (multiCmp.compare(searchKey, frameTuple) > 0)
+            if (multiCmp.compare(searchKey, frameTuple) > 0) {
                 return end;
-            else
-                return -1;
+            } else {
+                return GREATEST_KEY_INDICATOR;
+            }
         }
     }
     
     @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotOff(tupleIndex);
-        if (tupleIndex < 0) {
+        if (tupleIndex == GREATEST_KEY_INDICATOR) {
             slotOff = getSlotEndOff() - slotSize;
             setSlot(slotOff, tupleOff);
             return slotOff;

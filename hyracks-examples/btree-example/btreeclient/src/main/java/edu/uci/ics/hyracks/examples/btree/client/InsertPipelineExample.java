@@ -140,6 +140,10 @@ public class InsertPipelineExample {
         primaryTypeTraits[2] = new TypeTrait(4);
         primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 
+        // comparator factories for primary index
+        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
+        primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
         ITreeIndexFrameFactory primaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(primaryTupleWriterFactory);
@@ -149,10 +153,7 @@ public class InsertPipelineExample {
         // tuple
         int[] primaryFieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input
                                                         // tuple to field 0 of
-                                                        // B-Tree tuple, etc.
-        // comparator factories for primary index
-        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
-        primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+                                                        // B-Tree tuple, etc.        
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
@@ -161,7 +162,7 @@ public class InsertPipelineExample {
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider,
                 primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories,
-                null, primaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+                primaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -171,6 +172,11 @@ public class InsertPipelineExample {
         secondaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
         secondaryTypeTraits[1] = new TypeTrait(4);
 
+        // comparator factories for secondary index
+        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
+        secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+        
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
         ITreeIndexFrameFactory secondaryInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(
@@ -180,17 +186,13 @@ public class InsertPipelineExample {
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
         int[] secondaryFieldPermutation = { 1, 2 };
-        // comparator factories for primary index
-        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
-        secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-        secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
                 options.secondaryBTreeName);
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider,
                 secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, null, secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator

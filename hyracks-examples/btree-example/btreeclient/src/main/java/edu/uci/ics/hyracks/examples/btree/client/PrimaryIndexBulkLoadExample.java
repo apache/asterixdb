@@ -159,7 +159,7 @@ public class PrimaryIndexBulkLoadExample {
         ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, treeIndexRegistryProvider, btreeSplitProvider, interiorFrameFactory, leafFrameFactory,
-                typeTraits, comparatorFactories, null, fieldPermutation, 0.7f, opHelperFactory);
+                typeTraits, comparatorFactories, fieldPermutation, 0.7f, opHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 
         // distribute the records from the datagen via hashing to the bulk load

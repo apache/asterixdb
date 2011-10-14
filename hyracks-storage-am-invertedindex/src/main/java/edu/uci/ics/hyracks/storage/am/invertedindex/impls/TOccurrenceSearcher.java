@@ -96,7 +96,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
 
         btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
-        ITypeTrait[] invListFields = invIndex.getInvListElementCmp().getTypeTraits();
+        ITypeTrait[] invListFields = invIndex.getTypeTraits();
         invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
@@ -107,7 +107,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         invListFieldsWithCount[invListFields.length] = new TypeTrait(4);
         invListKeyLength = tmp;
 
-        btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
+        btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH);
 
         resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), invListFieldsWithCount);
         resultFrameTupleAcc = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), invListFieldsWithCount);
@@ -124,7 +124,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         // pre-create cursor objects
         for (int i = 0; i < cursorCacheSize; i++) {
             invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
-                    .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
+                    .getInvListsFileId(), invIndex.getTypeTraits()));
         }
 
         queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
@@ -174,7 +174,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             int diff = numQueryTokens - invListCursorCache.size();
             for (int i = 0; i < diff; i++) {
                 invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
-                        .getInvListsFileId(), invIndex.getInvListElementCmp().getTypeTraits()));
+                        .getInvListsFileId(), invIndex.getTypeTraits()));
             }
         }
 

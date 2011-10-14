@@ -15,22 +15,16 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public interface IBTreeInteriorFrame extends ITreeIndexFrame {
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
-    
-    public int getChildPageId(RangePredicate pred, MultiComparator srcCmp);
+public interface IBTreeInteriorFrame extends IBTreeFrame {
+    public int getChildPageId(RangePredicate pred);
 
-    public int getLeftmostChildPageId(MultiComparator cmp);
+    public int getLeftmostChildPageId();
 
-    public int getRightmostChildPageId(MultiComparator cmp);
+    public int getRightmostChildPageId();
 
     public void setRightmostChildPageId(int pageId);
 
-    public void deleteGreatest(MultiComparator cmp);
+    public void deleteGreatest();
 }

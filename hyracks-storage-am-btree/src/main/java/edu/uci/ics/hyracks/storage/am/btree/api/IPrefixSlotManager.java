@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
@@ -42,9 +42,9 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 // potentially all tuples slots would have to change their prefix slot pointers
 // all prefixes are recomputed during a reorg or compaction
 
-public interface IPrefixSlotManager {
-    public void setFrame(BTreeFieldPrefixNSMLeafFrame frame);
-
+public interface IPrefixSlotManager extends ISlotManager {
+    // TODO: Clean up interface after extending ISlotManager.
+	
     public int decodeFirstSlotField(int slot);
 
     public int decodeSecondSlotField(int slot);
@@ -58,7 +58,7 @@ public interface IPrefixSlotManager {
     public int insertSlot(int slot, int tupleOff);
 
     // returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
-    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp);
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple);
 
     public int getTupleSlotStartOff();
 
@@ -78,4 +78,6 @@ public interface IPrefixSlotManager {
 
     // functions for testing
     public void setPrefixSlot(int tupleIndex, int slot);
+    
+    public void setMultiComparator(MultiComparator cmp);
 }

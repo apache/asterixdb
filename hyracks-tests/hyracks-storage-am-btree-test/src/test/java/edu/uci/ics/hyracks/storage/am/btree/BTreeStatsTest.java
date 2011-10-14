@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
+import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -37,9 +39,9 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexBufferCacheWarmup;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexBufferCacheWarmup;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -75,10 +77,10 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         // declare keys
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -91,8 +93,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        btree.create(fileId, leafFrame, metaFrame);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(fileId);
         btree.open(fileId);
 
         Random rnd = new Random();
@@ -104,7 +106,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
@@ -114,7 +116,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
 
         // 10000
         for (int i = 0; i < 100000; i++) {
@@ -149,7 +151,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
                 btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-        LOGGER.info(stats.toString());
+        LOGGER.info("\n" + stats.toString());
 
         TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager,
                 fileId);

@@ -53,8 +53,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDesc
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -79,7 +79,6 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 	private int primaryKeyFieldCount = 4;
 	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
 	private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
-	private IPrimitiveValueProviderFactory[] primaryValueProviderFactories = new IPrimitiveValueProviderFactory[primaryKeyFieldCount];
 
 	private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
 			primaryTypeTraits);
@@ -92,10 +91,8 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 					DoubleSerializerDeserializer.INSTANCE,
 					UTF8StringSerializerDeserializer.INSTANCE });
 
-	private ITreeIndexFrameFactory primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-			primaryTupleWriterFactory, primaryKeyFieldCount);
-	private ITreeIndexFrameFactory primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-			primaryTupleWriterFactory, primaryKeyFieldCount);
+	private ITreeIndexFrameFactory primaryInteriorFrameFactory;
+	private ITreeIndexFrameFactory primaryLeafFrameFactory;
 
 	private static String primaryRTreeName = "primary"
 			+ simpleDateFormat.format(new Date());
@@ -118,11 +115,15 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 		primaryComparatorFactories[1] = primaryComparatorFactories[0];
 		primaryComparatorFactories[2] = primaryComparatorFactories[0];
 		primaryComparatorFactories[3] = primaryComparatorFactories[0];
-		primaryValueProviderFactories[0] = DoublePrimitiveValueProviderFactory.INSTANCE;
-		primaryValueProviderFactories[1] = primaryValueProviderFactories[0];
-		primaryValueProviderFactories[2] = primaryValueProviderFactories[0];
-		primaryValueProviderFactories[3] = primaryValueProviderFactories[0];
-
+		
+		IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
+				.comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
+		
+		primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+				primaryTupleWriterFactory, primaryValueProviderFactories);
+		primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
+				primaryTupleWriterFactory, primaryValueProviderFactories);
+		
 		loadPrimaryIndexTest();
 	}
 
@@ -157,7 +158,7 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 				spec, storageManager, treeIndexRegistryProvider,
 				primaryRTreeSplitProvider, primaryInteriorFrameFactory,
 				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories, primaryValueProviderFactories,
+				primaryComparatorFactories,
 				fieldPermutation, 0.7f, opHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryRTreeBulkLoad, NC1_ID);

@@ -101,6 +101,10 @@ public class PrimaryIndexSearchExample {
         typeTraits[2] = new TypeTrait(4);
         typeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 
+        // comparators for btree
+        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
+        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        
         // create factories and providers for B-Tree
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -112,10 +116,6 @@ public class PrimaryIndexSearchExample {
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, });
-
-        // comparators for btree
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
-        comparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // build tuple containing low and high search keys
         ArrayTupleBuilder tb = new ArrayTupleBuilder(comparatorFactories.length * 2); // high

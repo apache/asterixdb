@@ -23,10 +23,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 		AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -36,7 +35,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 	private final IndexOp op;
 	private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 	private ByteBuffer writeBuffer;
-	private IndexOpContext opCtx;
+	private IIndexOpContext opCtx;
 
 	public TreeIndexInsertUpdateDeleteOperatorNodePushable(
 			AbstractTreeIndexOperatorDescriptor opDesc,
@@ -64,10 +63,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 			treeIndexOpHelper.init();
 			treeIndexOpHelper.getTreeIndex().open(
 					treeIndexOpHelper.getIndexFileId());
-			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op,
-					treeIndexOpHelper.getLeafFrame(),
-					treeIndexOpHelper.getInteriorFrame(),
-					new LIFOMetaDataFrame());
+			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op);
 		} catch (Exception e) {
 			// cleanup in case of failure
 			treeIndexOpHelper.deinit();
@@ -88,23 +84,28 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 
 				case INSERT: {
 					treeIndex.insert(tuple, opCtx);
-				}
 					break;
+				}
 
+				case UPDATE: {
+					treeIndex.update(tuple, opCtx);
+					break;
+				}
+				
 				case DELETE: {
 					treeIndex.delete(tuple, opCtx);
-				}
 					break;
-
+				}
+					
 				default: {
 					throw new HyracksDataException("Unsupported operation "
 							+ op + " in tree index InsertUpdateDelete operator");
 				}
 
 				}
-
+			} catch (HyracksDataException e) {
+				throw e;
 			} catch (Exception e) {
-				e.printStackTrace();
 				throw new HyracksDataException(e);
 			}
 		}
