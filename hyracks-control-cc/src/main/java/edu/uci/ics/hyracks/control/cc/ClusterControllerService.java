@@ -95,7 +95,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final Map<JobId, JobRun> runMap;
 
-    private final WorkQueue jobQueue;
+    private final WorkQueue workQueue;
 
     private final Executor taskExecutor;
 
@@ -117,7 +117,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
         runMap = new HashMap<JobId, JobRun>();
-        jobQueue = new WorkQueue();
+        workQueue = new WorkQueue();
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
         ccContext = new ICCContext() {
@@ -158,8 +158,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return runMap;
     }
 
-    public WorkQueue getJobQueue() {
-        return jobQueue;
+    public WorkQueue getWorkQueue() {
+        return workQueue;
     }
 
     public Executor getExecutor() {
@@ -186,7 +186,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         JobId jobId = createJobId();
         JobCreateWork jce = new JobCreateWork(this, jobId, appName, jobSpec, jobFlags);
-        jobQueue.schedule(jce);
+        workQueue.schedule(jce);
         jce.sync();
         return jobId;
     }
@@ -196,7 +196,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         INodeController nodeController = reg.getNodeController();
         String id = reg.getNodeId();
         NodeControllerState state = new NodeControllerState(nodeController, reg);
-        jobQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
+        workQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
         nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
@@ -209,7 +209,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void unregisterNode(INodeController nodeController) throws Exception {
         String id = nodeController.getId();
-        jobQueue.scheduleAndSync(new UnregisterNodeWork(this, id));
+        workQueue.scheduleAndSync(new UnregisterNodeWork(this, id));
         LOGGER.log(Level.INFO, "Unregistered INodeController");
     }
 
@@ -217,33 +217,33 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
         TaskCompleteWork sce = new TaskCompleteWork(this, jobId, taskId, nodeId);
-        jobQueue.schedule(sce);
+        workQueue.schedule(sce);
     }
 
     @Override
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception exception)
             throws Exception {
         TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, exception);
-        jobQueue.schedule(tfe);
+        workQueue.schedule(tfe);
     }
 
     @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         GetJobStatusWork gse = new GetJobStatusWork(this, jobId);
-        jobQueue.scheduleAndSync(gse);
+        workQueue.scheduleAndSync(gse);
         return gse.getStatus();
     }
 
     @Override
     public void start(JobId jobId) throws Exception {
         JobStartWork jse = new JobStartWork(this, jobId);
-        jobQueue.schedule(jse);
+        workQueue.schedule(jse);
     }
 
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
         GetJobStatusConditionVariableWork e = new GetJobStatusConditionVariableWork(this, jobId);
-        jobQueue.scheduleAndSync(e);
+        workQueue.scheduleAndSync(e);
         IJobStatusConditionVariable var = e.getConditionVariable();
         if (var != null) {
             var.waitForCompletion();
@@ -252,12 +252,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception {
-        jobQueue.schedule(new ReportProfilesWork(this, profiles));
+        workQueue.schedule(new ReportProfilesWork(this, profiles));
     }
 
     @Override
     public synchronized void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
-        jobQueue.schedule(new NodeHeartbeatWork(this, id, hbData));
+        workQueue.schedule(new NodeHeartbeatWork(this, id, hbData));
     }
 
     @Override
@@ -274,14 +274,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void destroyApplication(String appName) throws Exception {
         FutureValue fv = new FutureValue();
-        jobQueue.schedule(new ApplicationDestroyWork(this, appName, fv));
+        workQueue.schedule(new ApplicationDestroyWork(this, appName, fv));
         fv.get();
     }
 
     @Override
     public void startApplication(final String appName) throws Exception {
         FutureValue fv = new FutureValue();
-        jobQueue.schedule(new ApplicationStartWork(this, appName, fv));
+        workQueue.schedule(new ApplicationStartWork(this, appName, fv));
         fv.get();
     }
 
@@ -292,18 +292,18 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) {
-        jobQueue.schedule(new RegisterPartitionAvailibilityWork(this, partitionDescriptor));
+        workQueue.schedule(new RegisterPartitionAvailibilityWork(this, partitionDescriptor));
     }
 
     @Override
     public void registerPartitionRequest(PartitionRequest partitionRequest) {
-        jobQueue.schedule(new RegisterPartitionRequestWork(this, partitionRequest));
+        workQueue.schedule(new RegisterPartitionRequestWork(this, partitionRequest));
     }
 
     private class DeadNodeSweeper extends TimerTask {
         @Override
         public void run() {
-            jobQueue.schedule(new RemoveDeadNodesWork(ClusterControllerService.this));
+            workQueue.schedule(new RemoveDeadNodesWork(ClusterControllerService.this));
         }
     }
 }

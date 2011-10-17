@@ -58,7 +58,7 @@ public class ApplicationDestroyWork extends AbstractWork {
                     fv.setException(e);
                     return;
                 }
-                ccs.getJobQueue().schedule(new AbstractWork() {
+                ccs.getWorkQueue().schedule(new AbstractWork() {
                     @Override
                     public void run() {
                         try {

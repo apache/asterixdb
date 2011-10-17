@@ -21,11 +21,11 @@ public class WorkQueue {
     private static final Logger LOGGER = Logger.getLogger(WorkQueue.class.getName());
 
     private final LinkedBlockingQueue<AbstractWork> queue;
-    private final JobThread thread;
+    private final WorkerThread thread;
 
     public WorkQueue() {
         queue = new LinkedBlockingQueue<AbstractWork>();
-        thread = new JobThread();
+        thread = new WorkerThread();
         thread.start();
     }
 
@@ -41,8 +41,8 @@ public class WorkQueue {
         sRunnable.sync();
     }
 
-    private class JobThread extends Thread {
-        JobThread() {
+    private class WorkerThread extends Thread {
+        WorkerThread() {
             setDaemon(true);
         }
 

@@ -42,7 +42,7 @@ public class JobStartWork extends SynchronizableWork {
         try {
             run.getScheduler().startJob();
         } catch (Exception e) {
-            ccs.getJobQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+            ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
         }
     }
 }

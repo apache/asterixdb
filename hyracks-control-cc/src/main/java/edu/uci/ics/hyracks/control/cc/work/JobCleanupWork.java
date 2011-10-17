@@ -63,7 +63,7 @@ public class JobCleanupWork extends AbstractWork {
                         e.printStackTrace();
                     }
                 }
-                ccs.getJobQueue().schedule(new AbstractWork() {
+                ccs.getWorkQueue().schedule(new AbstractWork() {
                     @Override
                     public void run() {
                         CCApplicationContext appCtx = ccs.getApplicationMap().get(
