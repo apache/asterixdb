@@ -105,6 +105,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final ICCContext ccContext;
 
+    private final DeadNodeSweeper sweeper;
+
     private long jobCounter;
 
     public ClusterControllerService(CCConfig ccConfig) throws Exception {
@@ -126,6 +128,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 return ipAddressNodeNameMap;
             }
         };
+        sweeper = new DeadNodeSweeper();
         jobCounter = 0;
     }
 
@@ -137,9 +140,10 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         registry.rebind(IClusterController.class.getName(), this);
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
+        workQueue.start();
         info = new ClusterControllerInfo();
         info.setWebPort(webServer.getListeningPort());
-        timer.schedule(new DeadNodeSweeper(), 0, ccConfig.heartbeatPeriod);
+        timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
@@ -147,6 +151,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping ClusterControllerService");
         webServer.stop();
+        sweeper.cancel();
+        workQueue.stop();
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
     }
 

@@ -15,18 +15,49 @@
 package edu.uci.ics.hyracks.control.common.work;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public class WorkQueue {
     private static final Logger LOGGER = Logger.getLogger(WorkQueue.class.getName());
 
     private final LinkedBlockingQueue<AbstractWork> queue;
     private final WorkerThread thread;
+    private final Semaphore stopSemaphore;
+    private boolean stopped;
 
     public WorkQueue() {
         queue = new LinkedBlockingQueue<AbstractWork>();
         thread = new WorkerThread();
+        stopSemaphore = new Semaphore(1);
+    }
+
+    public void start() throws HyracksException {
+        stopped = false;
+        try {
+            stopSemaphore.acquire();
+        } catch (InterruptedException e) {
+            throw new HyracksException(e);
+        }
         thread.start();
+    }
+
+    public void stop() throws HyracksException {
+        synchronized (this) {
+            stopped = true;
+        }
+        schedule(new AbstractWork() {
+            @Override
+            public void run() {
+            }
+        });
+        try {
+            stopSemaphore.acquire();
+        } catch (InterruptedException e) {
+            throw new HyracksException(e);
+        }
     }
 
     public void schedule(AbstractWork event) {
@@ -48,18 +79,27 @@ public class WorkQueue {
 
         @Override
         public void run() {
-            Runnable r;
-            while (true) {
-                try {
-                    r = queue.take();
-                } catch (InterruptedException e) {
-                    continue;
+            try {
+                Runnable r;
+                while (true) {
+                    synchronized (WorkQueue.this) {
+                        if (stopped) {
+                            return;
+                        }
+                    }
+                    try {
+                        r = queue.take();
+                    } catch (InterruptedException e) {
+                        continue;
+                    }
+                    try {
+                        r.run();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-                try {
-                    r.run();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            } finally {
+                stopSemaphore.release();
             }
         }
     }
