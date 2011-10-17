@@ -29,6 +29,9 @@ public class VirtualClusterDriver {
 
         @Option(name = "-cc-port", required = false, usage = "CC Port (default: 1099)")
         public int ccPort = 1099;
+
+        @Option(name = "-cc-http-port", required = false, usage = "CC Port (default: 0)")
+        public int ccHttpPort = 0;
     }
 
     public static void main(String[] args) throws Exception {
@@ -44,6 +47,7 @@ public class VirtualClusterDriver {
 
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = options.ccPort;
+        ccConfig.httpPort = options.ccHttpPort;
         HyracksCCProcess ccp = new HyracksCCProcess(ccConfig);
         ccp.start();
 

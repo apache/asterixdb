@@ -68,6 +68,7 @@ public class WebServer {
         addHandler(handler);
 
         String basedir = System.getProperty("basedir");
+        LOGGER.info("Starting Webserver with basedir = " + basedir);
         if (basedir != null) {
             File warFile = new File(basedir, "console/hyracks-admin-console.war");
             LOGGER.info("Looking for admin console binary in: " + warFile.getAbsolutePath());
