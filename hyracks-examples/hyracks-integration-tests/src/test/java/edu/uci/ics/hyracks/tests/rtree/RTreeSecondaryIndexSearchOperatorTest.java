@@ -88,35 +88,6 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 			"ddMMyy-hhmmssSS");
 	private final static String sep = System.getProperty("file.separator");
 
-	// field, type and key declarations for primary R-tree index
-	private int primaryFieldCount = 5;
-	private int primaryKeyFieldCount = 4;
-	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
-	private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
-
-	private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
-			primaryTypeTraits);
-
-	private ITreeIndexFrameFactory primaryInteriorFrameFactory;
-	private ITreeIndexFrameFactory primaryLeafFrameFactory;
-
-	private static String primaryRTreeName = "primary"
-			+ simpleDateFormat.format(new Date());
-	private static String primaryFileName = System
-			.getProperty("java.io.tmpdir") + sep + primaryRTreeName;
-
-	private IFileSplitProvider primaryRTreeSplitProvider = new ConstantFileSplitProvider(
-			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-					primaryFileName))) });
-
-	private RecordDescriptor primaryRecDesc = new RecordDescriptor(
-			new ISerializerDeserializer[] {
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					UTF8StringSerializerDeserializer.INSTANCE });
-
 	// field, type and key declarations for primary B-tree index
 	private int primaryBTreeFieldCount = 10;
 	private ITypeTrait[] primaryBTreeTypeTraits = new ITypeTrait[primaryBTreeFieldCount];
@@ -182,26 +153,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 					UTF8StringSerializerDeserializer.INSTANCE });
 
 	@Before
-	public void setup() throws Exception {
-		// field, type and key declarations for primary R-tree index
-		primaryTypeTraits[0] = new TypeTrait(8);
-		primaryTypeTraits[1] = new TypeTrait(8);
-		primaryTypeTraits[2] = new TypeTrait(8);
-		primaryTypeTraits[3] = new TypeTrait(8);
-		primaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
-		primaryComparatorFactories[1] = primaryComparatorFactories[0];
-		primaryComparatorFactories[2] = primaryComparatorFactories[0];
-		primaryComparatorFactories[3] = primaryComparatorFactories[0];
-
-		IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
-				.comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
-		
-		primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				primaryTupleWriterFactory, primaryValueProviderFactories);
-		primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-				primaryTupleWriterFactory, primaryValueProviderFactories);
-		
+	public void setup() throws Exception {	
 		// field, type and key declarations for primary B-tree index
 		primaryBTreeTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
 		primaryBTreeTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
@@ -238,7 +190,6 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 		secondaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
 				secondaryTupleWriterFactory, secondaryValueProviderFactories);
 		
-		loadPrimaryIndexTest();
 		loadPrimaryBTreeIndexTest();
 		loadSecondaryIndexTest();
 	}
@@ -315,54 +266,12 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 		runTest(spec);
 	}
 
-	public void loadPrimaryIndexTest() throws Exception {
-		JobSpecification spec = new JobSpecification();
-
-		FileSplit[] objectsSplits = new FileSplit[] { new FileSplit(NC1_ID,
-				new FileReference(new File("data/spatial.txt"))) };
-		IFileSplitProvider objectsSplitProvider = new ConstantFileSplitProvider(
-				objectsSplits);
-		RecordDescriptor objectsDesc = new RecordDescriptor(
-				new ISerializerDeserializer[] {
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE });
-
-		FileScanOperatorDescriptor objScanner = new FileScanOperatorDescriptor(
-				spec, objectsSplitProvider,
-				new DelimitedDataTupleParserFactory(new IValueParserFactory[] {
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						UTF8StringParserFactory.INSTANCE }, '|'), objectsDesc);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				objScanner, NC1_ID);
-
-		int[] fieldPermutation = { 0, 1, 2, 3, 4 };
-		TreeIndexBulkLoadOperatorDescriptor primaryRTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(
-				spec, storageManager, treeIndexRegistryProvider,
-				primaryRTreeSplitProvider, primaryInteriorFrameFactory,
-				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories,
-				fieldPermutation, 0.7f, opHelperFactory);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				primaryRTreeBulkLoad, NC1_ID);
-
-		spec.connect(new OneToOneConnectorDescriptor(spec), objScanner, 0,
-				primaryRTreeBulkLoad, 0);
-
-		spec.addRoot(primaryRTreeBulkLoad);
-		runTest(spec);
-	}
 
 	public void loadSecondaryIndexTest() throws Exception {
 		JobSpecification spec = new JobSpecification();
 
 		// build dummy tuple containing nothing
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
+		ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryBTreeKeyFieldCount * 2);
 		DataOutput dos = tb.getDataOutput();
 
 		tb.reset();
@@ -389,7 +298,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 				treeIndexRegistryProvider, primaryBTreeSplitProvider,
 				primaryBTreeInteriorFrameFactory, primaryBTreeLeafFrameFactory,
 				primaryBTreeTypeTraits, primaryBTreeComparatorFactories, true,
-				lowKeyFields, highKeyFields, true, true, opHelperFactory);
+				lowKeyFields, highKeyFields, true, true, bTreeopHelperFactory);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
 				primaryBTreeSearchOp, NC1_ID);
 
@@ -470,9 +379,6 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 
 	@AfterClass
 	public static void cleanup() throws Exception {
-		File primary = new File(primaryFileName);
-		primary.deleteOnExit();
-
 		File primaryBTree = new File(primaryBTreeFileName);
 		primaryBTree.deleteOnExit();
 
