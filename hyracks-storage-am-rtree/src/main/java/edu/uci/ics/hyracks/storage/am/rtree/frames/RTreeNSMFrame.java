@@ -86,7 +86,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	@Override
 	public void initBuffer(byte level) {
 		super.initBuffer(level);
-		buf.putInt(pageNsnOff, 0);
+		buf.putLong(pageNsnOff, 0);
 		buf.putInt(rightPageOff, -1);
 	}
 
