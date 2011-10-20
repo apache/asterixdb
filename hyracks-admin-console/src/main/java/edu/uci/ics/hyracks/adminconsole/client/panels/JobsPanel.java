@@ -54,6 +54,17 @@ public class JobsPanel extends Composite implements JobsTableWidget.IRefreshRequ
         initWidget(binder.createAndBindUi(this));
 
         jobs.setRefreshRequestHandler(this);
+        jobs.setClickListener(new JobsTableWidget.IClickListener() {
+            @Override
+            public void click(String jobId) {
+                if (details instanceof JobsDetailsPanel) {
+                    ((JobsDetailsPanel) details).destroy();
+                }
+                split.remove(details);
+                details = new JobsDetailsPanel(jobId);
+                split.add(details);
+            }
+        });
 
         Timer timer = new Timer() {
             @Override

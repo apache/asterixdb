@@ -14,10 +14,13 @@
  */
 package edu.uci.ics.hyracks.adminconsole.client.widgets;
 
+import com.google.gwt.cell.client.ClickableTextCell;
+import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
@@ -29,6 +32,10 @@ import edu.uci.ics.hyracks.adminconsole.client.beans.JobSummary;
 public class JobsTableWidget extends Composite {
     public interface IRefreshRequestHandler {
         public void refresh();
+    }
+
+    public interface IClickListener {
+        public void click(String jobId);
     }
 
     interface Binder extends UiBinder<Widget, JobsTableWidget> {
@@ -43,15 +50,25 @@ public class JobsTableWidget extends Composite {
 
     private IRefreshRequestHandler refreshRequestHandler;
 
+    private IClickListener cl;
+
     public JobsTableWidget() {
         initWidget(binder.createAndBindUi(this));
 
-        TextColumn<JobSummary> idCol = new TextColumn<JobSummary>() {
+        Column<JobSummary, String> idCol = new Column<JobSummary, String>(new ClickableTextCell()) {
             @Override
             public String getValue(JobSummary object) {
                 return object.getJobId();
             }
         };
+        idCol.setFieldUpdater(new FieldUpdater<JobSummary, String>() {
+            @Override
+            public void update(int index, JobSummary object, String value) {
+                if (cl != null) {
+                    cl.click(value);
+                }
+            }
+        });
         idCol.setSortable(true);
 
         TextColumn<JobSummary> appCol = new TextColumn<JobSummary>() {
@@ -113,6 +130,10 @@ public class JobsTableWidget extends Composite {
             }
         };
         jobSummaryProvider.addDataDisplay(table);
+    }
+
+    public void setClickListener(IClickListener cl) {
+        this.cl = cl;
     }
 
     public AsyncDataProvider<JobSummary> getDataProvider() {

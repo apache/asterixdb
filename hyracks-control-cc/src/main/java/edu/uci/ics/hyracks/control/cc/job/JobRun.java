@@ -175,6 +175,8 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
+        result.put("application-name", jag.getApplicationName());
+        result.put("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getCreateTime());
         result.put("end-time", getCreateTime());
@@ -260,7 +262,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
                     acTasks.put(entry);
                 }
-                planJSON.put("task-map", acTasks);
+                planJSON.put("activities", acTasks);
 
                 JSONArray tClusters = new JSONArray();
                 for (TaskCluster tc : acp.getTaskClusters()) {
@@ -296,6 +298,7 @@ public class JobRun implements IJobStatusConditionVariable {
                             JSONArray taskAttempts = new JSONArray();
                             for (TaskAttempt ta : tca.getTaskAttempts()) {
                                 JSONObject taskAttempt = new JSONObject();
+                                taskAttempt.put("task-id", ta.getTaskAttemptId().getTaskId());
                                 taskAttempt.put("task-attempt-id", ta.getTaskAttemptId());
                                 taskAttempt.put("status", ta.getStatus());
                                 taskAttempt.put("node-id", ta.getNodeId());
