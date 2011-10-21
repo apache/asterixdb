@@ -268,11 +268,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int newTupleBytes = 0;
         
         int numPrefixFields = frameTuple.getNumPrefixFields();
-        int numFields = frameTuple.getFieldCount();
+        int fieldCount = frameTuple.getFieldCount();
         if (numPrefixFields != 0) {
             // Check the space requirements for updating the suffix of the original tuple.            
             oldTupleBytes = frameTuple.getSuffixTupleSize();
-            newTupleBytes = tupleWriter.bytesRequired(newTuple, numPrefixFields, numFields - numPrefixFields); 
+            newTupleBytes = tupleWriter.bytesRequired(newTuple, numPrefixFields, fieldCount - numPrefixFields); 
         } else {
             // The original tuple is uncompressed.
             oldTupleBytes = frameTuple.getTupleSize();
@@ -308,18 +308,18 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int suffixTupleStartOff = slotManager.decodeSecondSlotField(tupleSlot);                
         
         frameTuple.resetByTupleIndex(this, tupleIndex);
-        int numFields = frameTuple.getFieldCount();
+        int fieldCount = frameTuple.getFieldCount();
         int numPrefixFields = frameTuple.getNumPrefixFields();
         int oldTupleBytes = frameTuple.getSuffixTupleSize();
         int bytesWritten = 0;        
         
         if (inPlace) {
             // Overwrite the old tuple suffix in place.
-            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, numFields - numPrefixFields, buf, suffixTupleStartOff);
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields, buf, suffixTupleStartOff);
         } else {
             // Insert the new tuple suffix at the end of the free space, and change the slot value (effectively "deleting" the old tuple).
             int newSuffixTupleStartOff = buf.getInt(freeSpaceOff);
-            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, numFields - numPrefixFields, buf, newSuffixTupleStartOff);
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields, buf, newSuffixTupleStartOff);
             // Update slot value using the same prefix slot num.
             slotManager.setSlot(tupleSlotOff, slotManager.encodeSlotFields(prefixSlotNum, newSuffixTupleStartOff));
             // Update contiguous free space pointer.

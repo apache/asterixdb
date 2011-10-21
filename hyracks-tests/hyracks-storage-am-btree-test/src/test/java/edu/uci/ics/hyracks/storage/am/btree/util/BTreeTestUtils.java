@@ -77,8 +77,8 @@ public class BTreeTestUtils {
     @SuppressWarnings("unchecked")
     private static CheckTuple createCheckTupleFromTuple(ITupleReference tuple, ISerializerDeserializer[] fieldSerdes, int numKeys) throws HyracksDataException {
         CheckTuple checkTuple = new CheckTuple(fieldSerdes.length, numKeys);
-        int numFields = Math.min(fieldSerdes.length, tuple.getFieldCount());
-        for (int i = 0; i < numFields; i++) {
+        int fieldCount = Math.min(fieldSerdes.length, tuple.getFieldCount());
+        for (int i = 0; i < fieldCount; i++) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(
                     tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i));
@@ -267,7 +267,7 @@ public class BTreeTestUtils {
     }
     
     public static void insertIntTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
         
         testCtx.opCtx.reset(IndexOp.INSERT);
@@ -282,7 +282,7 @@ public class BTreeTestUtils {
                 tupleValues[j] = rnd.nextInt() % maxValue;
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = j;
             }
             TupleUtils.createIntegerTuple(testCtx.tupleBuilder, testCtx.tuple, tupleValues);
@@ -292,7 +292,7 @@ public class BTreeTestUtils {
             try {
                 testCtx.btree.insert(testCtx.tuple, testCtx.opCtx);
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(numFields, numKeyFields);
+                CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldCount, numKeyFields);
                 for(int v : tupleValues) {
                     checkTuple.add(v);
                 }
@@ -304,12 +304,12 @@ public class BTreeTestUtils {
     }
     
     public static void insertStringTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
         
         testCtx.opCtx.reset(IndexOp.INSERT);
 
-        Object[] tupleValues = new Object[numFields];
+        Object[] tupleValues = new Object[fieldCount];
         for (int i = 0; i < numTuples; i++) {
             if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                 LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
@@ -320,14 +320,14 @@ public class BTreeTestUtils {
                 tupleValues[j] = getRandomString(length, rnd);
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = getRandomString(5, rnd);
             }
             TupleUtils.createTuple(testCtx.tupleBuilder, testCtx.tuple, testCtx.fieldSerdes, tupleValues);
             try {
                 testCtx.btree.insert(testCtx.tuple, testCtx.opCtx);
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                CheckTuple<String> checkTuple = new CheckTuple<String>(numFields, numKeyFields);
+                CheckTuple<String> checkTuple = new CheckTuple<String>(fieldCount, numKeyFields);
                 for(Object v : tupleValues) {
                     checkTuple.add((String)v);
                 }
@@ -339,7 +339,7 @@ public class BTreeTestUtils {
     }
 
     public static void bulkLoadIntTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
         int[] tupleValues = new int[testCtx.getFieldCount()];
         int maxValue = (int)Math.ceil(Math.pow(numTuples, 1.0/(double)numKeyFields));
@@ -349,12 +349,12 @@ public class BTreeTestUtils {
                 tupleValues[j] = rnd.nextInt() % maxValue;
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = j;
             }
             
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(numFields, numKeyFields);
+            CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldCount, numKeyFields);
             for(int v : tupleValues) {
                 checkTuple.add(v);
             }            
@@ -365,9 +365,9 @@ public class BTreeTestUtils {
     }
     
     public static void bulkLoadStringTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
-        String[] tupleValues = new String[numFields];
+        String[] tupleValues = new String[fieldCount];
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -375,11 +375,11 @@ public class BTreeTestUtils {
                 tupleValues[j] = getRandomString(length, rnd);
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = getRandomString(5, rnd);
             }
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            CheckTuple<String> checkTuple = new CheckTuple<String>(numFields, numKeyFields);
+            CheckTuple<String> checkTuple = new CheckTuple<String>(fieldCount, numKeyFields);
             for(String v : tupleValues) {
                 checkTuple.add(v);
             }            
@@ -390,8 +390,8 @@ public class BTreeTestUtils {
     }
     
     private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException {
-        int numFields = testCtx.getFieldCount();
-        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(numFields);
+        int fieldCount = testCtx.getFieldCount();
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
         IIndexBulkLoadContext bulkLoadCtx = testCtx.btree.beginBulkLoad(0.7f);

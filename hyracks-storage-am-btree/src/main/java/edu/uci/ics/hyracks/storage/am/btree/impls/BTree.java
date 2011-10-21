@@ -925,7 +925,6 @@ public class BTree implements ITreeIndex {
     	
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, leafFrame,
                 (IBTreeInteriorFrame)interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory().createFrame(), cmp);
-        ctx.nodeFrontiers.get(0).lastTuple.setFieldCount(fieldCount);
         ctx.splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         return ctx;
     }
