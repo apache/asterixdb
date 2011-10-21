@@ -29,18 +29,17 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 
@@ -60,7 +59,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     private ITreeIndexCursor cursor;
     private ITreeIndexFrame interiorFrame;
     private ITreeIndexFrame leafFrame;
-    private RTreeOpContext opCtx;
+    private ITreeIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
 
@@ -110,7 +109,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
                 appender.reset(writeBuffer, true);
 
-                opCtx = rtree.createOpContext(IndexOp.SEARCH);
+                indexAccessor = rtree.createAccessor();
             } catch (Exception e) {
                 writer.fail();
                 throw e;
@@ -154,7 +153,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
                 searchPred.setSearchKey(searchKey);
                 cursor.reset();
-                rtree.search(cursor, searchPred, opCtx);
+                indexAccessor.search(cursor, searchPred);
                 writeSearchResults();
             }
         } catch (Exception e) {

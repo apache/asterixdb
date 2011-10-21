@@ -17,12 +17,12 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 /**
  * Interface describing the operations of tree-based index structures. Indexes
  * implementing this interface can easily reuse the tree index operators for
  * dataflow. We assume that indexes store tuples with a fixed number of fields.
+ * Users must perform operations on an ITreeIndex via an ITreeIndexAccessor.
  */
 public interface ITreeIndex {
 
@@ -51,69 +51,14 @@ public interface ITreeIndex {
 	public void close();
 
 	/**
-	 * Creates an operation context for a given index operation
-	 * (insert/delete/update/search/diskorderscan). An operation context
-	 * maintains a cache of objects used during the traversal of the tree index.
-	 * The context is intended to be reused for multiple subsequent operations
-	 * by the same user/thread. An index operation context is stateful, and
-	 * therefore, should not be shared among two threads.
+	 * Creates an index accessor for performing operations on this index.
+	 * (insert/delete/update/search/diskorderscan). An ITreeIndexAccessor is not
+	 * thread safe, but different ITreeIndexAccessors can concurrently operate
+	 * on the same ITreeIndex
 	 * 
-	 * @param indexOp
-	 *            Intended index operation.
-	 * 
-	 * @returns IITreeIndexOpContext Operation context for the desired index
-	 *          operation.
+	 * @returns ITreeIndexAccessor A tree index accessor for this tree.
 	 */
-	public IIndexOpContext createOpContext(IndexOp op);
-	
-	/**
-	 * Inserts the given tuple into the index using an existing operation
-	 * context.
-	 * 
-	 * @param tuple
-	 *            Tuple to be inserted.
-	 * @param ictx
-	 *            Existing operation context.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If an index-specific constraint is violated, e.g., the key
-	 *             already exists.
-	 */
-	public void insert(ITupleReference tuple, IIndexOpContext ictx)
-			throws HyracksDataException, TreeIndexException;
-
-	/**
-	 * Updates the tuple in the index matching the given tuple with the new
-	 * contents in the given tuple.
-	 * 
-	 * @param tuple
-	 *            Tuple whose match in the index is to be update with the given
-	 *            tuples contents.
-	 * @param ictx
-	 *            Existing operation context.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If there is no matching tuple in the index.
-	 */
-	public void update(ITupleReference tuple, IIndexOpContext ictx)
-			throws HyracksDataException, TreeIndexException;
-
-	/**
-	 * Deletes the tuple in the index matching the given tuple.
-	 * 
-	 * @param tuple
-	 *            Tuple to be deleted.
-	 * @param ictx
-	 *            Existing operation context.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If there is no matching tuple in the index.
-	 */
-	public void delete(ITupleReference tuple, IIndexOpContext ictx)
-			throws HyracksDataException, TreeIndexException;
+	public ITreeIndexAccessor createAccessor();
 
 	/**
 	 * Prepares the index for bulk loading, returning a bulk load context. The
@@ -127,8 +72,8 @@ public interface ITreeIndex {
 	 *             If the tree is not empty.
 	 * @returns A new context for bulk loading, required for appending tuples.
 	 */
-	public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException,
-			HyracksDataException;
+	public IIndexBulkLoadContext beginBulkLoad(float fillFactor)
+			throws TreeIndexException, HyracksDataException;
 
 	/**
 	 * Append a tuple to the index in the context of a bulk load.
@@ -155,19 +100,6 @@ public interface ITreeIndex {
 			throws HyracksDataException;
 
 	/**
-	 * Open the given cursor for a disk-order scan, positioning the cursor to
-	 * the first leaf tuple.
-	 * 
-	 * @param icursor
-	 *            Cursor to be opened for disk-order scanning.
-	 * @param ictx
-	 *            Existing operation context.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 */
-	public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException;
-	
-	/**
 	 * @return The index's leaf frame factory.
 	 */
 	public ITreeIndexFrameFactory getLeafFrameFactory();
@@ -176,7 +108,7 @@ public interface ITreeIndex {
 	 * @return The index's interior frame factory.
 	 */
 	public ITreeIndexFrameFactory getInteriorFrameFactory();
-	
+
 	/**
 	 * @return The index's free page manager.
 	 */
@@ -186,7 +118,7 @@ public interface ITreeIndex {
 	 * @return The number of fields tuples of this index have.
 	 */
 	public int getFieldCount();
-	
+
 	/**
 	 * @return The current root page id of this index.
 	 */

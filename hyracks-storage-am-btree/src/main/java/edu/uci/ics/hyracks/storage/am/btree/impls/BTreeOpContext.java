@@ -40,7 +40,7 @@ public final class BTreeOpContext implements IIndexOpContext {
     public IntArrayList smPages;
     public IntArrayList freePages;
 
-    public BTreeOpContext(IndexOp op, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
+    public BTreeOpContext(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {        
         if (leafFrame != null) {
         	leafFrame.setMultiComparator(cmp);
@@ -52,7 +52,6 @@ public final class BTreeOpContext implements IIndexOpContext {
         this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
         this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
-        reset(op);
     }
 
     public void reset() {
@@ -67,6 +66,9 @@ public final class BTreeOpContext implements IIndexOpContext {
 
     @Override
     public void reset(IndexOp newOp) {
+        if (op != null && newOp == op) {
+            return;
+        }
         if (newOp == IndexOp.SEARCH || newOp == IndexOp.DISKORDERSCAN) {
             if (cursorInitialState == null) {
                 cursorInitialState = new BTreeCursorInitialState(null);

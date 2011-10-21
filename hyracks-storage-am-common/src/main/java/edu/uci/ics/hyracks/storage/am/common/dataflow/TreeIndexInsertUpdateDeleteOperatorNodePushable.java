@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
@@ -35,7 +35,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 	private final IndexOp op;
 	private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 	private ByteBuffer writeBuffer;
-	private IIndexOpContext opCtx;
+	private ITreeIndexAccessor indexAccessor;
 
 	public TreeIndexInsertUpdateDeleteOperatorNodePushable(
 			AbstractTreeIndexOperatorDescriptor opDesc,
@@ -63,7 +63,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 			treeIndexOpHelper.init();
 			treeIndexOpHelper.getTreeIndex().open(
 					treeIndexOpHelper.getIndexFileId());
-			opCtx = treeIndexOpHelper.getTreeIndex().createOpContext(op);
+			indexAccessor = treeIndexOpHelper.getTreeIndex().createAccessor();
 		} catch (Exception e) {
 			// cleanup in case of failure
 			treeIndexOpHelper.deinit();
@@ -83,17 +83,17 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends
 				switch (op) {
 
 				case INSERT: {
-					treeIndex.insert(tuple, opCtx);
+					indexAccessor.insert(tuple);
 					break;
 				}
 
 				case UPDATE: {
-					treeIndex.update(tuple, opCtx);
+					indexAccessor.update(tuple);
 					break;
 				}
 				
 				case DELETE: {
-					treeIndex.delete(tuple, opCtx);
+					indexAccessor.delete(tuple);
 					break;
 				}
 					

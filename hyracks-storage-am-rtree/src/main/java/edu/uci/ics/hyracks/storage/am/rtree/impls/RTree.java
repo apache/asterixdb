@@ -26,7 +26,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -242,15 +244,13 @@ public class RTree implements ITreeIndex {
         fileId = -1;
     }
 
-    @Override
-    public RTreeOpContext createOpContext(IndexOp op) {
-        return new RTreeOpContext(op, (IRTreeLeafFrame) leafFrameFactory.createFrame(),
+    private RTreeOpContext createOpContext() {
+        return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
                         .createFrame(), 8);
     }
 
-    @Override
-    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
@@ -686,9 +686,7 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    @Override
-    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
-        RTreeOpContext ctx = (RTreeOpContext) ictx;
+    public void delete(ITupleReference tuple, RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
@@ -934,14 +932,14 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void search(ITreeIndexCursor cursor, SearchPredicate pred, RTreeOpContext ctx) throws Exception {
-        ctx.reset();
+    private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, RTreeOpContext ctx)  throws HyracksDataException, TreeIndexException {
+    	ctx.reset();
         ctx.cursor = cursor;
 
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(fileId);
         ctx.cursorInitialState.setRootPage(rootPage);
-        ctx.cursor.open(ctx.cursorInitialState, pred);
+        ctx.cursor.open(ctx.cursorInitialState, (SearchPredicate)searchPred);
     }
 
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
@@ -960,18 +958,17 @@ public class RTree implements ITreeIndex {
         return freePageManager;
     }
 
-    @Override
-    public void update(ITupleReference tuple, IIndexOpContext ictx) {
+    private void update(ITupleReference tuple, RTreeOpContext ctx) {
         throw new UnsupportedOperationException("RTree Update not implemented.");
     }
 
     public final class BulkLoadContext implements IIndexBulkLoadContext {
 
-        public RTreeOpContext insertOpCtx;
+        public ITreeIndexAccessor indexAccessor;
 
         public BulkLoadContext(float fillFactor, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
                 ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-            insertOpCtx = createOpContext(IndexOp.INSERT);
+        	indexAccessor = createAccessor();
         }
     }
 
@@ -990,7 +987,7 @@ public class RTree implements ITreeIndex {
     @Override
     public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
         try {
-            insert(tuple, ((BulkLoadContext) ictx).insertOpCtx);
+        	((BulkLoadContext) ictx).indexAccessor.insert(tuple);
         } catch (Exception e) {
             throw new HyracksDataException("BulkLoad Error");
         }
@@ -1001,10 +998,8 @@ public class RTree implements ITreeIndex {
         loaded = true;
     }
 
-    @Override
-    public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException {
+    private void diskOrderScan(ITreeIndexCursor icursor, RTreeOpContext ctx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
-        RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
 
         int currentPageId = rootPage + 1;
@@ -1039,5 +1034,51 @@ public class RTree implements ITreeIndex {
     @Override
     public IndexType getIndexType() {
         return IndexType.RTREE;
+    }
+    
+    @Override
+	public ITreeIndexAccessor createAccessor() {
+    	return new RTreeAccessor(this);
+	}
+    
+    private class RTreeAccessor implements ITreeIndexAccessor {
+        private RTree rtree;
+        private RTreeOpContext ctx;
+        
+        public RTreeAccessor(RTree rtree) {
+            this.rtree = rtree;
+            this.ctx = rtree.createOpContext();
+        }
+        
+        @Override
+        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.INSERT);
+            rtree.insert(tuple, ctx);
+        }
+
+        @Override
+        public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.UPDATE);
+            rtree.update(tuple, ctx);
+        }
+
+        @Override
+        public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.DELETE);
+            rtree.delete(tuple, ctx);
+        }
+
+        @Override
+        public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
+                TreeIndexException {
+            ctx.reset(IndexOp.SEARCH);
+            rtree.search(cursor, searchPred, ctx);
+        }
+
+        @Override
+        public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
+            ctx.reset(IndexOp.DISKORDERSCAN);
+            rtree.diskOrderScan(cursor, ctx);
+        }
     }
 }

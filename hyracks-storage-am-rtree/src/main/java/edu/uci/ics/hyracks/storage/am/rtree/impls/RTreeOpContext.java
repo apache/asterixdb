@@ -37,24 +37,13 @@ public final class RTreeOpContext implements IIndexOpContext {
 	public PathList traverseList; // used for traversing the tree
 	private static final int initTraverseListSize = 100;
 
-	public RTreeOpContext(IndexOp op, IRTreeLeafFrame leafFrame,
+	public RTreeOpContext(IRTreeLeafFrame leafFrame,
 			IRTreeInteriorFrame interiorFrame,
 			ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
 		this.interiorFrame = interiorFrame;
 		this.leafFrame = leafFrame;
 		this.metaFrame = metaFrame;
 		pathList = new PathList(treeHeightHint, treeHeightHint);
-		if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
-			splitKey = new RTreeSplitKey(interiorFrame.getTupleWriter()
-					.createTupleReference(), interiorFrame.getTupleWriter()
-					.createTupleReference());
-			traverseList = new PathList(initTraverseListSize,
-					initTraverseListSize);
-		} else {
-			splitKey = null;
-			traverseList = null;
-			cursorInitialState = new RTreeCursorInitialState(pathList, 1);
-		}
 	}
 
 	public ITupleReference getTuple() {
@@ -76,6 +65,9 @@ public final class RTreeOpContext implements IIndexOpContext {
 
 	@Override
 	public void reset(IndexOp newOp) {
+		if (op != null && newOp == op) {
+			return;
+		}
 		if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
 			if (splitKey == null) {
 				splitKey = new RTreeSplitKey(interiorFrame.getTupleWriter()
@@ -86,11 +78,9 @@ public final class RTreeOpContext implements IIndexOpContext {
 				traverseList = new PathList(initTraverseListSize,
 						initTraverseListSize);
 			}
-
-		} else {
-			if (cursorInitialState == null) {
-				cursorInitialState = new RTreeCursorInitialState(pathList, 1);
-			}
+		}
+		if (cursorInitialState == null) {
+			cursorInitialState = new RTreeCursorInitialState(pathList, 1);
 		}
 		this.op = newOp;
 	}

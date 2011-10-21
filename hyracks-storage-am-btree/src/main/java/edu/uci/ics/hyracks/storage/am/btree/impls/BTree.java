@@ -30,8 +30,9 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableExcepti
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -118,10 +119,8 @@ public class BTree implements ITreeIndex {
         ctx.freePages.clear();
     }
     
-    @Override
-    public void diskOrderScan(ITreeIndexCursor icursor, IIndexOpContext ictx) throws HyracksDataException {
+    private void diskOrderScan(ITreeIndexCursor icursor, BTreeOpContext ctx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
-        BTreeOpContext ctx = (BTreeOpContext) ictx;
         ctx.reset();
 
         int currentPageId = rootPage;
@@ -143,9 +142,10 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    public void search(ITreeIndexCursor cursor, RangePredicate pred, BTreeOpContext ctx) throws Exception {
+    private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, BTreeOpContext ctx)
+            throws TreeIndexException, HyracksDataException {
         ctx.reset();
-        ctx.pred = pred;
+        ctx.pred = (RangePredicate) searchPred;
         ctx.cursor = cursor;
         // simple index scan
         if (ctx.pred.getLowKeyComparator() == null) {
@@ -250,8 +250,7 @@ public class BTree implements ITreeIndex {
         }
     }
     
-    private void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
-        BTreeOpContext ctx = (BTreeOpContext) ictx;
+    private void insertUpdateOrDelete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         ctx.reset();
         ctx.pred.setLowKeyComparator(cmp);
         ctx.pred.setHighKeyComparator(cmp);
@@ -287,25 +286,22 @@ public class BTree implements ITreeIndex {
         }
     }
     
-    @Override
-    public void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
-        insertUpdateOrDelete(tuple, ictx);
+    private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        insertUpdateOrDelete(tuple, ctx);
     }
 
-    @Override
-    public void update(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    private void update(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         // This call only allows updating of non-key fields.
         // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
         // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
         if (fieldCount == cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
-        insertUpdateOrDelete(tuple, ictx);
+        insertUpdateOrDelete(tuple, ctx);
     }
     
-    @Override
-    public void delete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
-        insertUpdateOrDelete(tuple, ictx);
+    private void delete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        insertUpdateOrDelete(tuple, ctx);
     }
     
     private void insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
@@ -1005,9 +1001,8 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    @Override
-    public BTreeOpContext createOpContext(IndexOp op) {
-        return new BTreeOpContext(op, (IBTreeLeafFrame) leafFrameFactory.createFrame(),
+    private BTreeOpContext createOpContext() {
+        return new BTreeOpContext((IBTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IBTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
                         .createFrame(), cmp);
     }
@@ -1119,6 +1114,52 @@ public class BTree implements ITreeIndex {
             node.releaseReadLatch();
             bufferCache.unpin(node);
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public ITreeIndexAccessor createAccessor() {
+        return new BTreeAccessor(this);
+    }
+    
+    private class BTreeAccessor implements ITreeIndexAccessor {
+        private BTree btree;
+        private BTreeOpContext ctx;
+        
+        public BTreeAccessor(BTree btree) {
+            this.btree = btree;
+            this.ctx = btree.createOpContext();
+        }
+        
+        @Override
+        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.INSERT);
+            btree.insert(tuple, ctx);
+        }
+
+        @Override
+        public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.UPDATE);
+            btree.update(tuple, ctx);
+        }
+
+        @Override
+        public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.DELETE);
+            btree.delete(tuple, ctx);
+        }
+
+        @Override
+        public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
+                TreeIndexException {
+            ctx.reset(IndexOp.SEARCH);
+            btree.search(cursor, searchPred, ctx);
+        }
+
+        @Override
+        public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
+            ctx.reset(IndexOp.DISKORDERSCAN);
+            btree.diskOrderScan(cursor, ctx);
         }
     }
 }

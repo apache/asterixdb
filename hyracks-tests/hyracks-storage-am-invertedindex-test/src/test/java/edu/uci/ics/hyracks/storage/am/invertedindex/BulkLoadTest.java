@@ -48,10 +48,10 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -59,7 +59,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
@@ -241,7 +240,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFrameTupleAccessor tokenAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), tokenRecDesc);
         tokenAccessor.reset(frame);
 
-        BTreeOpContext btreeOpCtx = invIndex.getBTree().createOpContext(IndexOp.SEARCH);
+        ITreeIndexAccessor btreeAccessor = invIndex.getBTree().createAccessor();
 
         // verify created inverted lists one-by-one
         for (int i = 0; i < tokens.size(); i++) {
@@ -256,7 +255,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
             searchKey.reset(tokenAccessor, 0);
 
-            invIndex.openCursor(btreeCursor, btreePred, btreeOpCtx, invListCursor);
+            invIndex.openCursor(btreeCursor, btreePred, btreeAccessor, invListCursor);
 
             invListCursor.pinPagesSync();
             int checkIndex = 0;
@@ -291,7 +290,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
             searchKey.reset(tokenAccessor, 0);
 
-            invIndex.openCursor(btreeCursor, btreePred, btreeOpCtx, invListCursor);
+            invIndex.openCursor(btreeCursor, btreePred, btreeAccessor, invListCursor);
 
             invListCursor.pinPagesSync();
             Assert.assertEquals(invListCursor.hasNext(), false);

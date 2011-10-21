@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -27,7 +28,7 @@ public interface ITreeIndexCursor {
 	public void next() throws Exception;
 
 	public void open(ICursorInitialState initialState,
-			ISearchPredicate searchPred) throws Exception;
+			ISearchPredicate searchPred) throws HyracksDataException;
 
 	public ICachedPage getPage();
 

@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -49,7 +50,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
@@ -57,7 +57,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -155,7 +154,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
+		ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -206,7 +205,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 
 			try {
-				rtree.insert(tuple, insertOpCtx);
+				indexAccessor.insert(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -223,8 +222,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
-		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
+		indexAccessor.diskOrderScan(diskOrderCursor);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
@@ -334,7 +332,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
+		ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -383,7 +381,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 
 			try {
-				rtree.insert(tuple, insertOpCtx);
+				indexAccessor.insert(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -396,7 +394,6 @@ public class RTreeTest extends AbstractRTreeTest {
 		String rtreeStats = rtree.printStats();
 		print(rtreeStats);
 
-		RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE);
 		rnd.setSeed(50);
 		for (int i = 0; i < 5000; i++) {
 
@@ -442,8 +439,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 
 			try {
-				rtree.delete(tuple, deleteOpCtx);
-
+				indexAccessor.delete(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -552,7 +548,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
+		ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -610,7 +606,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 
 			try {
-				rtree.insert(tuple, insertOpCtx);
+				indexAccessor.insert(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -627,8 +623,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
-		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
+		indexAccessor.diskOrderScan(diskOrderCursor);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();
@@ -738,7 +733,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
+		ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -789,7 +784,7 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 
 			try {
-				rtree.insert(tuple, insertOpCtx);
+				indexAccessor.insert(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -806,8 +801,7 @@ public class RTreeTest extends AbstractRTreeTest {
 		print("DISK-ORDER SCAN:\n");
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
-		RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN);
-		rtree.diskOrderScan(diskOrderCursor, diskOrderScanOpCtx);
+		indexAccessor.diskOrderScan(diskOrderCursor);
 		try {
 			while (diskOrderCursor.hasNext()) {
 				diskOrderCursor.next();

@@ -43,19 +43,18 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
@@ -106,7 +105,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
 	    ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+	    ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -128,7 +127,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 			tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -192,7 +191,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -211,7 +210,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -275,7 +274,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -294,7 +293,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -409,8 +408,8 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator());
-				BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
-				btree.search(rangeCursor, rangePred, searchOpCtx);
+				ITreeIndexAccessor indexAccessor = btree.createAccessor();
+				indexAccessor.search(rangeCursor, rangePred);
 
 				try {
 					while (rangeCursor.hasNext()) {

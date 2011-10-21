@@ -24,10 +24,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends
 		AbstractUnaryOutputSourceOperatorNodePushable {
@@ -43,19 +42,16 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends
 
 	@Override
 	public void initialize() throws HyracksDataException {
-
 		ITreeIndexFrame cursorFrame = treeIndexOpHelper.getOperatorDescriptor()
 				.getTreeIndexLeafFactory().createFrame();
 		ITreeIndexCursor cursor = treeIndexOpHelper
 				.createDiskOrderScanCursor(cursorFrame);
-		IIndexOpContext diskOrderScanOpCtx = treeIndexOpHelper.getTreeIndex()
-				.createOpContext(IndexOp.DISKORDERSCAN);
+		ITreeIndexAccessor indexAccessor = treeIndexOpHelper.getTreeIndex().createAccessor();
 		try {
-
 			treeIndexOpHelper.init();
 			writer.open();
 			try {
-				treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, diskOrderScanOpCtx);
+				indexAccessor.diskOrderScan(cursor);
 
 				int fieldCount = treeIndexOpHelper.getTreeIndex()
 						.getFieldCount();
@@ -90,7 +86,6 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends
 						}
 					}
 				}
-
 				if (appender.getTupleCount() > 0) {
 					FrameUtils.flushFrame(frame, writer);
 				}
@@ -101,7 +96,6 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends
 				cursor.close();
 				writer.close();
 			}
-
 		} catch (Exception e) {
 			deinitialize();
 			throw new HyracksDataException(e);
