@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.partitions.MaterializedPartitionWriter;
+import edu.uci.ics.hyracks.control.nc.partitions.MaterializingPipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
 
@@ -182,14 +183,25 @@ public class StartTasksWork extends SynchronizableWork {
     private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final JobId jobId,
             final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId) {
         if (cPolicy.materializeOnSendSide()) {
-            return new IPartitionWriterFactory() {
-                @Override
-                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new MaterializedPartitionWriter(ncs.getRootContext(), ncs.getPartitionManager(),
-                            new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
-                            ncs.getExecutor());
-                }
-            };
+            if (cPolicy.consumerWaitsForProducerToFinish()) {
+                return new IPartitionWriterFactory() {
+                    @Override
+                    public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                        return new MaterializedPartitionWriter(ncs.getRootContext(), ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
+                    }
+                };
+            } else {
+                return new IPartitionWriterFactory() {
+                    @Override
+                    public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                        return new MaterializingPipelinedPartition(ncs.getRootContext(), ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
+                    }
+                };
+            }
         } else {
             return new IPartitionWriterFactory() {
                 @Override

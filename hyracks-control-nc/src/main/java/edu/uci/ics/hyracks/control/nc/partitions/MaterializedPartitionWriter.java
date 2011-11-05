@@ -33,15 +33,15 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 public class MaterializedPartitionWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(MaterializedPartitionWriter.class.getName());
 
-    protected final IHyracksRootContext ctx;
+    private final IHyracksRootContext ctx;
 
-    protected final PartitionManager manager;
+    private final PartitionManager manager;
 
-    protected final PartitionId pid;
+    private final PartitionId pid;
 
-    protected final TaskAttemptId taId;
+    private final TaskAttemptId taId;
 
-    protected final Executor executor;
+    private final Executor executor;
 
     private FileReference fRef;
 
