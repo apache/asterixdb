@@ -19,6 +19,8 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -87,5 +89,15 @@ public class TestTaskContext implements IHyracksTaskContext {
     @Override
     public TaskAttemptId getTaskAttemptId() {
         return taskId;
+    }
+
+    @Override
+    public void setTaskState(ITaskState taskState) {
+
+    }
+
+    @Override
+    public ITaskState getTaskState(TaskId taskId) {
+        return null;
     }
 }

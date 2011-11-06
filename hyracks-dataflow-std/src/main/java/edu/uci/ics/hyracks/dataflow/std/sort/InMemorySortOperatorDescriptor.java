@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -104,7 +103,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private SortTaskState state;
@@ -125,7 +124,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void close() throws HyracksDataException {
                     state.frameSorter.sortFrames();
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 @Override
@@ -144,14 +143,14 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
                     writer.open();
                     try {
-                        SortTaskState state = (SortTaskState) env.getTaskState(new TaskId(new ActivityId(
+                        SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(
                                 getOperatorId(), SORT_ACTIVITY_ID), partition));
                         state.frameSorter.flushFrames(writer);
                     } catch (Exception e) {

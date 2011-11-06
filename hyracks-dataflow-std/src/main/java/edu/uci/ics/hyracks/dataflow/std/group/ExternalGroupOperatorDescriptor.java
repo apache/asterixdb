@@ -37,7 +37,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -146,7 +145,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
@@ -201,7 +200,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             state.gTable = null;
                         }
                     }
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 private void flushFramesToRun() throws HyracksDataException {
@@ -238,7 +237,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -288,7 +287,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private FrameTupleAppender writerFrameAppender;
 
                 public void initialize() throws HyracksDataException {
-                    aggState = (AggregateActivityState) env.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    aggState = (AggregateActivityState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             AGGREGATE_ACTIVITY_ID), partition));
                     runs = aggState.runs;
                     writer.open();

@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -102,7 +101,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
@@ -130,7 +129,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 @Override
                 public void close() throws HyracksDataException {
                     state.joiner.closeCache();
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 @Override
@@ -149,7 +148,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
@@ -157,7 +156,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (JoinCacheTaskState) env.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    state = (JoinCacheTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             JOIN_CACHE_ACTIVITY_ID), partition));
                     writer.open();
                 }

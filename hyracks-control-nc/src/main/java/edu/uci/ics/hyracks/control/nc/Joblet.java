@@ -50,8 +50,6 @@ import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class Joblet implements IHyracksJobletContext, ICounterContext {
-    private static final long serialVersionUID = 1L;
-
     private final NodeControllerService nodeController;
 
     private final INCApplicationContext appCtx;

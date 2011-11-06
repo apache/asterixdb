@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -55,9 +54,8 @@ public class RTreeSearchOperatorDescriptor extends
 
 	@Override
 	public IOperatorNodePushable createPushRuntime(
-			final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
+			final IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
+			int partition, int nPartitions) {
 		return new RTreeSearchOperatorNodePushable(this, ctx, partition,
 				recordDescProvider, keyFields);
 	}

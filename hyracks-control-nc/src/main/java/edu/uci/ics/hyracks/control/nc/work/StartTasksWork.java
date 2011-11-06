@@ -35,7 +35,6 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -106,10 +105,7 @@ public class StartTasksWork extends SynchronizableWork {
                 }
                 final int partition = tid.getPartition();
                 Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor());
-                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(),
-                        tid.getPartition());
-                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition,
-                        td.getPartitionCount());
+                IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 

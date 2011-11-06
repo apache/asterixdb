@@ -27,11 +27,14 @@ import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
@@ -57,6 +60,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Map<String, Counter> counterMap;
 
+    private final IOperatorEnvironment opEnv;
+
     private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
@@ -71,6 +76,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
+        opEnv = joblet.getEnvironment(taskId.getTaskId().getActivityId().getOperatorDescriptorId(), taskId.getTaskId()
+                .getPartition());
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -241,5 +248,15 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void setTaskState(ITaskState taskState) {
+        opEnv.setTaskState(taskState);
+    }
+
+    @Override
+    public ITaskState getTaskState(TaskId taskId) {
+        return opEnv.getTaskState(taskId);
     }
 }
