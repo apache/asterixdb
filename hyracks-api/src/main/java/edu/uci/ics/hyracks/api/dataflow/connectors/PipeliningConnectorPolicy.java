@@ -24,7 +24,7 @@ public final class PipeliningConnectorPolicy implements IConnectorPolicy {
 
     @Override
     public boolean consumerWaitsForProducerToFinish() {
-        return true;
+        return false;
     }
 
     @Override
