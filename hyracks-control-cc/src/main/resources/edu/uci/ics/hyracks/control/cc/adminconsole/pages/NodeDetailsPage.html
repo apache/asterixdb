@@ -1,0 +1,199 @@
+<wicket:extend xmlns:wicket>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.timer(function() {
+                window.location.reload();
+            }, 10000, true);
+            $.get('/rest/nodes/' + $.getURLParam('node-id'), function(data) {
+                var result = data.result;
+                var sysLoad = result['system-load-averages'];
+                var heapUsageInitSizes = result['heap-init-sizes'];
+                var heapUsageUsedSizes = result['heap-used-sizes'];
+                var heapUsageCommittedSizes = result['heap-committed-sizes'];
+                var heapUsageMaxSizes = result['heap-max-sizes'];
+                var nonheapUsageInitSizes = result['nonheap-init-sizes'];
+                var nonheapUsageUsedSizes = result['nonheap-used-sizes'];
+                var nonheapUsageCommittedSizes = result['nonheap-committed-sizes'];
+                var nonheapUsageMaxSizes = result['nonheap-max-sizes'];
+                var threadCounts = result['thread-counts'];
+                var peakThreadCounts = result['peak-thread-counts'];
+                var sysLoadArray = [];
+                var heapUsageInitSizesArray = [];
+                var heapUsageUsedSizesArray = [];
+                var heapUsageCommittedSizesArray = [];
+                var heapUsageMaxSizesArray = [];
+                var nonheapUsageInitSizesArray = [];
+                var nonheapUsageUsedSizesArray = [];
+                var nonheapUsageCommittedSizesArray = [];
+                var nonheapUsageMaxSizesArray = [];
+                var threadCountsArray = [];
+                var peakThreadCountsArray = [];
+                var rrdPtr = result['rrd-ptr'];
+                for(var i = 0; i < sysLoad.length; ++i) {
+                    sysLoadArray.push([i, sysLoad[rrdPtr]]);
+                    heapUsageInitSizesArray.push([i, heapUsageInitSizes[rrdPtr] / (1024 * 1024)]);
+                    heapUsageUsedSizesArray.push([i, heapUsageUsedSizes[rrdPtr] / (1024 * 1024)]);
+                    heapUsageCommittedSizesArray.push([i, heapUsageCommittedSizes[rrdPtr] / (1024 * 1024)]);
+                    heapUsageMaxSizesArray.push([i, heapUsageMaxSizes[rrdPtr] / (1024 * 1024)]);
+                    nonheapUsageInitSizesArray.push([i, nonheapUsageInitSizes[rrdPtr] / (1024 * 1024)]);
+                    nonheapUsageUsedSizesArray.push([i, nonheapUsageUsedSizes[rrdPtr] / (1024 * 1024)]);
+                    nonheapUsageCommittedSizesArray.push([i, nonheapUsageCommittedSizes[rrdPtr] / (1024 * 1024)]);
+                    nonheapUsageMaxSizesArray.push([i, nonheapUsageMaxSizes[rrdPtr] / (1024 * 1024)]);
+                    threadCountsArray.push([i, threadCounts[rrdPtr]]);
+                    peakThreadCountsArray.push([i, peakThreadCounts[rrdPtr]]);
+                    rrdPtr = (rrdPtr + 1) % sysLoad.length;
+                }
+                $('#system-load-chart').empty();
+                $.jqplot('system-load-chart', [sysLoadArray], {
+                    title: 'System Load',
+                    axes: {
+                        xaxis: {
+                            label: 'Time',
+                            tickOptions: {
+                                formatString:'%d'
+                            }
+                        },
+                        yaxis: {
+                            label: 'System Load',
+                            tickOptions:{
+                                formatString:'%.2f'
+                            }
+                        }
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 7.5
+                    },
+                    cursor: {
+                        show: false
+                    }
+                });
+                $('#heap-usage-chart').empty();
+                $.jqplot('heap-usage-chart', [heapUsageInitSizesArray, heapUsageUsedSizesArray, heapUsageCommittedSizesArray, heapUsageMaxSizesArray], {
+                    title: 'Heap Usage',
+                    series: [ 
+                        {
+                            lineWidth: 2, 
+                            markerOptions: { style:'dimaond' }
+                        }, 
+                        {
+                            showLine:false, 
+                            markerOptions: { size: 7, style:"x" }
+                        },
+                        { 
+                            markerOptions: { style:"circle" }
+                        }, 
+                        {
+                            lineWidth:5, 
+                            markerOptions: { style:"filledSquare", size:10 }
+                        }
+                    ],
+                    axes: {
+                        xaxis: {
+                            label: 'Time',
+                            tickOptions: {
+                                formatString:'%d'
+                            }
+                        },
+                        yaxis: {
+                            label: 'Memory Size',
+                            tickOptions:{
+                                formatString:'%.2f'
+                            }
+                        }
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 7.5
+                    },
+                    cursor: {
+                        show: false
+                    }
+                });
+                $('#nonheap-usage-chart').empty();
+                $.jqplot('nonheap-usage-chart', [nonheapUsageInitSizesArray, nonheapUsageUsedSizesArray, nonheapUsageCommittedSizesArray, nonheapUsageMaxSizesArray], {
+                    title: 'Non Heap Usage',
+                    series: [ 
+                        {
+                            lineWidth: 2, 
+                            markerOptions: { style:'dimaond' }
+                        }, 
+                        {
+                            showLine:false, 
+                            markerOptions: { size: 7, style:"x" }
+                        },
+                        { 
+                            markerOptions: { style:"circle" }
+                        }, 
+                        {
+                            lineWidth:5, 
+                            markerOptions: { style:"filledSquare", size:10 }
+                        }
+                    ],
+                    axes: {
+                        xaxis: {
+                            label: 'Time',
+                            tickOptions: {
+                                formatString:'%d'
+                            }
+                        },
+                        yaxis: {
+                            label: 'Memory Size',
+                            tickOptions:{
+                                formatString:'%.2f'
+                            }
+                        }
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 7.5
+                    },
+                    cursor: {
+                        show: false
+                    }
+                });
+                $('#thread-chart').empty();
+                $.jqplot('thread-chart', [threadCountsArray, peakThreadCountsArray], {
+                    title: 'Thread Counts',
+                    series: [ 
+                        {
+                            markerOptions: { style:'dimaond' }
+                        }, 
+                        {
+                            markerOptions: { style:"x" }
+                        }
+                    ],
+                    axes: {
+                        xaxis: {
+                            label: 'Time',
+                            tickOptions: {
+                                formatString:'%d'
+                            }
+                        },
+                        yaxis: {
+                            label: 'Threads',
+                            tickOptions:{
+                                formatString:'%d'
+                            }
+                        }
+                    },
+                    highlighter: {
+                        show: true,
+                        sizeAdjust: 7.5
+                    },
+                    cursor: {
+                        show: false
+                    }
+                });
+            });
+        });
+    </script>
+    <div id='system-load-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='heap-usage-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='nonheap-usage-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='thread-chart' class="jqplot-target time-chart">
+    </div>
+</wicket:extend>

@@ -76,7 +76,6 @@
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control-common</module>
-    <module>hyracks-admin-console</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>
