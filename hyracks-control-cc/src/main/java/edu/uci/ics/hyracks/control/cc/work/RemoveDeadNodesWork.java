@@ -62,13 +62,16 @@ public class RemoveDeadNodesWork extends AbstractWork {
                 }
             }
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Number of affected jobs: " + affectedJobIds.size());
-        }
-        for (JobId jobId : affectedJobIds) {
-            JobRun run = ccs.getRunMap().get(jobId);
-            if (run != null) {
-                run.getScheduler().notifyNodeFailures(deadNodes);
+        int size = affectedJobIds.size();
+        if (size > 0) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Number of affected jobs: " + size);
+            }
+            for (JobId jobId : affectedJobIds) {
+                JobRun run = ccs.getActiveRunMap().get(jobId);
+                if (run != null) {
+                    run.getScheduler().notifyNodeFailures(deadNodes);
+                }
             }
         }
     }

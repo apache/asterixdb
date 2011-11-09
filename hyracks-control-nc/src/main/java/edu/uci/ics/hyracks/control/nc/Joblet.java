@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -44,6 +45,7 @@ import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -135,7 +137,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {
         taskMap.remove(task);
-        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
+        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile());
         task.dumpProfile(taskProfile);
         nodeController.getClusterController().notifyTaskComplete(jobId, task.getTaskAttemptId(),
                 nodeController.getId(), taskProfile);
@@ -157,7 +159,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             counters.put(e.getKey(), e.getValue().get());
         }
         for (Task task : taskMap.values()) {
-            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
+            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
+                    new Hashtable<PartitionId, PartitionProfile>(task.getPartitionSendProfile()));
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }

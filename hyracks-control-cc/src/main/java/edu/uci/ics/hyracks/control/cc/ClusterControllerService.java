@@ -93,7 +93,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private ClusterControllerInfo info;
 
-    private final Map<JobId, JobRun> runMap;
+    private final Map<JobId, JobRun> activeRunMap;
+
+    private final Map<JobId, JobRun> runMapArchive;
 
     private final WorkQueue workQueue;
 
@@ -109,7 +111,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private long jobCounter;
 
-    public ClusterControllerService(CCConfig ccConfig) throws Exception {
+    public ClusterControllerService(final CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
         ipAddressNodeNameMap = new HashMap<String, Set<String>>();
@@ -118,7 +120,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
                 ClusterControllerService.class.getName()));
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
-        runMap = new HashMap<JobId, JobRun>();
+        activeRunMap = new HashMap<JobId, JobRun>();
+        runMapArchive = new LinkedHashMap<JobId, JobRun>() {
+            private static final long serialVersionUID = 1L;
+
+            protected boolean removeEldestEntry(Map.Entry<JobId, JobRun> eldest) {
+                return size() > ccConfig.jobHistorySize;
+            }
+        };
         workQueue = new WorkQueue();
         this.timer = new Timer(true);
         ccci = new CCClientInterface(this);
@@ -160,8 +169,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return applications;
     }
 
-    public Map<JobId, JobRun> getRunMap() {
-        return runMap;
+    public Map<JobId, JobRun> getActiveRunMap() {
+        return activeRunMap;
+    }
+
+    public Map<JobId, JobRun> getRunMapArchive() {
+        return runMapArchive;
     }
 
     public WorkQueue getWorkQueue() {
@@ -222,7 +235,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
-        TaskCompleteWork sce = new TaskCompleteWork(this, jobId, taskId, nodeId);
+        TaskCompleteWork sce = new TaskCompleteWork(this, jobId, taskId, nodeId, statistics);
         workQueue.schedule(sce);
     }
 

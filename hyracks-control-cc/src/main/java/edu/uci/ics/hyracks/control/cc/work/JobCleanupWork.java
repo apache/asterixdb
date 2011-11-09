@@ -42,7 +42,7 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        final JobRun run = ccs.getRunMap().get(jobId);
+        final JobRun run = ccs.getActiveRunMap().get(jobId);
         Set<String> targetNodes = run.getParticipatingNodeIds();
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
@@ -76,6 +76,8 @@ public class JobCleanupWork extends AbstractWork {
                             }
                         }
                         run.setStatus(status, exception);
+                        ccs.getActiveRunMap().remove(jobId);
+                        ccs.getRunMapArchive().put(jobId, run);
                     }
                 });
             }

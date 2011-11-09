@@ -21,14 +21,6 @@
           <target>1.6</target>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkMode>pertest</forkMode>
-          <argLine>-enableassertions</argLine>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
   <dependencies>

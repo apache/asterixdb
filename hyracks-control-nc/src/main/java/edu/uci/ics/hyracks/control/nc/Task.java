@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
@@ -37,9 +38,11 @@ import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -62,6 +65,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final IOperatorEnvironment opEnv;
 
+    private final Map<PartitionId, PartitionProfile> partitionSendProfile;
+
     private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
@@ -78,6 +83,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         counterMap = new HashMap<String, Counter>();
         opEnv = joblet.getEnvironment(taskId.getTaskId().getActivityId().getOperatorDescriptorId(), taskId.getTaskId()
                 .getPartition());
+        partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -144,11 +150,19 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return this;
     }
 
+    public Map<PartitionId, PartitionProfile> getPartitionSendProfile() {
+        return partitionSendProfile;
+    }
+
     public synchronized void dumpProfile(TaskProfile tProfile) {
         Map<String, Long> dumpMap = tProfile.getCounters();
         for (Counter c : counterMap.values()) {
             dumpMap.put(c.getName(), c.get());
         }
+    }
+
+    public void setPartitionSendProfile(PartitionProfile profile) {
+        partitionSendProfile.put(profile.getPartitionId(), profile);
     }
 
     public void start() throws HyracksException {

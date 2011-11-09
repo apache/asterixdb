@@ -1,0 +1,12 @@
+<wicket:extend xmlns:wicket>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.timer(function() {
+                window.location.reload();
+            }, 10000, true);
+            $.get('/rest/jobs/' + $.getURLParam('job-id') + '/job-specification, function(data) {
+                var result = data.result;
+            });
+        });
+    </script>
+</wicket:extend>

@@ -14,7 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.Collection;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -32,7 +35,12 @@ public class GetJobSummariesJSONWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         summaries = new JSONArray();
-        for (JobRun run : ccs.getRunMap().values()) {
+        populateJSON(ccs.getActiveRunMap().values());
+        populateJSON(ccs.getRunMapArchive().values());
+    }
+
+    private void populateJSON(Collection<JobRun> jobRuns) throws JSONException {
+        for (JobRun run : jobRuns) {
             JSONObject jo = new JSONObject();
             jo.put("type", "job-summary");
             jo.put("job-id", run.getJobId().toString());

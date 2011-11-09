@@ -19,8 +19,6 @@ import org.apache.wicket.protocol.http.WebApplication;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.adminconsole.pages.IndexPage;
-import edu.uci.ics.hyracks.control.cc.adminconsole.pages.JobsSummaryPage;
-import edu.uci.ics.hyracks.control.cc.adminconsole.pages.NodesSummaryPage;
 
 public class HyracksAdminConsoleApplication extends WebApplication {
     private ClusterControllerService ccs;
@@ -28,8 +26,6 @@ public class HyracksAdminConsoleApplication extends WebApplication {
     @Override
     public void init() {
         ccs = (ClusterControllerService) getServletContext().getAttribute(ClusterControllerService.class.getName());
-        mountPage("jobs", JobsSummaryPage.class);
-        mountPage("nodes", NodesSummaryPage.class);
     }
 
     @Override

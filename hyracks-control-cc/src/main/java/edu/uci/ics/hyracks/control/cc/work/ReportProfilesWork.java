@@ -35,9 +35,13 @@ public class ReportProfilesWork extends AbstractWork {
 
     @Override
     public void run() {
-        Map<JobId, JobRun> runMap = ccs.getRunMap();
+        Map<JobId, JobRun> runMap = ccs.getActiveRunMap();
         for (JobProfile profile : profiles) {
             JobRun run = runMap.get(profile.getJobId());
+            if (run != null) {
+                JobProfile jp = run.getJobProfile();
+                jp.merge(profile);
+            }
         }
     }
 

@@ -33,10 +33,13 @@ public class GetJobRunJSONWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
+        JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run == null) {
-            json = new JSONObject();
-            return;
+            run = ccs.getRunMapArchive().get(jobId);
+            if (run == null) {
+                json = new JSONObject();
+                return;
+            }
         }
         json = run.toJSON();
     }

@@ -62,7 +62,7 @@ public class WorkQueue {
 
     public void schedule(AbstractWork event) {
         if (LOGGER.isLoggable(event.logLevel())) {
-            LOGGER.info("Scheduling: " + event);
+            LOGGER.log(event.logLevel(), "Scheduling: " + event);
         }
         queue.offer(event);
     }

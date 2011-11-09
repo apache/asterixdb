@@ -1,3 +1,46 @@
 <wicket:extend xmlns:wicket>
-<h1>Index</h1>
+    <div>
+        Registered Node Count: <span wicket:id="node-count"></span>
+    </div>
+    <table>
+        <tr wicket:id="node-list">
+            <td>
+                <span wicket:id="node-id"></span>
+            </td>
+            <td>
+                <span wicket:id="heap-used"></span>
+            </td>
+            <td>
+                <span wicket:id="system-load-average"></span>
+            </td>
+            <td>
+                <a wicket:id="node-details">Details</a>
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr wicket:id="jobs-list">
+            <td>
+                <span wicket:id="job-id"></span>
+            </td>
+            <td>
+                <span wicket:id="application-name"></span>
+            </td>
+            <td>
+                <span wicket:id="status"></span>
+            </td>
+            <td>
+                <span wicket:id="create-time"></span>
+            </td>
+            <td>
+                <span wicket:id="start-time"></span>
+            </td>
+            <td>
+                <span wicket:id="end-time"></span>
+            </td>
+            <td>
+                <a wicket:id="job-details">Details</a>
+            </td>
+        </tr>
+    </table>
 </wicket:extend>

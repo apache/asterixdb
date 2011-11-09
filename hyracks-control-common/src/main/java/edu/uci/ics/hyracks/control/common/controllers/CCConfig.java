@@ -37,6 +37,9 @@ public class CCConfig {
     @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
     public int defaultMaxJobAttempts = 5;
 
+    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
+    public int jobHistorySize = 10;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-port");
         cList.add(String.valueOf(port));
@@ -50,5 +53,7 @@ public class CCConfig {
         cList.add(String.valueOf(profileDumpPeriod));
         cList.add("-default-max-job-attempts");
         cList.add(String.valueOf(defaultMaxJobAttempts));
+        cList.add("-job-history-size");
+        cList.add(String.valueOf(jobHistorySize));
     }
 }

@@ -70,7 +70,7 @@ public class JobCreateWork extends SynchronizableWork {
 
         run.setStatus(JobStatus.INITIALIZED, null);
 
-        ccs.getRunMap().put(jobId, run);
+        ccs.getActiveRunMap().put(jobId, run);
         JobScheduler jrs = new JobScheduler(ccs, run);
         run.setScheduler(jrs);
         appCtx.notifyJobCreation(jobId, spec);
