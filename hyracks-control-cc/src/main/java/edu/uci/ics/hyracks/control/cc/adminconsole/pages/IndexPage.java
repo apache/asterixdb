@@ -50,7 +50,7 @@ public class IndexPage extends AbstractPage {
                     item.add(new Label("system-load-average", o.getString("system-load-average")));
                     PageParameters params = new PageParameters();
                     params.add("node-id", o.getString("node-id"));
-                    item.add(new BookmarkablePageLink("node-details", NodeDetailsPage.class, params));
+                    item.add(new BookmarkablePageLink<Object>("node-details", NodeDetailsPage.class, params));
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
@@ -76,7 +76,7 @@ public class IndexPage extends AbstractPage {
                     item.add(new Label("end-time", o.getString("end-time")));
                     PageParameters params = new PageParameters();
                     params.add("job-id", o.getString("node-id"));
-                    item.add(new BookmarkablePageLink("job-details", JobDetailsPage.class, params));
+                    item.add(new BookmarkablePageLink<Object>("job-details", JobDetailsPage.class, params));
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }

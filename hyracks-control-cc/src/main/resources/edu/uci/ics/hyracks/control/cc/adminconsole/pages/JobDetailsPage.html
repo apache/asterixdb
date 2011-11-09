@@ -1,12 +1,8 @@
 <wicket:extend xmlns:wicket>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $.timer(function() {
-                window.location.reload();
-            }, 10000, true);
-            $.get('/rest/jobs/' + $.getURLParam('job-id') + '/job-specification, function(data) {
-                var result = data.result;
-            });
-        });
-    </script>
+    <div id="job-specification" wicket:id="job-specification" style="display: none;">
+    </div>
+    <div id="job-activity-graph" wicket:id="job-activity-graph" style="display: none;">
+    </div>
+    <div id="job-run" wicket:id="job-run" style="display: none;">
+    </div>
 </wicket:extend>
