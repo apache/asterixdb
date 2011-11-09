@@ -14,10 +14,16 @@
  */
 package edu.uci.ics.hyracks.tests.integration;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.EnumSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -30,6 +36,8 @@ import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractIntegrationTest {
+    private static final Logger LOGGER = Logger.getLogger(AbstractIntegrationTest.class.getName());
+
     public static final String NC1_ID = "nc1";
     public static final String NC2_ID = "nc2";
 
@@ -37,6 +45,9 @@ public abstract class AbstractIntegrationTest {
     private static NodeControllerService nc1;
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
+
+    @Rule
+    public TemporaryFolder outputFolder = new TemporaryFolder();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -75,9 +86,17 @@ public abstract class AbstractIntegrationTest {
 
     protected void runTest(JobSpecification spec) throws Exception {
         JobId jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
-        System.err.println(spec.toJSON().toString(2));
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(spec.toJSON().toString(2));
+        }
         hcc.start(jobId);
-        System.err.print(jobId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(jobId.toString());
+        }
         cc.waitForCompletion(jobId);
+    }
+    
+    protected File createTempFile() throws IOException {
+        return File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
     }
 }

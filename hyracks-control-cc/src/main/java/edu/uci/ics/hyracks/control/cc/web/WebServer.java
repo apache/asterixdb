@@ -81,7 +81,7 @@ public class WebServer {
         filter.setInitParameter(ContextParamWebApplicationFactory.APP_CLASS_PARAM,
                 HyracksAdminConsoleApplication.class.getName());
         filter.setInitParameter(WicketFilter.FILTER_MAPPING_PARAM, "/*");
-        filter.setInitParameter(Application.CONFIGURATION, RuntimeConfigurationType.DEVELOPMENT.toString());
+        filter.setInitParameter(Application.CONFIGURATION, RuntimeConfigurationType.DEPLOYMENT.toString());
 
         ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath("/adminconsole");
