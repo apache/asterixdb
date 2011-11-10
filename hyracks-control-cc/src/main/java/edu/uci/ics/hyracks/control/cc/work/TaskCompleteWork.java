@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.Map;
+
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -41,10 +43,13 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
             JobRun run = ac.getJobRun();
             if (statistics != null) {
                 JobProfile jobProfile = run.getJobProfile();
-                JobletProfile jobletProfile = jobProfile.getJobletProfiles().get(nodeId);
-                if (jobletProfile != null) {
-                    jobletProfile.getTaskProfiles().put(taId, statistics);
+                Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
+                JobletProfile jobletProfile = jobletProfiles.get(nodeId);
+                if (jobletProfile == null) {
+                    jobletProfile = new JobletProfile(nodeId);
+                    jobletProfiles.put(nodeId, jobletProfile);
                 }
+                jobletProfile.getTaskProfiles().put(taId, statistics);
             }
             ac.getJobRun().getScheduler().notifyTaskComplete(ta);
         } catch (HyracksException e) {

@@ -334,6 +334,8 @@ public class JobRun implements IJobStatusConditionVariable {
         }
         result.put("activity-clusters", aClusters);
 
+        result.put("profile", profile.toJSON());
+
         return result;
     }
 }

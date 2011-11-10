@@ -40,6 +40,9 @@ public class CCConfig {
     @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
     public int jobHistorySize = 10;
 
+    @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
+    public String ccRoot = "ClusterControllerService";
+
     public void toCommandLine(List<String> cList) {
         cList.add("-port");
         cList.add(String.valueOf(port));
@@ -55,5 +58,7 @@ public class CCConfig {
         cList.add(String.valueOf(defaultMaxJobAttempts));
         cList.add("-job-history-size");
         cList.add(String.valueOf(jobHistorySize));
+        cList.add("-cc-root");
+        cList.add(ccRoot);
     }
 }

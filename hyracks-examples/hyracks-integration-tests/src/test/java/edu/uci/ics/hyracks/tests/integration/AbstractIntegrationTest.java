@@ -54,6 +54,12 @@ public abstract class AbstractIntegrationTest {
         CCConfig ccConfig = new CCConfig();
         ccConfig.port = 39001;
         ccConfig.profileDumpPeriod = 10000;
+        File outDir = new File("target/ClusterController");
+        outDir.mkdirs();
+        File ccRoot = File.createTempFile(AbstractIntegrationTest.class.getName(), ".data", outDir);
+        ccRoot.delete();
+        ccRoot.mkdir();
+        ccConfig.ccRoot = ccRoot.getAbsolutePath();
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
@@ -75,6 +81,9 @@ public abstract class AbstractIntegrationTest {
 
         hcc = new HyracksLocalConnection(cc);
         hcc.createApplication("test", null);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting CC in " + ccRoot.getAbsolutePath());
+        }
     }
 
     @AfterClass
@@ -95,7 +104,7 @@ public abstract class AbstractIntegrationTest {
         }
         cc.waitForCompletion(jobId);
     }
-    
+
     protected File createTempFile() throws IOException {
         return File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
     }

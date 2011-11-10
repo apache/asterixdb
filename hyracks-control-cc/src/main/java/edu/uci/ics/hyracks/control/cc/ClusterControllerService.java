@@ -70,6 +70,7 @@ import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
+import edu.uci.ics.hyracks.control.common.logs.LogFile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 
@@ -77,9 +78,11 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         IHyracksClientInterface {
     private static final long serialVersionUID = 1L;
 
-    private CCConfig ccConfig;
+    private final CCConfig ccConfig;
 
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
+
+    private final LogFile jobLog;
 
     private final Map<String, NodeControllerState> nodeRegistry;
 
@@ -113,11 +116,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     public ClusterControllerService(final CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
+        File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
+        jobLog = new LogFile(jobLogFolder);
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
         ipAddressNodeNameMap = new HashMap<String, Set<String>>();
         applications = new Hashtable<String, CCApplicationContext>();
-        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(
-                ClusterControllerService.class.getName()));
+        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
         taskExecutor = Executors.newCachedThreadPool();
         webServer = new WebServer(this);
         activeRunMap = new HashMap<JobId, JobRun>();
@@ -144,6 +148,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService");
+        jobLog.open();
         Registry registry = LocateRegistry.createRegistry(ccConfig.port);
         registry.rebind(IHyracksClientInterface.class.getName(), ccci);
         registry.rebind(IClusterController.class.getName(), this);
@@ -162,6 +167,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         webServer.stop();
         sweeper.cancel();
         workQueue.stop();
+        jobLog.close();
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
     }
 
@@ -175,6 +181,10 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     public Map<JobId, JobRun> getRunMapArchive() {
         return runMapArchive;
+    }
+
+    public LogFile getJobLogFile() {
+        return jobLog;
     }
 
     public WorkQueue getWorkQueue() {

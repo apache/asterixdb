@@ -25,7 +25,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
             <forkMode>pertest</forkMode>
-            <argLine>-enableassertions -Djava.util.logging.config.file=${basedir}/config/logging.properties</argLine>
+            <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties</argLine>
         </configuration>
       </plugin>
     </plugins>
