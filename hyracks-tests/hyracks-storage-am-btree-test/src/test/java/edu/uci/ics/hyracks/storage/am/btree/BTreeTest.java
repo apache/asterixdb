@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -91,7 +92,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test01() throws Exception {
 
-        LOGGER.info("FIXED-LENGTH KEY TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("FIXED-LENGTH KEY TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -134,7 +137,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        LOGGER.info("INSERTING INTO TREE");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("INSERTING INTO TREE");
+        }
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -170,9 +175,11 @@ public class BTreeTest extends AbstractBTreeTest {
             ArrayTupleReference t = new ArrayTupleReference();
             t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
             
-            if (i % 1000 == 0) {
-                long end = System.currentTimeMillis();
-                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    long end = System.currentTimeMillis();
+                    LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+                }
             }
 
             try {
@@ -185,15 +192,20 @@ public class BTreeTest extends AbstractBTreeTest {
         // btree.printTree(leafFrame, interiorFrame);
 
         int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
-        LOGGER.info("MAXPAGE: " + maxPage);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("MAXPAGE: " + maxPage);
+        }
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        LOGGER.info("DURATION: " + duration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DURATION: " + duration);
+        }
 
         // ordered scan
-
-        LOGGER.info("ORDERED SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
@@ -202,7 +214,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -211,7 +225,9 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // disk-order scan
-        LOGGER.info("DISK-ORDER SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DISK-ORDER SCAN:");
+        }
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
         indexAccessor.diskOrderScan(diskOrderCursor);
         try {
@@ -219,7 +235,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -228,7 +246,9 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in [-1000, 1000]
-        LOGGER.info("RANGE SEARCH:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
 
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
@@ -274,7 +294,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -295,7 +317,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test02() throws Exception {
 
-        LOGGER.info("COMPOSITE KEY TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("COMPOSITE KEY TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -340,7 +364,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        LOGGER.info("INSERTING INTO TREE");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("INSERTING INTO TREE");
+        }
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -375,8 +401,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1);
+                }
             }
             
             try {
@@ -391,10 +419,14 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        LOGGER.info("DURATION: " + duration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DURATION: " + duration);
+        }
 
         // try a simple index scan
-        LOGGER.info("ORDERED SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
@@ -403,7 +435,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -412,7 +446,9 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in [(-3),(3)]
-        LOGGER.info("RANGE SEARCH:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
         // build low and high keys
@@ -463,7 +499,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -484,7 +522,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test03() throws Exception {
 
-        LOGGER.info("VARIABLE-LENGTH KEY TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("VARIABLE-LENGTH KEY TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -555,8 +595,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                LOGGER.info("INSERTING " + i);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i);
+                }
             }
 
             try {
@@ -566,10 +608,14 @@ public class BTreeTest extends AbstractBTreeTest {
         }
         // btree.printTree();
 
-        LOGGER.info("DONE INSERTING");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DONE INSERTING");
+        }
 
         // ordered scan
-        LOGGER.info("ORDERED SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
@@ -578,7 +624,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -587,7 +635,9 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // range search in ["cbf", cc7"]
-        LOGGER.info("RANGE SEARCH:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
 
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
@@ -633,7 +683,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -655,7 +707,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test04() throws Exception {
 
-        LOGGER.info("DELETION TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DELETION TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -713,9 +767,10 @@ public class BTreeTest extends AbstractBTreeTest {
         int runs = 3;
         for (int run = 0; run < runs; run++) {
 
-            LOGGER.info("DELETION TEST RUN: " + (run + 1) + "/" + runs);
-
-            LOGGER.info("INSERTING INTO BTREE");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("DELETION TEST RUN: " + (run + 1) + "/" + runs);
+                LOGGER.info("INSERTING INTO BTREE");
+            }
             int maxLength = 10;
             //int ins = 16;
             int ins = 10000;
@@ -741,8 +796,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
                 tuple.reset(accessor, 0);
 
-                if (i % 1000 == 0) {
-                    LOGGER.info("INSERTING " + i);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    if (i % 1000 == 0) {
+                        LOGGER.info("INSERTING " + i);
+                    }
                 }
 
                 try {
@@ -757,7 +814,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 insDoneCmp[i] = insDone;
             }
             
-            LOGGER.info("DELETING FROM BTREE");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("DELETING FROM BTREE");
+            }
             int delDone = 0;
             for (int i = 0; i < ins; i++) {
 
@@ -772,8 +831,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
                 tuple.reset(accessor, 0);
 
-                if (i % 1000 == 0) {
-                    LOGGER.info("DELETING " + i);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    if (i % 1000 == 0) {
+                        LOGGER.info("DELETING " + i);
+                    }
                 }
 
                 try {
@@ -786,15 +847,19 @@ public class BTreeTest extends AbstractBTreeTest {
                 }
 
                 if (insDoneCmp[i] != delDone) {
-                    LOGGER.info("INCONSISTENT STATE, ERROR IN DELETION TEST");
-                    LOGGER.info("INSDONECMP: " + insDoneCmp[i] + " " + delDone);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("INCONSISTENT STATE, ERROR IN DELETION TEST");
+                        LOGGER.info("INSDONECMP: " + insDoneCmp[i] + " " + delDone);
+                    }
                     break;
                 }
             }
             // btree.printTree(leafFrame, interiorFrame);
 
             if (insDone != delDone) {
-                LOGGER.info("ERROR! INSDONE: " + insDone + " DELDONE: " + delDone);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("ERROR! INSDONE: " + insDone + " DELDONE: " + delDone);
+                }
                 break;
             }
         }
@@ -807,7 +872,9 @@ public class BTreeTest extends AbstractBTreeTest {
     
     private void orderedScan(BTree btree, IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ISerializerDeserializer[] recDescSers) throws Exception {
         // try a simple index scan
-        LOGGER.info("ORDERED SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
@@ -825,7 +892,9 @@ public class BTreeTest extends AbstractBTreeTest {
         } finally {
             scanCursor.close();
         }
-        LOGGER.info(scanResults.toString());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(scanResults.toString());
+        }
     }
     
     // Assuming exactly two BTree fields.
@@ -856,7 +925,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test05() throws Exception {
 
-        LOGGER.info("DELETION TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DELETION TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -913,7 +984,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
         Map<String, String> expectedValues = new HashMap<String, String>();
         
-        LOGGER.info("INSERTING INTO BTREE");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("INSERTING INTO BTREE");
+        }
         int maxLength = 10;
         int ins = 10000;
         // Only remember the keys.
@@ -938,8 +1011,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                LOGGER.info("INSERTING " + i);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i);
+                }
             }
             try {
                 indexAccessor.insert(t);
@@ -961,10 +1036,10 @@ public class BTreeTest extends AbstractBTreeTest {
         
         int runs = 3;
         for (int run = 0; run < runs; run++) {
-
-            LOGGER.info("UPDATE TEST RUN: " + (run + 1) + "/" + runs);
-
-            LOGGER.info("UPDATING BTREE");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("UPDATE TEST RUN: " + (run + 1) + "/" + runs);
+                LOGGER.info("UPDATING BTREE");
+            }
             for (int i = 0; i < ins; i++) {
                 // Generate a new random value for f1.
                 String f1 = randomString(Math.abs(rnd.nextInt()) % maxLength + 1, rnd);
@@ -980,8 +1055,10 @@ public class BTreeTest extends AbstractBTreeTest {
 
                 tuple.reset(accessor, 0);
 
-                if (i % 1000 == 0) {
-                    LOGGER.info("UPDATING " + i);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    if (i % 1000 == 0) {
+                        LOGGER.info("UPDATING " + i);
+                    }
                 }
 
                 ArrayTupleReference t = new ArrayTupleReference();
@@ -1018,7 +1095,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test06() throws Exception {
 
-        LOGGER.info("BULK LOAD TEST");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BULK LOAD TEST");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -1077,7 +1156,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
         // generate sorted records
         int ins = 100000;
-        LOGGER.info("BULK LOADING " + ins + " RECORDS");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BULK LOADING " + ins + " RECORDS");
+        }
         long start = System.currentTimeMillis();
         for (int i = 0; i < ins; i++) {
 
@@ -1103,10 +1184,14 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        LOGGER.info("DURATION: " + duration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DURATION: " + duration);
+        }
 
         // range search
-        LOGGER.info("RANGE SEARCH:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
 
         // build low and high keys
@@ -1152,7 +1237,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1171,7 +1258,9 @@ public class BTreeTest extends AbstractBTreeTest {
     @Test
     public void test07() throws Exception {
 
-        LOGGER.info("TIME-INTERVAL INTERSECTION DEMO");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TIME-INTERVAL INTERSECTION DEMO");
+        }
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -1280,7 +1369,9 @@ public class BTreeTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            LOGGER.info("INSERTING " + i);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("INSERTING " + i);
+            }
 
             try {
                 indexAccessor.insert(tuple);
@@ -1292,11 +1383,14 @@ public class BTreeTest extends AbstractBTreeTest {
 
         long end = System.currentTimeMillis();
         long duration = end - start;
-        LOGGER.info("DURATION: " + duration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DURATION: " + duration);
+        }
 
         // try a simple index scan
-
-        LOGGER.info("ORDERED SCAN:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
@@ -1315,7 +1409,9 @@ public class BTreeTest extends AbstractBTreeTest {
         }
 
         // try a range search
-        LOGGER.info("RANGE SEARCH:");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
 
         // build low and high keys
@@ -1366,7 +1462,9 @@ public class BTreeTest extends AbstractBTreeTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-                LOGGER.info(rec);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

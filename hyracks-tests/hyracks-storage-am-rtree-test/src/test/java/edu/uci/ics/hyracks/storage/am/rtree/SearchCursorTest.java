@@ -23,6 +23,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -189,10 +190,12 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+							+ " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
@@ -233,9 +236,11 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			print(i + " Searching for: " + Math.min(p1x, p2x) + " "
-					+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-					+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info(i + " Searching for: " + Math.min(p1x, p2x) + " "
+						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
+						+ Math.max(p1y, p2y));
+			}
 
 			ITreeIndexCursor searchCursor = new RTreeSearchCursor(
 					interiorFrame, leafFrame);

@@ -1,5 +1,7 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.util.logging.Level;
+
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -20,7 +22,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     
     @Test
     public void oneIntKeyAndValue() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With One Int Key And Value.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With One Int Key And Value.");
+        }
                 
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         // Range search in [-1000, 1000]
@@ -32,8 +36,10 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     }
     
     @Test
-    public void twoIntKeys() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys.");
+    public void twoIntKeys() throws Exception {    
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys.");
+        }
         
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         
@@ -50,8 +56,10 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     }
     
     @Test
-    public void twoIntKeysAndValues() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys And Values.");
+    public void twoIntKeysAndValues() throws Exception {  
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys And Values.");
+        }
         
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         
@@ -69,7 +77,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     
     @Test
     public void oneStringKeyAndValue() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
+        }
         
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
         
@@ -82,8 +92,10 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     }
     
     @Test
-    public void twoStringKeys() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
+    public void twoStringKeys() throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
+        }
         
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
         
@@ -100,8 +112,10 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
     }
     
     @Test
-    public void twoStringKeysAndValues() throws Exception {        
-        LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");
+    public void twoStringKeysAndValues() throws Exception {      
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");
+        }
         
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
         

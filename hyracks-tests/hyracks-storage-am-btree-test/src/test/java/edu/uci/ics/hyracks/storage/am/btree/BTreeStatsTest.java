@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -101,7 +102,9 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        LOGGER.info("INSERTING INTO TREE");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("INSERTING INTO TREE");
+        }
 
         ByteBuffer frame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -133,9 +136,11 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 10000 == 0) {
-                long end = System.currentTimeMillis();
-                LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 10000 == 0) {
+                    long end = System.currentTimeMillis();
+                    LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+                }
             }
 
             try {
@@ -149,7 +154,9 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
                 btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-        LOGGER.info("\n" + stats.toString());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("\n" + stats.toString());
+        }
 
         TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager,
                 fileId);

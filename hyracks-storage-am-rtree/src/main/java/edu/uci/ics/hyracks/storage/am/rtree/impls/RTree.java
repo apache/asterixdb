@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
@@ -250,7 +251,7 @@ public class RTree implements ITreeIndex {
                         .createFrame(), 8);
     }
 
-    private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException, PageAllocationException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
@@ -425,7 +426,7 @@ public class RTree implements ITreeIndex {
     }
 
     private void insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException, TreeIndexException, PageAllocationException {
         FrameOpSpaceStatus spaceStatus;
         if (!isLeaf) {
             spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple);
@@ -551,7 +552,7 @@ public class RTree implements ITreeIndex {
         }
     }
 
-    public void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    public void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException, PageAllocationException {
         boolean writeLatched = false;
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
@@ -1051,7 +1052,7 @@ public class RTree implements ITreeIndex {
         }
         
         @Override
-        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException, PageAllocationException {
             ctx.reset(IndexOp.INSERT);
             rtree.insert(tuple, ctx);
         }

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -79,7 +80,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void uniqueIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 1;
@@ -164,7 +167,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void nonUniqueIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 2;
@@ -247,7 +252,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void nonUniqueFieldPrefixIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 2;
@@ -447,32 +454,35 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 						else
 							u = ')';
 
-						LOGGER.info("RANGE: " + l + " " + lowKey + " , "
-								+ highKey + " " + u);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);
+                        }
 						StringBuilder strBuilder = new StringBuilder();
 						for (Integer r : expectedResults) {
 							strBuilder.append(r + " ");
 						}
-						LOGGER.info(strBuilder.toString());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(strBuilder.toString());
+                        }
 					}
 				}
 
 				if (results.size() == expectedResults.size()) {
 					for (int k = 0; k < results.size(); k++) {
 						if (!results.get(k).equals(expectedResults.get(k))) {
-						    LOGGER.info("DIFFERENT RESULTS AT: i=" + i
-									+ " j=" + j + " k=" + k);
-						    LOGGER.info(results.get(k) + " "
-									+ expectedResults.get(k));
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " j=" + j + " k=" + k);
+                                LOGGER.info(results.get(k) + " " + expectedResults.get(k));
+                            }
 							return false;
 						}
 					}
 				} else {
-				    LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i
-							+ " j=" + j);
-				    LOGGER.info("RESULTS: " + results.size());
-				    LOGGER.info("EXPECTED RESULTS: "
-							+ expectedResults.size());
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i + " j=" + j);
+                        LOGGER.info("RESULTS: " + results.size());
+                        LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
+                    }
 					return false;
 				}
 			}

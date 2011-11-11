@@ -19,37 +19,43 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public final class BTreeOpContext implements IIndexOpContext {
-    private final int INIT_ARRAYLIST_SIZE = 6;    
-    public final IBTreeLeafFrame leafFrame;
-    public final IBTreeInteriorFrame interiorFrame;
-    public final ITreeIndexMetaDataFrame metaFrame;
+public class BTreeOpContext implements IIndexOpContext {
+    private final int INIT_ARRAYLIST_SIZE = 6; 
+    protected ITreeIndexFrameFactory leafFrameFactory;
+    protected ITreeIndexFrameFactory interiorFrameFactory;
+    public IBTreeLeafFrame leafFrame;
+    public IBTreeInteriorFrame interiorFrame;
+    public ITreeIndexMetaDataFrame metaFrame;
     public IndexOp op;
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
-    public BTreeSplitKey splitKey;
-    public int opRestarts = 0;
+    public BTreeSplitKey splitKey;    
     public LongArrayList pageLsns;
     public IntArrayList smPages;
     public IntArrayList freePages;
-
-    public BTreeOpContext(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {        
+    public int opRestarts = 0;
+    public boolean exceptionHandled;
+    
+    public BTreeOpContext(ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
+        this.leafFrameFactory = leafFrameFactory;
+        this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
         if (leafFrame != null) {
-        	leafFrame.setMultiComparator(cmp);
+            leafFrame.setMultiComparator(cmp);
         }
-        this.leafFrame = leafFrame;
+        this.interiorFrameFactory = interiorFrameFactory;
+        this.interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
         if (interiorFrame != null) {
-        	interiorFrame.setMultiComparator(cmp);
+            interiorFrame.setMultiComparator(cmp);
         }
-        this.interiorFrame = interiorFrame;
         this.metaFrame = metaFrame;
         this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
     }
@@ -62,13 +68,11 @@ public final class BTreeOpContext implements IIndexOpContext {
         if (smPages != null)
             smPages.clear();
         opRestarts = 0;
+        exceptionHandled = false;
     }
 
     @Override
     public void reset(IndexOp newOp) {
-        if (op != null && newOp == op) {
-            return;
-        }
         if (newOp == IndexOp.SEARCH || newOp == IndexOp.DISKORDERSCAN) {
             if (cursorInitialState == null) {
                 cursorInitialState = new BTreeCursorInitialState(null);
@@ -88,6 +92,15 @@ public final class BTreeOpContext implements IIndexOpContext {
                 splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             }
         }
-        this.op = newOp;
+        op = newOp;
+        exceptionHandled = false;
+    }
+
+    public IBTreeLeafFrame createLeafFrame() {
+        return (IBTreeLeafFrame) leafFrameFactory.createFrame();
+    }
+
+    public IBTreeInteriorFrame createInteriorFrame() {
+        return (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
     }
 }

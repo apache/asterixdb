@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -34,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -100,7 +102,9 @@ public class BTreeTestUtils {
     }
     
     public static void checkOrderedScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Ordered Scan.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Ordered Scan.");
+        }
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         testCtx.indexAccessor.search(scanCursor, nullPred);
@@ -126,7 +130,9 @@ public class BTreeTestUtils {
     }
     
     public static void checkDiskOrderScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Disk-Order Scan.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Disk-Order Scan.");
+        }
         ITreeIndexCursor diskOrderCursor = new TreeDiskOrderScanCursor(testCtx.leafFrame);
         testCtx.indexAccessor.diskOrderScan(diskOrderCursor);
         int actualCount = 0;        
@@ -152,7 +158,9 @@ public class BTreeTestUtils {
     }
     
     public static void checkRangeSearch(BTreeTestContext testCtx, ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive, boolean highKeyInclusive) throws Exception {
-        LOGGER.info("Testing Range Search.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Range Search.");
+        }
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), highKey);
         ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
@@ -192,7 +200,9 @@ public class BTreeTestUtils {
     }
     
     public static void checkPointSearches(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Point Searches On All Expected Keys.");        
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Point Searches On All Expected Keys.");
+        }
         ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
         
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
@@ -277,8 +287,10 @@ public class BTreeTestUtils {
                 tupleValues[j] = j;
             }
             TupleUtils.createIntegerTuple(testCtx.tupleBuilder, testCtx.tuple, tupleValues);
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             try {
                 testCtx.indexAccessor.insert(testCtx.tuple);
@@ -299,8 +311,10 @@ public class BTreeTestUtils {
         int numKeyFields = testCtx.getKeyFieldCount();
         Object[] tupleValues = new Object[fieldCount];
         for (int i = 0; i < numTuples; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -377,7 +391,7 @@ public class BTreeTestUtils {
         bulkLoadCheckTuples(testCtx, numTuples);
     }
     
-    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException {
+    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException, PageAllocationException {
         int fieldCount = testCtx.getFieldCount();
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -385,8 +399,10 @@ public class BTreeTestUtils {
         IIndexBulkLoadContext bulkLoadCtx = testCtx.btree.beginBulkLoad(0.7f);
         int c = 1;
         for (CheckTuple checkTuple : testCtx.checkTuples) {
-            if (c % (numTuples / 10) == 0) {
-                LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (c % (numTuples / 10) == 0) {
+                    LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
+                }
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, testCtx.fieldSerdes);
             testCtx.btree.bulkLoadAddTuple(tuple, bulkLoadCtx);
@@ -406,8 +422,10 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];            
@@ -443,8 +461,10 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Updating Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Updating Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];

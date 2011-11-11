@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
@@ -66,7 +68,7 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 		loadData();
 	}
 
-	public void loadData() throws HyracksDataException, TreeIndexException {
+	public void loadData() throws HyracksDataException, TreeIndexException, PageAllocationException {
 		tokens.add("compilers");
 		tokens.add("computer");
 		tokens.add("databases");
@@ -212,7 +214,10 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 				totalTime += timeEnd - timeStart;
 			}
 			double avgTime = totalTime / (double) repeats;
-			LOGGER.info(i + ": " + "\"" + queryString + "\": " + avgTime + "ms");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info(i + ": " + "\"" + queryString + "\": " + avgTime
+						+ "ms");
+			}
 
 			if (!panic) {
 
@@ -233,12 +238,16 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 				}
 
 				if (expectedResults.size() != checkIndex) {
-					LOGGER.info("CHECKING");
+					if (LOGGER.isLoggable(Level.INFO)) {
+						LOGGER.info("CHECKING");
+					}
 					StringBuilder expectedStrBuilder = new StringBuilder();
 					for (Integer x : expectedResults) {
 						expectedStrBuilder.append(x + " ");
 					}
-					LOGGER.info(expectedStrBuilder.toString());
+					if (LOGGER.isLoggable(Level.INFO)) {
+						LOGGER.info(expectedStrBuilder.toString());
+					}
 				}
 
 				Assert.assertEquals(expectedResults.size(), checkIndex);
@@ -266,27 +275,39 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 	public void jaccardKeywordQueryTest() throws Exception {
 		JaccardSearchModifier searchModifier = new JaccardSearchModifier(1.0f);
 
-		LOGGER.info("JACCARD: " + 1.0f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 1.0f);
+		}
 		searchModifier.setJaccThresh(1.0f);
 		runQueries(searchModifier, 50);
 
-		LOGGER.info("JACCARD: " + 0.9f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.9f);
+		}
 		searchModifier.setJaccThresh(0.9f);
 		runQueries(searchModifier, 50);
 
-		LOGGER.info("JACCARD: " + 0.8f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.8f);
+		}
 		searchModifier.setJaccThresh(0.8f);
 		runQueries(searchModifier, 50);
 
-		LOGGER.info("JACCARD: " + 0.7f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.7f);
+		}
 		searchModifier.setJaccThresh(0.7f);
 		runQueries(searchModifier, 50);
 
-		LOGGER.info("JACCARD: " + 0.6f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.6f);
+		}
 		searchModifier.setJaccThresh(0.6f);
 		runQueries(searchModifier, 50);
 
-		LOGGER.info("JACCARD: " + 0.5f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.5f);
+		}
 		searchModifier.setJaccThresh(0.5f);
 		runQueries(searchModifier, 50);
 	}

@@ -13,19 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+public class PageAllocationException extends Exception {
 
-public class BTreeException extends TreeIndexException {
+	private static final long serialVersionUID = 1L;
 
-    protected static final long serialVersionUID = 1L;
-
-    public BTreeException(Exception e) {
-        super(e);
+	public PageAllocationException(Throwable cause) {
+        super(cause);
     }
-
-    public BTreeException(String message) {
+    
+    public PageAllocationException(String message) {
         super(message);
     }
 }

@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -198,10 +199,12 @@ public class RTreeTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x)
+							+ " " + Math.min(p1y, p2y) + " "
+							+ Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
@@ -216,10 +219,14 @@ public class RTreeTest extends AbstractRTreeTest {
 		// System.err.println();
 
 		String rtreeStats = rtree.printStats();
-		print(rtreeStats);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(rtreeStats);
+		}
 
 		// disk-order scan
-		print("DISK-ORDER SCAN:\n");
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("DISK-ORDER SCAN:");
+		}
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
 		indexAccessor.diskOrderScan(diskOrderCursor);
@@ -228,7 +235,9 @@ public class RTreeTest extends AbstractRTreeTest {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
 				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-				print(rec + "\n");
+				if (LOGGER.isLoggable(Level.INFO)) {
+					LOGGER.info(rec);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -374,10 +383,12 @@ public class RTreeTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+							+ " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
@@ -392,7 +403,9 @@ public class RTreeTest extends AbstractRTreeTest {
 		// System.err.println();
 
 		String rtreeStats = rtree.printStats();
-		print(rtreeStats);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(rtreeStats);
+		}
 
 		rnd.setSeed(50);
 		for (int i = 0; i < 5000; i++) {
@@ -431,11 +444,13 @@ public class RTreeTest extends AbstractRTreeTest {
 					tb.getSize());
 
 			tuple.reset(accessor, 0);
-
-			if (i % 1000 == 0) {
-				print("DELETING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("DELETING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+							+ " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
@@ -598,11 +613,13 @@ public class RTreeTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.min(p1z, p2z) + " "
-						+ " " + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y)
-						+ " " + Math.max(p1z, p2z) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.min(p1z, p2z)
+							+ " " + " " + Math.max(p1x, p2x) + " "
+							+ Math.max(p1y, p2y) + " " + Math.max(p1z, p2z));
+				}
 			}
 
 			try {
@@ -617,10 +634,14 @@ public class RTreeTest extends AbstractRTreeTest {
 		// System.err.println();
 
 		String rtreeStats = rtree.printStats();
-		print(rtreeStats);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(rtreeStats);
+		}
 
 		// disk-order scan
-		print("DISK-ORDER SCAN:\n");
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("DISK-ORDER SCAN:");
+		}
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
 		indexAccessor.diskOrderScan(diskOrderCursor);
@@ -629,7 +650,9 @@ public class RTreeTest extends AbstractRTreeTest {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
 				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-				print(rec + "\n");
+				if (LOGGER.isLoggable(Level.INFO)) {
+					LOGGER.info(rec);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -777,10 +800,12 @@ public class RTreeTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+							+ " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
@@ -795,10 +820,14 @@ public class RTreeTest extends AbstractRTreeTest {
 		// System.err.println();
 
 		String rtreeStats = rtree.printStats();
-		print(rtreeStats);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(rtreeStats);
+		}
 
 		// disk-order scan
-		print("DISK-ORDER SCAN:\n");
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("DISK-ORDER SCAN:");
+		}
 		TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(
 				leafFrame);
 		indexAccessor.diskOrderScan(diskOrderCursor);
@@ -807,7 +836,9 @@ public class RTreeTest extends AbstractRTreeTest {
 				diskOrderCursor.next();
 				ITupleReference frameTuple = diskOrderCursor.getTuple();
 				String rec = TupleUtils.printTuple(frameTuple, recDescSers);
-				print(rec + "\n");
+				if (LOGGER.isLoggable(Level.INFO)) {
+					LOGGER.info(rec);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
