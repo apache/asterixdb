@@ -3,7 +3,7 @@ package edu.uci.ics.hyracks.tests.integration;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+
 
 import org.junit.Test;
 
@@ -68,7 +68,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     	JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/customer4.tbl"))) };
+                "data/tpch0.001/customer4.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -78,7 +78,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/orders4.tbl"))) };
+                "data/tpch0.001/orders4.tbl"))) };
         
         
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
@@ -153,7 +153,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     	JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/customer3.tbl"))) };
+                "data/tpch0.001/customer3.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -163,13 +163,8 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/orders4.tbl"))) };
+                "data/tpch0.001/orders4.tbl"))) };
         
-        
-        /*
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-        							"data/tpch0.001/pouria/integration/orders4.tbl"))) };
-        */
         
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -243,7 +238,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     	JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/customer3.tbl"))) };
+                "data/tpch0.001/customer3.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -253,13 +248,9 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/pouria/integration/orders1.tbl"))) };
+                "data/tpch0.001/orders1.tbl"))) };
         
         
-        /*
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-        							"data/tpch0.001/pouria/integration/orders4.tbl"))) };
-        */
         
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
