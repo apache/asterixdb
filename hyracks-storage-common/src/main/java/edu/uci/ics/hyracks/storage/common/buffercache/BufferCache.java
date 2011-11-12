@@ -564,8 +564,11 @@ public class BufferCache implements IBufferCacheInternal {
         synchronized (fileInfoMap) {
             try {
                 for(Map.Entry<Integer, BufferedFileHandle> entry : fileInfoMap.entrySet()) {
-                    sweepAndFlush(entry.getKey());
-                    ioManager.close(entry.getValue().getFileHandle());
+                	boolean fileHasBeenDeleted = entry.getValue().fileHasBeenDeleted();
+                    sweepAndFlush(entry.getKey(), !fileHasBeenDeleted);                            
+                    if (!fileHasBeenDeleted) {
+                    	ioManager.close(entry.getValue().getFileHandle());
+                    }
                 }
             } catch(HyracksDataException e) {
                 e.printStackTrace();
@@ -601,9 +604,12 @@ public class BufferCache implements IBufferCacheInternal {
                     for(Map.Entry<Integer, BufferedFileHandle> entry : fileInfoMap.entrySet()) {
                         if(entry.getValue().getReferenceCount() <= 0) {
                             int entryFileId = entry.getKey();
-                            sweepAndFlush(entryFileId);
+                            boolean fileHasBeenDeleted = entry.getValue().fileHasBeenDeleted();
+                            sweepAndFlush(entryFileId, !fileHasBeenDeleted);                            
+                            if (!fileHasBeenDeleted) {
+                            	ioManager.close(entry.getValue().getFileHandle());
+                            }
                             fileInfoMap.remove(entryFileId);
-                            ioManager.close(entry.getValue().getFileHandle());
                             unreferencedFileFound = true;
                             // for-each iterator is invalid because we changed fileInfoMap
                             break;
@@ -626,7 +632,7 @@ public class BufferCache implements IBufferCacheInternal {
         }
     }
         
-    private void sweepAndFlush(int fileId) throws HyracksDataException {
+    private void sweepAndFlush(int fileId, boolean flushDirtyPages) throws HyracksDataException {
         for (int i = 0; i < pageMap.length; ++i) {
             CacheBucket bucket = pageMap[i];
             bucket.bucketLock.lock();
@@ -637,7 +643,7 @@ public class BufferCache implements IBufferCacheInternal {
                     if (cPage == null) {
                         break;
                     }
-                    if (invalidateIfFileIdMatch(fileId, cPage)) {
+                    if (invalidateIfFileIdMatch(fileId, cPage, flushDirtyPages)) {
                         prev.next = cPage.next;
                         cPage.next = null;
                     } else {
@@ -646,7 +652,7 @@ public class BufferCache implements IBufferCacheInternal {
                 }
                 // Take care of the head of the chain.
                 if (bucket.cachedPage != null) {
-                    if (invalidateIfFileIdMatch(fileId, bucket.cachedPage)) {
+                    if (invalidateIfFileIdMatch(fileId, bucket.cachedPage, flushDirtyPages)) {
                         CachedPage cPage = bucket.cachedPage;
                         bucket.cachedPage = bucket.cachedPage.next;
                         cPage.next = null;
@@ -658,10 +664,12 @@ public class BufferCache implements IBufferCacheInternal {
         }
     }
 
-    private boolean invalidateIfFileIdMatch(int fileId, CachedPage cPage) throws HyracksDataException {
+    private boolean invalidateIfFileIdMatch(int fileId, CachedPage cPage, boolean flushDirtyPages) throws HyracksDataException {
         if (BufferedFileHandle.getFileId(cPage.dpid) == fileId) {
             if (cPage.dirty.get()) {
-                write(cPage);
+				if (flushDirtyPages) {
+					write(cPage);
+				}
                 cPage.dirty.set(false);
                 cPage.pinCount.decrementAndGet();
             }
@@ -697,11 +705,22 @@ public class BufferCache implements IBufferCacheInternal {
             LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
-            BufferedFileHandle fInfo = fileInfoMap.get(fileId);
-            if (fInfo != null) {
-                throw new HyracksDataException("Deleting open file");
-            }
-            fileMapManager.unregisterFile(fileId);
+        	BufferedFileHandle fInfo = null;
+        	try {
+				fInfo = fileInfoMap.get(fileId);
+				if (fInfo != null && fInfo.getReferenceCount() > 0) {
+					throw new HyracksDataException("Deleting open file");
+				}
+			} finally {
+				fileMapManager.unregisterFile(fileId);
+				if (fInfo != null) {
+					// Mark the fInfo as deleted, 
+					// such that when its pages are reclaimed in openFile(),
+					// the pages are not flushed to disk but only invalidates.
+					ioManager.close(fInfo.getFileHandle());
+					fInfo.markAsDeleted();
+				}
+			}       
         }
     }
 }

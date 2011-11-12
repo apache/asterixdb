@@ -37,6 +37,14 @@ public class BufferedFileHandle {
         return handle;
     }
 
+    public void markAsDeleted() {
+    	handle = null;
+    }
+    
+    public boolean fileHasBeenDeleted() {
+    	return handle == null;
+    }
+    
     public int incReferenceCount() {
         return refCount.incrementAndGet();
     }
