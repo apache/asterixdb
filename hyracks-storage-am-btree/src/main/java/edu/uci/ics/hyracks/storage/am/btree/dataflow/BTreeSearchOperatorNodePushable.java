@@ -18,7 +18,6 @@ import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -32,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -98,33 +98,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             treeIndexOpHelper.init();
             btree = (BTree) treeIndexOpHelper.getTreeIndex();
 
-            // construct range predicate
-
-            // TODO: Can we construct the multicmps using helper methods?
-            int lowKeySearchFields = btree.getMultiComparator().getComparators().length;
-            int highKeySearchFields = btree.getMultiComparator().getComparators().length;
-            if (lowKey != null)
-                lowKeySearchFields = lowKey.getFieldCount();
-            if (highKey != null)
-                highKeySearchFields = highKey.getFieldCount();
-
-            IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
-            for (int i = 0; i < lowKeySearchFields; i++) {
-                lowKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
-            }
-            lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
-
-            if (lowKeySearchFields == highKeySearchFields) {
-                highKeySearchCmp = lowKeySearchCmp;
-            } else {
-                IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
-                for (int i = 0; i < highKeySearchFields; i++) {
-                    highKeySearchComparators[i] = btree.getMultiComparator().getComparators()[i];
-                }
-                highKeySearchCmp = new MultiComparator(highKeySearchComparators);
-
-            }
-
+            // Construct range predicate.
+            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), lowKey);
+            highKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), highKey);
             rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 

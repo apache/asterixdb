@@ -27,10 +27,11 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 
 public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
-    private final TreeIndexOpHelper treeIndexOpHelper;
+    private final TreeIndexOpHelper btreeOpHelper;
     private float btreeFillFactor;
 
     private final InvertedIndexOpHelper invIndexOpHelper;
@@ -46,44 +47,52 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
 
     public InvertedIndexBulkLoadOperatorNodePushable(AbstractInvertedIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, float btreeFillFactor,
-            IInvertedListBuilder invListBuilder, IRecordDescriptorProvider recordDescProvider) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
+            IRecordDescriptorProvider recordDescProvider) {
+        btreeOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
                 IndexHelperOpenMode.CREATE);
-        invIndexOpHelper = new InvertedIndexOpHelper(opDesc, ctx, partition, IndexHelperOpenMode.CREATE);
+        invIndexOpHelper = new InvertedIndexOpHelper(btreeOpHelper, opDesc, ctx, partition);
         this.btreeFillFactor = btreeFillFactor;
         this.recordDescProvider = recordDescProvider;
         this.ctx = ctx;
-        this.invListBuilder = invListBuilder;
+        this.invListBuilder = new FixedSizeElementInvertedListBuilder(opDesc.getInvListsTypeTraits());
         tuple.setFieldPermutation(fieldPermutation);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractInvertedIndexOperatorDescriptor opDesc = (AbstractInvertedIndexOperatorDescriptor) treeIndexOpHelper
+        AbstractInvertedIndexOperatorDescriptor opDesc = (AbstractInvertedIndexOperatorDescriptor) btreeOpHelper
                 .getOperatorDescriptor();
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(btreeOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
-        // btree
+        // BTree.
         try {
-            treeIndexOpHelper.init();
-            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
+            btreeOpHelper.init();
+            btreeOpHelper.getTreeIndex().open(btreeOpHelper.getIndexFileId());
         } catch (Exception e) {
-            // cleanup in case of failure
-            treeIndexOpHelper.deinit();
-            throw new HyracksDataException(e);
+            // Cleanup in case of failure/
+            btreeOpHelper.deinit();
+            if (e instanceof HyracksDataException) {
+                throw (HyracksDataException) e;
+            } else {
+                throw new HyracksDataException(e);
+            }
         }
 
-        // inverted index
+        // Inverted Index.
         try {
             invIndexOpHelper.init();
             invIndexOpHelper.getInvIndex().open(invIndexOpHelper.getInvIndexFileId());
             bulkLoadCtx = invIndexOpHelper.getInvIndex().beginBulkLoad(invListBuilder, ctx.getFrameSize(),
                     btreeFillFactor);
         } catch (Exception e) {
-            // cleanup in case of failure
+            // Cleanup in case of failure.
             invIndexOpHelper.deinit();
-            throw new HyracksDataException(e);
+            if (e instanceof HyracksDataException) {
+                throw (HyracksDataException) e;
+            } else {
+                throw new HyracksDataException(e);
+            }
         }
     }
 
@@ -94,10 +103,10 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
             try {
-				invIndexOpHelper.getInvIndex().bulkLoadAddTuple(bulkLoadCtx, tuple);
-			} catch (PageAllocationException e) {
-				throw new HyracksDataException(e);
-			}
+                invIndexOpHelper.getInvIndex().bulkLoadAddTuple(bulkLoadCtx, tuple);
+            } catch (PageAllocationException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 
@@ -106,9 +115,9 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         try {
             invIndexOpHelper.getInvIndex().endBulkLoad(bulkLoadCtx);
         } catch (PageAllocationException e) {
-        	throw new HyracksDataException(e);
-		} finally {
-            treeIndexOpHelper.deinit();
+            throw new HyracksDataException(e);
+        } finally {
+            btreeOpHelper.deinit();
         }
     }
 

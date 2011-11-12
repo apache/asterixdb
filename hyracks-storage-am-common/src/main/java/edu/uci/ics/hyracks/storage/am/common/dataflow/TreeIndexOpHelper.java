@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -74,7 +75,6 @@ public abstract class TreeIndexOpHelper {
         // Only set indexFileId member when openFile() succeeds,
         // otherwise deinit() will try to close the file that failed to open
         indexFileId = fileId;
-
         IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
         // Create new tree and register it.
         treeIndexRegistry.lock();
@@ -83,20 +83,11 @@ public abstract class TreeIndexOpHelper {
             treeIndex = treeIndexRegistry.get(indexFileId);
             if (treeIndex != null) {
                 return;
-            }
-            IBinaryComparator[] comparators = new IBinaryComparator[opDesc.getTreeIndexComparatorFactories().length];
-            for (int i = 0; i < opDesc.getTreeIndexComparatorFactories().length; i++) {
-                comparators[i] = opDesc.getTreeIndexComparatorFactories()[i].createBinaryComparator();
-            }
-            cmp = new MultiComparator(comparators);
+            }           
+            cmp = IndexUtils.createMultiComparator(opDesc.getTreeIndexComparatorFactories());
             treeIndex = createTreeIndex();
             if (mode == IndexHelperOpenMode.CREATE) {
-                try {
-                    treeIndex.create(indexFileId);
-                } catch (Exception e) {
-                	e.printStackTrace();
-                    throw new HyracksDataException(e);
-                }
+            	treeIndex.create(indexFileId);
             }
             treeIndex.open(indexFileId);
             treeIndexRegistry.register(indexFileId, treeIndex);

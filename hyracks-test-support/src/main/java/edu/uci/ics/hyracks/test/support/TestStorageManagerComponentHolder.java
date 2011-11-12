@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.test.support;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -31,6 +32,7 @@ public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
     private static IndexRegistry<ITreeIndex> treeIndexRegistry;
+    private static IndexRegistry<InvertedIndex> invIndexRegistry;
 
     private static int pageSize;
     private static int numPages;
@@ -43,6 +45,7 @@ public class TestStorageManagerComponentHolder {
         bufferCache = null;
         fileMapProvider = null;
         treeIndexRegistry = null;
+        invIndexRegistry = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -68,5 +71,12 @@ public class TestStorageManagerComponentHolder {
             treeIndexRegistry = new IndexRegistry<ITreeIndex>();
         }
         return treeIndexRegistry;
+    }
+    
+    public synchronized static IndexRegistry<InvertedIndex> getInvertedIndexRegistry(IHyracksTaskContext ctx) {
+        if (invIndexRegistry == null) {
+        	invIndexRegistry = new IndexRegistry<InvertedIndex>();
+        }
+        return invIndexRegistry;
     }
 }

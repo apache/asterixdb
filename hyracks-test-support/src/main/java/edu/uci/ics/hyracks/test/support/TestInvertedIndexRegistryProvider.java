@@ -12,22 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.test.support;
 
-package edu.uci.ics.hyracks.storage.am.invertedindex.api;
-
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptorHelper;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 
-public interface IInvertedIndexOperatorDescriptorHelper extends ITreeIndexOperatorDescriptorHelper {
-    public IFileSplitProvider getInvListsFileSplitProvider();
+public class TestInvertedIndexRegistryProvider implements IIndexRegistryProvider<InvertedIndex> {
+    private static final long serialVersionUID = 1L;
 
-    public IBinaryComparatorFactory[] getInvListsComparatorFactories();
-
-    public ITypeTrait[] getInvListsTypeTraits();
-
-    public IIndexRegistryProvider<InvertedIndex> getInvIndexRegistryProvider();
+    @Override
+    public IndexRegistry<InvertedIndex> getRegistry(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getInvertedIndexRegistry(ctx);
+    }
 }

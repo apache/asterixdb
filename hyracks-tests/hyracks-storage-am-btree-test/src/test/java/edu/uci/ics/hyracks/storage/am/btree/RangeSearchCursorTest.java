@@ -47,7 +47,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -58,6 +57,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 
 public class RangeSearchCursorTest extends AbstractBTreeTest {
 	// Declare fields
@@ -89,7 +89,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
 		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 	            tupleWriterFactory);
@@ -177,7 +177,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
                 tupleWriterFactory);
@@ -262,7 +262,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE	;			
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
                 tupleWriterFactory);
