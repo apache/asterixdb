@@ -46,7 +46,7 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
             IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories) {
         super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, treeIndexRegistryProvider,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeTypeTraits, btreeComparatorFactories, btreeFillFactor,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeTypeTraits, btreeComparatorFactories, 
                 btreeOpHelperFactory, invListsFileSplitProvider, invIndexRegistryProvider, invListsTypeTraits,
                 invListComparatorFactories);
         this.fieldPermutation = fieldPermutation;

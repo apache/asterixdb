@@ -117,7 +117,11 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         } catch (PageAllocationException e) {
             throw new HyracksDataException(e);
         } finally {
-            btreeOpHelper.deinit();
+            try {
+                btreeOpHelper.deinit();
+            } finally {
+                invIndexOpHelper.deinit();
+            }
         }
     }
 

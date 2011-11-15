@@ -141,12 +141,12 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         currentNumResults = 0;
     }
 
-    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex,
+    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryField,
             IInvertedIndexSearchModifier searchModifier) throws Exception {
 
         queryTokenAppender.reset(queryTokenFrame, true);
-        queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
-                queryTuple.getFieldLength(queryFieldIndex));
+        queryTokenizer.reset(queryTuple.getFieldData(queryField), queryTuple.getFieldStart(queryField),
+                queryTuple.getFieldLength(queryField));
 
         while (queryTokenizer.hasNext()) {
             queryTokenizer.next();
