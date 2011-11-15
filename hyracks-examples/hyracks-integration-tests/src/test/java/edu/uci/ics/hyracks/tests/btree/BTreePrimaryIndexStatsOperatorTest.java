@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
@@ -104,12 +103,12 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 	@Before
 	public void setup() throws Exception {
 		// field, type and key declarations for primary index
-		primaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryTypeTraits[2] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryTypeTraits[5] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+		primaryTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryTypeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryTypeTraits[2] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryTypeTraits[3] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryTypeTraits[5] = ITypeTrait.VARLEN_TYPE_TRAIT;
 		primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
 		loadPrimaryIndexTest();

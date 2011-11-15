@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -155,24 +154,24 @@ public class RTreeSecondaryIndexSearchOperatorTest extends
 	@Before
 	public void setup() throws Exception {	
 		// field, type and key declarations for primary B-tree index
-		primaryBTreeTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[2] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[5] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryBTreeTypeTraits[6] = new TypeTrait(8);
-		primaryBTreeTypeTraits[7] = new TypeTrait(8);
-		primaryBTreeTypeTraits[8] = new TypeTrait(8);
-		primaryBTreeTypeTraits[9] = new TypeTrait(8);
+		primaryBTreeTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[2] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[3] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[5] = ITypeTrait.VARLEN_TYPE_TRAIT;
+		primaryBTreeTypeTraits[6] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		primaryBTreeTypeTraits[7] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		primaryBTreeTypeTraits[8] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		primaryBTreeTypeTraits[9] = ITypeTrait.DOUBLE_TYPE_TRAIT;
 		primaryBTreeComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
 		// field, type and key declarations for secondary indexes
-		secondaryTypeTraits[0] = new TypeTrait(8);
-		secondaryTypeTraits[1] = new TypeTrait(8);
-		secondaryTypeTraits[2] = new TypeTrait(8);
-		secondaryTypeTraits[3] = new TypeTrait(8);
-		secondaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+		secondaryTypeTraits[0] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		secondaryTypeTraits[1] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		secondaryTypeTraits[2] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		secondaryTypeTraits[3] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+		secondaryTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
 		secondaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
 		secondaryComparatorFactories[1] = secondaryComparatorFactories[0];
 		secondaryComparatorFactories[2] = secondaryComparatorFactories[0];
