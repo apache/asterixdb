@@ -70,7 +70,7 @@ public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory 
                 long diff = time - prevTime;
                 prevTime = time;
                 do {
-                    byte b = (byte) (diff & 0xef);
+                    byte b = (byte) (diff & 0x7f);
                     diff >>= 7;
                     if (diff != 0) {
                         b |= 0x80;
