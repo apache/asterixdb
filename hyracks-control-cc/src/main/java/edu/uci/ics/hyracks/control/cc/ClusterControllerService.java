@@ -148,7 +148,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService");
-        jobLog.open();
         Registry registry = LocateRegistry.createRegistry(ccConfig.port);
         registry.rebind(IHyracksClientInterface.class.getName(), ccci);
         registry.rebind(IClusterController.class.getName(), this);
@@ -158,6 +157,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         info = new ClusterControllerInfo();
         info.setWebPort(webServer.getListeningPort());
         timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
+        jobLog.open();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
