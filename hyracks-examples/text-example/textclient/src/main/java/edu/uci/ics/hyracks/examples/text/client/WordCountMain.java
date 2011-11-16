@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.examples.text.client;
 
 import java.io.File;
+import java.util.EnumSet;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -29,6 +30,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
@@ -82,6 +84,9 @@ public class WordCountMain {
 
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 32768)", required = false)
         public int sbSize = 32768;
+
+        @Option(name = "-runtime-profiling", usage = "Indicates if runtime profiling should be enabled. (default: false)")
+        public boolean runtimeProfiling = false;
     }
 
     public static void main(String[] args) throws Exception {
@@ -95,7 +100,8 @@ public class WordCountMain {
                 options.algo, options.htSize, options.sbSize, options.format);
 
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.createJob(options.app, job);
+        JobId jobId = hcc.createJob(options.app, job, options.runtimeProfiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME)
+                : EnumSet.noneOf(JobFlag.class));
         hcc.start(jobId);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
