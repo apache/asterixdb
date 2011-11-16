@@ -30,8 +30,8 @@ public class VirtualClusterDriver {
         @Option(name = "-cc-port", required = false, usage = "CC Port (default: 1099)")
         public int ccPort = 1099;
 
-        @Option(name = "-cc-http-port", required = false, usage = "CC Port (default: 0)")
-        public int ccHttpPort = 0;
+        @Option(name = "-cc-http-port", required = false, usage = "CC Port (default: 19001)")
+        public int ccHttpPort = 19001;
     }
 
     public static void main(String[] args) throws Exception {
