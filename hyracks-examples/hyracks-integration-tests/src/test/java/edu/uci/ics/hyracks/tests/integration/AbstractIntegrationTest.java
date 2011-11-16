@@ -16,10 +16,13 @@ package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -46,8 +49,14 @@ public abstract class AbstractIntegrationTest {
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
+    private final List<File> outputFiles;
+
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();
+
+    public AbstractIntegrationTest() {
+        outputFiles = new ArrayList<File>();
+    }
 
     @BeforeClass
     public static void init() throws Exception {
@@ -103,9 +112,32 @@ public abstract class AbstractIntegrationTest {
             LOGGER.info(jobId.toString());
         }
         cc.waitForCompletion(jobId);
+        dumpOutputFiles();
+    }
+
+    private void dumpOutputFiles() {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            for (File f : outputFiles) {
+                if (f.exists() && f.isFile()) {
+                    try {
+                        LOGGER.info("Reading file: " + f.getAbsolutePath() + " in test: " + getClass().getName());
+                        String data = FileUtils.readFileToString(f);
+                        LOGGER.info(data);
+                    } catch (IOException e) {
+                        LOGGER.info("Error reading file: " + f.getAbsolutePath());
+                        LOGGER.info(e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
     protected File createTempFile() throws IOException {
-        return File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
+        File tempFile = File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Output file: " + tempFile.getAbsolutePath());
+        }
+        outputFiles.add(tempFile);
+        return tempFile;
     }
 }
