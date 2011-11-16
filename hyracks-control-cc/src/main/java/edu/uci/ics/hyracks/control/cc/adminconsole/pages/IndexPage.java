@@ -75,7 +75,7 @@ public class IndexPage extends AbstractPage {
                     item.add(new Label("start-time", o.getString("start-time")));
                     item.add(new Label("end-time", o.getString("end-time")));
                     PageParameters params = new PageParameters();
-                    params.add("job-id", o.getString("node-id"));
+                    params.add("job-id", o.getString("job-id"));
                     item.add(new BookmarkablePageLink<Object>("job-details", JobDetailsPage.class, params));
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
