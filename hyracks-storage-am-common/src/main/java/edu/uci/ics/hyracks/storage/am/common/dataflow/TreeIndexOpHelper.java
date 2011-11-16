@@ -57,19 +57,22 @@ public abstract class TreeIndexOpHelper {
         IFileSplitProvider fileSplitProvider = opDesc.getTreeIndexFileSplitProvider();
 
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-        boolean fileIsMapped = fileMapProvider.isMapped(f);
-        if (!fileIsMapped) {
-            bufferCache.createFile(f);
-        }
-        int fileId = fileMapProvider.lookupFileId(f);
-        try {
-            bufferCache.openFile(fileId);
-        } catch (HyracksDataException e) {
-            // Revert state of buffer cache since file failed to open.
+        int fileId = -1;
+        synchronized (fileMapProvider) {
+            boolean fileIsMapped = fileMapProvider.isMapped(f);
             if (!fileIsMapped) {
-                bufferCache.deleteFile(fileId);
+                bufferCache.createFile(f);
             }
-            throw e;
+            fileId = fileMapProvider.lookupFileId(f);
+            try {
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId);
+                }
+                throw e;
+            }
         }
 
         // Only set indexFileId member when openFile() succeeds,
@@ -77,22 +80,19 @@ public abstract class TreeIndexOpHelper {
         indexFileId = fileId;
         IndexRegistry<ITreeIndex> treeIndexRegistry = opDesc.getTreeIndexRegistryProvider().getRegistry(ctx);
         // Create new tree and register it.
-        treeIndexRegistry.lock();
-        try {
+        synchronized (treeIndexRegistry) {
             // Check if tree has already been registered by another thread.
             treeIndex = treeIndexRegistry.get(indexFileId);
             if (treeIndex != null) {
                 return;
-            }           
+            }
             cmp = IndexUtils.createMultiComparator(opDesc.getTreeIndexComparatorFactories());
             treeIndex = createTreeIndex();
             if (mode == IndexHelperOpenMode.CREATE) {
-            	treeIndex.create(indexFileId);
+                treeIndex.create(indexFileId);
             }
             treeIndex.open(indexFileId);
             treeIndexRegistry.register(indexFileId, treeIndex);
-        } finally {
-            treeIndexRegistry.unlock();
         }
     }
 

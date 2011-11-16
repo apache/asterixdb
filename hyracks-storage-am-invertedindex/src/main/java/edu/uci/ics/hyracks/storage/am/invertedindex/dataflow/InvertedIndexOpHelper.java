@@ -31,8 +31,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public final class InvertedIndexOpHelper {
 
-	private final TreeIndexOpHelper btreeOpHelper;
-	
+    private final TreeIndexOpHelper btreeOpHelper;
+
     private InvertedIndex invIndex;
     private int invIndexFileId = -1;
     private int partition;
@@ -40,63 +40,61 @@ public final class InvertedIndexOpHelper {
     private IInvertedIndexOperatorDescriptorHelper opDesc;
     private IHyracksTaskContext ctx;
 
-	public InvertedIndexOpHelper(TreeIndexOpHelper btreeOpHelper,
-			IInvertedIndexOperatorDescriptorHelper opDesc,
-			final IHyracksTaskContext ctx, int partition) {
-		this.btreeOpHelper = btreeOpHelper;
-		this.opDesc = opDesc;
-		this.ctx = ctx;
-		this.partition = partition;
-	}
+    public InvertedIndexOpHelper(TreeIndexOpHelper btreeOpHelper, IInvertedIndexOperatorDescriptorHelper opDesc,
+            final IHyracksTaskContext ctx, int partition) {
+        this.btreeOpHelper = btreeOpHelper;
+        this.opDesc = opDesc;
+        this.ctx = ctx;
+        this.partition = partition;
+    }
 
-	// TODO: This is very similar to TreeIndexOpHelper. Maybe we can somehow merge them?
+    // TODO: This is very similar to TreeIndexOpHelper. Maybe we can somehow
+    // merge them?
     public void init() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
         IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
         IFileSplitProvider fileSplitProvider = opDesc.getInvListsFileSplitProvider();
 
         FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-        boolean fileIsMapped = fileMapProvider.isMapped(f);
-        if (!fileIsMapped) {
-            bufferCache.createFile(f);
-        }
-        int fileId = fileMapProvider.lookupFileId(f);
-        try {
-            bufferCache.openFile(fileId);
-        } catch (HyracksDataException e) {
-            // Revert state of buffer cache since file failed to open.
+        int fileId = -1;
+        synchronized (fileMapProvider) {
+            boolean fileIsMapped = fileMapProvider.isMapped(f);
             if (!fileIsMapped) {
-                bufferCache.deleteFile(fileId);
+                bufferCache.createFile(f);
             }
-            throw e;
+            fileId = fileMapProvider.lookupFileId(f);
+            try {
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId);
+                }
+                throw e;
+            }
         }
 
-		// only set btreeFileId member when openFile() succeeds,
-		// otherwise deinit() will try to close the file that failed to open
-		invIndexFileId = fileId;
-		IndexRegistry<InvertedIndex> invIndexRegistry = opDesc
-				.getInvIndexRegistryProvider().getRegistry(ctx);
-		// create new inverted index and register it
-		invIndexRegistry.lock();
-		try {
-			// check if inverted index has already been registered by
-			// another thread
-			invIndex = invIndexRegistry.get(invIndexFileId);
-			if (invIndex == null) {
-				// Create and register the inverted index.
-				MultiComparator cmp = IndexUtils.createMultiComparator(opDesc
-						.getInvListsComparatorFactories());
-				// Assumes btreeOpHelper.init() has already been called.
-				BTree btree = (BTree) btreeOpHelper.getTreeIndex();
-				invIndex = new InvertedIndex(bufferCache, btree,
-						opDesc.getInvListsTypeTraits(), cmp);
-				invIndex.open(invIndexFileId);
-				invIndexRegistry.register(invIndexFileId, invIndex);
-			}
-		} finally {
-			invIndexRegistry.unlock();
-		}
-	}
+        // only set btreeFileId member when openFile() succeeds,
+        // otherwise deinit() will try to close the file that failed to open
+        invIndexFileId = fileId;
+        IndexRegistry<InvertedIndex> invIndexRegistry = opDesc.getInvIndexRegistryProvider().getRegistry(ctx);
+        // create new inverted index and register it
+        synchronized (invIndexRegistry) {
+            // check if inverted index has already been registered by
+            // another thread
+            invIndex = invIndexRegistry.get(invIndexFileId);
+            if (invIndex != null) {
+                return;
+            }
+            // Create and register the inverted index.
+            MultiComparator cmp = IndexUtils.createMultiComparator(opDesc.getInvListsComparatorFactories());
+            // Assumes btreeOpHelper.init() has already been called.
+            BTree btree = (BTree) btreeOpHelper.getTreeIndex();
+            invIndex = new InvertedIndex(bufferCache, btree, opDesc.getInvListsTypeTraits(), cmp);
+            invIndex.open(invIndexFileId);
+            invIndexRegistry.register(invIndexFileId, invIndex);
+        }
+    }
 
     public void deinit() throws HyracksDataException {
         if (invIndexFileId != -1) {

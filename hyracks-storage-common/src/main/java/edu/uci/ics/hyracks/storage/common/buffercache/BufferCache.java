@@ -666,14 +666,17 @@ public class BufferCache implements IBufferCacheInternal {
 
     private boolean invalidateIfFileIdMatch(int fileId, CachedPage cPage, boolean flushDirtyPages) throws HyracksDataException {
         if (BufferedFileHandle.getFileId(cPage.dpid) == fileId) {
-            if (cPage.dirty.get()) {
+            int pinCount;
+        	if (cPage.dirty.get()) {
 				if (flushDirtyPages) {
 					write(cPage);
 				}
                 cPage.dirty.set(false);
-                cPage.pinCount.decrementAndGet();
+                pinCount = cPage.pinCount.decrementAndGet();
+            } else {
+            	pinCount = cPage.pinCount.get();
             }
-            if (cPage.pinCount.get() != 0) {
+            if (pinCount != 0) {
                 throw new IllegalStateException("Page is pinned and file is being closed");
             }
             cPage.invalidate();
