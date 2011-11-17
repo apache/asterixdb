@@ -132,6 +132,9 @@ public class BufferCache implements IBufferCacheInternal {
         pinSanityCheck(dpid);
         
         CachedPage cPage = findPage(dpid, newPage);
+        if (cPage == null) {
+        	throw new HyracksDataException("Failed to pin page because all pages are pinned.");
+        }
         if (!newPage) {
             if (!cPage.valid) {
                 /*
