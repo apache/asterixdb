@@ -99,6 +99,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private NodeParameters nodeParameters;
 
+    private HeartbeatTask heartbeatTask;
+
     private final ServerContext serverCtx;
 
     private final Map<String, NCApplicationContext> applications;
@@ -158,9 +160,12 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
                 .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
                 .getAvailableProcessors()));
+        queue.start();
+
+        heartbeatTask = new HeartbeatTask(cc);
 
         // Schedule heartbeat generator.
-        timer.schedule(new HeartbeatTask(cc), 0, nodeParameters.getHeartbeatPeriod());
+        timer.schedule(heartbeatTask, 0, nodeParameters.getHeartbeatPeriod());
 
         if (nodeParameters.getProfileDumpPeriod() > 0) {
             // Schedule profile dump generator.
@@ -174,7 +179,9 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
         partitionManager.close();
+        heartbeatTask.cancel();
         connectionManager.stop();
+        queue.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
 

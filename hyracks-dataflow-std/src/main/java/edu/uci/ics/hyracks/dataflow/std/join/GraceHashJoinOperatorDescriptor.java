@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -158,7 +157,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -189,7 +188,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                         closeWriter(i);
                     }
 
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 private void closeWriter(int i) throws HyracksDataException {
@@ -261,7 +260,7 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -285,9 +284,9 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void initialize() throws HyracksDataException {
-                    HashPartitionTaskState rState = (HashPartitionTaskState) env.getTaskState(new TaskId(
+                    HashPartitionTaskState rState = (HashPartitionTaskState) ctx.getTaskState(new TaskId(
                             new ActivityId(getOperatorId(), RPARTITION_ACTIVITY_ID), partition));
-                    HashPartitionTaskState sState = (HashPartitionTaskState) env.getTaskState(new TaskId(
+                    HashPartitionTaskState sState = (HashPartitionTaskState) ctx.getTaskState(new TaskId(
                             new ActivityId(getOperatorId(), SPARTITION_ACTIVITY_ID), partition));
                     buildWriters = sState.fWriters;
                     probeWriters = rState.fWriters;

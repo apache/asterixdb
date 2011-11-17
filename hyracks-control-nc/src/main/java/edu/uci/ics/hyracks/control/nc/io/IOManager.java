@@ -83,6 +83,7 @@ public class IOManager implements IIOManager {
                     throw new HyracksDataException("Error writing to file: " + fHandle.getFileReference().toString());
                 }
                 remaining -= len;
+                offset += len;
                 n += len;
             }
             return n;
@@ -104,6 +105,7 @@ public class IOManager implements IIOManager {
                     return -1;
                 }
                 remaining -= len;
+                offset += len;
                 n += len;
             }
             return n;

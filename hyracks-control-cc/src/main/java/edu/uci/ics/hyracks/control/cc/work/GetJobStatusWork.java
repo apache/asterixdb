@@ -32,7 +32,10 @@ public class GetJobStatusWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
+        JobRun run = ccs.getActiveRunMap().get(jobId);
+        if (run == null) {
+            run = ccs.getRunMapArchive().get(jobId);
+        }
         status = run == null ? null : run.getStatus();
     }
 

@@ -62,6 +62,7 @@ public abstract class HyracksServerProcess {
     private String[] buildCommand() {
         List<String> cList = new ArrayList<String>();
         cList.add(getJavaCommand());
+        cList.add("-Dbasedir=" + System.getProperty("basedir"));
         cList.add("-classpath");
         cList.add(getClasspath());
         cList.add(getMainClassName());

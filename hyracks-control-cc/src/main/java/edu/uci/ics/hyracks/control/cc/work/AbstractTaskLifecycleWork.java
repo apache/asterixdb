@@ -46,7 +46,7 @@ public abstract class AbstractTaskLifecycleWork extends AbstractWork {
 
     @Override
     public final void run() {
-        JobRun run = ccs.getRunMap().get(jobId);
+        JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run != null) {
             TaskId tid = taId.getTaskId();
             Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterMap();

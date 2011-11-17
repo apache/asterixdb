@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.nc.work;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -24,6 +25,7 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -35,8 +37,8 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
@@ -46,8 +48,10 @@ import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.partitions.MaterializedPartitionWriter;
+import edu.uci.ics.hyracks.control.nc.partitions.MaterializingPipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
+import edu.uci.ics.hyracks.control.nc.profiling.ProfilingPartitionWriterFactory;
 
 public class StartTasksWork extends SynchronizableWork {
     private static final Logger LOGGER = Logger.getLogger(StartTasksWork.class.getName());
@@ -80,17 +84,17 @@ public class StartTasksWork extends SynchronizableWork {
         try {
             Map<String, NCApplicationContext> applications = ncs.getApplications();
             NCApplicationContext appCtx = applications.get(appName);
-            final JobActivityGraph plan = (JobActivityGraph) appCtx.deserialize(jagBytes);
+            final JobActivityGraph jag = (JobActivityGraph) appCtx.deserialize(jagBytes);
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
                 public RecordDescriptor getOutputRecordDescriptor(OperatorDescriptorId opId, int outputIndex) {
-                    return plan.getJobSpecification().getOperatorOutputRecordDescriptor(opId, outputIndex);
+                    return jag.getJobSpecification().getOperatorOutputRecordDescriptor(opId, outputIndex);
                 }
 
                 @Override
                 public RecordDescriptor getInputRecordDescriptor(OperatorDescriptorId opId, int inputIndex) {
-                    return plan.getJobSpecification().getOperatorInputRecordDescriptor(opId, inputIndex);
+                    return jag.getJobSpecification().getOperatorInputRecordDescriptor(opId, inputIndex);
                 }
             };
 
@@ -99,20 +103,17 @@ public class StartTasksWork extends SynchronizableWork {
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
-                IActivity han = plan.getActivityNodeMap().get(tid.getActivityId());
+                IActivity han = jag.getActivityNodeMap().get(tid.getActivityId());
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
                 Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor());
-                IOperatorEnvironment env = joblet.getEnvironment(tid.getActivityId().getOperatorDescriptorId(),
-                        tid.getPartition());
-                IOperatorNodePushable operator = han.createPushRuntime(task, env, rdp, partition,
-                        td.getPartitionCount());
+                IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
-                List<IConnectorDescriptor> inputs = plan.getActivityInputConnectorDescriptors(tid.getActivityId());
+                List<IConnectorDescriptor> inputs = jag.getActivityInputConnectorDescriptors(tid.getActivityId());
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
@@ -120,21 +121,21 @@ public class StartTasksWork extends SynchronizableWork {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
-                        RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        RecordDescriptor recordDesc = jag.getJobSpecification().getConnectorRecordDescriptor(conn);
                         IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
                                 recordDesc, cPolicy);
                         collectors.add(collector);
                     }
                 }
-                List<IConnectorDescriptor> outputs = plan.getActivityOutputConnectorDescriptors(tid.getActivityId());
+                List<IConnectorDescriptor> outputs = jag.getActivityOutputConnectorDescriptors(tid.getActivityId());
                 if (outputs != null) {
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
-                        RecordDescriptor recordDesc = plan.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        RecordDescriptor recordDesc = jag.getJobSpecification().getConnectorRecordDescriptor(conn);
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
-                        IPartitionWriterFactory pwFactory = createPartitionWriterFactory(cPolicy, jobId, conn,
-                                partition, taId);
+                        IPartitionWriterFactory pwFactory = createPartitionWriterFactory(task, cPolicy, jobId, conn,
+                                partition, taId, jag.getJobFlags());
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
@@ -179,19 +180,32 @@ public class StartTasksWork extends SynchronizableWork {
         }
     }
 
-    private IPartitionWriterFactory createPartitionWriterFactory(IConnectorPolicy cPolicy, final JobId jobId,
-            final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId) {
+    private IPartitionWriterFactory createPartitionWriterFactory(IHyracksTaskContext ctx, IConnectorPolicy cPolicy,
+            final JobId jobId, final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId,
+            EnumSet<JobFlag> flags) {
+        IPartitionWriterFactory factory;
         if (cPolicy.materializeOnSendSide()) {
-            return new IPartitionWriterFactory() {
-                @Override
-                public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new MaterializedPartitionWriter(ncs.getRootContext(), ncs.getPartitionManager(),
-                            new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
-                            ncs.getExecutor());
-                }
-            };
+            if (cPolicy.consumerWaitsForProducerToFinish()) {
+                factory = new IPartitionWriterFactory() {
+                    @Override
+                    public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                        return new MaterializedPartitionWriter(ncs.getRootContext(), ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
+                    }
+                };
+            } else {
+                factory = new IPartitionWriterFactory() {
+                    @Override
+                    public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
+                        return new MaterializingPipelinedPartition(ncs.getRootContext(), ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
+                    }
+                };
+            }
         } else {
-            return new IPartitionWriterFactory() {
+            factory = new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                     return new PipelinedPartition(ncs.getPartitionManager(), new PartitionId(jobId,
@@ -199,5 +213,9 @@ public class StartTasksWork extends SynchronizableWork {
                 }
             };
         }
+        if (flags.contains(JobFlag.PROFILE_RUNTIME)) {
+            factory = new ProfilingPartitionWriterFactory(ctx, conn, senderIndex, factory);
+        }
+        return factory;
     }
 }

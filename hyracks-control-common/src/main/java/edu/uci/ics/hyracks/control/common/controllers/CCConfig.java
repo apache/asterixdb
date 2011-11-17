@@ -22,8 +22,8 @@ public class CCConfig {
     @Option(name = "-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
     public int port = 1099;
 
-    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller")
-    public int httpPort;
+    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 19001)")
+    public int httpPort = 19001;
 
     @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")
     public int heartbeatPeriod = 10000;
@@ -36,6 +36,12 @@ public class CCConfig {
 
     @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
     public int defaultMaxJobAttempts = 5;
+
+    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
+    public int jobHistorySize = 10;
+
+    @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
+    public String ccRoot = "ClusterControllerService";
 
     public void toCommandLine(List<String> cList) {
         cList.add("-port");
@@ -50,5 +56,9 @@ public class CCConfig {
         cList.add(String.valueOf(profileDumpPeriod));
         cList.add("-default-max-job-attempts");
         cList.add(String.valueOf(defaultMaxJobAttempts));
+        cList.add("-job-history-size");
+        cList.add(String.valueOf(jobHistorySize));
+        cList.add("-cc-root");
+        cList.add(ccRoot);
     }
 }

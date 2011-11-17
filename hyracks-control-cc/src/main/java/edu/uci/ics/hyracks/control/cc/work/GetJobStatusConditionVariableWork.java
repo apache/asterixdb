@@ -31,7 +31,10 @@ public class GetJobStatusConditionVariableWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        cVar = ccs.getRunMap().get(jobId);
+        cVar = ccs.getActiveRunMap().get(jobId);
+        if (cVar == null) {
+            cVar = ccs.getRunMapArchive().get(jobId);
+        }
     }
 
     public IJobStatusConditionVariable getConditionVariable() {

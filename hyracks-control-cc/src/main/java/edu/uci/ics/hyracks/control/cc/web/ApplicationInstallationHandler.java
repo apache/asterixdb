@@ -68,7 +68,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                 }
                 OutputStreamGetter r = new OutputStreamGetter();
                 try {
-                    ccs.getJobQueue().scheduleAndSync(r);
+                    ccs.getWorkQueue().scheduleAndSync(r);
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
@@ -92,7 +92,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                 }
                 InputStreamGetter r = new InputStreamGetter();
                 try {
-                    ccs.getJobQueue().scheduleAndSync(r);
+                    ccs.getWorkQueue().scheduleAndSync(r);
                 } catch (Exception e) {
                     throw new IOException(e);
                 }

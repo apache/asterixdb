@@ -16,7 +16,11 @@ package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Set;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -42,7 +46,7 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        final JobRun run = ccs.getRunMap().get(jobId);
+        final JobRun run = ccs.getActiveRunMap().get(jobId);
         Set<String> targetNodes = run.getParticipatingNodeIds();
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
@@ -63,7 +67,7 @@ public class JobCleanupWork extends AbstractWork {
                         e.printStackTrace();
                     }
                 }
-                ccs.getJobQueue().schedule(new AbstractWork() {
+                ccs.getWorkQueue().schedule(new AbstractWork() {
                     @Override
                     public void run() {
                         CCApplicationContext appCtx = ccs.getApplicationMap().get(
@@ -76,6 +80,26 @@ public class JobCleanupWork extends AbstractWork {
                             }
                         }
                         run.setStatus(status, exception);
+                        ccs.getActiveRunMap().remove(jobId);
+                        ccs.getRunMapArchive().put(jobId, run);
+                        try {
+                            ccs.getJobLogFile().log(createJobLogObject(run));
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    private JSONObject createJobLogObject(final JobRun run) {
+                        JSONObject jobLogObject = new JSONObject();
+                        try {
+                            JobActivityGraph jag = run.getJobActivityGraph();
+                            jobLogObject.put("job-specification", jag.getJobSpecification().toJSON());
+                            jobLogObject.put("job-activity-graph", jag.toJSON());
+                            jobLogObject.put("job-run", run.toJSON());
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return jobLogObject;
                     }
                 });
             }

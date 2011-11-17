@@ -38,7 +38,7 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
     @Override
     public void run() {
         final PartitionId pid = partitionDescriptor.getPartitionId();
-        JobRun run = ccs.getRunMap().get(pid.getJobId());
+        JobRun run = ccs.getActiveRunMap().get(pid.getJobId());
         if (run == null) {
             return;
         }

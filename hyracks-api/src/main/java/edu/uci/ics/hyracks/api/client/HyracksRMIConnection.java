@@ -19,7 +19,26 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+/**
+ * Connection Class used by a Hyracks Client to interact with a Hyracks Cluster
+ * Controller using RMI. Usually, such a connection would be used when the CC
+ * runs in a separate JVM from the client (The most common case).
+ * 
+ * @author vinayakb
+ * 
+ */
 public final class HyracksRMIConnection extends AbstractHyracksConnection {
+    /**
+     * Constructor to create a connection to the Hyracks Cluster Controller.
+     * 
+     * @param host
+     *            Host name (or IP Address) where the Cluster Controller can be
+     *            reached.
+     * @param port
+     *            Port to reach the Hyracks Cluster Controller at the specified
+     *            host name.
+     * @throws Exception
+     */
     public HyracksRMIConnection(String host, int port) throws Exception {
         super(host, lookupHCI(host, port));
     }

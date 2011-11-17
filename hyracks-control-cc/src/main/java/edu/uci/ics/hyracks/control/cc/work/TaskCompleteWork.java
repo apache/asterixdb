@@ -14,22 +14,43 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.Map;
+
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
 public class TaskCompleteWork extends AbstractTaskLifecycleWork {
-    public TaskCompleteWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
+    private final TaskProfile statistics;
+
+    public TaskCompleteWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
+            TaskProfile statistics) {
         super(ccs, jobId, taId, nodeId);
+        this.statistics = statistics;
     }
 
     @Override
     protected void performEvent(TaskAttempt ta) {
         try {
             ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
+            JobRun run = ac.getJobRun();
+            if (statistics != null) {
+                JobProfile jobProfile = run.getJobProfile();
+                Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
+                JobletProfile jobletProfile = jobletProfiles.get(nodeId);
+                if (jobletProfile == null) {
+                    jobletProfile = new JobletProfile(nodeId);
+                    jobletProfiles.put(nodeId, jobletProfile);
+                }
+                jobletProfile.getTaskProfiles().put(taId, statistics);
+            }
             ac.getJobRun().getScheduler().notifyTaskComplete(ta);
         } catch (HyracksException e) {
             e.printStackTrace();

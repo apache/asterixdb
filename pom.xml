@@ -20,6 +20,14 @@
       	<artifactId>versions-maven-plugin</artifactId>
       	<version>1.2</version>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+            <forkMode>pertest</forkMode>
+            <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties</argLine>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -76,7 +84,6 @@
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control-common</module>
-    <module>hyracks-admin-console</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-cli</module>

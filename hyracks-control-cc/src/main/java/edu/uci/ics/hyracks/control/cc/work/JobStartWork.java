@@ -31,7 +31,7 @@ public class JobStartWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getRunMap().get(jobId);
+        JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run == null) {
             throw new Exception("Unable to find job with id = " + jobId);
         }
@@ -42,7 +42,7 @@ public class JobStartWork extends SynchronizableWork {
         try {
             run.getScheduler().startJob();
         } catch (Exception e) {
-            ccs.getJobQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+            ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
         }
     }
 }

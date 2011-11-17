@@ -267,9 +267,10 @@ public class SearchCursorTest extends AbstractRTreeTest {
 			} finally {
 				searchCursor.close();
 			}
-
-			System.err.println("There are " + results.size()
-					+ " objects that satisfy the query");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("There are " + results.size()
+						+ " objects that satisfy the query");
+			}
 		}
 
 		rtree.close();

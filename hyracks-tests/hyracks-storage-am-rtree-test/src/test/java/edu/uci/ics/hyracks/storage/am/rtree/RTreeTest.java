@@ -215,9 +215,6 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 		}
 
-		// rtree.printTree(leafFrame, interiorFrame, recDescSers);
-		// System.err.println();
-
 		String rtreeStats = rtree.printStats();
 		if (LOGGER.isLoggable(Level.INFO)) {
 			LOGGER.info(rtreeStats);
@@ -250,7 +247,9 @@ public class RTreeTest extends AbstractRTreeTest {
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,
 				interiorFrame, metaFrame);
 		String string = stats.toString();
-		System.err.println(string);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(string);
+		}
 
 		rtree.close();
 		bufferCache.closeFile(fileId);
@@ -399,9 +398,6 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 		}
 
-		// rtree.printTree(leafFrame, interiorFrame, recDescSers);
-		// System.err.println();
-
 		String rtreeStats = rtree.printStats();
 		if (LOGGER.isLoggable(Level.INFO)) {
 			LOGGER.info(rtreeStats);
@@ -466,7 +462,9 @@ public class RTreeTest extends AbstractRTreeTest {
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,
 				interiorFrame, metaFrame);
 		String string = stats.toString();
-		System.err.println(string);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(string);
+		}
 
 		rtree.close();
 		bufferCache.closeFile(fileId);
@@ -630,9 +628,6 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 		}
 
-		// rtree.printTree(leafFrame, interiorFrame, recDescSers);
-		// System.err.println();
-
 		String rtreeStats = rtree.printStats();
 		if (LOGGER.isLoggable(Level.INFO)) {
 			LOGGER.info(rtreeStats);
@@ -665,7 +660,9 @@ public class RTreeTest extends AbstractRTreeTest {
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,
 				interiorFrame, metaFrame);
 		String string = stats.toString();
-		System.err.println(string);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(string);
+		}
 
 		rtree.close();
 		bufferCache.closeFile(fileId);
@@ -816,9 +813,6 @@ public class RTreeTest extends AbstractRTreeTest {
 			}
 		}
 
-		// rtree.printTree(leafFrame, interiorFrame, recDescSers);
-		// System.err.println();
-
 		String rtreeStats = rtree.printStats();
 		if (LOGGER.isLoggable(Level.INFO)) {
 			LOGGER.info(rtreeStats);
@@ -851,7 +845,9 @@ public class RTreeTest extends AbstractRTreeTest {
 		TreeIndexStats stats = statsGatherer.gatherStats(leafFrame,
 				interiorFrame, metaFrame);
 		String string = stats.toString();
-		System.err.println(string);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info(string);
+		}
 
 		rtree.close();
 		bufferCache.closeFile(fileId);

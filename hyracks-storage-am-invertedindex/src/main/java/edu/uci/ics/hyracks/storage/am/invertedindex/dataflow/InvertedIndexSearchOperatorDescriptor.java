@@ -6,7 +6,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -46,12 +46,13 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
         this.queryTokenizerFactory = queryTokenizerFactory;
     }
 
-    @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        IBinaryTokenizer tokenizer = queryTokenizerFactory.createTokenizer();
+	@Override
+	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+			IRecordDescriptorProvider recordDescProvider, int partition,
+			int nPartitions) throws HyracksDataException {
+		IBinaryTokenizer tokenizer = queryTokenizerFactory.createTokenizer();
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
         return new InvertedIndexSearchOperatorNodePushable(this, ctx, partition, queryField, searchModifier, tokenizer,
                 recordDescProvider);
-    }
+	}
 }
