@@ -59,7 +59,23 @@ public class FrameTupleAppender {
         }
         return false;
     }
-
+    
+    /*
+     * ADDED BY POURIA (for his sort operator)
+     * bytes already has the header (the fields offset)
+     */
+    public boolean append(byte[] bytes, int offset, int length){
+    	 if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+             System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, length);
+             tupleDataEndOffset += length;
+             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+             ++tupleCount;
+             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+             return true;
+         }
+         return false;
+    }
+    
     public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
         int length = tEndOffset - tStartOffset;
         if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
