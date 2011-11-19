@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
 
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
@@ -45,6 +47,8 @@ public class NodeControllerState {
     private final String osVersion;
 
     private final int nProcessors;
+
+    private final HeartbeatSchema hbSchema;
 
     private final long[] hbTime;
 
@@ -70,6 +74,12 @@ public class NodeControllerState {
 
     private final double[] systemLoadAverage;
 
+    private final String[] gcNames;
+
+    private final long[][] gcCollectionCounts;
+
+    private final long[][] gcCollectionTimes;
+
     private int rrdPtr;
 
     private int lastHeartbeatDuration;
@@ -84,6 +94,7 @@ public class NodeControllerState {
         arch = reg.getArch();
         osVersion = reg.getOSVersion();
         nProcessors = reg.getNProcessors();
+        hbSchema = reg.getHeartbeatSchema();
 
         hbTime = new long[RRD_SIZE];
         heapInitSize = new long[RRD_SIZE];
@@ -97,6 +108,14 @@ public class NodeControllerState {
         threadCount = new int[RRD_SIZE];
         peakThreadCount = new int[RRD_SIZE];
         systemLoadAverage = new double[RRD_SIZE];
+        GarbageCollectorInfo[] gcInfos = hbSchema.getGarbageCollectorInfos();
+        int gcN = gcInfos.length;
+        gcNames = new String[gcN];
+        for (int i = 0; i < gcN; ++i) {
+            gcNames[i] = gcInfos[i].getName();
+        }
+        gcCollectionCounts = new long[gcN][RRD_SIZE];
+        gcCollectionTimes = new long[gcN][RRD_SIZE];
         rrdPtr = 0;
     }
 
@@ -115,6 +134,11 @@ public class NodeControllerState {
         threadCount[rrdPtr] = hbData.threadCount;
         peakThreadCount[rrdPtr] = hbData.peakThreadCount;
         systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
+        int gcN = hbSchema.getGarbageCollectorInfos().length;
+        for (int i = 0; i < gcN; ++i) {
+            gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
+            gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
+        }
         rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
@@ -172,6 +196,9 @@ public class NodeControllerState {
         o.put("thread-counts", threadCount);
         o.put("peak-thread-counts", peakThreadCount);
         o.put("system-load-averages", systemLoadAverage);
+        o.put("gc-names", gcNames);
+        o.put("gc-collection-counts", gcCollectionCounts);
+        o.put("gc-collection-times", gcCollectionTimes);
 
         return o;
     }

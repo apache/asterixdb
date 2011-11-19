@@ -51,7 +51,7 @@ public class VirtualClusterDriver {
         HyracksCCProcess ccp = new HyracksCCProcess(ccConfig);
         ccp.start();
 
-        Thread.sleep(2000);
+        Thread.sleep(5000);
 
         HyracksNCProcess ncps[] = new HyracksNCProcess[options.n];
         for (int i = 0; i < options.n; ++i) {

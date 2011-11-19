@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.io.File;
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -55,6 +56,7 @@ import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
@@ -107,6 +109,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final MemoryMXBean memoryMXBean;
 
+    private final List<GarbageCollectorMXBean> gcMXBeans;
+
     private final ThreadMXBean threadMXBean;
 
     private final RuntimeMXBean runtimeMXBean;
@@ -132,6 +136,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 NodeControllerService.class.getName()), id));
         applications = new Hashtable<String, NCApplicationContext>();
         memoryMXBean = ManagementFactory.getMemoryMXBean();
+        gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
         threadMXBean = ManagementFactory.getThreadMXBean();
         runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
@@ -157,9 +162,14 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         connectionManager.start();
         Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
         IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
+        HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
+        for (int i = 0; i < gcInfos.length; ++i) {
+            gcInfos[i] = new HeartbeatSchema.GarbageCollectorInfo(gcMXBeans.get(i).getName());
+        }
+        HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
         this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
                 .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
-                .getAvailableProcessors()));
+                .getAvailableProcessors(), hbSchema));
         queue.start();
 
         heartbeatTask = new HeartbeatTask(cc);
@@ -296,6 +306,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         public HeartbeatTask(IClusterController cc) {
             this.cc = cc;
             hbData = new HeartbeatData();
+            hbData.gcCollectionCounts = new long[gcMXBeans.size()];
+            hbData.gcCollectionTimes = new long[gcMXBeans.size()];
         }
 
         @Override
@@ -314,6 +326,12 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             hbData.peakThreadCount = threadMXBean.getPeakThreadCount();
             hbData.totalStartedThreadCount = threadMXBean.getTotalStartedThreadCount();
             hbData.systemLoadAverage = osMXBean.getSystemLoadAverage();
+            int gcN = gcMXBeans.size();
+            for (int i = 0; i < gcN; ++i) {
+                GarbageCollectorMXBean gcMXBean = gcMXBeans.get(i);
+                hbData.gcCollectionCounts[i] = gcMXBean.getCollectionCount();
+                hbData.gcCollectionTimes[i] = gcMXBean.getCollectionTime();
+            }
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
