@@ -218,16 +218,15 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                         int entry = hpc.partition(accessor0, i, numPartitions);
                         ByteBuffer outbuf = outbufs[entry];
-                        appender.reset(outbuf, true);
-                        while (true) {
-                            if (appender.append(accessor0, i)) {
-                                break;
-                            } else {
-                                // buffer is full, ie. we cannot fit the tuple
-                                // into the buffer -- write it to disk
-                                write(entry, outbuf);
-                                outbuf.clear();
-                                appender.reset(outbuf, true);
+                        appender.reset(outbuf, false);
+                        if (!appender.append(accessor0, i)) {
+                            // buffer is full, ie. we cannot fit the tuple
+                            // into the buffer -- write it to disk
+                            write(entry, outbuf);
+                            outbuf.clear();
+                            appender.reset(outbuf, true);
+                            if (!appender.append(accessor0, i)) {
+                                throw new HyracksDataException("Item too big to fit in frame");
                             }
                         }
                     }
