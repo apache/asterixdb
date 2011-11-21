@@ -14,18 +14,23 @@
  */
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.DataOutput;
+import java.nio.ByteBuffer;
+
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class TreeIndexStatsOperatorNodePushable extends
-		AbstractOperatorNodePushable {
+public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 	private final TreeIndexOpHelper treeIndexOpHelper;
 	private final IHyracksTaskContext ctx;
 	private TreeIndexStatsGatherer statsGatherer;
@@ -36,16 +41,11 @@ public class TreeIndexStatsOperatorNodePushable extends
 		treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory()
 				.createTreeIndexOpHelper(opDesc, ctx, partition,
 						IndexHelperOpenMode.CREATE);
-		this.ctx = ctx;
+		this.ctx = ctx;		
 	}
 
 	@Override
 	public void deinitialize() throws HyracksDataException {
-	}
-
-	@Override
-	public int getInputArity() {
-		return 0;
 	}
 
 	@Override
@@ -56,15 +56,14 @@ public class TreeIndexStatsOperatorNodePushable extends
 	@Override
 	public void initialize() throws HyracksDataException {
 		try {
+			writer.open();
 			treeIndexOpHelper.init();
 			treeIndexOpHelper.getTreeIndex().open(
 					treeIndexOpHelper.getIndexFileId());
-
 			ITreeIndex treeIndex = treeIndexOpHelper.getTreeIndex();
 			IBufferCache bufferCache = treeIndexOpHelper
 					.getOperatorDescriptor().getStorageManager()
 					.getBufferCache(ctx);
-
 			statsGatherer = new TreeIndexStatsGatherer(bufferCache,
 					treeIndex.getFreePageManager(),
 					treeIndexOpHelper.getIndexFileId(),
@@ -74,15 +73,28 @@ public class TreeIndexStatsOperatorNodePushable extends
 					.getInteriorFrameFactory().createFrame(), treeIndex
 					.getFreePageManager().getMetaDataFrameFactory()
 					.createFrame());
-			System.err.println(stats.toString());
+			
+			// Write the stats output as a single string field.
+			ByteBuffer frame = ctx.allocateFrame();
+            FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+            appender.reset(frame, true);
+            ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
+            DataOutput dos = tb.getDataOutput();
+            tb.reset();
+            UTF8StringSerializerDeserializer.INSTANCE.serialize(stats.toString(), dos);
+			tb.addFieldEndOffset();
+			if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+				throw new IllegalStateException();
+			}
+			FrameUtils.flushFrame(frame, writer);
 		} catch (Exception e) {
-			treeIndexOpHelper.deinit();
-			throw new HyracksDataException(e);
+			try {
+				treeIndexOpHelper.deinit();			
+			} finally {
+				writer.fail();				
+			}
+		} finally {
+			writer.close();
 		}
-	}
-
-	@Override
-	public void setOutputFrameWriter(int index, IFrameWriter writer,
-			RecordDescriptor recordDesc) {
 	}
 }

@@ -34,10 +34,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     private static final long serialVersionUID = 1L;
 
-    // general
+    // General.
     protected final IStorageManagerInterface storageManager;
 
-    // btree
+    // Btree.
     protected final IFileSplitProvider btreeFileSplitProvider;
     protected final IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
     protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
@@ -46,7 +46,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final ITreeIndexOpHelperFactory btreeOpHelperFactory;
 
-    // inverted index
+    // Inverted index.
     protected final IFileSplitProvider invListsFileSplitProvider;
     protected final IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider;
     protected final ITypeTrait[] invListsTypeTraits;
@@ -62,10 +62,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IBinaryComparatorFactory[] invListComparatorFactories) {
         super(spec, inputArity, outputArity);
 
-        // general
+        // General.
         this.storageManager = storageManager;
 
-        // btree
+        // Btree.
         this.btreeFileSplitProvider = btreeFileSplitProvider;
         this.treeIndexRegistryProvider = treeIndexRegistryProvider;
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
@@ -74,7 +74,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.btreeOpHelperFactory = btreeOpHelperFactory;
 
-        // inverted index
+        // Inverted index.
         this.invListsFileSplitProvider = invListsFileSplitProvider;
         this.invIndexRegistryProvider = invIndexRegistryProvider;
         this.invListsTypeTraits = invListsTypeTraits;

@@ -15,7 +15,33 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.util;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 
 public class InvertedIndexUtils {
+	// Type traits to be appended to the token type trait which finally form the BTree field type traits.
+	private static final ITypeTrait[] btreeValueTypeTraits = new ITypeTrait[4];
+	static {
+		// startPageId
+		btreeValueTypeTraits[0] = new TypeTrait(4);
+        // endPageId
+		btreeValueTypeTraits[1] = new TypeTrait(4);
+        // startOff
+		btreeValueTypeTraits[2] = new TypeTrait(4);
+        // numElements
+		btreeValueTypeTraits[3] = new TypeTrait(4);
+	}
 	
+	public static ITypeTrait[] getBTreeTypeTraits(ITypeTrait[] tokenTypeTraits) {
+		ITypeTrait[] btreeTypeTraits = new ITypeTrait[tokenTypeTraits.length + btreeValueTypeTraits.length];
+		// Set key type traits.
+		for (int i = 0; i < tokenTypeTraits.length; i++) {
+		    btreeTypeTraits[i] = tokenTypeTraits[i];
+		}
+		// Set value type traits.
+		for (int i = 0; i < btreeValueTypeTraits.length; i++) {
+		    btreeTypeTraits[i + tokenTypeTraits.length] = btreeValueTypeTraits[i];
+		}
+		return btreeTypeTraits;
+	}
 }

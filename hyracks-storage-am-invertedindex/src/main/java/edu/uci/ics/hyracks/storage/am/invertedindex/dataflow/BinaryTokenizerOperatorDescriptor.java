@@ -29,11 +29,11 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     private static final long serialVersionUID = 1L;
 
     private final IBinaryTokenizerFactory tokenizerFactory;
-    // fields that will be tokenized
+    // Fields that will be tokenized
     private final int[] tokenFields;
     // operator will append these key fields to each token, e.g., as
     // payload for an inverted list
-    // WARNING: too many key fields can cause significant data blowup
+    // WARNING: too many key fields can cause significant data blowup.
     private final int[] keyFields;
 
     public BinaryTokenizerOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
