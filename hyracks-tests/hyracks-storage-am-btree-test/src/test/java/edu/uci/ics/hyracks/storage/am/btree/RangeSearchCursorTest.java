@@ -411,7 +411,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				int lowKey = i;
 				int highKey = j;
 
-				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator());

@@ -42,28 +42,28 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private TreeIndexOpHelper treeIndexOpHelper;
-    private FrameTupleAccessor accessor;
+	protected TreeIndexOpHelper treeIndexOpHelper;
+	protected FrameTupleAccessor accessor;
 
-    private ByteBuffer writeBuffer;
-    private FrameTupleAppender appender;
-    private ArrayTupleBuilder tb;
-    private DataOutput dos;
+	protected ByteBuffer writeBuffer;
+	protected FrameTupleAppender appender;
+	protected ArrayTupleBuilder tb;
+	protected DataOutput dos;
 
-    private BTree btree;
-    private boolean isForward;
-    private PermutingFrameTupleReference lowKey;
-    private PermutingFrameTupleReference highKey;
-    private boolean lowKeyInclusive;
-    private boolean highKeyInclusive;
-    private RangePredicate rangePred;
-    private MultiComparator lowKeySearchCmp;
-    private MultiComparator highKeySearchCmp;
-    private ITreeIndexCursor cursor;
-    private ITreeIndexFrame cursorFrame;
-    private ITreeIndexAccessor indexAccessor;
+	protected BTree btree;
+	protected boolean isForward;
+	protected PermutingFrameTupleReference lowKey;
+	protected PermutingFrameTupleReference highKey;
+	protected boolean lowKeyInclusive;
+	protected boolean highKeyInclusive;
+	protected RangePredicate rangePred;
+	protected MultiComparator lowKeySearchCmp;
+	protected MultiComparator highKeySearchCmp;
+	protected ITreeIndexCursor cursor;
+	protected ITreeIndexFrame cursorFrame;
+	protected ITreeIndexAccessor indexAccessor;
 
-    private RecordDescriptor recDesc;
+	protected RecordDescriptor recDesc;
 
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
@@ -91,7 +91,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
         cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame);
+        setCursor();        
         writer.open();
 
         try {
@@ -116,14 +116,18 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         }
     }
 
-    private void writeSearchResults() throws Exception {
+    protected void setCursor() {
+        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, false);
+    }
+    
+    protected void writeSearchResults() throws Exception {
         while (cursor.hasNext()) {
             tb.reset();
             cursor.next();
 
-            ITupleReference frameTuple = cursor.getTuple();
-            for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-                dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+            ITupleReference tuple = cursor.getTuple();
+            for (int i = 0; i < tuple.getFieldCount(); i++) {
+                dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
 
@@ -140,17 +144,17 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
-
         int tupleCount = accessor.getTupleCount();
         try {
             for (int i = 0; i < tupleCount; i++) {
-                if (lowKey != null)
+                if (lowKey != null) {
                     lowKey.reset(accessor, i);
-                if (highKey != null)
+                }
+                if (highKey != null) {
                     highKey.reset(accessor, i);
+                }
                 rangePred.setLowKey(lowKey, lowKeyInclusive);
                 rangePred.setHighKey(highKey, highKeyInclusive);
-
                 cursor.reset();
                 indexAccessor.search(cursor, rangePred);
                 writeSearchResults();

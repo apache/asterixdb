@@ -225,7 +225,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         // ------- START VERIFICATION -----------
 
-        ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
+        ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
         FrameTupleReference searchKey = new FrameTupleReference();
         RangePredicate btreePred = new RangePredicate(true, searchKey, searchKey, true, true, btreeCmp, btreeCmp);
 

@@ -628,19 +628,19 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    private final void acquireLatch(ICachedPage node, IndexOp op, boolean isLeaf) {
-        if (isLeaf && (op == IndexOp.INSERT || op == IndexOp.DELETE || op == IndexOp.UPDATE)) {
-            node.acquireWriteLatch();
-        } else {
+    private final void acquireLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
+        if (!isLeaf || (ctx.op == IndexOp.SEARCH && !ctx.cursor.exclusiveLatchNodes())) {
             node.acquireReadLatch();
+        } else {
+            node.acquireWriteLatch();
         }
     }
 
-    private final void releaseLatch(ICachedPage node, IndexOp op, boolean isLeaf) {
-        if (isLeaf && (op == IndexOp.INSERT || op == IndexOp.DELETE || op == IndexOp.UPDATE)) {
-            node.releaseWriteLatch();
-        } else {
+    private final void releaseLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
+        if (!isLeaf || (ctx.op == IndexOp.SEARCH && !ctx.cursor.exclusiveLatchNodes())) {
             node.releaseReadLatch();
+        } else {
+            node.releaseWriteLatch();
         }
     }
 
@@ -665,7 +665,7 @@ public class BTree implements ITreeIndex {
         // this check performs an unprotected read in the page
         // the following could happen: TODO fill out
         boolean unsafeIsLeaf = ctx.interiorFrame.isLeaf();
-        acquireLatch(node, ctx.op, unsafeIsLeaf);
+        acquireLatch(node, ctx, unsafeIsLeaf);        
         boolean smFlag = ctx.interiorFrame.getSmFlag();
         // re-check leafness after latching
         boolean isLeaf = ctx.interiorFrame.isLeaf();
@@ -744,7 +744,7 @@ public class BTree implements ITreeIndex {
                     ctx.opRestarts++;
                     System.out.println("ONGOING SM ON PAGE " + pageId + " AT LEVEL " + ctx.interiorFrame.getLevel()
                             + ", RESTARTS: " + ctx.opRestarts);
-                    releaseLatch(node, ctx.op, unsafeIsLeaf);
+                    releaseLatch(node, ctx, unsafeIsLeaf);
                     bufferCache.unpin(node);
 
                     // TODO: this should be an instant duration lock, how to do
@@ -785,20 +785,20 @@ public class BTree implements ITreeIndex {
             }
         } catch (TreeIndexException e) {
             if (!ctx.exceptionHandled) {
-                releaseLatch(node, ctx.op, unsafeIsLeaf);
+                releaseLatch(node, ctx, unsafeIsLeaf);
                 bufferCache.unpin(node);
                 ctx.exceptionHandled = true;
             }
             throw e;
         } catch (PageAllocationException e) {
             if (!ctx.exceptionHandled) {
-                releaseLatch(node, ctx.op, unsafeIsLeaf);
+                releaseLatch(node, ctx, unsafeIsLeaf);
                 bufferCache.unpin(node);
                 ctx.exceptionHandled = true;
             }
             throw e;
         } catch (Exception e) {
-            releaseLatch(node, ctx.op, unsafeIsLeaf);
+            releaseLatch(node, ctx, unsafeIsLeaf);
             bufferCache.unpin(node);
             BTreeException wrappedException = new BTreeException(e);
             throw wrappedException;

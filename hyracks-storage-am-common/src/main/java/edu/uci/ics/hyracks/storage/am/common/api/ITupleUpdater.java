@@ -15,31 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public interface ITreeIndexCursor {
-	public void reset();
-
-	public boolean hasNext() throws Exception;
-
-	public void next() throws Exception;
-
-	public void open(ICursorInitialState initialState,
-			ISearchPredicate searchPred) throws HyracksDataException;
-
-	public ICachedPage getPage();
-
-	public void close() throws Exception;
-
-	public void setBufferCache(IBufferCache bufferCache);
-
-	public void setFileId(int fileId);
-
-	public ITupleReference getTuple();
-	
-	// For allowing updates.
-	public boolean exclusiveLatchNodes();
+/**
+ * Interface for updating a tuple. Warning: By convention, this interface
+ * assumes that the modifications do not change the size of the tuple, and that
+ * it does not change keys (e.g., BTree keys). This interface is used to
+ * implement update scans.
+ * 
+ */
+public interface ITupleUpdater {
+	public void updateTuple(ITupleReference tuple);
 }

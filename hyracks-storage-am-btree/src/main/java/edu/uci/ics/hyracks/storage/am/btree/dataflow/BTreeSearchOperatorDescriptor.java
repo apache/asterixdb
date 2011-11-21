@@ -34,12 +34,12 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
 
     private static final long serialVersionUID = 1L;
 
-    private boolean isForward;
-    private int[] lowKeyFields; // fields in input tuple to be used as low keys
-    private int[] highKeyFields; // fields in input tuple to be used as high
+    protected boolean isForward;
+    protected int[] lowKeyFields; // fields in input tuple to be used as low keys
+    protected int[] highKeyFields; // fields in input tuple to be used as high
     // keys
-    private boolean lowKeyInclusive;
-    private boolean highKeyInclusive;
+    protected boolean lowKeyInclusive;
+    protected boolean highKeyInclusive;
 
     public BTreeSearchOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,

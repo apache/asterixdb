@@ -94,7 +94,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         leafFrame = invIndex.getBTree().getLeafFrameFactory().createFrame();
         interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
 
-        btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
+        btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
         ITypeTrait[] invListFields = invIndex.getTypeTraits();
         invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
         int tmp = 0;

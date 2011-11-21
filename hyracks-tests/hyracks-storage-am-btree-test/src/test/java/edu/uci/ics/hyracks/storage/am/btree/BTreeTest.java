@@ -206,7 +206,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("ORDERED SCAN:");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -250,7 +250,7 @@ public class BTreeTest extends AbstractBTreeTest {
             LOGGER.info("RANGE SEARCH:");
         }
 
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 
         // build low and high keys
         ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -427,7 +427,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("ORDERED SCAN:");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -449,7 +449,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RANGE SEARCH:");
         }
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 
         // build low and high keys
         ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -616,7 +616,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("ORDERED SCAN:");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -639,7 +639,7 @@ public class BTreeTest extends AbstractBTreeTest {
             LOGGER.info("RANGE SEARCH:");
         }
 
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 
         // build low and high keys
         ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -875,7 +875,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("ORDERED SCAN:");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
         indexAccessor.search(scanCursor, nullPred);
@@ -1025,7 +1025,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 e.printStackTrace();
             }
         }
-        ITreeIndexCursor insertCheckCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor insertCheckCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(insertCheckCursor, nullPred);
         try {
@@ -1074,7 +1074,7 @@ public class BTreeTest extends AbstractBTreeTest {
                 }
             }
             
-            ITreeIndexCursor updateCheckCursor = new BTreeRangeSearchCursor(leafFrame);
+            ITreeIndexCursor updateCheckCursor = new BTreeRangeSearchCursor(leafFrame, false);
             indexAccessor.search(updateCheckCursor, nullPred);
             try {
                 compareActualAndExpected(updateCheckCursor, expectedValues, fieldSerdes);
@@ -1192,7 +1192,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RANGE SEARCH:");
         }
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame);
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
 
         // build low and high keys
         ArrayTupleBuilder ktb = new ArrayTupleBuilder(1);
@@ -1391,7 +1391,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("ORDERED SCAN:");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -1412,7 +1412,7 @@ public class BTreeTest extends AbstractBTreeTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RANGE SEARCH:");
         }
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 
         // build low and high keys
         ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
@@ -1477,6 +1477,231 @@ public class BTreeTest extends AbstractBTreeTest {
         bufferCache.close();
     }
 
+    // Update scan test on fixed-length keys.
+    // create a B-tree with one fixed-length "key" field and one fixed-length
+    // "value" field
+    // fill B-tree with random values using insertions (not bulk load)
+    // perform ordered scan and range search
+    @Test
+    public void test08() throws Exception {
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("FIXED-LENGTH KEY TEST");
+        }
+
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
+        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        FileReference file = new FileReference(new File(fileName));
+        bufferCache.createFile(file);
+        int fileId = fmp.lookupFileId(file);
+        bufferCache.openFile(fileId);
+
+        // declare fields
+        int fieldCount = 2;
+        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+        typeTraits[0] = new TypeTrait(4);
+        typeTraits[1] = new TypeTrait(4);
+
+        // declare keys
+        int keyFieldCount = 1;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
+
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);        
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
+        ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
+
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(fileId);
+        btree.open(fileId);
+
+        Random rnd = new Random();
+        rnd.setSeed(50);
+
+        long start = System.currentTimeMillis();
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("INSERTING INTO TREE");
+        }
+
+        ByteBuffer frame = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        DataOutput dos = tb.getDataOutput();
+
+        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE };
+        RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        accessor.reset(frame);
+        FrameTupleReference tuple = new FrameTupleReference();
+
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        
+        // 10000
+        for (int i = 0; i < 10000; i++) {
+
+            int f0 = rnd.nextInt() % 10000;
+            int f1 = 5;
+
+            tb.reset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
+            tb.addFieldEndOffset();
+            IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
+            tb.addFieldEndOffset();
+
+            appender.reset(frame, true);
+            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+
+            tuple.reset(accessor, 0);
+
+            ArrayTupleReference t = new ArrayTupleReference();
+            t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+            
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    long end = System.currentTimeMillis();
+                    LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+                }
+            }
+
+            try {
+                indexAccessor.insert(t);
+            } catch (TreeIndexException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        // btree.printTree(leafFrame, interiorFrame);
+
+        int maxPage = btree.getFreePageManager().getMaxPage(metaFrame);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("MAXPAGE: " + maxPage);
+        }
+
+        long end = System.currentTimeMillis();
+        long duration = end - start;
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DURATION: " + duration);
+        }
+
+        // ordered scan
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("ORDERED SCAN:");
+        }
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
+        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        indexAccessor.search(scanCursor, nullPred);
+        try {
+            while (scanCursor.hasNext()) {
+                scanCursor.next();
+                ITupleReference frameTuple = scanCursor.getTuple();
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            scanCursor.close();
+        }
+
+        // disk-order scan
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DISK-ORDER SCAN:");
+        }
+        TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
+        indexAccessor.diskOrderScan(diskOrderCursor);
+        try {
+            while (diskOrderCursor.hasNext()) {
+                diskOrderCursor.next();
+                ITupleReference frameTuple = diskOrderCursor.getTuple();
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            diskOrderCursor.close();
+        }
+
+        // range search in [-1000, 1000]
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RANGE SEARCH:");
+        }
+
+        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
+
+        // build low and high keys
+        ArrayTupleBuilder ktb = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+        DataOutput kdos = ktb.getDataOutput();
+
+        ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE };
+        RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
+        IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx.getFrameSize(), keyDesc);
+        keyAccessor.reset(frame);
+
+        appender.reset(frame, true);
+
+        // build and append low key
+        ktb.reset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(-1000, kdos);
+        ktb.addFieldEndOffset();
+        appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
+
+        // build and append high key
+        ktb.reset();
+        IntegerSerializerDeserializer.INSTANCE.serialize(1000, kdos);
+        ktb.addFieldEndOffset();
+        appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
+
+        // create tuplereferences for search keys
+        FrameTupleReference lowKey = new FrameTupleReference();
+        lowKey.reset(keyAccessor, 0);
+
+        FrameTupleReference highKey = new FrameTupleReference();
+        highKey.reset(keyAccessor, 1);
+
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
+
+        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, searchCmp, searchCmp);
+        indexAccessor.search(rangeCursor, rangePred);
+
+        try {
+            while (rangeCursor.hasNext()) {
+                rangeCursor.next();
+                ITupleReference frameTuple = rangeCursor.getTuple();
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            rangeCursor.close();
+        }
+
+        btree.close();
+        bufferCache.closeFile(fileId);
+        bufferCache.close();
+    }
+    
     public static String randomString(int length, Random random) {
         String s = Long.toHexString(Double.doubleToLongBits(random.nextDouble()));
         StringBuilder strBuilder = new StringBuilder();

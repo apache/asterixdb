@@ -219,4 +219,9 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     public void setFileId(int fileId) {
         this.fileId = fileId;
     }
+
+	@Override
+	public boolean exclusiveLatchNodes() {
+		return false;
+	}
 }

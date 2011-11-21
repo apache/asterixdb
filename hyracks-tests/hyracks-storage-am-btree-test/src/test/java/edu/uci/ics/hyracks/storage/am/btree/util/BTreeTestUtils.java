@@ -105,7 +105,7 @@ public class BTreeTestUtils {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Ordered Scan.");
         }
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         testCtx.indexAccessor.search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = testCtx.checkTuples.iterator();
@@ -163,7 +163,7 @@ public class BTreeTestUtils {
         }
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), highKey);
-        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
         testCtx.indexAccessor.search(searchCursor, rangePred);
         // Get the subset of elements from the expected set within given key range.
@@ -203,7 +203,7 @@ public class BTreeTestUtils {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Point Searches On All Expected Keys.");
         }
-        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
         ArrayTupleReference lowKey = new ArrayTupleReference();
