@@ -47,7 +47,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class BTreeStatsTest extends AbstractBTreeTest {
+public class StatsTest extends AbstractBTreeTest {
 
     // private static final int PAGE_SIZE = 256;
     // private static final int NUM_PAGES = 10;

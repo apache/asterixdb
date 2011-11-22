@@ -48,7 +48,7 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
+public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
     private static final int PAGE_SIZE = 32768; // 32K
     private static final int NUM_PAGES = 40;
