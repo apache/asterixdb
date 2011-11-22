@@ -33,9 +33,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexHelperOpenMode;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexOpHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -44,7 +43,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 
 public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private TreeIndexOpHelper treeIndexOpHelper;
+    private TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
 
     private ByteBuffer writeBuffer;
@@ -65,9 +64,8 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.OPEN);
-
+        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+                opDesc, ctx, partition, false);
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();
@@ -77,38 +75,29 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
                 .getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
-
+        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
         interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
         leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
         cursor = new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrame, (IRTreeLeafFrame) leafFrame);
-
         try {
-
-            treeIndexOpHelper.init();
+            treeIndexHelper.init();
             writer.open();
             try {
-                rtree = (RTree) treeIndexOpHelper.getTreeIndex();
-
+                rtree = (RTree) treeIndexHelper.getIndex();
                 int keySearchFields = rtree.getCmp().getComparators().length;
-
                 IBinaryComparator[] keySearchComparators = new IBinaryComparator[keySearchFields];
                 for (int i = 0; i < keySearchFields; i++) {
                     keySearchComparators[i] = rtree.getCmp().getComparators()[i];
                 }
-
                 cmp = new MultiComparator(keySearchComparators);
-
                 searchPred = new SearchPredicate(searchKey, cmp);
-
-                writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
+                writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
                 tb = new ArrayTupleBuilder(rtree.getFieldCount());
                 dos = tb.getDataOutput();
-                appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
+                appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext().getFrameSize());
                 appender.reset(writeBuffer, true);
-
                 indexAccessor = rtree.createAccessor();
             } catch (Exception e) {
                 writer.fail();
@@ -116,7 +105,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             }
 
         } catch (Exception e) {
-            treeIndexOpHelper.deinit();
+            treeIndexHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
@@ -174,7 +163,7 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 throw new HyracksDataException(e);
             }
         } finally {
-            treeIndexOpHelper.deinit();
+            treeIndexHelper.deinit();
         }
     }
 

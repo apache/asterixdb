@@ -49,32 +49,29 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.ConjunctiveSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestInvertedIndexRegistryProvider;
+import edu.uci.ics.hyracks.test.support.TestIndexRegistryProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class WordInvertedIndexTest extends AbstractIntegrationTest {
@@ -83,9 +80,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     }
 
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
-    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = new TestTreeIndexRegistryProvider();
-    private IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider = new TestInvertedIndexRegistryProvider();
-    private ITreeIndexOpHelperFactory btreeOpHelperFactory = new BTreeOpHelperFactory();
+    private IIndexRegistryProvider<IIndex> indexRegistryProvider = new TestIndexRegistryProvider();
+    private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
@@ -114,17 +110,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
             IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
     // Inverted index BTree dictionary.
-    private int btreeFieldCount = 5;
-    private ITypeTrait[] btreeTypeTraits = new ITypeTrait[btreeFieldCount];
-    private int btreeKeyFieldCount = 1;
-    private IBinaryComparatorFactory[] btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-    private TypeAwareTupleWriterFactory btreeTupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
-    private ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
-    private ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
-    private RecordDescriptor btreeRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-            IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-            IntegerSerializerDeserializer.INSTANCE });
+    private ITypeTrait[] tokenTypeTraits = new ITypeTrait[1];
+    private IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[1];
 
     // Inverted index stuff.
     private int invListElementFieldCount = 1;
@@ -133,7 +120,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private RecordDescriptor tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
     private RecordDescriptor invListsRecDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });    
+            new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
     // Tokenizer stuff.
     private ITokenFactory tokenFactory = new UTF8WordTokenFactory();
@@ -147,13 +134,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         primaryTypeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
         primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
-        // Field declarations and comparators for dictionary BTree.
-        btreeTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        btreeTypeTraits[1] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        btreeTypeTraits[2] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        btreeTypeTraits[3] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        btreeTypeTraits[4] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        btreeComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        // Field declarations and comparators for tokens.
+        tokenTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
+        tokenComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // Field declarations and comparators for inverted lists.
         invListsTypeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
@@ -161,7 +144,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
         loadPrimaryIndex();
         printPrimaryIndex();
-        loadInvertedIndex();        
+        loadInvertedIndex();
     }
 
     @Test
@@ -188,9 +171,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createPrimaryBulkLoadOp(JobSpecification spec) {
         int[] fieldPermutation = { 0, 1 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeIndexRegistryProvider, primaryFileSplitProvider, primaryInteriorFrameFactory,
+                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
-                btreeOpHelperFactory);
+                btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
@@ -215,9 +198,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         int[] lowKeyFields = null; // - infinity
         int[] highKeyFields = null; // + infinity
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeIndexRegistryProvider, primaryFileSplitProvider, primaryInteriorFrameFactory,
+                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
-                highKeyFields, true, true, btreeOpHelperFactory);
+                highKeyFields, true, true, btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;
     }
@@ -264,10 +247,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     private IOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec, int[] fieldPermutation) {
         InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new InvertedIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, fieldPermutation, btreeFileSplitProvider, treeIndexRegistryProvider,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeTypeTraits, btreeComparatorFactories,
-                BTree.DEFAULT_FILL_FACTOR, btreeOpHelperFactory, invListsFileSplitProvider, invIndexRegistryProvider,
-                invListsTypeTraits, invListsComparatorFactories);
+                fieldPermutation, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
+                indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
+                invListsComparatorFactories, btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexBulkLoadOp, NC1_ID);
         return invIndexBulkLoadOp;
     }
@@ -310,10 +292,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createInvertedIndexSearchOp(JobSpecification spec,
             IInvertedIndexSearchModifierFactory searchModifierFactory) {
         InvertedIndexSearchOperatorDescriptor invIndexSearchOp = new InvertedIndexSearchOperatorDescriptor(spec, 0,
-                storageManager, btreeFileSplitProvider, treeIndexRegistryProvider, btreeInteriorFrameFactory,
-                btreeLeafFrameFactory, btreeTypeTraits, btreeComparatorFactories, btreeOpHelperFactory,
-                invListsFileSplitProvider, invIndexRegistryProvider, invListsTypeTraits, invListsComparatorFactories,
-                searchModifierFactory, tokenizerFactory, invListsRecDesc);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, indexRegistryProvider,
+                tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
+                btreeDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexSearchOp, NC1_ID);
         return invIndexSearchOp;
     }

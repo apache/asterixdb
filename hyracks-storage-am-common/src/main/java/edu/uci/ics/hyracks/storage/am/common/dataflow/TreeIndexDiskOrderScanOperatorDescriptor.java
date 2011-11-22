@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -33,14 +32,14 @@ public class TreeIndexDiskOrderScanOperatorDescriptor extends
 
 	public TreeIndexDiskOrderScanOperatorDescriptor(JobSpecification spec,
 			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+			IIndexRegistryProvider<IIndex> indexRegistryProvider,
 			IFileSplitProvider fileSplitProvider,
 			ITreeIndexFrameFactory interiorFrameFactory,
 			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-			ITreeIndexOpHelperFactory opHelperFactory) {
-		super(spec, 0, 1, recDesc, storageManager, treeIndexRegistryProvider,
+			IIndexDataflowHelperFactory dataflowHelperFactory) {
+		super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider,
 				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, null, opHelperFactory);
+				typeTraits, null, dataflowHelperFactory);
 	}
 
 	@Override

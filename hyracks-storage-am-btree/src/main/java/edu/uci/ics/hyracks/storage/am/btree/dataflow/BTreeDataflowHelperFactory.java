@@ -12,18 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
+
+package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 
-public class TestInvertedIndexRegistryProvider implements IIndexRegistryProvider<InvertedIndex> {
+public class BTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
+
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IndexRegistry<InvertedIndex> getRegistry(IHyracksTaskContext ctx) {
-        return TestStorageManagerComponentHolder.getInvertedIndexRegistry(ctx);
+    public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            int partition, boolean createIfNotExists) {
+        return new BTreeDataflowHelper(opDesc, ctx, partition, createIfNotExists);
     }
 }

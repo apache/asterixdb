@@ -22,40 +22,31 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexBulkLoadOperatorDescriptor extends
-		AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final int[] fieldPermutation;
-	private final float fillFactor;
+    private final int[] fieldPermutation;
+    private final float fillFactor;
 
-	public TreeIndexBulkLoadOperatorDescriptor(JobSpecification spec,
-			IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
-			IFileSplitProvider fileSplitProvider,
-			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
-			IBinaryComparatorFactory[] comparatorFactories,			
-			int[] fieldPermutation, float fillFactor,
-			ITreeIndexOpHelperFactory opHelperFactory) {
-		super(spec, 1, 0, null, storageManager, treeIndexRegistryProvider,
-				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, comparatorFactories,
-				opHelperFactory);
-		this.fieldPermutation = fieldPermutation;
-		this.fillFactor = fillFactor;
-	}
+    public TreeIndexBulkLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
+            IIndexRegistryProvider<IIndex> indexRegistryProvider, IFileSplitProvider fileSplitProvider,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation,
+            float fillFactor, IIndexDataflowHelperFactory dataflowHelperFactory) {
+        super(spec, 1, 0, null, storageManager, indexRegistryProvider, fileSplitProvider, interiorFrameFactory,
+                leafFrameFactory, typeTraits, comparatorFactories, dataflowHelperFactory);
+        this.fieldPermutation = fieldPermutation;
+        this.fillFactor = fillFactor;
+    }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider,
-			int partition, int nPartitions) {
-		return new TreeIndexBulkLoadOperatorNodePushable(this, ctx, partition,
-				fieldPermutation, fillFactor, recordDescProvider);
-	}
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new TreeIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
+                recordDescProvider);
+    }
 }

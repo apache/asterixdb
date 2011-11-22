@@ -15,15 +15,15 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
-public class TestTreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIndex> {
+public class TestIndexRegistryProvider implements IIndexRegistryProvider<IIndex> {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IndexRegistry<ITreeIndex> getRegistry(IHyracksTaskContext ctx) {
-        return TestStorageManagerComponentHolder.getTreeIndexRegistry(ctx);
+    public IndexRegistry<IIndex> getRegistry(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getIndexRegistry(ctx);
     }
 }

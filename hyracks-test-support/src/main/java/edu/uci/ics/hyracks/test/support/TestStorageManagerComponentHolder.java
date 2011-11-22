@@ -15,9 +15,8 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -31,8 +30,7 @@ import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static IndexRegistry<ITreeIndex> treeIndexRegistry;
-    private static IndexRegistry<InvertedIndex> invIndexRegistry;
+    private static IndexRegistry<IIndex> indexRegistry;
 
     private static int pageSize;
     private static int numPages;
@@ -44,8 +42,7 @@ public class TestStorageManagerComponentHolder {
         TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        treeIndexRegistry = null;
-        invIndexRegistry = null;
+        indexRegistry = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -66,17 +63,10 @@ public class TestStorageManagerComponentHolder {
         return fileMapProvider;
     }
 
-    public synchronized static IndexRegistry<ITreeIndex> getTreeIndexRegistry(IHyracksTaskContext ctx) {
-        if (treeIndexRegistry == null) {
-            treeIndexRegistry = new IndexRegistry<ITreeIndex>();
+    public synchronized static IndexRegistry<IIndex> getIndexRegistry(IHyracksTaskContext ctx) {
+        if (indexRegistry == null) {
+            indexRegistry = new IndexRegistry<IIndex>();
         }
-        return treeIndexRegistry;
-    }
-    
-    public synchronized static IndexRegistry<InvertedIndex> getInvertedIndexRegistry(IHyracksTaskContext ctx) {
-        if (invIndexRegistry == null) {
-        	invIndexRegistry = new IndexRegistry<InvertedIndex>();
-        }
-        return invIndexRegistry;
+        return indexRegistry;
     }
 }

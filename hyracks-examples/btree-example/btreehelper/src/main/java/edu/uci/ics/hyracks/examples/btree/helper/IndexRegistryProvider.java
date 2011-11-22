@@ -16,20 +16,20 @@
 package edu.uci.ics.hyracks.examples.btree.helper;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 
-public class TreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIndex> {
+public class IndexRegistryProvider implements IIndexRegistryProvider<IIndex> {
     private static final long serialVersionUID = 1L;
 
-    public static final TreeIndexRegistryProvider INSTANCE = new TreeIndexRegistryProvider();
+    public static final IndexRegistryProvider INSTANCE = new IndexRegistryProvider();
 
-    private TreeIndexRegistryProvider() {
+    private IndexRegistryProvider() {
     }
 
     @Override
-    public IndexRegistry<ITreeIndex> getRegistry(IHyracksTaskContext ctx) {
-        return RuntimeContext.get(ctx).getTreeIndexRegistry();
+    public IndexRegistry<IIndex> getRegistry(IHyracksTaskContext ctx) {
+        return RuntimeContext.get(ctx).getIndexRegistry();
     }
 }

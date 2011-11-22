@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 
 /**
  * Interface describing the operations of tree-based index structures. Indexes
@@ -24,31 +25,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
  * dataflow. We assume that indexes store tuples with a fixed number of fields.
  * Users must perform operations on an ITreeIndex via an ITreeIndexAccessor.
  */
-public interface ITreeIndex {
-
-	/**
-	 * Initializes the persistent state of a tree index, e.g., the root page,
-	 * and metadata pages.
-	 * 
-	 * @param indexFileId
-	 *            The file id to use for this index.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 */
-	public void create(int indexFileId) throws HyracksDataException;
-
-	/**
-	 * Opens the tree index backed by the given file id.
-	 * 
-	 * @param indexFileId
-	 *            The file id backing this index.
-	 */
-	public void open(int indexFileId);
-
-	/**
-	 * Closes the tree index.
-	 */
-	public void close();
+public interface ITreeIndex extends IIndex {
 
 	/**
 	 * Creates an index accessor for performing operations on this index.
