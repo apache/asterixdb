@@ -34,7 +34,7 @@ public abstract class AbstractBTreeTest {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String tmpDir = System.getProperty("java.io.tmpdir");
     protected final static String sep = System.getProperty("file.separator");
-    protected String fileName;    
+    protected String fileName;   
     
     @Before
     public void setUp() throws HyracksDataException {

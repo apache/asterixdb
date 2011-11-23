@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +48,7 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
+public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
     private static final int PAGE_SIZE = 32768; // 32K
     private static final int NUM_PAGES = 40;
@@ -56,8 +57,11 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
     private ITupleReference createTuple(IHyracksTaskContext ctx, int f0, int f1, int f2, boolean print)
             throws HyracksDataException {
-        if (print)
-            LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);
+        if (print) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);
+            }
+        }
 
         ByteBuffer buf = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -135,8 +139,11 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
             // insert records with random calls to compact and compress
             for (int i = 0; i < numRecords; i++) {
 
-                if ((i + 1) % 100 == 0)
-                    LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    if ((i + 1) % 100 == 0) {
+                        LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
+                    }
+                }
 
                 int a = rnd.nextInt() % smallMax;
                 int b = rnd.nextInt() % smallMax;
@@ -174,9 +181,11 @@ public class BTreeFieldPrefixNSMTest extends AbstractBTreeTest {
 
             // delete records with random calls to compact and compress
             for (int i = 0; i < numRecords; i++) {
-
-                if ((i + 1) % 100 == 0)
-                    LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    if ((i + 1) % 100 == 0) {
+                        LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
+                    }
+                }
 
                 ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
                 try {

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,21 +44,20 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 
 public class RangeSearchCursorTest extends AbstractBTreeTest {
 	// Declare fields
@@ -80,14 +80,16 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void uniqueIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 1;
 		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
 		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
 	            tupleWriterFactory);
@@ -106,7 +108,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
 	    ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+	    ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -128,7 +130,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 			tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -165,7 +167,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void nonUniqueIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 2;
@@ -173,7 +177,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
                 tupleWriterFactory);
@@ -192,7 +196,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -211,7 +215,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -248,7 +252,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 
 	@Test
 	public void nonUniqueFieldPrefixIndexTest() throws Exception {
-	    LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+        }
 
 		// declare keys
 		int keyFieldCount = 2;
@@ -256,7 +262,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE	;			
 
-		MultiComparator cmp = BTreeUtils.createMultiComparator(cmpFactories);
+		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
                 tupleWriterFactory);
@@ -275,7 +281,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-		BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
 		// generate keys
 		int numKeys = 50;
@@ -294,7 +300,7 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
 			try {
-				btree.insert(tuple, insertOpCtx);
+			    indexAccessor.insert(tuple);
 			} catch (BTreeException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -405,12 +411,12 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 				int lowKey = i;
 				int highKey = j;
 
-				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
 				RangePredicate rangePred = createRangePredicate(lowKey,
 						highKey, isForward, lowKeyInclusive, highKeyInclusive,
 						btree.getMultiComparator());
-				BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH);
-				btree.search(rangeCursor, rangePred, searchOpCtx);
+				ITreeIndexAccessor indexAccessor = btree.createAccessor();
+				indexAccessor.search(rangeCursor, rangePred);
 
 				try {
 					while (rangeCursor.hasNext()) {
@@ -448,32 +454,35 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
 						else
 							u = ')';
 
-						LOGGER.info("RANGE: " + l + " " + lowKey + " , "
-								+ highKey + " " + u);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);
+                        }
 						StringBuilder strBuilder = new StringBuilder();
 						for (Integer r : expectedResults) {
 							strBuilder.append(r + " ");
 						}
-						LOGGER.info(strBuilder.toString());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(strBuilder.toString());
+                        }
 					}
 				}
 
 				if (results.size() == expectedResults.size()) {
 					for (int k = 0; k < results.size(); k++) {
 						if (!results.get(k).equals(expectedResults.get(k))) {
-						    LOGGER.info("DIFFERENT RESULTS AT: i=" + i
-									+ " j=" + j + " k=" + k);
-						    LOGGER.info(results.get(k) + " "
-									+ expectedResults.get(k));
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " j=" + j + " k=" + k);
+                                LOGGER.info(results.get(k) + " " + expectedResults.get(k));
+                            }
 							return false;
 						}
 					}
 				} else {
-				    LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i
-							+ " j=" + j);
-				    LOGGER.info("RESULTS: " + results.size());
-				    LOGGER.info("EXPECTED RESULTS: "
-							+ expectedResults.size());
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i + " j=" + j);
+                        LOGGER.info("RESULTS: " + results.size());
+                        LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
+                    }
 					return false;
 				}
 			}

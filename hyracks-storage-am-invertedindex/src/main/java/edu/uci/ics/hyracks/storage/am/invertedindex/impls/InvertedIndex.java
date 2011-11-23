@@ -29,11 +29,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
@@ -49,36 +51,41 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
  * implemented features: updates (insert/update/delete) Limitations: a query
  * cannot exceed the size of a Hyracks frame
  */
-public class InvertedIndex {
+public class InvertedIndex implements IIndex {
 
     private BTree btree;
     private int rootPageId = 0;
     private IBufferCache bufferCache;
     private int fileId;
-    private final ITypeTrait[] typeTraits;
+    private final ITypeTrait[] invListTypeTraits;
     private final MultiComparator invListCmp;
     private final int numTokenFields;
     private final int numInvListKeys;
 
-    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTrait[] typeTraits, MultiComparator invListCmp) {
+    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTrait[] invListTypeTraits, MultiComparator invListCmp) {
         this.bufferCache = bufferCache;
         this.btree = btree;
         this.invListCmp = invListCmp;
-        this.typeTraits = typeTraits;
+        this.invListTypeTraits = invListTypeTraits;
         this.numTokenFields = btree.getMultiComparator().getKeyFieldCount();
         this.numInvListKeys = invListCmp.getKeyFieldCount();
     }
 
+    @Override
     public void open(int fileId) {
         this.fileId = fileId;
     }
 
+    @Override
+    public void create(int indexFileId) throws HyracksDataException {
+    }
+    
     public void close() {
         this.fileId = -1;
     }
 
     public BulkLoadContext beginBulkLoad(IInvertedListBuilder invListBuilder, int hyracksFrameSize,
-            float btreeFillFactor) throws HyracksDataException, TreeIndexException {
+            float btreeFillFactor) throws HyracksDataException, TreeIndexException, PageAllocationException {
         BulkLoadContext ctx = new BulkLoadContext(invListBuilder, hyracksFrameSize, btreeFillFactor);
         ctx.init(rootPageId, fileId);
         return ctx;
@@ -90,7 +97,7 @@ public class InvertedIndex {
     // the next invListCmp.getKeyFieldCount() fields in tuple are keys of the
     // inverted list (e.g., primary key)
     // key fields of inverted list are fixed size
-    public void bulkLoadAddTuple(BulkLoadContext ctx, ITupleReference tuple) throws HyracksDataException {
+    public void bulkLoadAddTuple(BulkLoadContext ctx, ITupleReference tuple) throws HyracksDataException, PageAllocationException {
 
         // first inverted list, copy token to baaos and start new list
         if (ctx.currentInvListTokenBaaos.size() == 0) {
@@ -151,9 +158,9 @@ public class InvertedIndex {
         }
     }
 
-    public boolean openCursor(ITreeIndexCursor btreeCursor, RangePredicate btreePred, BTreeOpContext btreeOpCtx,
+    public boolean openCursor(ITreeIndexCursor btreeCursor, RangePredicate btreePred, ITreeIndexAccessor btreeAccessor,
             IInvertedListCursor invListCursor) throws Exception {
-        btree.search(btreeCursor, btreePred, btreeOpCtx);
+    	btreeAccessor.search(btreeCursor, btreePred);
 
         boolean ret = false;
         if (btreeCursor.hasNext()) {
@@ -183,7 +190,7 @@ public class InvertedIndex {
         return ret;
     }
 
-    public void createAndInsertBTreeTuple(BulkLoadContext ctx) throws HyracksDataException {
+    public void createAndInsertBTreeTuple(BulkLoadContext ctx) throws HyracksDataException, PageAllocationException {
         // build tuple
         ctx.btreeTupleBuilder.reset();
         ctx.btreeTupleBuilder.addField(ctx.currentInvListTokenBaaos.getByteArray(), 0,
@@ -204,7 +211,7 @@ public class InvertedIndex {
         btree.bulkLoadAddTuple(ctx.btreeFrameTupleReference, ctx.btreeBulkLoadCtx);
     }
 
-    public void endBulkLoad(BulkLoadContext ctx) throws HyracksDataException {
+    public void endBulkLoad(BulkLoadContext ctx) throws HyracksDataException, PageAllocationException {
         // create entry in btree for last inverted list
         createAndInsertBTreeTuple(ctx);
         btree.endBulkLoad(ctx.btreeBulkLoadCtx);
@@ -224,7 +231,7 @@ public class InvertedIndex {
     }
     
     public ITypeTrait[] getTypeTraits() {
-        return typeTraits;
+        return invListTypeTraits;
     }
 
     public BTree getBTree() {
@@ -243,7 +250,7 @@ public class InvertedIndex {
         private int currentInvListStartPageId;
         private int currentInvListStartOffset;
         private final ByteArrayAccessibleOutputStream currentInvListTokenBaaos = new ByteArrayAccessibleOutputStream();
-        private final FixedSizeTupleReference currentInvListToken = new FixedSizeTupleReference(typeTraits);
+        private final FixedSizeTupleReference currentInvListToken = new FixedSizeTupleReference(invListTypeTraits);
 
         private int currentPageId;
         private ICachedPage currentPage;
@@ -267,7 +274,7 @@ public class InvertedIndex {
             this.btreeFillFactor = btreeFillFactor;
         }
 
-        public void init(int startPageId, int fileId) throws HyracksDataException, TreeIndexException {
+        public void init(int startPageId, int fileId) throws HyracksDataException, TreeIndexException, PageAllocationException {
             btreeBulkLoadCtx = btree.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
@@ -290,5 +297,5 @@ public class InvertedIndex {
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();
         }
-    };
+    }
 }

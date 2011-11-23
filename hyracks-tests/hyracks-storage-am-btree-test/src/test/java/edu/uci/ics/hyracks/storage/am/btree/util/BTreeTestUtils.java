@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -28,15 +29,15 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
@@ -51,13 +52,12 @@ public class BTreeTestUtils {
         BTree btree = BTreeUtils.createBTree(bufferCache, btreeFileId, typeTraits, cmps, leafType);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
-        // Set an arbitrary index op in the context. Will be reset anyway.
-        BTreeOpContext opCtx = btree.createOpContext(IndexOp.SEARCH);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
         
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
         IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) btree.getInteriorFrameFactory().createFrame();
         ITreeIndexMetaDataFrame metaFrame = btree.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        BTreeTestContext testCtx = new BTreeTestContext(bufferCache, fieldSerdes, btree, leafFrame, interiorFrame, metaFrame, opCtx);
+        BTreeTestContext testCtx = new BTreeTestContext(bufferCache, fieldSerdes, btree, leafFrame, interiorFrame, metaFrame, indexAccessor);
         return testCtx;
     }
     
@@ -77,8 +77,8 @@ public class BTreeTestUtils {
     @SuppressWarnings("unchecked")
     private static CheckTuple createCheckTupleFromTuple(ITupleReference tuple, ISerializerDeserializer[] fieldSerdes, int numKeys) throws HyracksDataException {
         CheckTuple checkTuple = new CheckTuple(fieldSerdes.length, numKeys);
-        int numFields = Math.min(fieldSerdes.length, tuple.getFieldCount());
-        for (int i = 0; i < numFields; i++) {
+        int fieldCount = Math.min(fieldSerdes.length, tuple.getFieldCount());
+        for (int i = 0; i < fieldCount; i++) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(
                     tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i));
@@ -102,11 +102,12 @@ public class BTreeTestUtils {
     }
     
     public static void checkOrderedScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Ordered Scan.");
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Ordered Scan.");
+        }
+        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        testCtx.opCtx.reset(IndexOp.SEARCH);
-        testCtx.btree.search(scanCursor, nullPred, testCtx.opCtx);
+        testCtx.indexAccessor.search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = testCtx.checkTuples.iterator();
         int actualCount = 0;
         try {
@@ -129,10 +130,11 @@ public class BTreeTestUtils {
     }
     
     public static void checkDiskOrderScan(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Disk-Order Scan.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Disk-Order Scan.");
+        }
         ITreeIndexCursor diskOrderCursor = new TreeDiskOrderScanCursor(testCtx.leafFrame);
-        testCtx.opCtx.reset(IndexOp.DISKORDERSCAN);
-        testCtx.btree.diskOrderScan(diskOrderCursor, testCtx.opCtx);
+        testCtx.indexAccessor.diskOrderScan(diskOrderCursor);
         int actualCount = 0;        
         try {
             while (diskOrderCursor.hasNext()) {
@@ -156,13 +158,14 @@ public class BTreeTestUtils {
     }
     
     public static void checkRangeSearch(BTreeTestContext testCtx, ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive, boolean highKeyInclusive) throws Exception {
-        LOGGER.info("Testing Range Search.");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Range Search.");
+        }
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(testCtx.btree.getMultiComparator(), highKey);
-        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
-        testCtx.opCtx.reset(IndexOp.SEARCH);
-        testCtx.btree.search(searchCursor, rangePred, testCtx.opCtx);
+        testCtx.indexAccessor.search(searchCursor, rangePred);
         // Get the subset of elements from the expected set within given key range.
         CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, testCtx.fieldSerdes, lowKeyCmp.getKeyFieldCount());
         CheckTuple highKeyCheck = createCheckTupleFromTuple(highKey, testCtx.fieldSerdes, highKeyCmp.getKeyFieldCount());
@@ -197,14 +200,15 @@ public class BTreeTestUtils {
     }
     
     public static void checkPointSearches(BTreeTestContext testCtx) throws Exception {
-        LOGGER.info("Testing Point Searches On All Expected Keys.");        
-        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Testing Point Searches On All Expected Keys.");
+        }
+        ITreeIndexCursor searchCursor = new BTreeRangeSearchCursor(testCtx.leafFrame, false);
         
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
         ArrayTupleReference lowKey = new ArrayTupleReference();
         ArrayTupleBuilder highKeyBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
         ArrayTupleReference highKey = new ArrayTupleReference();
-        testCtx.opCtx.reset(IndexOp.SEARCH);
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, null, null);
 
         // Iterate through expected tuples, and perform a point search in the BTree to verify the tuple can be reached.
@@ -219,7 +223,7 @@ public class BTreeTestUtils {
             rangePred.setLowKeyComparator(lowKeyCmp);
             rangePred.setHighKeyComparator(highKeyCmp);
             
-            testCtx.btree.search(searchCursor, rangePred, testCtx.opCtx);
+            testCtx.indexAccessor.search(searchCursor, rangePred);
             
             try {
                 // We expect exactly one answer.
@@ -267,11 +271,8 @@ public class BTreeTestUtils {
     }
     
     public static void insertIntTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
-        
-        testCtx.opCtx.reset(IndexOp.INSERT);
-        
         int[] tupleValues = new int[testCtx.getFieldCount()];
         // Scale range of values according to number of keys. 
         // For example, for 2 keys we want the square root of numTuples, for 3 keys the cube root of numTuples, etc.        
@@ -282,17 +283,19 @@ public class BTreeTestUtils {
                 tupleValues[j] = rnd.nextInt() % maxValue;
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = j;
             }
             TupleUtils.createIntegerTuple(testCtx.tupleBuilder, testCtx.tuple, tupleValues);
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             try {
-                testCtx.btree.insert(testCtx.tuple, testCtx.opCtx);
+                testCtx.indexAccessor.insert(testCtx.tuple);
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(numFields, numKeyFields);
+                CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldCount, numKeyFields);
                 for(int v : tupleValues) {
                     checkTuple.add(v);
                 }
@@ -304,15 +307,14 @@ public class BTreeTestUtils {
     }
     
     public static void insertStringTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
-        
-        testCtx.opCtx.reset(IndexOp.INSERT);
-
-        Object[] tupleValues = new Object[numFields];
+        Object[] tupleValues = new Object[fieldCount];
         for (int i = 0; i < numTuples; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -320,14 +322,14 @@ public class BTreeTestUtils {
                 tupleValues[j] = getRandomString(length, rnd);
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = getRandomString(5, rnd);
             }
             TupleUtils.createTuple(testCtx.tupleBuilder, testCtx.tuple, testCtx.fieldSerdes, tupleValues);
             try {
-                testCtx.btree.insert(testCtx.tuple, testCtx.opCtx);
+                testCtx.indexAccessor.insert(testCtx.tuple);
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                CheckTuple<String> checkTuple = new CheckTuple<String>(numFields, numKeyFields);
+                CheckTuple<String> checkTuple = new CheckTuple<String>(fieldCount, numKeyFields);
                 for(Object v : tupleValues) {
                     checkTuple.add((String)v);
                 }
@@ -339,7 +341,7 @@ public class BTreeTestUtils {
     }
 
     public static void bulkLoadIntTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
         int[] tupleValues = new int[testCtx.getFieldCount()];
         int maxValue = (int)Math.ceil(Math.pow(numTuples, 1.0/(double)numKeyFields));
@@ -349,12 +351,12 @@ public class BTreeTestUtils {
                 tupleValues[j] = rnd.nextInt() % maxValue;
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = j;
             }
             
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(numFields, numKeyFields);
+            CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldCount, numKeyFields);
             for(int v : tupleValues) {
                 checkTuple.add(v);
             }            
@@ -365,9 +367,9 @@ public class BTreeTestUtils {
     }
     
     public static void bulkLoadStringTuples(BTreeTestContext testCtx, int numTuples, Random rnd) throws Exception {
-        int numFields = testCtx.getFieldCount();
+        int fieldCount = testCtx.getFieldCount();
         int numKeyFields = testCtx.getKeyFieldCount();
-        String[] tupleValues = new String[numFields];
+        String[] tupleValues = new String[fieldCount];
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -375,11 +377,11 @@ public class BTreeTestUtils {
                 tupleValues[j] = getRandomString(length, rnd);
             }
             // Set values.
-            for (int j = numKeyFields; j < numFields; j++) {
+            for (int j = numKeyFields; j < fieldCount; j++) {
                 tupleValues[j] = getRandomString(5, rnd);
             }
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            CheckTuple<String> checkTuple = new CheckTuple<String>(numFields, numKeyFields);
+            CheckTuple<String> checkTuple = new CheckTuple<String>(fieldCount, numKeyFields);
             for(String v : tupleValues) {
                 checkTuple.add(v);
             }            
@@ -389,16 +391,18 @@ public class BTreeTestUtils {
         bulkLoadCheckTuples(testCtx, numTuples);
     }
     
-    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException {
-        int numFields = testCtx.getFieldCount();
-        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(numFields);
+    private static void bulkLoadCheckTuples(BTreeTestContext testCtx, int numTuples) throws HyracksDataException, TreeIndexException, PageAllocationException {
+        int fieldCount = testCtx.getFieldCount();
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
         IIndexBulkLoadContext bulkLoadCtx = testCtx.btree.beginBulkLoad(0.7f);
         int c = 1;
         for (CheckTuple checkTuple : testCtx.checkTuples) {
-            if (c % (numTuples / 10) == 0) {
-                LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (c % (numTuples / 10) == 0) {
+                    LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
+                }
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, testCtx.fieldSerdes);
             testCtx.btree.bulkLoadAddTuple(tuple, bulkLoadCtx);
@@ -411,7 +415,6 @@ public class BTreeTestUtils {
         ArrayTupleBuilder deleteTupleBuilder = new ArrayTupleBuilder(testCtx.btree.getMultiComparator().getKeyFieldCount());
         ArrayTupleReference deleteTuple = new ArrayTupleReference();
         int numCheckTuples = testCtx.checkTuples.size();        
-        testCtx.opCtx.reset(IndexOp.DELETE);
         // Copy CheckTuple references into array, so we can randomly pick from there.
         CheckTuple[] checkTuples = new CheckTuple[numCheckTuples];
         int idx = 0;
@@ -419,13 +422,15 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];            
             createTupleFromCheckTuple(checkTuple, deleteTupleBuilder, deleteTuple, testCtx.fieldSerdes);          
-            testCtx.btree.delete(deleteTuple, testCtx.opCtx);
+            testCtx.indexAccessor.delete(deleteTuple);
             
             // Remove check tuple from expected results.
             testCtx.checkTuples.remove(checkTuple);
@@ -449,7 +454,6 @@ public class BTreeTestUtils {
         ArrayTupleBuilder updateTupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference updateTuple = new ArrayTupleReference();
         int numCheckTuples = testCtx.checkTuples.size();
-        testCtx.opCtx.reset(IndexOp.UPDATE);
         // Copy CheckTuple references into array, so we can randomly pick from there.
         CheckTuple[] checkTuples = new CheckTuple[numCheckTuples];
         int idx = 0;
@@ -457,8 +461,10 @@ public class BTreeTestUtils {
             checkTuples[idx++] = checkTuple;
         }
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
-                LOGGER.info("Updating Tuple " + (i + 1) + "/" + numTuples);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Updating Tuple " + (i + 1) + "/" + numTuples);
+                }
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];
@@ -469,7 +475,7 @@ public class BTreeTestUtils {
             }
             
             createTupleFromCheckTuple(checkTuple, updateTupleBuilder, updateTuple, testCtx.fieldSerdes);            
-            testCtx.btree.update(updateTuple, testCtx.opCtx);
+            testCtx.indexAccessor.update(updateTuple);
             
             // Swap with last "valid" CheckTuple.
             CheckTuple tmp = checkTuples[numCheckTuples - 1];

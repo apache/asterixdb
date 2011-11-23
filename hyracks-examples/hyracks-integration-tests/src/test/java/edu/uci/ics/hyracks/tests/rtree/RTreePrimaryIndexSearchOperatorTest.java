@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -49,193 +48,161 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.test.support.TestIndexRegistryProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
-public class RTreePrimaryIndexSearchOperatorTest extends
-		AbstractIntegrationTest {
-	static {
-		TestStorageManagerComponentHolder.init(8192, 20, 20);
-	}
+public class RTreePrimaryIndexSearchOperatorTest extends AbstractIntegrationTest {
+    static {
+        TestStorageManagerComponentHolder.init(8192, 20, 20);
+    }
 
-	private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
-	private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = new TestTreeIndexRegistryProvider();
-	private ITreeIndexOpHelperFactory opHelperFactory = new RTreeOpHelperFactory();
+    private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
+    private IIndexRegistryProvider<IIndex> indexRegistryProvider = new TestIndexRegistryProvider();
+    private IIndexDataflowHelperFactory dataflowHelperFactory = new RTreeDataflowHelperFactory();
 
-	private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-			"ddMMyy-hhmmssSS");
-	private final static String sep = System.getProperty("file.separator");
+    private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
+    private final static String sep = System.getProperty("file.separator");
 
-	// field, type and key declarations for primary R-tree index
-	private int primaryFieldCount = 5;
-	private int primaryKeyFieldCount = 4;
-	private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
-	private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
+    // field, type and key declarations for primary R-tree index
+    private int primaryFieldCount = 5;
+    private int primaryKeyFieldCount = 4;
+    private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
+    private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
 
-	private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
-			primaryTypeTraits);
+    private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
+            primaryTypeTraits);
 
-	private RecordDescriptor primaryRecDesc = new RecordDescriptor(
-			new ISerializerDeserializer[] {
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					DoubleSerializerDeserializer.INSTANCE,
-					UTF8StringSerializerDeserializer.INSTANCE });
+    private RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+            DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+            UTF8StringSerializerDeserializer.INSTANCE });
 
-	private ITreeIndexFrameFactory primaryInteriorFrameFactory;
-	private ITreeIndexFrameFactory primaryLeafFrameFactory;
+    private ITreeIndexFrameFactory primaryInteriorFrameFactory;
+    private ITreeIndexFrameFactory primaryLeafFrameFactory;
 
-	private static String primaryRTreeName = "primary"
-			+ simpleDateFormat.format(new Date());
-	private static String primaryFileName = System
-			.getProperty("java.io.tmpdir") + sep + primaryRTreeName;
+    private static String primaryRTreeName = "primary" + simpleDateFormat.format(new Date());
+    private static String primaryFileName = System.getProperty("java.io.tmpdir") + sep + primaryRTreeName;
 
-	private IFileSplitProvider primaryRTreeSplitProvider = new ConstantFileSplitProvider(
-			new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-					primaryFileName))) });
+    private IFileSplitProvider primaryRTreeSplitProvider = new ConstantFileSplitProvider(
+            new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
 
-	@Before
-	public void setup() throws Exception {
-		// field, type and key declarations for primary R-tree index
-		primaryTypeTraits[0] = new TypeTrait(8);
-		primaryTypeTraits[1] = new TypeTrait(8);
-		primaryTypeTraits[2] = new TypeTrait(8);
-		primaryTypeTraits[3] = new TypeTrait(8);
-		primaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-		primaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
-		primaryComparatorFactories[1] = primaryComparatorFactories[0];
-		primaryComparatorFactories[2] = primaryComparatorFactories[0];
-		primaryComparatorFactories[3] = primaryComparatorFactories[0];
-		
-		IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
-				.comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
-		
-		primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				primaryTupleWriterFactory, primaryValueProviderFactories);
-		primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-				primaryTupleWriterFactory, primaryValueProviderFactories);
-		
-		loadPrimaryIndexTest();
-	}
+    @Before
+    public void setup() throws Exception {
+        // field, type and key declarations for primary R-tree index
+        primaryTypeTraits[0] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+        primaryTypeTraits[1] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+        primaryTypeTraits[2] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+        primaryTypeTraits[3] = ITypeTrait.DOUBLE_TYPE_TRAIT;
+        primaryTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
+        primaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+        primaryComparatorFactories[1] = primaryComparatorFactories[0];
+        primaryComparatorFactories[2] = primaryComparatorFactories[0];
+        primaryComparatorFactories[3] = primaryComparatorFactories[0];
 
-	public void loadPrimaryIndexTest() throws Exception {
-		JobSpecification spec = new JobSpecification();
+        IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
+                .comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
 
-		FileSplit[] objectsSplits = new FileSplit[] { new FileSplit(NC1_ID,
-				new FileReference(new File("data/spatial.txt"))) };
-		IFileSplitProvider objectsSplitProvider = new ConstantFileSplitProvider(
-				objectsSplits);
-		RecordDescriptor objectsDesc = new RecordDescriptor(
-				new ISerializerDeserializer[] {
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						DoubleSerializerDeserializer.INSTANCE,
-						UTF8StringSerializerDeserializer.INSTANCE });
+        primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(primaryTupleWriterFactory,
+                primaryValueProviderFactories);
+        primaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(primaryTupleWriterFactory, primaryValueProviderFactories);
 
-		FileScanOperatorDescriptor objScanner = new FileScanOperatorDescriptor(
-				spec, objectsSplitProvider,
-				new DelimitedDataTupleParserFactory(new IValueParserFactory[] {
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						DoubleParserFactory.INSTANCE,
-						UTF8StringParserFactory.INSTANCE }, '|'), objectsDesc);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				objScanner, NC1_ID);
+        loadPrimaryIndexTest();
+    }
 
-		int[] fieldPermutation = { 0, 1, 2, 3, 4 };
-		TreeIndexBulkLoadOperatorDescriptor primaryRTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(
-				spec, storageManager, treeIndexRegistryProvider,
-				primaryRTreeSplitProvider, primaryInteriorFrameFactory,
-				primaryLeafFrameFactory, primaryTypeTraits,
-				primaryComparatorFactories,
-				fieldPermutation, 0.7f, opHelperFactory);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				primaryRTreeBulkLoad, NC1_ID);
+    public void loadPrimaryIndexTest() throws Exception {
+        JobSpecification spec = new JobSpecification();
 
-		spec.connect(new OneToOneConnectorDescriptor(spec), objScanner, 0,
-				primaryRTreeBulkLoad, 0);
+        FileSplit[] objectsSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
+                "data/spatial.txt"))) };
+        IFileSplitProvider objectsSplitProvider = new ConstantFileSplitProvider(objectsSplits);
+        RecordDescriptor objectsDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE });
 
-		spec.addRoot(primaryRTreeBulkLoad);
-		runTest(spec);
-	}
+        FileScanOperatorDescriptor objScanner = new FileScanOperatorDescriptor(spec, objectsSplitProvider,
+                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { DoubleParserFactory.INSTANCE,
+                        DoubleParserFactory.INSTANCE, DoubleParserFactory.INSTANCE, DoubleParserFactory.INSTANCE,
+                        UTF8StringParserFactory.INSTANCE }, '|'), objectsDesc);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, objScanner, NC1_ID);
 
-	@Test
-	public void searchPrimaryIndexTest() throws Exception {
-		JobSpecification spec = new JobSpecification();
+        int[] fieldPermutation = { 0, 1, 2, 3, 4 };
+        TreeIndexBulkLoadOperatorDescriptor primaryRTreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+                storageManager, indexRegistryProvider, primaryRTreeSplitProvider, primaryInteriorFrameFactory,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
+                dataflowHelperFactory);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryRTreeBulkLoad, NC1_ID);
 
-		// build tuple
-		ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount);
-		DataOutput dos = tb.getDataOutput();
+        spec.connect(new OneToOneConnectorDescriptor(spec), objScanner, 0, primaryRTreeBulkLoad, 0);
 
-		tb.reset();
-		DoubleSerializerDeserializer.INSTANCE.serialize(61.2894, dos);
-		tb.addFieldEndOffset();
-		DoubleSerializerDeserializer.INSTANCE.serialize(-149.624, dos);
-		tb.addFieldEndOffset();
-		DoubleSerializerDeserializer.INSTANCE.serialize(61.8894, dos);
-		tb.addFieldEndOffset();
-		DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
-		tb.addFieldEndOffset();
+        spec.addRoot(primaryRTreeBulkLoad);
+        runTest(spec);
+    }
 
-		ISerializerDeserializer[] keyRecDescSers = {
-				DoubleSerializerDeserializer.INSTANCE,
-				DoubleSerializerDeserializer.INSTANCE,
-				DoubleSerializerDeserializer.INSTANCE,
-				DoubleSerializerDeserializer.INSTANCE };
-		RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+    @Test
+    public void searchPrimaryIndexTest() throws Exception {
+        JobSpecification spec = new JobSpecification();
 
-		ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(
-				spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-				tb.getSize());
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				keyProviderOp, NC1_ID);
+        // build tuple
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount);
+        DataOutput dos = tb.getDataOutput();
 
-		int[] keyFields = { 0, 1, 2, 3 };
+        tb.reset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(61.2894, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(-149.624, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(61.8894, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
+        tb.addFieldEndOffset();
 
-		RTreeSearchOperatorDescriptor primaryRTreeSearchOp = new RTreeSearchOperatorDescriptor(
-				spec, primaryRecDesc, storageManager,
-				treeIndexRegistryProvider, primaryRTreeSplitProvider,
-				primaryInteriorFrameFactory, primaryLeafFrameFactory,
-				primaryTypeTraits, primaryComparatorFactories,
-				keyFields, opHelperFactory);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
-				primaryRTreeSearchOp, NC1_ID);
+        ISerializerDeserializer[] keyRecDescSers = { DoubleSerializerDeserializer.INSTANCE,
+                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                DoubleSerializerDeserializer.INSTANCE };
+        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
+
+        int[] keyFields = { 0, 1, 2, 3 };
+
+        RTreeSearchOperatorDescriptor primaryRTreeSearchOp = new RTreeSearchOperatorDescriptor(spec, primaryRecDesc,
+                storageManager, indexRegistryProvider, primaryRTreeSplitProvider, primaryInteriorFrameFactory,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, keyFields,
+                dataflowHelperFactory);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryRTreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
                 createTempFile().getAbsolutePath()) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer,
-				NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
-		spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0,
-				primaryRTreeSearchOp, 0);
-		spec.connect(new OneToOneConnectorDescriptor(spec),
-				primaryRTreeSearchOp, 0, printer, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryRTreeSearchOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), primaryRTreeSearchOp, 0, printer, 0);
 
-		spec.addRoot(printer);
-		runTest(spec);
-	}
+        spec.addRoot(printer);
+        runTest(spec);
+    }
 
-	@AfterClass
-	public static void cleanup() throws Exception {
-		File primary = new File(primaryFileName);
-		primary.deleteOnExit();
-	}
+    @AfterClass
+    public static void cleanup() throws Exception {
+        File primary = new File(primaryFileName);
+        primary.deleteOnExit();
+    }
 }

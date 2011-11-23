@@ -33,7 +33,8 @@ public class TupleUtils {
     public static void createTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple, ISerializerDeserializer[] fieldSerdes, final Object... fields) throws HyracksDataException {
         DataOutput dos = tupleBuilder.getDataOutput();
         tupleBuilder.reset();
-        for (int i = 0; i < fields.length; i++) {  
+        int numFields = Math.min(tupleBuilder.getFieldEndOffsets().length, fields.length);
+        for (int i = 0; i < numFields; i++) {  
             fieldSerdes[i].serialize(fields[i], dos);
             tupleBuilder.addFieldEndOffset();
         }

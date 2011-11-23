@@ -23,6 +23,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDese
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -51,14 +53,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
@@ -155,7 +155,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 		accessor.reset(hyracksFrame);
 		FrameTupleReference tuple = new FrameTupleReference();
 
-		RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT);
+		ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
 		Random rnd = new Random();
 		rnd.setSeed(50);
@@ -190,14 +190,16 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			if (i % 1000 == 0) {
-				print("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
-						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-						+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				if (i % 1000 == 0) {
+					LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " "
+							+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
+							+ " " + Math.max(p1y, p2y));
+				}
 			}
 
 			try {
-				rtree.insert(tuple, insertOpCtx);
+				indexAccessor.insert(tuple);
 			} catch (TreeIndexException e) {
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -234,16 +236,17 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
 			tuple.reset(accessor, 0);
 
-			print(i + " Searching for: " + Math.min(p1x, p2x) + " "
-					+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
-					+ Math.max(p1y, p2y) + "\n");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info(i + " Searching for: " + Math.min(p1x, p2x) + " "
+						+ Math.min(p1y, p2y) + " " + Math.max(p1x, p2x) + " "
+						+ Math.max(p1y, p2y));
+			}
 
 			ITreeIndexCursor searchCursor = new RTreeSearchCursor(
 					interiorFrame, leafFrame);
 			SearchPredicate searchPredicate = new SearchPredicate(tuple, cmp);
 
-			RTreeOpContext searchOpCtx = rtree.createOpContext(IndexOp.SEARCH);
-			rtree.search(searchCursor, searchPredicate, searchOpCtx);
+			indexAccessor.search(searchCursor, searchPredicate);
 
 			ArrayList<Integer> results = new ArrayList<Integer>();
 			try {
@@ -264,9 +267,10 @@ public class SearchCursorTest extends AbstractRTreeTest {
 			} finally {
 				searchCursor.close();
 			}
-
-			System.err.println("There are " + results.size()
-					+ " objects that satisfy the query");
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("There are " + results.size()
+						+ " objects that satisfy the query");
+			}
 		}
 
 		rtree.close();

@@ -16,24 +16,13 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.util.HashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class IndexRegistry<IndexType> {
 
 	private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
-	private Lock registryLock = new ReentrantLock();
 
 	public IndexType get(int fileId) {
 		return map.get(fileId);
-	}
-
-	public void lock() {
-		registryLock.lock();
-	}
-
-	public void unlock() {
-		registryLock.unlock();
 	}
 
 	public void register(int fileId, IndexType index) {

@@ -12,18 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+package edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers;
 
-public class TestTreeIndexRegistryProvider implements IIndexRegistryProvider<ITreeIndex> {
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifierFactory;
+
+public class ConjunctiveSearchModifierFactory implements IInvertedIndexSearchModifierFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IndexRegistry<ITreeIndex> getRegistry(IHyracksTaskContext ctx) {
-        return TestStorageManagerComponentHolder.getTreeIndexRegistry(ctx);
+    public IInvertedIndexSearchModifier createSearchModifier() {
+        return new ConjunctiveSearchModifier();
     }
 }

@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 public class BTreeException extends TreeIndexException {
 
     protected static final long serialVersionUID = 1L;
-    protected boolean handled = false;
 
     public BTreeException(Exception e) {
         super(e);
@@ -28,13 +27,5 @@ public class BTreeException extends TreeIndexException {
 
     public BTreeException(String message) {
         super(message);
-    }
-
-    public void setHandled(boolean handled) {
-        this.handled = handled;
-    }
-
-    public boolean getHandled() {
-        return handled;
     }
 }

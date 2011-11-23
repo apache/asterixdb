@@ -21,98 +21,100 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptorHelper;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor
-        implements IInvertedIndexOperatorDescriptorHelper {
+        implements IInvertedIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    // general
+    // General.
     protected final IStorageManagerInterface storageManager;
+    protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
 
-    // btree
-    protected final IFileSplitProvider btreeFileSplitProvider;
-    protected final IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
-    protected final ITreeIndexFrameFactory interiorFrameFactory;
-    protected final ITreeIndexFrameFactory leafFrameFactory;
+    // Btree.
+    protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
+    protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
     protected final ITypeTrait[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
-    protected final ITreeIndexOpHelperFactory opHelperFactory;
+    protected final IIndexDataflowHelperFactory btreeDataflowHelperFactory;
+    protected final IFileSplitProvider btreeFileSplitProvider;
 
-    // inverted index
-    protected final IFileSplitProvider invIndexFileSplitProvider;
-    protected final IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider;
-    protected final ITypeTrait[] invIndexTypeTraits;
-    protected final IBinaryComparatorFactory[] invIndexComparatorFactories;
+    // Inverted index.
+    protected final ITypeTrait[] invListsTypeTraits;
+    protected final IBinaryComparatorFactory[] invListComparatorFactories;
+    protected final IFileSplitProvider invListsFileSplitProvider;
 
     public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IFileSplitProvider btreeFileSplitProvider, IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
-            ITypeTrait[] btreeTypeTraits, IBinaryComparatorFactory[] btreeComparatorFactories, float btreeFillFactor,
-            ITreeIndexOpHelperFactory opHelperFactory, IFileSplitProvider invIndexFileSplitProvider,
-            IIndexRegistryProvider<InvertedIndex> invIndexRegistryProvider, ITypeTrait[] invIndexTypeTraits,
-            IBinaryComparatorFactory[] invIndexComparatorFactories) {
+            IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
+            IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTrait[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTrait[] invListsTypeTraits,
+            IBinaryComparatorFactory[] invListComparatorFactories,
+            IIndexDataflowHelperFactory btreeDataflowHelperFactory) {
         super(spec, inputArity, outputArity);
 
-        // general
+        // General.
         this.storageManager = storageManager;
+        this.indexRegistryProvider = indexRegistryProvider;
 
-        // btree
+        // Btree.
+        this.btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
+        ITreeIndexTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
+        this.btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
+        this.btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        this.btreeComparatorFactories = tokenComparatorFactories;
+        this.btreeDataflowHelperFactory = btreeDataflowHelperFactory;
         this.btreeFileSplitProvider = btreeFileSplitProvider;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
-        this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
-        this.btreeTypeTraits = btreeTypeTraits;
-        this.btreeComparatorFactories = btreeComparatorFactories;
-        this.opHelperFactory = opHelperFactory;
 
-        // inverted index
-        this.invIndexFileSplitProvider = invIndexFileSplitProvider;
-        this.invIndexRegistryProvider = invIndexRegistryProvider;
-        this.invIndexTypeTraits = invIndexTypeTraits;
-        this.invIndexComparatorFactories = invIndexComparatorFactories;
+        // Inverted index.
+        this.invListsTypeTraits = invListsTypeTraits;
+        this.invListComparatorFactories = invListComparatorFactories;
+        this.invListsFileSplitProvider = invListsFileSplitProvider;
 
-        if (outputArity > 0)
+        if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
+        }
     }
 
     @Override
-    public IFileSplitProvider getTreeIndexFileSplitProvider() {
+    public IFileSplitProvider getFileSplitProvider() {
         return btreeFileSplitProvider;
+    }
+    
+    @Override
+    public IFileSplitProvider getInvListsFileSplitProvider() {
+        return invListsFileSplitProvider;
     }
 
     @Override
     public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
         return btreeComparatorFactories;
     }
-    
+
     @Override
     public ITypeTrait[] getTreeIndexTypeTraits() {
         return btreeTypeTraits;
     }
-    
-    @Override
-    public int getTreeIndexFieldCount() {
-        return btreeTypeTraits.length;
-    }
 
     @Override
     public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
-        return interiorFrameFactory;
+        return btreeInteriorFrameFactory;
     }
 
     @Override
     public ITreeIndexFrameFactory getTreeIndexLeafFactory() {
-        return leafFrameFactory;
+        return btreeLeafFrameFactory;
     }
 
     @Override
@@ -121,37 +123,27 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public IIndexRegistryProvider<ITreeIndex> getTreeIndexRegistryProvider() {
-        return treeIndexRegistryProvider;
-    }
-
-    @Override
     public RecordDescriptor getRecordDescriptor() {
         return recordDescriptors[0];
     }
 
     @Override
-    public IIndexRegistryProvider<InvertedIndex> getInvIndexRegistryProvider() {
-        return invIndexRegistryProvider;
+    public IBinaryComparatorFactory[] getInvListsComparatorFactories() {
+        return invListComparatorFactories;
     }
 
     @Override
-    public IBinaryComparatorFactory[] getInvIndexComparatorFactories() {
-        return invIndexComparatorFactories;
+    public ITypeTrait[] getInvListsTypeTraits() {
+        return invListsTypeTraits;
     }
 
     @Override
-    public IFileSplitProvider getInvIndexFileSplitProvider() {
-        return invIndexFileSplitProvider;
+    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
+        return indexRegistryProvider;
     }
-
+    
     @Override
-    public ITypeTrait[] getInvIndexTypeTraits() {
-        return invIndexTypeTraits;
-    }
-
-    @Override
-    public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
-        return opHelperFactory;
+    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
+        return btreeDataflowHelperFactory;
     }
 }

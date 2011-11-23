@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.invertedindex;
 
 import java.io.DataOutput;
@@ -43,6 +58,7 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
+import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -64,9 +80,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected FileReference btreeFile = new FileReference(new File(btreeFileName));
     protected int btreeFileId;
 
-    // declare btree fields
-    protected int fieldCount = 5;
-    protected ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+    // declare token type traits
+    protected ITypeTrait[] tokenTypeTraits = new ITypeTrait[] { ITypeTrait.VARLEN_TYPE_TRAIT };
+    protected ITypeTrait[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
 
     // declare btree keys
     protected int btreeKeyFieldCount = 1;
@@ -74,7 +90,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected MultiComparator btreeCmp = new MultiComparator(btreeBinCmps);
 
     // btree frame factories
-    protected TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+    protected TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
     protected ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
     protected ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
     protected ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
@@ -153,22 +169,11 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         btreeFileId = fmp.lookupFileId(btreeFile);
         bufferCache.openFile(btreeFileId);
 
-        // token (key)
-        typeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        // startPageId
-        typeTraits[1] = new TypeTrait(4);
-        // endPageId
-        typeTraits[2] = new TypeTrait(4);
-        // startOff
-        typeTraits[3] = new TypeTrait(4);
-        // numElements
-        typeTraits[4] = new TypeTrait(4);
-
         btreeBinCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
         freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, fieldCount, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 

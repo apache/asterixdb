@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
@@ -85,7 +86,9 @@ public class StorageManagerTest extends AbstractBTreeTest {
         private void pinRandomPage() {
             int pageId = Math.abs(rnd.nextInt() % maxPages);
 
-            LOGGER.info(workerId + " PINNING PAGE: " + pageId);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(workerId + " PINNING PAGE: " + pageId);
+            }
 
             try {
                 ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
@@ -99,14 +102,18 @@ public class StorageManagerTest extends AbstractBTreeTest {
                         break;
 
                     case FTA_READONLY: {
-                        LOGGER.info(workerId + " S LATCHING: " + pageId);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(workerId + " S LATCHING: " + pageId);
+                        }
                         page.acquireReadLatch();
                         latch = LatchType.LATCH_S;
                     }
                         break;
 
                     case FTA_WRITEONLY: {
-                        LOGGER.info(workerId + " X LATCHING: " + pageId);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(workerId + " X LATCHING: " + pageId);
+                        }
                         page.acquireWriteLatch();
                         latch = LatchType.LATCH_X;
                     }
@@ -114,11 +121,15 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
                     case FTA_MIXED: {
                         if (rnd.nextInt() % 2 == 0) {
-                            LOGGER.info(workerId + " S LATCHING: " + pageId);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info(workerId + " S LATCHING: " + pageId);
+                            }
                             page.acquireReadLatch();
                             latch = LatchType.LATCH_S;
                         } else {
-                            LOGGER.info(workerId + " X LATCHING: " + pageId);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info(workerId + " X LATCHING: " + pageId);
+                            }
                             page.acquireWriteLatch();
                             latch = LatchType.LATCH_X;
                         }
@@ -141,14 +152,20 @@ public class StorageManagerTest extends AbstractBTreeTest {
 
                 if (plPage.latch != null) {
                     if (plPage.latch == LatchType.LATCH_S) {
-                        LOGGER.info(workerId + " S UNLATCHING: " + plPage.pageId);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(workerId + " S UNLATCHING: " + plPage.pageId);
+                        }
                         plPage.page.releaseReadLatch();
                     } else {
-                        LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
+                        }
                         plPage.page.releaseWriteLatch();
                     }
                 }
-                LOGGER.info(workerId + " UNPINNING PAGE: " + plPage.pageId);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(workerId + " UNPINNING PAGE: " + plPage.pageId);
+                }
 
                 bufferCache.unpin(plPage.page);
                 pinnedPages.remove(index);
@@ -158,7 +175,9 @@ public class StorageManagerTest extends AbstractBTreeTest {
         }
 
         private void openFile() {
-            LOGGER.info(workerId + " OPENING FILE: " + fileId);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(workerId + " OPENING FILE: " + fileId);
+            }
             try {
                 bufferCache.openFile(fileId);
                 fileIsOpen = true;
@@ -168,7 +187,9 @@ public class StorageManagerTest extends AbstractBTreeTest {
         }
 
         private void closeFile() {
-            LOGGER.info(workerId + " CLOSING FILE: " + fileId);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(workerId + " CLOSING FILE: " + fileId);
+            }
             try {
                 bufferCache.closeFile(fileId);
                 fileIsOpen = false;
@@ -185,7 +206,9 @@ public class StorageManagerTest extends AbstractBTreeTest {
             while (loopCount < maxLoopCount) {
                 loopCount++;
 
-                LOGGER.info(workerId + " LOOP: " + loopCount + "/" + maxLoopCount);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(workerId + " LOOP: " + loopCount + "/" + maxLoopCount);
+                }
 
                 if (fileIsOpen) {
 

@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 		IRTreeFrame {
 	protected static final int pageNsnOff = smFlagOff + 1;
-	protected static final int rightPageOff = pageNsnOff + 4;
+	protected static final int rightPageOff = pageNsnOff + 8;
 
 	protected ITreeIndexTupleReference[] tuples;
 	protected ITreeIndexTupleReference cmpFrameTuple;
@@ -86,7 +86,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	@Override
 	public void initBuffer(byte level) {
 		super.initBuffer(level);
-		buf.putInt(pageNsnOff, 0);
+		buf.putLong(pageNsnOff, 0);
 		buf.putInt(rightPageOff, -1);
 	}
 

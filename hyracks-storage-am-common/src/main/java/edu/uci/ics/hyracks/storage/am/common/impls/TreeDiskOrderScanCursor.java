@@ -31,12 +31,12 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 	private int fileId = -1;
 	private int currentPageId = -1;
 	private int maxPageId = -1;
-	private ICachedPage page = null;
-	private ITreeIndexFrame frame = null;
+	private ICachedPage page = null;	
 	private IBufferCache bufferCache = null;
 	
-	private ITreeIndexTupleReference frameTuple;
-
+	private final ITreeIndexFrame frame;
+	private final ITreeIndexTupleReference frameTuple;
+	
 	public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
 		this.frame = frame;		
 		this.frameTuple = frame.createTupleReference();
@@ -144,5 +144,10 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
 	public void setMaxPageId(int maxPageId) {
 		this.maxPageId = maxPageId;
+	}
+
+	@Override
+	public boolean exclusiveLatchNodes() {
+		return false;
 	}
 }
