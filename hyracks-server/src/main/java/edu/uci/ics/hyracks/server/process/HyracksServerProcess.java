@@ -63,6 +63,7 @@ public abstract class HyracksServerProcess {
         List<String> cList = new ArrayList<String>();
         cList.add(getJavaCommand());
         cList.add("-Dbasedir=" + System.getProperty("basedir"));
+        cList.add("-Djava.rmi.server.hostname=127.0.0.1");
         cList.add("-classpath");
         cList.add(getClasspath());
         cList.add(getMainClassName());

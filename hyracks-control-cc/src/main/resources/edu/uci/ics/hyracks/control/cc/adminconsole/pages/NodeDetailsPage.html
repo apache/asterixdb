@@ -1,4 +1,14 @@
 <wicket:extend xmlns:wicket>
+    <div id='system-load-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='gc-charts'>
+    </div>
+    <div id='heap-usage-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='nonheap-usage-chart' class="jqplot-target time-chart">
+    </div>
+    <div id='thread-chart' class="jqplot-target time-chart">
+    </div>
     <script type="text/javascript">
         $(document).ready(function() {
             $.timer(function() {
@@ -17,6 +27,8 @@
                 var nonheapUsageMaxSizes = result['nonheap-max-sizes'];
                 var threadCounts = result['thread-counts'];
                 var peakThreadCounts = result['peak-thread-counts'];
+                var gcCollectionCounts = result['gc-collection-counts'];
+                var gcCollectionTimes = result['gc-collection-times'];
                 var sysLoadArray = [];
                 var heapUsageInitSizesArray = [];
                 var heapUsageUsedSizesArray = [];
@@ -28,6 +40,20 @@
                 var nonheapUsageMaxSizesArray = [];
                 var threadCountsArray = [];
                 var peakThreadCountsArray = [];
+                var gcCollectionCountsArray = [];
+                var gcCollectionTimesArray = [];
+                var gcChartsDiv = document.getElementById('gc-charts');
+                for(var i = 0; i < gcCollectionCounts.length; ++i) {
+                    gcCollectionCountsArray.push([]);
+                    gcCollectionTimesArray.push([]);
+                    var gcCollectionCountDiv = document.createElement('div');
+                    gcCollectionCountDiv.id = 'gc-collection-count-' + i;
+                    gcCollectionCountDiv.style = "jqplot-target time-chart";
+                    gcChartsDiv.appendChild(gcCollectionCountDiv);
+                    var gcCollectionTimeDiv = document.createElement('div');
+                    gcCollectionTimeDiv.id = 'gc-collection-time-' + i;
+                    gcChartsDiv.appendChild(gcCollectionTimeDiv);
+                }
                 var rrdPtr = result['rrd-ptr'];
                 for(var i = 0; i < sysLoad.length; ++i) {
                     sysLoadArray.push([i, sysLoad[rrdPtr]]);
@@ -41,6 +67,12 @@
                     nonheapUsageMaxSizesArray.push([i, nonheapUsageMaxSizes[rrdPtr] / (1024 * 1024)]);
                     threadCountsArray.push([i, threadCounts[rrdPtr]]);
                     peakThreadCountsArray.push([i, peakThreadCounts[rrdPtr]]);
+                    for(var j = 0; j < gcCollectionCounts.length; ++j) {
+                        gcCollectionCountsArray[j].push([i, gcCollectionCounts[j][rrdPtr]]);
+                    }
+                    for(var j = 0; j < gcCollectionTimes.length; ++j) {
+                        gcCollectionTimesArray[j].push([i, gcCollectionTimes[j][rrdPtr]]);
+                    }
                     rrdPtr = (rrdPtr + 1) % sysLoad.length;
                 }
                 $('#system-load-chart').empty();
@@ -68,6 +100,59 @@
                         show: false
                     }
                 });
+                var gcNames = result['gc-names'];
+                for(var i = 0; i < gcCollectionCounts.length; ++i) {
+                    $('#gc-collection-count-' + i).addClass("jqplot-target time-chart");
+                    $.jqplot('gc-collection-count-' + i, [gcCollectionCountsArray[i]], {
+                        title: 'GC Collection Counts(' + gcNames[i] + ')',
+                        axes: {
+                            xaxis: {
+                                label: 'Time',
+                                tickOptions: {
+                                    formatString:'%d'
+                                }
+                            },
+                            yaxis: {
+                                label: 'Collection Counts',
+                                tickOptions:{
+                                    formatString:'%d'
+                                }
+                            }
+                        },
+                        highlighter: {
+                            show: true,
+                            sizeAdjust: 7.5
+                        },
+                        cursor: {
+                            show: false
+                        }
+                    });
+                    $('#gc-collection-time-' + i).addClass("jqplot-target time-chart");
+                    $.jqplot('gc-collection-time-' + i, [gcCollectionTimesArray[i]], {
+                        title: 'GC Collection Times(' + gcNames[i] + ')',
+                        axes: {
+                            xaxis: {
+                                label: 'Time',
+                                tickOptions: {
+                                    formatString:'%d'
+                                }
+                            },
+                            yaxis: {
+                                label: 'Collection Times',
+                                tickOptions:{
+                                    formatString:'%d'
+                                }
+                            }
+                        },
+                        highlighter: {
+                            show: true,
+                            sizeAdjust: 7.5
+                        },
+                        cursor: {
+                            show: false
+                        }
+                    });
+                }
                 $('#heap-usage-chart').empty();
                 $.jqplot('heap-usage-chart', [heapUsageInitSizesArray, heapUsageUsedSizesArray, heapUsageCommittedSizesArray, heapUsageMaxSizesArray], {
                     title: 'Heap Usage',
@@ -188,12 +273,4 @@
             });
         });
     </script>
-    <div id='system-load-chart' class="jqplot-target time-chart">
-    </div>
-    <div id='heap-usage-chart' class="jqplot-target time-chart">
-    </div>
-    <div id='nonheap-usage-chart' class="jqplot-target time-chart">
-    </div>
-    <div id='thread-chart' class="jqplot-target time-chart">
-    </div>
 </wicket:extend>

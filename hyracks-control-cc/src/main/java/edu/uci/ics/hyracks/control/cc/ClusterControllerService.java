@@ -147,7 +147,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void start() throws Exception {
-        LOGGER.log(Level.INFO, "Starting ClusterControllerService");
+        LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
         Registry registry = LocateRegistry.createRegistry(ccConfig.port);
         registry.rebind(IHyracksClientInterface.class.getName(), ccci);
         registry.rebind(IClusterController.class.getName(), this);

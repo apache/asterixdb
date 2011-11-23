@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
 
 public final class NodeRegistration implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -38,8 +39,10 @@ public final class NodeRegistration implements Serializable {
 
     private final int nProcessors;
 
+    private final HeartbeatSchema hbSchema;
+
     public NodeRegistration(INodeController nc, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
-            String osName, String arch, String osVersion, int nProcessors) {
+            String osName, String arch, String osVersion, int nProcessors, HeartbeatSchema hbSchema) {
         this.nc = nc;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
@@ -48,6 +51,7 @@ public final class NodeRegistration implements Serializable {
         this.arch = arch;
         this.osVersion = osVersion;
         this.nProcessors = nProcessors;
+        this.hbSchema = hbSchema;
     }
 
     public INodeController getNodeController() {
@@ -80,5 +84,9 @@ public final class NodeRegistration implements Serializable {
 
     public int getNProcessors() {
         return nProcessors;
+    }
+
+    public HeartbeatSchema getHeartbeatSchema() {
+        return hbSchema;
     }
 }

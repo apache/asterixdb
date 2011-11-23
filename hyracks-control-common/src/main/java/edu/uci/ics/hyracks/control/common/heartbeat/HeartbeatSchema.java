@@ -16,21 +16,30 @@ package edu.uci.ics.hyracks.control.common.heartbeat;
 
 import java.io.Serializable;
 
-public class HeartbeatData implements Serializable {
+public class HeartbeatSchema implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public long heapInitSize;
-    public long heapUsedSize;
-    public long heapCommittedSize;
-    public long heapMaxSize;
-    public long nonheapInitSize;
-    public long nonheapUsedSize;
-    public long nonheapCommittedSize;
-    public long nonheapMaxSize;
-    public int threadCount;
-    public int peakThreadCount;
-    public long totalStartedThreadCount;
-    public double systemLoadAverage;
-    public long[] gcCollectionCounts;
-    public long[] gcCollectionTimes;
+    private final GarbageCollectorInfo[] gcInfos;
+
+    public HeartbeatSchema(GarbageCollectorInfo[] gcInfos) {
+        this.gcInfos = gcInfos;
+    }
+
+    public GarbageCollectorInfo[] getGarbageCollectorInfos() {
+        return gcInfos;
+    }
+
+    public static class GarbageCollectorInfo implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final String name;
+
+        public GarbageCollectorInfo(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 }
