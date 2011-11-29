@@ -61,7 +61,7 @@ public class SumAggregatorFactory implements IFieldValueResultingAggregatorFacto
 
             @Override
             public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                sum++;
+                sum = 0;
             }
 
             @Override
