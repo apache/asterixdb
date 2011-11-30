@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -71,6 +73,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private IOperatorNodePushable operator;
 
+    private volatile boolean failed;
+
+    private ByteArrayOutputStream errorBaos;
+
+    private PrintWriter errorWriter;
+
     private volatile boolean aborted;
 
     public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor) {
@@ -84,6 +92,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         opEnv = joblet.getEnvironment(taskId.getTaskId().getActivityId().getOperatorDescriptorId(), taskId.getTaskId()
                 .getPartition());
         partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
+        failed = false;
+        errorBaos = new ByteArrayOutputStream();
+        errorWriter = new PrintWriter(errorBaos, true);
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -182,7 +193,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         Thread ct = Thread.currentThread();
         String threadName = ct.getName();
         try {
-            ct.setName(displayName + ": " + taskAttemptId);
+            ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
             operator.initialize();
             try {
                 if (collectors.length > 0) {
@@ -191,12 +202,23 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         final IPartitionCollector collector = collectors[i];
                         final IFrameWriter writer = operator.getInputFrameWriter(i);
                         sem.acquire();
+                        final int cIdx = i;
                         executor.execute(new Runnable() {
                             public void run() {
+                                Thread thread = Thread.currentThread();
+                                String oldName = thread.getName();
+                                thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                                 try {
                                     pushFrames(collector, writer);
                                 } catch (HyracksDataException e) {
+                                    synchronized (Task.this) {
+                                        failed = true;
+                                        errorWriter.println("Exception caught by thread: " + thread.getName());
+                                        e.printStackTrace(errorWriter);
+                                        errorWriter.println();
+                                    }
                                 } finally {
+                                    thread.setName(oldName);
                                     sem.release();
                                 }
                             }
@@ -213,15 +235,21 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             }
             joblet.notifyTaskComplete(this);
         } catch (Exception e) {
-            e.printStackTrace();
-            try {
-                joblet.notifyTaskFailed(this, e);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            failed = true;
+            errorWriter.println("Exception caught by thread: " + ct.getName());
+            e.printStackTrace(errorWriter);
+            errorWriter.println();
         } finally {
             ct.setName(threadName);
             close();
+        }
+        if (failed) {
+            errorWriter.close();
+            try {
+                joblet.notifyTaskFailed(this, errorBaos.toString("UTF-8"));
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         }
     }
 

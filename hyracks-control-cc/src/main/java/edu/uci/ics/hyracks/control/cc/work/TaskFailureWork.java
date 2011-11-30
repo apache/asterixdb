@@ -21,18 +21,18 @@ import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
 public class TaskFailureWork extends AbstractTaskLifecycleWork {
-    private final Exception exception;
+    private final String details;
 
     public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
-            Exception exception) {
+            String details) {
         super(ccs, jobId, taId, nodeId);
-        this.exception = exception;
+        this.details = details;
     }
 
     @Override
     protected void performEvent(TaskAttempt ta) {
         ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
-        ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, exception);
+        ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, details);
     }
 
     @Override

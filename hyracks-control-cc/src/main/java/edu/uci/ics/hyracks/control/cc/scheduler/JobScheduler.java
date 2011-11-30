@@ -597,10 +597,10 @@ public class JobScheduler {
      *            - Failed Task Attempt
      * @param ac
      *            - Activity Cluster that owns this Task
-     * @param exception
+     * @param details
      *            - Cause of the failure
      */
-    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, Exception exception) {
+    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, String details) {
         try {
             LOGGER.info("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();
@@ -608,12 +608,12 @@ public class JobScheduler {
             TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
             if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
                 LOGGER.info("Marking TaskAttempt " + ta.getTaskAttemptId() + " as failed");
-                ta.setStatus(TaskAttempt.TaskStatus.FAILED, exception);
+                ta.setStatus(TaskAttempt.TaskStatus.FAILED, details);
                 abortTaskCluster(lastAttempt);
                 lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
                 abortDoomedTaskClusters();
                 if (lastAttempt.getAttempt() >= ac.getMaxTaskClusterAttempts()) {
-                    abortJob(null);
+                    abortJob(new HyracksException(details));
                     return;
                 }
                 startRunnableActivityClusters();
@@ -647,8 +647,7 @@ public class JobScheduler {
                             for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts()) {
                                 assert (ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING);
                                 if (deadNodes.contains(ta.getNodeId())) {
-                                    ta.setStatus(TaskAttempt.TaskStatus.FAILED,
-                                            new HyracksException("Node " + ta.getNodeId() + " failed"));
+                                    ta.setStatus(TaskAttempt.TaskStatus.FAILED, "Node " + ta.getNodeId() + " failed");
                                     abort = true;
                                 }
                             }

@@ -146,10 +146,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
                 nodeController.getId(), taskProfile);
     }
 
-    public synchronized void notifyTaskFailed(Task task, Exception exception) throws Exception {
+    public synchronized void notifyTaskFailed(Task task, String details) throws Exception {
         taskMap.remove(task);
         nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), nodeController.getId(),
-                exception);
+                details);
     }
 
     public NodeControllerService getNodeController() {

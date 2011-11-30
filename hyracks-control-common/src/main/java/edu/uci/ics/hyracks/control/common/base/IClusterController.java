@@ -35,7 +35,7 @@ public interface IClusterController extends Remote {
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception;
 
-    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception e) throws Exception;
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception;
 
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception;
 

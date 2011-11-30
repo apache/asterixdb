@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -302,18 +300,9 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("task-attempt-id", ta.getTaskAttemptId());
                                 taskAttempt.put("status", ta.getStatus());
                                 taskAttempt.put("node-id", ta.getNodeId());
-                                Exception e = ta.getException();
-                                if (e != null) {
-                                    JSONObject ex = new JSONObject();
-                                    ex.put("exception-class", e.getClass().getName());
-                                    ex.put("exception-message", e.getMessage());
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    PrintWriter pw = new PrintWriter(baos);
-                                    e.printStackTrace(pw);
-                                    pw.close();
-                                    ex.put("exception-stacktrace", new String(baos.toByteArray()));
-
-                                    taskAttempt.put("exception", ex);
+                                String failureDetails = ta.getFailureDetails();
+                                if (failureDetails != null) {
+                                    taskAttempt.put("failure-details", failureDetails);
                                 }
                                 taskAttempts.put(taskAttempt);
                             }

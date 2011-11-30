@@ -250,9 +250,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, Exception exception)
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details)
             throws Exception {
-        TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, exception);
+        TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, details);
         workQueue.schedule(tfe);
     }
 
