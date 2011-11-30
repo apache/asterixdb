@@ -462,7 +462,8 @@ public class JobScheduler {
         for (TaskCluster tc : inProgressTaskClusters) {
             abortTaskCluster(findLastTaskClusterAttempt(tc));
         }
-        jobRun.setStatus(JobStatus.FAILURE, exception);
+        inProgressTaskClusters.clear();
+        ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, jobRun.getJobId(), JobStatus.FAILURE, exception));
     }
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt) {

@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
@@ -241,8 +242,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void cleanUpJob(JobId jobId) throws Exception {
-        CleanupJobWork cjw = new CleanupJobWork(this, jobId);
+    public void cleanUpJob(JobId jobId, JobStatus status) throws Exception {
+        CleanupJobWork cjw = new CleanupJobWork(this, jobId, status);
         queue.scheduleAndSync(cjw);
     }
 

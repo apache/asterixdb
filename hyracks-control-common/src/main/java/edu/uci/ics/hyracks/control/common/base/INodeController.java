@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
@@ -37,7 +38,7 @@ public interface INodeController extends Remote {
 
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;
 
-    public void cleanUpJob(JobId jobId) throws Exception;
+    public void cleanUpJob(JobId jobId, JobStatus status) throws Exception;
 
     public void notifyRegistration(IClusterController ccs) throws Exception;
 

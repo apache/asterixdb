@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
@@ -31,9 +32,12 @@ public class CleanupJobWork extends SynchronizableWork {
 
     private final JobId jobId;
 
-    public CleanupJobWork(NodeControllerService ncs, JobId jobId) {
+    private JobStatus status;
+
+    public CleanupJobWork(NodeControllerService ncs, JobId jobId, JobStatus status) {
         this.ncs = ncs;
         this.jobId = jobId;
+        this.status = status;
     }
 
     @Override
@@ -46,7 +50,7 @@ public class CleanupJobWork extends SynchronizableWork {
         if (joblet != null) {
             IJobletEventListener listener = joblet.getJobletEventListener();
             if (listener != null) {
-                listener.jobletFinish();
+                listener.jobletFinish(status);
             }
             ncs.getPartitionManager().unregisterPartitions(jobId);
             joblet.close();

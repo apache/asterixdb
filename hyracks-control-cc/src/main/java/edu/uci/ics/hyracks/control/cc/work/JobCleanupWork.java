@@ -51,7 +51,7 @@ public class JobCleanupWork extends AbstractWork {
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
         for (String n : targetNodes) {
-            jcns[i++] = new JobCompleteNotifier(n, jobId);
+            jcns[i++] = new JobCompleteNotifier(n, jobId, status);
             NodeControllerState ncs = ccs.getNodeMap().get(n);
             if (ncs != null) {
                 ncs.getActiveJobIds().remove(jobId);

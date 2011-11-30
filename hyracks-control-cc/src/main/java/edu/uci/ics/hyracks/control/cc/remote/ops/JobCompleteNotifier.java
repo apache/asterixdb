@@ -15,21 +15,24 @@
 package edu.uci.ics.hyracks.control.cc.remote.ops;
 
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 
 public class JobCompleteNotifier implements RemoteOp<Void> {
     private String nodeId;
     private JobId jobId;
+    private JobStatus status;
 
-    public JobCompleteNotifier(String nodeId, JobId jobId) {
+    public JobCompleteNotifier(String nodeId, JobId jobId, JobStatus status) {
         this.nodeId = nodeId;
         this.jobId = jobId;
+        this.status = status;
     }
 
     @Override
     public Void execute(INodeController node) throws Exception {
-        node.cleanUpJob(jobId);
+        node.cleanUpJob(jobId, status);
         return null;
     }
 
