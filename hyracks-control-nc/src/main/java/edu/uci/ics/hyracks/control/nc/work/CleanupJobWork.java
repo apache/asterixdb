@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
@@ -43,6 +44,10 @@ public class CleanupJobWork extends SynchronizableWork {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
+            IJobletEventListener listener = joblet.getJobletEventListener();
+            if (listener != null) {
+                listener.jobletFinish();
+            }
             ncs.getPartitionManager().unregisterPartitions(jobId);
             joblet.close();
         }

@@ -37,6 +37,8 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IJobletEventListener;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -98,7 +100,7 @@ public class StartTasksWork extends SynchronizableWork {
                 }
             };
 
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx);
+            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, jag);
 
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
@@ -157,11 +159,18 @@ public class StartTasksWork extends SynchronizableWork {
         }
     }
 
-    private Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx) throws Exception {
+    private Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag)
+            throws Exception {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
             ji = new Joblet(ncs, jobId, appCtx);
+            IJobletEventListenerFactory jelf = jag.getJobSpecification().getJobletEventListenerFactory();
+            if (jelf != null) {
+                IJobletEventListener listener = jelf.createListener(ji);
+                ji.setJobletEventListener(listener);
+                listener.jobletStart();
+            }
             jobletMap.put(jobId, ji);
         }
         return ji;

@@ -58,6 +58,8 @@ public class JobSpecification implements Serializable {
 
     private int maxAttempts;
 
+    private IJobletEventListenerFactory jobletEventListenerFactory;
+
     private transient int operatorIdCounter;
 
     private transient int connectorIdCounter;
@@ -213,6 +215,14 @@ public class JobSpecification implements Serializable {
 
     public Set<Constraint> getUserConstraints() {
         return userConstraints;
+    }
+
+    public IJobletEventListenerFactory getJobletEventListenerFactory() {
+        return jobletEventListenerFactory;
+    }
+
+    public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
+        this.jobletEventListenerFactory = jobletEventListenerFactory;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

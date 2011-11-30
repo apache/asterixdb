@@ -56,7 +56,6 @@ public class AbortTasksWork extends SynchronizableWork {
                     task.abort();
                 }
             }
-            ji.close();
         }
     }
 }
