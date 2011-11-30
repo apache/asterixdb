@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.common.work;
 
-public class FutureValue {
+public class FutureValue<T> {
     private boolean done;
 
-    private Object value;
+    private T value;
 
     private Exception e;
 
@@ -27,7 +27,7 @@ public class FutureValue {
         e = null;
     }
 
-    public synchronized void setValue(Object value) {
+    public synchronized void setValue(T value) {
         done = true;
         this.value = value;
         e = null;
@@ -48,7 +48,7 @@ public class FutureValue {
         notifyAll();
     }
 
-    public synchronized Object get() throws Exception {
+    public synchronized T get() throws Exception {
         while (!done) {
             wait();
         }

@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.control.nc.work;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
@@ -28,13 +27,11 @@ import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public class BuildJobProfilesWork extends SynchronizableWork {
-    private static final Logger LOGGER = Logger.getLogger(BuildJobProfilesWork.class.getName());
-
     private final NodeControllerService ncs;
 
-    private final FutureValue fv;
+    private final FutureValue<List<JobProfile>> fv;
 
-    public BuildJobProfilesWork(NodeControllerService ncs, FutureValue fv) {
+    public BuildJobProfilesWork(NodeControllerService ncs, FutureValue<List<JobProfile>> fv) {
         this.ncs = ncs;
         this.fv = fv;
     }

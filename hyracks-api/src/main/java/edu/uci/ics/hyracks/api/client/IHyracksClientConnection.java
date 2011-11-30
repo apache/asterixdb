@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.io.File;
 import java.util.EnumSet;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -98,7 +99,7 @@ public interface IHyracksClientConnection {
     public void start(JobId jobId) throws Exception;
 
     /**
-     * Waits untile the specified job has completed, either successfully or has
+     * Waits until the specified job has completed, either successfully or has
      * encountered a permanent failure.
      * 
      * @param jobId
@@ -106,4 +107,11 @@ public interface IHyracksClientConnection {
      * @throws Exception
      */
     public void waitForCompletion(JobId jobId) throws Exception;
+
+    /**
+     * Gets a map of node controller names to node information.
+     * 
+     * @return Map of node name to node information.
+     */
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception;
 }

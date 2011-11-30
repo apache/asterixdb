@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.rmi.Remote;
 import java.util.EnumSet;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -37,4 +38,6 @@ public interface IHyracksClientInterface extends Remote {
     public void start(JobId jobId) throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
+
+    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
 }

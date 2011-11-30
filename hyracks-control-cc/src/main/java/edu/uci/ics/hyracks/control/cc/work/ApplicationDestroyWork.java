@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.control.common.work.FutureValue;
 public class ApplicationDestroyWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final String appName;
-    private FutureValue fv;
+    private FutureValue<Object> fv;
 
-    public ApplicationDestroyWork(ClusterControllerService ccs, String appName, FutureValue fv) {
+    public ApplicationDestroyWork(ClusterControllerService ccs, String appName, FutureValue<Object> fv) {
         this.ccs = ccs;
         this.appName = appName;
         this.fv = fv;

@@ -47,20 +47,11 @@ public class RemoveDeadNodesWork extends AbstractWork {
             }
         }
         Set<JobId> affectedJobIds = new HashSet<JobId>();
-        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIPAddressNodeNameMap();
         for (String deadNode : deadNodes) {
             NodeControllerState state = nodeMap.remove(deadNode);
 
             // Deal with dead tasks.
             affectedJobIds.addAll(state.getActiveJobIds());
-
-            String ipAddress = state.getNCConfig().dataIPAddress;
-            Set<String> ipNodes = ipAddressNodeNameMap.get(ipAddress);
-            if (ipNodes != null) {
-                if (ipNodes.remove(deadNode) && ipNodes.isEmpty()) {
-                    ipAddressNodeNameMap.remove(ipAddress);
-                }
-            }
         }
         int size = affectedJobIds.size();
         if (size > 0) {

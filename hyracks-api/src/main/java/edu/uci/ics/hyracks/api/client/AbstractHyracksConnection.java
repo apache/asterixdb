@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.io.File;
 import java.util.EnumSet;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -87,5 +88,10 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
         hci.waitForCompletion(jobId);
+    }
+
+    @Override
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception {
+        return hci.getNodeControllersInfo();
     }
 }

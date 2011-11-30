@@ -3,9 +3,11 @@ package edu.uci.ics.hyracks.control.cc;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.EnumSet;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -57,5 +59,10 @@ public class CCClientInterface extends UnicastRemoteObject implements IHyracksCl
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
         ccs.waitForCompletion(jobId);
+    }
+
+    @Override
+    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
+        return ccs.getNodeControllersInfo();
     }
 }

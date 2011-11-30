@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -47,6 +48,7 @@ import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
+import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.JobCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
 import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
@@ -199,10 +201,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return nodeRegistry;
     }
 
-    public Map<String, Set<String>> getIPAddressNodeNameMap() {
-        return ipAddressNodeNameMap;
-    }
-
     public CCConfig getConfig() {
         return ccConfig;
     }
@@ -250,8 +248,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details)
-            throws Exception {
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception {
         TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, details);
         workQueue.schedule(tfe);
     }
@@ -302,14 +299,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        FutureValue fv = new FutureValue();
+        FutureValue<Object> fv = new FutureValue<Object>();
         workQueue.schedule(new ApplicationDestroyWork(this, appName, fv));
         fv.get();
     }
 
     @Override
     public void startApplication(final String appName) throws Exception {
-        FutureValue fv = new FutureValue();
+        FutureValue<Object> fv = new FutureValue<Object>();
         workQueue.schedule(new ApplicationStartWork(this, appName, fv));
         fv.get();
     }
@@ -317,6 +314,13 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public ClusterControllerInfo getClusterControllerInfo() throws Exception {
         return info;
+    }
+
+    @Override
+    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
+        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<Map<String, NodeControllerInfo>>();
+        workQueue.schedule(new GetNodeControllersInfoWork(this, fv));
+        return fv.get();
     }
 
     @Override

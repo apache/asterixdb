@@ -351,10 +351,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         @Override
         public void run() {
             try {
-                FutureValue fv = new FutureValue();
+                FutureValue<List<JobProfile>> fv = new FutureValue<List<JobProfile>>();
                 BuildJobProfilesWork bjpw = new BuildJobProfilesWork(NodeControllerService.this, fv);
                 queue.scheduleAndSync(bjpw);
-                List<JobProfile> profiles = (List<JobProfile>) fv.get();
+                List<JobProfile> profiles = fv.get();
                 if (!profiles.isEmpty()) {
                     cc.reportProfile(id, profiles);
                 }

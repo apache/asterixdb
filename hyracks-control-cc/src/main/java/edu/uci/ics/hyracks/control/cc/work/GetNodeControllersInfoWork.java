@@ -14,29 +14,33 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
+import edu.uci.ics.hyracks.api.client.NodeStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
+import edu.uci.ics.hyracks.control.common.work.FutureValue;
 
-public class RegisterNodeWork extends SynchronizableWork {
+public class GetNodeControllersInfoWork extends AbstractWork {
     private final ClusterControllerService ccs;
-    private final String nodeId;
-    private final NodeControllerState state;
+    private FutureValue<Map<String, NodeControllerInfo>> fv;
 
-    public RegisterNodeWork(ClusterControllerService ccs, String nodeId, NodeControllerState state) {
+    public GetNodeControllersInfoWork(ClusterControllerService ccs, FutureValue<Map<String, NodeControllerInfo>> fv) {
         this.ccs = ccs;
-        this.nodeId = nodeId;
-        this.state = state;
+        this.fv = fv;
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
+        Map<String, NodeControllerInfo> result = new LinkedHashMap<String, NodeControllerInfo>();
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        if (nodeMap.containsKey(nodeId)) {
-            throw new Exception("Node with this name already registered.");
+        for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
+            result.put(e.getKey(), new NodeControllerInfo(e.getKey(), e.getValue().getDataPort().getIpAddress(),
+                    NodeStatus.ALIVE));
         }
-        nodeMap.put(nodeId, state);
+        fv.setValue(result);
     }
 }

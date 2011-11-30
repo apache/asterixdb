@@ -30,9 +30,9 @@ import edu.uci.ics.hyracks.control.common.work.FutureValue;
 public class ApplicationStartWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final String appName;
-    private final FutureValue fv;
+    private final FutureValue<Object> fv;
 
-    public ApplicationStartWork(ClusterControllerService ccs, String appName, FutureValue fv) {
+    public ApplicationStartWork(ClusterControllerService ccs, String appName, FutureValue<Object> fv) {
         this.ccs = ccs;
         this.appName = appName;
         this.fv = fv;
