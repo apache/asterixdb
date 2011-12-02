@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -75,6 +76,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private IJobletEventListener jobletEventListener;
 
+    private JobStatus cleanupStatus;
+
+    private boolean cleanupPending;
+
     public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
@@ -86,6 +91,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
+        cleanupPending = false;
     }
 
     @Override
@@ -140,16 +146,28 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {
         taskMap.remove(task);
-        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile());
-        task.dumpProfile(taskProfile);
-        nodeController.getClusterController().notifyTaskComplete(jobId, task.getTaskAttemptId(),
-                nodeController.getId(), taskProfile);
+        try {
+            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile());
+            task.dumpProfile(taskProfile);
+            nodeController.getClusterController().notifyTaskComplete(jobId, task.getTaskAttemptId(),
+                    nodeController.getId(), taskProfile);
+        } finally {
+            if (cleanupPending && taskMap.isEmpty()) {
+                performCleanup();
+            }
+        }
     }
 
     public synchronized void notifyTaskFailed(Task task, String details) throws Exception {
         taskMap.remove(task);
-        nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), nodeController.getId(),
-                details);
+        try {
+            nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(),
+                    nodeController.getId(), details);
+        } finally {
+            if (cleanupPending && taskMap.isEmpty()) {
+                performCleanup();
+            }
+        }
     }
 
     public NodeControllerService getNodeController() {
@@ -245,5 +263,23 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public void setJobletEventListener(IJobletEventListener jobletEventListener) {
         this.jobletEventListener = jobletEventListener;
+    }
+
+    public synchronized void cleanup(JobStatus status) {
+        cleanupStatus = status;
+        cleanupPending = true;
+        if (taskMap.isEmpty()) {
+            performCleanup();
+        }
+    }
+
+    private void performCleanup() {
+        nodeController.getJobletMap().remove(jobId);
+        IJobletEventListener listener = getJobletEventListener();
+        if (listener != null) {
+            listener.jobletFinish(cleanupStatus);
+        }
+        close();
+        cleanupPending = false;
     }
 }

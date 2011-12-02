@@ -37,6 +37,8 @@ public interface IClusterController extends Remote {
 
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception;
 
+    public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception;
+
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception;
 
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception;

@@ -16,16 +16,9 @@ package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Set;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
 import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
@@ -48,14 +41,12 @@ public class JobCleanupWork extends AbstractWork {
     public void run() {
         final JobRun run = ccs.getActiveRunMap().get(jobId);
         Set<String> targetNodes = run.getParticipatingNodeIds();
+        run.getCleanupPendingNodeIds().addAll(targetNodes);
+        run.setPendingStatus(status, exception);
         final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
         int i = 0;
         for (String n : targetNodes) {
             jcns[i++] = new JobCompleteNotifier(n, jobId, status);
-            NodeControllerState ncs = ccs.getNodeMap().get(n);
-            if (ncs != null) {
-                ncs.getActiveJobIds().remove(jobId);
-            }
         }
         ccs.getExecutor().execute(new Runnable() {
             @Override
@@ -67,41 +58,6 @@ public class JobCleanupWork extends AbstractWork {
                         e.printStackTrace();
                     }
                 }
-                ccs.getWorkQueue().schedule(new AbstractWork() {
-                    @Override
-                    public void run() {
-                        CCApplicationContext appCtx = ccs.getApplicationMap().get(
-                                run.getJobActivityGraph().getApplicationName());
-                        if (appCtx != null) {
-                            try {
-                                appCtx.notifyJobFinish(jobId);
-                            } catch (HyracksException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        run.setStatus(status, exception);
-                        ccs.getActiveRunMap().remove(jobId);
-                        ccs.getRunMapArchive().put(jobId, run);
-                        try {
-                            ccs.getJobLogFile().log(createJobLogObject(run));
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    private JSONObject createJobLogObject(final JobRun run) {
-                        JSONObject jobLogObject = new JSONObject();
-                        try {
-                            JobActivityGraph jag = run.getJobActivityGraph();
-                            jobLogObject.put("job-specification", jag.getJobSpecification().toJSON());
-                            jobLogObject.put("job-activity-graph", jag.toJSON());
-                            jobLogObject.put("job-run", run.toJSON());
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
-                        return jobLogObject;
-                    }
-                });
             }
         });
     }

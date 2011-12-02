@@ -19,7 +19,9 @@ import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
@@ -69,6 +71,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Map<PartitionId, PartitionProfile> partitionSendProfile;
 
+    private final Set<Thread> pendingThreads;
+
     private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
@@ -92,6 +96,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         opEnv = joblet.getEnvironment(taskId.getTaskId().getActivityId().getOperatorDescriptorId(), taskId.getTaskId()
                 .getPartition());
         partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
+        pendingThreads = new LinkedHashSet<Thread>();
         failed = false;
         errorBaos = new ByteArrayOutputStream();
         errorWriter = new PrintWriter(errorBaos, true);
@@ -181,10 +186,30 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         joblet.getExecutor().execute(this);
     }
 
-    public void abort() {
+    public synchronized void abort() {
         aborted = true;
         for (IPartitionCollector c : collectors) {
             c.abort();
+        }
+        for (Thread t : pendingThreads) {
+            t.interrupt();
+        }
+    }
+
+    private synchronized void addPendingThread(Thread t) {
+        pendingThreads.add(t);
+    }
+
+    private synchronized void removePendingThread(Thread t) {
+        pendingThreads.remove(t);
+        if (pendingThreads.isEmpty()) {
+            notifyAll();
+        }
+    }
+
+    public synchronized void waitForCompletion() throws InterruptedException {
+        while (!pendingThreads.isEmpty()) {
+            wait();
         }
     }
 
@@ -192,6 +217,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public void run() {
         Thread ct = Thread.currentThread();
         String threadName = ct.getName();
+        addPendingThread(ct);
         try {
             ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
             operator.initialize();
@@ -205,7 +231,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         final int cIdx = i;
                         executor.execute(new Runnable() {
                             public void run() {
+                                if (aborted) {
+                                    return;
+                                }
                                 Thread thread = Thread.currentThread();
+                                addPendingThread(thread);
                                 String oldName = thread.getName();
                                 thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                                 try {
@@ -220,6 +250,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 } finally {
                                     thread.setName(oldName);
                                     sem.release();
+                                    removePendingThread(thread);
                                 }
                             }
                         });
@@ -242,6 +273,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } finally {
             ct.setName(threadName);
             close();
+            removePendingThread(ct);
         }
         if (failed) {
             errorWriter.close();

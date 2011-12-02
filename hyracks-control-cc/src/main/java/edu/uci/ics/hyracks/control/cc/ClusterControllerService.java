@@ -51,6 +51,7 @@ import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.JobCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
+import edu.uci.ics.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterNodeWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionAvailibilityWork;
@@ -251,6 +252,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception {
         TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, details);
         workQueue.schedule(tfe);
+    }
+
+    @Override
+    public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception {
+        JobletCleanupNotificationWork jcnw = new JobletCleanupNotificationWork(this, jobId, nodeId);
+        workQueue.schedule(jcnw);
     }
 
     @Override

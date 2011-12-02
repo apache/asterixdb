@@ -47,6 +47,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final Set<String> participatingNodeIds;
 
+    private final Set<String> cleanupPendingNodeIds;
+
     private final JobProfile profile;
 
     private Set<ActivityCluster> activityClusters;
@@ -67,11 +69,16 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception exception;
 
+    private JobStatus pendingStatus;
+
+    private Exception pendingException;
+
     public JobRun(JobId jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
         pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<String>();
+        cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
@@ -99,6 +106,23 @@ public class JobRun implements IJobStatusConditionVariable {
         return status;
     }
 
+    public synchronized Exception getException() {
+        return exception;
+    }
+
+    public void setPendingStatus(JobStatus status, Exception exception) {
+        this.pendingStatus = status;
+        this.pendingException = exception;
+    }
+
+    public JobStatus getPendingStatus() {
+        return pendingStatus;
+    }
+
+    public synchronized Exception getPendingException() {
+        return pendingException;
+    }
+
     public long getCreateTime() {
         return createTime;
     }
@@ -123,10 +147,6 @@ public class JobRun implements IJobStatusConditionVariable {
         this.endTime = endTime;
     }
 
-    public synchronized Exception getException() {
-        return exception;
-    }
-
     @Override
     public synchronized void waitForCompletion() throws Exception {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
@@ -139,6 +159,10 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public Set<String> getParticipatingNodeIds() {
         return participatingNodeIds;
+    }
+
+    public Set<String> getCleanupPendingNodeIds() {
+        return cleanupPendingNodeIds;
     }
 
     public JobProfile getJobProfile() {

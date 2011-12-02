@@ -69,7 +69,7 @@ import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
 import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
-import edu.uci.ics.hyracks.control.nc.work.CleanupJobWork;
+import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
 import edu.uci.ics.hyracks.control.nc.work.CreateApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.DestroyApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
@@ -242,8 +242,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     }
 
     @Override
-    public void cleanUpJob(JobId jobId, JobStatus status) throws Exception {
-        CleanupJobWork cjw = new CleanupJobWork(this, jobId, status);
+    public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
+        CleanupJobletWork cjw = new CleanupJobletWork(this, jobId, status);
         queue.scheduleAndSync(cjw);
     }
 

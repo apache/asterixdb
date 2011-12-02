@@ -32,7 +32,7 @@ public class JobCompleteNotifier implements RemoteOp<Void> {
 
     @Override
     public Void execute(INodeController node) throws Exception {
-        node.cleanUpJob(jobId, status);
+        node.cleanUpJoblet(jobId, status);
         return null;
     }
 

@@ -38,7 +38,7 @@ public interface INodeController extends Remote {
 
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;
 
-    public void cleanUpJob(JobId jobId, JobStatus status) throws Exception;
+    public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception;
 
     public void notifyRegistration(IClusterController ccs) throws Exception;
 
