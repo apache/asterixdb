@@ -98,5 +98,6 @@
     <module>hyracks-examples</module>
     <module>hyracks-documentation</module>
     <module>hyracks-hadoop-compat</module>
+    <module>hyracks-algebricks</module>
   </modules>
 </project>
