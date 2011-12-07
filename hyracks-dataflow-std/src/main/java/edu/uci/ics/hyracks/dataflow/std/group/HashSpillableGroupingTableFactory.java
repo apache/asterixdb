@@ -111,7 +111,6 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
             private final ISerializableTable table = new SerializableHashTable(tableSize, ctx);;
             private final TuplePointer storedTuplePointer = new TuplePointer();
             private final List<ByteBuffer> frames = new ArrayList<ByteBuffer>();
-            private int groupSize = 0;
             private IAggregatorDescriptor aggregator = aggregateDescriptorFactory.createAggregator(ctx,
                     inRecordDescriptor, outRecordDescriptor, keyFields);
 
@@ -124,7 +123,6 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
 
             @Override
             public void reset() {
-                groupSize = 0;
                 dataFrameCount = -1;
                 tPointers = null;
                 table.reset();
@@ -175,7 +173,6 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
                     storedTuplePointer.frameIndex = dataFrameCount;
                     storedTuplePointer.tupleIndex = appender.getTupleCount() - 1;
                     table.insert(entry, storedTuplePointer);
-                    groupSize++;
                 } else {
                     // If there is a matching found, do aggregation directly
                     int tupleOffset = storedKeysAccessor1.getTupleStartOffset(storedTuplePointer.tupleIndex);
@@ -439,7 +436,6 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
 
             @Override
             public void close() {
-                groupSize = 0;
                 dataFrameCount = -1;
                 tPointers = null;
                 table.close();

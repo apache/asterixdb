@@ -108,6 +108,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
+                count += 1;
                 if (fieldOutput != null) {
                     try {
                         fieldOutput.writeInt(sum);
@@ -117,7 +118,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                                 "I/O exception when initializing the aggregator.");
                     }
                 } else {
-                    state.setState(new Object[]{sum, count});
+                    state.setState(new Integer[]{sum, count});
                 }
             }
             
@@ -180,7 +181,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                     Integer[] fields = (Integer[])state.getState();
                     sum += fields[0];
                     count += fields[1];
-                    state.setState(new Object[]{sum, count});
+                    state.setState(new Integer[]{sum, count});
                 }
             }
         };

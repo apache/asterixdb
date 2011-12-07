@@ -399,6 +399,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             if (currentTupleInOutFrame < 0
                                     || compareFrameTuples(fta, tupleIndex, outFrameAccessor, currentTupleInOutFrame) != 0) {
                                 /**
+                                 * If a new group comes
                                  * Initialize the first output record
                                  * Reset the tuple builder
                                  */
