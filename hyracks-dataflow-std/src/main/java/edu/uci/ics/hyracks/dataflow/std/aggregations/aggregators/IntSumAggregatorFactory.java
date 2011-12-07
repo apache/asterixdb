@@ -1,0 +1,180 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators;
+
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
+
+/**
+ *
+ */
+public class IntSumAggregatorFactory implements
+        IFieldAggregateDescriptorFactory {
+
+    private static final long serialVersionUID = 1L;
+
+    private final int aggField;
+
+    public IntSumAggregatorFactory(int aggField) {
+        this.aggField = aggField;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.uci.ics.hyracks.dataflow.std.aggregations.
+     * IFieldAggregateDescriptorFactory
+     * #createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
+     */
+    @Override
+    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
+            RecordDescriptor inRecordDescriptor,
+            RecordDescriptor outRecordDescriptor) throws HyracksDataException {
+
+        return new IFieldAggregateDescriptor() {
+
+            @Override
+            public void reset(IAggregateState state) {
+                state.reset();
+            }
+
+            @Override
+            public void outputPartialResult(DataOutput fieldOutput,
+                    byte[] data, int offset, IAggregateState state)
+                    throws HyracksDataException {
+                int sum;
+                if (data != null) {
+                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                } else {
+                    sum = (Integer) (state.getState());
+                }
+                try {
+                    fieldOutput.writeInt(sum);
+                } catch (IOException e) {
+                    throw new HyracksDataException(
+                            "I/O exception when writing aggregation to the output buffer.");
+                }
+            }
+
+            @Override
+            public void outputFinalResult(DataOutput fieldOutput, byte[] data,
+                    int offset, IAggregateState state)
+                    throws HyracksDataException {
+                int sum;
+                if (data != null) {
+                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                } else {
+                    sum = (Integer) (state.getState());
+                }
+                try {
+                    fieldOutput.writeInt(sum);
+                } catch (IOException e) {
+                    throw new HyracksDataException(
+                            "I/O exception when writing aggregation to the output buffer.");
+                }
+            }
+
+            @Override
+            public void init(IFrameTupleAccessor accessor, int tIndex,
+                    DataOutput fieldOutput, IAggregateState state)
+                    throws HyracksDataException {
+                int sum = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                sum += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart);
+                if (fieldOutput != null) {
+                    try {
+                        fieldOutput.writeInt(sum);
+                    } catch (IOException e) {
+                        throw new HyracksDataException(
+                                "I/O exception when initializing the aggregator.");
+                    }
+                } else {
+                    state.setState(new Integer(sum));
+                }
+            }
+
+            @Override
+            public IAggregateState createState() {
+                return new IAggregateState() {
+
+                    private static final long serialVersionUID = 1L;
+
+                    Integer sum = null;
+
+                    public int getLength() {
+                        return 4;
+                    }
+
+                    public Object getState() {
+                        return sum;
+                    }
+
+                    public void setState(Object obj) {
+                        sum = null;
+                        sum = (Integer) obj;
+                    }
+
+                    public void reset() {
+                        sum = null;
+                    }
+
+                };
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex,
+                    byte[] data, int offset, IAggregateState state)
+                    throws HyracksDataException {
+                int sum = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                sum += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart);
+                if (data != null) {
+                    ByteBuffer buf = ByteBuffer.wrap(data);
+                    sum += buf.getInt(offset);
+                    buf.putInt(offset, sum);
+                } else {
+                    sum += (Integer) (state.getState());
+                    state.setState(new Integer(sum));
+                }
+            }
+        };
+    }
+
+}
