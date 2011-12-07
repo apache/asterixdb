@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
 
@@ -51,13 +51,13 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
         return new IFieldAggregateDescriptor() {
             
             @Override
-            public void reset(IAggregateState state) {
+            public void reset(AggregateState state) {
                 state.reset();
             }
             
             @Override
             public void outputPartialResult(DataOutput fieldOutput, byte[] data,
-                    int offset, IAggregateState state) throws HyracksDataException {
+                    int offset, AggregateState state) throws HyracksDataException {
                 int sum, count;
                 if (data != null) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
@@ -78,7 +78,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
             
             @Override
             public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-                    int offset, IAggregateState state) throws HyracksDataException {
+                    int offset, AggregateState state) throws HyracksDataException {
                 int sum, count;
                 if (data != null) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
@@ -98,7 +98,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
             
             @Override
             public void init(IFrameTupleAccessor accessor, int tIndex,
-                    DataOutput fieldOutput, IAggregateState state)
+                    DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
                 int sum = 0;
                 int count = 0;
@@ -123,34 +123,8 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
             }
             
             @Override
-            public IAggregateState createState() {
-                return new IAggregateState() {
-                    
-                    private static final long serialVersionUID = 1L;
-                    
-                    Object state = null;
-                    
-                    @Override
-                    public void setState(Object obj) {
-                        state = null;
-                        state = obj;
-                    }
-                    
-                    @Override
-                    public void reset() {
-                        state = null;
-                    }
-                    
-                    @Override
-                    public Object getState() {
-                        return state;
-                    }
-                    
-                    @Override
-                    public int getLength() {
-                        return 8;
-                    }
-                };
+            public AggregateState createState() {
+                return new AggregateState();
             }
             
             @Override
@@ -161,7 +135,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
             
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-                    byte[] data, int offset, IAggregateState state)
+                    byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum = 0, count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);

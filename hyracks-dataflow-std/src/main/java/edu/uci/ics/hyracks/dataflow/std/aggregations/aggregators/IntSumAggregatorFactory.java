@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
 
@@ -58,13 +58,13 @@ public class IntSumAggregatorFactory implements
         return new IFieldAggregateDescriptor() {
 
             @Override
-            public void reset(IAggregateState state) {
+            public void reset(AggregateState state) {
                 state.reset();
             }
 
             @Override
             public void outputPartialResult(DataOutput fieldOutput,
-                    byte[] data, int offset, IAggregateState state)
+                    byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
                 if (data != null) {
@@ -82,7 +82,7 @@ public class IntSumAggregatorFactory implements
 
             @Override
             public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-                    int offset, IAggregateState state)
+                    int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
                 if (data != null) {
@@ -100,7 +100,7 @@ public class IntSumAggregatorFactory implements
 
             @Override
             public void init(IFrameTupleAccessor accessor, int tIndex,
-                    DataOutput fieldOutput, IAggregateState state)
+                    DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -122,31 +122,8 @@ public class IntSumAggregatorFactory implements
             }
 
             @Override
-            public IAggregateState createState() {
-                return new IAggregateState() {
-
-                    private static final long serialVersionUID = 1L;
-
-                    Integer sum = null;
-
-                    public int getLength() {
-                        return 4;
-                    }
-
-                    public Object getState() {
-                        return sum;
-                    }
-
-                    public void setState(Object obj) {
-                        sum = null;
-                        sum = (Integer) obj;
-                    }
-
-                    public void reset() {
-                        sum = null;
-                    }
-
-                };
+            public AggregateState createState() {
+                return new AggregateState();
             }
 
             @Override
@@ -156,7 +133,7 @@ public class IntSumAggregatorFactory implements
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-                    byte[] data, int offset, IAggregateState state)
+                    byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);

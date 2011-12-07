@@ -135,7 +135,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 : firstKeyNormalizerFactory.createNormalizedKeyComputer();
 
         final IFieldAggregateDescriptor[] aggregators = new IFieldAggregateDescriptor[aggregatorFactories.length];
-        final IAggregateState[] aggregateStates = new IAggregateState[aggregatorFactories.length];
+        final AggregateState[] aggregateStates = new AggregateState[aggregatorFactories.length];
         for (int i = 0; i < aggregators.length; i++) {
             aggregators[i] = aggregatorFactories[i].createAggregator(ctx,
                     inRecordDescriptor, outRecordDescriptor);

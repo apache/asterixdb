@@ -19,28 +19,27 @@ import java.io.Serializable;
 /**
  *
  */
-public interface IAggregateState extends Serializable {
+public class AggregateState implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
+    Object state = null;
 
-	/**
-	 * Return the length of the state if in the frame
-	 * @return
-	 */
-	public int getLength();
-	
-	/**
-	 * Return the state as a java object
-	 * @return
-	 */
-	public Object getState();
-	
-	/**
-	 * Set the state.
-	 * @param obj
-	 */
-	public void setState(Object obj);
-	
-	/**
-	 * Reset the state. 
-	 */
-	public void reset();
+    public void setState(Object obj) {
+        state = null;
+        state = obj;
+    }
+
+    public void reset() {
+        state = null;
+    }
+
+    public Object getState() {
+        return state;
+    }
+
+    public int getLength() {
+        return -1;
+    }
+    
 }

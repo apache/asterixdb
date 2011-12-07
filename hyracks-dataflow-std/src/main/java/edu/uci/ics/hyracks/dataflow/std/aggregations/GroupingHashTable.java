@@ -66,7 +66,7 @@ class GroupingHashTable {
 	private final FrameTupleAppender appender;
 	private final List<ByteBuffer> buffers;
 	private final Link[] table;
-	private IAggregateState[][] aggregateStates;
+	private AggregateState[][] aggregateStates;
 	private int accumulatorSize;
 
 	private int lastBIndex;
@@ -93,7 +93,7 @@ class GroupingHashTable {
 		buffers = new ArrayList<ByteBuffer>();
 		table = new Link[tableSize];
 		
-		this.aggregateStates = new IAggregateState[aggregatorFactories.length][INIT_ACCUMULATORS_SIZE];
+		this.aggregateStates = new AggregateState[aggregatorFactories.length][INIT_ACCUMULATORS_SIZE];
 		accumulatorSize = 0;
 		
 		this.fields = fields;
@@ -176,7 +176,7 @@ class GroupingHashTable {
 			int sbIndex = lastBIndex;
 			int stIndex = appender.getTupleCount() - 1;
 			for (int i = 0; i < aggregators.length; i++) {
-				IAggregateState aggState = aggregators[i].createState();
+				AggregateState aggState = aggregators[i].createState();
 				aggregators[i].init(accessor, tIndex, null, aggState);
 				if (saIndex >= aggregateStates[i].length) {
 					aggregateStates[i] = Arrays.copyOf(aggregateStates[i],

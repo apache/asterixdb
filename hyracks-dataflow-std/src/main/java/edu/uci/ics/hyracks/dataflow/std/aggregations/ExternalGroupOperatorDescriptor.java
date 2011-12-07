@@ -274,7 +274,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         .createBinaryComparator();
             }
             final IFieldAggregateDescriptor[] currentWorkingAggregators = new IFieldAggregateDescriptor[mergeFactories.length];
-            final IAggregateState[] aggregateStates = new IAggregateState[mergeFactories.length];
+            final AggregateState[] aggregateStates = new AggregateState[mergeFactories.length];
             for (int i = 0; i < currentWorkingAggregators.length; i++) {
                 currentWorkingAggregators[i] = mergeFactories[i]
                         .createAggregator(ctx, recordDescriptors[0],

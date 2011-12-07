@@ -29,7 +29,7 @@ public interface IFieldAggregateDescriptor {
      * 
      * @return
      */
-    public IAggregateState createState();
+    public AggregateState createState();
 
     /**
      * Initialize the state based on the input tuple.
@@ -44,7 +44,7 @@ public interface IFieldAggregateDescriptor {
      * @throws HyracksDataException
      */
     public void init(IFrameTupleAccessor accessor, int tIndex,
-            DataOutput fieldOutput, IAggregateState state)
+            DataOutput fieldOutput, AggregateState state)
             throws HyracksDataException;
 
     /**
@@ -55,7 +55,7 @@ public interface IFieldAggregateDescriptor {
      * 
      * @param state
      */
-    public void reset(IAggregateState state);
+    public void reset(AggregateState state);
 
     /**
      * Aggregate the value. Aggregate state should be updated correspondingly.
@@ -72,7 +72,7 @@ public interface IFieldAggregateDescriptor {
      * @throws HyracksDataException
      */
     public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-            byte[] data, int offset, IAggregateState state)
+            byte[] data, int offset, AggregateState state)
             throws HyracksDataException;
 
     /**
@@ -88,7 +88,7 @@ public interface IFieldAggregateDescriptor {
      * @throws HyracksDataException
      */
     public void outputPartialResult(DataOutput fieldOutput, byte[] data,
-            int offset, IAggregateState state) throws HyracksDataException;
+            int offset, AggregateState state) throws HyracksDataException;
 
     /**
      * Output the final aggregation result.
@@ -103,7 +103,7 @@ public interface IFieldAggregateDescriptor {
      * @throws HyracksDataException
      */
     public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-            int offset, IAggregateState state) throws HyracksDataException;
+            int offset, AggregateState state) throws HyracksDataException;
 
     public void close();
 
