@@ -8,12 +8,12 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 /**
  * @author pouria
  * 
- *         Inteface for the Run Generator
+ *         Interface for the Run Generator
  */
 public interface IRunGenerator extends IFrameWriter {
-	/**
-	 * 
-	 * @return the list of generated runs, each stored sorted
-	 */
-	public List<IFrameReader> getRuns();
+
+    /**
+     * @return the list of generated (sorted) runs
+     */
+    public List<IFrameReader> getRuns();
 }

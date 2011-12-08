@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 /**
  * @author pouria
  * 
- *         Operator descriptor for sorting with replacement. Consists of two
+ *         Operator descriptor for sorting with replacement, consisting of two
  *         phases:
  * 
  *         - Run Generation: Denoted by OptimizedSortActivity below, in which
@@ -42,188 +42,163 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
  *         - Merging: Denoted by MergeActivity below, in which runs (generated
  *         in the previous phase) get merged via a merger. Each run has a single
  *         buffer in memory, and a priority queue is used to select the top
- *         tuple each time and send it to the new run/output
+ *         tuple each time. Top tuple is send to a new run or output
  */
-public class OptimizedExternalSortOperatorDescriptor extends
-		AbstractOperatorDescriptor {
 
-	private static final int NO_LIMIT = -1;
+public class OptimizedExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final int NO_LIMIT = -1;
+    private static final long serialVersionUID = 1L;
+    private static final int SORT_ACTIVITY_ID = 0;
+    private static final int MERGE_ACTIVITY_ID = 1;
 
-	private static final int SORT_ACTIVITY_ID = 0;
-	private static final int MERGE_ACTIVITY_ID = 1;
+    private final int[] sortFields;
+    private final INormalizedKeyComputerFactory firstKeyNormalizerFactory;
+    private final IBinaryComparatorFactory[] comparatorFactories;
+    private final int memSize;
+    private final int outputLimit;
 
-	private final int[] sortFields;
-	private final INormalizedKeyComputerFactory firstKeyNormalizerFactory;
-	private final IBinaryComparatorFactory[] comparatorFactories;
-	private final int memSize;
-	private final int outputLimit;
+    public OptimizedExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+        this(spec, framesLimit, NO_LIMIT, sortFields, null, comparatorFactories, recordDescriptor);
+    }
 
-	public OptimizedExternalSortOperatorDescriptor(JobSpecification spec,
-			int framesLimit, int[] sortFields,
-			IBinaryComparatorFactory[] comparatorFactories,
-			RecordDescriptor recordDescriptor) {
-		this(spec, framesLimit, NO_LIMIT, sortFields, null,
-				comparatorFactories, recordDescriptor);
-	}
+    public OptimizedExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int outputLimit,
+            int[] sortFields, IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+        this(spec, framesLimit, outputLimit, sortFields, null, comparatorFactories, recordDescriptor);
+    }
 
-	public OptimizedExternalSortOperatorDescriptor(JobSpecification spec,
-			int framesLimit, int outputLimit, int[] sortFields,
-			IBinaryComparatorFactory[] comparatorFactories,
-			RecordDescriptor recordDescriptor) {
-		this(spec, framesLimit, outputLimit, sortFields, null,
-				comparatorFactories, recordDescriptor);
-	}
+    public OptimizedExternalSortOperatorDescriptor(JobSpecification spec, int memSize, int outputLimit,
+            int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+        super(spec, 1, 1);
+        this.memSize = memSize;
+        this.outputLimit = outputLimit;
+        this.sortFields = sortFields;
+        this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
+        this.comparatorFactories = comparatorFactories;
+        if (memSize <= 1) {
+            throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
+        }
+        recordDescriptors[0] = recordDescriptor;
+    }
 
-	public OptimizedExternalSortOperatorDescriptor(JobSpecification spec,
-			int memSize, int outputLimit, int[] sortFields,
-			INormalizedKeyComputerFactory firstKeyNormalizerFactory,
-			IBinaryComparatorFactory[] comparatorFactories,
-			RecordDescriptor recordDescriptor) {
-		super(spec, 1, 1);
-		this.memSize = memSize;
-		this.outputLimit = outputLimit;
-		this.sortFields = sortFields;
-		this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
-		this.comparatorFactories = comparatorFactories;
-		if (memSize <= 1) {
-			throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
-		}
-		recordDescriptors[0] = recordDescriptor;
-	}
+    @Override
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        OptimizedSortActivity osa = new OptimizedSortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
+        OptimizedMergeActivity oma = new OptimizedMergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-	@Override
-	public void contributeActivities(IActivityGraphBuilder builder) {
-		OptimizedSortActivity osa = new OptimizedSortActivity(new ActivityId(
-				odId, SORT_ACTIVITY_ID));
-		OptimizedMergeActivity oma = new OptimizedMergeActivity(new ActivityId(
-				odId, MERGE_ACTIVITY_ID));
+        builder.addActivity(osa);
+        builder.addSourceEdge(0, osa, 0);
 
-		builder.addActivity(osa);
-		builder.addSourceEdge(0, osa, 0);
+        builder.addActivity(oma);
+        builder.addTargetEdge(0, oma, 0);
 
-		builder.addActivity(oma);
-		builder.addTargetEdge(0, oma, 0);
+        builder.addBlockingEdge(osa, oma);
+    }
 
-		builder.addBlockingEdge(osa, oma);
-	}
+    public static class OptimizedSortTaskState extends AbstractTaskState {
+        private List<IFrameReader> runs;
 
-	public static class OptimizedSortTaskState extends AbstractTaskState {
-		private List<IFrameReader> runs;
+        public OptimizedSortTaskState() {
+        }
 
-		public OptimizedSortTaskState() {
-		}
+        private OptimizedSortTaskState(JobId jobId, TaskId taskId) {
+            super(jobId, taskId);
+        }
 
-		private OptimizedSortTaskState(JobId jobId, TaskId taskId) {
-			super(jobId, taskId);
-		}
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
 
-		@Override
-		public void toBytes(DataOutput out) throws IOException {
+        }
 
-		}
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
 
-		@Override
-		public void fromBytes(DataInput in) throws IOException {
+        }
+    }
 
-		}
-	}
+    private class OptimizedSortActivity extends AbstractActivityNode {
+        private static final long serialVersionUID = 1L;
 
-	private class OptimizedSortActivity extends AbstractActivityNode {
-		private static final long serialVersionUID = 1L;
+        public OptimizedSortActivity(ActivityId id) {
+            super(id);
+        }
 
-		public OptimizedSortActivity(ActivityId id) {
-			super(id);
-		}
+        @Override
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+            final IRunGenerator runGen;
+            if (outputLimit == NO_LIMIT) {
+                runGen = new OptimizedExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory,
+                        comparatorFactories, recordDescriptors[0], memSize);
+            } else {
+                runGen = new OptimizedExternalSortRunGeneratorWithLimit(ctx, sortFields, firstKeyNormalizerFactory,
+                        comparatorFactories, recordDescriptors[0], memSize, outputLimit);
+            }
 
-		@Override
-		public IOperatorNodePushable createPushRuntime(
-				final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-				IRecordDescriptorProvider recordDescProvider,
-				final int partition, int nPartitions) {
-			final IRunGenerator runGen;
-			if (outputLimit == NO_LIMIT) {
-				runGen = new OptimizedExternalSortRunGenerator(ctx, sortFields,
-						firstKeyNormalizerFactory, comparatorFactories,
-						recordDescriptors[0], memSize);
-			} else {
-				runGen = new OptimizedExternalSortRunGeneratorWithLimit(ctx,
-						sortFields, firstKeyNormalizerFactory,
-						comparatorFactories, recordDescriptors[0], memSize,
-						outputLimit);
-			}
+            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
+                @Override
+                public void open() throws HyracksDataException {
 
-			IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
-				@Override
-				public void open() throws HyracksDataException {
+                    runGen.open();
+                }
 
-					runGen.open();
-				}
+                @Override
+                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                    runGen.nextFrame(buffer);
+                }
 
-				@Override
-				public void nextFrame(ByteBuffer buffer)
-						throws HyracksDataException {
-					runGen.nextFrame(buffer);
-				}
+                @Override
+                public void close() throws HyracksDataException {
+                    OptimizedSortTaskState state = new OptimizedSortTaskState(ctx.getJobletContext().getJobId(),
+                            new TaskId(getActivityId(), partition));
+                    runGen.close();
+                    state.runs = runGen.getRuns();
+                    env.setTaskState(state);
 
-				@Override
-				public void close() throws HyracksDataException {
-					OptimizedSortTaskState state = new OptimizedSortTaskState(
-							ctx.getJobletContext().getJobId(), new TaskId(
-									getActivityId(), partition));
-					runGen.close();
-					state.runs = runGen.getRuns();
-					env.setTaskState(state);
+                }
 
-				}
+                @Override
+                public void fail() throws HyracksDataException {
+                    runGen.fail();
+                }
+            };
+            return op;
+        }
+    }
 
-				@Override
-				public void fail() throws HyracksDataException {
-					runGen.fail();
-				}
-			};
-			return op;
-		}
-	}
+    private class OptimizedMergeActivity extends AbstractActivityNode {
+        private static final long serialVersionUID = 1L;
 
-	private class OptimizedMergeActivity extends AbstractActivityNode {
-		private static final long serialVersionUID = 1L;
+        public OptimizedMergeActivity(ActivityId id) {
+            super(id);
+        }
 
-		public OptimizedMergeActivity(ActivityId id) {
-			super(id);
-		}
+        @Override
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+            IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
+                @Override
+                public void initialize() throws HyracksDataException {
+                    OptimizedSortTaskState state = (OptimizedSortTaskState) env.getTaskState(new TaskId(new ActivityId(
+                            getOperatorId(), SORT_ACTIVITY_ID), partition));
 
-		@Override
-		public IOperatorNodePushable createPushRuntime(
-				final IHyracksTaskContext ctx, final IOperatorEnvironment env,
-				IRecordDescriptorProvider recordDescProvider,
-				final int partition, int nPartitions) {
-			IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
-				@Override
-				public void initialize() throws HyracksDataException {
-					OptimizedSortTaskState state = (OptimizedSortTaskState) env
-							.getTaskState(new TaskId(new ActivityId(
-									getOperatorId(), SORT_ACTIVITY_ID),
-									partition));
+                    List<IFrameReader> runs = state.runs;
 
-					List<IFrameReader> runs = state.runs;
+                    IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
+                    for (int i = 0; i < comparatorFactories.length; ++i) {
+                        comparators[i] = comparatorFactories[i].createBinaryComparator();
+                    }
 
-					IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-					for (int i = 0; i < comparatorFactories.length; ++i) {
-						comparators[i] = comparatorFactories[i]
-								.createBinaryComparator();
-					}
+                    OptimizedExternalSortRunMerger merger = new OptimizedExternalSortRunMerger(ctx, outputLimit, runs,
+                            sortFields, comparators, recordDescriptors[0], memSize, writer);
 
-					OptimizedExternalSortRunMerger merger = new OptimizedExternalSortRunMerger(
-							ctx, outputLimit, runs, sortFields, comparators,
-							recordDescriptors[0], memSize, writer);
+                    merger.process();
 
-					merger.process();
-
-				}
-			};
-			return op;
-		}
-	}
+                }
+            };
+            return op;
+        }
+    }
 }

@@ -31,23 +31,14 @@ import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
 public class RunMergingFrameReader implements IFrameReader {
     private final IHyracksTaskContext ctx;
-
     private final IFrameReader[] runCursors;
-
     private final List<ByteBuffer> inFrames;
-
     private final int[] sortFields;
-
     private final IBinaryComparator[] comparators;
-
     private final RecordDescriptor recordDesc;
-
     private final FrameTupleAppender outFrameAppender;
-
     private ReferencedPriorityQueue topTuples;
-
     private int[] tupleIndexes;
-
     private FrameTupleAccessor[] tupleAccessors;
 
     public RunMergingFrameReader(IHyracksTaskContext ctx, IFrameReader[] runCursors, List<ByteBuffer> inFrames,
