@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -71,13 +71,13 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
         if (keyFields.length >= outRecordDescriptor.getFields().length) {
             // for the case of zero-aggregations
             ISerializerDeserializer<?>[] fields = outRecordDescriptor.getFields();
-            ITypeTrait[] types = outRecordDescriptor.getTypeTraits();
+            ITypeTraits[] types = outRecordDescriptor.getTypeTraits();
             ISerializerDeserializer<?>[] newFields = new ISerializerDeserializer[fields.length + 1];
             for (int i = 0; i < fields.length; i++)
                 newFields[i] = fields[i];
-            ITypeTrait[] newTypes = null;
+            ITypeTraits[] newTypes = null;
             if (types != null) {
-                newTypes = new ITypeTrait[types.length + 1];
+                newTypes = new ITypeTraits[types.length + 1];
                 for (int i = 0; i < types.length; i++)
                     newTypes[i] = types[i];
             }

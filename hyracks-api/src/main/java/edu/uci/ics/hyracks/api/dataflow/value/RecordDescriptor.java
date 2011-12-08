@@ -21,7 +21,7 @@ public final class RecordDescriptor implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final ISerializerDeserializer[] fields;
-    private final ITypeTrait[] typeTraits;
+    private final ITypeTraits[] typeTraits;
     
     // leaving this constructor for backwards-compatibility
     public RecordDescriptor(ISerializerDeserializer[] fields) {
@@ -30,7 +30,7 @@ public final class RecordDescriptor implements Serializable {
     }
     
     // temporarily adding constructor to include type traits
-    public RecordDescriptor(ISerializerDeserializer[] fields, ITypeTrait[] typeTraits) {
+    public RecordDescriptor(ISerializerDeserializer[] fields, ITypeTraits[] typeTraits) {
     	this.fields = fields;
         this.typeTraits = typeTraits;
     }
@@ -39,7 +39,7 @@ public final class RecordDescriptor implements Serializable {
         return fields;
     }
     
-    public ITypeTrait[] getTypeTraits() {
+    public ITypeTraits[] getTypeTraits() {
     	return typeTraits;
     }
 }

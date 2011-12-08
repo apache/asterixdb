@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
@@ -45,11 +45,11 @@ public final class JobGenHelper {
 
     private static final Logger LOGGER = Logger.getLogger(JobGenHelper.class.getName());
 
-    public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTrait[] typeTraits) {
+    public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
         return new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
     }
 
-    public static ITreeIndexFrameFactory createBTreeNSMLeafFrameFactory(ITypeTrait[] typeTraits) {
+    public static ITreeIndexFrameFactory createBTreeNSMLeafFrameFactory(ITypeTraits[] typeTraits) {
         return new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
     }
 
@@ -143,9 +143,9 @@ public final class JobGenHelper {
         return null;
     }
 
-    public static ITypeTrait[] variablesToTypeTraits(Collection<LogicalVariable> varLogical,
+    public static ITypeTraits[] variablesToTypeTraits(Collection<LogicalVariable> varLogical,
             IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
-        ITypeTrait[] typeTraits = new ITypeTrait[varLogical.size()];
+        ITypeTraits[] typeTraits = new ITypeTraits[varLogical.size()];
         ITypeTraitProvider typeTraitProvider = context.getTypeTraitProvider();
         int i = 0;
         for (LogicalVariable v : varLogical) {

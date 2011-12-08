@@ -15,33 +15,33 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.util;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 
 public class InvertedIndexUtils {
-	// Type traits to be appended to the token type trait which finally form the BTree field type traits.
-	private static final ITypeTrait[] btreeValueTypeTraits = new ITypeTrait[4];
-	static {
-		// startPageId
-		btreeValueTypeTraits[0] = new TypeTrait(4);
+    // Type traits to be appended to the token type trait which finally form the BTree field type traits.
+    private static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
+    static {
+        // startPageId
+        btreeValueTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
         // endPageId
-		btreeValueTypeTraits[1] = new TypeTrait(4);
+        btreeValueTypeTraits[1] = IntegerPointable.TYPE_TRAITS;
         // startOff
-		btreeValueTypeTraits[2] = new TypeTrait(4);
+        btreeValueTypeTraits[2] = IntegerPointable.TYPE_TRAITS;
         // numElements
-		btreeValueTypeTraits[3] = new TypeTrait(4);
-	}
-	
-	public static ITypeTrait[] getBTreeTypeTraits(ITypeTrait[] tokenTypeTraits) {
-		ITypeTrait[] btreeTypeTraits = new ITypeTrait[tokenTypeTraits.length + btreeValueTypeTraits.length];
-		// Set key type traits.
-		for (int i = 0; i < tokenTypeTraits.length; i++) {
-		    btreeTypeTraits[i] = tokenTypeTraits[i];
-		}
-		// Set value type traits.
-		for (int i = 0; i < btreeValueTypeTraits.length; i++) {
-		    btreeTypeTraits[i + tokenTypeTraits.length] = btreeValueTypeTraits[i];
-		}
-		return btreeTypeTraits;
-	}
+        btreeValueTypeTraits[3] = IntegerPointable.TYPE_TRAITS;
+    }
+
+    public static ITypeTraits[] getBTreeTypeTraits(ITypeTraits[] tokenTypeTraits) {
+        ITypeTraits[] btreeTypeTraits = new ITypeTraits[tokenTypeTraits.length + btreeValueTypeTraits.length];
+        // Set key type traits.
+        for (int i = 0; i < tokenTypeTraits.length; i++) {
+            btreeTypeTraits[i] = tokenTypeTraits[i];
+        }
+        // Set value type traits.
+        for (int i = 0; i < btreeValueTypeTraits.length; i++) {
+            btreeTypeTraits[i + tokenTypeTraits.length] = btreeValueTypeTraits[i];
+        }
+        return btreeTypeTraits;
+    }
 }

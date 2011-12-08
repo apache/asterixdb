@@ -12,15 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
+public interface INumeric {
+    public byte byteValue();
 
-public class FloatBinaryComparator implements IBinaryComparator {
-    @Override
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        return Float.compare(FloatSerializerDeserializer.getFloat(b1, s1), FloatSerializerDeserializer
-                .getFloat(b2, s2));
-    }
+    public short shortValue();
+
+    public int intValue();
+
+    public long longValue();
+
+    public float floatValue();
+
+    public double doubleValue();
 }

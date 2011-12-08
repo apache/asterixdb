@@ -12,15 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+public interface IComparable {
+    public int compareTo(IPointable pointer);
 
-public class DoubleBinaryComparator implements IBinaryComparator {
-    @Override
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {   
-        return Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1), DoubleSerializerDeserializer
-                .getDouble(b2, s2));
-    }
+    public int compareTo(byte[] bytes, int start, int length);
 }

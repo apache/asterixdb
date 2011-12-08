@@ -31,17 +31,17 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -104,13 +104,13 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         bufferCache.openFile(invListsFileId);
 
         // Declare token type traits, and compute BTree type traits.
-        ITypeTrait[] tokenTypeTraits = new ITypeTrait[] { ITypeTrait.VARLEN_TYPE_TRAIT }; 
-        ITypeTrait[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
+        ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
+        ITypeTraits[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
 
         // declare btree keys
         int keyFieldCount = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
         MultiComparator btreeCmp = new MultiComparator(cmps);
 
@@ -123,17 +123,18 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         int invListFields = 1;
-        ITypeTrait[] invListTypeTraits = new ITypeTrait[invListFields];
-        invListTypeTraits[0] = new TypeTrait(4);
+        ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
+        invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
 
         int invListKeys = 1;
         IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
-        invListBinCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        invListBinCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         MultiComparator invListCmp = new MultiComparator(invListBinCmps);
 

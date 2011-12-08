@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.data;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public interface ITypeTraitProvider {
-    public ITypeTrait getTypeTrait(Object type);
+    public ITypeTraits getTypeTrait(Object type);
 }

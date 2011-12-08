@@ -22,6 +22,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
 public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
@@ -67,9 +68,9 @@ public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
         int pos = start;
         for (int i = 0; i < numRegChars; i++) {
-            char c = Character.toLowerCase(StringUtils.charAt(data, pos));
+            char c = Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
             StringUtils.writeCharAsModifiedUTF8(c, dos);
-            pos += StringUtils.charSize(data, pos);
+            pos += UTF8StringPointable.charSize(data, pos);
         }
 
         // post chars

@@ -28,13 +28,14 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
@@ -88,7 +89,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
     // field, type and key declarations for primary B-tree index
     private int primaryBTreeFieldCount = 10;
-    private ITypeTrait[] primaryBTreeTypeTraits = new ITypeTrait[primaryBTreeFieldCount];
+    private ITypeTraits[] primaryBTreeTypeTraits = new ITypeTraits[primaryBTreeFieldCount];
     private int primaryBTreeKeyFieldCount = 1;
     private IBinaryComparatorFactory[] primaryBTreeComparatorFactories = new IBinaryComparatorFactory[primaryBTreeKeyFieldCount];
     private TypeAwareTupleWriterFactory primaryBTreeTupleWriterFactory = new TypeAwareTupleWriterFactory(
@@ -113,7 +114,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
     // field, type and key declarations for secondary indexes
     private int secondaryFieldCount = 5;
-    private ITypeTrait[] secondaryTypeTraits = new ITypeTrait[secondaryFieldCount];
+    private ITypeTraits[] secondaryTypeTraits = new ITypeTraits[secondaryFieldCount];
     private int secondaryKeyFieldCount = 4;
     private IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyFieldCount];
     private IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = new IPrimitiveValueProviderFactory[secondaryKeyFieldCount];
@@ -138,25 +139,25 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
     @Before
     public void setup() throws Exception {
         // field, type and key declarations for primary B-tree index
-        primaryBTreeTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[2] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[3] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[5] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryBTreeTypeTraits[6] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryBTreeTypeTraits[7] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryBTreeTypeTraits[8] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryBTreeTypeTraits[9] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryBTreeComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        primaryBTreeTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[2] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[5] = UTF8StringPointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[6] = DoublePointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[7] = DoublePointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[8] = DoublePointable.TYPE_TRAITS;
+        primaryBTreeTypeTraits[9] = DoublePointable.TYPE_TRAITS;
+        primaryBTreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         // field, type and key declarations for secondary indexes
-        secondaryTypeTraits[0] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        secondaryTypeTraits[1] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        secondaryTypeTraits[2] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        secondaryTypeTraits[3] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        secondaryTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        secondaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+        secondaryTypeTraits[0] = DoublePointable.TYPE_TRAITS;
+        secondaryTypeTraits[1] = DoublePointable.TYPE_TRAITS;
+        secondaryTypeTraits[2] = DoublePointable.TYPE_TRAITS;
+        secondaryTypeTraits[3] = DoublePointable.TYPE_TRAITS;
+        secondaryTypeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
+        secondaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
         secondaryComparatorFactories[1] = secondaryComparatorFactories[0];
         secondaryComparatorFactories[2] = secondaryComparatorFactories[0];
         secondaryComparatorFactories[3] = secondaryComparatorFactories[0];
@@ -166,7 +167,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
         secondaryValueProviderFactories[3] = secondaryValueProviderFactories[0];
 
         IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = RTreeUtils
-                .comparatorFactoriesToPrimitiveValueProviderFactories(secondaryComparatorFactories);
+                .createPrimitiveValueProviderFactories(secondaryComparatorFactories.length, DoublePointable.FACTORY);
 
         secondaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(secondaryTupleWriterFactory,
                 secondaryValueProviderFactories);
@@ -203,7 +204,8 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, 1000, new int[] { 0 },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };

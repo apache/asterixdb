@@ -19,7 +19,7 @@ import java.io.PrintStream;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class UTF8StringPrinterFactory implements IPrinterFactory {
 
@@ -36,12 +36,12 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
 
             @Override
             public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-                int strlen = StringUtils.getUTFLen(b, s);
+                int strlen = UTF8StringPointable.getUTFLen(b, s);
                 int pos = s + 2;
                 int maxPos = pos + strlen;
                 ps.print("\"");
                 while (pos < maxPos) {
-                    char c = StringUtils.charAt(b, pos);
+                    char c = UTF8StringPointable.charAt(b, pos);
                     switch (c) {
                         case '\\':
                         case '"':
@@ -49,7 +49,7 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
                             break;
                     }
                     ps.print(c);
-                    pos += StringUtils.charSize(b, pos);
+                    pos += UTF8StringPointable.charSize(b, pos);
                 }
                 ps.print("\"");
             }

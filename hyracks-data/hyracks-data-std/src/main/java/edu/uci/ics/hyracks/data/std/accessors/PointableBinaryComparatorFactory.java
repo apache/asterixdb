@@ -12,21 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.accessors;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IComparable;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
 
-public class IntegerBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class PointableBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    public static final IntegerBinaryComparatorFactory INSTANCE = new IntegerBinaryComparatorFactory();
+    private final IPointableFactory pf;
 
-    private IntegerBinaryComparatorFactory() {
+    public static PointableBinaryComparatorFactory of(IPointableFactory pf) {
+        return new PointableBinaryComparatorFactory(pf);
+    }
+
+    public PointableBinaryComparatorFactory(IPointableFactory pf) {
+        this.pf = pf;
     }
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IntegerBinaryComparator();
+        final IPointable p = pf.createPointable();
+        return new IBinaryComparator() {
+            @Override
+            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+                p.set(b1, s1, l1);
+                return ((IComparable) p).compareTo(b2, s2, l2);
+            }
+        };
     }
 }

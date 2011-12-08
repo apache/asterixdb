@@ -22,12 +22,13 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
@@ -63,9 +64,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
 
         // Declare fields.
         int fieldCount = 2;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.INTEGER_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
@@ -73,7 +74,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
@@ -140,10 +141,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
 
         // Declare fields.
         int fieldCount = 3;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        typeTraits[2] = ITypeTrait.INTEGER_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -151,8 +152,8 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
@@ -219,9 +220,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
 
         // Declare fields.
         int fieldCount = 2;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE };
@@ -229,7 +230,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
@@ -298,9 +299,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
 
         // Declare fields.
         int fieldCount = 2;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE };
@@ -308,7 +309,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
@@ -399,9 +400,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
 
         // Declare fields.
         int fieldCount = 2;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE };
@@ -409,7 +410,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
@@ -483,10 +484,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
         // Declare fields.
         int fieldCount = 3;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        typeTraits[1] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        typeTraits[2] = ITypeTrait.INTEGER_TYPE_TRAIT;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -494,8 +495,8 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         BTree btree = BTreeUtils
                 .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);

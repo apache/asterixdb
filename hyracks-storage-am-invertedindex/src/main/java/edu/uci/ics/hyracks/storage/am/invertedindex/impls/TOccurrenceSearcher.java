@@ -24,10 +24,10 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -79,7 +79,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected final InvertedIndex invIndex;
     protected final IBinaryTokenizer queryTokenizer;
-    protected final ITypeTrait[] invListFieldsWithCount;
+    protected final ITypeTraits[] invListFieldsWithCount;
     protected int occurrenceThreshold;
 
     protected final int cursorCacheSize = 10;
@@ -95,15 +95,15 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
 
         btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
-        ITypeTrait[] invListFields = invIndex.getTypeTraits();
-        invListFieldsWithCount = new TypeTrait[invListFields.length + 1];
+        ITypeTraits[] invListFields = invIndex.getTypeTraits();
+        invListFieldsWithCount = new ITypeTraits[invListFields.length + 1];
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
             invListFieldsWithCount[i] = invListFields[i];
-            tmp += invListFields[i].getStaticallyKnownDataLength();
+            tmp += invListFields[i].getFixedLength();
         }
         // using an integer for counting occurrences
-        invListFieldsWithCount[invListFields.length] = new TypeTrait(4);
+        invListFieldsWithCount[invListFields.length] = IntegerPointable.TYPE_TRAITS;
         invListKeyLength = tmp;
 
         resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), invListFieldsWithCount);
@@ -126,7 +126,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
         queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
         queryTokenFrame = ctx.allocateFrame();
-        
+
         btreeAccessor = invIndex.getBTree().createAccessor();
         currentNumResults = 0;
     }

@@ -12,21 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+public interface IPointable {
+    public void set(byte[] bytes, int start, int length);
 
-public class DoubleBinaryComparatorFactory implements IBinaryComparatorFactory {
-    private static final long serialVersionUID = 1L;
+    public void set(IPointable pointer);
 
-    public static final DoubleBinaryComparatorFactory INSTANCE = new DoubleBinaryComparatorFactory();
+    public byte[] getByteArray();
 
-    private DoubleBinaryComparatorFactory() {
-    }
+    public int getStartOffset();
 
-    @Override
-    public IBinaryComparator createBinaryComparator() {
-        return new DoubleBinaryComparator();
-    }
+    public int getLength();
 }

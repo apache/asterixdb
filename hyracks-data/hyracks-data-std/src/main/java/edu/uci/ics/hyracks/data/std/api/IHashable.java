@@ -12,21 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-
-public class UTF8StringBinaryComparatorFactory implements IBinaryComparatorFactory {
-    private static final long serialVersionUID = 1L;
-
-    public static final UTF8StringBinaryComparatorFactory INSTANCE = new UTF8StringBinaryComparatorFactory();
-
-    private UTF8StringBinaryComparatorFactory() {
-    }
-
-    @Override
-    public IBinaryComparator createBinaryComparator() {
-        return new UTF8StringBinaryComparator();
-    }
+public interface IHashable {
+    public int hash();
 }

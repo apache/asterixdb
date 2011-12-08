@@ -21,7 +21,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public abstract class AbstractUTF8Token implements IToken {
     public static final int GOLDEN_RATIO_32 = 0x09e3779b9;
@@ -58,9 +58,9 @@ public abstract class AbstractUTF8Token implements IToken {
         int lowerCaseUTF8Len = 0;
         int pos = start;
         for (int i = 0; i < size; i++) {
-            char c = Character.toLowerCase(StringUtils.charAt(data, pos));
-            lowerCaseUTF8Len += StringUtils.getModifiedUTF8Len(c);
-            pos += StringUtils.charSize(data, pos);
+            char c = Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
+            lowerCaseUTF8Len += UTF8StringPointable.getModifiedUTF8Len(c);
+            pos += UTF8StringPointable.charSize(data, pos);
         }
         return lowerCaseUTF8Len;
     }

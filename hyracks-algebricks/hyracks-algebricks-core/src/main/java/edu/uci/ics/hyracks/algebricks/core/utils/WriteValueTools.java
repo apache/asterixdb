@@ -3,7 +3,7 @@ package edu.uci.ics.hyracks.algebricks.core.utils;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public final class WriteValueTools {
 
@@ -58,20 +58,20 @@ public final class WriteValueTools {
     }
 
     public static void writeUTF8String(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = StringUtils.getUTFLen(b, s);
+        int stringLength = UTF8StringPointable.getUTFLen(b, s);
         int position = s + 2;
         int maxPosition = position + stringLength;
         os.write('\"');
         while (position < maxPosition) {
-            char c = StringUtils.charAt(b, position);
+            char c = UTF8StringPointable.charAt(b, position);
             switch (c) {
-                // escape
+            // escape
                 case '\\':
                 case '"':
                     os.write('\\');
                     break;
             }
-            int sz = StringUtils.charSize(b, position);
+            int sz = UTF8StringPointable.charSize(b, position);
             while (sz > 0) {
                 os.write(b[position]);
                 position++;
@@ -82,19 +82,19 @@ public final class WriteValueTools {
     }
 
     public static void writeUTF8StringNoQuotes(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = StringUtils.getUTFLen(b, s);
+        int stringLength = UTF8StringPointable.getUTFLen(b, s);
         int position = s + 2;
         int maxPosition = position + stringLength;
         while (position < maxPosition) {
-            char c = StringUtils.charAt(b, position);
+            char c = UTF8StringPointable.charAt(b, position);
             switch (c) {
-                // escape
+            // escape
                 case '\\':
                 case '"':
                     os.write('\\');
                     break;
             }
-            int sz = StringUtils.charSize(b, position);
+            int sz = UTF8StringPointable.charSize(b, position);
             while (sz > 0) {
                 os.write(b[position]);
                 position++;

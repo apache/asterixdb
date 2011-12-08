@@ -28,17 +28,17 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -81,8 +81,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected int btreeFileId;
 
     // declare token type traits
-    protected ITypeTrait[] tokenTypeTraits = new ITypeTrait[] { ITypeTrait.VARLEN_TYPE_TRAIT };
-    protected ITypeTrait[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
+    protected ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
+    protected ITypeTraits[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
 
     // declare btree keys
     protected int btreeKeyFieldCount = 1;
@@ -109,7 +109,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected int invListsFileId;
 
     protected int invListFields = 1;
-    protected ITypeTrait[] invListTypeTraits = new ITypeTrait[invListFields];
+    protected ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
 
     protected int invListKeys = 1;
     protected IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
@@ -169,11 +169,12 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         btreeFileId = fmp.lookupFileId(btreeFile);
         bufferCache.openFile(btreeFileId);
 
-        btreeBinCmps[0] = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        btreeBinCmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
         freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
@@ -183,8 +184,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         invListsFileId = fmp.lookupFileId(invListsFile);
         bufferCache.openFile(invListsFileId);
 
-        invListTypeTraits[0] = new TypeTrait(4);
-        invListBinCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        invListBinCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
         invIndex.open(invListsFileId);

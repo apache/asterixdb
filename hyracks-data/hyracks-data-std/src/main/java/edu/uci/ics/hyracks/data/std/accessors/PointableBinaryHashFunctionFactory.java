@@ -12,26 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.hash;
+package edu.uci.ics.hyracks.data.std.accessors;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.data.std.api.IHashable;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
 
-public class IntegerBinaryHashFunctionFactory implements IBinaryHashFunctionFactory {
+public class PointableBinaryHashFunctionFactory implements IBinaryHashFunctionFactory {
     private static final long serialVersionUID = 1L;
 
-    public static final IntegerBinaryHashFunctionFactory INSTANCE = new IntegerBinaryHashFunctionFactory();
+    private final IPointableFactory pf;
 
-    private IntegerBinaryHashFunctionFactory() {
+    public static PointableBinaryHashFunctionFactory of(IPointableFactory pf) {
+        return new PointableBinaryHashFunctionFactory(pf);
+    }
+
+    public PointableBinaryHashFunctionFactory(IPointableFactory pf) {
+        this.pf = pf;
     }
 
     @Override
     public IBinaryHashFunction createBinaryHashFunction() {
+        final IPointable p = pf.createPointable();
         return new IBinaryHashFunction() {
             @Override
             public int hash(byte[] bytes, int offset, int length) {
-                return IntegerSerializerDeserializer.getInt(bytes, offset);
+                p.set(bytes, offset, length);
+                return ((IHashable) p).hash();
             }
         };
     }

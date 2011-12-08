@@ -12,21 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.comparators;
+package edu.uci.ics.hyracks.data.std.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import java.io.Serializable;
 
-public class FloatBinaryComparatorFactory implements IBinaryComparatorFactory {
-    private static final long serialVersionUID = 1L;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
-    public static final FloatBinaryComparatorFactory INSTANCE = new FloatBinaryComparatorFactory();
-
-    private FloatBinaryComparatorFactory() {
-    }
-
-    @Override
-    public IBinaryComparator createBinaryComparator() {
-        return new FloatBinaryComparator();
-    }
+public interface IPointableFactory extends Serializable {
+    public IPointable createPointable();
+    
+    public ITypeTraits getTypeTraits();
 }

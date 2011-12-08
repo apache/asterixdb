@@ -19,60 +19,59 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
-public abstract class AbstractUTF8StringBinaryTokenizer implements
-		IBinaryTokenizer {
+public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokenizer {
 
-	protected byte[] data;
-	protected int start;
-	protected int length;
-	protected int tokenLength;
-	protected int index;
-	protected int utf8Length;
+    protected byte[] data;
+    protected int start;
+    protected int length;
+    protected int tokenLength;
+    protected int index;
+    protected int utf8Length;
 
-	protected final IntArray tokensStart;
-	protected final IntArray tokensLength;
-	protected final IToken token;
+    protected final IntArray tokensStart;
+    protected final IntArray tokensLength;
+    protected final IToken token;
 
-	protected final boolean ignoreTokenCount;
-	protected final boolean sourceHasTypeTag;
+    protected final boolean ignoreTokenCount;
+    protected final boolean sourceHasTypeTag;
 
-	public AbstractUTF8StringBinaryTokenizer(boolean ignoreTokenCount,
-			boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
-		this.ignoreTokenCount = ignoreTokenCount;
-		this.sourceHasTypeTag = sourceHasTypeTag;
-		if (!ignoreTokenCount) {
-			tokensStart = new IntArray();
-			tokensLength = new IntArray();
-		} else {
-			tokensStart = null;
-			tokensLength = null;
-		}
-		token = tokenFactory.createToken();
-	}
+    public AbstractUTF8StringBinaryTokenizer(boolean ignoreTokenCount, boolean sourceHasTypeTag,
+            ITokenFactory tokenFactory) {
+        this.ignoreTokenCount = ignoreTokenCount;
+        this.sourceHasTypeTag = sourceHasTypeTag;
+        if (!ignoreTokenCount) {
+            tokensStart = new IntArray();
+            tokensLength = new IntArray();
+        } else {
+            tokensStart = null;
+            tokensLength = null;
+        }
+        token = tokenFactory.createToken();
+    }
 
-	@Override
-	public IToken getToken() {
-		return token;
-	}
+    @Override
+    public IToken getToken() {
+        return token;
+    }
 
-	@Override
-	public void reset(byte[] data, int start, int length) {
-		this.start = start;
-		index = this.start;
-		if (sourceHasTypeTag) {
-			index++; // skip type tag
-		}
-		utf8Length = StringUtils.getUTFLen(data, index);
-		index += 2; // skip utf8 length indicator
-		this.data = data;
-		this.length = length + start;
+    @Override
+    public void reset(byte[] data, int start, int length) {
+        this.start = start;
+        index = this.start;
+        if (sourceHasTypeTag) {
+            index++; // skip type tag
+        }
+        utf8Length = UTF8StringPointable.getUTFLen(data, index);
+        index += 2; // skip utf8 length indicator
+        this.data = data;
+        this.length = length + start;
 
-		tokenLength = 0;
-		if (!ignoreTokenCount) {
-			tokensStart.reset();
-			tokensLength.reset();
-		}
-	}
+        tokenLength = 0;
+        if (!ignoreTokenCount) {
+            tokensStart.reset();
+            tokensLength.reset();
+        }
+    }
 }

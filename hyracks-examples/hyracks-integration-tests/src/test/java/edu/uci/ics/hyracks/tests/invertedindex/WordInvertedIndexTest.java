@@ -27,14 +27,15 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -99,7 +100,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     // Primary BTree index.
     private int primaryFieldCount = 2;
-    private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
+    private ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
     private int primaryKeyFieldCount = 1;
     private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
     private TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
@@ -110,12 +111,12 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
             IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
     // Inverted index BTree dictionary.
-    private ITypeTrait[] tokenTypeTraits = new ITypeTrait[1];
+    private ITypeTraits[] tokenTypeTraits = new ITypeTraits[1];
     private IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[1];
 
     // Inverted index stuff.
     private int invListElementFieldCount = 1;
-    private ITypeTrait[] invListsTypeTraits = new ITypeTrait[invListElementFieldCount];
+    private ITypeTraits[] invListsTypeTraits = new ITypeTraits[invListElementFieldCount];
     private IBinaryComparatorFactory[] invListsComparatorFactories = new IBinaryComparatorFactory[invListElementFieldCount];
     private RecordDescriptor tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -130,17 +131,17 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     @Before
     public void setup() throws Exception {
         // Field declarations and comparators for primary BTree index.
-        primaryTypeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        primaryTypeTraits[1] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        primaryTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        primaryTypeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // Field declarations and comparators for tokens.
-        tokenTypeTraits[0] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        tokenComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        tokenTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        tokenComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         // Field declarations and comparators for inverted lists.
-        invListsTypeTraits[0] = ITypeTrait.INTEGER_TYPE_TRAIT;
-        invListsComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        invListsTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        invListsComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         loadPrimaryIndex();
         printPrimaryIndex();
@@ -232,8 +233,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createExternalSortOp(JobSpecification spec, int[] sortFields,
             RecordDescriptor outputRecDesc) {
         ExternalSortOperatorDescriptor externalSortOp = new ExternalSortOperatorDescriptor(spec, 1000, sortFields,
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, outputRecDesc);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                        PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, outputRecDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, externalSortOp, NC1_ID);
         return externalSortOp;
     }

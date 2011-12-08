@@ -31,8 +31,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.hash.IntegerBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -205,45 +206,46 @@ public class ExternalGroupClient {
                         spec,
                         keys,
                         framesLimit,
-                        new IBinaryComparatorFactory[] {
-                        // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE },
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(),
                         new MultiAggregatorDescriptorFactory(
                                 new IAggregatorDescriptorFactory[] { new CountAggregatorDescriptorFactory() }),
                         new MultiAggregatorDescriptorFactory(
                                 new IAggregatorDescriptorFactory[] { new IntSumAggregatorDescriptorFactory(keys.length) }),
                         outDesc, new HashSpillableGroupingTableFactory(new FieldHashPartitionComputerFactory(keys,
-                                new IBinaryHashFunctionFactory[] {
-                                // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }), htSize), false);
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }), htSize), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 
                 // Connect scanner with the grouper
                 IConnectorDescriptor scanGroupConn = new MToNPartitioningConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                        new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }));
                 spec.connect(scanGroupConn, fileScanner, 0, grouper, 0);
                 break;
             case 1: // External sort + pre-cluster
-                ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, framesLimit, keys,
-                        new IBinaryComparatorFactory[] {
-                        // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, inDesc);
+                ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(
+                        spec,
+                        framesLimit,
+                        keys,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                        inDesc);
                 createPartitionConstraint(spec, sorter, inSplits);
 
                 // Connect scan operator with the sorter
                 IConnectorDescriptor scanSortConn = new MToNPartitioningConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                        new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }));
                 spec.connect(scanSortConn, fileScanner, 0, sorter, 0);
 
-                grouper = new PreclusteredGroupOperatorDescriptor(spec, keys, new IBinaryComparatorFactory[] {
-                // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                grouper = new PreclusteredGroupOperatorDescriptor(
+                        spec,
+                        keys,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                        new MultiAggregatorFactory(
                                 new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc);
 
                 createPartitionConstraint(spec, grouper, outSplits);
@@ -253,12 +255,14 @@ public class ExternalGroupClient {
                 spec.connect(sortGroupConn, sorter, 0, grouper, 0);
                 break;
             case 2: // In-memory hash group
-                grouper = new HashGroupOperatorDescriptor(spec, keys, new FieldHashPartitionComputerFactory(keys,
-                        new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                        IntegerBinaryHashFunctionFactory.INSTANCE }), new IBinaryComparatorFactory[] {
-                // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE }, new MultiAggregatorFactory(
+                grouper = new HashGroupOperatorDescriptor(
+                        spec,
+                        keys,
+                        new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }),
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                        new MultiAggregatorFactory(
                                 new IFieldValueResultingAggregatorFactory[] { new CountAggregatorFactory() }), outDesc,
                         htSize);
 
@@ -266,9 +270,9 @@ public class ExternalGroupClient {
 
                 // Connect scanner with the grouper
                 IConnectorDescriptor scanConn = new MToNPartitioningConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                        new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }));
                 spec.connect(scanConn, fileScanner, 0, grouper, 0);
                 break;
             default:
@@ -276,26 +280,23 @@ public class ExternalGroupClient {
                         spec,
                         keys,
                         framesLimit,
-                        new IBinaryComparatorFactory[] {
-                        // IntegerBinaryComparatorFactory.INSTANCE,
-                        IntegerBinaryComparatorFactory.INSTANCE },
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(),
                         new MultiAggregatorDescriptorFactory(
                                 new IAggregatorDescriptorFactory[] { new CountAggregatorDescriptorFactory() }),
                         new MultiAggregatorDescriptorFactory(
                                 new IAggregatorDescriptorFactory[] { new IntSumAggregatorDescriptorFactory(keys.length) }),
                         outDesc, new HashSpillableGroupingTableFactory(new FieldHashPartitionComputerFactory(keys,
-                                new IBinaryHashFunctionFactory[] {
-                                // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }), htSize), false);
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }), htSize), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 
                 // Connect scanner with the grouper
                 IConnectorDescriptor scanGroupConnDef = new MToNPartitioningConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
-                        // IntegerBinaryHashFunctionFactory.INSTANCE,
-                                IntegerBinaryHashFunctionFactory.INSTANCE }));
+                        new FieldHashPartitionComputerFactory(keys,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(IntegerPointable.FACTORY) }));
                 spec.connect(scanGroupConnDef, fileScanner, 0, grouper, 0);
         }
 

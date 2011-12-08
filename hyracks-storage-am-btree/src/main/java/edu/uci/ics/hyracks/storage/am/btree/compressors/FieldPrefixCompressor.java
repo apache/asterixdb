@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
@@ -41,9 +41,9 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
     // them
     private int occurrenceThreshold;
 
-    private ITypeTrait[] typeTraits;
+    private ITypeTraits[] typeTraits;
 
-    public FieldPrefixCompressor(ITypeTrait[] typeTraits, float ratioThreshold, int occurrenceThreshold) {
+    public FieldPrefixCompressor(ITypeTraits[] typeTraits, float ratioThreshold, int occurrenceThreshold) {
         this.typeTraits = typeTraits;
         this.ratioThreshold = ratioThreshold;
         this.occurrenceThreshold = occurrenceThreshold;

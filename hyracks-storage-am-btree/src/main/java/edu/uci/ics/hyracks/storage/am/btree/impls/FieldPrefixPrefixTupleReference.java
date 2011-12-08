@@ -15,14 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 
 public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
 
-    public FieldPrefixPrefixTupleReference(ITypeTrait[] typeTraits) {
+    public FieldPrefixPrefixTupleReference(ITypeTraits[] typeTraits) {
         super(typeTraits);
     }
 
