@@ -186,6 +186,10 @@ public class MultiFieldsAggregatorFactory implements
                         }
                     }
                 }
+                // For pre-cluster: no output state is needed
+                if(appender == null){
+                    return true;
+                }
                 if (!appender.append(stateTupleBuilder.getFieldEndOffsets(),
                         stateTupleBuilder.getByteArray(), 0,
                         stateTupleBuilder.getSize())) {
