@@ -67,8 +67,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory firstNormalizerFactory;
 
-    private final IFieldAggregateDescriptorFactory[] aggregateFactories;
-    private final IFieldAggregateDescriptorFactory[] mergeFactories;
+    private final IAggregatorDescriptorFactory aggregatorFactory;
+    private final IAggregatorDescriptorFactory mergerFactory;
+
     private final int framesLimit;
     private final ISpillableTableFactory spillableTableFactory;
     private final boolean isOutputSorted;
@@ -77,8 +78,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             int[] keyFields, int framesLimit,
             IBinaryComparatorFactory[] comparatorFactories,
             INormalizedKeyComputerFactory firstNormalizerFactory,
-            IFieldAggregateDescriptorFactory[] aggregateFactories,
-            IFieldAggregateDescriptorFactory[] mergeFactories,
+            IAggregatorDescriptorFactory aggregatorFactory,
+            IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor,
             ISpillableTableFactory spillableTableFactory, boolean isOutputSorted) {
         super(spec, 1, 1);
@@ -92,8 +93,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     "frame limit should at least be 2, but it is "
                             + framesLimit + "!");
         }
-        this.aggregateFactories = aggregateFactories;
-        this.mergeFactories = mergeFactories;
+        this.aggregatorFactory = aggregatorFactory;
+        this.mergerFactory = mergerFactory;
         this.keyFields = keyFields;
         this.comparatorFactories = comparatorFactories;
         this.firstNormalizerFactory = firstNormalizerFactory;
@@ -180,7 +181,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     state.runs = new LinkedList<RunFileReader>();
                     state.gTable = spillableTableFactory.buildSpillableTable(
                             ctx, keyFields, comparatorFactories,
-                            firstNormalizerFactory, aggregateFactories,
+                            firstNormalizerFactory, aggregatorFactory,
                             recordDescProvider.getInputRecordDescriptor(
                                     getOperatorId(), 0), recordDescriptors[0],
                             ExternalGroupOperatorDescriptor.this.framesLimit);
@@ -273,14 +274,13 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 comparators[i] = comparatorFactories[i]
                         .createBinaryComparator();
             }
-            final IFieldAggregateDescriptor[] currentWorkingAggregators = new IFieldAggregateDescriptor[mergeFactories.length];
-            final AggregateState[] aggregateStates = new AggregateState[mergeFactories.length];
-            for (int i = 0; i < currentWorkingAggregators.length; i++) {
-                currentWorkingAggregators[i] = mergeFactories[i]
-                        .createAggregator(ctx, recordDescriptors[0],
-                                recordDescriptors[0]);
-                aggregateStates[i] = currentWorkingAggregators[i].createState();
-            }
+
+            final IAggregatorDescriptor aggregator = mergerFactory
+                    .createAggregator(ctx, recordDescriptors[0],
+                            recordDescriptors[0], keyFields);
+            final AggregateState aggregateState = aggregator
+                    .createAggregateStates();
+
             final int[] storedKeys = new int[keyFields.length];
             /**
              * Get the list of the fields in the stored records.
@@ -288,11 +288,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             for (int i = 0; i < keyFields.length; ++i) {
                 storedKeys[i] = i;
             }
-            /**
-             * Tuple builder
-             */
-            final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(
-                    recordDescriptors[0].getFields().length);
 
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 /**
@@ -455,55 +450,28 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  * Initialize the first output record Reset the
                                  * tuple builder
                                  */
-                                tupleBuilder.reset();
-                                for (int i = 0; i < keyFields.length; i++) {
-                                    tupleBuilder.addField(fta, tupleIndex, i);
-                                }
-                                for (int i = 0; i < currentWorkingAggregators.length; i++) {
-                                    currentWorkingAggregators[i].init(fta,
-                                            tupleIndex,
-                                            tupleBuilder.getDataOutput(),
-                                            aggregateStates[i]);
-                                    tupleBuilder.addFieldEndOffset();
-                                }
-                                if (!outFrameAppender.append(
-                                        tupleBuilder.getFieldEndOffsets(),
-                                        tupleBuilder.getByteArray(), 0,
-                                        tupleBuilder.getSize())) {
+
+                                if (!aggregator.init(outFrameAppender, fta,
+                                        tupleIndex, aggregateState)) {
                                     flushOutFrame(writer, finalPass);
-                                    if (!outFrameAppender.append(
-                                            tupleBuilder.getFieldEndOffsets(),
-                                            tupleBuilder.getByteArray(), 0,
-                                            tupleBuilder.getSize()))
+                                    if (!aggregator.init(outFrameAppender, fta,
+                                            tupleIndex, aggregateState)) {
                                         throw new HyracksDataException(
                                                 "Failed to append an aggregation result to the output frame.");
+                                    }
                                 }
+
                             } else {
                                 /**
                                  * if new tuple is in the same group of the
                                  * current aggregator do merge and output to the
                                  * outFrame
                                  */
-                                int tupleOffset = outFrameAccessor
-                                        .getTupleStartOffset(currentTupleInOutFrame);
-                                int fieldOffset = outFrameAccessor
-                                        .getFieldStartOffset(
-                                                currentTupleInOutFrame,
-                                                keyFields.length);
-                                for (int i = 0; i < currentWorkingAggregators.length; i++) {
-                                    currentWorkingAggregators[i]
-                                            .aggregate(
-                                                    fta,
-                                                    tupleIndex,
-                                                    outFrameAccessor
-                                                            .getBuffer()
-                                                            .array(),
-                                                    tupleOffset
-                                                            + outFrameAccessor
-                                                                    .getFieldSlotsLength()
-                                                            + fieldOffset,
-                                                    aggregateStates[i]);
-                                }
+
+                                aggregator.aggregate(fta, tupleIndex,
+                                        outFrameAccessor,
+                                        currentTupleInOutFrame, aggregateState);
+
                             }
                             tupleIndices[runIndex]++;
                             setNextTopTuple(runIndex, tupleIndices,
@@ -514,9 +482,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             flushOutFrame(writer, finalPass);
                         }
 
-                        for (int i = 0; i < currentWorkingAggregators.length; i++) {
-                            currentWorkingAggregators[i].close();
-                        }
+                        aggregator.close();
+                        
                         runs.subList(0, runNumber).clear();
                         /**
                          * insert the new run file into the beginning of the run
@@ -549,53 +516,30 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     outFrameAccessor.reset(outFrame);
 
                     for (int i = 0; i < outFrameAccessor.getTupleCount(); i++) {
-                        int tupleOffset = outFrameAccessor
-                                .getTupleStartOffset(i);
-                        finalTupleBuilder.reset();
                         for (int j = 0; j < keyFields.length; j++) {
                             finalTupleBuilder.addField(outFrameAccessor, i, j);
                         }
-                        for (int j = 0; j < currentWorkingAggregators.length; j++) {
-                            int fieldOffset = outFrameAccessor
-                                    .getFieldStartOffset(i, keyFields.length
-                                            + j);
-                            if (isFinal)
-                                currentWorkingAggregators[j].outputFinalResult(
-                                        finalTupleBuilder.getDataOutput(),
-                                        outFrameAccessor.getBuffer().array(),
-                                        tupleOffset
-                                                + outFrameAccessor
-                                                        .getFieldSlotsLength()
-                                                + fieldOffset,
-                                        aggregateStates[j]);
-                            else
-                                currentWorkingAggregators[j]
-                                        .outputPartialResult(
-                                                finalTupleBuilder
-                                                        .getDataOutput(),
-                                                outFrameAccessor.getBuffer()
-                                                        .array(),
-                                                tupleOffset
-                                                        + outFrameAccessor
-                                                                .getFieldSlotsLength()
-                                                        + fieldOffset,
-                                                aggregateStates[j]);
-                            finalTupleBuilder.addFieldEndOffset();
+                        
+                        if(isFinal){
+                            if(!aggregator.outputFinalResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                FrameUtils.flushFrame(writerFrame, writer);
+                                writerFrameAppender.reset(writerFrame, true);
+                                if(!aggregator.outputFinalResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                    throw new HyracksDataException(
+                                            "Failed to write final aggregation result to a writer frame!");
+                                }
+                            }
+                        } else {
+                            if(!aggregator.outputPartialResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                FrameUtils.flushFrame(writerFrame, writer);
+                                writerFrameAppender.reset(writerFrame, true);
+                                if(!aggregator.outputPartialResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                    throw new HyracksDataException(
+                                            "Failed to write final aggregation result to a writer frame!");
+                                }
+                            }
                         }
-
-                        if (!writerFrameAppender.append(
-                                finalTupleBuilder.getFieldEndOffsets(),
-                                finalTupleBuilder.getByteArray(), 0,
-                                finalTupleBuilder.getSize())) {
-                            FrameUtils.flushFrame(writerFrame, writer);
-                            writerFrameAppender.reset(writerFrame, true);
-                            if (!writerFrameAppender.append(
-                                    finalTupleBuilder.getFieldEndOffsets(),
-                                    finalTupleBuilder.getByteArray(), 0,
-                                    finalTupleBuilder.getSize()))
-                                throw new HyracksDataException(
-                                        "Failed to write final aggregation result to a writer frame!");
-                        }
+                        aggregator.reset();
                     }
                     if (writerFrameAppender.getTupleCount() > 0) {
                         FrameUtils.flushFrame(writerFrame, writer);

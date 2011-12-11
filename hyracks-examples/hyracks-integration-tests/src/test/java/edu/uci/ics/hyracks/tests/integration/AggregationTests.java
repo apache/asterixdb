@@ -42,10 +42,11 @@ import edu.uci.ics.hyracks.dataflow.std.aggregations.ExternalGroupOperatorDescri
 import edu.uci.ics.hyracks.dataflow.std.aggregations.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.AvgAggregatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.AvgMergeAggregatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.IntSumAggregatorFactory;
-import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.MinMaxStringAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.AvgFieldAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.CountFieldAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.IntSumFieldAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.MinMaxStringFieldAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.aggregators.MultiFieldsAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
@@ -140,9 +141,11 @@ public class AggregationTests extends AbstractIntegrationTest {
                         keyFields,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new IntSumAggregatorFactory(3) }, outputRec, tableSize);
+                new MultiFieldsAggregatorFactory(
+                        new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, true),
+                                new IntSumFieldAggregatorFactory(3, true) }),
+                outputRec, tableSize);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -193,12 +196,12 @@ public class AggregationTests extends AbstractIntegrationTest {
                 frameLimits,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new IntSumAggregatorFactory(3) },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new IntSumAggregatorFactory(3) },
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new IntSumFieldAggregatorFactory(3, false) }),
+                new MultiFieldsAggregatorFactory( new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new IntSumFieldAggregatorFactory(3, false) }),
                 outputRec,
                 new HashSpillableTableFactory(
                         new FieldHashPartitionComputerFactory(
@@ -243,6 +246,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                 new ISerializerDeserializer[] {
                         UTF8StringSerializerDeserializer.INSTANCE,
                         IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE,
                         FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
@@ -255,9 +259,10 @@ public class AggregationTests extends AbstractIntegrationTest {
                         keyFields,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new AvgAggregatorFactory(1) }, outputRec, tableSize);
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, true),
+                        new CountFieldAggregatorFactory(true),
+                        new AvgFieldAggregatorFactory(1, true) }), outputRec, tableSize);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -296,6 +301,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                 new ISerializerDeserializer[] {
                         UTF8StringSerializerDeserializer.INSTANCE,
                         IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE,
                         FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
@@ -308,12 +314,14 @@ public class AggregationTests extends AbstractIntegrationTest {
                 frameLimits,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new AvgAggregatorFactory(1) },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new AvgMergeAggregatorFactory(2) },
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new CountFieldAggregatorFactory(false),
+                        new AvgFieldAggregatorFactory(1, false) }),
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new CountFieldAggregatorFactory(false),
+                        new AvgFieldAggregatorFactory(2, false) }),
                 outputRec,
                 new HashSpillableTableFactory(
                         new FieldHashPartitionComputerFactory(
@@ -370,9 +378,10 @@ public class AggregationTests extends AbstractIntegrationTest {
                         keyFields,
                         new IBinaryHashFunctionFactory[] { UTF8StringBinaryHashFunctionFactory.INSTANCE }),
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new MinMaxStringAggregatorFactory(15, true) }, outputRec, tableSize);
+                new MultiFieldsAggregatorFactory( new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, true),
+                        new MinMaxStringFieldAggregatorFactory(15, true, false) }),
+                outputRec, tableSize);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -423,12 +432,12 @@ public class AggregationTests extends AbstractIntegrationTest {
                 frameLimits,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new MinMaxStringAggregatorFactory(15, true) },
-                new IFieldAggregateDescriptorFactory[] {
-                        new IntSumAggregatorFactory(1),
-                        new MinMaxStringAggregatorFactory(2, true) },
+                new MultiFieldsAggregatorFactory( new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                new MultiFieldsAggregatorFactory( new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new MinMaxStringFieldAggregatorFactory(2, true, true) }),
                 outputRec,
                 new HashSpillableTableFactory(
                         new FieldHashPartitionComputerFactory(
@@ -458,5 +467,5 @@ public class AggregationTests extends AbstractIntegrationTest {
         spec.addRoot(printer);
         runTest(spec);
     }
-    
+
 }

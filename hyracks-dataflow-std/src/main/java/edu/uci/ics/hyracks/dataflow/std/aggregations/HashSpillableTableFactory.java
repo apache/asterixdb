@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
@@ -72,7 +71,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             final int[] keyFields,
             IBinaryComparatorFactory[] comparatorFactories,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory,
-            IFieldAggregateDescriptorFactory[] aggregatorFactories,
+            IAggregatorDescriptorFactory aggregateFactory,
             RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, final int framesLimit)
             throws HyracksDataException {
@@ -122,25 +121,15 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final ITuplePartitionComputer tpc = tpcf.createPartitioner();
         final ByteBuffer outFrame = ctx.allocateFrame();
 
-        final ArrayTupleBuilder internalTupleBuilder;
-        if (keyFields.length < outRecordDescriptor.getFields().length)
-            internalTupleBuilder = new ArrayTupleBuilder(
-                    outRecordDescriptor.getFields().length);
-        else
-            internalTupleBuilder = new ArrayTupleBuilder(
-                    outRecordDescriptor.getFields().length + 1);
-        final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(
-                outRecordDescriptor.getFields().length);
         final INormalizedKeyComputer nkc = firstKeyNormalizerFactory == null ? null
                 : firstKeyNormalizerFactory.createNormalizedKeyComputer();
 
-        final IFieldAggregateDescriptor[] aggregators = new IFieldAggregateDescriptor[aggregatorFactories.length];
-        final AggregateState[] aggregateStates = new AggregateState[aggregatorFactories.length];
-        for (int i = 0; i < aggregators.length; i++) {
-            aggregators[i] = aggregatorFactories[i].createAggregator(ctx,
-                    inRecordDescriptor, outRecordDescriptor);
-            aggregateStates[i] = aggregators[i].createState();
-        }
+        final IAggregatorDescriptor aggregator = aggregateFactory
+                .createAggregator(ctx, inRecordDescriptor, outRecordDescriptor,
+                        keyFields);
+
+        final AggregateState aggregateState = aggregator
+                .createAggregateStates();
 
         return new ISpillableTable() {
 
@@ -206,9 +195,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 dataFrameCount = -1;
                 tPointers = null;
                 table.reset();
-                for (int i = 0; i < aggregators.length; i++) {
-                    aggregators[i].close();
-                }
+                aggregator.reset();
             }
 
             @Override
@@ -234,33 +221,15 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 } while (true);
 
                 if (!foundGroup) {
-                    /**
-                     * If no matching group is found, create a new aggregator
-                     * Create a tuple for the new group
-                     */
-                    internalTupleBuilder.reset();
-                    for (int i = 0; i < keyFields.length; i++) {
-                        internalTupleBuilder.addField(accessor, tIndex,
-                                keyFields[i]);
-                    }
-                    for (int i = 0; i < aggregators.length; i++) {
-                        aggregators[i].init(accessor, tIndex,
-                                internalTupleBuilder.getDataOutput(),
-                                aggregateStates[i]);
-                        internalTupleBuilder.addFieldEndOffset();
-                    }
-                    if (!appender.append(
-                            internalTupleBuilder.getFieldEndOffsets(),
-                            internalTupleBuilder.getByteArray(), 0,
-                            internalTupleBuilder.getSize())) {
+
+                    if (!aggregator.init(appender, accessor, tIndex,
+                            aggregateState)) {
                         if (!nextAvailableFrame()) {
                             return false;
                         } else {
-                            if (!appender.append(
-                                    internalTupleBuilder.getFieldEndOffsets(),
-                                    internalTupleBuilder.getByteArray(), 0,
-                                    internalTupleBuilder.getSize())) {
-                                throw new IllegalStateException(
+                            if (!aggregator.init(appender, accessor, tIndex,
+                                    aggregateState)) {
+                                throw new HyracksDataException(
                                         "Failed to init an aggregator");
                             }
                         }
@@ -270,24 +239,10 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     storedTuplePointer.tupleIndex = appender.getTupleCount() - 1;
                     table.insert(entry, storedTuplePointer);
                 } else {
-                    // If there is a matching found, do aggregation directly
-                    int tupleOffset = storedKeysAccessor1
-                            .getTupleStartOffset(storedTuplePointer.tupleIndex);
 
-                    for (int i = 0; i < aggregators.length; i++) {
-                        int aggFieldOffset = storedKeysAccessor1
-                                .getFieldStartOffset(
-                                        storedTuplePointer.tupleIndex,
-                                        keyFields.length + i);
-                        aggregators[i].aggregate(
-                                accessor,
-                                tIndex,
-                                storedKeysAccessor1.getBuffer().array(),
-                                tupleOffset
-                                        + storedKeysAccessor1
-                                                .getFieldSlotsLength()
-                                        + aggFieldOffset, aggregateStates[i]);
-                    }
+                    aggregator.aggregate(accessor, tIndex, storedKeysAccessor1,
+                            storedTuplePointer.tupleIndex, aggregateState);
+
                 }
                 return true;
             }
@@ -323,62 +278,29 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             int tIndex = storedTuplePointer.tupleIndex;
 
                             storedKeysAccessor1.reset(frames.get(bIndex));
-                            int tupleOffset = storedKeysAccessor1
-                                    .getTupleStartOffset(tIndex);
-                            // Reset the tuple for the partial result
-                            outputTupleBuilder.reset();
-                            for (int k = 0; k < keyFields.length; k++) {
-                                outputTupleBuilder.addField(
-                                        storedKeysAccessor1, tIndex, k);
-                            }
-                            for (int k = 0; k < aggregators.length; k++) {
-                                int fieldStart = storedKeysAccessor1
-                                        .getFieldStartOffset(tIndex,
-                                                keyFields.length + k);
-                                if (isPartial)
-                                    aggregators[k]
-                                            .outputPartialResult(
-                                                    outputTupleBuilder
-                                                            .getDataOutput(),
-                                                    storedKeysAccessor1
-                                                            .getBuffer()
-                                                            .array(),
-                                                    tupleOffset
-                                                            + storedKeysAccessor1
-                                                                    .getFieldSlotsLength()
-                                                            + fieldStart,
-                                                    aggregateStates[k]);
-                                else
-                                    aggregators[k]
-                                            .outputFinalResult(
-                                                    outputTupleBuilder
-                                                            .getDataOutput(),
-                                                    storedKeysAccessor1
-                                                            .getBuffer()
-                                                            .array(),
-                                                    tupleOffset
-                                                            + storedKeysAccessor1
-                                                                    .getFieldSlotsLength()
-                                                            + fieldStart,
-                                                    aggregateStates[k]);
-                                outputTupleBuilder.addFieldEndOffset();
-                            }
 
-                            while (!appender.append(
-                                    outputTupleBuilder.getFieldEndOffsets(),
-                                    outputTupleBuilder.getByteArray(), 0,
-                                    outputTupleBuilder.getSize())) {
-                                FrameUtils.flushFrame(outFrame, writer);
-                                appender.reset(outFrame, true);
+                            if (isPartial) {
+                                while (!aggregator.outputPartialResult(
+                                        appender, storedKeysAccessor1, tIndex,
+                                        aggregateState)) {
+                                    FrameUtils.flushFrame(outFrame, writer);
+                                    appender.reset(outFrame, true);
+                                }
+                            } else {
+                                while (!aggregator.outputFinalResult(appender,
+                                        storedKeysAccessor1, tIndex,
+                                        aggregateState)) {
+                                    FrameUtils.flushFrame(outFrame, writer);
+                                    appender.reset(outFrame, true);
+                                }
                             }
+                            aggregator.reset();
                         } while (true);
                     }
                     if (appender.getTupleCount() != 0) {
                         FrameUtils.flushFrame(outFrame, writer);
                     }
-                    for (int i = 0; i < aggregators.length; i++) {
-                        aggregators[i].close();
-                    }
+                    aggregator.close();
                     return;
                 }
                 int n = tPointers.length / 3;
@@ -393,54 +315,41 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     ByteBuffer buffer = frames.get(frameIndex);
                     storedKeysAccessor1.reset(buffer);
 
-                    int tupleOffset = storedKeysAccessor1
-                            .getTupleStartOffset(tupleIndex);
-
-                    outputTupleBuilder.reset();
-                    for (int k = 0; k < keyFields.length; k++) {
-                        outputTupleBuilder.addField(storedKeysAccessor1,
-                                tupleIndex, k);
-                    }
-                    for (int k = 0; k < aggregators.length; k++) {
-                        int fieldStart = storedKeysAccessor1
-                                .getFieldStartOffset(tupleIndex,
-                                        keyFields.length + k);
-                        if (isPartial)
-                            aggregators[k].outputPartialResult(
-                                    outputTupleBuilder.getDataOutput(),
-                                    storedKeysAccessor1.getBuffer().array(),
-                                    tupleOffset
-                                            + storedKeysAccessor1
-                                                    .getFieldSlotsLength()
-                                            + fieldStart, aggregateStates[k]);
-                        else
-                            aggregators[k].outputFinalResult(outputTupleBuilder
-                                    .getDataOutput(), storedKeysAccessor1
-                                    .getBuffer().array(), tupleOffset
-                                    + storedKeysAccessor1.getFieldSlotsLength()
-                                    + fieldStart, aggregateStates[k]);
-                        outputTupleBuilder.addFieldEndOffset();
-                    }
-                    if (!appender.append(
-                            outputTupleBuilder.getFieldEndOffsets(),
-                            outputTupleBuilder.getByteArray(), 0,
-                            outputTupleBuilder.getSize())) {
-                        FrameUtils.flushFrame(outFrame, writer);
-                        appender.reset(outFrame, true);
-                        if (!appender.append(
-                                outputTupleBuilder.getFieldEndOffsets(),
-                                outputTupleBuilder.getByteArray(), 0,
-                                outputTupleBuilder.getSize())) {
-                            throw new IllegalStateException();
+                    if (isPartial) {
+                        if (!aggregator
+                                .outputPartialResult(appender,
+                                        storedKeysAccessor1, tupleIndex,
+                                        aggregateState)) {
+                            FrameUtils.flushFrame(outFrame, writer);
+                            appender.reset(outFrame, true);
+                            if (!aggregator.outputPartialResult(appender,
+                                    storedKeysAccessor1, tupleIndex,
+                                    aggregateState)) {
+                                throw new HyracksDataException(
+                                        "Failed to output partial result.");
+                            }
+                        }
+                    } else {
+                        if (!aggregator
+                                .outputFinalResult(appender,
+                                        storedKeysAccessor1, tupleIndex,
+                                        aggregateState)) {
+                            FrameUtils.flushFrame(outFrame, writer);
+                            appender.reset(outFrame, true);
+                            if (!aggregator.outputFinalResult(appender,
+                                    storedKeysAccessor1, tupleIndex,
+                                    aggregateState)) {
+                                throw new HyracksDataException(
+                                        "Failed to output partial result.");
+                            }
                         }
                     }
+                    aggregator.reset();
                 }
                 if (appender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(outFrame, writer);
                 }
-                for (int i = 0; i < aggregators.length; i++) {
-                    aggregators[i].close();
-                }
+                aggregator.close();
             }
 
             @Override

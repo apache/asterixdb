@@ -24,21 +24,25 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.AggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
 
 /**
  *
  */
-public class IntSumAggregatorFactory implements
+public class IntSumFieldAggregatorFactory implements
         IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
 
     private final int aggField;
+    
+    private final boolean useObjectState;
 
-    public IntSumAggregatorFactory(int aggField) {
+    public IntSumFieldAggregatorFactory(int aggField, boolean useObjState) {
         this.aggField = aggField;
+        this.useObjectState = useObjState;
     }
 
     /*
@@ -58,8 +62,7 @@ public class IntSumAggregatorFactory implements
         return new IFieldAggregateDescriptor() {
 
             @Override
-            public void reset(AggregateState state) {
-                state.reset();
+            public void reset() {
             }
 
             @Override
@@ -67,10 +70,10 @@ public class IntSumAggregatorFactory implements
                     byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
-                if (data != null) {
+                if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    sum = (Integer) (state.getState());
+                    sum = (Integer) state.getState();
                 }
                 try {
                     fieldOutput.writeInt(sum);
@@ -85,10 +88,10 @@ public class IntSumAggregatorFactory implements
                     int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
-                if (data != null) {
+                if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    sum = (Integer) (state.getState());
+                    sum = (Integer) state.getState();
                 }
                 try {
                     fieldOutput.writeInt(sum);
@@ -109,7 +112,7 @@ public class IntSumAggregatorFactory implements
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
-                if (fieldOutput != null) {
+                if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);
                     } catch (IOException e) {
@@ -117,13 +120,36 @@ public class IntSumAggregatorFactory implements
                                 "I/O exception when initializing the aggregator.");
                     }
                 } else {
-                    state.setState(new Integer(sum));
+                    state.setState(sum);
                 }
             }
 
             @Override
-            public AggregateState createState() {
-                return new AggregateState();
+            public IAggregateStateFactory getAggregateStateFactory(){
+                return new IAggregateStateFactory() {
+                    
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public boolean hasObjectState() {
+                        return useObjectState;
+                    }
+                    
+                    @Override
+                    public boolean hasBinaryState() {
+                        return !useObjectState;
+                    }
+                    
+                    @Override
+                    public int getStateLength() {
+                        return 4;
+                    }
+                    
+                    @Override
+                    public Object createState() {
+                        return new Integer(0);
+                    }
+                };
             }
 
             @Override
@@ -142,14 +168,21 @@ public class IntSumAggregatorFactory implements
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
-                if (data != null) {
+                if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
                     sum += buf.getInt(offset);
                     buf.putInt(offset, sum);
                 } else {
-                    sum += (Integer) (state.getState());
-                    state.setState(new Integer(sum));
+                    sum += (Integer) state.getState();
+                    state.setState(sum);
                 }
+            }
+
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor,
+                    int tIndex, DataOutput fieldOutput, AggregateState state)
+                    throws HyracksDataException {
+                init(accessor, tIndex, fieldOutput, state);
             }
         };
     }

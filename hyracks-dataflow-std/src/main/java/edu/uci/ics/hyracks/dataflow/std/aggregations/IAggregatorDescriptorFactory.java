@@ -17,15 +17,16 @@ package edu.uci.ics.hyracks.dataflow.std.aggregations;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface ISpillableTableFactory extends Serializable {
-    ISpillableTable buildSpillableTable(IHyracksTaskContext ctx, int[] keyFields,
-            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory normalizedKeyComputerFactory,
-            IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int framesLimit) throws HyracksDataException;
+/**
+ *
+ */
+public interface IAggregatorDescriptorFactory extends Serializable {
 
+    IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
+            RecordDescriptor inRecordDescriptor,
+            RecordDescriptor outRecordDescriptor, int[] keyFields) throws HyracksDataException;
+    
 }

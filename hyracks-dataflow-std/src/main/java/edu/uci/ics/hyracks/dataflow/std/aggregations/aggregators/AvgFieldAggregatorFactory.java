@@ -24,20 +24,24 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.AggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
 
 /**
  *
  */
-public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
+public class AvgFieldAggregatorFactory implements IFieldAggregateDescriptorFactory {
     
     private static final long serialVersionUID = 1L;
     
     private final int aggField;
     
-    public AvgAggregatorFactory(int aggField){
+    private final boolean useObjectState;
+    
+    public AvgFieldAggregatorFactory(int aggField, boolean useObjectState){
         this.aggField = aggField;
+        this.useObjectState = useObjectState;
     }
     
     /* (non-Javadoc)
@@ -51,15 +55,14 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
         return new IFieldAggregateDescriptor() {
             
             @Override
-            public void reset(AggregateState state) {
-                state.reset();
+            public void reset() {
             }
             
             @Override
             public void outputPartialResult(DataOutput fieldOutput, byte[] data,
                     int offset, AggregateState state) throws HyracksDataException {
                 int sum, count;
-                if (data != null) {
+                if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                     count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
@@ -80,7 +83,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
             public void outputFinalResult(DataOutput fieldOutput, byte[] data,
                     int offset, AggregateState state) throws HyracksDataException {
                 int sum, count;
-                if (data != null) {
+                if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                     count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
@@ -109,7 +112,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
                 count += 1;
-                if (fieldOutput != null) {
+                if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);
                         fieldOutput.writeInt(count);
@@ -120,11 +123,6 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                 } else {
                     state.setState(new Integer[]{sum, count});
                 }
-            }
-            
-            @Override
-            public AggregateState createState() {
-                return new AggregateState();
             }
             
             @Override
@@ -145,7 +143,7 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
                 count += 1;
-                if (data != null) {
+                if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
                     sum += buf.getInt(offset);
                     count += buf.getInt(offset + 4);
@@ -155,6 +153,63 @@ public class AvgAggregatorFactory implements IFieldAggregateDescriptorFactory {
                     Integer[] fields = (Integer[])state.getState();
                     sum += fields[0];
                     count += fields[1];
+                    state.setState(new Integer[]{sum, count});
+                }
+            }
+
+            @Override
+            public IAggregateStateFactory getAggregateStateFactory() {
+                return new IAggregateStateFactory() {
+                    
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public boolean hasObjectState() {
+                        return useObjectState;
+                    }
+                    
+                    @Override
+                    public boolean hasBinaryState() {
+                        return !useObjectState;
+                    }
+                    
+                    @Override
+                    public int getStateLength() {
+                        return 8;
+                    }
+                    
+                    @Override
+                    public Object createState() {
+                        return new Integer[]{0, 0};
+                    }
+                };
+            }
+
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor,
+                    int tIndex, DataOutput fieldOutput, AggregateState state)
+                    throws HyracksDataException {
+                int sum = 0;
+                int count = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                sum += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart);
+                count += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart + 4);
+                if (!useObjectState) {
+                    try {
+                        fieldOutput.writeInt(sum);
+                        fieldOutput.writeInt(count);
+                    } catch (IOException e) {
+                        throw new HyracksDataException(
+                                "I/O exception when initializing the aggregator.");
+                    }
+                } else {
                     state.setState(new Integer[]{sum, count});
                 }
             }

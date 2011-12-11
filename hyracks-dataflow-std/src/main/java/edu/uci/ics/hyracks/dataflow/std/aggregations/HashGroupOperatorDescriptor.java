@@ -53,20 +53,20 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     private final ITuplePartitionComputerFactory tpcf;
     private final IBinaryComparatorFactory[] comparatorFactories;
 
-    private final IFieldAggregateDescriptorFactory[] aggregatorFactories;
+    private final IAggregatorDescriptorFactory aggregatorFactory;
 
     private final int tableSize;
 
     public HashGroupOperatorDescriptor(JobSpecification spec, int[] keys,
             ITuplePartitionComputerFactory tpcf,
             IBinaryComparatorFactory[] comparatorFactories,
-            IFieldAggregateDescriptorFactory[] aggregatorFactories,
+            IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor outRecordDescriptor, int tableSize) {
         super(spec, 1, 1);
         this.keys = keys;
         this.tpcf = tpcf;
         this.comparatorFactories = comparatorFactories;
-        this.aggregatorFactories = aggregatorFactories;
+        this.aggregatorFactory = aggregatorFactory;
         recordDescriptors[0] = outRecordDescriptor;
         this.tableSize = tableSize;
     }
@@ -138,7 +138,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                     state = new HashBuildActivityState(ctx.getJobletContext()
                             .getJobId(), new TaskId(getActivityId(), partition));
                     state.table = new GroupingHashTable(ctx, keys,
-                            comparatorFactories, tpcf, aggregatorFactories,
+                            comparatorFactories, tpcf, aggregatorFactory,
                             recordDescProvider.getInputRecordDescriptor(
                                     getOperatorId(), 0), recordDescriptors[0],
                             tableSize);

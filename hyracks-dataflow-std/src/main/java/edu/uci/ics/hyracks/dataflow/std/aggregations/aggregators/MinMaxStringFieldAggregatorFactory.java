@@ -27,13 +27,14 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.AggregateState;
+import edu.uci.ics.hyracks.dataflow.std.aggregations.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory;
 
 /**
  *
  */
-public class MinMaxStringAggregatorFactory implements
+public class MinMaxStringFieldAggregatorFactory implements
         IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
@@ -41,10 +42,13 @@ public class MinMaxStringAggregatorFactory implements
     private final int aggField;
 
     private final boolean isMax;
+    
+    private final boolean hasBinaryState;
 
-    public MinMaxStringAggregatorFactory(int aggField, boolean isMax) {
+    public MinMaxStringFieldAggregatorFactory(int aggField, boolean isMax, boolean hasBinaryState) {
         this.aggField = aggField;
         this.isMax = isMax;
+        this.hasBinaryState = hasBinaryState;
     }
 
     /*
@@ -63,8 +67,7 @@ public class MinMaxStringAggregatorFactory implements
         return new IFieldAggregateDescriptor() {
 
             @Override
-            public void reset(AggregateState state) {
-                state.reset();
+            public void reset() {
             }
 
             @Override
@@ -72,7 +75,7 @@ public class MinMaxStringAggregatorFactory implements
                     byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 try {
-                    if (data != null) {
+                    if (hasBinaryState) {
                         int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
                         Object[] storedState = (Object[]) state.getState();
                         fieldOutput.writeUTF((String)storedState[stateIdx]);
@@ -90,11 +93,14 @@ public class MinMaxStringAggregatorFactory implements
                     int offset, AggregateState state)
                     throws HyracksDataException {
                 try {
-                    if (data != null) {
+                    if (hasBinaryState) {
                         int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
                         Object[] storedState = (Object[]) state.getState();
                         fieldOutput.writeUTF((String)storedState[stateIdx]);
                     } else {
+                        if(((String)state.getState()).equalsIgnoreCase("ic platelets lose carefully. blithely unu")){
+                            System.out.print("");
+                        }
                         fieldOutput.writeUTF((String) state.getState());
                     }
                 } catch (IOException e) {
@@ -116,7 +122,7 @@ public class MinMaxStringAggregatorFactory implements
                                         .array(), tupleOffset
                                         + accessor.getFieldSlotsLength()
                                         + fieldStart, fieldLength)));
-                if (fieldOutput != null) {
+                if (hasBinaryState) {
                     // Object-binary-state
                     Object[] storedState = (Object[]) state.getState();
                     if (storedState == null) {
@@ -146,11 +152,6 @@ public class MinMaxStringAggregatorFactory implements
             }
 
             @Override
-            public AggregateState createState() {
-                return new AggregateState();
-            }
-
-            @Override
             public void close() {
                 // TODO Auto-generated method stub
 
@@ -169,7 +170,7 @@ public class MinMaxStringAggregatorFactory implements
                                         .array(), tupleOffset
                                         + accessor.getFieldSlotsLength()
                                         + fieldStart, fieldLength)));
-                if (data != null) {
+                if (hasBinaryState) {
                     int stateIdx = IntegerSerializerDeserializer.getInt(data,
                             offset);
                     Object[] storedState = (Object[]) state.getState();
@@ -198,6 +199,41 @@ public class MinMaxStringAggregatorFactory implements
                         }
                     }
                 }
+            }
+
+            @Override
+            public IAggregateStateFactory getAggregateStateFactory() {
+                return new IAggregateStateFactory() {
+                    
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public boolean hasObjectState() {
+                        return true;
+                    }
+                    
+                    @Override
+                    public boolean hasBinaryState() {
+                        return hasBinaryState;
+                    }
+                    
+                    @Override
+                    public int getStateLength() {
+                        return 4;
+                    }
+                    
+                    @Override
+                    public Object createState() {
+                        return null;
+                    }
+                };
+            }
+
+            @Override
+            public void initFromPartial(IFrameTupleAccessor accessor,
+                    int tIndex, DataOutput fieldOutput, AggregateState state)
+                    throws HyracksDataException {
+                init(accessor, tIndex, fieldOutput, state);
             }
         };
     }

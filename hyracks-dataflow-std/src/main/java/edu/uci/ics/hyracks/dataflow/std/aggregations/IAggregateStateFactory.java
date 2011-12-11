@@ -19,23 +19,14 @@ import java.io.Serializable;
 /**
  *
  */
-public class AggregateState implements Serializable {
+public interface IAggregateStateFactory extends Serializable {
+
+    public int getStateLength();
     
-    private static final long serialVersionUID = 1L;
+    public Object createState();
     
-    Object state = null;
-
-    public void setState(Object obj) {
-        state = null;
-        state = obj;
-    }
-
-    public void reset() {
-        state = null;
-    }
-
-    public Object getState() {
-        return state;
-    }
+    public boolean hasBinaryState();
+    
+    public boolean hasObjectState();
     
 }
