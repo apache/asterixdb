@@ -24,11 +24,12 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 /**
- * FrameTupleCursor is used to navigate over tuples in a Frame.
- * A frame is formatted with tuple data concatenated starting at offset 0, one tuple after another.
- * Offset FS - 4 holds an int indicating the number of tuples (N) in the frame. FS - ((i + 1) * 4) for i from
- * 0 to N - 1 holds an int indicating the offset of the (i + 1)^th tuple.
- * Every tuple is organized as a sequence of ints indicating the end of each field in the tuple relative to the end of the
+ * FrameTupleCursor is used to navigate over tuples in a Frame. A frame is
+ * formatted with tuple data concatenated starting at offset 0, one tuple after
+ * another. Offset FS - 4 holds an int indicating the number of tuples (N) in
+ * the frame. FS - ((i + 1) * 4) for i from 0 to N - 1 holds an int indicating
+ * the offset of the (i + 1)^th tuple. Every tuple is organized as a sequence of
+ * ints indicating the end of each field in the tuple relative to the end of the
  * field slots.
  * 
  * @author vinayakb
@@ -86,7 +87,7 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldSlotsLength() {
-        return recordDescriptor.getFields().length * 4;
+        return getFieldCount() * 4;
     }
 
     public void prettyPrint() {
@@ -96,7 +97,7 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
         System.err.println("TC: " + tc);
         for (int i = 0; i < tc; ++i) {
             System.err.print(i + ":(" + getTupleStartOffset(i) + ", " + getTupleEndOffset(i) + ")[");
-            for (int j = 0; j < recordDescriptor.getFields().length; ++j) {
+            for (int j = 0; j < getFieldCount(); ++j) {
                 System.err.print(j + ":(" + getFieldStartOffset(i, j) + ", " + getFieldEndOffset(i, j) + ") ");
                 System.err.print("{");
                 bbis.setByteBuffer(buffer, getTupleStartOffset(i) + getFieldSlotsLength() + getFieldStartOffset(i, j));
@@ -113,6 +114,6 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldCount() {
-        return recordDescriptor.getFields().length;
+        return recordDescriptor.getFieldCount();
     }
 }

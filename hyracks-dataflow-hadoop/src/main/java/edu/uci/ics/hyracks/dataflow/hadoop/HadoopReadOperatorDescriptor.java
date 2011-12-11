@@ -142,8 +142,8 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
 
     @SuppressWarnings("deprecation")
     @Override
-    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IRecordDescriptorProvider recordDescProvider,
-            final int partition, int nPartitions)
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+            final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             @Override
@@ -191,7 +191,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                     RecordDescriptor outputRecordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                             (Class<? extends Writable>) hadoopRecordReader.createKey().getClass(),
                             (Class<? extends Writable>) hadoopRecordReader.createValue().getClass());
-                    int nFields = outputRecordDescriptor.getFields().length;
+                    int nFields = outputRecordDescriptor.getFieldCount();
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(nFields);
                     writer.open();
                     try {

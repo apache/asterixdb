@@ -58,8 +58,8 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
-            int partition, int nPartitions) {
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
 
         final ByteBuffer outputFrame = ctx.allocateFrame();
         final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -82,7 +82,7 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
                     appender.reset(outputFrame, true);
                     for (int i = 0; i < numRecords; i++) {
                         tb.reset();
-                        for (int j = 0; j < recDesc.getFields().length; j++) {
+                        for (int j = 0; j < recDesc.getFieldCount(); j++) {
                             genField(tb, j);
                         }
 

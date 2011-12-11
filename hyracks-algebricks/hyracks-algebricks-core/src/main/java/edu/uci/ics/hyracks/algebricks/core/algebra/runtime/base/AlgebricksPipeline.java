@@ -39,7 +39,7 @@ public class AlgebricksPipeline implements Serializable {
     }
 
     public int getOutputWidth() {
-        return recordDescriptors[recordDescriptors.length - 1].getFields().length;
+        return recordDescriptors[recordDescriptors.length - 1].getFieldCount();
     }
 
     // public int[] getProjectedColumns() {
