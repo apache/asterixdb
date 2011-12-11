@@ -1128,7 +1128,9 @@ public class BTree implements ITreeIndex {
         return new BTreeAccessor(this);
     }
     
-    private class BTreeAccessor implements ITreeIndexAccessor {
+	// TODO: Class should be private. But currently we need to expose the
+	// setOpContext() API to the LSM Tree for it to work correctly.
+    public class BTreeAccessor implements ITreeIndexAccessor {
         private BTree btree;
         private BTreeOpContext ctx;
         
@@ -1167,5 +1169,13 @@ public class BTree implements ITreeIndex {
             ctx.reset(IndexOp.DISKORDERSCAN);
             btree.diskOrderScan(cursor, ctx);
         }
+        
+		// TODO: Ideally, this method should not exist. But we need it for
+		// the LSM tree to work correctly, so we can use the LSMOpContext inside
+		// a BTreeAccessor.
+		// Making the appropriate change will involve changing lots of code.
+		public void setOpContext(BTreeOpContext ctx) {
+			this.ctx = ctx;
+		}
     }
 }
