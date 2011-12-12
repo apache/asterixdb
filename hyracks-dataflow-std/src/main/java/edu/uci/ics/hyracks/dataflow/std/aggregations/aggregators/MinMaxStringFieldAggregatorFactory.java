@@ -42,10 +42,11 @@ public class MinMaxStringFieldAggregatorFactory implements
     private final int aggField;
 
     private final boolean isMax;
-    
+
     private final boolean hasBinaryState;
 
-    public MinMaxStringFieldAggregatorFactory(int aggField, boolean isMax, boolean hasBinaryState) {
+    public MinMaxStringFieldAggregatorFactory(int aggField, boolean isMax,
+            boolean hasBinaryState) {
         this.aggField = aggField;
         this.isMax = isMax;
         this.hasBinaryState = hasBinaryState;
@@ -76,9 +77,10 @@ public class MinMaxStringFieldAggregatorFactory implements
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
+                        int stateIdx = IntegerSerializerDeserializer.getInt(
+                                data, offset);
                         Object[] storedState = (Object[]) state.getState();
-                        fieldOutput.writeUTF((String)storedState[stateIdx]);
+                        fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
                         fieldOutput.writeUTF((String) state.getState());
                     }
@@ -94,13 +96,11 @@ public class MinMaxStringFieldAggregatorFactory implements
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
+                        int stateIdx = IntegerSerializerDeserializer.getInt(
+                                data, offset);
                         Object[] storedState = (Object[]) state.getState();
-                        fieldOutput.writeUTF((String)storedState[stateIdx]);
+                        fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
-                        if(((String)state.getState()).equalsIgnoreCase("ic platelets lose carefully. blithely unu")){
-                            System.out.print("");
-                        }
                         fieldOutput.writeUTF((String) state.getState());
                     }
                 } catch (IOException e) {
@@ -124,11 +124,13 @@ public class MinMaxStringFieldAggregatorFactory implements
                                         + fieldStart, fieldLength)));
                 if (hasBinaryState) {
                     // Object-binary-state
-                    Object[] storedState = (Object[]) state.getState();
-                    if (storedState == null) {
+                    Object[] storedState;
+                    if (state.getState() == null) {
                         storedState = new Object[8];
                         storedState[0] = new Integer(0);
                         state.setState(storedState);
+                    } else {
+                        storedState = (Object[]) state.getState();
                     }
                     int stateCount = (Integer) (storedState[0]);
                     if (stateCount + 1 >= storedState.length) {
@@ -173,6 +175,7 @@ public class MinMaxStringFieldAggregatorFactory implements
                 if (hasBinaryState) {
                     int stateIdx = IntegerSerializerDeserializer.getInt(data,
                             offset);
+
                     Object[] storedState = (Object[]) state.getState();
 
                     if (isMax) {
@@ -204,24 +207,24 @@ public class MinMaxStringFieldAggregatorFactory implements
             @Override
             public IAggregateStateFactory getAggregateStateFactory() {
                 return new IAggregateStateFactory() {
-                    
+
                     private static final long serialVersionUID = 1L;
 
                     @Override
                     public boolean hasObjectState() {
                         return true;
                     }
-                    
+
                     @Override
                     public boolean hasBinaryState() {
                         return hasBinaryState;
                     }
-                    
+
                     @Override
                     public int getStateLength() {
                         return 4;
                     }
-                    
+
                     @Override
                     public Object createState() {
                         return null;

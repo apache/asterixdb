@@ -294,7 +294,6 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                                     appender.reset(outFrame, true);
                                 }
                             }
-                            aggregator.reset();
                         } while (true);
                     }
                     if (appender.getTupleCount() != 0) {
@@ -344,7 +343,6 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             }
                         }
                     }
-                    aggregator.reset();
                 }
                 if (appender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(outFrame, writer);

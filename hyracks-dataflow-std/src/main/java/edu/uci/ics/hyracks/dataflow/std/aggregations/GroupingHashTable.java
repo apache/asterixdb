@@ -65,6 +65,10 @@ class GroupingHashTable {
     private final FrameTupleAppender appender;
     private final List<ByteBuffer> buffers;
     private final Link[] table;
+    /**
+     * Aggregate states: a list of states for all groups maintained in the main
+     * memory.
+     */
     private AggregateState[] aggregateStates;
     private int accumulatorSize;
 
@@ -165,12 +169,15 @@ class GroupingHashTable {
                     throw new IllegalStateException();
                 }
             }
-            // Add aggregation fields
+            // Add index to the keys in frame
             int sbIndex = lastBIndex;
             int stIndex = appender.getTupleCount() - 1;
+            
+            // Add aggregation fields
             AggregateState newState = aggregator.createAggregateStates();
-            aggregator.init(appender, accessor, tIndex, newState);
-
+            
+            aggregator.init(null, accessor, tIndex, newState);
+            
             if (accumulatorSize >= aggregateStates.length) {
                 aggregateStates = Arrays.copyOf(aggregateStates,
                         aggregateStates.length * 2);
@@ -198,8 +205,9 @@ class GroupingHashTable {
                     ByteBuffer keyBuffer = buffers.get(bIndex);
                     storedKeysAccessor.reset(keyBuffer);
 
-                    while (!aggregator.outputFinalResult(appender,
-                            storedKeysAccessor, tIndex, aggregateStates[aIndex])) {
+                    while (!aggregator
+                            .outputFinalResult(appender, storedKeysAccessor,
+                                    tIndex, aggregateStates[aIndex])) {
                         flushFrame(appender, writer);
                     }
                     aggregator.reset();

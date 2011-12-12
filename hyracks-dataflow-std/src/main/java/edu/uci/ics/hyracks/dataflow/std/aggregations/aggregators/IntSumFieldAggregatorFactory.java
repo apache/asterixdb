@@ -105,13 +105,16 @@ public class IntSumFieldAggregatorFactory implements
             public void init(IFrameTupleAccessor accessor, int tIndex,
                     DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
+
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                
                 sum += IntegerSerializerDeserializer.getInt(accessor
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
+                
                 if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);
@@ -168,6 +171,7 @@ public class IntSumFieldAggregatorFactory implements
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
+                
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
                     sum += buf.getInt(offset);

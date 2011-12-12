@@ -20,7 +20,12 @@ import java.io.Serializable;
  *
  */
 public interface IAggregateStateFactory extends Serializable {
-
+    
+    /**
+     * Get the (partial) state length in binary. 
+     * 
+     * @return
+     */
     public int getStateLength();
     
     public Object createState();

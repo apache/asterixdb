@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -315,7 +314,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         ctx.getFrameSize());
                 private final FrameTupleAccessor outFrameAccessor = new FrameTupleAccessor(
                         ctx.getFrameSize(), recordDescriptors[0]);
-                private ArrayTupleBuilder finalTupleBuilder;
                 private FrameTupleAppender writerFrameAppender;
 
                 public void initialize() throws HyracksDataException {
@@ -450,11 +448,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  * Initialize the first output record Reset the
                                  * tuple builder
                                  */
-
-                                if (!aggregator.init(outFrameAppender, fta,
+                                if (!aggregator.initFromPartial(outFrameAppender, fta,
                                         tupleIndex, aggregateState)) {
                                     flushOutFrame(writer, finalPass);
-                                    if (!aggregator.init(outFrameAppender, fta,
+                                    if (!aggregator.initFromPartial(outFrameAppender, fta,
                                             tupleIndex, aggregateState)) {
                                         throw new HyracksDataException(
                                                 "Failed to append an aggregation result to the output frame.");
@@ -501,10 +498,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 private void flushOutFrame(IFrameWriter writer, boolean isFinal)
                         throws HyracksDataException {
-                    if (finalTupleBuilder == null) {
-                        finalTupleBuilder = new ArrayTupleBuilder(
-                                recordDescriptors[0].getFields().length);
-                    }
                     if (writerFrame == null) {
                         writerFrame = ctx.allocateFrame();
                     }
@@ -516,9 +509,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     outFrameAccessor.reset(outFrame);
 
                     for (int i = 0; i < outFrameAccessor.getTupleCount(); i++) {
-                        for (int j = 0; j < keyFields.length; j++) {
-                            finalTupleBuilder.addField(outFrameAccessor, i, j);
-                        }
                         
                         if(isFinal){
                             if(!aggregator.outputFinalResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
@@ -539,7 +529,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                 }
                             }
                         }
-                        aggregator.reset();
                     }
                     if (writerFrameAppender.getTupleCount() > 0) {
                         FrameUtils.flushFrame(writerFrame, writer);

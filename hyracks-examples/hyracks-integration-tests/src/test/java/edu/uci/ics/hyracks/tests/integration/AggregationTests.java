@@ -239,7 +239,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                         IntegerSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 3;
+        int frameLimits = 4;
         int tableSize = 8;
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(
@@ -253,7 +253,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                         new IntSumFieldAggregatorFactory(3, false) }),
                 new MultiFieldsAggregatorFactory( new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false),
-                        new IntSumFieldAggregatorFactory(3, false) }),
+                        new IntSumFieldAggregatorFactory(2, false) }),
                 outputRec,
                 new HashSpillableTableFactory(
                         new FieldHashPartitionComputerFactory(
@@ -408,7 +408,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                         FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 3;
+        int frameLimits = 4;
         int tableSize = 8;
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(
@@ -423,8 +423,8 @@ public class AggregationTests extends AbstractIntegrationTest {
                         new AvgFieldAggregatorFactory(1, false) }),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false),
-                        new CountFieldAggregatorFactory(false),
-                        new AvgFieldAggregatorFactory(2, false) }),
+                        new IntSumFieldAggregatorFactory(2, false),
+                        new AvgFieldAggregatorFactory(3, false) }),
                 outputRec,
                 new HashSpillableTableFactory(
                         new FieldHashPartitionComputerFactory(
@@ -577,7 +577,7 @@ public class AggregationTests extends AbstractIntegrationTest {
                         UTF8StringSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 3;
+        int frameLimits = 4;
         int tableSize = 8;
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(
