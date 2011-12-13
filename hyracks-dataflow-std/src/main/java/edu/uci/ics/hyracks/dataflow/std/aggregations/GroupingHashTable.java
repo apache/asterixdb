@@ -73,7 +73,6 @@ class GroupingHashTable {
     private int accumulatorSize;
 
     private int lastBIndex;
-    private final int[] fields;
     private final int[] storedKeys;
     private final IBinaryComparator[] comparators;
     private final FrameTuplePairComparator ftpc;
@@ -94,7 +93,6 @@ class GroupingHashTable {
         buffers = new ArrayList<ByteBuffer>();
         table = new Link[tableSize];
 
-        this.fields = fields;
         storedKeys = new int[fields.length];
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] storedKeySerDeser = new ISerializerDeserializer[fields.length];
@@ -163,20 +161,22 @@ class GroupingHashTable {
             // Did not find the key. Insert a new entry.
             saIndex = accumulatorSize++;
             // Add keys
-            if (!appender.appendProjection(accessor, tIndex, fields)) {
-                addNewBuffer();
-                if (!appender.appendProjection(accessor, tIndex, fields)) {
-                    throw new IllegalStateException();
-                }
-            }
+
             // Add index to the keys in frame
             int sbIndex = lastBIndex;
-            int stIndex = appender.getTupleCount() - 1;
+            int stIndex = appender.getTupleCount();
             
             // Add aggregation fields
             AggregateState newState = aggregator.createAggregateStates();
             
-            aggregator.init(null, accessor, tIndex, newState);
+            if(!aggregator.init(appender, accessor, tIndex, newState)){
+                addNewBuffer();
+                sbIndex = lastBIndex;
+                stIndex = appender.getTupleCount();
+                if(!aggregator.init(appender, accessor, tIndex, newState)){
+                    throw new IllegalStateException();
+                }
+            }
             
             if (accumulatorSize >= aggregateStates.length) {
                 aggregateStates = Arrays.copyOf(aggregateStates,
@@ -210,7 +210,6 @@ class GroupingHashTable {
                                     tIndex, aggregateStates[aIndex])) {
                         flushFrame(appender, writer);
                     }
-                    aggregator.reset();
                 }
             }
         }

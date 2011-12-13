@@ -74,7 +74,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 } else {
                     switchGroupIfRequired(inFrameAccessor, i - 1, inFrameAccessor, i);
                 }
-                aggregator.aggregate(inFrameAccessor, i, null, 0, aggregateState);
+                
             }
         }
         FrameUtils.copy(buffer, copyFrame);
@@ -85,6 +85,8 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         if (!sameGroup(prevTupleAccessor, prevTupleIndex, currTupleAccessor, currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
             aggregator.init(null, currTupleAccessor, currTupleIndex, aggregateState);
+        } else {
+            aggregator.aggregate(currTupleAccessor, currTupleIndex, null, 0, aggregateState);
         }
     }
 
@@ -97,7 +99,6 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 throw new IllegalStateException();
             }
         }
-        aggregator.reset();
     }
 
     private boolean sameGroup(FrameTupleAccessor a1, int t1Idx, FrameTupleAccessor a2, int t2Idx) {

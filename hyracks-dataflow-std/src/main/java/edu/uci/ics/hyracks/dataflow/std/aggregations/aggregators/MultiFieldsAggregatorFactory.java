@@ -136,10 +136,12 @@ public class MultiFieldsAggregatorFactory implements
                     AggregateState state) throws HyracksDataException {
                 if (!outputPending) {
                     resultTupleBuilder.reset();
+                    
                     for (int i = 0; i < keyFields.length; i++) {
                         resultTupleBuilder.addField(accessor, tIndex,
                                 keyFields[i]);
                     }
+ 
                     DataOutput dos = resultTupleBuilder.getDataOutput();
 
                     int tupleOffset = accessor.getTupleStartOffset(tIndex);
