@@ -3,6 +3,7 @@ package edu.uci.ics.hyracks.control.common.job.profiling.om;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,12 +33,13 @@ public class JobProfile extends AbstractProfile {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        json.put("type", "job-profile");
         json.put("job-id", jobId.toString());
         populateCounters(json);
+        JSONArray jobletsArray = new JSONArray();
         for (JobletProfile p : jobletProfiles.values()) {
-            json.accumulate("joblets", p.toJSON());
+            jobletsArray.put(p.toJSON());
         }
+        json.put("joblets", jobletsArray);
 
         return json;
     }

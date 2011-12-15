@@ -264,8 +264,6 @@ public class JobSpecification implements Serializable {
     public JSONObject toJSON() throws JSONException {
         JSONObject jjob = new JSONObject();
 
-        jjob.put("type", "job");
-
         JSONArray jopArray = new JSONArray();
         for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : opMap.entrySet()) {
             jopArray.put(e.getValue().toJSON());
@@ -277,7 +275,6 @@ public class JobSpecification implements Serializable {
             JSONObject conn = new JSONObject();
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connection = connectorOpMap
                     .get(e.getKey());
-            conn.put("type", "connector-info");
             if (connection != null) {
                 conn.put("in-operator-id", connection.first.first.getOperatorId().toString());
                 conn.put("in-operator-port", connection.first.second.intValue());

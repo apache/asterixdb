@@ -209,13 +209,11 @@ public class JobActivityGraph implements Serializable {
     public JSONObject toJSON() throws JSONException {
         JSONObject jplan = new JSONObject();
 
-        jplan.put("type", "plan");
         jplan.put("flags", jobFlags.toString());
 
         JSONArray jans = new JSONArray();
         for (IActivity an : activityNodes.values()) {
             JSONObject jan = new JSONObject();
-            jan.put("type", "activity");
             jan.put("id", an.getActivityId().toString());
             jan.put("java-class", an.getClass().getName());
             jan.put("operator-id", an.getActivityId().getOperatorDescriptorId().toString());
@@ -225,7 +223,6 @@ public class JobActivityGraph implements Serializable {
                 JSONArray jInputs = new JSONArray();
                 for (int i = 0; i < inputs.size(); ++i) {
                     JSONObject jInput = new JSONObject();
-                    jInput.put("type", "activity-input");
                     jInput.put("input-port", i);
                     jInput.put("connector-id", inputs.get(i).getConnectorId().toString());
                     jInputs.put(jInput);
@@ -238,7 +235,6 @@ public class JobActivityGraph implements Serializable {
                 JSONArray jOutputs = new JSONArray();
                 for (int i = 0; i < outputs.size(); ++i) {
                     JSONObject jOutput = new JSONObject();
-                    jOutput.put("type", "activity-output");
                     jOutput.put("output-port", i);
                     jOutput.put("connector-id", outputs.get(i).getConnectorId().toString());
                     jOutputs.put(jOutput);

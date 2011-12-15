@@ -32,9 +32,15 @@ public class TaskClusterAttempt {
 
     private int pendingTaskCounter;
 
+    private long startTime;
+
+    private long endTime;
+
     public TaskClusterAttempt(TaskCluster taskCluster, int attempt) {
         this.taskCluster = taskCluster;
         this.attempt = attempt;
+        startTime = -1;
+        endTime = -1;
     }
 
     public TaskCluster getTaskCluster() {
@@ -59,6 +65,22 @@ public class TaskClusterAttempt {
 
     public TaskClusterStatus getStatus() {
         return status;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
     }
 
     public void initializePendingTaskCounter() {

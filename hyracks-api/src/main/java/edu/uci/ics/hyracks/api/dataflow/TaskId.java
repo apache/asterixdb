@@ -52,6 +52,15 @@ public final class TaskId implements Serializable {
 
     @Override
     public String toString() {
-        return "TID:[" + activityId + "]:" + partition;
+        return "TID:" + activityId + ":" + partition;
+    }
+
+    public static TaskId parse(String str) {
+        if (str.startsWith("TID:")) {
+            str = str.substring(4);
+            int idIdx = str.lastIndexOf(':');
+            return new TaskId(ActivityId.parse(str.substring(0, idIdx)), Integer.parseInt(str.substring(idIdx + 1)));
+        }
+        throw new IllegalArgumentException();
     }
 }

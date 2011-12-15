@@ -48,7 +48,6 @@ public class TaskProfile extends AbstractProfile {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        json.put("type", "task-profile");
         json.put("activity-id", taskAttemptId.getTaskId().getActivityId().toString());
         json.put("partition", taskAttemptId.getTaskId().getPartition());
         json.put("attempt", taskAttemptId.getAttempt());

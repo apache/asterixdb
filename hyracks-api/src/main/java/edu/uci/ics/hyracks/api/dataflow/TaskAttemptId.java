@@ -52,6 +52,15 @@ public final class TaskAttemptId implements Serializable {
 
     @Override
     public String toString() {
-        return "TAID:[" + taskId + "]:" + attempt;
+        return "TAID:" + taskId + ":" + attempt;
+    }
+
+    public static TaskAttemptId parse(String str) {
+        if (str.startsWith("TAID:")) {
+            str = str.substring(5);
+            int idIdx = str.lastIndexOf(':');
+            return new TaskAttemptId(TaskId.parse(str.substring(0, idIdx)), Integer.parseInt(str.substring(idIdx + 1)));
+        }
+        throw new IllegalArgumentException();
     }
 }
