@@ -36,7 +36,6 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -44,6 +43,7 @@ import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
@@ -174,6 +174,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
     }
 
+    public ServerContext getServerContext() {
+        return serverCtx;
+    }
+
+    public ICCContext getCCContext() {
+        return ccContext;
+    }
+
     public Map<String, CCApplicationContext> getApplicationMap() {
         return applications;
     }
@@ -225,9 +233,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         String id = reg.getNodeId();
         NodeControllerState state = new NodeControllerState(nodeController, reg);
         workQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
-        nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
+        params.setClusterController(this);
         params.setClusterControllerInfo(info);
         params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
         params.setProfileDumpPeriod(ccConfig.profileDumpPeriod);
@@ -237,8 +245,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void unregisterNode(INodeController nodeController) throws Exception {
         String id = nodeController.getId();
-        workQueue.scheduleAndSync(new UnregisterNodeWork(this, id));
-        LOGGER.log(Level.INFO, "Unregistered INodeController");
+        workQueue.schedule(new UnregisterNodeWork(this, id));
     }
 
     @Override
@@ -295,13 +302,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void createApplication(String appName) throws Exception {
-        synchronized (applications) {
-            if (applications.containsKey(appName)) {
-                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
-            }
-            CCApplicationContext appCtx = new CCApplicationContext(serverCtx, ccContext, appName);
-            applications.put(appName, appCtx);
-        }
+        FutureValue<Object> fv = new FutureValue<Object>();
+        workQueue.schedule(new ApplicationCreateWork(this, appName, fv));
+        fv.get();
     }
 
     @Override

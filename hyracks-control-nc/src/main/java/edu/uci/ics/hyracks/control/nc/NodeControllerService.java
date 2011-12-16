@@ -171,6 +171,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
                 .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
                 .getAvailableProcessors(), hbSchema));
+        this.ccs = nodeParameters.getClusterController();
         queue.start();
 
         heartbeatTask = new HeartbeatTask(cc);
@@ -238,18 +239,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, byte[] ctxVarBytes) throws Exception {
         StartTasksWork stw = new StartTasksWork(this, appName, jobId, jagBytes, taskDescriptors, connectorPoliciesMap);
-        queue.scheduleAndSync(stw);
+        queue.schedule(stw);
     }
 
     @Override
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
         CleanupJobletWork cjw = new CleanupJobletWork(this, jobId, status);
-        queue.scheduleAndSync(cjw);
-    }
-
-    @Override
-    public void notifyRegistration(IClusterController ccs) throws Exception {
-        this.ccs = ccs;
+        queue.schedule(cjw);
     }
 
     @Override
@@ -260,20 +256,24 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public synchronized void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
         AbortTasksWork atw = new AbortTasksWork(this, jobId, tasks);
-        queue.scheduleAndSync(atw);
+        queue.schedule(atw);
     }
 
     @Override
     public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
             throws Exception {
-        CreateApplicationWork caw = new CreateApplicationWork(this, appName, deployHar, serializedDistributedState);
-        queue.scheduleAndSync(caw);
+        FutureValue<Object> fv = new FutureValue<Object>();
+        CreateApplicationWork caw = new CreateApplicationWork(this, appName, deployHar, serializedDistributedState, fv);
+        queue.schedule(caw);
+        fv.get();
     }
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        DestroyApplicationWork daw = new DestroyApplicationWork(this, appName);
-        queue.scheduleAndSync(daw);
+        FutureValue<Object> fv = new FutureValue<Object>();
+        DestroyApplicationWork daw = new DestroyApplicationWork(this, appName, fv);
+        queue.schedule(daw);
+        fv.get();
     }
 
     @Override

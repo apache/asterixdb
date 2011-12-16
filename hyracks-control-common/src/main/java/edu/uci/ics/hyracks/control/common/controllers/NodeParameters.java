@@ -17,15 +17,26 @@ package edu.uci.ics.hyracks.control.common.controllers;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
+import edu.uci.ics.hyracks.control.common.base.IClusterController;
 
 public class NodeParameters implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    private IClusterController cc;
 
     private ClusterControllerInfo ccInfo;
 
     private int heartbeatPeriod;
 
     private int profileDumpPeriod;
+
+    public IClusterController getClusterController() {
+        return cc;
+    }
+
+    public void setClusterController(IClusterController cc) {
+        this.cc = cc;
+    }
 
     public ClusterControllerInfo getClusterControllerInfo() {
         return ccInfo;

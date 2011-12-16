@@ -52,7 +52,7 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
                     int fh = hashFn
                             .hash(accessor.getBuffer().array(), startOffset + slotLength + fStart, fEnd - fStart);
-                    h += fh;
+                    h = h * 31 + fh;
                 }
                 if (h < 0) {
                     h = -h;

@@ -40,8 +40,6 @@ public interface INodeController extends Remote {
 
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception;
 
-    public void notifyRegistration(IClusterController ccs) throws Exception;
-
     public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
             throws Exception;
 

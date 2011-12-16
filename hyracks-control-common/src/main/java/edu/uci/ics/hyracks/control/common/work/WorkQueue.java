@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.control.common.work;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -27,15 +29,21 @@ public class WorkQueue {
     private final WorkerThread thread;
     private final Semaphore stopSemaphore;
     private boolean stopped;
+    private final AtomicInteger enqueueCount;
+    private final AtomicInteger dequeueCount;
 
     public WorkQueue() {
         queue = new LinkedBlockingQueue<AbstractWork>();
         thread = new WorkerThread();
         stopSemaphore = new Semaphore(1);
+        enqueueCount = new AtomicInteger();
+        dequeueCount = new AtomicInteger();
     }
 
     public void start() throws HyracksException {
         stopped = false;
+        enqueueCount.set(0);
+        dequeueCount.set(0);
         try {
             stopSemaphore.acquire();
         } catch (InterruptedException e) {
@@ -61,6 +69,10 @@ public class WorkQueue {
     }
 
     public void schedule(AbstractWork event) {
+        enqueueCount.incrementAndGet();
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Enqueue: " + enqueueCount);
+        }
         if (LOGGER.isLoggable(event.logLevel())) {
             LOGGER.log(event.logLevel(), "Scheduling: " + event);
         }
@@ -80,7 +92,7 @@ public class WorkQueue {
         @Override
         public void run() {
             try {
-                Runnable r;
+                AbstractWork r;
                 while (true) {
                     synchronized (WorkQueue.this) {
                         if (stopped) {
@@ -92,7 +104,14 @@ public class WorkQueue {
                     } catch (InterruptedException e) {
                         continue;
                     }
+                    dequeueCount.incrementAndGet();
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("Dequeue: " + dequeueCount + "/" + enqueueCount);
+                    }
                     try {
+                        if (LOGGER.isLoggable(r.logLevel())) {
+                            LOGGER.log(r.logLevel(), "Executing: " + r);
+                        }
                         r.run();
                     } catch (Exception e) {
                         e.printStackTrace();
