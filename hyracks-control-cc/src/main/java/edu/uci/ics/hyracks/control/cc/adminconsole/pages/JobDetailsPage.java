@@ -244,13 +244,18 @@ public class JobDetailsPage extends AbstractPage {
                                         .append("\" width=\"1\" height=\"")
                                         .append(HEIGHT / 2)
                                         .append("\" style=\"fill:rgb(255,0,0);stroke-width:1;stroke:rgb(255,0,0)\"/>\n");
-                                for (long ft : tp.frameTimes) {
+                                for (int l = 0; l < tp.frameTimes.length; ++l) {
+                                    long ft = tp.frameTimes[l];
+                                    long ftn = l < tp.frameTimes.length - 1 ? tp.frameTimes[l + 1] : ft;
                                     long taNextTime = ft - minTime;
+                                    long barWidth = ftn - ft;
                                     buffer.append("<rect x=\"")
                                             .append(taNextTime * width + leftOffset)
                                             .append("\" y=\"")
                                             .append(y * (HEIGHT + 1) + HEIGHT / 4)
-                                            .append("\" width=\"1\" height=\"")
+                                            .append("\" width=\"")
+                                            .append(barWidth == 0 ? 1 : (barWidth * width))
+                                            .append("\" height=\"")
                                             .append(HEIGHT / 2)
                                             .append("\" style=\"fill:rgb(0,255,0);stroke-width:1;stroke:rgb(0,255,0)\"/>\n");
                                 }

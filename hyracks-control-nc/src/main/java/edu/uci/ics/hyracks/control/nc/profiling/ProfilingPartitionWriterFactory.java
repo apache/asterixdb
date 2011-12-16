@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.nc.Task;
 
 public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory {
-    private static final int N_SAMPLES = 1024;
+    private static final int N_SAMPLES = 64;
 
     private final IHyracksTaskContext ctx;
 
