@@ -62,6 +62,6 @@ public final class ActivityId implements Serializable {
             return new ActivityId(OperatorDescriptorId.parse(str.substring(0, idIdx)), Integer.parseInt(str
                     .substring(idIdx + 1)));
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Unable to parse: " + str);
     }
 }

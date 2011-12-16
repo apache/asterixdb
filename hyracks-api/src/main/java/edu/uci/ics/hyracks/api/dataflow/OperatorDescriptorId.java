@@ -55,6 +55,6 @@ public final class OperatorDescriptorId implements Serializable {
             str = str.substring(5);
             return new OperatorDescriptorId(Integer.parseInt(str));
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Unable to parse: " + str);
     }
 }

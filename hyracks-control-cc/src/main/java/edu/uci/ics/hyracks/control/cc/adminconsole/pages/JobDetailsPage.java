@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.string.StringValue;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -41,7 +41,6 @@ public class JobDetailsPage extends AbstractPage {
     private static final long serialVersionUID = 1L;
 
     private static final int HEIGHT = 29;
-    private static final int WIDTH = 9;
 
     public JobDetailsPage(PageParameters params) throws Exception {
         ClusterControllerService ccs = getAdminConsoleApplication().getClusterControllerService();
@@ -119,10 +118,11 @@ public class JobDetailsPage extends AbstractPage {
                                         tcAttempts[k].tasks = new TaskAttempt[taArray.length()];
                                         for (int l = 0; l < taArray.length(); ++l) {
                                             JSONObject taO = taArray.getJSONObject(l);
-                                            TaskAttempt ta = new TaskAttempt(taO.getString("task-id"),
-                                                    taO.getLong("start-time"), taO.getLong("end-time"));
+                                            TaskAttemptId taId = TaskAttemptId.parse(taO.getString("task-attempt-id"));
+                                            TaskAttempt ta = new TaskAttempt(taId, taO.getLong("start-time"),
+                                                    taO.getLong("end-time"));
                                             tcAttempts[k].tasks[l] = ta;
-                                            TaskId tid = TaskId.parse(taO.getString("task-id"));
+                                            TaskId tid = taId.getTaskId();
                                             ta.name = activityMap.get(tid.getActivityId());
                                             ta.partition = tid.getPartition();
                                         }
@@ -142,6 +142,46 @@ public class JobDetailsPage extends AbstractPage {
                                     }
                                 });
                                 tcList.add(tcAttempts);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Map<TaskAttemptId, TaskProfile> tpMap = new HashMap<TaskAttemptId, TaskProfile>();
+        if (jrO.has("profile")) {
+            JSONObject pO = jrO.getJSONObject("profile");
+            if (pO.has("joblets")) {
+                JSONArray jobletsA = pO.getJSONArray("joblets");
+                for (int i = 0; i < jobletsA.length(); ++i) {
+                    JSONObject jobletO = jobletsA.getJSONObject(i);
+                    if (jobletO.has("tasks")) {
+                        JSONArray tasksA = jobletO.getJSONArray("tasks");
+                        for (int j = 0; j < tasksA.length(); ++j) {
+                            JSONObject taskO = tasksA.getJSONObject(j);
+                            ActivityId activityId = ActivityId.parse(taskO.getString("activity-id"));
+                            int partition = taskO.getInt("partition");
+                            int attempt = taskO.getInt("attempt");
+                            TaskAttemptId taId = new TaskAttemptId(new TaskId(activityId, partition), attempt);
+                            if (taskO.has("partition-send-profile")) {
+                                JSONArray taskProfilesA = taskO.getJSONArray("partition-send-profile");
+                                for (int k = 0; k < taskProfilesA.length(); ++k) {
+                                    JSONObject ppO = taskProfilesA.getJSONObject(k);
+                                    long openTime = ppO.getLong("open-time");
+                                    long closeTime = ppO.getLong("close-time");
+                                    int resolution = ppO.getInt("resolution");
+                                    long offset = ppO.getLong("offset");
+                                    JSONArray frameTimesA = ppO.getJSONArray("frame-times");
+                                    long[] frameTimes = new long[frameTimesA.length()];
+                                    for (int l = 0; l < frameTimes.length; ++l) {
+                                        frameTimes[l] = frameTimesA.getInt(l) + offset;
+                                    }
+                                    TaskProfile tp = new TaskProfile(taId, openTime, closeTime, frameTimes, resolution);
+                                    if (!tpMap.containsKey(tp.taId)) {
+                                        tpMap.put(tp.taId, tp);
+                                    }
+                                }
                             }
                         }
                     }
@@ -188,11 +228,42 @@ public class JobDetailsPage extends AbstractPage {
                         buffer.append("<rect x=\"").append(tStartTime * width + leftOffset).append("\" y=\"")
                                 .append(y * (HEIGHT + 1) + HEIGHT / 4).append("\" width=\"")
                                 .append(width * (tEndTime - tStartTime)).append("\" height=\"").append(HEIGHT / 2)
-                                .append("\"/>\n");
+                                .append("\" style=\"fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0)\"/>\n");
                         buffer.append("<text x=\"").append(tEndTime * width + leftOffset + 20).append("\" y=\"")
                                 .append(y * (HEIGHT + 1) + HEIGHT * 3 / 4).append("\">")
                                 .append((tEndTime - tStartTime) + " ms (" + ta.name + ":" + ta.partition + ")")
                                 .append("</text>\n");
+                        TaskProfile tp = tpMap.get(ta.taId);
+                        if (tp != null) {
+                            for (int k = 0; k < tp.frameTimes.length; ++k) {
+                                long taOpenTime = tp.openTime - minTime;
+                                buffer.append("<rect x=\"")
+                                        .append(taOpenTime * width + leftOffset)
+                                        .append("\" y=\"")
+                                        .append(y * (HEIGHT + 1) + HEIGHT / 4)
+                                        .append("\" width=\"1\" height=\"")
+                                        .append(HEIGHT / 2)
+                                        .append("\" style=\"fill:rgb(255,0,0);stroke-width:1;stroke:rgb(255,0,0)\"/>\n");
+                                for (long ft : tp.frameTimes) {
+                                    long taNextTime = ft - minTime;
+                                    buffer.append("<rect x=\"")
+                                            .append(taNextTime * width + leftOffset)
+                                            .append("\" y=\"")
+                                            .append(y * (HEIGHT + 1) + HEIGHT / 4)
+                                            .append("\" width=\"1\" height=\"")
+                                            .append(HEIGHT / 2)
+                                            .append("\" style=\"fill:rgb(0,255,0);stroke-width:1;stroke:rgb(0,255,0)\"/>\n");
+                                }
+                                long taCloseTime = tp.closeTime - minTime;
+                                buffer.append("<rect x=\"")
+                                        .append(taCloseTime * width + leftOffset)
+                                        .append("\" y=\"")
+                                        .append(y * (HEIGHT + 1) + HEIGHT / 4)
+                                        .append("\" width=\"1\" height=\"")
+                                        .append(HEIGHT / 2)
+                                        .append("\" style=\"fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,255)\"/>\n");
+                            }
+                        }
                         ++y;
                     }
                 }
@@ -209,96 +280,17 @@ public class JobDetailsPage extends AbstractPage {
             markup.setEscapeModelStrings(false);
             add(markup);
         }
-
-        List<TaskProfile> taskProfiles = new ArrayList<TaskProfile>();
-        if (jrO.has("profile")) {
-            JSONObject pO = jrO.getJSONObject("profile");
-            if (pO.has("joblets")) {
-                JSONArray jobletsA = pO.getJSONArray("joblets");
-                for (int i = 0; i < jobletsA.length(); ++i) {
-                    JSONObject jobletO = jobletsA.getJSONObject(i);
-                    if (jobletO.has("tasks")) {
-                        JSONArray tasksA = jobletO.getJSONArray("tasks");
-                        for (int j = 0; j < tasksA.length(); ++j) {
-                            JSONObject taskO = tasksA.getJSONObject(j);
-                            String activityId = taskO.getString("activity-id");
-                            int partition = taskO.getInt("partition");
-                            int attempt = taskO.getInt("attempt");
-                            if (taskO.has("partition-send-profile")) {
-                                JSONArray taskProfilesA = taskO.getJSONArray("partition-send-profile");
-                                for (int k = 0; k < taskProfilesA.length(); ++k) {
-                                    JSONObject ppO = taskProfilesA.getJSONObject(k);
-                                    long openTime = ppO.getLong("open-time");
-                                    long closeTime = ppO.getLong("close-time");
-                                    JSONArray frameTimesA = ppO.getJSONArray("frame-times");
-                                    long[] frameTimes = new long[frameTimesA.length()];
-                                    for (int l = 0; l < frameTimes.length; ++l) {
-                                        frameTimes[l] = frameTimesA.getLong(l);
-                                    }
-                                    taskProfiles.add(new TaskProfile(activityId, partition, attempt, openTime,
-                                            closeTime, frameTimes));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!taskProfiles.isEmpty()) {
-            Collections.sort(taskProfiles, new Comparator<TaskProfile>() {
-                @Override
-                public int compare(TaskProfile o1, TaskProfile o2) {
-                    return o1.openTime < o2.openTime ? -1 : (o1.openTime > o2.openTime ? 1 : 0);
-                }
-            });
-            long startTime = taskProfiles.get(0).openTime;
-            long timeRange = taskProfiles.get(taskProfiles.size() - 1).closeTime - startTime;
-            int n = taskProfiles.size();
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("<svg viewBox=\"0 0 ").append((timeRange + 1) * (WIDTH + 1)).append(' ')
-                    .append((n + 1) * (HEIGHT + 1)).append("\" version=\"1.1\"\n");
-            buffer.append("xmlns=\"http://www.w3.org/2000/svg\">\n");
-            for (int i = 0; i < n; ++i) {
-                TaskProfile tp = taskProfiles.get(i);
-                open(buffer, i, tp.openTime - startTime);
-                for (long ft : tp.frameTimes) {
-                    nextFrame(buffer, i, ft - startTime);
-                }
-                close(buffer, i, tp.closeTime - startTime);
-            }
-            buffer.append("</svg>");
-            Label markup = new Label("job-timeline-profile", buffer.toString());
-            markup.setEscapeModelStrings(false);
-            add(markup);
-        } else {
-            add(new EmptyPanel("job-timeline-profile"));
-        }
-    }
-
-    private void open(StringBuilder buffer, int i, long openTime) {
-        buffer.append("<rect x=\"").append(openTime * (WIDTH + 1)).append("\" y=\"").append(i * (HEIGHT + 1))
-                .append("\" width=\"").append(WIDTH).append("\" height=\"").append(HEIGHT).append("\"/>\n");
-    }
-
-    private void close(StringBuilder buffer, int i, long closeTime) {
-        buffer.append("<rect x=\"").append(closeTime * (WIDTH + 1)).append("\" y=\"").append(i * (HEIGHT + 1))
-                .append("\" width=\"").append(WIDTH).append("\" height=\"").append(HEIGHT).append("\"/>\n");
-    }
-
-    private void nextFrame(StringBuilder buffer, int i, long frameTime) {
-        buffer.append("<rect x=\"").append(frameTime * (WIDTH + 1)).append("\" y=\"").append(i * (HEIGHT + 1))
-                .append("\" width=\"").append(WIDTH).append("\" height=\"").append(HEIGHT).append("\"/>\n");
     }
 
     private static class TaskAttempt {
-        private String taskId;
+        private TaskAttemptId taId;
         private long startTime;
         private long endTime;
         private String name;
         private int partition;
 
-        public TaskAttempt(String taskId, long startTime, long endTime) {
-            this.taskId = taskId;
+        public TaskAttempt(TaskAttemptId taId, long startTime, long endTime) {
+            this.taId = taId;
             this.startTime = startTime;
             this.endTime = endTime;
         }
@@ -320,21 +312,18 @@ public class JobDetailsPage extends AbstractPage {
     }
 
     private static class TaskProfile {
-        private String activityId;
-        private int partition;
-        private int attempt;
+        private TaskAttemptId taId;
         private long openTime;
         private long closeTime;
         private long[] frameTimes;
+        private int resolution;
 
-        public TaskProfile(String activityId, int partition, int attempt, long openTime, long closeTime,
-                long[] frameTimes) {
-            this.activityId = activityId;
-            this.partition = partition;
-            this.activityId = activityId;
+        public TaskProfile(TaskAttemptId taId, long openTime, long closeTime, long[] frameTimes, int resolution) {
+            this.taId = taId;
             this.openTime = openTime;
             this.closeTime = closeTime;
             this.frameTimes = frameTimes;
+            this.resolution = resolution;
         }
     }
 }

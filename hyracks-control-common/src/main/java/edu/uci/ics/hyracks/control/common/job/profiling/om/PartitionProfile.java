@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.control.common.job.profiling.om;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 
 public class PartitionProfile implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -27,13 +28,13 @@ public class PartitionProfile implements Serializable {
 
     private final long closeTime;
 
-    private final byte[] frameTimes;
+    private final MultiResolutionEventProfiler mrep;
 
-    public PartitionProfile(PartitionId pid, long openTime, long closeTime, byte[] frameTimes) {
+    public PartitionProfile(PartitionId pid, long openTime, long closeTime, MultiResolutionEventProfiler mrep) {
         this.pid = pid;
         this.openTime = openTime;
         this.closeTime = closeTime;
-        this.frameTimes = frameTimes;
+        this.mrep = mrep;
     }
 
     public PartitionId getPartitionId() {
@@ -48,7 +49,7 @@ public class PartitionProfile implements Serializable {
         return closeTime;
     }
 
-    public byte[] getFrameTimes() {
-        return frameTimes;
+    public MultiResolutionEventProfiler getSamples() {
+        return mrep;
     }
 }

@@ -61,6 +61,6 @@ public final class TaskId implements Serializable {
             int idIdx = str.lastIndexOf(':');
             return new TaskId(ActivityId.parse(str.substring(0, idIdx)), Integer.parseInt(str.substring(idIdx + 1)));
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Unable to parse: " + str);
     }
 }
