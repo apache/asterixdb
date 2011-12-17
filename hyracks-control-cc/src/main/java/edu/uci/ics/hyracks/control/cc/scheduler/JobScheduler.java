@@ -461,10 +461,11 @@ public class JobScheduler {
     }
 
     private void abortJob(Exception exception) {
-        for (TaskCluster tc : inProgressTaskClusters) {
+        Set<TaskCluster> inProgressTaskClustersCopy = new HashSet<TaskCluster>(inProgressTaskClusters);
+        for (TaskCluster tc : inProgressTaskClustersCopy) {
             abortTaskCluster(findLastTaskClusterAttempt(tc));
         }
-        inProgressTaskClusters.clear();
+        assert inProgressTaskClusters.isEmpty();
         ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, jobRun.getJobId(), JobStatus.FAILURE, exception));
     }
 
