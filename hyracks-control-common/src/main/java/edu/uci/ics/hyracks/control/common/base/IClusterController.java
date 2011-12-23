@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.common.base;
 
-import java.rmi.Remote;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
@@ -27,10 +26,10 @@ import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
-public interface IClusterController extends Remote {
+public interface IClusterController {
     public NodeParameters registerNode(NodeRegistration reg) throws Exception;
 
-    public void unregisterNode(INodeController nodeController) throws Exception;
+    public void unregisterNode(String nodeId) throws Exception;
 
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception;

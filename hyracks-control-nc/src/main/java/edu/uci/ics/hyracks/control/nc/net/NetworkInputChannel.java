@@ -130,7 +130,7 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
     public synchronized boolean dispatchNetworkEvent() throws IOException {
         if (aborted) {
             eos = true;
-            monitor.notifyEndOfStream(this);
+            monitor.notifyFailure(this);
             return true;
         }
         if (key.isConnectable()) {

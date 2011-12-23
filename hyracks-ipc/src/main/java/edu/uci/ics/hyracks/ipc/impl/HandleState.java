@@ -12,18 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.client;
+package edu.uci.ics.hyracks.ipc.impl;
 
-/**
- * Connection Class used by a Hyracks Client that is colocated in the same VM
- * with the Cluster Controller. Usually, clients must not use this class. This
- * is used internally for testing purposes.
- * 
- * @author vinayakb
- * 
- */
-public final class HyracksLocalConnection extends AbstractHyracksConnection {
-    public HyracksLocalConnection(IHyracksClientInterface hci) throws Exception {
-        super("localhost", hci);
-    }
+enum HandleState {
+    INITIAL,
+    CONNECT_SENT,
+    CONNECT_RECEIVED,
+    CONNECTED,
+    CLOSED,
 }

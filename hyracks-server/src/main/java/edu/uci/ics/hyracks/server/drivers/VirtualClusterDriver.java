@@ -27,8 +27,11 @@ public class VirtualClusterDriver {
         @Option(name = "-n", required = false, usage = "Number of node controllers (default: 2)")
         public int n = 2;
 
-        @Option(name = "-cc-port", required = false, usage = "CC Port (default: 1099)")
-        public int ccPort = 1099;
+        @Option(name = "-cc-client-net-port", required = false, usage = "CC Port (default: 1098)")
+        public int ccClientNetPort = 1098;
+
+        @Option(name = "-cc-cluster-net-port", required = false, usage = "CC Port (default: 1099)")
+        public int ccClusterNetPort = 1099;
 
         @Option(name = "-cc-http-port", required = false, usage = "CC Port (default: 19001)")
         public int ccHttpPort = 19001;
@@ -46,7 +49,10 @@ public class VirtualClusterDriver {
         }
 
         CCConfig ccConfig = new CCConfig();
-        ccConfig.port = options.ccPort;
+        ccConfig.clusterNetIpAddress = "127.0.0.1";
+        ccConfig.clusterNetPort = options.ccClusterNetPort;
+        ccConfig.clientNetIpAddress = "127.0.0.1";
+        ccConfig.clientNetPort = options.ccClientNetPort;
         ccConfig.httpPort = options.ccHttpPort;
         HyracksCCProcess ccp = new HyracksCCProcess(ccConfig);
         ccp.start();
@@ -56,7 +62,9 @@ public class VirtualClusterDriver {
         HyracksNCProcess ncps[] = new HyracksNCProcess[options.n];
         for (int i = 0; i < options.n; ++i) {
             NCConfig ncConfig = new NCConfig();
-            ncConfig.ccHost = "localhost";
+            ncConfig.ccHost = "127.0.0.1";
+            ncConfig.ccPort = options.ccClusterNetPort;
+            ncConfig.clusterNetIPAddress = "127.0.0.1";
             ncConfig.nodeId = "nc" + i;
             ncConfig.dataIPAddress = "127.0.0.1";
             ncps[i] = new HyracksNCProcess(ncConfig);

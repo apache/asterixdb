@@ -79,6 +79,7 @@
   </pluginRepositories>
 
   <modules>
+    <module>hyracks-ipc</module>
     <module>hyracks-api</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>

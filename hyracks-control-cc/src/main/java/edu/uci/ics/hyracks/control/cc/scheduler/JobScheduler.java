@@ -448,7 +448,7 @@ public class JobScheduler {
                     public void run() {
                         try {
                             node.getNodeController().startTasks(appName, jobId, JavaSerializationUtils.serialize(jag),
-                                    taskDescriptors, connectorPolicies, null);
+                                    taskDescriptors, connectorPolicies);
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (Exception e) {

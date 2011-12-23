@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.common.base;
 
-import java.rmi.Remote;
 import java.util.List;
 import java.util.Map;
 
@@ -25,16 +24,11 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 
-public interface INodeController extends Remote {
-    public String getId() throws Exception;
-
-    public NCConfig getConfiguration() throws Exception;
-
+public interface INodeController {
     public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, byte[] ctxVarBytes) throws Exception;
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception;
 
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;
 

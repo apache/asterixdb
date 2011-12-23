@@ -63,7 +63,8 @@ public class ConnectionManager {
         this.ctx = ctx;
         serverChannel = ServerSocketChannel.open();
         ServerSocket serverSocket = serverChannel.socket();
-        serverSocket.bind(new InetSocketAddress(inetAddress, 0));
+        serverSocket.bind(new InetSocketAddress(inetAddress, 0), 0);
+        serverSocket.setReuseAddress(true);
         stopped = false;
         connectionListener = new ConnectionListenerThread();
         dataListener = new DataListenerThread();
@@ -97,6 +98,7 @@ public class ConnectionManager {
         public ConnectionListenerThread() {
             super("Hyracks NC Connection Listener");
             setDaemon(true);
+            setPriority(MAX_PRIORITY);
         }
 
         @Override
@@ -159,6 +161,7 @@ public class ConnectionManager {
                         if (!pendingIncomingConnections.isEmpty()) {
                             for (SocketChannel sc : pendingIncomingConnections) {
                                 sc.configureBlocking(false);
+                                sc.socket().setReuseAddress(true);
                                 SelectionKey scKey = sc.register(selector, SelectionKey.OP_READ);
                                 ByteBuffer buffer = ByteBuffer.allocate(INITIAL_MESSAGE_SIZE);
                                 scKey.attach(buffer);
@@ -170,6 +173,7 @@ public class ConnectionManager {
                             for (INetworkChannel nc : pendingOutgoingConnections) {
                                 SocketChannel sc = SocketChannel.open();
                                 sc.configureBlocking(false);
+                                sc.socket().setReuseAddress(true);
                                 SelectionKey scKey = sc.register(selector, 0);
                                 scKey.attach(nc);
                                 nc.setSelectionKey(scKey);
@@ -202,6 +206,7 @@ public class ConnectionManager {
                                             } catch (HyracksException e) {
                                                 key.cancel();
                                                 sc.close();
+                                                channel.abort();
                                             }
                                         } else {
                                             buffer.compact();
@@ -210,15 +215,19 @@ public class ConnectionManager {
                                 } else {
                                     INetworkChannel channel = (INetworkChannel) key.attachment();
                                     boolean close = false;
+                                    boolean error = false;
                                     try {
                                         close = channel.dispatchNetworkEvent();
                                     } catch (IOException e) {
                                         e.printStackTrace();
-                                        close = true;
+                                        error = true;
                                     }
-                                    if (close) {
+                                    if (close || error) {
                                         key.cancel();
                                         sc.close();
+                                        if (error) {
+                                            channel.abort();
+                                        }
                                     }
                                 }
                             }

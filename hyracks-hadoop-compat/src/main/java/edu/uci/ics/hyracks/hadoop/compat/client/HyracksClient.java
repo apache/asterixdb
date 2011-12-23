@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -15,7 +15,7 @@ import edu.uci.ics.hyracks.hadoop.compat.util.Utilities;
 
 public class HyracksClient {
 
-    private static HyracksRMIConnection connection;
+    private static HyracksConnection connection;
     private static final String jobProfilingKey = "jobProfilingKey";
     Set<String> systemLibs;
 
@@ -25,7 +25,7 @@ public class HyracksClient {
 
     private void initialize(Properties properties) throws Exception {
         String clusterController = (String) properties.get(ConfigurationConstants.clusterControllerHost);
-        connection = new HyracksRMIConnection(clusterController, 1099);
+        connection = new HyracksConnection(clusterController, 1099);
         systemLibs = new HashSet<String>();
         for (String systemLib : ConfigurationConstants.systemLibs) {
             String systemLibPath = properties.getProperty(systemLib);

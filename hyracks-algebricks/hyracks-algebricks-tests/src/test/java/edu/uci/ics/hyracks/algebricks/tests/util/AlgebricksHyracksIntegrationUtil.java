@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.algebricks.tests.util;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
-import edu.uci.ics.hyracks.api.client.HyracksLocalConnection;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -32,9 +32,8 @@ public class AlgebricksHyracksIntegrationUtil {
     public static final String NC1_ID = "nc1";
     public static final String NC2_ID = "nc2";
 
-    public static final int DEFAULT_HYRACKS_CC_PORT = 1099;
-
-    public static final int TEST_HYRACKS_CC_PORT = 4322;
+    public static final int TEST_HYRACKS_CC_CLUSTER_NET_PORT = 4322;
+    public static final int TEST_HYRACKS_CC_CLIENT_NET_PORT = 4321;
 
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;
@@ -43,14 +42,18 @@ public class AlgebricksHyracksIntegrationUtil {
 
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
-        ccConfig.port = TEST_HYRACKS_CC_PORT;
+        ccConfig.clientNetIpAddress = "127.0.0.1";
+        ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_NET_PORT;
+        ccConfig.clusterNetIpAddress = "127.0.0.1";
+        ccConfig.clusterNetPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
         // ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
         NCConfig ncConfig1 = new NCConfig();
         ncConfig1.ccHost = "localhost";
-        ncConfig1.ccPort = TEST_HYRACKS_CC_PORT;
+        ncConfig1.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
+        ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         nc1 = new NodeControllerService(ncConfig1);
@@ -58,13 +61,14 @@ public class AlgebricksHyracksIntegrationUtil {
 
         NCConfig ncConfig2 = new NCConfig();
         ncConfig2.ccHost = "localhost";
-        ncConfig2.ccPort = TEST_HYRACKS_CC_PORT;
+        ncConfig2.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
+        ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 
-        hcc = new HyracksLocalConnection(cc);
+        hcc = new HyracksConnection(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
         hcc.createApplication(AlgebricksConfig.HYRACKS_APP_NAME, null);
     }
 
@@ -77,7 +81,7 @@ public class AlgebricksHyracksIntegrationUtil {
     public static void runJob(JobSpecification spec) throws Exception {
         JobId jobId = hcc.createJob(AlgebricksConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(spec.toJSON().toString());
-        cc.start(jobId);
+        cc.startJob(jobId);
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(jobId.toString());
         cc.waitForCompletion(jobId);
     }

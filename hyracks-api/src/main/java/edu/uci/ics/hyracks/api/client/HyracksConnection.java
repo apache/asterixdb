@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.client;
 
 import java.io.File;
+import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -30,17 +31,42 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
+import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
-abstract class AbstractHyracksConnection implements IHyracksClientConnection {
+/**
+ * Connection Class used by a Hyracks Client to interact with a Hyracks Cluster
+ * Controller.
+ * 
+ * @author vinayakb
+ * 
+ */
+public final class HyracksConnection implements IHyracksClientConnection {
     private final String ccHost;
+
+    private final IPCSystem ipc;
 
     private final IHyracksClientInterface hci;
 
     private final ClusterControllerInfo ccInfo;
 
-    public AbstractHyracksConnection(String ccHost, IHyracksClientInterface hci) throws Exception {
+    /**
+     * Constructor to create a connection to the Hyracks Cluster Controller.
+     * 
+     * @param ccHost
+     *            Host name (or IP Address) where the Cluster Controller can be
+     *            reached.
+     * @param ccPort
+     *            Port to reach the Hyracks Cluster Controller at the specified
+     *            host name.
+     * @throws Exception
+     */
+    public HyracksConnection(String ccHost, int ccPort) throws Exception {
         this.ccHost = ccHost;
-        this.hci = hci;
+        ipc = new IPCSystem(new InetSocketAddress(0));
+        ipc.start();
+        IIPCHandle ccIpchandle = ipc.getHandle(new InetSocketAddress(ccHost, ccPort));
+        this.hci = new HyracksClientInterfaceRemoteProxy(ccIpchandle);
         ccInfo = hci.getClusterControllerInfo();
     }
 
@@ -82,7 +108,7 @@ abstract class AbstractHyracksConnection implements IHyracksClientConnection {
 
     @Override
     public void start(JobId jobId) throws Exception {
-        hci.start(jobId);
+        hci.startJob(jobId);
     }
 
     @Override
