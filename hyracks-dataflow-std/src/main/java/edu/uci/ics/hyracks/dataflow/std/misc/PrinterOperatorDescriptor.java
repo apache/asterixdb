@@ -14,10 +14,6 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.misc;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -32,9 +28,7 @@ import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
 
 public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-    PrintWriter pw; 
-    public int counter = 0;
-    
+
     public PrinterOperatorDescriptor(JobSpecification spec) {
         super(spec, 1, 0);
     }
@@ -42,18 +36,10 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
     private class PrinterOperator implements IOpenableDataWriterOperator {
         @Override
         public void open() throws HyracksDataException {
-        	try {
-				pw = new PrintWriter( new File("/home/pouria/Desktop/printerOutput.txt") );
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				throw (new HyracksDataException("Exception Happened in Printer Open() method"));
-			}
         }
 
         @Override
         public void close() throws HyracksDataException {
-        	pw.println("Output Size (From Printer):\t"+counter);
-        	pw.close();
         }
 
         @Override
@@ -62,24 +48,11 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
 
         @Override
         public void writeData(Object[] data) throws HyracksDataException {
-        	/*
             for (int i = 0; i < data.length; ++i) {
                 System.err.print(StringSerializationUtils.toString(data[i]));
                 System.err.print(", ");
             }
             System.err.println();
-            */
-        	for (int i = 0; i < data.length; ++i) {
-                pw.print(String.valueOf(data[i]));
-                pw.print(", ");
-            }
-        	pw.println("");
-        	
-        	
-        	counter++;
-        	if(counter % 20000 == 0){
-        		System.err.println(counter+" records sent to output");
-        	}
         }
 
         @Override
