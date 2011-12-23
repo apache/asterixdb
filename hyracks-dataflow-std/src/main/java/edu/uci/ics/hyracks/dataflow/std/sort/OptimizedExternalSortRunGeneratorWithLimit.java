@@ -1,7 +1,6 @@
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,47 +20,34 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 /**
  * @author pouria
- * 
  *         This class implements the run generator for sorting with replacement
  *         selection, where there is a limit on the output, i.e. we are looking
  *         for top-k tuples (first k smallest tuples w.r.t sorting keys).
- * 
  *         A SortMinMaxHeap is used as the selectionTree to decide the order of
  *         writing tuples into the runs, and also to prune tuples (if possible).
  *         Memory manager is based on a binary search tree and is used to
  *         allocate memory slots for tuples.
- * 
  *         The overall process is as follows (Assuming that the limit is K):
- * 
  *         - Read the input data frame by frame. For each tuple T in the current
  *         frame:
- * 
  *         - If currentRun R has reached the limit of K on the size, and (T >
  *         maximum tuple of R), then ignore T.
- * 
  *         - Otherwise, try to allocate a memory slot for writing T along with
  *         the attached header/footer (for memory management purpose)
- * 
  *         - If T can not be allocated, try to output as many tuples, currently
  *         resident in memory, as needed so that a free slot, large enough to
  *         hold T, gets created. MinMaxHeap decides about which tuple should be
  *         sent to the output at each step.
- * 
  *         - Write T into memory.
- * 
  *         - Calculate the runID of T (based on the last output tuple for the
  *         current run). It is either the current run or the next run. Also
  *         calculate Poorman's Normalized Key (PNK) for T, to make comparisons
  *         faster later.
- * 
  *         - Create an heap element for T, containing its runID, the slot ptr to
  *         its memory location, and its PNK.
- * 
  *         - If runID is the nextRun, insert the heap element into the heap, and
  *         increment the size of nextRun.
- * 
  *         - If runID is the currentRun, then:
- * 
  *         - If currentRun has not hit the limit of k, insert the element into
  *         the heap, and increase currentRun size. - Otherwise, currentRun has
  *         hit the limit of K, while T is less than the max. So discard the
@@ -69,10 +55,8 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
  *         unallocating its memory location) and insert the heap element into
  *         the heap. No need to change the currentRun size as we are replacing
  *         an old element (the old max) with T.
- * 
  *         - Upon closing, write all the tuples, currently resident in memory,
  *         into their corresponding run(s).
- * 
  *         - Note that upon opening a new Run R, if size of R (based on stats)
  *         is S and (S > K), then (S-K) current maximum tuples of R (which are
  *         resident in memory) get discarded at the beginning. MinMax heap can
@@ -83,7 +67,7 @@ public class OptimizedExternalSortRunGeneratorWithLimit implements IRunGenerator
     private final IHyracksTaskContext ctx;
     private final int[] sortFields;
     private final INormalizedKeyComputer nkc;
-    IBinaryComparatorFactory[] comparatorFactories;
+    private final IBinaryComparatorFactory[] comparatorFactories;
     private final IBinaryComparator[] comparators;
     private final RecordDescriptor recordDescriptor;
     private final List<IFrameReader> runs;
@@ -114,7 +98,7 @@ public class OptimizedExternalSortRunGeneratorWithLimit implements IRunGenerator
     private Slot discard;
     private int[] sTreeTop;
     private int[] peek;
-    RunFileWriter writer;
+    private RunFileWriter writer;
     private boolean newRun;
     private int curRunId;
 

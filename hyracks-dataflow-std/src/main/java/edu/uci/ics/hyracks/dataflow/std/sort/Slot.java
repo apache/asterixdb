@@ -2,15 +2,12 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 
 /**
  * @author pouria
- * 
  *         Defines a slot in the memory, which can be a free or used (allocated)
  *         slot. Memory is a set of frames, ordered as a list. Each tuple is
  *         stored in a slot, where the location of the slot is denoted by a pair
  *         of integers:
- * 
  *         - The index of the frame, in the list of frames in memory. (referred
  *         to as frameIx)
- * 
  *         - The starting offset of the slot, within that specific frame.
  *         (referred to as offset)
  */

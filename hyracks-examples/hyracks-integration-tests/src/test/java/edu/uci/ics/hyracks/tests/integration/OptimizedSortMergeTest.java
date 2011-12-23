@@ -90,6 +90,8 @@ public class OptimizedSortMergeTest extends AbstractIntegrationTest {
         runTest(spec);
     }
 	
+	
+	
 	@Test
     public void optimizedSortMergeTest02() throws Exception {
         JobSpecification spec = new JobSpecification();
@@ -113,7 +115,7 @@ public class OptimizedSortMergeTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
         
-        int outputLimit = 15;
+        int outputLimit = 200;
         OptimizedExternalSortOperatorDescriptor sorter = new OptimizedExternalSortOperatorDescriptor(spec, 4, outputLimit, new int[] { 1, 0 },
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
                         UTF8StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
@@ -137,4 +139,5 @@ public class OptimizedSortMergeTest extends AbstractIntegrationTest {
 
         runTest(spec);
     }
+    
 }

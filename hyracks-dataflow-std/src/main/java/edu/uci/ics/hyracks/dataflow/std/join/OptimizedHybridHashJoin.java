@@ -34,7 +34,7 @@ public class OptimizedHybridHashJoin {
     private final int INVALID_BUFFER = -2;
     private final int UNALLOCATED_FRAME = -3;
     private final int BUFFER_FOR_RESIDENT_PARTS = -1;
-
+    
     private IHyracksTaskContext ctx;
 
     private final String rel0Name;
@@ -579,7 +579,7 @@ public class OptimizedHybridHashJoin {
         return pStatus;
     }
 
-    public String _stats_debug_getStats() {
+    public String debugGetStats() {
         int numOfResidentPartitions = 0;
         int numOfSpilledPartitions = 0;
         double sumOfBuildSpilledSizes = 0;

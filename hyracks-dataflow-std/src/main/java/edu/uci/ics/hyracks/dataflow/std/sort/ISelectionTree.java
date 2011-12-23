@@ -2,7 +2,6 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 
 /**
  * @author pouria
- * 
  *         Defines the selection tree, used in sorting with replacement
  *         selection to manage the order of output tuples into the runs, during
  *         the run generation phase. This tree contains tuples, belonging to two

@@ -9,7 +9,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
  * @author pouria
- * 
  *         Implements Memory Manager based on creating Binary Search Tree (BST)
  *         while Free slot size is the key for the BST nodes. Each node in BST
  *         shows a class of free slots, while all the free slots within a class
@@ -18,7 +17,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
  *         as a separate data structure, but the free slots in the memory are
  *         used to hold BST nodes. Each BST node has the logical structure,
  *         defined in the BSTNodeUtil class.
- * 
  */
 public class BSTMemMgr implements IMemoryManager {
 
@@ -28,21 +26,14 @@ public class BSTMemMgr implements IMemoryManager {
     private ByteBuffer[] frames;
     private ByteBuffer convertBuffer;
     private Slot root;
-    private Slot result; // A reusable object to hold one node returned as
-                         // method result
-    private Slot insertSlot; // A reusable object to hold one node within insert
-                             // process
+    private Slot result; // A reusable object to hold one node returned as method result
+    private Slot insertSlot; // A reusable object to hold one node within insert process
+    private Slot lastLeftParent; //A reusable object for the search process
+    private Slot lastLeft; //A reusable object for the search process
+    private Slot parent; //A reusable object for the search process 
 
     private Slot[] parentRes;
     private int lastFrame;
-
-    // Variables used for debugging/performance testing
-    private int debugFreeSlots = 0;
-    private int debugTreeSize = 0;
-    private int debugTotalLookupSteps;
-    private int debugTotalLookupCounts;
-    private int debugDepthCounter;
-    private int debugMaxDepth;
 
     public BSTMemMgr(IHyracksCommonContext ctx, int memSize) {
         this.ctx = ctx;
@@ -53,9 +44,10 @@ public class BSTMemMgr implements IMemoryManager {
         root = new Slot();
         insertSlot = new Slot();
         result = new Slot();
+        lastLeftParent = new Slot();
+        lastLeft = new Slot();
+        parent = new Slot();
         parentRes = new Slot[] { new Slot(), new Slot() };
-        debugTotalLookupCounts = 0;
-        debugTotalLookupSteps = 0;
     }
 
     /**
@@ -63,7 +55,6 @@ public class BSTMemMgr implements IMemoryManager {
      */
     @Override
     public void allocate(int length, Slot result) throws HyracksDataException {
-        debugTotalLookupCounts++;
         search(length, parentRes);
         if (parentRes[1].isNull()) {
             addFrame(parentRes);
@@ -77,8 +68,7 @@ public class BSTMemMgr implements IMemoryManager {
         if (shouldSplit(sl, acLen)) {
             int[] s = split(parentRes[1], parentRes[0], acLen);
             int insertLen = BSTNodeUtil.getLength(s[2], s[3], frames, convertBuffer);
-            insert(s[2], s[3], insertLen); // inserting second half of the split
-                                           // slot
+            insert(s[2], s[3], insertLen); // inserting second half of the split slot
             BSTNodeUtil.setHeaderFooter(s[0], s[1], length, false, frames);
             result.set(s[0], s[1]);
             return;
@@ -97,8 +87,7 @@ public class BSTMemMgr implements IMemoryManager {
                 : BSTNodeUtil.INVALID_INDEX);
         int t = off + 2 * BSTNodeUtil.HEADER_SIZE + actualLen;
         int nextMemSlotHeaderOffset = (t < frameSize ? t : BSTNodeUtil.INVALID_INDEX);
-        // Remember: next and prev memory slots have the same frame index as the
-        // unallocated slot
+        // Remember: next and prev memory slots have the same frame index as the unallocated slot
         if (!isNodeNull(fix, prevMemSlotFooterOffset) && BSTNodeUtil.isFree(fix, prevMemSlotFooterOffset, frames)) {
             int leftLength = BSTNodeUtil.getLength(fix, prevMemSlotFooterOffset, frames, convertBuffer);
             removeFromList(fix, prevMemSlotFooterOffset - leftLength - BSTNodeUtil.HEADER_SIZE);
@@ -156,24 +145,12 @@ public class BSTMemMgr implements IMemoryManager {
         return frames[frameIndex];
     }
 
-    public String debugGetAvgSearchPath() {
-        double avg = (((double) debugTotalLookupSteps) / ((double) debugTotalLookupCounts));
-        return "\nTotal allocation requests:\t" + debugTotalLookupCounts + "\nAvg Allocation Path Length:\t" + avg
-                + "\nMax BST Depth:\t" + debugMaxDepth;
-    }
-
-    public void debugDecLookupCount() {
-        debugTotalLookupCounts--;
-    }
-
     /**
-     * 
      * @param parentResult
      *            is the container passed by the caller to contain the results
      * @throws HyracksDataException
      */
     private void addFrame(Slot[] parentResult) throws HyracksDataException {
-        debugDepthCounter = 0;
         clear(parentResult);
         if ((lastFrame + 1) >= frames.length) {
             return;
@@ -192,13 +169,9 @@ public class BSTMemMgr implements IMemoryManager {
         }
 
         while (!parentResult[1].isNull()) {
-            debugDepthCounter++;
             if (BSTNodeUtil.getLength(parentResult[1], frames, convertBuffer) == l) {
                 append(parentResult[1].getFrameIx(), parentResult[1].getOffset(), lastFrame, 0);
                 parentResult[1].set(lastFrame, 0);
-                if (debugDepthCounter > debugMaxDepth) {
-                    debugMaxDepth = debugDepthCounter;
-                }
                 return;
             }
             if (l < BSTNodeUtil.getLength(parentResult[1], frames, convertBuffer)) {
@@ -208,9 +181,6 @@ public class BSTMemMgr implements IMemoryManager {
                             frames);
                     parentResult[0].copy(parentResult[1]);
                     parentResult[1].set(lastFrame, 0);
-                    if (debugDepthCounter > debugMaxDepth) {
-                        debugMaxDepth = debugDepthCounter;
-                    }
                     return;
                 } else {
                     parentResult[0].copy(parentResult[1]);
@@ -224,9 +194,6 @@ public class BSTMemMgr implements IMemoryManager {
                             frames);
                     parentResult[0].copy(parentResult[1]);
                     parentResult[1].set(lastFrame, 0);
-                    if (debugDepthCounter > debugMaxDepth) {
-                        debugMaxDepth = debugDepthCounter;
-                    }
                     return;
                 } else {
                     parentResult[0].copy(parentResult[1]);
@@ -239,7 +206,6 @@ public class BSTMemMgr implements IMemoryManager {
     }
 
     private void insert(int fix, int off, int length) throws HyracksDataException {
-        debugDepthCounter = 0;
         BSTNodeUtil.setHeaderFooter(fix, off, length, true, frames);
         initNewNode(fix, off);
 
@@ -251,13 +217,9 @@ public class BSTMemMgr implements IMemoryManager {
         insertSlot.clear();
         insertSlot.copy(root);
         while (!insertSlot.isNull()) {
-            debugDepthCounter++;
             int curSlotLen = BSTNodeUtil.getLength(insertSlot, frames, convertBuffer);
             if (curSlotLen == length) {
                 append(insertSlot.getFrameIx(), insertSlot.getOffset(), fix, off);
-                if (debugDepthCounter > debugMaxDepth) {
-                    debugMaxDepth = debugDepthCounter;
-                }
                 return;
             }
             if (length < curSlotLen) {
@@ -266,9 +228,6 @@ public class BSTMemMgr implements IMemoryManager {
                 if (isNodeNull(leftChildFIx, leftChildOffset)) {
                     initNewNode(fix, off);
                     BSTNodeUtil.setLeftChild(insertSlot.getFrameIx(), insertSlot.getOffset(), fix, off, frames);
-                    if (debugDepthCounter > debugMaxDepth) {
-                        debugMaxDepth = debugDepthCounter;
-                    }
                     return;
                 } else {
                     insertSlot.set(leftChildFIx, leftChildOffset);
@@ -279,9 +238,6 @@ public class BSTMemMgr implements IMemoryManager {
                 if (isNodeNull(rightChildFIx, rightChildOffset)) {
                     initNewNode(fix, off);
                     BSTNodeUtil.setRightChild(insertSlot.getFrameIx(), insertSlot.getOffset(), fix, off, frames);
-                    if (debugDepthCounter > debugMaxDepth) {
-                        debugMaxDepth = debugDepthCounter;
-                    }
                     return;
                 } else {
                     insertSlot.set(rightChildFIx, rightChildOffset);
@@ -304,13 +260,12 @@ public class BSTMemMgr implements IMemoryManager {
             return;
         }
 
-        Slot lastLeftParent = new Slot();
-        Slot lastLeft = new Slot();
-        Slot parent = new Slot();
+        lastLeftParent.clear();
+        lastLeft.clear();
+        parent.clear();
         result.copy(root);
 
         while (!result.isNull()) {
-            debugTotalLookupSteps++;
             if (BSTNodeUtil.getLength(result, frames, convertBuffer) == length) {
                 target[0].copy(parent);
                 target[1].copy(result);
@@ -658,14 +613,9 @@ public class BSTMemMgr implements IMemoryManager {
     }
 
     public String debugPrintMemory() {
-        debugFreeSlots = 0;
         Slot s = new Slot(0, 0);
         if (s.isNull()) {
             return "memory:\tNull";
-        }
-
-        if (BSTNodeUtil.isFree(0, 0, frames)) {
-            debugFreeSlots++;
         }
 
         String m = "memory:\n" + debugPrintSlot(0, 0) + "\n";
@@ -678,9 +628,6 @@ public class BSTMemMgr implements IMemoryManager {
         }
         s.set(nfix, noff);
         while (!isNodeNull(s.getFrameIx(), s.getOffset())) {
-            if (BSTNodeUtil.isFree(s.getFrameIx(), s.getOffset(), frames)) {
-                debugFreeSlots++;
-            }
             m += debugPrintSlot(s.getFrameIx(), s.getOffset()) + "\n";
             length = BSTNodeUtil.getActualLength(BSTNodeUtil.getLength(s.getFrameIx(), s.getOffset(), frames,
                     convertBuffer));
@@ -694,16 +641,14 @@ public class BSTMemMgr implements IMemoryManager {
             }
             s.set(nfix, noff);
         }
-        return m + "\nFree Slots:\t" + debugFreeSlots;
+        return m;
     }
 
     public String debugPrintTree() {
-        debugTreeSize = 0;
         Slot node = new Slot();
         node.copy(root);
         if (!node.isNull()) {
-            debugTreeSize++;
-            return debugPrintSubTree(node) + "\nTree Nodes:\t" + debugTreeSize;
+            return debugPrintSubTree(node);
         }
         return "Null";
     }
@@ -727,11 +672,9 @@ public class BSTMemMgr implements IMemoryManager {
                 + debugPrintSlot(lfix, loff) + ") - " + "(RC: " + debugPrintSlot(rfix, roff) + ") - " + "(NX: "
                 + debugPrintSlot(nfix, noff) + ") - " + "(PR: " + debugPrintSlot(pfix, poff) + ")  }\n";
         if (!isNodeNull(lfix, loff)) {
-            debugTreeSize++;
             s += debugPrintSubTree(new Slot(lfix, loff)) + "\n";
         }
         if (!isNodeNull(rfix, roff)) {
-            debugTreeSize++;
             s += debugPrintSubTree(new Slot(rfix, roff)) + "\n";
         }
 

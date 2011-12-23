@@ -1,8 +1,7 @@
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -11,21 +10,16 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
- * 
  * @author pouria
- * 
  *         Implements a minimum binary heap, used as selection tree, for sort
  *         with replacement. This heap structure can only be used as the min
  *         heap (no access to the max element). Elements in the heap are
  *         compared based on their run numbers, and sorting key(s):
- * 
  *         Considering two heap elements A and B:
- * 
  *         if RunNumber(A) > RunNumber(B) then A is larger than B if
  *         RunNumber(A) == RunNumber(B), then A is smaller than B, if and only
  *         if the value of the sort key(s) in B is greater than A (based on the
  *         sort comparator).
- * 
  */
 public class SortMinHeap implements ISelectionTree {
 
@@ -33,17 +27,18 @@ public class SortMinHeap implements ISelectionTree {
     static final int FRAME_IX = 1;
     static final int OFFSET_IX = 2;
     private static final int PNK_IX = 3;
+    private static final int ELEMENT_SIZE = 4;
+    private static final int INIT_ARRAY_SIZE = 512;
 
     private final int[] sortFields;
     private final IBinaryComparator[] comparators;
     private final RecordDescriptor recordDescriptor;
     private final FrameTupleAccessor fta1;
     private final FrameTupleAccessor fta2;
-
-    List<int[]> tree;
-    IMemoryManager memMgr;
-    int[] top; // Used as the temp variable to access the top, to avoid object
-               // creation
+    private int[] elements;
+    private int nextIx;
+    private final IMemoryManager memMgr;
+    private int[] top; // Used as a temp variable to access the top, to avoid object creation
 
     public SortMinHeap(IHyracksCommonContext ctx, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, IMemoryManager memMgr) {
@@ -56,8 +51,11 @@ public class SortMinHeap implements ISelectionTree {
         fta1 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         fta2 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         this.memMgr = memMgr;
-
-        this.tree = new ArrayList<int[]>();
+        this.top = new int[ELEMENT_SIZE];
+        Arrays.fill(top, -1);
+        this.elements = new int[INIT_ARRAY_SIZE];
+        Arrays.fill(elements, -1);
+        this.nextIx = 0;
     }
 
     /*
@@ -65,7 +63,7 @@ public class SortMinHeap implements ISelectionTree {
      */
     @Override
     public void getMin(int[] result) {
-        if (tree.size() == 0) {
+        if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
         }
@@ -78,54 +76,71 @@ public class SortMinHeap implements ISelectionTree {
 
     @Override
     public void peekMin(int[] result) {
-        if (tree.size() == 0) {
+        if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
         }
-
-        top = tree.get(0);
-        for (int i = 0; i < top.length; i++) {
-            result[i] = top[i];
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            result[i] = elements[i];
         }
     }
 
     @Override
     public void insert(int[] e) {
-        tree.add(e);
-        siftUp(tree.size() - 1);
+        if (nextIx >= elements.length) {
+            elements = Arrays.copyOf(elements, elements.length * 2);
+        }
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            elements[nextIx + i] = e[i];
+        }
+        siftUp(nextIx);
+        nextIx += ELEMENT_SIZE;
+
     }
 
     @Override
     public void reset() {
-        this.tree.clear();
+        Arrays.fill(elements, -1);
+        nextIx = 0;
     }
 
     @Override
     public boolean isEmpty() {
-        return (tree.size() < 1);
+        return (nextIx < ELEMENT_SIZE);
     }
 
     public int _debugGetSize() {
-        return tree.size();
+        return (nextIx > 0 ? (nextIx - 1) / 4 : 0);
     }
 
     private int[] delete(int nix) {
-        int[] nv = tree.get(nix);
-        int[] last = tree.remove(tree.size() - 1);
+        int[] nv = Arrays.copyOfRange(elements, nix, nix + ELEMENT_SIZE);
+        int[] lastElem = removeLast();
 
-        if (tree.size() > 0) {
-            tree.set(nix, last);
-        } else {
+        if (nextIx == 0) {
             return nv;
         }
 
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            elements[nix + i] = lastElem[i];
+        }
         int pIx = getParent(nix);
-        if (pIx > -1 && (compare(last, tree.get(pIx)) < 0)) {
+        if (pIx > -1 && (compare(lastElem, Arrays.copyOfRange(elements, pIx, pIx + ELEMENT_SIZE)) < 0)) {
             siftUp(nix);
         } else {
             siftDown(nix);
         }
         return nv;
+    }
+
+    private int[] removeLast() {
+        if (nextIx < ELEMENT_SIZE) { //this is the very last element
+            return new int[] { -1, -1, -1, -1 };
+        }
+        int[] l = Arrays.copyOfRange(elements, nextIx - ELEMENT_SIZE, nextIx);
+        Arrays.fill(elements, nextIx - ELEMENT_SIZE, nextIx, -1);
+        nextIx -= ELEMENT_SIZE;
+        return l;
     }
 
     private void siftUp(int nodeIx) {
@@ -160,8 +175,8 @@ public class SortMinHeap implements ISelectionTree {
 
     // first < sec : -1
     private int compare(int nodeSIx1, int nodeSIx2) {
-        int[] n1 = tree.get(nodeSIx1);
-        int[] n2 = tree.get(nodeSIx2);
+        int[] n1 = Arrays.copyOfRange(elements, nodeSIx1, nodeSIx1 + ELEMENT_SIZE);
+        int[] n2 = Arrays.copyOfRange(elements, nodeSIx2, nodeSIx2 + ELEMENT_SIZE);
         return (compare(n1, n2));
     }
 
@@ -220,24 +235,30 @@ public class SortMinHeap implements ISelectionTree {
         return ((compare(lix, rix) < 0) ? lix : rix);
     }
 
+    //Assumption: n1Ix and n2Ix are starting indices of two elements
     private void swap(int n1Ix, int n2Ix) {
-        int[] temp = tree.get(n1Ix);
-        tree.set(n1Ix, tree.get(n2Ix));
-        tree.set(n2Ix, temp);
+        int[] temp = Arrays.copyOfRange(elements, n1Ix, n1Ix + ELEMENT_SIZE);
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            elements[n1Ix + i] = elements[n2Ix + i];
+            elements[n2Ix + i] = temp[i];
+        }
     }
 
     private int getLeftChild(int ix) {
-        int lix = 2 * ix + 1;
-        return ((lix < tree.size()) ? lix : -1);
+        int lix = (2 * ELEMENT_SIZE) * (ix / ELEMENT_SIZE) + ELEMENT_SIZE;
+        return ((lix < nextIx) ? lix : -1);
     }
 
     private int getRightChild(int ix) {
-        int rix = 2 * ix + 2;
-        return ((rix < tree.size()) ? rix : -1);
+        int rix = (2 * ELEMENT_SIZE) * (ix / ELEMENT_SIZE) + (2 * ELEMENT_SIZE);
+        return ((rix < nextIx) ? rix : -1);
     }
 
     private int getParent(int ix) {
-        return ((ix - 1) / 2);
+        if (ix <= 0) {
+            return -1;
+        }
+        return ((ix - ELEMENT_SIZE) / (2 * ELEMENT_SIZE)) * ELEMENT_SIZE;
     }
 
     private ByteBuffer getFrame(int frameIx) {

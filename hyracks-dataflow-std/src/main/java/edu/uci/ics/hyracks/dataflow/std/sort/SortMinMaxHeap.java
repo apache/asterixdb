@@ -1,8 +1,7 @@
 package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -12,7 +11,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * @author pouria
- * 
  *         Implements a MinMax binary heap, used as the selection tree, in
  *         sorting with replacement. Check SortMinHeap for details on comparing
  *         elements.
@@ -23,6 +21,8 @@ public class SortMinMaxHeap implements ISelectionTree {
     static final int OFFSET_IX = 2;
     private static final int PNK_IX = 3;
     private static final int NOT_EXIST = -1;
+    private static final int ELEMENT_SIZE = 4;
+    private static final int INIT_ARRAY_SIZE = 512;
 
     private final int[] sortFields;
     private final IBinaryComparator[] comparators;
@@ -30,11 +30,10 @@ public class SortMinMaxHeap implements ISelectionTree {
     private final FrameTupleAccessor fta1;
     private final FrameTupleAccessor fta2;
 
-    List<int[]> tree;
-    IMemoryManager memMgr;
+    private int[] elements;
+    private int nextIx;
 
-    int[] top; // Used as the temp variable to access the top, to avoid object
-               // creation
+    private final IMemoryManager memMgr;
 
     public SortMinMaxHeap(IHyracksCommonContext ctx, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, IMemoryManager memMgr) {
@@ -47,122 +46,141 @@ public class SortMinMaxHeap implements ISelectionTree {
         fta1 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         fta2 = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
         this.memMgr = memMgr;
-
-        this.tree = new ArrayList<int[]>();
+        this.elements = new int[INIT_ARRAY_SIZE];
+        Arrays.fill(elements, -1);
+        this.nextIx = 0;
     }
 
     @Override
     public void insert(int[] element) {
-        tree.add(element);
-        bubbleUp(tree.size() - 1);
+        if (nextIx >= elements.length) {
+            elements = Arrays.copyOf(elements, elements.length * 2);
+        }
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            elements[nextIx + i] = element[i];
+        }
+        nextIx += ELEMENT_SIZE;
+        bubbleUp(nextIx - ELEMENT_SIZE);
     }
 
     @Override
     public void getMin(int[] result) {
-        if (tree.size() == 0) {
+        if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
         }
 
-        top = delete(0);
-        for (int i = 0; i < top.length; i++) {
-            result[i] = top[i];
+        int[] topElem = delete(0);
+        for (int x = 0; x < ELEMENT_SIZE; x++) {
+            result[x] = topElem[x];
         }
     }
 
     @Override
     public void reset() {
-        this.tree.clear();
+        Arrays.fill(elements, -1);
+        nextIx = 0;
     }
 
     @Override
     public boolean isEmpty() {
-        return (tree.size() < 1);
+        return (nextIx < ELEMENT_SIZE);
     }
 
     @Override
     public void peekMin(int[] result) {
-        if (tree.size() == 0) {
+        if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
         }
 
-        top = tree.get(0);
-        for (int i = 0; i < top.length; i++) {
-            result[i] = top[i];
+        for (int x = 0; x < ELEMENT_SIZE; x++) {
+            result[x] = elements[x];
         }
     }
 
     @Override
     public void getMax(int[] result) {
-        if (tree.size() == 1) {
-            top = tree.remove(0);
-            for (int i = 0; i < top.length; i++) {
-                result[i] = top[i];
+        if (nextIx == ELEMENT_SIZE) {
+            int[] topElement = removeLast();
+            for (int x = 0; x < ELEMENT_SIZE; x++) {
+                result[x] = topElement[x];
             }
             return;
         }
 
-        if (tree.size() > 1) {
+        if (nextIx > ELEMENT_SIZE) {
             int lc = getLeftChild(0);
             int rc = getRightChild(0);
+            int maxIx = lc;
 
-            if (rc == -1) {
-                top = delete(lc);
-            } else {
-                top = (compare(lc, rc) < 0) ? delete(rc) : delete(lc);
+            if (rc != -1) {
+                maxIx = compare(lc, rc) < 0 ? rc : lc;
             }
 
-            for (int i = 0; i < top.length; i++) {
-                result[i] = top[i];
+            int[] maxElem = delete(maxIx);
+            for (int x = 0; x < ELEMENT_SIZE; x++) {
+                result[x] = maxElem[x];
             }
             return;
-
         }
+
         result[0] = result[1] = result[2] = result[3] = -1;
+
     }
 
     @Override
     public void peekMax(int[] result) {
-        if (tree.size() == 1) {
-            top = tree.get(0);
-            for (int i = 0; i < top.length; i++) {
-                result[i] = top[i];
+        if (nextIx == ELEMENT_SIZE) {
+            for (int i = 0; i < ELEMENT_SIZE; i++) {
+                result[i] = elements[i];
             }
             return;
         }
-        if (tree.size() > 1) {
+        if (nextIx > ELEMENT_SIZE) {
             int lc = getLeftChild(0);
             int rc = getRightChild(0);
+            int maxIx = lc;
 
-            if (rc == -1) {
-                top = tree.get(lc);
-            } else {
-                top = (compare(lc, rc) < 0) ? tree.get(rc) : tree.get(lc);
+            if (rc != -1) {
+                maxIx = compare(lc, rc) < 0 ? rc : lc;
             }
 
-            for (int i = 0; i < top.length; i++) {
-                result[i] = top[i];
+            for (int x = 0; x < ELEMENT_SIZE; x++) {
+                result[x] = elements[maxIx + x];
             }
+
             return;
         }
         result[0] = result[1] = result[2] = result[3] = -1;
     }
 
     private int[] delete(int delIx) {
-        int s = tree.size();
-        if (s > 1) {
-            int[] delEntry = tree.get(delIx);
-            int[] last = (tree.remove(s - 1));
-            if (delIx != tree.size()) {
-                tree.set(delIx, last);
+        int s = nextIx;
+        if (nextIx > ELEMENT_SIZE) {
+            int[] delEntry = Arrays.copyOfRange(elements, delIx, delIx + ELEMENT_SIZE);
+            int[] last = removeLast();
+            if (delIx != (s - ELEMENT_SIZE)) {
+                for (int x = 0; x < ELEMENT_SIZE; x++) {
+                    elements[delIx + x] = last[x];
+                }
                 trickleDown(delIx);
             }
             return delEntry;
-        } else if (s == 1) {
-            return tree.remove(0);
+        } else if (nextIx == ELEMENT_SIZE) {
+            return (removeLast());
         }
         return null;
+    }
+
+    private int[] removeLast() {
+        if (nextIx < ELEMENT_SIZE) { //this is the very last element
+            return new int[] { -1, -1, -1, -1 };
+        }
+        int[] l = Arrays.copyOfRange(elements, nextIx - ELEMENT_SIZE, nextIx);
+        Arrays.fill(elements, nextIx - ELEMENT_SIZE, nextIx, -1);
+        nextIx -= ELEMENT_SIZE;
+        return l;
     }
 
     private void bubbleUp(int ix) {
@@ -301,16 +319,18 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     private void swap(int n1Ix, int n2Ix) {
-        int[] temp = tree.get(n1Ix);
-        tree.set(n1Ix, tree.get(n2Ix));
-        tree.set(n2Ix, temp);
+        int[] temp = Arrays.copyOfRange(elements, n1Ix, n1Ix + ELEMENT_SIZE);
+        for (int i = 0; i < ELEMENT_SIZE; i++) {
+            elements[n1Ix + i] = elements[n2Ix + i];
+            elements[n2Ix + i] = temp[i];
+        }
     }
 
     private int getParentIx(int i) {
-        if (i == 0) {
+        if (i < ELEMENT_SIZE) {
             return NOT_EXIST;
         }
-        return (i - 1) / 2;
+        return ((i - ELEMENT_SIZE) / (2 * ELEMENT_SIZE)) * ELEMENT_SIZE;
     }
 
     private int getGrandParent(int i) {
@@ -319,8 +339,8 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     private int getLeftChild(int i) {
-        int lc = 2 * i + 1;
-        return lc < tree.size() ? lc : NOT_EXIST;
+        int lc = (2 * ELEMENT_SIZE) * (i / ELEMENT_SIZE) + ELEMENT_SIZE;
+        return (lc < nextIx ? lc : -1);
     }
 
     private int[] getLeftGrandChildren(int i) {
@@ -329,8 +349,8 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     private int getRightChild(int i) {
-        int rc = 2 * i + 2;
-        return rc < tree.size() ? rc : -1;
+        int rc = (2 * ELEMENT_SIZE) * (i / ELEMENT_SIZE) + (2 * ELEMENT_SIZE);
+        return (rc < nextIx ? rc : -1);
     }
 
     private int[] getRightGrandChildren(int i) {
@@ -344,11 +364,13 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     private int getLevel(int i) {
-        if (i == 0) {
+        if (i < ELEMENT_SIZE) {
             return 0;
         }
-        int l = (int) Math.floor(Math.log(i) / Math.log(2));
-        if (i == (((int) Math.pow(2, (l + 1))) - 1)) {
+
+        int cnv = i / ELEMENT_SIZE;
+        int l = (int) Math.floor(Math.log(cnv) / Math.log(2));
+        if (cnv == (((int) Math.pow(2, (l + 1))) - 1)) {
             return (l + 1);
         }
         return l;
@@ -360,8 +382,8 @@ public class SortMinMaxHeap implements ISelectionTree {
 
     // first < sec : -1
     private int compare(int nodeSIx1, int nodeSIx2) {
-        int[] n1 = tree.get(nodeSIx1);
-        int[] n2 = tree.get(nodeSIx2);
+        int[] n1 = Arrays.copyOfRange(elements, nodeSIx1, nodeSIx1 + ELEMENT_SIZE); //tree.get(nodeSIx1);
+        int[] n2 = Arrays.copyOfRange(elements, nodeSIx2, nodeSIx2 + ELEMENT_SIZE); //tree.get(nodeSIx2);
         return (compare(n1, n2));
     }
 
@@ -406,14 +428,5 @@ public class SortMinMaxHeap implements ISelectionTree {
             }
         }
         return 0;
-    }
-
-    public String _debugPrintTree() {
-        String s = "";
-        for (int i = 0; i < tree.size(); i++) {
-            int[] n = tree.get(i);
-            s += "\t[" + i + "](" + n[RUN_ID_IX] + ", " + n[FRAME_IX] + ", " + n[OFFSET_IX] + "), ";
-        }
-        return s;
     }
 }

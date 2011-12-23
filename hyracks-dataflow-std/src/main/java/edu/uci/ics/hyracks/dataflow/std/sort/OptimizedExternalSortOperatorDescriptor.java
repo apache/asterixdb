@@ -29,16 +29,13 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 
 /**
  * @author pouria
- * 
  *         Operator descriptor for sorting with replacement, consisting of two
  *         phases:
- * 
  *         - Run Generation: Denoted by OptimizedSortActivity below, in which
  *         sort runs get generated from the input data. This phases uses the
  *         Selection Tree and Memory Manager to benefit from the replacement
  *         selection optimization, to create runs which are longer than the
  *         available memory size.
- * 
  *         - Merging: Denoted by MergeActivity below, in which runs (generated
  *         in the previous phase) get merged via a merger. Each run has a single
  *         buffer in memory, and a priority queue is used to select the top
@@ -191,10 +188,10 @@ public class OptimizedExternalSortOperatorDescriptor extends AbstractOperatorDes
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
 
-                    OptimizedExternalSortRunMerger merger = new OptimizedExternalSortRunMerger(ctx, outputLimit, runs,
-                            sortFields, comparators, recordDescriptors[0], memSize, writer);
+                    ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, outputLimit, runs, sortFields,
+                            comparators, recordDescriptors[0], memSize, writer);
 
-                    merger.process();
+                    merger.processWithReplacementSelection();
 
                 }
             };

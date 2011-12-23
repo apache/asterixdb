@@ -83,7 +83,7 @@ import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
  */
 
 public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-
+	
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
     private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
 

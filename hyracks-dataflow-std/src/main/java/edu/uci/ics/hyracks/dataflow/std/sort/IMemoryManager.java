@@ -8,7 +8,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
  * @author pouria
- * 
  *         Defines the required operations, needed for any memory manager, used
  *         in sorting with replacement selection, to manage the free spaces
  */

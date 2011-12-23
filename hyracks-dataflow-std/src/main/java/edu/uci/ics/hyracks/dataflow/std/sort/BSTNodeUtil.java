@@ -4,10 +4,8 @@ import java.nio.ByteBuffer;
 
 /**
  * @author pouria
- * 
  *         Implements utility methods, used extensively and repeatedly within
  *         the BSTMemMgr.
- * 
  *         Mainly includes methods to set/get different types of pointers,
  *         required and accessed within BST traversal, along with the methods
  *         for setting/getting length/header/footer of free slots, which have

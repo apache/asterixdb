@@ -7,7 +7,6 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 
 /**
  * @author pouria
- * 
  *         Interface for the Run Generator
  */
 public interface IRunGenerator extends IFrameWriter {
