@@ -22,9 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
@@ -52,7 +53,7 @@ public class PartitionMatchMaker {
             while (i.hasNext()) {
                 PartitionRequest req = i.next();
                 if (partitionDescriptor.getState().isAtLeast(req.getMinimumState())) {
-                    matches.add(new Pair<PartitionDescriptor, PartitionRequest>(partitionDescriptor, req));
+                    matches.add(Pair.<PartitionDescriptor, PartitionRequest> of(partitionDescriptor, req));
                     i.remove();
                     matched = true;
                     if (!partitionDescriptor.isReusable()) {
@@ -88,7 +89,7 @@ public class PartitionMatchMaker {
             while (i.hasNext()) {
                 PartitionDescriptor descriptor = i.next();
                 if (descriptor.getState().isAtLeast(partitionRequest.getMinimumState())) {
-                    match = new Pair<PartitionDescriptor, PartitionRequest>(descriptor, partitionRequest);
+                    match = Pair.<PartitionDescriptor, PartitionRequest> of(descriptor, partitionRequest);
                     if (!descriptor.isReusable()) {
                         i.remove();
                     }

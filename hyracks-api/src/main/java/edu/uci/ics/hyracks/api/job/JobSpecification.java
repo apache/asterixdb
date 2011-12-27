@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +34,6 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.util.Pair;
 
 public class JobSpecification implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -94,10 +94,11 @@ public class JobSpecification implements Serializable {
             IOperatorDescriptor consumerOp, int consumerPort) {
         insertIntoIndexedMap(opInputMap, consumerOp.getOperatorId(), consumerPort, conn);
         insertIntoIndexedMap(opOutputMap, producerOp.getOperatorId(), producerPort, conn);
-        connectorOpMap.put(conn.getConnectorId(),
-                new Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>(
-                        new Pair<IOperatorDescriptor, Integer>(producerOp, producerPort),
-                        new Pair<IOperatorDescriptor, Integer>(consumerOp, consumerPort)));
+        connectorOpMap.put(
+                conn.getConnectorId(),
+                Pair.<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> of(
+                        Pair.<IOperatorDescriptor, Integer> of(producerOp, producerPort),
+                        Pair.<IOperatorDescriptor, Integer> of(consumerOp, consumerPort)));
     }
 
     public void setProperty(String name, Serializable value) {
@@ -126,19 +127,19 @@ public class JobSpecification implements Serializable {
     public RecordDescriptor getConnectorRecordDescriptor(IConnectorDescriptor conn) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
                 .getConnectorId());
-        return connInfo.first.first.getOutputRecordDescriptors()[connInfo.first.second];
+        return connInfo.getLeft().getLeft().getOutputRecordDescriptors()[connInfo.getLeft().getRight()];
     }
 
     public IOperatorDescriptor getConsumer(IConnectorDescriptor conn) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
                 .getConnectorId());
-        return connInfo.second.first;
+        return connInfo.getRight().getLeft();
     }
 
     public int getConsumerInputIndex(IConnectorDescriptor conn) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
                 .getConnectorId());
-        return connInfo.second.second;
+        return connInfo.getRight().getRight();
     }
 
     public IConnectorDescriptor getInputConnectorDescriptor(IOperatorDescriptor op, int inputIndex) {
@@ -180,13 +181,13 @@ public class JobSpecification implements Serializable {
     public IOperatorDescriptor getProducer(IConnectorDescriptor conn) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
                 .getConnectorId());
-        return connInfo.first.first;
+        return connInfo.getLeft().getLeft();
     }
 
     public int getProducerOutputIndex(IConnectorDescriptor conn) {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
                 .getConnectorId());
-        return connInfo.first.second;
+        return connInfo.getLeft().getRight();
     }
 
     public List<OperatorDescriptorId> getRoots() {
@@ -276,10 +277,10 @@ public class JobSpecification implements Serializable {
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connection = connectorOpMap
                     .get(e.getKey());
             if (connection != null) {
-                conn.put("in-operator-id", connection.first.first.getOperatorId().toString());
-                conn.put("in-operator-port", connection.first.second.intValue());
-                conn.put("out-operator-id", connection.second.first.getOperatorId().toString());
-                conn.put("out-operator-port", connection.second.second.intValue());
+                conn.put("in-operator-id", connection.getLeft().getLeft().getOperatorId().toString());
+                conn.put("in-operator-port", connection.getLeft().getRight().intValue());
+                conn.put("out-operator-id", connection.getRight().getLeft().getOperatorId().toString());
+                conn.put("out-operator-port", connection.getRight().getRight().intValue());
             }
             conn.put("connector", e.getValue().toJSON());
             jcArray.put(conn);
