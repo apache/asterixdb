@@ -12,7 +12,7 @@ public class ConnectCommand extends Command {
     public ConnectCommand(String hostPortStr) {
         int idx = hostPortStr.indexOf(':');
         host = hostPortStr;
-        port = 1099;
+        port = 1098;
         if (idx != -1) {
             host = hostPortStr.substring(0, idx);
             port = Integer.valueOf(hostPortStr.substring(idx + 1));
