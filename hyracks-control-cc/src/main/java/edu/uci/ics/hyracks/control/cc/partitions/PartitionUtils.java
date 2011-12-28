@@ -12,7 +12,7 @@ import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 
 public class PartitionUtils {
     public static void reportPartitionMatch(ClusterControllerService ccs, final PartitionId pid,
-            Pair<PartitionDescriptor, PartitionRequest> match) {
+            Pair<PartitionDescriptor, PartitionRequest> match) throws Exception {
         PartitionDescriptor desc = match.getLeft();
         PartitionRequest req = match.getRight();
 
@@ -20,15 +20,6 @@ public class PartitionUtils {
         NodeControllerState requestorNCS = ccs.getNodeMap().get(req.getNodeId());
         final NetworkAddress dataport = producerNCS.getDataPort();
         final INodeController requestorNC = requestorNCS.getNodeController();
-        ccs.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    requestorNC.reportPartitionAvailability(pid, dataport);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        requestorNC.reportPartitionAvailability(pid, dataport);
     }
 }

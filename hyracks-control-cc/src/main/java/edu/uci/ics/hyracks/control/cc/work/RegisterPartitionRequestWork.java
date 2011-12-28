@@ -44,7 +44,11 @@ public class RegisterPartitionRequestWork extends AbstractWork {
         PartitionMatchMaker pmm = run.getPartitionMatchMaker();
         Pair<PartitionDescriptor, PartitionRequest> match = pmm.matchPartitionRequest(partitionRequest);
         if (match != null) {
-            PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            try {
+                PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

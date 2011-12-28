@@ -79,9 +79,8 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
-        SyncRMI sync = new SyncRMI();
         NodeControllerFunctions.ReportPartitionAvailabilityFunction rpaf = new NodeControllerFunctions.ReportPartitionAvailabilityFunction(
                 pid, networkAddress);
-        sync.call(ipcHandle, rpaf);
+        ipcHandle.send(rpaf, null);
     }
 }

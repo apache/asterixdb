@@ -47,7 +47,11 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
         List<Pair<PartitionDescriptor, PartitionRequest>> matches = pmm
                 .registerPartitionDescriptor(partitionDescriptor);
         for (Pair<PartitionDescriptor, PartitionRequest> match : matches) {
-            PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            try {
+                PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
