@@ -19,11 +19,13 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -37,13 +39,14 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;
         }
@@ -55,26 +58,26 @@ public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRu
         return gvChanged || dvChanged;
     }
 
-    private boolean factorRedundantRhsVars(List<Pair<LogicalVariable, LogicalExpressionReference>> veList,
-            LogicalOperatorReference opRef, Map<LogicalVariable, LogicalVariable> varRhsToLhs,
+    private boolean factorRedundantRhsVars(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> veList,
+            Mutable<ILogicalOperator> opRef, Map<LogicalVariable, LogicalVariable> varRhsToLhs,
             IOptimizationContext context) throws AlgebricksException {
         varRhsToLhs.clear();
-        ListIterator<Pair<LogicalVariable, LogicalExpressionReference>> iter = veList.listIterator();
+        ListIterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = veList.listIterator();
         boolean changed = false;
         while (iter.hasNext()) {
-            Pair<LogicalVariable, LogicalExpressionReference> p = iter.next();
-            if (p.second.getExpression().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            Pair<LogicalVariable, Mutable<ILogicalExpression>> p = iter.next();
+            if (p.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 continue;
             }
             LogicalVariable v = GroupByOperator.getDecorVariable(p);
             LogicalVariable lhs = varRhsToLhs.get(v);
             if (lhs != null) {
                 if (p.first != null) {
-                    AssignOperator assign = new AssignOperator(p.first, new LogicalExpressionReference(
+                    AssignOperator assign = new AssignOperator(p.first, new MutableObject<ILogicalExpression>(
                             new VariableReferenceExpression(lhs)));
-                    ILogicalOperator op = opRef.getOperator();
-                    assign.getInputs().add(new LogicalOperatorReference(op));
-                    opRef.setOperator(assign);
+                    ILogicalOperator op = opRef.getValue();
+                    assign.getInputs().add(new MutableObject<ILogicalOperator>(op));
+                    opRef.setValue(assign);
                     context.computeAndSetTypeEnvironmentForOperator(assign);
                 }
                 iter.remove();

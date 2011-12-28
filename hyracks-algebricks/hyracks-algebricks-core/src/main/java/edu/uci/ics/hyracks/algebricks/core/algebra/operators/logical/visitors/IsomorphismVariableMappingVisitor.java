@@ -19,11 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractAssignOperator;
@@ -253,13 +254,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapChildren(ILogicalOperator op, ILogicalOperator opArg) throws AlgebricksException {
-        List<LogicalOperatorReference> inputs = op.getInputs();
-        List<LogicalOperatorReference> inputsArg = opArg.getInputs();
+        List<Mutable<ILogicalOperator>> inputs = op.getInputs();
+        List<Mutable<ILogicalOperator>> inputsArg = opArg.getInputs();
         if (inputs.size() != inputsArg.size())
             throw new AlgebricksException("children are not isomoprhic");
         for (int i = 0; i < inputs.size(); i++) {
-            ILogicalOperator input = inputs.get(i).getOperator();
-            ILogicalOperator inputArg = inputsArg.get(i).getOperator();
+            ILogicalOperator input = inputs.get(i).getValue();
+            ILogicalOperator inputArg = inputsArg.get(i).getValue();
             input.accept(this, inputArg);
         }
     }
@@ -298,23 +299,23 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     private void mapVariablesForGroupBy(ILogicalOperator left, ILogicalOperator right) throws AlgebricksException {
         GroupByOperator leftOp = (GroupByOperator) left;
         GroupByOperator rightOp = (GroupByOperator) right;
-        List<Pair<LogicalVariable, LogicalExpressionReference>> leftPairs = leftOp.getGroupByList();
-        List<Pair<LogicalVariable, LogicalExpressionReference>> rightPairs = rightOp.getGroupByList();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> leftPairs = leftOp.getGroupByList();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> rightPairs = rightOp.getGroupByList();
         mapVarExprPairList(leftPairs, rightPairs);
         leftPairs = leftOp.getDecorList();
         rightPairs = rightOp.getDecorList();
         mapVarExprPairList(leftPairs, rightPairs);
     }
 
-    private void mapVarExprPairList(List<Pair<LogicalVariable, LogicalExpressionReference>> leftPairs,
-            List<Pair<LogicalVariable, LogicalExpressionReference>> rightPairs) {
+    private void mapVarExprPairList(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> leftPairs,
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> rightPairs) {
         if (leftPairs.size() != rightPairs.size())
             return;
         for (int i = 0; i < leftPairs.size(); i++) {
-            ILogicalExpression exprLeft = leftPairs.get(i).second.getExpression();
+            ILogicalExpression exprLeft = leftPairs.get(i).second.getValue();
             LogicalVariable leftVar = leftPairs.get(i).first;
             for (int j = 0; j < leftPairs.size(); j++) {
-                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(rightPairs.get(j).second).getExpression();
+                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(rightPairs.get(j).second).getValue();
                 if (exprLeft.equals(exprRight)) {
                     LogicalVariable rightVar = rightPairs.get(j).first;
                     if (rightVar != null && leftVar != null) {
@@ -327,16 +328,16 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariablesForAbstractAssign(List<LogicalVariable> variablesLeft,
-            List<LogicalExpressionReference> exprsLeft, List<LogicalVariable> variablesRight,
-            List<LogicalExpressionReference> exprsRight) {
+            List<Mutable<ILogicalExpression>> exprsLeft, List<LogicalVariable> variablesRight,
+            List<Mutable<ILogicalExpression>> exprsRight) {
         if (variablesLeft.size() != variablesRight.size())
             return;
         int size = variablesLeft.size();
         for (int i = 0; i < size; i++) {
-            ILogicalExpression exprLeft = exprsLeft.get(i).getExpression();
+            ILogicalExpression exprLeft = exprsLeft.get(i).getValue();
             LogicalVariable left = variablesLeft.get(i);
             for (int j = 0; j < size; j++) {
-                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(exprsRight.get(j)).getExpression();
+                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(exprsRight.get(j)).getValue();
                 if (exprLeft.equals(exprRight)) {
                     LogicalVariable right = variablesRight.get(j);
                     variableMapping.put(right, left);
@@ -354,13 +355,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         if (plans.size() != plansArg.size())
             return;
         for (int i = 0; i < plans.size(); i++) {
-            List<LogicalOperatorReference> roots = plans.get(i).getRoots();
-            List<LogicalOperatorReference> rootsArg = plansArg.get(i).getRoots();
+            List<Mutable<ILogicalOperator>> roots = plans.get(i).getRoots();
+            List<Mutable<ILogicalOperator>> rootsArg = plansArg.get(i).getRoots();
             if (roots.size() != rootsArg.size())
                 return;
             for (int j = 0; j < roots.size(); j++) {
-                ILogicalOperator topOp1 = roots.get(j).getOperator();
-                ILogicalOperator topOp2 = rootsArg.get(j).getOperator();
+                ILogicalOperator topOp1 = roots.get(j).getValue();
+                ILogicalOperator topOp2 = rootsArg.get(j).getValue();
                 topOp1.accept(this, topOp2);
             }
         }
@@ -371,11 +372,11 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         mapVariables(op, arg);
     }
 
-    private LogicalExpressionReference copyExpressionAndSubtituteVars(LogicalExpressionReference expr) {
-        ILogicalExpression copy = ((AbstractLogicalExpression) expr.getExpression()).cloneExpression();
+    private Mutable<ILogicalExpression> copyExpressionAndSubtituteVars(Mutable<ILogicalExpression> expr) {
+        ILogicalExpression copy = ((AbstractLogicalExpression) expr.getValue()).cloneExpression();
         for (Entry<LogicalVariable, LogicalVariable> entry : variableMapping.entrySet())
             copy.substituteVar(entry.getKey(), entry.getValue());
-        return new LogicalExpressionReference(copy);
+        return new MutableObject<ILogicalExpression>(copy);
     }
 
     private void mapVariablesForUnion(ILogicalOperator op, ILogicalOperator arg) {

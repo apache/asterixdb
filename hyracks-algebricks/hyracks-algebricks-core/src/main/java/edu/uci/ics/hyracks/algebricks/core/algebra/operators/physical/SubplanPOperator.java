@@ -17,11 +17,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -53,7 +54,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childsProperties = op2.getPhysicalOperator().getDeliveredProperties();
         List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
         if (childsProperties.getLocalProperties() != null) {
@@ -62,8 +63,8 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         // ... get local properties for newly created variables...
         SubplanOperator subplan = (SubplanOperator) op;
         for (ILogicalPlan plan : subplan.getNestedPlans()) {
-            for (LogicalOperatorReference r : plan.getRoots()) {
-                AbstractLogicalOperator rOp = (AbstractLogicalOperator) r.getOperator();
+            for (Mutable<ILogicalOperator> r : plan.getRoots()) {
+                AbstractLogicalOperator rOp = (AbstractLogicalOperator) r.getValue();
                 propsLocal.addAll(rOp.getPhysicalOperator().getDeliveredProperties().getLocalProperties());
             }
         }
@@ -88,7 +89,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], subplan, opSchema, context);
         assert (subplans.length == 1);
         AlgebricksPipeline np = subplans[0];
-        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getOperator(),
+        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getValue(),
                 inputSchemas[0], context);
         INullWriterFactory[] nullWriterFactories = new INullWriterFactory[np.getOutputWidth()];
         for (int i = 0; i < nullWriterFactories.length; i++) {
@@ -99,7 +100,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(subplan, runtime, recDesc);
 
-        ILogicalOperator src = op.getInputs().get(0).getOperator();
+        ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }
 

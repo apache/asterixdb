@@ -21,9 +21,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -34,17 +36,20 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependen
 public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpression {
 
     public enum FunctionKind {
-        SCALAR, STATEFUL, AGGREGATE, UNNEST
+        SCALAR,
+        STATEFUL,
+        AGGREGATE,
+        UNNEST
     }
 
     protected IFunctionInfo finfo;
-    final private List<LogicalExpressionReference> arguments;
+    final private List<Mutable<ILogicalExpression>> arguments;
     private Object[] opaqueParameters;
     private final FunctionKind kind;
     private Map<Object, IExpressionAnnotation> annotationMap = new HashMap<Object, IExpressionAnnotation>();
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
-            List<LogicalExpressionReference> arguments) {
+            List<Mutable<ILogicalExpression>> arguments) {
         this.kind = kind;
         this.finfo = finfo;
         this.arguments = arguments;
@@ -53,13 +58,13 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo) {
         this.kind = kind;
         this.finfo = finfo;
-        this.arguments = new ArrayList<LogicalExpressionReference>();
+        this.arguments = new ArrayList<Mutable<ILogicalExpression>>();
     }
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
-            LogicalExpressionReference... expressions) {
+            Mutable<ILogicalExpression>... expressions) {
         this(kind, finfo);
-        for (LogicalExpressionReference e : expressions) {
+        for (Mutable<ILogicalExpression> e : expressions) {
             this.arguments.add(e);
         }
     }
@@ -76,11 +81,11 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         return kind;
     }
 
-    protected List<LogicalExpressionReference> cloneArguments() {
-        List<LogicalExpressionReference> clonedArgs = new ArrayList<LogicalExpressionReference>(arguments.size());
-        for (LogicalExpressionReference e : arguments) {
-            ILogicalExpression e2 = ((AbstractLogicalExpression) e.getExpression()).cloneExpression();
-            clonedArgs.add(new LogicalExpressionReference(e2));
+    protected List<Mutable<ILogicalExpression>> cloneArguments() {
+        List<Mutable<ILogicalExpression>> clonedArgs = new ArrayList<Mutable<ILogicalExpression>>(arguments.size());
+        for (Mutable<ILogicalExpression> e : arguments) {
+            ILogicalExpression e2 = ((AbstractLogicalExpression) e.getValue()).cloneExpression();
+            clonedArgs.add(new MutableObject<ILogicalExpression>(e2));
         }
         return clonedArgs;
     }
@@ -97,7 +102,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         this.finfo = finfo;
     }
 
-    public List<LogicalExpressionReference> getArguments() {
+    public List<Mutable<ILogicalExpression>> getArguments() {
         return arguments;
     }
 
@@ -106,13 +111,13 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         sb.append("function-call: " + finfo.getFunctionIdentifier() + ", Args:[");
         // + arguments;
         boolean first = true;
-        for (LogicalExpressionReference ref : arguments) {
+        for (Mutable<ILogicalExpression> ref : arguments) {
             if (first) {
                 first = false;
             } else {
                 sb.append(", ");
             }
-            sb.append(ref.getExpression());
+            sb.append(ref.getValue());
         }
         sb.append("]");
         return sb.toString();
@@ -125,15 +130,15 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     @Override
     public void getUsedVariables(Collection<LogicalVariable> vars) {
-        for (LogicalExpressionReference arg : arguments) {
-            arg.getExpression().getUsedVariables(vars);
+        for (Mutable<ILogicalExpression> arg : arguments) {
+            arg.getValue().getUsedVariables(vars);
         }
     }
 
     @Override
     public void substituteVar(LogicalVariable v1, LogicalVariable v2) {
-        for (LogicalExpressionReference arg : arguments) {
-            arg.getExpression().substituteVar(v1, v2);
+        for (Mutable<ILogicalExpression> arg : arguments) {
+            arg.getValue().substituteVar(v1, v2);
         }
     }
 
@@ -142,12 +147,12 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             Map<LogicalVariable, EquivalenceClass> equivClasses) {
         FunctionIdentifier funId = getFunctionIdentifier();
         if (funId == AlgebricksBuiltinFunctions.AND) {
-            for (LogicalExpressionReference a : arguments) {
-                a.getExpression().getConstraintsAndEquivClasses(fds, equivClasses);
+            for (Mutable<ILogicalExpression> a : arguments) {
+                a.getValue().getConstraintsAndEquivClasses(fds, equivClasses);
             }
         } else if (funId == AlgebricksBuiltinFunctions.EQ) {
-            ILogicalExpression opLeft = arguments.get(0).getExpression();
-            ILogicalExpression opRight = arguments.get(1).getExpression();
+            ILogicalExpression opLeft = arguments.get(0).getValue();
+            ILogicalExpression opRight = arguments.get(1).getValue();
             if (opLeft.getExpressionTag() == LogicalExpressionTag.CONSTANT
                     && opRight.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 ConstantExpression op1 = (ConstantExpression) opLeft;
@@ -166,12 +171,12 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     public void getConstraintsForOuterJoin(Collection<FunctionalDependency> fds, Collection<LogicalVariable> outerVars) {
         FunctionIdentifier funId = getFunctionIdentifier();
         if (funId == AlgebricksBuiltinFunctions.AND) {
-            for (LogicalExpressionReference a : arguments) {
-                a.getExpression().getConstraintsForOuterJoin(fds, outerVars);
+            for (Mutable<ILogicalExpression> a : arguments) {
+                a.getValue().getConstraintsForOuterJoin(fds, outerVars);
             }
         } else if (funId == AlgebricksBuiltinFunctions.EQ) {
-            ILogicalExpression opLeft = arguments.get(0).getExpression();
-            ILogicalExpression opRight = arguments.get(1).getExpression();
+            ILogicalExpression opLeft = arguments.get(0).getValue();
+            ILogicalExpression opRight = arguments.get(1).getValue();
             if (opLeft.getExpressionTag() == LogicalExpressionTag.VARIABLE
                     && opRight.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable var1 = ((VariableReferenceExpression) opLeft).getVariableReference();
@@ -196,8 +201,8 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             if (!equal)
                 return false;
             for (int i = 0; i < arguments.size(); i++) {
-                ILogicalExpression argument = arguments.get(i).getExpression();
-                ILogicalExpression fceArgument = fce.getArguments().get(i).getExpression();
+                ILogicalExpression argument = arguments.get(i).getValue();
+                ILogicalExpression fceArgument = fce.getArguments().get(i).getValue();
                 if (!argument.equals(fceArgument))
                     return false;
             }
@@ -208,14 +213,14 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     @Override
     public int hashCode() {
         int h = finfo.hashCode();
-        for (LogicalExpressionReference e : arguments) {
-            h = h * 41 + e.getExpression().hashCode();
+        for (Mutable<ILogicalExpression> e : arguments) {
+            h = h * 41 + e.getValue().hashCode();
         }
         return h;
     }
 
     @Override
-    public boolean splitIntoConjuncts(List<LogicalExpressionReference> conjs) {
+    public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs) {
         if (getFunctionIdentifier() != AlgebricksBuiltinFunctions.AND || arguments.size() <= 1) {
             return false;
         } else {

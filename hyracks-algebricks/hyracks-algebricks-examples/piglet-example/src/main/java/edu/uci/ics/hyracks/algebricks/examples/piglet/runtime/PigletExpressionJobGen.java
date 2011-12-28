@@ -4,8 +4,9 @@ import java.io.DataOutput;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -70,16 +71,16 @@ public class PigletExpressionJobGen implements ILogicalExpressionJobGen {
             case FUNCTION_CALL: {
                 ScalarFunctionCallExpression sfce = (ScalarFunctionCallExpression) expr;
 
-                List<LogicalExpressionReference> argExprs = sfce.getArguments();
+                List<Mutable<ILogicalExpression>> argExprs = sfce.getArguments();
                 IEvaluatorFactory argEvalFactories[] = new IEvaluatorFactory[argExprs.size()];
                 for (int i = 0; i < argEvalFactories.length; ++i) {
-                    LogicalExpressionReference er = argExprs.get(i);
-                    argEvalFactories[i] = createEvaluatorFactory(er.getExpression(), env, inputSchemas, context);
+                    Mutable<ILogicalExpression> er = argExprs.get(i);
+                    argEvalFactories[i] = createEvaluatorFactory(er.getValue(), env, inputSchemas, context);
                 }
                 IEvaluatorFactory funcEvalFactory;
                 try {
-                    funcEvalFactory = PigletFunctionRegistry.createFunctionEvaluatorFactory(sfce
-                            .getFunctionIdentifier(), argEvalFactories);
+                    funcEvalFactory = PigletFunctionRegistry.createFunctionEvaluatorFactory(
+                            sfce.getFunctionIdentifier(), argEvalFactories);
                 } catch (PigletException e) {
                     throw new AlgebricksException(e);
                 }

@@ -3,10 +3,11 @@ package edu.uci.ics.hyracks.algebricks.rewriter.util;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -27,20 +28,20 @@ public class PhysicalOptimizationsUtil {
     private static void computeFDsAndEqClassesWithVisitorRec(AbstractLogicalOperator op, IOptimizationContext ctx,
             FDsAndEquivClassesVisitor visitor, Set<ILogicalOperator> visitSet) throws AlgebricksException {
         visitSet.add(op);
-        for (LogicalOperatorReference i : op.getInputs()) {
-            computeFDsAndEqClassesWithVisitorRec((AbstractLogicalOperator) i.getOperator(), ctx, visitor, visitSet);
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            computeFDsAndEqClassesWithVisitorRec((AbstractLogicalOperator) i.getValue(), ctx, visitor, visitSet);
         }
         if (op.hasNestedPlans()) {
             for (ILogicalPlan p : ((AbstractOperatorWithNestedPlans) op).getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
-                    AbstractLogicalOperator rootOp = (AbstractLogicalOperator) r.getOperator();
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    AbstractLogicalOperator rootOp = (AbstractLogicalOperator) r.getValue();
                     computeFDsAndEqClassesWithVisitorRec(rootOp, ctx, visitor, visitSet);
                 }
             }
         }
         if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
             NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
-            ILogicalOperator source = nts.getDataSourceReference().getOperator().getInputs().get(0).getOperator();
+            ILogicalOperator source = nts.getDataSourceReference().getValue().getInputs().get(0).getValue();
             if (!visitSet.contains(source)) {
                 computeFDsAndEqClassesWithVisitorRec((AbstractLogicalOperator) source, ctx, visitor, visitSet);
             }

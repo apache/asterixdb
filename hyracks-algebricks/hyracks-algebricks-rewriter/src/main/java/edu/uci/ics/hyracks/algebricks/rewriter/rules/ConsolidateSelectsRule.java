@@ -16,9 +16,12 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -31,41 +34,41 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
         SelectOperator select = (SelectOperator) op;
 
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) select.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) select.getInputs().get(0).getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
 
-        AbstractFunctionCallExpression conj = new ScalarFunctionCallExpression(AlgebricksBuiltinFunctions
-                .getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
-        conj.getArguments().add(new LogicalExpressionReference(select.getCondition().getExpression()));
+        AbstractFunctionCallExpression conj = new ScalarFunctionCallExpression(
+                AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        conj.getArguments().add(new MutableObject<ILogicalExpression>(select.getCondition().getValue()));
         conj.getArguments().add(((SelectOperator) op2).getCondition());
 
-        LogicalOperatorReference botOpRef = select.getInputs().get(0);
+        Mutable<ILogicalOperator> botOpRef = select.getInputs().get(0);
         boolean more = true;
         while (more) {
-            botOpRef = botOpRef.getOperator().getInputs().get(0);
-            AbstractLogicalOperator botOp = (AbstractLogicalOperator) botOpRef.getOperator();
+            botOpRef = botOpRef.getValue().getInputs().get(0);
+            AbstractLogicalOperator botOp = (AbstractLogicalOperator) botOpRef.getValue();
             if (botOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 conj.getArguments().add(((SelectOperator) botOp).getCondition());
             } else {
                 more = false;
             }
         }
-        select.getCondition().setExpression(conj);
-        List<LogicalOperatorReference> selInptList = select.getInputs();
+        select.getCondition().setValue(conj);
+        List<Mutable<ILogicalOperator>> selInptList = select.getInputs();
         selInptList.clear();
         selInptList.add(botOpRef);
         context.computeAndSetTypeEnvironmentForOperator(select);

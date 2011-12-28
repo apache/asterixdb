@@ -16,9 +16,11 @@ package edu.uci.ics.hyracks.algebricks.core.rewriter.base;
 
 import java.util.Collection;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
@@ -45,7 +47,7 @@ public abstract class AbstractRuleController {
      * @param ruleClasses
      * @return true iff one of the rules in the collection fired
      */
-    public abstract boolean rewriteWithRuleCollection(LogicalOperatorReference root,
+    public abstract boolean rewriteWithRuleCollection(Mutable<ILogicalOperator> root,
             Collection<IAlgebraicRewriteRule> rules) throws AlgebricksException;
 
     /**
@@ -54,20 +56,20 @@ public abstract class AbstractRuleController {
      * @return true if any rewrite was fired, either on opRef or any operator
      *         under it.
      */
-    protected boolean rewriteOperatorRef(LogicalOperatorReference opRef, IAlgebraicRewriteRule rule)
+    protected boolean rewriteOperatorRef(Mutable<ILogicalOperator> opRef, IAlgebraicRewriteRule rule)
             throws AlgebricksException {
         return rewriteOperatorRef(opRef, rule, true, false);
     }
 
-    private void printRuleApplication(IAlgebraicRewriteRule rule, LogicalOperatorReference opRef)
+    private void printRuleApplication(IAlgebraicRewriteRule rule, Mutable<ILogicalOperator> opRef)
             throws AlgebricksException {
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Rule " + rule.getClass() + " fired.\n");
         StringBuilder sb = new StringBuilder();
-        PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getOperator(), sb, pvisitor, 0);
+        PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine(sb.toString());
     }
 
-    protected boolean rewriteOperatorRef(LogicalOperatorReference opRef, IAlgebraicRewriteRule rule,
+    protected boolean rewriteOperatorRef(Mutable<ILogicalOperator> opRef, IAlgebraicRewriteRule rule,
             boolean enterNestedPlans, boolean fullDFS) throws AlgebricksException {
 
         if (rule.rewritePre(opRef, context)) {
@@ -75,9 +77,9 @@ public abstract class AbstractRuleController {
             return true;
         }
         boolean rewritten = false;
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
-        for (LogicalOperatorReference inp : op.getInputs()) {
+        for (Mutable<ILogicalOperator> inp : op.getInputs()) {
             if (rewriteOperatorRef(inp, rule, enterNestedPlans, fullDFS)) {
                 rewritten = true;
                 if (!fullDFS) {
@@ -89,7 +91,7 @@ public abstract class AbstractRuleController {
         if (op.hasNestedPlans() && enterNestedPlans) {
             AbstractOperatorWithNestedPlans o2 = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : o2.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     if (rewriteOperatorRef(r, rule, enterNestedPlans, fullDFS)) {
                         rewritten = true;
                         if (!fullDFS) {

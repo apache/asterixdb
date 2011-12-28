@@ -50,7 +50,7 @@ public class StreamDiePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -69,13 +69,13 @@ public class StreamDiePOperator extends AbstractPhysicalOperator {
         DieOperator die = (DieOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IEvaluatorFactory afterObjectsFact = exprJobGen.createEvaluatorFactory(die.getAfterObjects().getExpression(),
+        IEvaluatorFactory afterObjectsFact = exprJobGen.createEvaluatorFactory(die.getAfterObjects().getValue(),
                 env, inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         StreamDieRuntimeFactory runtime = new StreamDieRuntimeFactory(afterObjectsFact, null,
                 context.getBinaryIntegerInspector());
         builder.contributeMicroOperator(die, runtime, recDesc);
-        ILogicalOperator src = die.getInputs().get(0).getOperator();
+        ILogicalOperator src = die.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, die, 0);
     }
 

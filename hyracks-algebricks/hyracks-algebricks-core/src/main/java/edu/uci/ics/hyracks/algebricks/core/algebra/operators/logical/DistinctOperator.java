@@ -17,8 +17,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -31,9 +32,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class DistinctOperator extends AbstractLogicalOperator {
-    private final List<LogicalExpressionReference> expressions;
+    private final List<Mutable<ILogicalExpression>> expressions;
 
-    public DistinctOperator(List<LogicalExpressionReference> expressions) {
+    public DistinctOperator(List<Mutable<ILogicalExpression>> expressions) {
         this.expressions = expressions;
     }
 
@@ -42,13 +43,13 @@ public class DistinctOperator extends AbstractLogicalOperator {
         return LogicalOperatorTag.DISTINCT;
     }
 
-    public List<LogicalExpressionReference> getExpressions() {
+    public List<Mutable<ILogicalExpression>> getExpressions() {
         return expressions;
     }
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getOperator().getSchema());
+        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -59,7 +60,7 @@ public class DistinctOperator extends AbstractLogicalOperator {
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean changed = false;
-        for (LogicalExpressionReference e : expressions) {
+        for (Mutable<ILogicalExpression> e : expressions) {
             if (visitor.transform(e)) {
                 changed = true;
             }
@@ -79,8 +80,8 @@ public class DistinctOperator extends AbstractLogicalOperator {
 
     public List<LogicalVariable> getDistinctByVarList() {
         List<LogicalVariable> varList = new ArrayList<LogicalVariable>(expressions.size());
-        for (LogicalExpressionReference eRef : expressions) {
-            ILogicalExpression e = eRef.getExpression();
+        for (Mutable<ILogicalExpression> eRef : expressions) {
+            ILogicalExpression e = eRef.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) e;
                 varList.add(v.getVariableReference());
@@ -90,8 +91,8 @@ public class DistinctOperator extends AbstractLogicalOperator {
     }
 
     public boolean isDistinctByVar(LogicalVariable var) {
-        for (LogicalExpressionReference eRef : expressions) {
-            ILogicalExpression e = eRef.getExpression();
+        for (Mutable<ILogicalExpression> eRef : expressions) {
+            ILogicalExpression e = eRef.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) e;
                 if (v.getVariableReference() == var) {

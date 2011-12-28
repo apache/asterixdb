@@ -14,10 +14,11 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -48,9 +49,8 @@ public class NestedTupleSourcePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        LogicalOperatorReference dataSource = ((NestedTupleSourceOperator) op).getDataSourceReference();
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) dataSource.getOperator().getInputs().get(0)
-                .getOperator();
+        Mutable<ILogicalOperator> dataSource = ((NestedTupleSourceOperator) op).getDataSourceReference();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) dataSource.getValue().getInputs().get(0).getValue();
         IPhysicalPropertiesVector inheritedProps = op2.getDeliveredPhysicalProperties();
         deliveredProperties = (StructuralPropertiesVector) inheritedProps.clone();
     }

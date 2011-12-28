@@ -17,10 +17,11 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -37,6 +38,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -50,7 +52,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
@@ -66,16 +67,16 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitAggregateOperator(AggregateOperator op, Void arg) {
-        for (LogicalExpressionReference exprRef : op.getExpressions()) {
-            exprRef.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitAssignOperator(AssignOperator op, Void arg) {
-        for (LogicalExpressionReference exprRef : op.getExpressions()) {
-            exprRef.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -88,8 +89,8 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Void arg) {
-        for (LogicalExpressionReference eRef : op.getExpressions()) {
-            eRef.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> eRef : op.getExpressions()) {
+            eRef.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -109,35 +110,35 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getOperator(), usedVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getValue(), usedVariables);
             }
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> g : op.getGroupByList()) {
-            g.second.getExpression().getUsedVariables(usedVariables);
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : op.getGroupByList()) {
+            g.second.getValue().getUsedVariables(usedVariables);
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> g : op.getDecorList()) {
-            g.second.getExpression().getUsedVariables(usedVariables);
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : op.getDecorList()) {
+            g.second.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitInnerJoinOperator(InnerJoinOperator op, Void arg) {
-        op.getCondition().getExpression().getUsedVariables(usedVariables);
+        op.getCondition().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
     @Override
     public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void arg) {
-        op.getCondition().getExpression().getUsedVariables(usedVariables);
+        op.getCondition().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
     @Override
     public Void visitLimitOperator(LimitOperator op, Void arg) {
-        op.getMaxObjects().getExpression().getUsedVariables(usedVariables);
-        ILogicalExpression offsetExpr = op.getOffset().getExpression();
+        op.getMaxObjects().getValue().getUsedVariables(usedVariables);
+        ILogicalExpression offsetExpr = op.getOffset().getValue();
         if (offsetExpr != null) {
             offsetExpr.getUsedVariables(usedVariables);
         }
@@ -146,7 +147,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitDieOperator(DieOperator op, Void arg) {
-        op.getAfterObjects().getExpression().getUsedVariables(usedVariables);
+        op.getAfterObjects().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
@@ -158,16 +159,16 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitOrderOperator(OrderOperator op, Void arg) {
-        for (Pair<IOrder, LogicalExpressionReference> oe : op.getOrderExpressions()) {
-            oe.second.getExpression().getUsedVariables(usedVariables);
+        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
+            oe.second.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitPartitioningSplitOperator(PartitioningSplitOperator op, Void arg) {
-        for (LogicalExpressionReference e : op.getExpressions()) {
-            e.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
+            e.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -185,8 +186,8 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, Void arg) {
-        for (LogicalExpressionReference exprRef : op.getExpressions()) {
-            exprRef.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -204,15 +205,15 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitSelectOperator(SelectOperator op, Void arg) {
-        op.getCondition().getExpression().getUsedVariables(usedVariables);
+        op.getCondition().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getOperator(), usedVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getValue(), usedVariables);
             }
         }
         return null;
@@ -233,49 +234,49 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void arg) {
-        op.getExpressionRef().getExpression().getUsedVariables(usedVariables);
+        op.getExpressionRef().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Void arg) {
-        op.getExpressionRef().getExpression().getUsedVariables(usedVariables);
+        op.getExpressionRef().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
     @Override
     public Void visitWriteOperator(WriteOperator op, Void arg) {
-        for (LogicalExpressionReference expr : op.getExpressions()) {
-            expr.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> expr : op.getExpressions()) {
+            expr.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitWriteResultOperator(WriteResultOperator op, Void arg) {
-        op.getPayloadExpression().getExpression().getUsedVariables(usedVariables);
-        for (LogicalExpressionReference e : op.getKeyExpressions()) {
-            e.getExpression().getUsedVariables(usedVariables);
+        op.getPayloadExpression().getValue().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
+            e.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitInsertDeleteOperator(InsertDeleteOperator op, Void arg) {
-        op.getPayloadExpression().getExpression().getUsedVariables(usedVariables);
-        for (LogicalExpressionReference e : op.getPrimaryKeyExpressions()) {
-            e.getExpression().getUsedVariables(usedVariables);
+        op.getPayloadExpression().getValue().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
+            e.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
 
     @Override
     public Void visitIndexInsertDeleteOperator(IndexInsertDeleteOperator op, Void arg) {
-        for (LogicalExpressionReference e : op.getPrimaryKeyExpressions()) {
-            e.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
+            e.getValue().getUsedVariables(usedVariables);
         }
-        for (LogicalExpressionReference e : op.getSecondaryKeyExpressions()) {
-            e.getExpression().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
+            e.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }

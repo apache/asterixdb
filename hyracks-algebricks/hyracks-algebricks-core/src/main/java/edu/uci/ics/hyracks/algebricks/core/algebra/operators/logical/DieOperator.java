@@ -16,8 +16,10 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -29,20 +31,20 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class DieOperator extends AbstractLogicalOperator {
 
-    private final LogicalExpressionReference afterObjects; // mandatory
+    private final Mutable<ILogicalExpression> afterObjects; // mandatory
 
     public DieOperator(ILogicalExpression maxObjectsExpr) {
-        this.afterObjects = new LogicalExpressionReference(maxObjectsExpr);
+        this.afterObjects = new MutableObject<ILogicalExpression>(maxObjectsExpr);
     }
 
-    public LogicalExpressionReference getAfterObjects() {
+    public Mutable<ILogicalExpression> getAfterObjects() {
         return afterObjects;
     }
 
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override

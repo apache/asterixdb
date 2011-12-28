@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -27,7 +29,7 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class RunningAggregateOperator extends AbstractAssignOperator {
 
-    public RunningAggregateOperator(List<LogicalVariable> variables, List<LogicalExpressionReference> expressions) {
+    public RunningAggregateOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
         super(variables, expressions);
     }
 
@@ -68,8 +70,8 @@ public class RunningAggregateOperator extends AbstractAssignOperator {
         for (int i = 0; i < n; i++) {
             env.setVarType(
                     variables.get(i),
-                    ctx.getExpressionTypeComputer().getType(expressions.get(i).getExpression(),
-                            ctx.getMetadataProvider(), env));
+                    ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(), ctx.getMetadataProvider(),
+                            env));
         }
         return env;
     }

@@ -18,10 +18,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -46,18 +49,19 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 public class IntroduceGroupByForStandaloneAggregRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-        LogicalOperatorReference opRef2 = op.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
@@ -71,26 +75,26 @@ public class IntroduceGroupByForStandaloneAggregRule implements IAlgebraicRewrit
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(assign, used);
         if (used.contains(aggVar)) {
-            LogicalOperatorReference opRef3 = op2.getInputs().get(0);
-            List<Pair<LogicalVariable, LogicalExpressionReference>> groupByList = new ArrayList<Pair<LogicalVariable, LogicalExpressionReference>>();
+            Mutable<ILogicalOperator> opRef3 = op2.getInputs().get(0);
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
             LogicalVariable gbyVar = context.newVar();
             // ILogicalExpression constOne = new ConstantExpression(new
             // IntegerLiteral(new Integer(1)));
-            groupByList.add(new Pair<LogicalVariable, LogicalExpressionReference>(gbyVar,
-                    new LogicalExpressionReference(ConstantExpression.TRUE)));
-            NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new LogicalOperatorReference());
-            List<LogicalOperatorReference> aggInpList = agg.getInputs();
+            groupByList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(gbyVar,
+                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE)));
+            NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>());
+            List<Mutable<ILogicalOperator>> aggInpList = agg.getInputs();
             aggInpList.clear();
-            aggInpList.add(new LogicalOperatorReference(nts));
+            aggInpList.add(new MutableObject<ILogicalOperator>(nts));
             ILogicalPlan np1 = new ALogicalPlanImpl(opRef2);
             ArrayList<ILogicalPlan> nestedPlans = new ArrayList<ILogicalPlan>();
             nestedPlans.add(np1);
             GroupByOperator gbyOp = new GroupByOperator(groupByList,
-                    new ArrayList<Pair<LogicalVariable, LogicalExpressionReference>>(), nestedPlans);
-            LogicalOperatorReference opRefGby = new LogicalOperatorReference(gbyOp);
-            nts.getDataSourceReference().setOperator(gbyOp);
+                    new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>(), nestedPlans);
+            Mutable<ILogicalOperator> opRefGby = new MutableObject<ILogicalOperator>(gbyOp);
+            nts.getDataSourceReference().setValue(gbyOp);
             gbyOp.getInputs().add(opRef3);
-            List<LogicalOperatorReference> asgnInpList = assign.getInputs();
+            List<Mutable<ILogicalOperator>> asgnInpList = assign.getInputs();
             context.computeAndSetTypeEnvironmentForOperator(nts);
             context.computeAndSetTypeEnvironmentForOperator(agg);
             context.computeAndSetTypeEnvironmentForOperator(gbyOp);

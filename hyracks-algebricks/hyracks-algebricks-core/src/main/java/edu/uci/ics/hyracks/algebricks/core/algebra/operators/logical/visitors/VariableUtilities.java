@@ -19,8 +19,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -51,8 +52,8 @@ public class VariableUtilities {
             throws AlgebricksException {
         // DFS traversal
         VariableUtilities.getUsedVariables(op, vars);
-        for (LogicalOperatorReference c : op.getInputs()) {
-            getUsedVariablesInDescendantsAndSelf(c.getOperator(), vars);
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            getUsedVariablesInDescendantsAndSelf(c.getValue(), vars);
         }
     }
 

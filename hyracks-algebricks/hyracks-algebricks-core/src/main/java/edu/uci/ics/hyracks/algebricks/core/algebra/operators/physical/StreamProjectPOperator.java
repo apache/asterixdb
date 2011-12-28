@@ -64,7 +64,7 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
         StreamProjectRuntimeFactory runtime = new StreamProjectRuntimeFactory(projectionList);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         builder.contributeMicroOperator(project, runtime, recDesc);
-        ILogicalOperator src = project.getInputs().get(0).getOperator();
+        ILogicalOperator src = project.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, project, 0);
     }
 

@@ -19,11 +19,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -39,7 +41,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
@@ -52,7 +54,7 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
         if (op2.getInputs().size() != 1) {
             return false;
         }
-        AbstractLogicalOperator alo = (AbstractLogicalOperator) op2.getInputs().get(0).getOperator();
+        AbstractLogicalOperator alo = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
         if (descOrSelfIsScanOrJoin(alo)) {
             return true;
         }
@@ -76,16 +78,16 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
     }
 
     protected void buildVarExprList(Collection<LogicalVariable> vars, IOptimizationContext context, GroupByOperator g,
-            List<Pair<LogicalVariable, LogicalExpressionReference>> outVeList) throws AlgebricksException {
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
             ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
-            outVeList.add(new Pair<LogicalVariable, LogicalExpressionReference>(ov, new LogicalExpressionReference(
-                    varExpr)));
+            outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
+                    new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
-                    OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getOperator(), ov, newVar,
-                            true, context);
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,
+                            context);
                 }
             }
             // g.substituteVarInNestedPlans(ov, newVar);

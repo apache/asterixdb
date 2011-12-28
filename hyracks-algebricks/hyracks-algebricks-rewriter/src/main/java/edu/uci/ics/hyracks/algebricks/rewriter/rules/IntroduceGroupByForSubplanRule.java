@@ -23,11 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -60,13 +62,14 @@ import edu.uci.ics.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getValue();
         if (op0.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
         }
@@ -83,10 +86,10 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         if (p.getRoots().size() != 1) {
             return false;
         }
-        LogicalOperatorReference subplanRoot = p.getRoots().get(0);
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) subplanRoot.getOperator();
+        Mutable<ILogicalOperator> subplanRoot = p.getRoots().get(0);
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) subplanRoot.getValue();
 
-        LogicalOperatorReference botRef = subplanRoot;
+        Mutable<ILogicalOperator> botRef = subplanRoot;
         AbstractLogicalOperator op2;
         // Project is optional
         if (op1.getOperatorTag() != LogicalOperatorTag.PROJECT) {
@@ -94,7 +97,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         } else {
             ProjectOperator project = (ProjectOperator) op1;
             botRef = project.getInputs().get(0);
-            op2 = (AbstractLogicalOperator) botRef.getOperator();
+            op2 = (AbstractLogicalOperator) botRef.getValue();
         }
         if (op2.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
@@ -104,8 +107,8 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         Set<LogicalVariable> free = new HashSet<LogicalVariable>();
         VariableUtilities.getUsedVariables(aggregate, free);
 
-        LogicalOperatorReference op3Ref = aggregate.getInputs().get(0);
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op3Ref.getOperator();
+        Mutable<ILogicalOperator> op3Ref = aggregate.getInputs().get(0);
+        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op3Ref.getValue();
 
         while (op3.getInputs().size() == 1) {
             Set<LogicalVariable> prod = new HashSet<LogicalVariable>();
@@ -114,7 +117,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             VariableUtilities.getUsedVariables(op3, free);
             botRef = op3Ref;
             op3Ref = op3.getInputs().get(0);
-            op3 = (AbstractLogicalOperator) op3Ref.getOperator();
+            op3 = (AbstractLogicalOperator) op3Ref.getValue();
         }
 
         if (op3.getOperatorTag() != LogicalOperatorTag.INNERJOIN
@@ -122,16 +125,16 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op3;
-        if (join.getCondition().getExpression() == ConstantExpression.TRUE) {
+        if (join.getCondition().getValue() == ConstantExpression.TRUE) {
             return false;
         }
         VariableUtilities.getUsedVariables(join, free);
 
-        AbstractLogicalOperator b0 = (AbstractLogicalOperator) join.getInputs().get(0).getOperator();
+        AbstractLogicalOperator b0 = (AbstractLogicalOperator) join.getInputs().get(0).getValue();
         // see if there's an NTS at the end of the pipeline
         NestedTupleSourceOperator outerNts = getNts(b0);
         if (outerNts == null) {
-            AbstractLogicalOperator b1 = (AbstractLogicalOperator) join.getInputs().get(1).getOperator();
+            AbstractLogicalOperator b1 = (AbstractLogicalOperator) join.getInputs().get(1).getValue();
             outerNts = getNts(b1);
             if (outerNts == null) {
                 return false;
@@ -145,9 +148,9 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         }
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Found FD for introducing group-by: " + pkVars);
 
-        LogicalOperatorReference rightRef = join.getInputs().get(1);
+        Mutable<ILogicalOperator> rightRef = join.getInputs().get(1);
         LogicalVariable testForNull = null;
-        AbstractLogicalOperator right = (AbstractLogicalOperator) rightRef.getOperator();
+        AbstractLogicalOperator right = (AbstractLogicalOperator) rightRef.getValue();
         switch (right.getOperatorTag()) {
             case UNNEST: {
                 UnnestOperator innerUnnest = (UnnestOperator) right;
@@ -166,43 +169,43 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         }
         if (testForNull == null) {
             testForNull = context.newVar();
-            AssignOperator tmpAsgn = new AssignOperator(testForNull, new LogicalExpressionReference(
+            AssignOperator tmpAsgn = new AssignOperator(testForNull, new MutableObject<ILogicalExpression>(
                     ConstantExpression.TRUE));
-            tmpAsgn.getInputs().add(new LogicalOperatorReference(rightRef.getOperator()));
-            rightRef.setOperator(tmpAsgn);
+            tmpAsgn.getInputs().add(new MutableObject<ILogicalOperator>(rightRef.getValue()));
+            rightRef.setValue(tmpAsgn);
             context.computeAndSetTypeEnvironmentForOperator(tmpAsgn);
         }
 
         IFunctionInfo finfoEq = AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.IS_NULL);
-        ILogicalExpression isNullTest = new ScalarFunctionCallExpression(finfoEq, new LogicalExpressionReference(
-                new VariableReferenceExpression(testForNull)));
+        ILogicalExpression isNullTest = new ScalarFunctionCallExpression(finfoEq,
+                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(testForNull)));
         IFunctionInfo finfoNot = AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NOT);
         ScalarFunctionCallExpression nonNullTest = new ScalarFunctionCallExpression(finfoNot,
-                new LogicalExpressionReference(isNullTest));
-        SelectOperator selectNonNull = new SelectOperator(new LogicalExpressionReference(nonNullTest));
+                new MutableObject<ILogicalExpression>(isNullTest));
+        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest));
         GroupByOperator g = new GroupByOperator();
-        LogicalOperatorReference newSubplanRef = new LogicalOperatorReference(subplan);
-        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new LogicalOperatorReference(g));
-        opRef.setOperator(g);
-        selectNonNull.getInputs().add(new LogicalOperatorReference(nts));
+        Mutable<ILogicalOperator> newSubplanRef = new MutableObject<ILogicalOperator>(subplan);
+        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(g));
+        opRef.setValue(g);
+        selectNonNull.getInputs().add(new MutableObject<ILogicalOperator>(nts));
 
-        List<LogicalOperatorReference> prodInpList = botRef.getOperator().getInputs();
+        List<Mutable<ILogicalOperator>> prodInpList = botRef.getValue().getInputs();
         prodInpList.clear();
-        prodInpList.add(new LogicalOperatorReference(selectNonNull));
+        prodInpList.add(new MutableObject<ILogicalOperator>(selectNonNull));
 
-        ILogicalPlan gPlan = new ALogicalPlanImpl(new LogicalOperatorReference(subplanRoot.getOperator()));
+        ILogicalPlan gPlan = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(subplanRoot.getValue()));
         g.getNestedPlans().add(gPlan);
-        subplanRoot.setOperator(op3Ref.getOperator());
+        subplanRoot.setValue(op3Ref.getValue());
         g.getInputs().add(newSubplanRef);
 
         HashSet<LogicalVariable> underVars = new HashSet<LogicalVariable>();
-        VariableUtilities.getLiveVariables(subplan.getInputs().get(0).getOperator(), underVars);
+        VariableUtilities.getLiveVariables(subplan.getInputs().get(0).getValue(), underVars);
         underVars.removeAll(pkVars);
         Map<LogicalVariable, LogicalVariable> mappedVars = buildVarExprList(pkVars, context, g, g.getGroupByList());
         context.updatePrimaryKeys(mappedVars);
         for (LogicalVariable uv : underVars) {
             g.getDecorList().add(
-                    new Pair<LogicalVariable, LogicalExpressionReference>(null, new LogicalExpressionReference(
+                    new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null, new MutableObject<ILogicalExpression>(
                             new VariableReferenceExpression(uv))));
         }
         OperatorPropertiesUtil.typeOpRec(subplanRoot, context);
@@ -220,7 +223,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             if (alo.getInputs().size() != 1) {
                 return null;
             }
-            alo = (AbstractLogicalOperator) alo.getInputs().get(0).getOperator();
+            alo = (AbstractLogicalOperator) alo.getInputs().get(0).getValue();
         } while (true);
     }
 
@@ -245,20 +248,20 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
 
     private Map<LogicalVariable, LogicalVariable> buildVarExprList(Collection<LogicalVariable> vars,
             IOptimizationContext context, GroupByOperator g,
-            List<Pair<LogicalVariable, LogicalExpressionReference>> outVeList) throws AlgebricksException {
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
         Map<LogicalVariable, LogicalVariable> m = new HashMap<LogicalVariable, LogicalVariable>();
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
             ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
-            outVeList.add(new Pair<LogicalVariable, LogicalExpressionReference>(ov, new LogicalExpressionReference(
-                    varExpr)));
+            outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
+                    new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
-                    OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getOperator(), ov, newVar,
-                            true, context);
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,
+                            context);
                 }
             }
-            AbstractLogicalOperator opUnder = (AbstractLogicalOperator) g.getInputs().get(0).getOperator();
+            AbstractLogicalOperator opUnder = (AbstractLogicalOperator) g.getInputs().get(0).getValue();
             OperatorManipulationUtil.substituteVarRec(opUnder, ov, newVar, true, context);
             m.put(ov, newVar);
         }

@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -62,7 +64,7 @@ public interface ILogicalExpression {
      * @return true if the expression can be broken in at least two conjuncts,
      *         false otherwise.
      */
-    public boolean splitIntoConjuncts(List<LogicalExpressionReference> conjs);
+    public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs);
 
     public abstract ILogicalExpression cloneExpression();
 }

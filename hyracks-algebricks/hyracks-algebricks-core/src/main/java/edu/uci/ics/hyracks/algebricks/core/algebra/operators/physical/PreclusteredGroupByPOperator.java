@@ -16,10 +16,11 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -64,8 +65,8 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         int numFds = gby.getDecorList().size();
         int fdColumns[] = new int[numFds];
         int j = 0;
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : gby.getDecorList()) {
-            ILogicalExpression expr = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
+            ILogicalExpression expr = p.second.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new AlgebricksException("pre-sorted group-by expects variable references.");
             }
@@ -88,7 +89,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
 
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
-        ILogicalOperator src = op.getInputs().get(0).getOperator();
+        ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }
 

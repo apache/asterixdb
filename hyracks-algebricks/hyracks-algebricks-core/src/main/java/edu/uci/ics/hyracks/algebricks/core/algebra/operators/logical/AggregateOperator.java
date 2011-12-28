@@ -3,7 +3,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -17,9 +19,9 @@ public class AggregateOperator extends AbstractAssignOperator {
 
     // private ArrayList<AggregateFunctionCallExpression> expressions;
     // TODO type safe list of expressions
-    private List<LogicalExpressionReference> mergeExpressions;
+    private List<Mutable<ILogicalExpression>> mergeExpressions;
 
-    public AggregateOperator(List<LogicalVariable> variables, List<LogicalExpressionReference> expressions) {
+    public AggregateOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
         super(variables, expressions);
     }
 
@@ -58,23 +60,23 @@ public class AggregateOperator extends AbstractAssignOperator {
         schema.addAll(variables);
     }
 
-    public void setMergeExpressions(List<LogicalExpressionReference> merges) {
+    public void setMergeExpressions(List<Mutable<ILogicalExpression>> merges) {
         mergeExpressions = merges;
     }
 
-    public List<LogicalExpressionReference> getMergeExpressions() {
+    public List<Mutable<ILogicalExpression>> getMergeExpressions() {
         return mergeExpressions;
     }
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx
-                .getMetadataProvider());
-        IVariableTypeEnvironment env2 = ctx.getOutputTypeEnvironment(inputs.get(0).getOperator());
+        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
+                ctx.getMetadataProvider());
+        IVariableTypeEnvironment env2 = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
         int n = variables.size();
         for (int i = 0; i < n; i++) {
-            Object t = ctx.getExpressionTypeComputer().getType(expressions.get(i).getExpression(), ctx.getMetadataProvider(),
-                    env2);
+            Object t = ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(),
+                    ctx.getMetadataProvider(), env2);
             env.setVarType(variables.get(i), t);
         }
         return env;

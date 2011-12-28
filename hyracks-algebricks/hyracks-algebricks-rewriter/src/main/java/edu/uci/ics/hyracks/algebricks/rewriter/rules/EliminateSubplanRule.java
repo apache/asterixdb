@@ -16,11 +16,13 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.LinkedList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -34,7 +36,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class EliminateSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
@@ -46,15 +48,15 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
      * there are no aggregates?)
      */
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
         }
         SubplanOperator subplan = (SubplanOperator) op;
 
-        LogicalOperatorReference outerRef = subplan.getInputs().get(0);
-        AbstractLogicalOperator outerRefOp = (AbstractLogicalOperator) outerRef.getOperator();
+        Mutable<ILogicalOperator> outerRef = subplan.getInputs().get(0);
+        AbstractLogicalOperator outerRefOp = (AbstractLogicalOperator) outerRef.getValue();
         if (outerRefOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
             elimSubplanOverEts(opRef, context);
             return true;
@@ -69,12 +71,12 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private boolean elimOneSubplanWithNoFreeVars(LogicalOperatorReference opRef) {
-        SubplanOperator subplan = (SubplanOperator) opRef.getOperator();
+    private boolean elimOneSubplanWithNoFreeVars(Mutable<ILogicalOperator> opRef) {
+        SubplanOperator subplan = (SubplanOperator) opRef.getValue();
         AbstractLogicalOperator rootOp = (AbstractLogicalOperator) subplan.getNestedPlans().get(0).getRoots().get(0)
-                .getOperator();
+                .getValue();
         if (rootOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            opRef.setOperator(subplan.getInputs().get(0).getOperator());
+            opRef.setValue(subplan.getInputs().get(0).getValue());
             return true;
         } else {
             AbstractLogicalOperator botOp = rootOp;
@@ -82,11 +84,11 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
                 return false;
             }
             do {
-                LogicalOperatorReference botRef = botOp.getInputs().get(0);
-                botOp = (AbstractLogicalOperator) botRef.getOperator();
+                Mutable<ILogicalOperator> botRef = botOp.getInputs().get(0);
+                botOp = (AbstractLogicalOperator) botRef.getValue();
                 if (botOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-                    botRef.setOperator(subplan.getInputs().get(0).getOperator());
-                    opRef.setOperator(rootOp);
+                    botRef.setValue(subplan.getInputs().get(0).getValue());
+                    opRef.setValue(rootOp);
                     return true;
                 }
             } while (botOp.getInputs().size() == 1);
@@ -94,32 +96,32 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void elimSubplanOverEts(LogicalOperatorReference opRef, IOptimizationContext ctx)
+    private void elimSubplanOverEts(Mutable<ILogicalOperator> opRef, IOptimizationContext ctx)
             throws AlgebricksException {
-        SubplanOperator subplan = (SubplanOperator) opRef.getOperator();
+        SubplanOperator subplan = (SubplanOperator) opRef.getValue();
         for (ILogicalPlan p : subplan.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 OperatorManipulationUtil.ntsToEts(r, ctx);
             }
         }
-        LinkedList<LogicalOperatorReference> allRoots = subplan.allRootsInReverseOrder();
+        LinkedList<Mutable<ILogicalOperator>> allRoots = subplan.allRootsInReverseOrder();
         if (allRoots.size() == 1) {
-            opRef.setOperator(allRoots.get(0).getOperator());
+            opRef.setValue(allRoots.get(0).getValue());
         } else {
             ILogicalOperator topOp = null;
-            for (LogicalOperatorReference r : allRoots) {
+            for (Mutable<ILogicalOperator> r : allRoots) {
                 if (topOp == null) {
-                    topOp = r.getOperator();
+                    topOp = r.getValue();
                 } else {
-                    LeftOuterJoinOperator j = new LeftOuterJoinOperator(new LogicalExpressionReference(
+                    LeftOuterJoinOperator j = new LeftOuterJoinOperator(new MutableObject<ILogicalExpression>(
                             ConstantExpression.TRUE));
-                    j.getInputs().add(new LogicalOperatorReference(topOp));
+                    j.getInputs().add(new MutableObject<ILogicalOperator>(topOp));
                     j.getInputs().add(r);
                     ctx.setOutputTypeEnvironment(j, j.computeOutputTypeEnvironment(ctx));
                     topOp = j;
                 }
             }
-            opRef.setOperator(topOp);
+            opRef.setValue(topOp);
         }
     }
 }

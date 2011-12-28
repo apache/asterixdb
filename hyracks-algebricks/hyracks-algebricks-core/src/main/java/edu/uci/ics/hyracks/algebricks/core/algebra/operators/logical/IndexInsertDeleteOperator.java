@@ -3,7 +3,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -18,12 +20,12 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
 
     private final IDataSourceIndex<?, ?> dataSourceIndex;
-    private final List<LogicalExpressionReference> primaryKeyExprs;
-    private final List<LogicalExpressionReference> secondaryKeyExprs;
+    private final List<Mutable<ILogicalExpression>> primaryKeyExprs;
+    private final List<Mutable<ILogicalExpression>> secondaryKeyExprs;
     private final Kind operation;
 
     public IndexInsertDeleteOperator(IDataSourceIndex<?, ?> dataSourceIndex,
-            List<LogicalExpressionReference> primaryKeyExprs, List<LogicalExpressionReference> secondaryKeyExprs,
+            List<Mutable<ILogicalExpression>> primaryKeyExprs, List<Mutable<ILogicalExpression>> secondaryKeyExprs,
             Kind operation) {
         this.dataSourceIndex = dataSourceIndex;
         this.primaryKeyExprs = primaryKeyExprs;
@@ -34,7 +36,7 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() throws AlgebricksException {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -78,7 +80,7 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
-    public List<LogicalExpressionReference> getPrimaryKeyExpressions() {
+    public List<Mutable<ILogicalExpression>> getPrimaryKeyExpressions() {
         return primaryKeyExprs;
     }
 
@@ -86,7 +88,7 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
         return dataSourceIndex;
     }
 
-    public List<LogicalExpressionReference> getSecondaryKeyExpressions() {
+    public List<Mutable<ILogicalExpression>> getSecondaryKeyExpressions() {
         return secondaryKeyExprs;
     }
 

@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.base;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 public interface ILogicalPlan {
-    public List<LogicalOperatorReference> getRoots();
+    public List<Mutable<ILogicalOperator>> getRoots();
 }

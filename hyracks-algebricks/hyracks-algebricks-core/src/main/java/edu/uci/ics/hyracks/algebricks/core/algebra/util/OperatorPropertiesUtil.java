@@ -18,12 +18,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -84,8 +85,8 @@ public class OperatorPropertiesUtil {
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans s = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : s.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
-                    getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getOperator(), freeVars);
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getValue(), freeVars);
                 }
             }
             s.getUsedVariablesExceptNestedPlans(freeVars);
@@ -93,16 +94,16 @@ public class OperatorPropertiesUtil {
             s.getProducedVariablesExceptNestedPlans(produced2);
             freeVars.removeAll(produced);
         }
-        for (LogicalOperatorReference i : op.getInputs()) {
-            getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) i.getOperator(), freeVars);
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) i.getValue(), freeVars);
         }
     }
 
     public static void getFreeVariablesInSubplans(AbstractOperatorWithNestedPlans op, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getOperator(), freeVars);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getValue(), freeVars);
             }
         }
     }
@@ -122,14 +123,14 @@ public class OperatorPropertiesUtil {
     public static void computeSchemaAndPropertiesRecIfNull(AbstractLogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
         if (op.getSchema() == null) {
-            for (LogicalOperatorReference i : op.getInputs()) {
-                computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) i.getOperator(), context);
+            for (Mutable<ILogicalOperator> i : op.getInputs()) {
+                computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) i.getValue(), context);
             }
             if (op.hasNestedPlans()) {
                 AbstractOperatorWithNestedPlans a = (AbstractOperatorWithNestedPlans) op;
                 for (ILogicalPlan p : a.getNestedPlans()) {
-                    for (LogicalOperatorReference r : p.getRoots()) {
-                        computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) r.getOperator(), context);
+                    for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                        computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) r.getValue(), context);
                     }
                 }
             }
@@ -140,14 +141,14 @@ public class OperatorPropertiesUtil {
 
     public static void computeSchemaRecIfNull(AbstractLogicalOperator op) throws AlgebricksException {
         if (op.getSchema() == null) {
-            for (LogicalOperatorReference i : op.getInputs()) {
-                computeSchemaRecIfNull((AbstractLogicalOperator) i.getOperator());
+            for (Mutable<ILogicalOperator> i : op.getInputs()) {
+                computeSchemaRecIfNull((AbstractLogicalOperator) i.getValue());
             }
             if (op.hasNestedPlans()) {
                 AbstractOperatorWithNestedPlans a = (AbstractOperatorWithNestedPlans) op;
                 for (ILogicalPlan p : a.getNestedPlans()) {
-                    for (LogicalOperatorReference r : p.getRoots()) {
-                        computeSchemaRecIfNull((AbstractLogicalOperator) r.getOperator());
+                    for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                        computeSchemaRecIfNull((AbstractLogicalOperator) r.getValue());
                     }
                 }
             }
@@ -159,11 +160,11 @@ public class OperatorPropertiesUtil {
         if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
-        AbstractLogicalOperator doubleUnder = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator doubleUnder = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         if (doubleUnder.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
             return false;
         }
-        ILogicalExpression eu = ((SelectOperator) op).getCondition().getExpression();
+        ILogicalExpression eu = ((SelectOperator) op).getCondition().getValue();
         if (eu.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
@@ -171,7 +172,7 @@ public class OperatorPropertiesUtil {
         if (f1.getFunctionIdentifier() != AlgebricksBuiltinFunctions.NOT) {
             return false;
         }
-        ILogicalExpression a1 = f1.getArguments().get(0).getExpression();
+        ILogicalExpression a1 = f1.getArguments().get(0).getValue();
         if (a1.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
@@ -183,14 +184,14 @@ public class OperatorPropertiesUtil {
     }
 
     public static void typePlan(ILogicalPlan p, IOptimizationContext context) throws AlgebricksException {
-        for (LogicalOperatorReference r : p.getRoots()) {
+        for (Mutable<ILogicalOperator> r : p.getRoots()) {
             typeOpRec(r, context);
         }
     }
 
-    public static void typeOpRec(LogicalOperatorReference r, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) r.getOperator();
-        for (LogicalOperatorReference i : op.getInputs()) {
+    public static void typeOpRec(Mutable<ILogicalOperator> r, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) r.getValue();
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
             typeOpRec(i, context);
         }
         if (op.hasNestedPlans()) {

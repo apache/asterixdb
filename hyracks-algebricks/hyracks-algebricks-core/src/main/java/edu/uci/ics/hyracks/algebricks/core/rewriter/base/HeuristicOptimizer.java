@@ -2,9 +2,11 @@ package edu.uci.ics.hyracks.algebricks.core.rewriter.base;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -72,7 +74,7 @@ public class HeuristicOptimizer {
     private void runOptimizationSets(ILogicalPlan plan,
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> optimSet) throws AlgebricksException {
         for (Pair<AbstractRuleController, List<IAlgebraicRewriteRule>> ruleList : optimSet) {
-            for (LogicalOperatorReference r : plan.getRoots()) {
+            for (Mutable<ILogicalOperator> r : plan.getRoots()) {
                 ruleList.first.setContext(context);
                 ruleList.first.rewriteWithRuleCollection(r, ruleList.second);
             }
@@ -80,14 +82,14 @@ public class HeuristicOptimizer {
     }
 
     private static void computeSchemaBottomUpForPlan(ILogicalPlan p) throws AlgebricksException {
-        for (LogicalOperatorReference r : p.getRoots()) {
-            computeSchemaBottomUpForOp((AbstractLogicalOperator) r.getOperator());
+        for (Mutable<ILogicalOperator> r : p.getRoots()) {
+            computeSchemaBottomUpForOp((AbstractLogicalOperator) r.getValue());
         }
     }
 
     private static void computeSchemaBottomUpForOp(AbstractLogicalOperator op) throws AlgebricksException {
-        for (LogicalOperatorReference i : op.getInputs()) {
-            computeSchemaBottomUpForOp((AbstractLogicalOperator) i.getOperator());
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            computeSchemaBottomUpForOp((AbstractLogicalOperator) i.getValue());
         }
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans a = (AbstractOperatorWithNestedPlans) op;

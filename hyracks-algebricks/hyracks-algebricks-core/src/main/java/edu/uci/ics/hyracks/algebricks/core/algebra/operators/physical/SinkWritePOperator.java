@@ -14,11 +14,12 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -56,7 +57,7 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -77,8 +78,8 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
         WriteOperator write = (WriteOperator) op;
         int[] columns = new int[write.getExpressions().size()];
         int i = 0;
-        for (LogicalExpressionReference exprRef : write.getExpressions()) {
-            ILogicalExpression expr = exprRef.getExpression();
+        for (Mutable<ILogicalExpression> exprRef : write.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new NotImplementedException("Only writing variable expressions is supported.");
             }
@@ -87,8 +88,8 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
             columns[i++] = inputSchemas[0].findVariable(v);
         }
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
-        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getOperator(),
-                inputSchemas[0], context);
+        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getValue(), inputSchemas[0],
+                context);
 
         IPrinterFactory[] pf = JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op),
                 context, columns);
@@ -99,7 +100,7 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
                 columns, pf, inputDesc);
 
         builder.contributeMicroOperator(write, runtime.first, recDesc, runtime.second);
-        ILogicalOperator src = write.getInputs().get(0).getOperator();
+        ILogicalOperator src = write.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, write, 0);
     }
 

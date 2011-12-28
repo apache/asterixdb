@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.base;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -30,7 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public interface ILogicalOperator {
 
-    public List<LogicalOperatorReference> getInputs();
+    public List<Mutable<ILogicalOperator>> getInputs();
 
     boolean hasInputs();
 

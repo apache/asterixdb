@@ -17,8 +17,10 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -42,33 +44,33 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveRedundantProjectionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() == LogicalOperatorTag.PROJECT) {
-            LogicalOperatorReference opRef2 = op1.getInputs().get(0);
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+            Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
             if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT) {
                 return false;
             }
             ProjectOperator pi2 = (ProjectOperator) op2;
-            opRef2.setOperator(pi2.getInputs().get(0).getOperator());
+            opRef2.setValue(pi2.getInputs().get(0).getValue());
         } else {
             if (op1.getInputs().size() <= 0)
                 return false;
-            LogicalOperatorReference opRef2 = op1.getInputs().get(0);
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+            Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
             if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT) {
                 return false;
             }
             if (op2.getInputs().size() <= 0)
                 return false;
-            LogicalOperatorReference opRef3 = op2.getInputs().get(0);
-            AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getOperator();
+            Mutable<ILogicalOperator> opRef3 = op2.getInputs().get(0);
+            AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
 
             List<LogicalVariable> liveVars2 = new ArrayList<LogicalVariable>();
             List<LogicalVariable> liveVars3 = new ArrayList<LogicalVariable>();
@@ -78,7 +80,7 @@ public class RemoveRedundantProjectionRule implements IAlgebraicRewriteRule {
 
             if (!VariableUtilities.varListEqualUnordered(liveVars2, liveVars3))
                 return false;
-            opRef2.setOperator(op3);
+            opRef2.setValue(op3);
         }
 
         return true;

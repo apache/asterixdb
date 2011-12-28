@@ -14,8 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
@@ -35,23 +37,23 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class SetExecutionModeRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean changed = OperatorManipulationUtil.setOperatorMode(op);
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.UNPARTITIONED
                 || op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.LOCAL) {
             return changed;
         }
         switch (op.getOperatorTag()) {
-            // case DISTINCT:
-            // case AGGREGATE:
-            // case GROUP:
-            // case ORDER:
-            // case INNERJOIN:
-            // case LEFTOUTERJOIN: {
-            // op.setExecutionMode(ExecutionMode.GLOBAL);
-            // return true;
-            // }
+        // case DISTINCT:
+        // case AGGREGATE:
+        // case GROUP:
+        // case ORDER:
+        // case INNERJOIN:
+        // case LEFTOUTERJOIN: {
+        // op.setExecutionMode(ExecutionMode.GLOBAL);
+        // return true;
+        // }
 
             case PARTITIONINGSPLIT: {
                 throw new NotImplementedException();
@@ -64,7 +66,7 @@ public class SetExecutionModeRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 

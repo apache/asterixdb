@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
@@ -64,9 +64,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+            AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
             IPhysicalPropertiesVector pv0 = op0.getPhysicalOperator().getDeliveredProperties();
-            AbstractLogicalOperator op1 = (AbstractLogicalOperator) op.getInputs().get(1).getOperator();
+            AbstractLogicalOperator op1 = (AbstractLogicalOperator) op.getInputs().get(1).getValue();
             IPhysicalPropertiesVector pv1 = op1.getPhysicalOperator().getDeliveredProperties();
 
             if (pv0 == null || pv1 == null) {

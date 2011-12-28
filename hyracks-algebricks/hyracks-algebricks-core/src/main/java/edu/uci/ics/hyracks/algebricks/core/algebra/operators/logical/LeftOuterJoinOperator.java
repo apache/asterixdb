@@ -14,8 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
@@ -28,12 +30,12 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
 
-    public LeftOuterJoinOperator(LogicalExpressionReference condition) {
+    public LeftOuterJoinOperator(Mutable<ILogicalExpression> condition) {
         super(JoinKind.LEFT_OUTER, condition);
     }
 
-    public LeftOuterJoinOperator(LogicalExpressionReference condition, LogicalOperatorReference input1,
-            LogicalOperatorReference input2) {
+    public LeftOuterJoinOperator(Mutable<ILogicalExpression> condition, Mutable<ILogicalOperator> input1,
+            Mutable<ILogicalOperator> input2) {
         super(JoinKind.LEFT_OUTER, condition, input1, input2);
     }
 
@@ -54,8 +56,8 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
         for (int i = 0; i < n; i++) {
             envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
         }
-        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(), ctx
-                .getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
+        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(),
+                ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
     }
 
 }

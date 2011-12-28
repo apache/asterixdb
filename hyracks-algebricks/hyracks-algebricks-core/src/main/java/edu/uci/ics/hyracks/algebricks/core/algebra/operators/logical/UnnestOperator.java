@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -29,11 +31,11 @@ public class UnnestOperator extends AbstractUnnestOperator {
     private LogicalVariable positionalVariable;
     private Object positionalVariableType;
 
-    public UnnestOperator(LogicalVariable variable, LogicalExpressionReference expression) {
+    public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression) {
         super(makeSingletonList(variable), expression);
     }
 
-    public UnnestOperator(LogicalVariable variable, LogicalExpressionReference expression,
+    public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
             LogicalVariable positionalVariable, Object positionalVariableType) {
         this(variable, expression);
         this.setPositionalVariable(positionalVariable);
@@ -79,7 +81,7 @@ public class UnnestOperator extends AbstractUnnestOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         IVariableTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
-        Object t = env.getType(expression.getExpression());
+        Object t = env.getType(expression.getValue());
         env.setVarType(variables.get(0), t);
         if (positionalVariable != null) {
             env.setVarType(positionalVariable, positionalVariableType);

@@ -53,7 +53,7 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -83,8 +83,8 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
         IMetadataProvider mp = context.getMetadataProvider();
 
         JobSpecification spec = builder.getJobSpec();
-        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getOperator(),
-                inputSchemas[0], context);
+        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(op.getInputs().get(0).getValue(), inputSchemas[0],
+                context);
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = null;
         if (insertDeleteOp.getOperation() == Kind.INSERT)
@@ -96,7 +96,7 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
 
         builder.contributeHyracksOperator(insertDeleteOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
-        ILogicalOperator src = insertDeleteOp.getInputs().get(0).getOperator();
+        ILogicalOperator src = insertDeleteOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, insertDeleteOp, 0);
     }
 

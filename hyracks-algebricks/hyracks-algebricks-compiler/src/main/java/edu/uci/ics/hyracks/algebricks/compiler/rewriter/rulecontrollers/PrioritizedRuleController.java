@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.compiler.rewriter.rulecontrollers;
 
 import java.util.Collection;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -38,7 +40,7 @@ public class PrioritizedRuleController extends AbstractRuleController {
     }
 
     @Override
-    public boolean rewriteWithRuleCollection(LogicalOperatorReference root, Collection<IAlgebraicRewriteRule> rules)
+    public boolean rewriteWithRuleCollection(Mutable<ILogicalOperator> root, Collection<IAlgebraicRewriteRule> rules)
             throws AlgebricksException {
         boolean anyRuleFired = false;
         boolean anyChange = false;

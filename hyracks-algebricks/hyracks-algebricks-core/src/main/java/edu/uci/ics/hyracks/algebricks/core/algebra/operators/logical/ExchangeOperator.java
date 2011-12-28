@@ -52,9 +52,9 @@ public class ExchangeOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() throws AlgebricksException {
-        AbstractLogicalOperator cld = (AbstractLogicalOperator) inputs.get(0).getOperator();
+        AbstractLogicalOperator cld = (AbstractLogicalOperator) inputs.get(0).getValue();
         OperatorPropertiesUtil.computeSchemaRecIfNull(cld);
-        List<LogicalVariable> inputSchema = inputs.get(0).getOperator().getSchema();
+        List<LogicalVariable> inputSchema = inputs.get(0).getValue().getSchema();
         schema = new ArrayList<LogicalVariable>(inputSchema);
     }
 

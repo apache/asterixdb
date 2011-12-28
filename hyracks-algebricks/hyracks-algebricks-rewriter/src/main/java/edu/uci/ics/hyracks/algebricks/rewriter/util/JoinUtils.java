@@ -19,27 +19,27 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalPropertiesVisitor;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HybridHashJoinPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.InMemoryHashJoinPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.NLJoinPOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
@@ -58,10 +58,10 @@ public class JoinUtils {
             throws AlgebricksException {
         List<LogicalVariable> sideLeft = new LinkedList<LogicalVariable>();
         List<LogicalVariable> sideRight = new LinkedList<LogicalVariable>();
-        List<LogicalVariable> varsLeft = op.getInputs().get(0).getOperator().getSchema();
-        List<LogicalVariable> varsRight = op.getInputs().get(1).getOperator().getSchema();
-        if (isHashJoinCondition(op.getCondition().getExpression(), varsLeft, varsRight, sideLeft, sideRight)) {
-            BroadcastSide side = getBroadcastJoinSide(op.getCondition().getExpression(), varsLeft, varsRight);
+        List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();
+        List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
+        if (isHashJoinCondition(op.getCondition().getValue(), varsLeft, varsRight, sideLeft, sideRight)) {
+            BroadcastSide side = getBroadcastJoinSide(op.getCondition().getValue(), varsLeft, varsRight);
             if (side == null) {
                 setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
             } else {
@@ -70,11 +70,11 @@ public class JoinUtils {
                         setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideLeft, sideRight, context);
                         break;
                     case LEFT:
-                        LogicalOperatorReference opRef0 = op.getInputs().get(0);
-                        LogicalOperatorReference opRef1 = op.getInputs().get(1);
-                        ILogicalOperator tmp = opRef0.getOperator();
-                        opRef0.setOperator(opRef1.getOperator());
-                        opRef1.setOperator(tmp);
+                        Mutable<ILogicalOperator> opRef0 = op.getInputs().get(0);
+                        Mutable<ILogicalOperator> opRef1 = op.getInputs().get(1);
+                        ILogicalOperator tmp = opRef0.getValue();
+                        opRef0.setValue(opRef1.getValue());
+                        opRef1.setValue(tmp);
                         setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideRight, sideLeft, context);
                         break;
                     default:
@@ -108,7 +108,7 @@ public class JoinUtils {
 
     private static void hybridToInMemHashJoin(AbstractBinaryJoinOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        ILogicalOperator opBuild = op.getInputs().get(1).getOperator();
+        ILogicalOperator opBuild = op.getInputs().get(1).getValue();
         LogicalPropertiesVisitor.computeLogicalPropertiesDFS(opBuild, context);
         ILogicalPropertiesVector v = context.getLogicalPropertiesVector(opBuild);
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("// HybridHashJoin inner branch -- Logical properties for " + opBuild
@@ -135,8 +135,8 @@ public class JoinUtils {
                 AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fi = fexp.getFunctionIdentifier();
                 if (fi == AlgebricksBuiltinFunctions.AND) {
-                    for (LogicalExpressionReference a : fexp.getArguments()) {
-                        if (!isHashJoinCondition(a.getExpression(), inLeftAll, inRightAll, outLeftFields,
+                    for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
+                        if (!isHashJoinCondition(a.getValue(), inLeftAll, inRightAll, outLeftFields,
                                 outRightFields)) {
                             return false;
                         }
@@ -147,8 +147,8 @@ public class JoinUtils {
                     if (ck != ComparisonKind.EQ) {
                         return false;
                     }
-                    ILogicalExpression opLeft = fexp.getArguments().get(0).getExpression();
-                    ILogicalExpression opRight = fexp.getArguments().get(1).getExpression();
+                    ILogicalExpression opLeft = fexp.getArguments().get(0).getValue();
+                    ILogicalExpression opRight = fexp.getArguments().get(1).getValue();
                     if (opLeft.getExpressionTag() != LogicalExpressionTag.VARIABLE
                             || opRight.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                         return false;
@@ -204,7 +204,7 @@ public class JoinUtils {
                 return null;
         }
         ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
-        fexp.getArguments().get(i).getExpression().getUsedVariables(vars);
+        fexp.getArguments().get(i).getValue().getUsedVariables(vars);
         if (varsLeft.containsAll(vars)) {
             return BroadcastSide.LEFT;
         } else if (varsRight.containsAll(vars)) {

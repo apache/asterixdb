@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPropertiesComputer;
@@ -33,13 +35,13 @@ public class StatefulFunctionCallExpression extends AbstractFunctionCallExpressi
     }
 
     public StatefulFunctionCallExpression(IFunctionInfo finfo, IPropertiesComputer propertiesComputer,
-            List<LogicalExpressionReference> arguments) {
+            List<Mutable<ILogicalExpression>> arguments) {
         super(FunctionKind.STATEFUL, finfo, arguments);
         this.propertiesComputer = propertiesComputer;
     }
 
     public StatefulFunctionCallExpression(IFunctionInfo finfo, IPropertiesComputer propertiesComputer,
-            LogicalExpressionReference... expressions) {
+            Mutable<ILogicalExpression>... expressions) {
         super(FunctionKind.STATEFUL, finfo, expressions);
         this.propertiesComputer = propertiesComputer;
     }
@@ -47,7 +49,7 @@ public class StatefulFunctionCallExpression extends AbstractFunctionCallExpressi
     @Override
     public StatefulFunctionCallExpression cloneExpression() {
         cloneAnnotations();
-        List<LogicalExpressionReference> clonedArgs = cloneArguments();
+        List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         return new StatefulFunctionCallExpression(finfo, propertiesComputer, clonedArgs);
     }
 

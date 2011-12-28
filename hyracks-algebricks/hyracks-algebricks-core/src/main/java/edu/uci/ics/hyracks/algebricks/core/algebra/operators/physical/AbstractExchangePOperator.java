@@ -15,8 +15,8 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder.TargetConstraint;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -31,7 +31,7 @@ public abstract class AbstractExchangePOperator extends AbstractPhysicalOperator
         Pair<IConnectorDescriptor, TargetConstraint> connPair = createConnectorDescriptor(builder.getJobSpec(), op,
                 opSchema, context);
         builder.contributeConnectorWithTargetConstraint(op, connPair.first, connPair.second);
-        ILogicalOperator src = op.getInputs().get(0).getOperator();
+        ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }
 

@@ -24,9 +24,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -112,15 +112,15 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         }
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
-        ILogicalOperator src1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator src1 = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src1, 0, op, 0);
-        ILogicalOperator src2 = op.getInputs().get(1).getOperator();
+        ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
     @Override
     protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector pv0 = op0.getPhysicalOperator().getDeliveredProperties();
         List<ILocalStructuralProperty> lp0 = pv0.getLocalProperties();
         if (lp0 != null) {

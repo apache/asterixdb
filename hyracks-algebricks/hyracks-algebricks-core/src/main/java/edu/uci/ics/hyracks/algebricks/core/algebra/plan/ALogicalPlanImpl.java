@@ -17,34 +17,36 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.plan;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 
 /*
  * Author: Guangqiang Li
  * Created on Jul 9, 2009 
  */
 public class ALogicalPlanImpl implements ILogicalPlan {
-    private List<LogicalOperatorReference> roots;
+    private List<Mutable<ILogicalOperator>> roots;
 
     public ALogicalPlanImpl() {
-        this.roots = new ArrayList<LogicalOperatorReference>();
+        this.roots = new ArrayList<Mutable<ILogicalOperator>>();
     }
 
-    public ALogicalPlanImpl(List<LogicalOperatorReference> roots) {
+    public ALogicalPlanImpl(List<Mutable<ILogicalOperator>> roots) {
         this.roots = roots;
     }
 
-    public ALogicalPlanImpl(LogicalOperatorReference root) {
-        roots = new ArrayList<LogicalOperatorReference>(1);
+    public ALogicalPlanImpl(Mutable<ILogicalOperator> root) {
+        roots = new ArrayList<Mutable<ILogicalOperator>>(1);
         roots.add(root);
     }
 
-    public List<LogicalOperatorReference> getRoots() {
+    public List<Mutable<ILogicalOperator>> getRoots() {
         return roots;
     }
 
-    public void setRoots(List<LogicalOperatorReference> roots) {
+    public void setRoots(List<Mutable<ILogicalOperator>> roots) {
         this.roots = roots;
     }
 }

@@ -16,10 +16,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
@@ -43,7 +45,7 @@ public class AssignPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -59,7 +61,7 @@ public class AssignPOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         AssignOperator assign = (AssignOperator) op;
         List<LogicalVariable> variables = assign.getVariables();
-        List<LogicalExpressionReference> expressions = assign.getExpressions();
+        List<Mutable<ILogicalExpression>> expressions = assign.getExpressions();
         int[] outColumns = new int[variables.size()];
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
@@ -67,8 +69,8 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[expressions.size()];
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         for (int i = 0; i < evalFactories.length; i++) {
-            evalFactories[i] = exprJobGen.createEvaluatorFactory(expressions.get(i).getExpression(), context
-                    .getTypeEnvironment(op.getInputs().get(0).getOperator()), inputSchemas, context);
+            evalFactories[i] = exprJobGen.createEvaluatorFactory(expressions.get(i).getValue(),
+                    context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
         // TODO push projections into the operator
@@ -80,7 +82,7 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(assign, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = assign.getInputs().get(0).getOperator();
+        ILogicalOperator src = assign.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, assign, 0);
 
     }

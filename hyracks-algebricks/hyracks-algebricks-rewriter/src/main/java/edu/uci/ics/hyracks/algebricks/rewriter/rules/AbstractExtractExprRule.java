@@ -14,11 +14,13 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -26,12 +28,12 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public abstract class AbstractExtractExprRule implements IAlgebraicRewriteRule {
 
-    protected LogicalVariable extractExprIntoAssignOpRef(ILogicalExpression gExpr, LogicalOperatorReference opRef2,
+    protected LogicalVariable extractExprIntoAssignOpRef(ILogicalExpression gExpr, Mutable<ILogicalOperator> opRef2,
             IOptimizationContext context) throws AlgebricksException {
         LogicalVariable v = context.newVar();
-        AssignOperator a = new AssignOperator(v, new LogicalExpressionReference(gExpr));
-        a.getInputs().add(new LogicalOperatorReference(opRef2.getOperator()));
-        opRef2.setOperator(a);
+        AssignOperator a = new AssignOperator(v, new MutableObject<ILogicalExpression>(gExpr));
+        a.getInputs().add(new MutableObject<ILogicalOperator>(opRef2.getValue()));
+        opRef2.setValue(a);
         if (gExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             context.addNotToBeInlinedVar(v);
         }

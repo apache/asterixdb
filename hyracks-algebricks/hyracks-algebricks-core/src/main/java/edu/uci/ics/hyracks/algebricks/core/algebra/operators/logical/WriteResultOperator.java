@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -31,11 +33,11 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 public class WriteResultOperator extends AbstractLogicalOperator {
 
     private IDataSource<?> dataSource;
-    private LogicalExpressionReference payloadExpr;
-    private List<LogicalExpressionReference> keyExprs;
+    private Mutable<ILogicalExpression> payloadExpr;
+    private List<Mutable<ILogicalExpression>> keyExprs;
 
-    public WriteResultOperator(IDataSource<?> dataSource, LogicalExpressionReference payload,
-            List<LogicalExpressionReference> keyExprs) {
+    public WriteResultOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payload,
+            List<Mutable<ILogicalExpression>> keyExprs) {
         this.dataSource = dataSource;
         this.payloadExpr = payload;
         this.keyExprs = keyExprs;
@@ -45,11 +47,11 @@ public class WriteResultOperator extends AbstractLogicalOperator {
         return dataSource;
     }
 
-    public LogicalExpressionReference getPayloadExpression() {
+    public Mutable<ILogicalExpression> getPayloadExpression() {
         return payloadExpr;
     }
 
-    public List<LogicalExpressionReference> getKeyExpressions() {
+    public List<Mutable<ILogicalExpression>> getKeyExpressions() {
         return keyExprs;
     }
 
@@ -87,7 +89,7 @@ public class WriteResultOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override

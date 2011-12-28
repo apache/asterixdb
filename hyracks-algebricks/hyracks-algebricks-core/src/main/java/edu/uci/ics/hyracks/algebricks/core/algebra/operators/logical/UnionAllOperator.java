@@ -74,7 +74,7 @@ public class UnionAllOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        for (LogicalVariable v1 : inputs.get(0).getOperator().getSchema()) {
+        for (LogicalVariable v1 : inputs.get(0).getValue().getSchema()) {
             for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
                 if (t.first.equals(v1)) {
                     schema.add(t.third);
@@ -83,7 +83,7 @@ public class UnionAllOperator extends AbstractLogicalOperator {
                 }
             }
         }
-        for (LogicalVariable v2 : inputs.get(1).getOperator().getSchema()) {
+        for (LogicalVariable v2 : inputs.get(1).getValue().getSchema()) {
             for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
                 if (t.second.equals(v2)) {
                     schema.add(t.third);
@@ -101,9 +101,9 @@ public class UnionAllOperator extends AbstractLogicalOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx
-                .getMetadataProvider());
-        IVariableTypeEnvironment envLeft = ctx.getOutputTypeEnvironment(inputs.get(0).getOperator());
+        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
+                ctx.getMetadataProvider());
+        IVariableTypeEnvironment envLeft = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
         if (envLeft == null) {
             throw new AlgebricksException("Left input types for union operator are not computed.");
         }

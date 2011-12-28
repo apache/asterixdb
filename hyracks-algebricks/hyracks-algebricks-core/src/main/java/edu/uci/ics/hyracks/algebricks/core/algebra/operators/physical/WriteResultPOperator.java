@@ -53,7 +53,7 @@ public class WriteResultPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -83,7 +83,7 @@ public class WriteResultPOperator extends AbstractPhysicalOperator {
 
         builder.contributeHyracksOperator(writeResultOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
-        ILogicalOperator src = writeResultOp.getInputs().get(0).getOperator();
+        ILogicalOperator src = writeResultOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, writeResultOp, 0);
     }
 }

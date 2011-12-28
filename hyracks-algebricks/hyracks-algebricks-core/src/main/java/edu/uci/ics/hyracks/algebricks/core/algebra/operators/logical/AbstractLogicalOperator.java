@@ -19,11 +19,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -60,12 +61,12 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     private boolean bJobGenEnabled = true;
     private Object hostQueryContext;
 
-    final protected List<LogicalOperatorReference> inputs;
+    final protected List<Mutable<ILogicalOperator>> inputs;
     // protected List<LogicalOperatorReference> outputs;
     protected List<LogicalVariable> schema;
 
     public AbstractLogicalOperator() {
-        inputs = new ArrayList<LogicalOperatorReference>();
+        inputs = new ArrayList<Mutable<ILogicalOperator>>();
         // outputs = new ArrayList<LogicalOperatorReference>();
     }
 
@@ -118,7 +119,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     }
 
     @Override
-    public final List<LogicalOperatorReference> getInputs() {
+    public final List<Mutable<ILogicalOperator>> getInputs() {
         return inputs;
     }
 

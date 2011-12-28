@@ -17,10 +17,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -51,7 +53,7 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childProps = op2.getDeliveredPhysicalProperties();
         deliveredProperties = new StructuralPropertiesVector(childProps.getPartitioningProperty(),
                 new ArrayList<ILocalStructuralProperty>(0));
@@ -69,7 +71,7 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         AggregateOperator aggOp = (AggregateOperator) op;
         List<LogicalVariable> variables = aggOp.getVariables();
-        List<LogicalExpressionReference> expressions = aggOp.getExpressions();
+        List<Mutable<ILogicalExpression>> expressions = aggOp.getExpressions();
         int[] outColumns = new int[variables.size()];
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
@@ -78,9 +80,9 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         for (int i = 0; i < aggFactories.length; i++) {
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) expressions.get(i)
-                    .getExpression();
-            aggFactories[i] = exprJobGen.createAggregateFunctionFactory(aggFun, context.getTypeEnvironment(op
-                    .getInputs().get(0).getOperator()), inputSchemas, context);
+                    .getValue();
+            aggFactories[i] = exprJobGen.createAggregateFunctionFactory(aggFun,
+                    context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
         AggregateRuntimeFactory runtime = new AggregateRuntimeFactory(aggFactories);
@@ -89,7 +91,7 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(aggOp, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = aggOp.getInputs().get(0).getOperator();
+        ILogicalOperator src = aggOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, aggOp, 0);
     }
 

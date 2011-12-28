@@ -14,8 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -24,12 +26,12 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class InnerJoinOperator extends AbstractBinaryJoinOperator {
 
-    public InnerJoinOperator(LogicalExpressionReference condition) {
+    public InnerJoinOperator(Mutable<ILogicalExpression> condition) {
         super(JoinKind.INNER, condition);
     }
 
-    public InnerJoinOperator(LogicalExpressionReference condition, LogicalOperatorReference input1,
-            LogicalOperatorReference input2) {
+    public InnerJoinOperator(Mutable<ILogicalExpression> condition, Mutable<ILogicalOperator> input1,
+            Mutable<ILogicalOperator> input2) {
         super(JoinKind.INNER, condition, input1, input2);
     }
 

@@ -20,17 +20,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class PlanCompiler {
     private JobGenContext context;
-    private Map<LogicalOperatorReference, List<LogicalOperatorReference>> operatorVisitedToParents = new HashMap<LogicalOperatorReference, List<LogicalOperatorReference>>();
+    private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents = new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
 
     public PlanCompiler(JobGenContext context) {
         this.context = context;
@@ -44,9 +45,9 @@ public class PlanCompiler {
         JobSpecification spec = new JobSpecification();
         List<ILogicalOperator> rootOps = new ArrayList<ILogicalOperator>();
         IHyracksJobBuilder builder = new JobBuilder(spec, context.getClusterLocations());
-        for (LogicalOperatorReference opRef : plan.getRoots()) {
+        for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
             compileOpRef(opRef, spec, builder, outerPlanSchema);
-            rootOps.add(opRef.getOperator());
+            rootOps.add(opRef.getValue());
         }
         reviseEdges(builder);
         operatorVisitedToParents.clear();
@@ -54,24 +55,24 @@ public class PlanCompiler {
         return spec;
     }
 
-    private void compileOpRef(LogicalOperatorReference opRef, JobSpecification spec, IHyracksJobBuilder builder,
+    private void compileOpRef(Mutable<ILogicalOperator> opRef, JobSpecification spec, IHyracksJobBuilder builder,
             IOperatorSchema outerPlanSchema) throws AlgebricksException {
-        ILogicalOperator op = opRef.getOperator();
+        ILogicalOperator op = opRef.getValue();
         int n = op.getInputs().size();
         IOperatorSchema[] schemas = new IOperatorSchema[n];
         int i = 0;
-        for (LogicalOperatorReference opRef2 : op.getInputs()) {
-            List<LogicalOperatorReference> parents = operatorVisitedToParents.get(opRef2);
+        for (Mutable<ILogicalOperator> opRef2 : op.getInputs()) {
+            List<Mutable<ILogicalOperator>> parents = operatorVisitedToParents.get(opRef2);
             if (parents == null) {
-                parents = new ArrayList<LogicalOperatorReference>();
+                parents = new ArrayList<Mutable<ILogicalOperator>>();
                 operatorVisitedToParents.put(opRef2, parents);
                 parents.add(opRef);
                 compileOpRef(opRef2, spec, builder, outerPlanSchema);
-                schemas[i++] = context.getSchema(opRef2.getOperator());
+                schemas[i++] = context.getSchema(opRef2.getValue());
             } else {
                 if (!parents.contains(opRef))
                     parents.add(opRef);
-                schemas[i++] = context.getSchema(opRef2.getOperator());
+                schemas[i++] = context.getSchema(opRef2.getValue());
                 continue;
             }
         }
@@ -86,14 +87,14 @@ public class PlanCompiler {
         /**
          * revise the edges for the case of replicate operator
          */
-        for (Entry<LogicalOperatorReference, List<LogicalOperatorReference>> entry : operatorVisitedToParents
+        for (Entry<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> entry : operatorVisitedToParents
                 .entrySet()) {
-            LogicalOperatorReference child = entry.getKey();
-            List<LogicalOperatorReference> parents = entry.getValue();
+            Mutable<ILogicalOperator> child = entry.getKey();
+            List<Mutable<ILogicalOperator>> parents = entry.getValue();
             if (parents.size() > 1) {
                 int i = 0;
-                for (LogicalOperatorReference parent : parents) {
-                    builder.contributeGraphEdge(child.getOperator(), i, parent.getOperator(), 0);
+                for (Mutable<ILogicalOperator> parent : parents) {
+                    builder.contributeGraphEdge(child.getValue(), i, parent.getValue(), 0);
                     i++;
                 }
             }

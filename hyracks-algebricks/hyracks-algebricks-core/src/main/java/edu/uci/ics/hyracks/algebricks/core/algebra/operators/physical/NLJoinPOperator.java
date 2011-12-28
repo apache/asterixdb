@@ -24,9 +24,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryBooleanInspector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
@@ -89,7 +89,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(1).getOperator();
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(1).getValue();
             IPhysicalPropertiesVector pv1 = op2.getPhysicalOperator().getDeliveredProperties();
             if (pv1 == null) {
                 pp = null;
@@ -126,10 +126,10 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
         conditionInputSchemas[0] = propagatedSchema;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(join.getCondition().getExpression(), context
-                .getTypeEnvironment(op), conditionInputSchemas, context);
-        ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond, context
-                .getBinaryBooleanInspector());
+        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(join.getCondition().getValue(),
+                context.getTypeEnvironment(op), conditionInputSchemas, context);
+        ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond,
+                context.getBinaryBooleanInspector());
         JobSpecification spec = builder.getJobSpec();
         IOperatorDescriptor opDesc = null;
 
@@ -145,9 +145,9 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         }
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
-        ILogicalOperator src1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator src1 = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src1, 0, op, 0);
-        ILogicalOperator src2 = op.getInputs().get(1).getOperator();
+        ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
     }
 

@@ -16,10 +16,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.util;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -35,15 +37,15 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 public class OperatorManipulationUtil {
 
     // Transforms all NestedTupleSource operators to EmptyTupleSource operators
-    public static void ntsToEts(LogicalOperatorReference opRef, IOptimizationContext context)
+    public static void ntsToEts(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
             EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
             context.computeAndSetTypeEnvironmentForOperator(ets);
-            opRef.setOperator(ets);
+            opRef.setValue(ets);
         } else {
-            for (LogicalOperatorReference i : opRef.getOperator().getInputs()) {
+            for (Mutable<ILogicalOperator> i : opRef.getValue().getInputs()) {
                 ntsToEts(i, context);
             }
         }
@@ -52,20 +54,20 @@ public class OperatorManipulationUtil {
     public static ILogicalOperator eliminateSingleSubplanOverEts(SubplanOperator subplan) {
         if (subplan.getNestedPlans().size() > 1) {
             // not a single subplan
-            List<LogicalOperatorReference> subInpList = subplan.getInputs();
+            List<Mutable<ILogicalOperator>> subInpList = subplan.getInputs();
             subInpList.clear();
-            subInpList.add(new LogicalOperatorReference(new EmptyTupleSourceOperator()));
+            subInpList.add(new MutableObject<ILogicalOperator>(new EmptyTupleSourceOperator()));
             return subplan;
         }
         ILogicalPlan plan = subplan.getNestedPlans().get(0);
         if (plan.getRoots().size() > 1) {
             // not a single subplan
-            List<LogicalOperatorReference> subInpList = subplan.getInputs();
+            List<Mutable<ILogicalOperator>> subInpList = subplan.getInputs();
             subInpList.clear();
-            subInpList.add(new LogicalOperatorReference(new EmptyTupleSourceOperator()));
+            subInpList.add(new MutableObject<ILogicalOperator>(new EmptyTupleSourceOperator()));
             return subplan;
         }
-        return plan.getRoots().get(0).getOperator();
+        return plan.getRoots().get(0).getValue();
     }
 
     public static boolean setOperatorMode(AbstractLogicalOperator op) {
@@ -75,7 +77,7 @@ public class OperatorManipulationUtil {
                 // ILogicalExpression e = ((UnnestOperator) op).getExpression();
                 // if (AnalysisUtil.isDataSetCall(e)) {
                 op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-                AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+                AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
                 if (child.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
                     child.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
                 }
@@ -85,8 +87,8 @@ public class OperatorManipulationUtil {
             }
             case NESTEDTUPLESOURCE: {
                 NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
-                AbstractLogicalOperator prevOp = (AbstractLogicalOperator) nts.getDataSourceReference().getOperator()
-                        .getInputs().get(0).getOperator();
+                AbstractLogicalOperator prevOp = (AbstractLogicalOperator) nts.getDataSourceReference().getValue()
+                        .getInputs().get(0).getValue();
                 if (prevOp.getExecutionMode() != AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
                     nts.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
                     change = true;
@@ -105,9 +107,9 @@ public class OperatorManipulationUtil {
                     }
                 }
 
-                for (LogicalOperatorReference i : op.getInputs()) {
+                for (Mutable<ILogicalOperator> i : op.getInputs()) {
                     boolean exit = false;
-                    AbstractLogicalOperator inputOp = (AbstractLogicalOperator) i.getOperator();
+                    AbstractLogicalOperator inputOp = (AbstractLogicalOperator) i.getValue();
                     switch (inputOp.getExecutionMode()) {
                         case PARTITIONED: {
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
@@ -134,22 +136,22 @@ public class OperatorManipulationUtil {
     public static void substituteVarRec(AbstractLogicalOperator op, LogicalVariable v1, LogicalVariable v2,
             boolean goThroughNts, ITypingContext ctx) throws AlgebricksException {
         VariableUtilities.substituteVariables(op, v1, v2, goThroughNts, ctx);
-        for (LogicalOperatorReference opRef2 : op.getInputs()) {
-            substituteVarRec((AbstractLogicalOperator) opRef2.getOperator(), v1, v2, goThroughNts, ctx);
+        for (Mutable<ILogicalOperator> opRef2 : op.getInputs()) {
+            substituteVarRec((AbstractLogicalOperator) opRef2.getValue(), v1, v2, goThroughNts, ctx);
         }
         if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE && goThroughNts) {
             NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
             if (nts.getDataSourceReference() != null) {
-                AbstractLogicalOperator op2 = (AbstractLogicalOperator) nts.getDataSourceReference().getOperator()
-                        .getInputs().get(0).getOperator();
+                AbstractLogicalOperator op2 = (AbstractLogicalOperator) nts.getDataSourceReference().getValue()
+                        .getInputs().get(0).getValue();
                 substituteVarRec(op2, v1, v2, goThroughNts, ctx);
             }
         }
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans aonp = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : aonp.getNestedPlans()) {
-                for (LogicalOperatorReference ref : p.getRoots()) {
-                    AbstractLogicalOperator aop = (AbstractLogicalOperator) ref.getOperator();
+                for (Mutable<ILogicalOperator> ref : p.getRoots()) {
+                    AbstractLogicalOperator aop = (AbstractLogicalOperator) ref.getValue();
                     substituteVarRec(aop, v1, v2, goThroughNts, ctx);
                 }
             }

@@ -14,9 +14,11 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -24,14 +26,14 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 public class PlanPrettyPrinter {
     public static void printPlan(ILogicalPlan plan, StringBuilder out, LogicalOperatorPrettyPrintVisitor pvisitor,
             int indent) throws AlgebricksException {
-        for (LogicalOperatorReference root : plan.getRoots()) {
-            printOperator((AbstractLogicalOperator) root.getOperator(), out, pvisitor, indent);
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            printOperator((AbstractLogicalOperator) root.getValue(), out, pvisitor, indent);
         }
     }
 
     public static void printPhysicalOps(ILogicalPlan plan, StringBuilder out, int indent) {
-        for (LogicalOperatorReference root : plan.getRoots()) {
-            printPhysicalOperator((AbstractLogicalOperator) root.getOperator(), indent, out);
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
         }
     }
 
@@ -48,8 +50,8 @@ public class PlanPrettyPrinter {
             appendln(out, " -- |" + op.getExecutionMode() + "|");
         }
 
-        for (LogicalOperatorReference i : op.getInputs()) {
-            printOperator((AbstractLogicalOperator) i.getOperator(), out, pvisitor, indent + 2);
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            printOperator((AbstractLogicalOperator) i.getValue(), out, pvisitor, indent + 2);
         }
 
     }
@@ -69,8 +71,8 @@ public class PlanPrettyPrinter {
             }
         }
 
-        for (LogicalOperatorReference i : op.getInputs()) {
-            printPhysicalOperator((AbstractLogicalOperator) i.getOperator(), indent + 2, out);
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            printPhysicalOperator((AbstractLogicalOperator) i.getValue(), indent + 2, out);
         }
 
     }

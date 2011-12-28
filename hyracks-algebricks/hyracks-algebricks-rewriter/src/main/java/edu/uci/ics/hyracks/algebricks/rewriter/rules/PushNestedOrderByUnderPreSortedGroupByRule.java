@@ -17,11 +17,12 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -40,13 +41,14 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;
         }
@@ -59,12 +61,12 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
         }
         GroupByOperator gby = (GroupByOperator) op;
         ILogicalPlan plan = gby.getNestedPlans().get(0);
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) plan.getRoots().get(0).getOperator();
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) plan.getRoots().get(0).getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
-        LogicalOperatorReference opRef2 = op1.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.ORDER) {
             return false;
         }
@@ -78,7 +80,7 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
             return false;
         }
         // StableSortPOperator sort1 = (StableSortPOperator) pOrder1;
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         if (op3.getOperatorTag() != LogicalOperatorTag.ORDER) {
             return false;
         }
@@ -93,7 +95,7 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
         // OrderColumn[] sortColumns = new OrderColumn[n2 + n1];
         // System.arraycopy(sort2.getSortColumns(), 0, sortColumns, 0, n2);
         // int k = 0;
-        for (Pair<IOrder, LogicalExpressionReference> oe : order1.getOrderExpressions()) {
+        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : order1.getOrderExpressions()) {
             order2.getOrderExpressions().add(oe);
             // sortColumns[n2 + k] = sort1.getSortColumns()[k];
             // ++k;
@@ -101,8 +103,8 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
         // sort2.setSortColumns(sortColumns);
         sort2.computeDeliveredProperties(order2, null);
         // remove order1
-        ILogicalOperator underOrder1 = order1.getInputs().get(0).getOperator();
-        opRef2.setOperator(underOrder1);
+        ILogicalOperator underOrder1 = order1.getInputs().get(0).getValue();
+        opRef2.setValue(underOrder1);
         return true;
     }
 

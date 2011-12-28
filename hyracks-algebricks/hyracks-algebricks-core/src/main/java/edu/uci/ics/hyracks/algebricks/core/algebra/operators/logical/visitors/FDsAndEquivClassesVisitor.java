@@ -23,20 +23,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -86,7 +86,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     @Override
     public Void visitAssignOperator(AssignOperator op, IOptimizationContext ctx) throws AlgebricksException {
-        ILogicalOperator inp1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator inp1 = op.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = getOrComputeEqClasses(inp1, ctx);
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<LogicalVariable> used = new ArrayList<LogicalVariable>();
@@ -110,7 +110,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, IOptimizationContext ctx) throws AlgebricksException {
-        ILogicalOperator inp1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator inp1 = op.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = getOrComputeEqClasses(inp1, ctx);
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<FunctionalDependency> fds = new ArrayList<FunctionalDependency>(getOrComputeFDs(inp1, ctx));
@@ -121,7 +121,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, IOptimizationContext ctx) throws AlgebricksException {
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
         List<FunctionalDependency> functionalDependencies = new ArrayList<FunctionalDependency>();
         ctx.putFDList(op, functionalDependencies);
         for (FunctionalDependency inherited : getOrComputeFDs(op0, ctx)) {
@@ -146,9 +146,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             }
         }
         Set<LogicalVariable> gbySet = new HashSet<LogicalVariable>();
-        List<LogicalExpressionReference> expressions = op.getExpressions();
-        for (LogicalExpressionReference pRef : expressions) {
-            ILogicalExpression p = pRef.getExpression();
+        List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
+        for (Mutable<ILogicalExpression> pRef : expressions) {
+            ILogicalExpression p = pRef.getValue();
             if (p.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) p;
                 gbySet.add(v.getVariableReference());
@@ -161,9 +161,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
         lgp.normalizeGroupingColumns(equivalenceClasses, functionalDependencies);
         Set<LogicalVariable> normSet = lgp.getColumnSet();
-        List<LogicalExpressionReference> newDistinctByList = new ArrayList<LogicalExpressionReference>();
-        for (LogicalExpressionReference p2Ref : expressions) {
-            ILogicalExpression p2 = p2Ref.getExpression();
+        List<Mutable<ILogicalExpression>> newDistinctByList = new ArrayList<Mutable<ILogicalExpression>>();
+        for (Mutable<ILogicalExpression> p2Ref : expressions) {
+            ILogicalExpression p2 = p2Ref.getValue();
             if (p2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression var2 = (VariableReferenceExpression) p2;
                 LogicalVariable v2 = var2.getVariableReference();
@@ -202,14 +202,14 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
         List<FunctionalDependency> inheritedFDs = new ArrayList<FunctionalDependency>();
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                ILogicalOperator op2 = r.getOperator();
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                ILogicalOperator op2 = r.getValue();
                 equivalenceClasses.putAll(getOrComputeEqClasses(op2, ctx));
                 inheritedFDs.addAll(getOrComputeFDs(op2, ctx));
             }
         }
 
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
         inheritedFDs.addAll(getOrComputeFDs(op0, ctx));
         Map<LogicalVariable, EquivalenceClass> inheritedEcs = getOrComputeEqClasses(op0, ctx);
         for (FunctionalDependency inherited : inheritedFDs) {
@@ -243,15 +243,15 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         }
 
         List<LogicalVariable> premiseGby = new LinkedList<LogicalVariable>();
-        List<Pair<LogicalVariable, LogicalExpressionReference>> gByList = op.getGroupByList();
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : gByList) {
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gByList = op.getGroupByList();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
             premiseGby.add(p.first);
         }
 
-        List<Pair<LogicalVariable, LogicalExpressionReference>> decorList = op.getDecorList();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorList = op.getDecorList();
 
         LinkedList<LogicalVariable> conclDecor = new LinkedList<LogicalVariable>();
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : decorList) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
             conclDecor.add(GroupByOperator.getDecorVariable(p));
         }
         if (!conclDecor.isEmpty()) {
@@ -259,8 +259,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         }
 
         Set<LogicalVariable> gbySet = new HashSet<LogicalVariable>();
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : gByList) {
-            ILogicalExpression expr = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
+            ILogicalExpression expr = p.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) expr;
                 gbySet.add(v.getVariableReference());
@@ -269,10 +269,10 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         LocalGroupingProperty lgp = new LocalGroupingProperty(gbySet);
         lgp.normalizeGroupingColumns(inheritedEcs, inheritedFDs);
         Set<LogicalVariable> normSet = lgp.getColumnSet();
-        List<Pair<LogicalVariable, LogicalExpressionReference>> newGbyList = new ArrayList<Pair<LogicalVariable, LogicalExpressionReference>>();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newGbyList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
         boolean changed = false;
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : gByList) {
-            ILogicalExpression expr = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
+            ILogicalExpression expr = p.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
                 LogicalVariable v2 = varRef.getVariableReference();
@@ -309,13 +309,13 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         List<FunctionalDependency> functionalDependencies = new ArrayList<FunctionalDependency>();
         ctx.putEquivalenceClassMap(op, equivalenceClasses);
         ctx.putFDList(op, functionalDependencies);
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
-        ILogicalOperator op1 = op.getInputs().get(1).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
+        ILogicalOperator op1 = op.getInputs().get(1).getValue();
         functionalDependencies.addAll(getOrComputeFDs(op0, ctx));
         functionalDependencies.addAll(getOrComputeFDs(op1, ctx));
         equivalenceClasses.putAll(getOrComputeEqClasses(op0, ctx));
         equivalenceClasses.putAll(getOrComputeEqClasses(op1, ctx));
-        ILogicalExpression expr = op.getCondition().getExpression();
+        ILogicalExpression expr = op.getCondition().getValue();
         expr.getConstraintsAndEquivClasses(functionalDependencies, equivalenceClasses);
         return null;
     }
@@ -327,8 +327,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         List<FunctionalDependency> functionalDependencies = new ArrayList<FunctionalDependency>();
         ctx.putEquivalenceClassMap(op, equivalenceClasses);
         ctx.putFDList(op, functionalDependencies);
-        ILogicalOperator opLeft = op.getInputs().get(0).getOperator();
-        ILogicalOperator opRight = op.getInputs().get(1).getOperator();
+        ILogicalOperator opLeft = op.getInputs().get(0).getValue();
+        ILogicalOperator opRight = op.getInputs().get(1).getValue();
         functionalDependencies.addAll(getOrComputeFDs(opLeft, ctx));
         functionalDependencies.addAll(getOrComputeFDs(opRight, ctx));
         equivalenceClasses.putAll(getOrComputeEqClasses(opLeft, ctx));
@@ -343,7 +343,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         } else {
             leftSideVars = opLeft.getSchema();
         }
-        ILogicalExpression expr = op.getCondition().getExpression();
+        ILogicalExpression expr = op.getCondition().getValue();
         expr.getConstraintsForOuterJoin(functionalDependencies, leftSideVars);
         return null;
     }
@@ -363,8 +363,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op, IOptimizationContext ctx)
             throws AlgebricksException {
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) op.getDataSourceReference().getOperator();
-        ILogicalOperator inp1 = op1.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) op.getDataSourceReference().getValue();
+        ILogicalOperator inp1 = op1.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = getOrComputeEqClasses(inp1, ctx);
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<FunctionalDependency> fds = new ArrayList<FunctionalDependency>(getOrComputeFDs(inp1, ctx));
@@ -425,10 +425,10 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         List<FunctionalDependency> functionalDependencies = new ArrayList<FunctionalDependency>();
         ctx.putEquivalenceClassMap(op, equivalenceClasses);
         ctx.putFDList(op, functionalDependencies);
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
         functionalDependencies.addAll(getOrComputeFDs(op0, ctx));
         equivalenceClasses.putAll(getOrComputeEqClasses(op0, ctx));
-        ILogicalExpression expr = op.getCondition().getExpression();
+        ILogicalExpression expr = op.getCondition().getValue();
         expr.getConstraintsAndEquivClasses(functionalDependencies, equivalenceClasses);
         return null;
     }
@@ -440,8 +440,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         ctx.putEquivalenceClassMap(op, equivalenceClasses);
         ctx.putFDList(op, functionalDependencies);
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                ILogicalOperator op2 = r.getOperator();
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                ILogicalOperator op2 = r.getValue();
                 equivalenceClasses.putAll(getOrComputeEqClasses(op2, ctx));
                 functionalDependencies.addAll(getOrComputeFDs(op2, ctx));
             }
@@ -501,7 +501,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     }
 
     private void propagateFDsAndEquivClasses(ILogicalOperator op, IOptimizationContext ctx) throws AlgebricksException {
-        ILogicalOperator inp1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator inp1 = op.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = getOrComputeEqClasses(inp1, ctx);
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<FunctionalDependency> fds = getOrComputeFDs(inp1, ctx);
@@ -530,7 +530,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     private void propagateFDsAndEquivClassesForUsedVars(ILogicalOperator op, IOptimizationContext ctx,
             List<LogicalVariable> usedVariables) throws AlgebricksException {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = new HashMap<LogicalVariable, EquivalenceClass>();
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<FunctionalDependency> fds = new ArrayList<FunctionalDependency>();
@@ -584,13 +584,13 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     private void fdsEqClassesForAbstractUnnestOperator(AbstractUnnestOperator op, IOptimizationContext ctx)
             throws AlgebricksException {
-        ILogicalOperator inp1 = op.getInputs().get(0).getOperator();
+        ILogicalOperator inp1 = op.getInputs().get(0).getValue();
         Map<LogicalVariable, EquivalenceClass> eqClasses = getOrComputeEqClasses(inp1, ctx);
         ctx.putEquivalenceClassMap(op, eqClasses);
         List<FunctionalDependency> fds = getOrComputeFDs(inp1, ctx);
         ctx.putFDList(op, fds);
 
-        ILogicalExpression expr = op.getExpressionRef().getExpression();
+        ILogicalExpression expr = op.getExpressionRef().getValue();
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression afe = (AbstractFunctionCallExpression) expr;
             if (afe.getKind() == FunctionKind.UNNEST && ((UnnestingFunctionCallExpression) afe).returnsUniqueValues()) {
@@ -612,8 +612,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     }
 
     private LogicalVariable getNewGbyVar(GroupByOperator g, LogicalVariable v) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : g.getGroupByList()) {
-            ILogicalExpression e = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : g.getGroupByList()) {
+            ILogicalExpression e = p.second.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable v2 = ((VariableReferenceExpression) e).getVariableReference();
                 if (v2 == v) {
@@ -625,8 +625,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     }
 
     private LogicalVariable getNewDecorVar(GroupByOperator g, LogicalVariable v) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : g.getDecorList()) {
-            ILogicalExpression e = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : g.getDecorList()) {
+            ILogicalExpression e = p.second.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable v2 = ((VariableReferenceExpression) e).getVariableReference();
                 if (v2 == v) {
