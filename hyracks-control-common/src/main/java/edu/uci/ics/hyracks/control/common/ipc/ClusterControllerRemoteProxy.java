@@ -55,57 +55,50 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     @Override
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.NotifyTaskCompleteFunction fn = new ClusterControllerFunctions.NotifyTaskCompleteFunction(
                 jobId, taskId, nodeId, statistics);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.NotifyTaskFailureFunction fn = new ClusterControllerFunctions.NotifyTaskFailureFunction(
                 jobId, taskId, nodeId, details);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.NotifyJobletCleanupFunction fn = new ClusterControllerFunctions.NotifyJobletCleanupFunction(
                 jobId, nodeId);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.NodeHeartbeatFunction fn = new ClusterControllerFunctions.NodeHeartbeatFunction(id,
                 hbData);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.ReportProfileFunction fn = new ClusterControllerFunctions.ReportProfileFunction(id,
                 profiles);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.RegisterPartitionProviderFunction fn = new ClusterControllerFunctions.RegisterPartitionProviderFunction(
                 partitionDescriptor);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 
     @Override
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception {
-        SyncRMI sync = new SyncRMI();
         ClusterControllerFunctions.RegisterPartitionRequestFunction fn = new ClusterControllerFunctions.RegisterPartitionRequestFunction(
                 partitionRequest);
-        sync.call(ipcHandle, fn);
+        ipcHandle.send(fn, null);
     }
 }
