@@ -39,15 +39,17 @@ public class NodeControllerRemoteProxy implements INodeController {
     @Override
     public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception {
+        SyncRMI sync = new SyncRMI();
         NodeControllerFunctions.StartTasksFunction stf = new NodeControllerFunctions.StartTasksFunction(appName, jobId,
                 planBytes, taskDescriptors, connectorPolicies);
-        ipcHandle.send(stf, null);
+        sync.call(ipcHandle, stf);
     }
 
     @Override
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
+        SyncRMI sync = new SyncRMI();
         NodeControllerFunctions.AbortTasksFunction atf = new NodeControllerFunctions.AbortTasksFunction(jobId, tasks);
-        ipcHandle.send(atf, null);
+        sync.call(ipcHandle, atf);
     }
 
     @Override
