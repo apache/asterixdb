@@ -28,7 +28,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 public class PreclusteredGroupWriter implements IFrameWriter {
     private final int[] groupFields;
     private final IBinaryComparator[] comparators;
-    private final IAccumulatingAggregator aggregator;
+    private final IAggregatorDescriptor aggregator;
+    private final AggregateState aggregateState;
     private final IFrameWriter writer;
     private final ByteBuffer copyFrame;
     private final FrameTupleAccessor inFrameAccessor;
@@ -38,10 +39,11 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private boolean first;
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
-            IAccumulatingAggregator aggregator, RecordDescriptor inRecordDesc, IFrameWriter writer) {
+            IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, IFrameWriter writer) {
         this.groupFields = groupFields;
         this.comparators = comparators;
         this.aggregator = aggregator;
+        this.aggregateState = aggregator.createAggregateStates();
         this.writer = writer;
         copyFrame = ctx.allocateFrame();
         inFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
@@ -64,7 +66,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         int nTuples = inFrameAccessor.getTupleCount();
         for (int i = 0; i < nTuples; ++i) {
             if (first) {
-                aggregator.init(inFrameAccessor, i);
+                aggregator.init(null, inFrameAccessor, i, aggregateState);
                 first = false;
             } else {
                 if (i == 0) {
@@ -72,8 +74,8 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 } else {
                     switchGroupIfRequired(inFrameAccessor, i - 1, inFrameAccessor, i);
                 }
+                
             }
-            aggregator.accumulate(inFrameAccessor, i);
         }
         FrameUtils.copy(buffer, copyFrame);
     }
@@ -82,16 +84,18 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             FrameTupleAccessor currTupleAccessor, int currTupleIndex) throws HyracksDataException {
         if (!sameGroup(prevTupleAccessor, prevTupleIndex, currTupleAccessor, currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
-            aggregator.init(currTupleAccessor, currTupleIndex);
+            aggregator.init(null, currTupleAccessor, currTupleIndex, aggregateState);
+        } else {
+            aggregator.aggregate(currTupleAccessor, currTupleIndex, null, 0, aggregateState);
         }
     }
 
     private void writeOutput(final FrameTupleAccessor lastTupleAccessor, int lastTupleIndex)
             throws HyracksDataException {
-        if (!aggregator.output(appender, lastTupleAccessor, lastTupleIndex, groupFields)) {
+        if (!aggregator.outputFinalResult(appender, lastTupleAccessor, lastTupleIndex, aggregateState)) {
             FrameUtils.flushFrame(appender.getBuffer(), writer);
             appender.reset(appender.getBuffer(), true);
-            if (!aggregator.output(appender, lastTupleAccessor, lastTupleIndex, groupFields)) {
+            if (!aggregator.outputFinalResult(appender, lastTupleAccessor, lastTupleIndex, aggregateState)) {
                 throw new IllegalStateException();
             }
         }
@@ -124,6 +128,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 FrameUtils.flushFrame(appender.getBuffer(), writer);
             }
         }
+        aggregateState.close();
         writer.close();
     }
 }

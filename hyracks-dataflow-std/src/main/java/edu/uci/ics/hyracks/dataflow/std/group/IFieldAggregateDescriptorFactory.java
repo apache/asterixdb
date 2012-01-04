@@ -12,34 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.aggregations;
+package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.io.Serializable;
+
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  *
  */
-public class AggregateState implements Serializable {
-    
-    private static final long serialVersionUID = 1L;
-    
-    Object state = null;
+public interface IFieldAggregateDescriptorFactory extends Serializable {
 
-    public void setState(Object obj) {
-        state = null;
-        state = obj;
-    }
+	public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
+			RecordDescriptor inRecordDescriptor,
+			RecordDescriptor outRecordDescriptor) throws HyracksDataException;
 
-    public void reset() {
-        state = null;
-    }
-    
-    public void close() {
-        state = null;
-    }
-
-    public Object getState() {
-        return state;
-    }
-    
 }

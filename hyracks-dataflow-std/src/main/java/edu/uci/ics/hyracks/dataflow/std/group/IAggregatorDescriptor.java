@@ -12,46 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.aggregations;
-
-import java.io.DataOutput;
+package edu.uci.ics.hyracks.dataflow.std.group;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
  *
  */
-public interface IFieldAggregateDescriptor {
-    
-    public IAggregateStateFactory getAggregateStateFactory();
+public interface IAggregatorDescriptor {
 
     /**
-     * Initialize the state based on the input tuple. 
+     * Create an aggregate state
      * 
-     * @param accessor
-     * @param tIndex
-     * @param fieldOutput
-     *            The data output for the frame containing the state. This may
-     *            be null, if the state is maintained as a java object. 
-     *            
-     *            Note that we have an assumption that the initialization of
-     *            the binary state (if any) inserts the state fields into the
-     *            buffer in a appending fashion. This means that an arbitrary
-     *            initial size of the state can be accquired.
-     * @param state
-     *            The state to be initialized.
-     * @throws HyracksDataException
+     * @return
      */
-    public void init(IFrameTupleAccessor accessor, int tIndex,
-            DataOutput fieldOutput, AggregateState state)
-            throws HyracksDataException;
+    public AggregateState createAggregateStates();
     
     /**
-     * Initialize the state by loading the partial results. This is specified
-     * since for some aggregations (like avg), the partial results and final 
-     * results are different, and different initialization methods should be 
-     * used.
+     * Get the length of the binary states.
+     * 
+     * @return
+     */
+    public int getAggregateStatesLength();
+
+    /**
+     * Initialize the state based on the input tuple.
      * 
      * @param accessor
      * @param tIndex
@@ -62,8 +49,24 @@ public interface IFieldAggregateDescriptor {
      *            The state to be initialized.
      * @throws HyracksDataException
      */
-    public void initFromPartial(IFrameTupleAccessor accessor, int tIndex,
-            DataOutput fieldOutput, AggregateState state)
+    public boolean init(FrameTupleAppender appender,
+            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+            throws HyracksDataException;
+    
+    /**
+     * Initialize the state based on the partial results.
+     * 
+     * @param accessor
+     * @param tIndex
+     * @param fieldOutput
+     *            The data output for the frame containing the state. This may
+     *            be null, if the state is maintained as a java object
+     * @param state
+     *            The state to be initialized.
+     * @throws HyracksDataException
+     */
+    public boolean initFromPartial(FrameTupleAppender appender,
+            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
 
     /**
@@ -84,19 +87,15 @@ public interface IFieldAggregateDescriptor {
      * @param data
      *            The buffer containing the state, if frame-based-state is used.
      *            This means that it can be null if java-object-based-state is
-     *            used. 
-     *            
-     *            Here the length of binary state can be obtains from the state
-     *            parameter, and if the content to be filled into that is over-
-     *            flowing (larger than the reversed space), error should be emit.
+     *            used.
      * @param offset
      * @param state
      *            The aggregate state.
      * @throws HyracksDataException
      */
     public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-            byte[] data, int offset, AggregateState state)
-            throws HyracksDataException;
+            IFrameTupleAccessor stateAccessor, int stateTupleIndex,
+            AggregateState state) throws HyracksDataException;
 
     /**
      * Output the partial aggregation result.
@@ -110,8 +109,9 @@ public interface IFieldAggregateDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputPartialResult(DataOutput fieldOutput, byte[] data,
-            int offset, AggregateState state) throws HyracksDataException;
+    public boolean outputPartialResult(FrameTupleAppender appender,
+            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+            throws HyracksDataException;
 
     /**
      * Output the final aggregation result.
@@ -125,8 +125,9 @@ public interface IFieldAggregateDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-            int offset, AggregateState state) throws HyracksDataException;
+    public boolean outputFinalResult(FrameTupleAppender appender,
+            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+            throws HyracksDataException;
 
     public void close();
 
