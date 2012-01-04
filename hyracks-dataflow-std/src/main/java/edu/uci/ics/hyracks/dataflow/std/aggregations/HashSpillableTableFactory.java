@@ -124,9 +124,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final INormalizedKeyComputer nkc = firstKeyNormalizerFactory == null ? null
                 : firstKeyNormalizerFactory.createNormalizedKeyComputer();
 
+        int[] keyFieldsInPartialResults = new int[keyFields.length];
+        for(int i = 0; i < keyFieldsInPartialResults.length; i++){
+            keyFieldsInPartialResults[i] = i;
+        }
+        
         final IAggregatorDescriptor aggregator = aggregateFactory
                 .createAggregator(ctx, inRecordDescriptor, outRecordDescriptor,
-                        keyFields);
+                        keyFields, keyFieldsInPartialResults);
 
         final AggregateState aggregateState = aggregator
                 .createAggregateStates();
@@ -356,6 +361,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 tPointers = null;
                 table.close();
                 frames.clear();
+                aggregateState.close();
             }
 
             /**

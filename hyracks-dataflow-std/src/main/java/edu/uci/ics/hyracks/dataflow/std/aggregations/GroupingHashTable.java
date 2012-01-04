@@ -108,8 +108,13 @@ class GroupingHashTable {
         ftpc = new FrameTuplePairComparator(fields, storedKeys, comparators);
         tpc = tpcf.createPartitioner();
 
+        int[] keyFieldsInPartialResults = new int[fields.length];
+        for(int i = 0; i < keyFieldsInPartialResults.length; i++){
+            keyFieldsInPartialResults[i] = i;
+        }
+        
         this.aggregator = aggregatorFactory.createAggregator(ctx,
-                inRecordDescriptor, outRecordDescriptor, fields);
+                inRecordDescriptor, outRecordDescriptor, fields, keyFieldsInPartialResults);
 
         this.aggregateStates = new AggregateState[INIT_AGG_STATE_SIZE];
         accumulatorSize = 0;
@@ -215,6 +220,12 @@ class GroupingHashTable {
         }
         if (appender.getTupleCount() != 0) {
             flushFrame(appender, writer);
+        }
+    }
+    
+    void close() throws HyracksDataException {
+        for(AggregateState aState : aggregateStates){
+            aState.close();
         }
     }
 }

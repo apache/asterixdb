@@ -61,7 +61,7 @@ public class PreclusteredGroupOperatorDescriptor extends
                 .getInputRecordDescriptor(getOperatorId(), 0);
         final IAggregatorDescriptor aggregator = aggregatorFactory
                 .createAggregator(ctx, inRecordDesc, recordDescriptors[0],
-                        groupFields);
+                        groupFields, groupFields);
         final ByteBuffer copyFrame = ctx.allocateFrame();
         final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(
                 ctx.getFrameSize(), inRecordDesc);

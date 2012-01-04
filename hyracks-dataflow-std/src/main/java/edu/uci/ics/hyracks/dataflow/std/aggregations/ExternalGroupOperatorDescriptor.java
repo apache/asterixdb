@@ -274,9 +274,14 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         .createBinaryComparator();
             }
 
+            int[] keyFieldsInPartialResults = new int[keyFields.length];
+            for(int i = 0; i < keyFieldsInPartialResults.length; i++){
+                keyFieldsInPartialResults[i] = i;
+            }
+            
             final IAggregatorDescriptor aggregator = mergerFactory
                     .createAggregator(ctx, recordDescriptors[0],
-                            recordDescriptors[0], keyFields);
+                            recordDescriptors[0], keyFields, keyFieldsInPartialResults);
             final AggregateState aggregateState = aggregator
                     .createAggregateStates();
 
@@ -350,6 +355,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         writer.fail();
                         throw new HyracksDataException(e);
                     } finally {
+                        aggregateState.close();
                         writer.close();
                     }
                 }
@@ -421,6 +427,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                                 runFileReaders, tupleAccessors,
                                                 topTuples);
                                 } else {
+                                    closeRun(runIndex, runFileReaders, tupleAccessors);
                                     break;
                                 }
                             }
@@ -622,6 +629,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     if (runCursors[index] != null) {
                         runCursors[index].close();
                         runCursors[index] = null;
+                        tupleAccessor[index] = null;
                     }
                 }
 

@@ -33,6 +33,10 @@ public class AggregateState implements Serializable {
     public void reset() {
         state = null;
     }
+    
+    public void close() {
+        state = null;
+    }
 
     public Object getState() {
         return state;

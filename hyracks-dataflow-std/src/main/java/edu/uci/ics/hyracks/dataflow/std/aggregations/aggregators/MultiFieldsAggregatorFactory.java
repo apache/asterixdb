@@ -55,7 +55,7 @@ public class MultiFieldsAggregatorFactory implements
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, final int[] keyFields)
+            RecordDescriptor outRecordDescriptor, final int[] keyFields, final int[] keyFieldsInPartialResults)
             throws HyracksDataException {
 
         final IFieldAggregateDescriptor[] aggregators = new IFieldAggregateDescriptor[aggregatorFactories.length];
@@ -101,9 +101,9 @@ public class MultiFieldsAggregatorFactory implements
                     AggregateState state) throws HyracksDataException {
                 if (!outputPending) {
                     resultTupleBuilder.reset();
-                    for (int i = 0; i < keyFields.length; i++) {
+                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
                         resultTupleBuilder.addField(accessor, tIndex,
-                                keyFields[i]);
+                        		keyFieldsInPartialResults[i]);
                     }
                     DataOutput dos = resultTupleBuilder.getDataOutput();
 
@@ -137,9 +137,9 @@ public class MultiFieldsAggregatorFactory implements
                 if (!outputPending) {
                     resultTupleBuilder.reset();
                     
-                    for (int i = 0; i < keyFields.length; i++) {
+                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
                         resultTupleBuilder.addField(accessor, tIndex,
-                                keyFields[i]);
+                        		keyFieldsInPartialResults[i]);
                     }
  
                     DataOutput dos = resultTupleBuilder.getDataOutput();
@@ -230,7 +230,9 @@ public class MultiFieldsAggregatorFactory implements
 
             @Override
             public void close() {
-                // TODO Auto-generated method stub
+                for(int i = 0; i < aggregators.length; i++){
+                    aggregators[i].close();
+                }
             }
 
             @Override
@@ -275,9 +277,9 @@ public class MultiFieldsAggregatorFactory implements
                     AggregateState state) throws HyracksDataException {
                 if (!initPending) {
                     stateTupleBuilder.reset();
-                    for (int i = 0; i < keyFields.length; i++) {
+                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
                         stateTupleBuilder.addField(accessor, tIndex,
-                                keyFields[i]);
+                        		keyFieldsInPartialResults[i]);
                     }
                     DataOutput dos = stateTupleBuilder.getDataOutput();
 
