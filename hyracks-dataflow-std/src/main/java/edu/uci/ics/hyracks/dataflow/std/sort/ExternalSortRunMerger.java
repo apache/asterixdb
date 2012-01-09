@@ -53,7 +53,7 @@ public class ExternalSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    private final FrameSorter frameSorter; //Used in External sort, no replacement selection
+    private FrameSorter frameSorter; //Used in External sort, no replacement selection
     private FrameTupleAccessor outFrameAccessor; //Used in External sort, with replacement selection
     private final int outputLimit; //Used in External sort, with replacement selection and limit on output size
     private int currentSize; //Used in External sort, with replacement selection and limit on output size
@@ -95,7 +95,15 @@ public class ExternalSortRunMerger {
                 if (frameSorter != null && frameSorter.getFrameCount() > 0) {
                     frameSorter.flushFrames(writer);
                 }
+                /** recycle sort buffer */
+                frameSorter = null;
+                System.gc();
+
             } else {
+            	/** recycle sort buffer */
+                frameSorter = null;
+                System.gc();
+
                 inFrames = new ArrayList<ByteBuffer>();
                 outFrame = ctx.allocateFrame();
                 outFrameAppender = new FrameTupleAppender(ctx.getFrameSize());
@@ -162,15 +170,12 @@ public class ExternalSortRunMerger {
 
     public void processWithReplacementSelection() throws HyracksDataException {
         writer.open();
-
         try {
             outFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
             outFrame = ctx.allocateFrame();
             outFrameAppender = new FrameTupleAppender(ctx.getFrameSize());
             outFrameAppender.reset(outFrame, true);
-
             if (runs.size() == 1) {
-
                 if (outputLimit < 1) {
                     runs.get(0).open();
                     ByteBuffer nextFrame = ctx.allocateFrame();
@@ -178,9 +183,10 @@ public class ExternalSortRunMerger {
                         FrameUtils.flushFrame(nextFrame, writer);
                         outFrameAppender.reset(nextFrame, true);
                     }
+                    System.gc();
                     return;
                 }
-
+                //Limit on the output size
                 int totalCount = 0;
                 runs.get(0).open();
                 FrameTupleAccessor fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
@@ -203,16 +209,15 @@ public class ExternalSortRunMerger {
                         totalCount++;
                     }
                 }
-
                 if (outFrameAppender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(outFrame, writer);
                     outFrameAppender.reset(outFrame, true);
                 }
-
+                System.gc();
                 return;
             }
-
             // More than one run, actual merging is needed
+            System.gc();
             inFrames = new ArrayList<ByteBuffer>();
             for (int i = 0; i < framesLimit - 1; ++i) {
                 inFrames.add(ctx.allocateFrame());

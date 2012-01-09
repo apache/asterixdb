@@ -187,9 +187,10 @@ public class OptimizedExternalSortOperatorDescriptor extends AbstractOperatorDes
                     for (int i = 0; i < comparatorFactories.length; ++i) {
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
-
+                    
+                    int necessaryFrames = Math.min(runs.size() + 2, memSize);
                     ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, outputLimit, runs, sortFields,
-                            comparators, recordDescriptors[0], memSize, writer);
+                            comparators, recordDescriptors[0], necessaryFrames, writer);
 
                     merger.processWithReplacementSelection();
 
