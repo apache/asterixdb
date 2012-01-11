@@ -31,17 +31,20 @@ import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 /**
  *
  */
-public class CountFieldAggregatorFactory implements
+public class AvgFieldMergeAggregatorFactory implements
         IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
     
+    private final int aggField;
+    
     private final boolean useObjectState;
     
-    public CountFieldAggregatorFactory(boolean useObjectState){
+    public AvgFieldMergeAggregatorFactory(int aggField, boolean useObjectState) {
+        this.aggField = aggField;
         this.useObjectState = useObjectState;
     }
-
+    
     /* (non-Javadoc)
      * @see edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory#createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
      */
@@ -49,6 +52,7 @@ public class CountFieldAggregatorFactory implements
     public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
+        
         return new IFieldAggregateDescriptor() {
             
             @Override
@@ -58,13 +62,17 @@ public class CountFieldAggregatorFactory implements
             @Override
             public void outputPartialResult(DataOutput fieldOutput, byte[] data,
                     int offset, AggregateState state) throws HyracksDataException {
-                int count;
+                int sum, count;
                 if (!useObjectState) {
-                    count = IntegerSerializerDeserializer.getInt(data, offset);
+                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                    count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
-                    count = (Integer) state.getState();
+                    Integer[] fields = (Integer[])state.getState();
+                    sum = fields[0];
+                    count = fields[1];
                 }
                 try {
+                    fieldOutput.writeInt(sum);
                     fieldOutput.writeInt(count);
                 } catch (IOException e) {
                     throw new HyracksDataException(
@@ -75,14 +83,17 @@ public class CountFieldAggregatorFactory implements
             @Override
             public void outputFinalResult(DataOutput fieldOutput, byte[] data,
                     int offset, AggregateState state) throws HyracksDataException {
-                int count;
+                int sum, count;
                 if (!useObjectState) {
-                    count = IntegerSerializerDeserializer.getInt(data, offset);
+                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                    count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
-                    count = (Integer) state.getState();
+                    Integer[] fields = (Integer[])state.getState();
+                    sum = fields[0];
+                    count = fields[1];
                 }
                 try {
-                    fieldOutput.writeInt(count);
+                    fieldOutput.writeFloat((float)sum/count);
                 } catch (IOException e) {
                     throw new HyracksDataException(
                             "I/O exception when writing aggregation to the output buffer.");
@@ -90,22 +101,37 @@ public class CountFieldAggregatorFactory implements
             }
             
             @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex,
-                    DataOutput fieldOutput, AggregateState state)
-                    throws HyracksDataException {
-                int count = 1;
-                if (!useObjectState) {
-                    try {
-                        fieldOutput.writeInt(count);
-                    } catch (IOException e) {
-                        throw new HyracksDataException(
-                                "I/O exception when initializing the aggregator.");
-                    }
-                } else {
-                    state.setState(count);
-                }
+            public void close() {
+                // TODO Auto-generated method stub
+                
             }
             
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex,
+                    byte[] data, int offset, AggregateState state)
+                    throws HyracksDataException {
+                int sum = 0, count = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                sum += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart);
+                count += 1;
+                if (!useObjectState) {
+                    ByteBuffer buf = ByteBuffer.wrap(data);
+                    sum += buf.getInt(offset);
+                    count += buf.getInt(offset + 4);
+                    buf.putInt(offset, sum);
+                    buf.putInt(offset + 4, count);
+                } else {
+                    Integer[] fields = (Integer[])state.getState();
+                    sum += fields[0];
+                    count += fields[1];
+                    state.setState(new Integer[]{sum, count});
+                }
+            }
+
             @Override
             public IAggregateStateFactory getAggregateStateFactory() {
                 return new IAggregateStateFactory() {
@@ -124,36 +150,46 @@ public class CountFieldAggregatorFactory implements
                     
                     @Override
                     public int getStateLength() {
-                        return 4;
+                        return 8;
                     }
                     
                     @Override
                     public Object createState() {
-                        return new Integer(0);
+                        return new Integer[]{0, 0};
                     }
                 };
             }
-            
+
             @Override
-            public void close() {
-                
-            }
-            
-            @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-                    byte[] data, int offset, AggregateState state)
+            public void init(IFrameTupleAccessor accessor,
+                    int tIndex, DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
-                int count = 1;
+                int sum = 0;
+                int count = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
+                sum += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart);
+                count += IntegerSerializerDeserializer.getInt(accessor
+                        .getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength()
+                                + fieldStart + 4);
                 if (!useObjectState) {
-                    ByteBuffer buf = ByteBuffer.wrap(data);
-                    count += buf.getInt(offset);
-                    buf.putInt(offset, count);
+                    try {
+                        fieldOutput.writeInt(sum);
+                        fieldOutput.writeInt(count);
+                    } catch (IOException e) {
+                        throw new HyracksDataException(
+                                "I/O exception when initializing the aggregator.");
+                    }
                 } else {
-                    count += (Integer) state.getState();
-                    state.setState(count);
+                    state.setState(new Integer[]{sum, count});
                 }
             }
         };
     }
 
 }
+

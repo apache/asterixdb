@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 /**
  *
  */
-public class AvgFieldAggregatorFactory implements IFieldAggregateDescriptorFactory {
+public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptorFactory {
     
     private static final long serialVersionUID = 1L;
     
@@ -39,7 +39,7 @@ public class AvgFieldAggregatorFactory implements IFieldAggregateDescriptorFacto
     
     private final boolean useObjectState;
     
-    public AvgFieldAggregatorFactory(int aggField, boolean useObjectState){
+    public AvgFieldGroupAggregatorFactory(int aggField, boolean useObjectState){
         this.aggField = aggField;
         this.useObjectState = useObjectState;
     }
@@ -183,35 +183,6 @@ public class AvgFieldAggregatorFactory implements IFieldAggregateDescriptorFacto
                         return new Integer[]{0, 0};
                     }
                 };
-            }
-
-            @Override
-            public void initFromPartial(IFrameTupleAccessor accessor,
-                    int tIndex, DataOutput fieldOutput, AggregateState state)
-                    throws HyracksDataException {
-                int sum = 0;
-                int count = 0;
-                int tupleOffset = accessor.getTupleStartOffset(tIndex);
-                int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerSerializerDeserializer.getInt(accessor
-                        .getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength()
-                                + fieldStart);
-                count += IntegerSerializerDeserializer.getInt(accessor
-                        .getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength()
-                                + fieldStart + 4);
-                if (!useObjectState) {
-                    try {
-                        fieldOutput.writeInt(sum);
-                        fieldOutput.writeInt(count);
-                    } catch (IOException e) {
-                        throw new HyracksDataException(
-                                "I/O exception when initializing the aggregator.");
-                    }
-                } else {
-                    state.setState(new Integer[]{sum, count});
-                }
             }
         };
     }

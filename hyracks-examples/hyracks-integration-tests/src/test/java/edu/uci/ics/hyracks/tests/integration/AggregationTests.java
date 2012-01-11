@@ -53,7 +53,8 @@ import edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldGroupAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldMergeAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.CountFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MinMaxStringFieldAggregatorFactory;
@@ -317,7 +318,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, true),
 								new CountFieldAggregatorFactory(true),
-								new AvgFieldAggregatorFactory(1, true) }),
+								new AvgFieldGroupAggregatorFactory(1, true) }),
 				outputRec, tableSize);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
@@ -370,7 +371,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, true),
 								new CountFieldAggregatorFactory(true),
-								new AvgFieldAggregatorFactory(1, true) }),
+								new AvgFieldGroupAggregatorFactory(1, true) }),
 				outputRec);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
@@ -427,12 +428,12 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, false),
 								new CountFieldAggregatorFactory(false),
-								new AvgFieldAggregatorFactory(1, false) }),
+								new AvgFieldGroupAggregatorFactory(1, false) }),
 				new MultiFieldsAggregatorFactory(
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, false),
 								new IntSumFieldAggregatorFactory(2, false),
-								new AvgFieldAggregatorFactory(3, false) }),
+								new AvgFieldMergeAggregatorFactory(3, false) }),
 				outputRec,
 				new HashSpillableTableFactory(
 						new FieldHashPartitionComputerFactory(
@@ -850,7 +851,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, true),
 								new CountFieldAggregatorFactory(true),
-								new AvgFieldAggregatorFactory(1, true) }),
+								new AvgFieldGroupAggregatorFactory(1, true) }),
 				outputRec, tableSize);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
@@ -904,7 +905,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, true),
 								new CountFieldAggregatorFactory(true),
-								new AvgFieldAggregatorFactory(1, true) }),
+								new AvgFieldGroupAggregatorFactory(1, true) }),
 				outputRec);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
@@ -964,12 +965,12 @@ public class AggregationTests extends AbstractIntegrationTest {
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, false),
 								new CountFieldAggregatorFactory(false),
-								new AvgFieldAggregatorFactory(1, false) }),
+								new AvgFieldGroupAggregatorFactory(1, false) }),
 				new MultiFieldsAggregatorFactory(
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(2, false),
 								new IntSumFieldAggregatorFactory(3, false),
-								new AvgFieldAggregatorFactory(4, false) }),
+								new AvgFieldMergeAggregatorFactory(4, false) }),
 				outputRec,
 				new HashSpillableTableFactory(
 						new FieldHashPartitionComputerFactory(

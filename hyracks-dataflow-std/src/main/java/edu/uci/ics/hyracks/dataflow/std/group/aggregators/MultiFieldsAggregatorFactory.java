@@ -270,41 +270,6 @@ public class MultiFieldsAggregatorFactory implements
                     }
                 }
             }
-
-            @Override
-            public boolean initFromPartial(FrameTupleAppender appender,
-                    IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                if (!initPending) {
-                    stateTupleBuilder.reset();
-                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
-                        stateTupleBuilder.addField(accessor, tIndex,
-                        		keyFieldsInPartialResults[i]);
-                    }
-                    DataOutput dos = stateTupleBuilder.getDataOutput();
-
-                    for (int i = 0; i < aggregators.length; i++) {
-                        aggregators[i].initFromPartial(accessor, tIndex, dos,
-                                ((AggregateState[]) state.getState())[i]);
-                        if (aggregateStateFactories[i].hasBinaryState()) {
-                            stateTupleBuilder.addFieldEndOffset();
-                        }
-                    }
-                }
-                // For pre-cluster: no output state is needed
-                if(appender == null){
-                    initPending = false;
-                    return true;
-                }
-                if (!appender.append(stateTupleBuilder.getFieldEndOffsets(),
-                        stateTupleBuilder.getByteArray(), 0,
-                        stateTupleBuilder.getSize())) {
-                    initPending = true;
-                    return false;
-                }
-                initPending = false;
-                return true;
-            }
         };
     }
 }

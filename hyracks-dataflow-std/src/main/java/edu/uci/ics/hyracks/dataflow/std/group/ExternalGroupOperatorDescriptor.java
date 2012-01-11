@@ -455,10 +455,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  * Initialize the first output record Reset the
                                  * tuple builder
                                  */
-                                if (!aggregator.initFromPartial(outFrameAppender, fta,
+                                if (!aggregator.init(outFrameAppender, fta,
                                         tupleIndex, aggregateState)) {
                                     flushOutFrame(writer, finalPass);
-                                    if (!aggregator.initFromPartial(outFrameAppender, fta,
+                                    if (!aggregator.init(outFrameAppender, fta,
                                             tupleIndex, aggregateState)) {
                                         throw new HyracksDataException(
                                                 "Failed to append an aggregation result to the output frame.");

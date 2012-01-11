@@ -46,25 +46,6 @@ public interface IFieldAggregateDescriptor {
     public void init(IFrameTupleAccessor accessor, int tIndex,
             DataOutput fieldOutput, AggregateState state)
             throws HyracksDataException;
-    
-    /**
-     * Initialize the state by loading the partial results. This is specified
-     * since for some aggregations (like avg), the partial results and final 
-     * results are different, and different initialization methods should be 
-     * used.
-     * 
-     * @param accessor
-     * @param tIndex
-     * @param fieldOutput
-     *            The data output for the frame containing the state. This may
-     *            be null, if the state is maintained as a java object
-     * @param state
-     *            The state to be initialized.
-     * @throws HyracksDataException
-     */
-    public void initFromPartial(IFrameTupleAccessor accessor, int tIndex,
-            DataOutput fieldOutput, AggregateState state)
-            throws HyracksDataException;
 
     /**
      * Reset the aggregator. The corresponding aggregate state should be reset

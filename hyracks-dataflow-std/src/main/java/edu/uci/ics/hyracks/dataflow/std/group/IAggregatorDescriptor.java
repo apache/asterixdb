@@ -52,22 +52,6 @@ public interface IAggregatorDescriptor {
     public boolean init(FrameTupleAppender appender,
             IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
-    
-    /**
-     * Initialize the state based on the partial results.
-     * 
-     * @param accessor
-     * @param tIndex
-     * @param fieldOutput
-     *            The data output for the frame containing the state. This may
-     *            be null, if the state is maintained as a java object
-     * @param state
-     *            The state to be initialized.
-     * @throws HyracksDataException
-     */
-    public boolean initFromPartial(FrameTupleAppender appender,
-            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
-            throws HyracksDataException;
 
     /**
      * Reset the aggregator. The corresponding aggregate state should be reset

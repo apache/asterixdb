@@ -230,7 +230,7 @@ public class ExternalGroupClient {
 
         switch (alg) {
         case 0: // new external hash graph
-            grouper = new edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor(
+            grouper = new ExternalGroupOperatorDescriptor(
                     spec,
                     keys,
                     framesLimit,
@@ -276,7 +276,7 @@ public class ExternalGroupClient {
                             IntegerBinaryHashFunctionFactory.INSTANCE }));
             spec.connect(scanSortConn2, fileScanner, 0, sorter2, 0);
 
-            grouper = new edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor(
+            grouper = new PreclusteredGroupOperatorDescriptor(
                     spec,
                     keys,
                     new IBinaryComparatorFactory[] {

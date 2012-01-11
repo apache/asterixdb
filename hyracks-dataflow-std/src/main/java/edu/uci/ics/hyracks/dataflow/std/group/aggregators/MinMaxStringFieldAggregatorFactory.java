@@ -231,13 +231,6 @@ public class MinMaxStringFieldAggregatorFactory implements
                     }
                 };
             }
-
-            @Override
-            public void initFromPartial(IFrameTupleAccessor accessor,
-                    int tIndex, DataOutput fieldOutput, AggregateState state)
-                    throws HyracksDataException {
-                init(accessor, tIndex, fieldOutput, state);
-            }
         };
     }
 
