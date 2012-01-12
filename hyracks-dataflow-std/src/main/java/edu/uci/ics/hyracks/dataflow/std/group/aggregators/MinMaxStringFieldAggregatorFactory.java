@@ -78,10 +78,10 @@ public class MinMaxStringFieldAggregatorFactory implements
                     if (hasBinaryState) {
                         int stateIdx = IntegerSerializerDeserializer.getInt(
                                 data, offset);
-                        Object[] storedState = (Object[]) state.getState();
+                        Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
-                        fieldOutput.writeUTF((String) state.getState());
+                        fieldOutput.writeUTF((String) state.state);
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException(
@@ -97,10 +97,10 @@ public class MinMaxStringFieldAggregatorFactory implements
                     if (hasBinaryState) {
                         int stateIdx = IntegerSerializerDeserializer.getInt(
                                 data, offset);
-                        Object[] storedState = (Object[]) state.getState();
+                        Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
-                        fieldOutput.writeUTF((String) state.getState());
+                        fieldOutput.writeUTF((String) state.state);
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException(
@@ -124,18 +124,18 @@ public class MinMaxStringFieldAggregatorFactory implements
                 if (hasBinaryState) {
                     // Object-binary-state
                     Object[] storedState;
-                    if (state.getState() == null) {
+                    if (state.state == null) {
                         storedState = new Object[8];
                         storedState[0] = new Integer(0);
-                        state.setState(storedState);
+                        state.state = storedState;
                     } else {
-                        storedState = (Object[]) state.getState();
+                        storedState = (Object[]) state.state;
                     }
                     int stateCount = (Integer) (storedState[0]);
                     if (stateCount + 1 >= storedState.length) {
                         storedState = Arrays.copyOf(storedState,
                                 storedState.length * 2);
-                        state.setState(storedState);
+                        state.state = storedState;
                     }
 
                     stateCount++;
@@ -148,7 +148,7 @@ public class MinMaxStringFieldAggregatorFactory implements
                     }
                 } else {
                     // Only object-state
-                    state.setState(strField);
+                    state.state = strField;
                 }
             }
 
@@ -175,7 +175,7 @@ public class MinMaxStringFieldAggregatorFactory implements
                     int stateIdx = IntegerSerializerDeserializer.getInt(data,
                             offset);
 
-                    Object[] storedState = (Object[]) state.getState();
+                    Object[] storedState = (Object[]) state.state;
 
                     if (isMax) {
                         if (strField.length() > ((String) (storedState[stateIdx]))
@@ -190,14 +190,14 @@ public class MinMaxStringFieldAggregatorFactory implements
                     }
                 } else {
                     if (isMax) {
-                        if (strField.length() > ((String) (state.getState()))
+                        if (strField.length() > ((String) (state.state))
                                 .length()) {
-                            state.setState(strField);
+                            state.state = strField;
                         }
                     } else {
-                        if (strField.length() < ((String) (state.getState()))
+                        if (strField.length() < ((String) (state.state))
                                 .length()) {
-                            state.setState(strField);
+                            state.state = strField;
                         }
                     }
                 }
@@ -236,11 +236,11 @@ public class MinMaxStringFieldAggregatorFactory implements
                     int stateIdx = IntegerSerializerDeserializer.getInt(data,
                             offset);
 
-                    Object[] storedState = (Object[]) state.getState();
+                    Object[] storedState = (Object[]) state.state;
 
                     len = getUTFLength(((String) (storedState[stateIdx])));
                 } else {
-                    len = getUTFLength((String) (state.getState()));
+                    len = getUTFLength((String) (state.state));
                 }
 
                 return len;
@@ -255,11 +255,11 @@ public class MinMaxStringFieldAggregatorFactory implements
                     int stateIdx = IntegerSerializerDeserializer.getInt(data,
                             offset);
 
-                    Object[] storedState = (Object[]) state.getState();
+                    Object[] storedState = (Object[]) state.state;
 
                     len = getUTFLength(((String) (storedState[stateIdx])));
                 } else {
-                    len = getUTFLength((String) (state.getState()));
+                    len = getUTFLength((String) (state.state));
                 }
 
                 return len;

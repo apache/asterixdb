@@ -72,7 +72,7 @@ public class IntSumFieldAggregatorFactory implements
                 if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    sum = (Integer) state.getState();
+                    sum = (Integer) state.state;
                 }
                 try {
                     fieldOutput.writeInt(sum);
@@ -90,7 +90,7 @@ public class IntSumFieldAggregatorFactory implements
                 if (!useObjectState) {
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    sum = (Integer) state.getState();
+                    sum = (Integer) state.state;
                 }
                 try {
                     fieldOutput.writeInt(sum);
@@ -122,7 +122,7 @@ public class IntSumFieldAggregatorFactory implements
                                 "I/O exception when initializing the aggregator.");
                     }
                 } else {
-                    state.setState(sum);
+                    state.state = sum;
                 }
             }
 
@@ -160,8 +160,8 @@ public class IntSumFieldAggregatorFactory implements
                     sum += buf.getInt(offset);
                     buf.putInt(offset, sum);
                 } else {
-                    sum += (Integer) state.getState();
-                    state.setState(sum);
+                    sum += (Integer) state.state;
+                    state.state = sum;
                 }
             }
 

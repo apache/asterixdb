@@ -68,7 +68,7 @@ public class CountFieldAggregatorFactory implements
                 if (!useObjectState) {
                     count = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    count = (Integer) state.getState();
+                    count = (Integer) state.state;
                 }
                 try {
                     fieldOutput.writeInt(count);
@@ -86,7 +86,7 @@ public class CountFieldAggregatorFactory implements
                 if (!useObjectState) {
                     count = IntegerSerializerDeserializer.getInt(data, offset);
                 } else {
-                    count = (Integer) state.getState();
+                    count = (Integer) state.state;
                 }
                 try {
                     fieldOutput.writeInt(count);
@@ -109,7 +109,7 @@ public class CountFieldAggregatorFactory implements
                                 "I/O exception when initializing the aggregator.");
                     }
                 } else {
-                    state.setState(count);
+                    state.state = count;
                 }
             }
 
@@ -140,8 +140,8 @@ public class CountFieldAggregatorFactory implements
                     count += buf.getInt(offset);
                     buf.putInt(offset, count);
                 } else {
-                    count += (Integer) state.getState();
-                    state.setState(count);
+                    count += (Integer) state.state;
+                    state.state = count;
                 }
             }
 

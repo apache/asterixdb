@@ -23,7 +23,7 @@ public class AggregateState implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
-    Object state = null;
+    public Object state = null;
     
     public AggregateState(){
         state = null;
@@ -33,21 +33,12 @@ public class AggregateState implements Serializable {
         state = obj;
     }
 
-    public void setState(Object obj) {
-        state = null;
-        state = obj;
-    }
-
     public void reset() {
         state = null;
     }
     
     public void close() {
         state = null;
-    }
-
-    public Object getState() {
-        return state;
     }
     
 }

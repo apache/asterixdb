@@ -116,7 +116,7 @@ public class MultiFieldsAggregatorFactory implements
                             .getBuffer().array(),
                             fieldOffset + accessor.getFieldSlotsLength()
                                     + tupleOffset, ((AggregateState[]) state
-                                    .getState())[i]);
+                                    .state)[i]);
                     resultTupleBuilder.addFieldEndOffset();
                 }
 
@@ -150,10 +150,10 @@ public class MultiFieldsAggregatorFactory implements
                                 .getBuffer().array(),
                                 tupleOffset + accessor.getFieldSlotsLength()
                                         + fieldOffset,
-                                ((AggregateState[]) state.getState())[i]);
+                                ((AggregateState[]) state.state)[i]);
                     } else {
                         aggregators[i].outputFinalResult(dos, null, 0,
-                                ((AggregateState[]) state.getState())[i]);
+                                ((AggregateState[]) state.state)[i]);
                     }
                     resultTupleBuilder.addFieldEndOffset();
                 }
@@ -188,7 +188,7 @@ public class MultiFieldsAggregatorFactory implements
                             accessor.getBuffer().array(), tupleOffset
                                     + accessor.getFieldSlotsLength()
                                     + fieldOffset,
-                            ((AggregateState[]) state.getState())[i]);
+                            ((AggregateState[]) state.state)[i]);
                     // add length for slot offset
                     stateLength += 4;
                 }
@@ -219,7 +219,7 @@ public class MultiFieldsAggregatorFactory implements
                             .getBuffer().array(),
                             tupleOffset + accessor.getFieldSlotsLength()
                                     + fieldOffset, ((AggregateState[]) state
-                                    .getState())[i]);
+                                    .state)[i]);
                     // add length for slot offset
                     stateLength += 4;
                 }
@@ -239,7 +239,7 @@ public class MultiFieldsAggregatorFactory implements
 
                 for (int i = 0; i < aggregators.length; i++) {
                     aggregators[i].init(accessor, tIndex, dos,
-                            ((AggregateState[]) state.getState())[i]);
+                            ((AggregateState[]) state.state)[i]);
                     if (aggregators[i].needsBinaryState()) {
                         stateTupleBuilder.addFieldEndOffset();
                     }
@@ -276,7 +276,7 @@ public class MultiFieldsAggregatorFactory implements
                     if (aggregators[i].needsBinaryState()) {
                         stateLength += aggregators[i].getBinaryStateLength(
                                 accessor, tIndex,
-                                ((AggregateState[]) state.getState())[i]);
+                                ((AggregateState[]) state.state)[i]);
                         // add length for slot offset
                         stateLength += 4;
                     }
@@ -312,17 +312,17 @@ public class MultiFieldsAggregatorFactory implements
                                             + stateAccessor
                                                     .getFieldSlotsLength()
                                             + stateFieldOffset,
-                                    ((AggregateState[]) state.getState())[i]);
+                                    ((AggregateState[]) state.state)[i]);
                             fieldIndex++;
                         } else {
                             aggregators[i].aggregate(accessor, tIndex, null, 0,
-                                    ((AggregateState[]) state.getState())[i]);
+                                    ((AggregateState[]) state.state)[i]);
                         }
                     }
                 } else {
                     for (int i = 0; i < aggregators.length; i++) {
                         aggregators[i].aggregate(accessor, tIndex, null, 0,
-                                ((AggregateState[]) state.getState())[i]);
+                                ((AggregateState[]) state.state)[i]);
                     }
                 }
             }

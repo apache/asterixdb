@@ -65,7 +65,7 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                     count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
-                    Integer[] fields = (Integer[])state.getState();
+                    Integer[] fields = (Integer[])state.state;
                     sum = fields[0];
                     count = fields[1];
                 }
@@ -86,7 +86,7 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                     sum = IntegerSerializerDeserializer.getInt(data, offset);
                     count = IntegerSerializerDeserializer.getInt(data, offset + 4);
                 } else {
-                    Integer[] fields = (Integer[])state.getState();
+                    Integer[] fields = (Integer[])state.state;
                     sum = fields[0];
                     count = fields[1];
                 }
@@ -120,7 +120,7 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                                 "I/O exception when initializing the aggregator.");
                     }
                 } else {
-                    state.setState(new Integer[]{sum, count});
+                    state.state = new Integer[]{sum, count};
                 }
             }
             
@@ -149,10 +149,10 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                     buf.putInt(offset, sum);
                     buf.putInt(offset + 4, count);
                 } else {
-                    Integer[] fields = (Integer[])state.getState();
+                    Integer[] fields = (Integer[])state.state;
                     sum += fields[0];
                     count += fields[1];
-                    state.setState(new Integer[]{sum, count});
+                    state.state = new Integer[]{sum, count};
                 }
             }
 
