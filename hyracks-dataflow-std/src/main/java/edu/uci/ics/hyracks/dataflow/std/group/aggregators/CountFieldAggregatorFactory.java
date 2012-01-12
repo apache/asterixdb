@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
@@ -35,29 +34,36 @@ public class CountFieldAggregatorFactory implements
         IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final boolean useObjectState;
-    
-    public CountFieldAggregatorFactory(boolean useObjectState){
+
+    public CountFieldAggregatorFactory(boolean useObjectState) {
         this.useObjectState = useObjectState;
     }
 
-    /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory#createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.uci.ics.hyracks.dataflow.std.aggregations.
+     * IFieldAggregateDescriptorFactory
+     * #createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
      */
     @Override
     public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
         return new IFieldAggregateDescriptor() {
-            
+
             @Override
             public void reset() {
             }
-            
+
             @Override
-            public void outputPartialResult(DataOutput fieldOutput, byte[] data,
-                    int offset, AggregateState state) throws HyracksDataException {
+            public void outputPartialResult(DataOutput fieldOutput,
+                    byte[] data, int offset, AggregateState state)
+                    throws HyracksDataException {
                 int count;
                 if (!useObjectState) {
                     count = IntegerSerializerDeserializer.getInt(data, offset);
@@ -71,10 +77,11 @@ public class CountFieldAggregatorFactory implements
                             "I/O exception when writing aggregation to the output buffer.");
                 }
             }
-            
+
             @Override
             public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-                    int offset, AggregateState state) throws HyracksDataException {
+                    int offset, AggregateState state)
+                    throws HyracksDataException {
                 int count;
                 if (!useObjectState) {
                     count = IntegerSerializerDeserializer.getInt(data, offset);
@@ -88,7 +95,7 @@ public class CountFieldAggregatorFactory implements
                             "I/O exception when writing aggregation to the output buffer.");
                 }
             }
-            
+
             @Override
             public void init(IFrameTupleAccessor accessor, int tIndex,
                     DataOutput fieldOutput, AggregateState state)
@@ -105,40 +112,24 @@ public class CountFieldAggregatorFactory implements
                     state.setState(count);
                 }
             }
-            
-            @Override
-            public IAggregateStateFactory getAggregateStateFactory() {
-                return new IAggregateStateFactory() {
-                    
-                    private static final long serialVersionUID = 1L;
 
-                    @Override
-                    public boolean hasObjectState() {
-                        return useObjectState;
-                    }
-                    
-                    @Override
-                    public boolean hasBinaryState() {
-                        return !useObjectState;
-                    }
-                    
-                    @Override
-                    public int getStateLength() {
-                        return 4;
-                    }
-                    
-                    @Override
-                    public Object createState() {
-                        return new Integer(0);
-                    }
-                };
+            public boolean needsObjectState() {
+                return useObjectState;
             }
-            
+
+            public boolean needsBinaryState() {
+                return !useObjectState;
+            }
+
+            public AggregateState createState() {
+                return new AggregateState(new Integer(0));
+            }
+
             @Override
             public void close() {
-                
+
             }
-            
+
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex,
                     byte[] data, int offset, AggregateState state)
@@ -152,6 +143,26 @@ public class CountFieldAggregatorFactory implements
                     count += (Integer) state.getState();
                     state.setState(count);
                 }
+            }
+
+            @Override
+            public int getBinaryStateLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state) {
+                if(useObjectState)
+                    return 0;
+                return 4;
+            }
+
+            @Override
+            public int getPartialResultLength(byte[] data, int offset,
+                    AggregateState state) {
+                return 4;
+            }
+
+            @Override
+            public int getFinalResultLength(byte[] data, int offset,
+                    AggregateState state) {
+                return 4;
             }
         };
     }

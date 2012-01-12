@@ -67,7 +67,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 
 	final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
 			new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-					"data/tpch0.001/lineitem.tbl"))) });
+					 "data/tpch0.001/lineitem.tbl"))) });
 
 	final RecordDescriptor desc = new RecordDescriptor(
 			new ISerializerDeserializer[] {
@@ -765,6 +765,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 						IntegerSerializerDeserializer.INSTANCE });
 
 		int[] keyFields = new int[] { 8, 0 };
+		int[] keys = new int[] {0, 1};
 		int frameLimits = 4;
 		int tableSize = 8;
 
@@ -776,11 +777,11 @@ public class AggregationTests extends AbstractIntegrationTest {
 						UTF8StringBinaryComparatorFactory.INSTANCE,
 						UTF8StringBinaryComparatorFactory.INSTANCE },
 				new UTF8StringNormalizedKeyComputerFactory(),
-				new MultiFieldsAggregatorFactory(
+				new MultiFieldsAggregatorFactory(keyFields,
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(1, false),
 								new IntSumFieldAggregatorFactory(3, false) }),
-				new MultiFieldsAggregatorFactory(
+				new MultiFieldsAggregatorFactory(keys,
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(2, false),
 								new IntSumFieldAggregatorFactory(3, false) }),
@@ -966,8 +967,8 @@ public class AggregationTests extends AbstractIntegrationTest {
 								new IntSumFieldAggregatorFactory(1, false),
 								new CountFieldAggregatorFactory(false),
 								new AvgFieldGroupAggregatorFactory(1, false) }),
-				new MultiFieldsAggregatorFactory(
-						new IFieldAggregateDescriptorFactory[] {
+				new MultiFieldsAggregatorFactory(new int[]{0, 1},
+						new IFieldAggregateDescriptorFactory[] { 
 								new IntSumFieldAggregatorFactory(2, false),
 								new IntSumFieldAggregatorFactory(3, false),
 								new AvgFieldMergeAggregatorFactory(4, false) }),
@@ -1148,7 +1149,7 @@ public class AggregationTests extends AbstractIntegrationTest {
 								new IntSumFieldAggregatorFactory(1, false),
 								new MinMaxStringFieldAggregatorFactory(15,
 										true, true) }),
-				new MultiFieldsAggregatorFactory(
+				new MultiFieldsAggregatorFactory(new int[] {0, 1},
 						new IFieldAggregateDescriptorFactory[] {
 								new IntSumFieldAggregatorFactory(2, false),
 								new MinMaxStringFieldAggregatorFactory(3, true,

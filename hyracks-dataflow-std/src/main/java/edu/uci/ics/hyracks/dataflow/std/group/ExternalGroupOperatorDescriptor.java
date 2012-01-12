@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
@@ -275,13 +274,14 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             }
 
             int[] keyFieldsInPartialResults = new int[keyFields.length];
-            for(int i = 0; i < keyFieldsInPartialResults.length; i++){
+            for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
                 keyFieldsInPartialResults[i] = i;
             }
-            
+
             final IAggregatorDescriptor aggregator = mergerFactory
                     .createAggregator(ctx, recordDescriptors[0],
-                            recordDescriptors[0], keyFields, keyFieldsInPartialResults);
+                            recordDescriptors[0], keyFields,
+                            keyFieldsInPartialResults);
             final AggregateState aggregateState = aggregator
                     .createAggregateStates();
 
@@ -303,6 +303,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                  * Output frame.
                  */
                 private ByteBuffer outFrame, writerFrame;
+                private int outFrameOffset, writerFrameOffset;
 
                 private LinkedList<RunFileReader> runs;
 
@@ -315,11 +316,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 private int[] currentFrameIndexInRun;
                 private int[] currentRunFrames;
-                private final FrameTupleAppender outFrameAppender = new FrameTupleAppender(
-                        ctx.getFrameSize());
+
                 private final FrameTupleAccessor outFrameAccessor = new FrameTupleAccessor(
                         ctx.getFrameSize(), recordDescriptors[0]);
-                private FrameTupleAppender writerFrameAppender;
 
                 public void initialize() throws HyracksDataException {
                     aggState = (AggregateActivityState) ctx
@@ -340,7 +339,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             runs = new LinkedList<RunFileReader>(runs);
                             inFrames = new ArrayList<ByteBuffer>();
                             outFrame = ctx.allocateFrame();
-                            outFrameAppender.reset(outFrame, true);
+                            outFrameOffset = 0;
                             outFrameAccessor.reset(outFrame);
                             while (runs.size() > 0) {
                                 try {
@@ -427,7 +426,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                                 runFileReaders, tupleAccessors,
                                                 topTuples);
                                 } else {
-                                    closeRun(runIndex, runFileReaders, tupleAccessors);
+                                    closeRun(runIndex, runFileReaders,
+                                            tupleAccessors);
                                     break;
                                 }
                             }
@@ -455,15 +455,31 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  * Initialize the first output record Reset the
                                  * tuple builder
                                  */
-                                if (!aggregator.init(outFrameAppender, fta,
-                                        tupleIndex, aggregateState)) {
+
+                                int stateLength = aggregator
+                                        .getBinaryAggregateStateLength(fta,
+                                                tupleIndex, aggregateState);
+
+                                if (FrameToolsForGroupers.isFrameOverflowing(
+                                        outFrame, stateLength, (outFrameOffset == 0))) {
                                     flushOutFrame(writer, finalPass);
-                                    if (!aggregator.init(outFrameAppender, fta,
-                                            tupleIndex, aggregateState)) {
+                                    if (FrameToolsForGroupers
+                                            .isFrameOverflowing(outFrame,
+                                                    stateLength, (outFrameOffset == 0))) {
                                         throw new HyracksDataException(
-                                                "Failed to append an aggregation result to the output frame.");
+                                                "The partial result is too large to be initialized in a frame.");
                                     }
                                 }
+
+                                aggregator.init(outFrame.array(),
+                                        outFrameOffset, fta, tupleIndex,
+                                        aggregateState);
+
+                                FrameToolsForGroupers
+                                        .updateFrameMetaForNewTuple(outFrame,
+                                                stateLength, (outFrameOffset == 0));
+
+                                outFrameOffset += stateLength;
 
                             } else {
                                 /**
@@ -482,12 +498,12 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                     runFileReaders, tupleAccessors, topTuples);
                         }
 
-                        if (outFrameAppender.getTupleCount() > 0) {
+                        if (outFrameOffset > 0) {
                             flushOutFrame(writer, finalPass);
                         }
 
                         aggregator.close();
-                        
+
                         runs.subList(0, runNumber).clear();
                         /**
                          * insert the new run file into the beginning of the run
@@ -507,41 +523,66 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         throws HyracksDataException {
                     if (writerFrame == null) {
                         writerFrame = ctx.allocateFrame();
+                        writerFrameOffset = 0;
                     }
-                    if (writerFrameAppender == null) {
-                        writerFrameAppender = new FrameTupleAppender(
-                                ctx.getFrameSize());
-                        writerFrameAppender.reset(writerFrame, true);
-                    }
+
                     outFrameAccessor.reset(outFrame);
 
                     for (int i = 0; i < outFrameAccessor.getTupleCount(); i++) {
-                        
-                        if(isFinal){
-                            if(!aggregator.outputFinalResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+
+                        int outputLen;
+
+                        if (isFinal) {
+
+                            outputLen = aggregator.getFinalOutputLength(
+                                    outFrameAccessor, i, aggregateState);
+
+                            if (FrameToolsForGroupers.isFrameOverflowing(
+                                    writerFrame, outputLen, (writerFrameOffset == 0))) {
                                 FrameUtils.flushFrame(writerFrame, writer);
-                                writerFrameAppender.reset(writerFrame, true);
-                                if(!aggregator.outputFinalResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                writerFrameOffset = 0;
+                                if (FrameToolsForGroupers.isFrameOverflowing(
+                                        writerFrame, outputLen, (writerFrameOffset == 0))) {
                                     throw new HyracksDataException(
-                                            "Failed to write final aggregation result to a writer frame!");
+                                            "Final aggregation output is too large to be fit into a frame.");
                                 }
                             }
+
+                            aggregator.outputFinalResult(writerFrame.array(),
+                                    writerFrameOffset, outFrameAccessor, i,
+                                    aggregateState);
+
                         } else {
-                            if(!aggregator.outputPartialResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+
+                            outputLen = aggregator.getPartialOutputLength(
+                                    outFrameAccessor, i, aggregateState);
+
+                            if (FrameToolsForGroupers.isFrameOverflowing(
+                                    writerFrame, outputLen, (writerFrameOffset == 0))) {
                                 FrameUtils.flushFrame(writerFrame, writer);
-                                writerFrameAppender.reset(writerFrame, true);
-                                if(!aggregator.outputPartialResult(writerFrameAppender, outFrameAccessor, i, aggregateState)){
+                                writerFrameOffset = 0;
+                                if (FrameToolsForGroupers.isFrameOverflowing(
+                                        writerFrame, outputLen, (writerFrameOffset == 0))) {
                                     throw new HyracksDataException(
-                                            "Failed to write final aggregation result to a writer frame!");
+                                            "Final aggregation output is too large to be fit into a frame.");
                                 }
                             }
+
+                            aggregator.outputPartialResult(writerFrame.array(),
+                                    writerFrameOffset, outFrameAccessor, i,
+                                    aggregateState);
                         }
+
+                        FrameToolsForGroupers.updateFrameMetaForNewTuple(
+                                writerFrame, outputLen, (writerFrameOffset == 0));
+
+                        writerFrameOffset += outputLen;
                     }
-                    if (writerFrameAppender.getTupleCount() > 0) {
+                    if (writerFrameOffset > 0) {
                         FrameUtils.flushFrame(writerFrame, writer);
-                        writerFrameAppender.reset(writerFrame, true);
+                        writerFrameOffset = 0;
                     }
-                    outFrameAppender.reset(outFrame, true);
+                    outFrameOffset = 0;
                 }
 
                 private void setNextTopTuple(int runIndex, int[] tupleIndices,

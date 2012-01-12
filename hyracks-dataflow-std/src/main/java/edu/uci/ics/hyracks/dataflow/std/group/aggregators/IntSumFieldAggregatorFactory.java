@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
@@ -37,7 +36,7 @@ public class IntSumFieldAggregatorFactory implements
     private static final long serialVersionUID = 1L;
 
     private final int aggField;
-    
+
     private final boolean useObjectState;
 
     public IntSumFieldAggregatorFactory(int aggField, boolean useObjState) {
@@ -109,12 +108,12 @@ public class IntSumFieldAggregatorFactory implements
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                
+
                 sum += IntegerSerializerDeserializer.getInt(accessor
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
-                
+
                 if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);
@@ -127,32 +126,16 @@ public class IntSumFieldAggregatorFactory implements
                 }
             }
 
-            @Override
-            public IAggregateStateFactory getAggregateStateFactory(){
-                return new IAggregateStateFactory() {
-                    
-                    private static final long serialVersionUID = 1L;
+            public boolean needsObjectState() {
+                return useObjectState;
+            }
 
-                    @Override
-                    public boolean hasObjectState() {
-                        return useObjectState;
-                    }
-                    
-                    @Override
-                    public boolean hasBinaryState() {
-                        return !useObjectState;
-                    }
-                    
-                    @Override
-                    public int getStateLength() {
-                        return 4;
-                    }
-                    
-                    @Override
-                    public Object createState() {
-                        return new Integer(0);
-                    }
-                };
+            public boolean needsBinaryState() {
+                return !useObjectState;
+            }
+
+            public AggregateState createState() {
+                return new AggregateState(new Integer(0));
             }
 
             @Override
@@ -171,7 +154,7 @@ public class IntSumFieldAggregatorFactory implements
                         .getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength()
                                 + fieldStart);
-                
+
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
                     sum += buf.getInt(offset);
@@ -180,6 +163,26 @@ public class IntSumFieldAggregatorFactory implements
                     sum += (Integer) state.getState();
                     state.setState(sum);
                 }
+            }
+
+            @Override
+            public int getBinaryStateLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state) {
+                if (useObjectState)
+                    return 0;
+                return 4;
+            }
+
+            @Override
+            public int getPartialResultLength(byte[] data, int offset,
+                    AggregateState state) {
+                return 4;
+            }
+
+            @Override
+            public int getFinalResultLength(byte[] data, int offset,
+                    AggregateState state) {
+                return 4;
             }
         };
     }

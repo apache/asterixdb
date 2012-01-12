@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
@@ -158,32 +157,43 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
             }
 
             @Override
-            public IAggregateStateFactory getAggregateStateFactory() {
-                return new IAggregateStateFactory() {
-                    
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public boolean hasObjectState() {
-                        return useObjectState;
-                    }
-                    
-                    @Override
-                    public boolean hasBinaryState() {
-                        return !useObjectState;
-                    }
-                    
-                    @Override
-                    public int getStateLength() {
-                        return 8;
-                    }
-                    
-                    @Override
-                    public Object createState() {
-                        return new Integer[]{0, 0};
-                    }
-                };
+            public boolean needsObjectState() {
+                return useObjectState;
             }
+            
+            @Override
+            public boolean needsBinaryState() {
+                return !useObjectState;
+            }
+            
+            @Override
+            public AggregateState createState() {
+                return new AggregateState(new Integer[]{0, 0});
+            }
+
+            @Override
+            public int getBinaryStateLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                if(useObjectState){
+                    return 0;
+                } else {
+                    return 8;
+                }
+            }
+
+            @Override
+            public int getPartialResultLength(byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
+                return 8;
+            }
+
+            @Override
+            public int getFinalResultLength(byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
+                return 4;
+            }
+
         };
     }
 

@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregateStateFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
@@ -204,34 +203,92 @@ public class MinMaxStringFieldAggregatorFactory implements
                 }
             }
 
-            @Override
-            public IAggregateStateFactory getAggregateStateFactory() {
-                return new IAggregateStateFactory() {
-
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public boolean hasObjectState() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean hasBinaryState() {
-                        return hasBinaryState;
-                    }
-
-                    @Override
-                    public int getStateLength() {
-                        return 4;
-                    }
-
-                    @Override
-                    public Object createState() {
-                        return null;
-                    }
-                };
+            public boolean needsObjectState() {
+                return true;
             }
+
+            public boolean needsBinaryState() {
+                return hasBinaryState;
+            }
+
+            public AggregateState createState() {
+                return new AggregateState();
+            }
+
+            @Override
+            public int getBinaryStateLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state) {
+                int len = 0;
+
+                if (hasBinaryState) {
+                    len = 4;
+                }
+
+                return len;
+            }
+
+            @Override
+            public int getPartialResultLength(byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
+                int len = 0;
+
+                if (hasBinaryState) {
+                    int stateIdx = IntegerSerializerDeserializer.getInt(data,
+                            offset);
+
+                    Object[] storedState = (Object[]) state.getState();
+
+                    len = getUTFLength(((String) (storedState[stateIdx])));
+                } else {
+                    len = getUTFLength((String) (state.getState()));
+                }
+
+                return len;
+            }
+
+            @Override
+            public int getFinalResultLength(byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
+                int len = 0;
+
+                if (hasBinaryState) {
+                    int stateIdx = IntegerSerializerDeserializer.getInt(data,
+                            offset);
+
+                    Object[] storedState = (Object[]) state.getState();
+
+                    len = getUTFLength(((String) (storedState[stateIdx])));
+                } else {
+                    len = getUTFLength((String) (state.getState()));
+                }
+
+                return len;
+            }
+
+            private int getUTFLength(String str) throws HyracksDataException {
+                int utflen = 0;
+                int c = 0;
+
+                /* use charAt instead of copying String to char array */
+                for (int i = 0; i < str.length(); i++) {
+                    c = str.charAt(i);
+                    if ((c >= 0x0001) && (c <= 0x007F)) {
+                        utflen++;
+                    } else if (c > 0x07FF) {
+                        utflen += 3;
+                    } else {
+                        utflen += 2;
+                    }
+                }
+
+                if (utflen > 65535) {
+                    throw new HyracksDataException("encoded string too long: "
+                            + utflen + " bytes");
+                }
+
+                return utflen + 2;
+            }
+
         };
     }
-
 }

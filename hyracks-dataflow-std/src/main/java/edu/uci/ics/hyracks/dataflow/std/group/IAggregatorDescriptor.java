@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
  *
@@ -29,13 +28,20 @@ public interface IAggregatorDescriptor {
      * @return
      */
     public AggregateState createAggregateStates();
-    
+
     /**
      * Get the length of the binary states.
      * 
      * @return
      */
-    public int getAggregateStatesLength();
+    public int getBinaryAggregateStateLength(IFrameTupleAccessor accessor,
+            int tIndex, AggregateState state) throws HyracksDataException;
+
+    public int getPartialOutputLength(IFrameTupleAccessor accessor, int tIndex,
+            AggregateState state) throws HyracksDataException;
+
+    public int getFinalOutputLength(IFrameTupleAccessor accessor, int tIndex,
+            AggregateState state) throws HyracksDataException;
 
     /**
      * Initialize the state based on the input tuple.
@@ -49,9 +55,8 @@ public interface IAggregatorDescriptor {
      *            The state to be initialized.
      * @throws HyracksDataException
      */
-    public boolean init(FrameTupleAppender appender,
-            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
-            throws HyracksDataException;
+    public void init(byte[] buf, int offset, IFrameTupleAccessor accessor,
+            int tIndex, AggregateState state) throws HyracksDataException;
 
     /**
      * Reset the aggregator. The corresponding aggregate state should be reset
@@ -93,7 +98,7 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public boolean outputPartialResult(FrameTupleAppender appender,
+    public void outputPartialResult(byte[] data, int offset,
             IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
 
@@ -109,7 +114,7 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public boolean outputFinalResult(FrameTupleAppender appender,
+    public void outputFinalResult(byte[] data, int offset,
             IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
 

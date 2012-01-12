@@ -23,22 +23,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  *
  */
 public interface IFieldAggregateDescriptor {
-    
-    public IAggregateStateFactory getAggregateStateFactory();
 
     /**
-     * Initialize the state based on the input tuple. 
+     * Initialize the state based on the input tuple.
      * 
      * @param accessor
      * @param tIndex
      * @param fieldOutput
      *            The data output for the frame containing the state. This may
-     *            be null, if the state is maintained as a java object. 
-     *            
-     *            Note that we have an assumption that the initialization of
-     *            the binary state (if any) inserts the state fields into the
-     *            buffer in a appending fashion. This means that an arbitrary
-     *            initial size of the state can be accquired.
+     *            be null, if the state is maintained as a java object.
+     * 
+     *            Note that we have an assumption that the initialization of the
+     *            binary state (if any) inserts the state fields into the buffer
+     *            in a appending fashion. This means that an arbitrary initial
+     *            size of the state can be accquired.
      * @param state
      *            The state to be initialized.
      * @throws HyracksDataException
@@ -65,11 +63,12 @@ public interface IFieldAggregateDescriptor {
      * @param data
      *            The buffer containing the state, if frame-based-state is used.
      *            This means that it can be null if java-object-based-state is
-     *            used. 
-     *            
+     *            used.
+     * 
      *            Here the length of binary state can be obtains from the state
      *            parameter, and if the content to be filled into that is over-
-     *            flowing (larger than the reversed space), error should be emit.
+     *            flowing (larger than the reversed space), error should be
+     *            emit.
      * @param offset
      * @param state
      *            The aggregate state.
@@ -109,6 +108,24 @@ public interface IFieldAggregateDescriptor {
     public void outputFinalResult(DataOutput fieldOutput, byte[] data,
             int offset, AggregateState state) throws HyracksDataException;
 
+    public boolean needsBinaryState();
+
+    public boolean needsObjectState();
+
+    public int getBinaryStateLength(IFrameTupleAccessor accessor, int tIndex,
+            AggregateState state) throws HyracksDataException;
+
+    public int getPartialResultLength(byte[] data, int offset,
+            AggregateState state) throws HyracksDataException;
+
+    public int getFinalResultLength(byte[] data, int offset,
+            AggregateState state) throws HyracksDataException;
+
+    public AggregateState createState();
+
+    /**
+     * Close the field aggregator
+     */
     public void close();
 
 }

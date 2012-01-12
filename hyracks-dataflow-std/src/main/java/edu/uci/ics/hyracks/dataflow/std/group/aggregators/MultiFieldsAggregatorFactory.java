@@ -21,9 +21,8 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregateStateFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.FrameToolsForGroupers;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -37,7 +36,14 @@ public class MultiFieldsAggregatorFactory implements
 
     private static final long serialVersionUID = 1L;
     private final IFieldAggregateDescriptorFactory[] aggregatorFactories;
+    private int[] keys;
 
+    public MultiFieldsAggregatorFactory(int[] keys, 
+            IFieldAggregateDescriptorFactory[] aggregatorFactories) {
+        this.keys = keys;
+        this.aggregatorFactories = aggregatorFactories;
+    }
+    
     public MultiFieldsAggregatorFactory(
             IFieldAggregateDescriptorFactory[] aggregatorFactories) {
         this.aggregatorFactories = aggregatorFactories;
@@ -55,21 +61,22 @@ public class MultiFieldsAggregatorFactory implements
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, final int[] keyFields, final int[] keyFieldsInPartialResults)
-            throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, final int[] keyFields,
+            final int[] keyFieldsInPartialResults) throws HyracksDataException {
 
         final IFieldAggregateDescriptor[] aggregators = new IFieldAggregateDescriptor[aggregatorFactories.length];
-        final IAggregateStateFactory[] aggregateStateFactories = new IAggregateStateFactory[aggregators.length];
         for (int i = 0; i < aggregators.length; i++) {
             aggregators[i] = aggregatorFactories[i].createAggregator(ctx,
                     inRecordDescriptor, outRecordDescriptor);
-            aggregateStateFactories[i] = aggregators[i]
-                    .getAggregateStateFactory();
         }
-
-        int stateTupleFieldCount = keyFields.length;
-        for (int i = 0; i < aggregateStateFactories.length; i++) {
-            if (aggregateStateFactories[i].hasBinaryState()) {
+        
+        if(this.keys == null){
+            this.keys = keyFields;
+        }
+        
+        int stateTupleFieldCount = keys.length;
+        for (int i = 0; i < aggregators.length; i++) {
+            if (aggregators[i].needsBinaryState()) {
                 stateTupleFieldCount++;
             }
         }
@@ -82,155 +89,204 @@ public class MultiFieldsAggregatorFactory implements
 
         return new IAggregatorDescriptor() {
 
-            private boolean initPending, outputPending;
-
             @Override
             public void reset() {
                 for (int i = 0; i < aggregators.length; i++) {
                     aggregators[i].reset();
-                    aggregateStateFactories[i] = aggregators[i]
-                            .getAggregateStateFactory();
                 }
-                initPending = false;
-                outputPending = false;
             }
 
             @Override
-            public boolean outputPartialResult(FrameTupleAppender appender,
+            public void outputPartialResult(byte[] buf, int offset,
                     IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                if (!outputPending) {
-                    resultTupleBuilder.reset();
-                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
-                        resultTupleBuilder.addField(accessor, tIndex,
-                        		keyFieldsInPartialResults[i]);
-                    }
-                    DataOutput dos = resultTupleBuilder.getDataOutput();
 
-                    int tupleOffset = accessor.getTupleStartOffset(tIndex);
-                    for (int i = 0; i < aggregators.length; i++) {
+                resultTupleBuilder.reset();
+                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+                    resultTupleBuilder.addField(accessor, tIndex,
+                            keyFieldsInPartialResults[i]);
+                }
+                DataOutput dos = resultTupleBuilder.getDataOutput();
+
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                for (int i = 0; i < aggregators.length; i++) {
+                    int fieldOffset = accessor.getFieldStartOffset(tIndex,
+                            keys.length + i);
+                    aggregators[i].outputPartialResult(dos, accessor
+                            .getBuffer().array(),
+                            fieldOffset + accessor.getFieldSlotsLength()
+                                    + tupleOffset, ((AggregateState[]) state
+                                    .getState())[i]);
+                    resultTupleBuilder.addFieldEndOffset();
+                }
+
+                if (buf != null)
+                    FrameToolsForGroupers.writeFields(buf, offset, this
+                            .getPartialOutputLength(accessor, tIndex, state),
+                            resultTupleBuilder);
+
+            }
+
+            @Override
+            public void outputFinalResult(byte[] buf, int offset,
+                    IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+
+                resultTupleBuilder.reset();
+
+                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+                    resultTupleBuilder.addField(accessor, tIndex,
+                            keyFieldsInPartialResults[i]);
+                }
+
+                DataOutput dos = resultTupleBuilder.getDataOutput();
+
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                for (int i = 0; i < aggregators.length; i++) {
+                    if (aggregators[i].needsBinaryState()) {
                         int fieldOffset = accessor.getFieldStartOffset(tIndex,
-                                keyFields.length + i);
-                        aggregators[i].outputPartialResult(dos, accessor
+                                keys.length + i);
+                        aggregators[i].outputFinalResult(dos, accessor
                                 .getBuffer().array(),
-                                fieldOffset + accessor.getFieldSlotsLength()
-                                        + tupleOffset,
+                                tupleOffset + accessor.getFieldSlotsLength()
+                                        + fieldOffset,
                                 ((AggregateState[]) state.getState())[i]);
-                        resultTupleBuilder.addFieldEndOffset();
+                    } else {
+                        aggregators[i].outputFinalResult(dos, null, 0,
+                                ((AggregateState[]) state.getState())[i]);
                     }
+                    resultTupleBuilder.addFieldEndOffset();
                 }
-                if (!appender.append(resultTupleBuilder.getFieldEndOffsets(),
-                        resultTupleBuilder.getByteArray(), 0,
-                        resultTupleBuilder.getSize())) {
-                    outputPending = true;
-                    return false;
-                }
-                outputPending = false;
-                return true;
 
+                if (buf != null)
+                    FrameToolsForGroupers.writeFields(buf, offset,
+                            this.getFinalOutputLength(accessor, tIndex, state),
+                            resultTupleBuilder);
             }
 
             @Override
-            public boolean outputFinalResult(FrameTupleAppender appender,
-                    IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                if (!outputPending) {
-                    resultTupleBuilder.reset();
-                    
-                    for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
-                        resultTupleBuilder.addField(accessor, tIndex,
-                        		keyFieldsInPartialResults[i]);
-                    }
- 
-                    DataOutput dos = resultTupleBuilder.getDataOutput();
+            public int getPartialOutputLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                int stateLength = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
 
-                    int tupleOffset = accessor.getTupleStartOffset(tIndex);
-                    for (int i = 0; i < aggregators.length; i++) {
-                        if (aggregateStateFactories[i].hasBinaryState()) {
-                            int fieldOffset = accessor.getFieldStartOffset(
-                                    tIndex, keyFields.length + i);
-                            aggregators[i].outputFinalResult(dos, accessor
-                                    .getBuffer().array(), tupleOffset
+                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+                    stateLength += accessor.getFieldLength(tIndex,
+                            keyFieldsInPartialResults[i]);
+                    // add length for slot offset
+                    stateLength += 4;
+                }
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    int fieldOffset = 0;
+                    if (aggregators[i].needsBinaryState()) {
+                        fieldOffset = accessor.getFieldStartOffset(tIndex,
+                                keys.length + i);
+                    }
+                    stateLength += aggregators[i].getPartialResultLength(
+                            accessor.getBuffer().array(), tupleOffset
                                     + accessor.getFieldSlotsLength()
+                                    + fieldOffset,
+                            ((AggregateState[]) state.getState())[i]);
+                    // add length for slot offset
+                    stateLength += 4;
+                }
+                return stateLength;
+            }
+
+            @Override
+            public int getFinalOutputLength(IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                int stateLength = 0;
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+
+                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+                    stateLength += accessor.getFieldLength(tIndex,
+                            keyFieldsInPartialResults[i]);
+                    // add length for slot offset
+                    stateLength += 4;
+                }
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    int fieldOffset = 0;
+                    if (aggregators[i].needsBinaryState()) {
+                        fieldOffset = accessor.getFieldStartOffset(tIndex,
+                                keys.length + i);
+                    }
+                    stateLength += aggregators[i].getFinalResultLength(accessor
+                            .getBuffer().array(),
+                            tupleOffset + accessor.getFieldSlotsLength()
                                     + fieldOffset, ((AggregateState[]) state
                                     .getState())[i]);
-                        } else {
-                            aggregators[i].outputFinalResult(dos, null, 0,
-                                    ((AggregateState[]) state.getState())[i]);
-                        }
-                        resultTupleBuilder.addFieldEndOffset();
-                    }
+                    // add length for slot offset
+                    stateLength += 4;
                 }
-                if (!appender.append(resultTupleBuilder.getFieldEndOffsets(),
-                        resultTupleBuilder.getByteArray(), 0,
-                        resultTupleBuilder.getSize())) {
-                    outputPending = true;
-                    return false;
-                }
-                outputPending = false;
-                return true;
+                return stateLength;
             }
 
             @Override
-            public boolean init(FrameTupleAppender appender,
+            public void init(byte[] buf, int offset,
                     IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                if (!initPending) {
-                    stateTupleBuilder.reset();
-                    for (int i = 0; i < keyFields.length; i++) {
-                        stateTupleBuilder.addField(accessor, tIndex,
-                                keyFields[i]);
-                    }
-                    DataOutput dos = stateTupleBuilder.getDataOutput();
 
-                    for (int i = 0; i < aggregators.length; i++) {
-                        aggregators[i].init(accessor, tIndex, dos,
-                                ((AggregateState[]) state.getState())[i]);
-                        if (aggregateStateFactories[i].hasBinaryState()) {
-                            stateTupleBuilder.addFieldEndOffset();
-                        }
+                stateTupleBuilder.reset();
+                for (int i = 0; i < keys.length; i++) {
+                    stateTupleBuilder.addField(accessor, tIndex, keys[i]);
+                }
+                DataOutput dos = stateTupleBuilder.getDataOutput();
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    aggregators[i].init(accessor, tIndex, dos,
+                            ((AggregateState[]) state.getState())[i]);
+                    if (aggregators[i].needsBinaryState()) {
+                        stateTupleBuilder.addFieldEndOffset();
                     }
                 }
-                // For pre-cluster: no output state is needed
-                if(appender == null){
-                    initPending = false;
-                    return true;
-                }
-                if (!appender.append(stateTupleBuilder.getFieldEndOffsets(),
-                        stateTupleBuilder.getByteArray(), 0,
-                        stateTupleBuilder.getSize())) {
-                    initPending = true;
-                    return false;
-                }
-                initPending = false;
-                return true;
+                if (buf != null)
+                    FrameToolsForGroupers.writeFields(buf, offset, this
+                            .getBinaryAggregateStateLength(accessor, tIndex,
+                                    state), stateTupleBuilder);
             }
 
             @Override
             public AggregateState createAggregateStates() {
-                AggregateState aggregateStates = new AggregateState();
-                AggregateState[] states = new AggregateState[aggregateStateFactories.length];
+                AggregateState[] states = new AggregateState[aggregators.length];
                 for (int i = 0; i < states.length; i++) {
-                    states[i] = new AggregateState();
-                    states[i]
-                            .setState(aggregateStateFactories[i].createState());
+                    states[i] = aggregators[i].createState();
                 }
-                aggregateStates.setState(states);
-                return aggregateStates;
+                return new AggregateState(states);
             }
 
             @Override
-            public int getAggregateStatesLength() {
+            public int getBinaryAggregateStateLength(
+                    IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
                 int stateLength = 0;
-                for (int i = 0; i < aggregateStateFactories.length; i++) {
-                    stateLength += aggregateStateFactories[i].getStateLength();
+
+                for (int i = 0; i < keys.length; i++) {
+                    stateLength += accessor
+                            .getFieldLength(tIndex, keys[i]);
+                    // add length for slot offset
+                    stateLength += 4;
+                }
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    if (aggregators[i].needsBinaryState()) {
+                        stateLength += aggregators[i].getBinaryStateLength(
+                                accessor, tIndex,
+                                ((AggregateState[]) state.getState())[i]);
+                        // add length for slot offset
+                        stateLength += 4;
+                    }
                 }
                 return stateLength;
             }
 
             @Override
             public void close() {
-                for(int i = 0; i < aggregators.length; i++){
+                for (int i = 0; i < aggregators.length; i++) {
                     aggregators[i].close();
                 }
             }
@@ -244,10 +300,10 @@ public class MultiFieldsAggregatorFactory implements
                             .getTupleStartOffset(stateTupleIndex);
                     int fieldIndex = 0;
                     for (int i = 0; i < aggregators.length; i++) {
-                        if (aggregateStateFactories[i].hasBinaryState()) {
+                        if (aggregators[i].needsBinaryState()) {
                             int stateFieldOffset = stateAccessor
                                     .getFieldStartOffset(stateTupleIndex,
-                                            keyFields.length + fieldIndex);
+                                            keys.length + fieldIndex);
                             aggregators[i].aggregate(
                                     accessor,
                                     tIndex,
