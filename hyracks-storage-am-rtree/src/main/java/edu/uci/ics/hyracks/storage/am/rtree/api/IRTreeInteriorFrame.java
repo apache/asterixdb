@@ -25,6 +25,8 @@ public interface IRTreeInteriorFrame extends IRTreeFrame {
 
 	public int getBestChildPageId();
 
+	public int getChildPageId(int tupleIndex);
+	
 	public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex,
 			MultiComparator cmp);
 
@@ -40,4 +42,6 @@ public interface IRTreeInteriorFrame extends IRTreeFrame {
 			MultiComparator cmp);
 
 	public void enlarge(ITupleReference tuple, MultiComparator cmp);
+
+    boolean checkEnlargement(ITupleReference tuple, MultiComparator cmp);
 }

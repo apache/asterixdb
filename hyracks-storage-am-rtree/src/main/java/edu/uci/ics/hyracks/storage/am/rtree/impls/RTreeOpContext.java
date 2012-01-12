@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
-public final class RTreeOpContext implements IIndexOpContext {
+public class RTreeOpContext implements IIndexOpContext {
 	public final IRTreeInteriorFrame interiorFrame;
 	public final IRTreeLeafFrame leafFrame;
 	public IndexOp op;
