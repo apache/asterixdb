@@ -16,7 +16,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 	
 	private final int pageSize;
 	private final int numPages;
-    private final CachedPage[] cachedPages;
+    protected final CachedPage[] cachedPages;
 
 	//Constructor
 	public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages){

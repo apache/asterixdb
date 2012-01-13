@@ -33,13 +33,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.FreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryBufferCacheFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTree;
+import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeInMemoryBufferCacheFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.RTreeFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
@@ -54,7 +53,7 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class LSMRTreeTest extends AbstractLSMTreeTest {
 
     private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10000;
+    private static final int NUM_PAGES = 100;
     private static final int MAX_OPEN_FILES = 100;
     private static final int HYRACKS_FRAME_SIZE = 128;
     private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
@@ -72,12 +71,9 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         bufferCache.openFile(fileId);
 
         // in memory
-        InMemoryBufferCacheFactory rtreeInMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache rtreeMemBufferCache = rtreeInMemBufferCacheFactory.createInMemoryBufferCache();
-
-        // in memory
-        InMemoryBufferCacheFactory btreeInMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache btreeMemBufferCache = btreeInMemBufferCacheFactory.createInMemoryBufferCache();
+        LSMRTreeInMemoryBufferCacheFactory inMemBufferCacheFactory = new LSMRTreeInMemoryBufferCacheFactory(PAGE_SIZE,
+                NUM_PAGES);
+        IBufferCache memBufferCache = inMemBufferCacheFactory.createInMemoryBufferCache();
 
         // declare keys
         int keyFieldCount = 4;
@@ -117,8 +113,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
 
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager rtreeMemFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
-        IFreePageManager btreeMemFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        IFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
 
@@ -127,9 +122,9 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        LSMRTree lsmrtree = new LSMRTree(rtreeMemBufferCache, btreeMemBufferCache, bufferCache, fieldCount, cmp,
-                rtreeMemFreePageManager, btreeMemFreePageManager, rtreeInteriorFrameFactory, btreeInteriorFrameFactory,
-                rtreeLeafFrameFactory, btreeLeafFrameFactory, rTreeFactory, bTreeFactory, (IFileMapManager) fmp);
+        LSMRTree lsmrtree = new LSMRTree(memBufferCache, bufferCache, fieldCount, cmp, memFreePageManager,
+                rtreeInteriorFrameFactory, btreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeLeafFrameFactory,
+                rTreeFactory, bTreeFactory, (IFileMapManager) fmp);
 
         lsmrtree.create(fileId);
         lsmrtree.open(fileId);
@@ -240,10 +235,10 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
             tuple.reset(accessor, 0);
 
             if (LOGGER.isLoggable(Level.INFO)) {
-                //if (i % 1000 == 0) {
-                    LOGGER.info("DELETING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
-                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
-                //}
+                // if (i % 1000 == 0) {
+                LOGGER.info("DELETING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                        + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+                // }
             }
 
             try {
@@ -256,8 +251,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
 
         lsmrtree.close();
         bufferCache.closeFile(fileId);
-        rtreeMemBufferCache.close();
-        btreeMemBufferCache.close();
+        memBufferCache.close();
     }
 
 }

@@ -43,8 +43,7 @@ public class LSMRTree implements ILSMTree {
     private int btreeFileId;
     private boolean created;
 
-    private final IFreePageManager rtreeMemFreePageManager;
-    private final IFreePageManager btreeMemFreePageManager;
+    private final IFreePageManager memFreePageManager;
     private final ITreeIndexFrameFactory rtreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory btreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory rtreeLeafFrameFactory;
@@ -63,8 +62,8 @@ public class LSMRTree implements ILSMTree {
     private int threadReferenceCounter;
     private boolean flushFlag;
 
-    public LSMRTree(IBufferCache rtreeMemCache, IBufferCache btreeMemCache, IBufferCache bufferCache, int fieldCount, MultiComparator cmp,
-            IFreePageManager rtreeMemFreePageManager, IFreePageManager btreeMemFreePageManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+    public LSMRTree(IBufferCache rtreeMemCache, IBufferCache bufferCache, int fieldCount, MultiComparator cmp,
+            IFreePageManager memFreePageManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, RTreeFactory rTreeFactory, BTreeFactory bTreeFactory,
             IFileMapManager fileMapManager) {
@@ -74,8 +73,7 @@ public class LSMRTree implements ILSMTree {
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
-        this.rtreeMemFreePageManager = rtreeMemFreePageManager;
-        this.btreeMemFreePageManager = btreeMemFreePageManager;
+        this.memFreePageManager = memFreePageManager;
         this.rTreeFactory = rTreeFactory;
         this.bTreeFactory = bTreeFactory;
         this.inDiskRTreeList = new LinkedList<ITreeIndex>();
@@ -99,9 +97,9 @@ public class LSMRTree implements ILSMTree {
             e.printStackTrace();
         }
 
-        memRTree = new RTree(rtreeMemCache, fieldCount, cmp, rtreeMemFreePageManager, rtreeInteriorFrameFactory,
+        memRTree = new RTree(rtreeMemCache, fieldCount, cmp, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory);
-        memBTree = new BTree(btreeMemCache, fieldCount, cmp, btreeMemFreePageManager, btreeInteriorFrameFactory,
+        memBTree = new BTree(rtreeMemCache, fieldCount, cmp, memFreePageManager, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory);
     }
 
@@ -227,7 +225,8 @@ public class LSMRTree implements ILSMTree {
         // TODO: Close the RTree during cleanup.
         inDiskRTree.open(newDiskRTreeId);
 
-        // // BulkLoad the tuples from the in-memory tree into the new disk RTree.
+        // // BulkLoad the tuples from the in-memory tree into the new disk
+        // RTree.
         IIndexBulkLoadContext rtreeBulkLoadCtx = inDiskRTree.beginBulkLoad(1.0f);
 
         int i = 0;
@@ -244,8 +243,8 @@ public class LSMRTree implements ILSMTree {
         inDiskRTree.endBulkLoad(rtreeBulkLoadCtx);
 
         // scan the BTree
-        ITreeIndexCursor btreeScanCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) btreeLeafFrameFactory.createFrame(),
-                false);
+        ITreeIndexCursor btreeScanCursor = new BTreeRangeSearchCursor(
+                (IBTreeLeafFrame) btreeLeafFrameFactory.createFrame(), false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
         memBTreeAccessor.search(btreeScanCursor, nullPred);
@@ -295,8 +294,7 @@ public class LSMRTree implements ILSMTree {
     }
 
     public void resetInMemoryTrees() throws HyracksDataException {
-        ((InMemoryFreePageManager) rtreeMemFreePageManager).reset();
-        ((InMemoryFreePageManager) btreeMemFreePageManager).reset();
+        ((InMemoryFreePageManager) memFreePageManager).reset();
         memRTree.create(rtreeFileId);
         memBTree.create(btreeFileId);
     }
@@ -459,10 +457,10 @@ public class LSMRTree implements ILSMTree {
 
         return new LSMTreeOpContext(new LSMRTreeOpContext((RTree.RTreeAccessor) memRTree.createAccessor(),
                 (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
-                (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), rtreeMemFreePageManager
+                (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
                         .getMetaDataFrameFactory().createFrame(), 8), new LSMBTreeOpContext(
                 (BTree.BTreeAccessor) memBTree.createAccessor(), btreeLeafFrameFactory, btreeInteriorFrameFactory,
-                btreeMemFreePageManager.getMetaDataFrameFactory().createFrame(), cmp));
+                memFreePageManager.getMetaDataFrameFactory().createFrame(), cmp));
     }
 
     private class LSMRTreeAccessor implements ITreeIndexAccessor {
