@@ -21,7 +21,9 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class PreclusteredGroupWriter implements IFrameWriter {
@@ -35,13 +37,14 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private final FrameTupleAccessor copyFrameAccessor;
 
     private final ByteBuffer outFrame;
-    private int outFrameOffset;
+    private final FrameTupleAppender appender;
+    private final ArrayTupleBuilder tupleBuilder;
 
     private boolean first;
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields,
             IBinaryComparator[] comparators, IAggregatorDescriptor aggregator,
-            RecordDescriptor inRecordDesc, IFrameWriter writer) {
+            RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc, IFrameWriter writer) {
         this.groupFields = groupFields;
         this.comparators = comparators;
         this.aggregator = aggregator;
@@ -55,7 +58,10 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         copyFrameAccessor.reset(copyFrame);
 
         outFrame = ctx.allocateFrame();
-        outFrameOffset = 0;
+        appender = new FrameTupleAppender(ctx.getFrameSize());
+        appender.reset(outFrame, true);
+        
+        tupleBuilder = new ArrayTupleBuilder(outRecordDesc.getFields().length);
     }
 
     @Override
@@ -71,7 +77,9 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         for (int i = 0; i < nTuples; ++i) {
             if (first) {
 
-                aggregator.init(null, 0, inFrameAccessor, i, aggregateState);
+                tupleBuilder.reset();
+                
+                aggregator.init(tupleBuilder, inFrameAccessor, i, aggregateState);
 
                 first = false;
 
@@ -97,7 +105,8 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
 
-            aggregator.init(null, 0, currTupleAccessor, currTupleIndex,
+            tupleBuilder.reset();
+            aggregator.init(tupleBuilder, currTupleAccessor, currTupleIndex,
                     aggregateState);
         } else {
             aggregator.aggregate(currTupleAccessor, currTupleIndex, null, 0,
@@ -108,25 +117,19 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private void writeOutput(final FrameTupleAccessor lastTupleAccessor,
             int lastTupleIndex) throws HyracksDataException {
 
-        int outLen = aggregator.getFinalOutputLength(lastTupleAccessor,
-                lastTupleIndex, aggregateState);
+        tupleBuilder.reset();
 
-        if (FrameToolsForGroupers.isFrameOverflowing(outFrame, outLen, (outFrameOffset == 0))) {
+        aggregator.outputFinalResult(tupleBuilder,
+                lastTupleAccessor, lastTupleIndex, aggregateState);
+        
+        if(!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
             FrameUtils.flushFrame(outFrame, writer);
-            outFrameOffset = 0;
-            if (FrameToolsForGroupers.isFrameOverflowing(outFrame, outLen, (outFrameOffset == 0))) {
+            appender.reset(outFrame, true);
+            if(!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize()))  {
                 throw new HyracksDataException(
                         "The output cannot be fit into a frame.");
             }
         }
-
-        aggregator.outputFinalResult(outFrame.array(), outFrameOffset,
-                lastTupleAccessor, lastTupleIndex, aggregateState);
-
-        FrameToolsForGroupers.updateFrameMetaForNewTuple(outFrame, outLen,
-                (outFrameOffset == 0));
-
-        outFrameOffset += outLen;
 
     }
 
@@ -158,7 +161,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         if (!first) {
             writeOutput(copyFrameAccessor,
                     copyFrameAccessor.getTupleCount() - 1);
-            if (outFrameOffset > 0) {
+            if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(outFrame, writer);
             }
         }

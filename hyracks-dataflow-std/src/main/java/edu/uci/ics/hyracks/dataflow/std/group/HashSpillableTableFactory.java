@@ -30,7 +30,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
@@ -113,6 +115,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
         final FrameTuplePairComparator ftpcPartial = new FrameTuplePairComparator(
                 keyFields, storedKeys, comparators);
+
         final FrameTuplePairComparator ftpcTuple = new FrameTuplePairComparator(
                 storedKeys, storedKeys, comparators);
 
@@ -133,13 +136,27 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final AggregateState aggregateState = aggregator
                 .createAggregateStates();
 
+        final ArrayTupleBuilder stateTupleBuilder;
+        if (keyFields.length < outRecordDescriptor.getFields().length) {
+            stateTupleBuilder = new ArrayTupleBuilder(
+                    outRecordDescriptor.getFields().length);
+        } else {
+            stateTupleBuilder = new ArrayTupleBuilder(
+                    outRecordDescriptor.getFields().length + 1);
+        }
+
+        final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(
+                outRecordDescriptor.getFields().length);
+
         return new ISpillableTable() {
 
             private int lastBufIndex;
-            private int outFrameOffset;
-            private int tupleCountInOutFrame;
 
             private ByteBuffer outputFrame;
+            private FrameTupleAppender outputAppender;
+
+            private FrameTupleAppender stateAppender = new FrameTupleAppender(
+                    ctx.getFrameSize());
 
             private final ISerializableTable table = new SerializableHashTable(
                     tableSize, ctx);
@@ -229,27 +246,29 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                 if (!foundGroup) {
 
-                    int initLen = aggregator.getBinaryAggregateStateLength(
-                            accessor, tIndex, aggregateState);
+                    stateTupleBuilder.reset();
 
-                    if (FrameToolsForGroupers.isFrameOverflowing(
-                            frames.get(lastBufIndex), initLen, (outFrameOffset == 0))) {
+                    aggregator.init(stateTupleBuilder, accessor, tIndex,
+                            aggregateState);
+                    if (!stateAppender.appendSkipEmptyField(
+                            stateTupleBuilder.getFieldEndOffsets(),
+                            stateTupleBuilder.getByteArray(), 0,
+                            stateTupleBuilder.getSize())) {
                         if (!nextAvailableFrame()) {
                             return false;
                         }
+                        if (!stateAppender.appendSkipEmptyField(
+                                stateTupleBuilder.getFieldEndOffsets(),
+                                stateTupleBuilder.getByteArray(), 0,
+                                stateTupleBuilder.getSize())) {
+                            throw new HyracksDataException(
+                                    "Cannot init external aggregate state in a frame.");
+                        }
                     }
 
-                    aggregator.init(frames.get(lastBufIndex).array(),
-                            outFrameOffset, accessor, tIndex, aggregateState);
-
-                    FrameToolsForGroupers.updateFrameMetaForNewTuple(
-                            frames.get(lastBufIndex), initLen, (outFrameOffset == 0));
-
-                    outFrameOffset += initLen;
-                    tupleCountInOutFrame++;
-
                     storedTuplePointer.frameIndex = lastBufIndex;
-                    storedTuplePointer.tupleIndex = tupleCountInOutFrame - 1;
+                    storedTuplePointer.tupleIndex = stateAppender
+                            .getTupleCount() - 1;
                     table.insert(entry, storedTuplePointer);
                 } else {
 
@@ -277,7 +296,13 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     outputFrame = ctx.allocateFrame();
                 }
 
-                int outputFrameOffset = 0;
+                if (outputAppender == null) {
+                    outputAppender = new FrameTupleAppender(
+                            outputFrame.capacity());
+                }
+
+                outputAppender.reset(outputFrame, true);
+
                 writer.open();
 
                 if (tPointers == null) {
@@ -295,64 +320,46 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                             storedKeysAccessor1.reset(frames.get(bIndex));
 
-                            int outputLen;
+                            outputTupleBuilder.reset();
 
                             if (isPartial) {
 
-                                outputLen = aggregator.getPartialOutputLength(
-                                        storedKeysAccessor1, tIndex,
-                                        aggregateState);
-
-                                if (FrameToolsForGroupers.isFrameOverflowing(
-                                        outputFrame, outputLen, (outputFrameOffset == 0))) {
-                                    FrameUtils.flushFrame(outputFrame, writer);
-                                    outputFrameOffset = 0;
-                                    if (FrameToolsForGroupers
-                                            .isFrameOverflowing(outputFrame,
-                                                    outputLen, (outputFrameOffset == 0))) {
-                                        throw new HyracksDataException(
-                                                "The output item is too large to be fit into a frame.");
-                                    }
-                                }
-
                                 aggregator.outputPartialResult(
-                                        outputFrame.array(), outputFrameOffset,
+                                        outputTupleBuilder,
                                         storedKeysAccessor1, tIndex,
                                         aggregateState);
 
                             } else {
-                                outputLen = aggregator.getFinalOutputLength(
-                                        storedKeysAccessor1, tIndex,
-                                        aggregateState);
-
-                                if (FrameToolsForGroupers.isFrameOverflowing(
-                                        outputFrame, outputLen, (outputFrameOffset == 0))) {
-                                    FrameUtils.flushFrame(outputFrame, writer);
-                                    outputFrameOffset = 0;
-                                    if (FrameToolsForGroupers
-                                            .isFrameOverflowing(outputFrame,
-                                                    outputLen, (outputFrameOffset == 0))) {
-                                        throw new HyracksDataException(
-                                                "The output item is too large to be fit into a frame.");
-                                    }
-                                }
 
                                 aggregator.outputFinalResult(
-                                        outputFrame.array(), outputFrameOffset,
+                                        outputTupleBuilder,
                                         storedKeysAccessor1, tIndex,
                                         aggregateState);
                             }
 
-                            FrameToolsForGroupers.updateFrameMetaForNewTuple(
-                                    outputFrame, outputLen, (outputFrameOffset == 0));
-
-                            outputFrameOffset += outputLen;
+                            if (!outputAppender.appendSkipEmptyField(
+                                    outputTupleBuilder.getFieldEndOffsets(),
+                                    outputTupleBuilder.getByteArray(), 0,
+                                    outputTupleBuilder.getSize())) {
+                                FrameUtils.flushFrame(outputFrame, writer);
+                                outputAppender.reset(outputFrame, true);
+                                if (!outputAppender
+                                        .appendSkipEmptyField(
+                                                outputTupleBuilder
+                                                        .getFieldEndOffsets(),
+                                                outputTupleBuilder
+                                                        .getByteArray(), 0,
+                                                outputTupleBuilder.getSize())) {
+                                    throw new HyracksDataException(
+                                            "The output item is too large to be fit into a frame.");
+                                }
+                            }
 
                         } while (true);
                     }
-                    if (outputFrameOffset > 0) {
+                    if (outputAppender.getTupleCount() > 0) {
                         FrameUtils.flushFrame(outputFrame, writer);
-                        outputFrameOffset = 0;
+                        outputAppender.reset(outputFrame, true);
                     }
                     aggregator.close();
                     return;
@@ -369,58 +376,41 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     ByteBuffer buffer = frames.get(frameIndex);
                     storedKeysAccessor1.reset(buffer);
 
-                    int outputLen;
+                    outputTupleBuilder.reset();
 
                     if (isPartial) {
 
-                        outputLen = aggregator
-                                .getPartialOutputLength(storedKeysAccessor1,
-                                        tupleIndex, aggregateState);
-
-                        if (FrameToolsForGroupers.isFrameOverflowing(
-                                outputFrame, outputLen, (outputFrameOffset == 0))) {
-                            FrameUtils.flushFrame(outputFrame, writer);
-                            outputFrameOffset = 0;
-                            if (FrameToolsForGroupers.isFrameOverflowing(
-                                    outputFrame, outputLen, (outputFrameOffset == 0))) {
-                                throw new HyracksDataException(
-                                        "The output item is too large to be fit into a frame.");
-                            }
-                        }
-
-                        aggregator.outputPartialResult(outputFrame.array(),
-                                outputFrameOffset, storedKeysAccessor1,
-                                tupleIndex, aggregateState);
+                        aggregator
+                                .outputPartialResult(outputTupleBuilder,
+                                        storedKeysAccessor1, tupleIndex,
+                                        aggregateState);
 
                     } else {
-                        outputLen = aggregator
-                                .getFinalOutputLength(storedKeysAccessor1,
-                                        tupleIndex, aggregateState);
 
-                        if (FrameToolsForGroupers.isFrameOverflowing(
-                                outputFrame, outputLen, (outputFrameOffset == 0))) {
-                            FrameUtils.flushFrame(outputFrame, writer);
-                            outputFrameOffset = 0;
-                            if (FrameToolsForGroupers.isFrameOverflowing(
-                                    outputFrame, outputLen, (outputFrameOffset == 0))) {
-                                throw new HyracksDataException(
-                                        "The output item is too large to be fit into a frame.");
-                            }
-                        }
-
-                        aggregator.outputFinalResult(outputFrame.array(),
-                                outputFrameOffset, storedKeysAccessor1,
-                                tupleIndex, aggregateState);
+                        aggregator
+                                .outputFinalResult(outputTupleBuilder,
+                                        storedKeysAccessor1, tupleIndex,
+                                        aggregateState);
                     }
 
-                    FrameToolsForGroupers.updateFrameMetaForNewTuple(
-                            outputFrame, outputLen, (outputFrameOffset == 0));
-
-                    outputFrameOffset += outputLen;
+                    if (!outputAppender.appendSkipEmptyField(
+                            outputTupleBuilder.getFieldEndOffsets(),
+                            outputTupleBuilder.getByteArray(), 0,
+                            outputTupleBuilder.getSize())) {
+                        FrameUtils.flushFrame(outputFrame, writer);
+                        outputAppender.reset(outputFrame, true);
+                        if (!outputAppender.appendSkipEmptyField(
+                                outputTupleBuilder.getFieldEndOffsets(),
+                                outputTupleBuilder.getByteArray(), 0,
+                                outputTupleBuilder.getSize())) {
+                            throw new HyracksDataException(
+                                    "The output item is too large to be fit into a frame.");
+                        }
+                    }
                 }
-                if (outputFrameOffset > 0) {
+                if (outputAppender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(outputFrame, writer);
-                    outputFrameOffset = 0;
+                    outputAppender.reset(outputFrame, true);
                 }
                 aggregator.close();
             }
@@ -453,8 +443,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     frame.position(0);
                     frame.limit(frame.capacity());
                     frames.add(frame);
-                    outFrameOffset = 0;
-                    tupleCountInOutFrame = 0;
+                    stateAppender.reset(frame, true);
                     lastBufIndex = frames.size() - 1;
                 } else {
                     // Reuse an old frame
@@ -462,8 +451,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     ByteBuffer frame = frames.get(lastBufIndex);
                     frame.position(0);
                     frame.limit(frame.capacity());
-                    outFrameOffset = 0;
-                    tupleCountInOutFrame = 0;
+                    stateAppender.reset(frame, true);
                 }
                 return true;
             }

@@ -112,15 +112,6 @@ public interface IFieldAggregateDescriptor {
 
     public boolean needsObjectState();
 
-    public int getBinaryStateLength(IFrameTupleAccessor accessor, int tIndex,
-            AggregateState state) throws HyracksDataException;
-
-    public int getPartialResultLength(byte[] data, int offset,
-            AggregateState state) throws HyracksDataException;
-
-    public int getFinalResultLength(byte[] data, int offset,
-            AggregateState state) throws HyracksDataException;
-
     public AggregateState createState();
 
     /**

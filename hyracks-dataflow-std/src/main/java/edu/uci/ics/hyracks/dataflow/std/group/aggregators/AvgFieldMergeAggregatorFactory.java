@@ -140,29 +140,6 @@ public class AvgFieldMergeAggregatorFactory implements
             public boolean needsBinaryState() {
                 return !useObjectState;
             }
-
-            @Override
-            public int getBinaryStateLength(IFrameTupleAccessor accessor,
-                    int tIndex, AggregateState state)
-                    throws HyracksDataException {
-                if(useObjectState){
-                    return 0;
-                } else {
-                    return 8;
-                }
-            }
-
-            @Override
-            public int getPartialResultLength(byte[] data, int offset,
-                    AggregateState state) throws HyracksDataException {
-                return 8;
-            }
-
-            @Override
-            public int getFinalResultLength(byte[] data, int offset,
-                    AggregateState state) throws HyracksDataException {
-                return 4;
-            }
             
             @Override
             public AggregateState createState() {

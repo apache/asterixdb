@@ -144,26 +144,6 @@ public class CountFieldAggregatorFactory implements
                     state.state = count;
                 }
             }
-
-            @Override
-            public int getBinaryStateLength(IFrameTupleAccessor accessor,
-                    int tIndex, AggregateState state) {
-                if(useObjectState)
-                    return 0;
-                return 4;
-            }
-
-            @Override
-            public int getPartialResultLength(byte[] data, int offset,
-                    AggregateState state) {
-                return 4;
-            }
-
-            @Override
-            public int getFinalResultLength(byte[] data, int offset,
-                    AggregateState state) {
-                return 4;
-            }
         };
     }
 

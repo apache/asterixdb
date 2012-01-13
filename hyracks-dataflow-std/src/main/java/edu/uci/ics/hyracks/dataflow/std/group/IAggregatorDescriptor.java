@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 /**
  *
@@ -30,20 +31,6 @@ public interface IAggregatorDescriptor {
     public AggregateState createAggregateStates();
 
     /**
-     * Get the length of the binary states.
-     * 
-     * @return
-     */
-    public int getBinaryAggregateStateLength(IFrameTupleAccessor accessor,
-            int tIndex, AggregateState state) throws HyracksDataException;
-
-    public int getPartialOutputLength(IFrameTupleAccessor accessor, int tIndex,
-            AggregateState state) throws HyracksDataException;
-
-    public int getFinalOutputLength(IFrameTupleAccessor accessor, int tIndex,
-            AggregateState state) throws HyracksDataException;
-
-    /**
      * Initialize the state based on the input tuple.
      * 
      * @param accessor
@@ -55,7 +42,7 @@ public interface IAggregatorDescriptor {
      *            The state to be initialized.
      * @throws HyracksDataException
      */
-    public void init(byte[] buf, int offset, IFrameTupleAccessor accessor,
+    public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor,
             int tIndex, AggregateState state) throws HyracksDataException;
 
     /**
@@ -98,7 +85,7 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputPartialResult(byte[] data, int offset,
+    public void outputPartialResult(ArrayTupleBuilder tupleBuilder,
             IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
 
@@ -114,7 +101,7 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputFinalResult(byte[] data, int offset,
+    public void outputFinalResult(ArrayTupleBuilder tupleBuilder,
             IFrameTupleAccessor accessor, int tIndex, AggregateState state)
             throws HyracksDataException;
 

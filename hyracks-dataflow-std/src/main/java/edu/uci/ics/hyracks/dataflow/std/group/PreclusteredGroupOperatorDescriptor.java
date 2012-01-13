@@ -76,7 +76,7 @@ public class PreclusteredGroupOperatorDescriptor extends
             @Override
             public void open() throws HyracksDataException {
                 pgw = new PreclusteredGroupWriter(ctx, groupFields,
-                        comparators, aggregator, inRecordDesc, writer);
+                        comparators, aggregator, inRecordDesc, recordDescriptors[0], writer);
                 pgw.open();
             }
 
