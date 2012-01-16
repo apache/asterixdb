@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<project name="asterix" default="build" basedir=".">
+
+    <target name="init">
+        <condition property="isWindows">
+            <os family="windows" />
+        </condition>
+        <condition property="isUnix">
+            <os family="unix" />
+        </condition>
+    </target>
+
+    <target name="win" depends="init" if="isWindows">
+        <property name="os.family" value="windows" />
+        <property name="source.ext" value=".cmd" />
+        <property name="target.ext" value=".cmd" />
+    </target>
+
+    <target name="unix" depends="init" if="isUnix">
+        <property name="os.family" value="unix" />
+        <property name="source.ext" value=".sh" />
+        <property name="target.ext" value="" />
+    </target>
+
+    <target name="build" depends="win,unix">
+        <mkdir dir="${target.dir}"/>
+        <pathconvert targetos="${os.family}" property="classpath">
+          <path>
+            <pathelement path="${script.classpath}"/>
+          </path>
+        </pathconvert>
+        <copy file="${source}${source.ext}" tofile="${target.dir}/${target}${target.ext}">
+            <filterset>
+                <filter token="main.class" value="${main.class}"/>
+                <filter token="classpath" value="${classpath}"/>
+                <filter token="jvm.params" value="${jvm.params}"/>
+                <filter token="program.params" value="${program.params}"/>
+            </filterset>
+        </copy>
+        <chmod perm="ugo+x">
+            <fileset dir="${target.dir}"/>
+        </chmod>
+    </target>
+
+</project>
