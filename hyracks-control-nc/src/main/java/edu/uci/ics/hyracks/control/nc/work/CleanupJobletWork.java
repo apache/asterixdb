@@ -46,10 +46,19 @@ public class CleanupJobletWork extends SynchronizableWork {
         }
         ncs.getPartitionManager().unregisterPartitions(jobId);
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
-        Joblet joblet = jobletMap.get(jobId);
+        Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
             joblet.cleanup(status);
         }
-        ncs.getClusterController().notifyJobletCleanup(jobId, ncs.getId());
+        ncs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ncs.getClusterController().notifyJobletCleanup(jobId, ncs.getId());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 }

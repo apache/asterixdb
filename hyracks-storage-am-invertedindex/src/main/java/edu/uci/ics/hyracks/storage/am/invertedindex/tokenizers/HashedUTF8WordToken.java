@@ -22,7 +22,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class HashedUTF8WordToken extends UTF8WordToken {
 
@@ -46,10 +46,11 @@ public class HashedUTF8WordToken extends UTF8WordToken {
         }
         int offset = 0;
         for (int i = 0; i < tokenLength; i++) {
-            if (StringUtils.charAt(t.getData(), t.getStart() + offset) != StringUtils.charAt(data, start + offset)) {
+            if (UTF8StringPointable.charAt(t.getData(), t.getStart() + offset) != UTF8StringPointable.charAt(data,
+                    start + offset)) {
                 return false;
             }
-            offset += StringUtils.charSize(data, start + offset);
+            offset += UTF8StringPointable.charSize(data, start + offset);
         }
         return true;
     }
@@ -67,9 +68,9 @@ public class HashedUTF8WordToken extends UTF8WordToken {
         int pos = start;
         hash = GOLDEN_RATIO_32;
         for (int i = 0; i < tokenLength; i++) {
-            hash ^= Character.toLowerCase(StringUtils.charAt(data, pos));
+            hash ^= Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
             hash *= GOLDEN_RATIO_32;
-            pos += StringUtils.charSize(data, pos);
+            pos += UTF8StringPointable.charSize(data, pos);
         }
         hash += tokenCount;
     }

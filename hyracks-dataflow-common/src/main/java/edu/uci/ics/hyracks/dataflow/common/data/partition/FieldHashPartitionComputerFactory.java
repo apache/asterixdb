@@ -39,6 +39,9 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
         return new ITuplePartitionComputer() {
             @Override
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) {
+                if (nParts == 1) {
+                    return 0;
+                }
                 int h = 0;
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int slotLength = accessor.getFieldSlotsLength();
@@ -49,7 +52,7 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
                     int fh = hashFn
                             .hash(accessor.getBuffer().array(), startOffset + slotLength + fStart, fEnd - fStart);
-                    h += fh;
+                    h = h * 31 + fh;
                 }
                 if (h < 0) {
                     h = -h;

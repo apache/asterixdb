@@ -19,7 +19,7 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
 
@@ -62,7 +62,7 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
 
         concreteToken.setNumPrePostChars(numPreChars, numPostChars);
         if (numPreChars == 0) {
-            index += StringUtils.charSize(data, index);
+            index += UTF8StringPointable.charSize(data, index);
         }
 
         // compute token count
@@ -73,14 +73,14 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
                 tokenCount++; // assume found
                 int offset = 0;
                 for (int j = 0; j < gramLength; j++) {
-                    if (Character.toLowerCase(StringUtils.charAt(data, currentTokenStart + offset)) != Character
-                            .toLowerCase(StringUtils.charAt(data, tmpIndex + offset))) {
+                    if (Character.toLowerCase(UTF8StringPointable.charAt(data, currentTokenStart + offset)) != Character
+                            .toLowerCase(UTF8StringPointable.charAt(data, tmpIndex + offset))) {
                         tokenCount--;
                         break;
                     }
-                    offset += StringUtils.charSize(data, tmpIndex + offset);
+                    offset += UTF8StringPointable.charSize(data, tmpIndex + offset);
                 }
-                tmpIndex += StringUtils.charSize(data, tmpIndex);
+                tmpIndex += UTF8StringPointable.charSize(data, tmpIndex);
             }
         }
 
@@ -98,7 +98,7 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
         int end = pos + utf8Length;
         while (pos < end) {
             numChars++;
-            pos += StringUtils.charSize(data, pos);
+            pos += UTF8StringPointable.charSize(data, pos);
         }
 
         if (usePrePost) {

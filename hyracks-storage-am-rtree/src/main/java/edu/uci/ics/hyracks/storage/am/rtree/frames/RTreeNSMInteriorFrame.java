@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
@@ -42,9 +43,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
     private static final int childPtrSize = 4;
-    private static IBinaryComparator childPtrCmp = IntegerBinaryComparatorFactory.INSTANCE
-			.createBinaryComparator();
-    
+    private static IBinaryComparator childPtrCmp = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY)
+            .createBinaryComparator();
+
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
         super(tupleWriter, keyValueProviders);
         frameTuple.setFieldCount(keyValueProviders.length);
@@ -269,11 +270,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     private int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
-    	return childPtrCmp.compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1),
-                getChildPointerOff(tupleA), childPtrSize, tupleB.getFieldData(cmp.getKeyFieldCount() - 1),
-                getChildPointerOff(tupleB), childPtrSize);
+        return childPtrCmp
+                .compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleA), childPtrSize,
+                        tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB), childPtrSize);
     }
-    
+
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
@@ -294,10 +295,10 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             for (int k = 0; k < getTupleCount(); ++k) {
 
                 frameTuple.resetByTupleIndex(this, k);
-                double LowerKey = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
-                        frameTuple.getFieldStart(i));
-                double UpperKey = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
-                        frameTuple.getFieldStart(j));
+                double LowerKey = keyValueProviders[i]
+                        .getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
+                double UpperKey = keyValueProviders[j]
+                        .getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
 
                 tupleEntries1.add(k, LowerKey);
                 tupleEntries2.add(k, UpperKey);

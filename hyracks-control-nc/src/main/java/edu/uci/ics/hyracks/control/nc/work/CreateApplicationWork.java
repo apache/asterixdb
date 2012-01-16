@@ -29,6 +29,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
@@ -44,41 +45,49 @@ public class CreateApplicationWork extends SynchronizableWork {
 
     private final byte[] serializedDistributedState;
 
+    private final FutureValue<Object> fv;
+
     public CreateApplicationWork(NodeControllerService ncs, String appName, boolean deployHar,
-            byte[] serializedDistributedState) {
+            byte[] serializedDistributedState, FutureValue<Object> fv) {
         this.ncs = ncs;
         this.appName = appName;
         this.deployHar = deployHar;
         this.serializedDistributedState = serializedDistributedState;
+        this.fv = fv;
     }
 
     @Override
     protected void doRun() throws Exception {
-        NCApplicationContext appCtx;
-        Map<String, NCApplicationContext> applications = ncs.getApplications();
-        if (applications.containsKey(appName)) {
-            throw new HyracksException("Duplicate application with name: " + appName + " being created.");
-        }
-        appCtx = new NCApplicationContext(ncs.getServerContext(), ncs.getRootContext(), appName, ncs.getId());
-        applications.put(appName, appCtx);
-        if (deployHar) {
-            NCConfig ncConfig = ncs.getConfiguration();
-            NodeParameters nodeParameters = ncs.getNodeParameters();
-            HttpClient hc = new DefaultHttpClient();
-            HttpGet get = new HttpGet("http://" + ncConfig.ccHost + ":"
-                    + nodeParameters.getClusterControllerInfo().getWebPort() + "/applications/" + appName);
-            HttpResponse response = hc.execute(get);
-            InputStream is = response.getEntity().getContent();
-            OutputStream os = appCtx.getHarOutputStream();
-            try {
-                IOUtils.copyLarge(is, os);
-            } finally {
-                os.close();
-                is.close();
+        try {
+            NCApplicationContext appCtx;
+            Map<String, NCApplicationContext> applications = ncs.getApplications();
+            if (applications.containsKey(appName)) {
+                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
             }
+            appCtx = new NCApplicationContext(ncs.getServerContext(), ncs.getRootContext(), appName, ncs.getId());
+            applications.put(appName, appCtx);
+            if (deployHar) {
+                NCConfig ncConfig = ncs.getConfiguration();
+                NodeParameters nodeParameters = ncs.getNodeParameters();
+                HttpClient hc = new DefaultHttpClient();
+                HttpGet get = new HttpGet("http://" + ncConfig.ccHost + ":"
+                        + nodeParameters.getClusterControllerInfo().getWebPort() + "/applications/" + appName);
+                HttpResponse response = hc.execute(get);
+                InputStream is = response.getEntity().getContent();
+                OutputStream os = appCtx.getHarOutputStream();
+                try {
+                    IOUtils.copyLarge(is, os);
+                } finally {
+                    os.close();
+                    is.close();
+                }
+            }
+            appCtx.initializeClassPath();
+            appCtx.setDistributedState((Serializable) appCtx.deserialize(serializedDistributedState));
+            appCtx.initialize();
+            fv.setValue(null);
+        } catch (Exception e) {
+            fv.setException(e);
         }
-        appCtx.initializeClassPath();
-        appCtx.setDistributedState((Serializable) appCtx.deserialize(serializedDistributedState));
-        appCtx.initialize();
     }
 }

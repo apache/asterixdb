@@ -15,15 +15,15 @@
 package edu.uci.ics.hyracks.control.common.controllers;
 
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
 
 public final class NodeRegistration implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final INodeController nc;
+    private final InetSocketAddress ncAddress;
 
     private final String nodeId;
 
@@ -41,9 +41,9 @@ public final class NodeRegistration implements Serializable {
 
     private final HeartbeatSchema hbSchema;
 
-    public NodeRegistration(INodeController nc, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
+    public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
             String osName, String arch, String osVersion, int nProcessors, HeartbeatSchema hbSchema) {
-        this.nc = nc;
+        this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
         this.dataPort = dataPort;
@@ -54,8 +54,8 @@ public final class NodeRegistration implements Serializable {
         this.hbSchema = hbSchema;
     }
 
-    public INodeController getNodeController() {
-        return nc;
+    public InetSocketAddress getNodeControllerAddress() {
+        return ncAddress;
     }
 
     public String getNodeId() {

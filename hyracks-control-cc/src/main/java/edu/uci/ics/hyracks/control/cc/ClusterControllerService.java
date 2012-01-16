@@ -15,8 +15,7 @@
 package edu.uci.ics.hyracks.control.cc;
 
 import java.io.File;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -36,14 +35,15 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
+import edu.uci.ics.hyracks.control.cc.ipc.HyracksClientInterfaceDelegateIPCI;
 import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
@@ -69,6 +69,8 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerDelegateIPCI;
+import edu.uci.ics.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
@@ -76,14 +78,19 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.common.logs.LogFile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
+import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import edu.uci.ics.hyracks.ipc.api.IIPCI;
+import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
 public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
         IHyracksClientInterface {
-    private static final long serialVersionUID = 1L;
+    private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final CCConfig ccConfig;
 
-    private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
+    private IPCSystem clusterIPC;
+
+    private IPCSystem clientIPC;
 
     private final LogFile jobLog;
 
@@ -105,11 +112,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     private final WorkQueue workQueue;
 
-    private final Executor taskExecutor;
+    private final Executor executor;
 
     private final Timer timer;
-
-    private final CCClientInterface ccci;
 
     private final ICCContext ccContext;
 
@@ -125,7 +130,12 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         ipAddressNodeNameMap = new HashMap<String, Set<String>>();
         applications = new Hashtable<String, CCApplicationContext>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
-        taskExecutor = Executors.newCachedThreadPool();
+        executor = Executors.newCachedThreadPool();
+        IIPCI ccIPCI = new ClusterControllerDelegateIPCI(this);
+        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI, executor);
+        IIPCI ciIPCI = new HyracksClientInterfaceDelegateIPCI(this);
+        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
+                executor);
         webServer = new WebServer(this);
         activeRunMap = new HashMap<JobId, JobRun>();
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
@@ -137,7 +147,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         };
         workQueue = new WorkQueue();
         this.timer = new Timer(true);
-        ccci = new CCClientInterface(this);
         ccContext = new ICCContext() {
             @Override
             public Map<String, Set<String>> getIPAddressNodeMap() {
@@ -151,9 +160,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
-        Registry registry = LocateRegistry.createRegistry(ccConfig.port);
-        registry.rebind(IHyracksClientInterface.class.getName(), ccci);
-        registry.rebind(IClusterController.class.getName(), this);
+        clusterIPC.start();
+        clientIPC.start();
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
         workQueue.start();
@@ -172,6 +180,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         workQueue.stop();
         jobLog.close();
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
+    }
+
+    public ServerContext getServerContext() {
+        return serverCtx;
+    }
+
+    public ICCContext getCCContext() {
+        return ccContext;
     }
 
     public Map<String, CCApplicationContext> getApplicationMap() {
@@ -195,7 +211,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     public Executor getExecutor() {
-        return taskExecutor;
+        return executor;
     }
 
     public Map<String, NodeControllerState> getNodeMap() {
@@ -221,11 +237,14 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public NodeParameters registerNode(NodeRegistration reg) throws Exception {
-        INodeController nodeController = reg.getNodeController();
+        InetSocketAddress ncAddress = reg.getNodeControllerAddress();
         String id = reg.getNodeId();
+
+        IIPCHandle ncIPCHandle = clusterIPC.getHandle(reg.getNodeControllerAddress());
+        INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
+
         NodeControllerState state = new NodeControllerState(nodeController, reg);
         workQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
-        nodeController.notifyRegistration(this);
         LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
         NodeParameters params = new NodeParameters();
         params.setClusterControllerInfo(info);
@@ -235,10 +254,8 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void unregisterNode(INodeController nodeController) throws Exception {
-        String id = nodeController.getId();
-        workQueue.scheduleAndSync(new UnregisterNodeWork(this, id));
-        LOGGER.log(Level.INFO, "Unregistered INodeController");
+    public void unregisterNode(String nodeId) throws Exception {
+        workQueue.schedule(new UnregisterNodeWork(this, nodeId));
     }
 
     @Override
@@ -268,7 +285,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     }
 
     @Override
-    public void start(JobId jobId) throws Exception {
+    public void startJob(JobId jobId) throws Exception {
         JobStartWork jse = new JobStartWork(this, jobId);
         workQueue.schedule(jse);
     }
@@ -295,13 +312,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public void createApplication(String appName) throws Exception {
-        synchronized (applications) {
-            if (applications.containsKey(appName)) {
-                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
-            }
-            CCApplicationContext appCtx = new CCApplicationContext(serverCtx, ccContext, appName);
-            applications.put(appName, appCtx);
-        }
+        FutureValue<Object> fv = new FutureValue<Object>();
+        workQueue.schedule(new ApplicationCreateWork(this, appName, fv));
+        fv.get();
     }
 
     @Override

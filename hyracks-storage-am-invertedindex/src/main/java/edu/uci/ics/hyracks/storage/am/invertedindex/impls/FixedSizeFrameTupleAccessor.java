@@ -19,29 +19,29 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
 
     private final int frameSize;
     private ByteBuffer buffer;
 
-    private final ITypeTrait[] fields;
+    private final ITypeTraits[] fields;
     private final int[] fieldStartOffsets;
     private final int tupleSize;
 
-    public FixedSizeFrameTupleAccessor(int frameSize, ITypeTrait[] fields) {
+    public FixedSizeFrameTupleAccessor(int frameSize, ITypeTraits[] fields) {
         this.frameSize = frameSize;
         this.fields = fields;
         this.fieldStartOffsets = new int[fields.length];
         this.fieldStartOffsets[0] = 0;
         for (int i = 1; i < fields.length; i++) {
-            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + fields[i - 1].getStaticallyKnownDataLength();
+            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + fields[i - 1].getFixedLength();
         }
 
         int tmp = 0;
         for (int i = 0; i < fields.length; i++) {
-            tmp += fields[i].getStaticallyKnownDataLength();
+            tmp += fields[i].getFixedLength();
         }
         tupleSize = tmp;
     }
@@ -58,12 +58,12 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return getTupleStartOffset(tupleIndex) + fieldStartOffsets[fIdx] + fields[fIdx].getStaticallyKnownDataLength();
+        return getTupleStartOffset(tupleIndex) + fieldStartOffsets[fIdx] + fields[fIdx].getFixedLength();
     }
 
     @Override
     public int getFieldLength(int tupleIndex, int fIdx) {
-        return fields[fIdx].getStaticallyKnownDataLength();
+        return fields[fIdx].getFixedLength();
     }
 
     @Override

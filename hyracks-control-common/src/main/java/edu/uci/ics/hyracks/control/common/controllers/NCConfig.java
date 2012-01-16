@@ -22,16 +22,19 @@ import org.kohsuke.args4j.Option;
 public class NCConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Option(name = "-cc-host", usage = "Cluster Controller host name")
+    @Option(name = "-cc-host", usage = "Cluster Controller host name", required = true)
     public String ccHost;
 
     @Option(name = "-cc-port", usage = "Cluster Controller port (default: 1099)")
     public int ccPort = 1099;
 
-    @Option(name = "-node-id", usage = "Logical name of node controller unique within the cluster")
+    @Option(name = "-cluster-net-ip-address", usage = "IP Address to bind cluster listener", required = true)
+    public String clusterNetIPAddress;
+
+    @Option(name = "-node-id", usage = "Logical name of node controller unique within the cluster", required = true)
     public String nodeId;
 
-    @Option(name = "-data-ip-address", usage = "IP Address to bind data listener")
+    @Option(name = "-data-ip-address", usage = "IP Address to bind data listener", required = true)
     public String dataIPAddress;
 
     @Option(name = "-frame-size", usage = "Frame Size to use for data communication (default: 32768)")
@@ -54,6 +57,8 @@ public class NCConfig implements Serializable {
         cList.add(ccHost);
         cList.add("-cc-port");
         cList.add(String.valueOf(ccPort));
+        cList.add("-cluster-net-ip-address");
+        cList.add(clusterNetIPAddress);
         cList.add("-node-id");
         cList.add(nodeId);
         cList.add("-data-ip-address");

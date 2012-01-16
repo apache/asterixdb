@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -57,12 +57,12 @@ public class InvertedIndex implements IIndex {
     private int rootPageId = 0;
     private IBufferCache bufferCache;
     private int fileId;
-    private final ITypeTrait[] invListTypeTraits;
+    private final ITypeTraits[] invListTypeTraits;
     private final MultiComparator invListCmp;
     private final int numTokenFields;
     private final int numInvListKeys;
 
-    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTrait[] invListTypeTraits, MultiComparator invListCmp) {
+    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListTypeTraits, MultiComparator invListCmp) {
         this.bufferCache = bufferCache;
         this.btree = btree;
         this.invListCmp = invListCmp;
@@ -230,7 +230,7 @@ public class InvertedIndex implements IIndex {
         return invListCmp;
     }
     
-    public ITypeTrait[] getTypeTraits() {
+    public ITypeTraits[] getTypeTraits() {
         return invListTypeTraits;
     }
 

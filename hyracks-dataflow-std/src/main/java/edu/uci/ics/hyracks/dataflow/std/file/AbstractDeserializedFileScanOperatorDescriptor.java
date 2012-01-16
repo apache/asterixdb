@@ -75,7 +75,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
             writer.open();
             try {
                 while (true) {
-                    Object[] record = new Object[desc.getFields().length];
+                    Object[] record = new Object[desc.getFieldCount()];
                     if (!reader.read(record)) {
                         break;
                     }
@@ -107,8 +107,8 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
-            int partition, int nPartitions) {
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new DeserializedFileScanOperator(partition), null);
     }
 }

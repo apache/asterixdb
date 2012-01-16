@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.common.tuples;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
@@ -29,11 +29,11 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected int nullFlagsBytes;
     protected int dataStartOff;
 
-    protected ITypeTrait[] typeTraits;
+    protected ITypeTraits[] typeTraits;
     protected VarLenIntEncoderDecoder encDec = new VarLenIntEncoderDecoder();
     protected int[] decodedFieldSlots;
 
-    public TypeAwareTupleReference(ITypeTrait[] typeTraits) {
+    public TypeAwareTupleReference(ITypeTraits[] typeTraits) {
         this.typeTraits = typeTraits;
         this.fieldStartIndex = 0;
         setFieldCount(typeTraits.length);
@@ -50,12 +50,11 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
         int end = fieldStartIndex + fieldCount;
         encDec.reset(buf.array(), tupleStartOff + nullFlagsBytes);
         for (int i = fieldStartIndex; i < end; i++) {
-            int staticDataLen = typeTraits[i].getStaticallyKnownDataLength();
-            if (staticDataLen == ITypeTrait.VARIABLE_LENGTH) {
+            if (!typeTraits[i].isFixedLength()) {
                 cumul += encDec.decode();
                 decodedFieldSlots[field++] = cumul;
             } else {
-                cumul += staticDataLen;
+                cumul += typeTraits[i].getFixedLength();
                 decodedFieldSlots[field++] = cumul;
             }
         }
@@ -119,8 +118,8 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
         return (int) Math.ceil(fieldCount / 8.0);
     }
 
-	@Override
-	public int getTupleSize() {
-		return dataStartOff - tupleStartOff + decodedFieldSlots[fieldCount-1];
-	}
+    @Override
+    public int getTupleSize() {
+        return dataStartOff - tupleStartOff + decodedFieldSlots[fieldCount - 1];
+    }
 }

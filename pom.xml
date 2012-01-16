@@ -79,6 +79,7 @@
   </pluginRepositories>
 
   <modules>
+    <module>hyracks-ipc</module>
     <module>hyracks-api</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
@@ -86,6 +87,7 @@
     <module>hyracks-control-common</module>
     <module>hyracks-control-cc</module>
     <module>hyracks-control-nc</module>
+    <module>hyracks-data</module>
     <module>hyracks-cli</module>
     <module>hyracks-storage-common</module>
     <module>hyracks-storage-am-common</module>
@@ -98,5 +100,6 @@
     <module>hyracks-examples</module>
     <module>hyracks-documentation</module>
     <module>hyracks-hadoop-compat</module>
+    <module>hyracks-algebricks</module>
   </modules>
 </project>

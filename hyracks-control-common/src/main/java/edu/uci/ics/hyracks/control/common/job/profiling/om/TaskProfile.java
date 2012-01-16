@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
-import java.io.ByteArrayInputStream;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -23,6 +22,7 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 
 public class TaskProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
@@ -48,7 +48,6 @@ public class TaskProfile extends AbstractProfile {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        json.put("type", "task-profile");
         json.put("activity-id", taskAttemptId.getTaskId().getActivityId().toString());
         json.put("partition", taskAttemptId.getTaskId().getPartition());
         json.put("attempt", taskAttemptId.getAttempt());
@@ -65,24 +64,17 @@ public class TaskProfile extends AbstractProfile {
                 ppObj.put("partition-id", pidObj);
                 ppObj.put("open-time", pp.getOpenTime());
                 ppObj.put("close-time", pp.getCloseTime());
-                JSONArray ftArray = new JSONArray();
-                byte[] ftb = pp.getFrameTimes();
-                ByteArrayInputStream bais = new ByteArrayInputStream(ftb);
-                long value = 0;
-                int vLen = 0;
-                long time = pp.getOpenTime();
-                for (int i = 0; i < ftb.length; ++i) {
-                    byte b = (byte) bais.read();
-                    ++vLen;
-                    value += (((long) (b & 0xef)) << ((vLen - 1) * 7));
-                    if ((b & 0x80) == 0) {
-                        time += value;
-                        ftArray.put(time);
-                        vLen = 0;
-                        value = 0;
-                    }
+                MultiResolutionEventProfiler samples = pp.getSamples();
+                ppObj.put("offset", samples.getOffset());
+                int resolution = samples.getResolution();
+                int sampleCount = samples.getCount();
+                JSONArray ftA = new JSONArray();
+                int[] ft = samples.getSamples();
+                for (int i = 0; i < sampleCount; ++i) {
+                    ftA.put(ft[i]);
                 }
-                ppObj.put("frame-times", ftArray);
+                ppObj.put("frame-times", ftA);
+                ppObj.put("resolution", resolution);
                 pspArray.put(ppObj);
             }
             json.put("partition-send-profile", pspArray);

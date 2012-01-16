@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
@@ -38,7 +40,6 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.PipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.ActivityClusterPlan;
 import edu.uci.ics.hyracks.control.cc.job.ActivityPlan;
@@ -128,7 +129,7 @@ public class ActivityClusterPlanner {
                         Set<TaskId> cluster = taskClusterMap.get(ac1TaskStates[i].getTaskId());
                         for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j + 1)) {
                             TaskId targetTID = ac2TaskStates[j].getTaskId();
-                            cInfoList.add(new Pair<TaskId, ConnectorDescriptorId>(targetTID, cdId));
+                            cInfoList.add(Pair.<TaskId, ConnectorDescriptorId> of(targetTID, cdId));
                             IConnectorPolicy cPolicy = connectorPolicies.get(cdId);
                             if (cPolicy.requiresProducerConsumerCoscheduling()) {
                                 cluster.add(targetTID);
@@ -148,12 +149,13 @@ public class ActivityClusterPlanner {
                 List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(tid);
                 if (cInfoList != null) {
                     for (Pair<TaskId, ConnectorDescriptorId> p : cInfoList) {
-                        Task targetTS = activityPlanMap.get(p.first.getActivityId()).getTasks()[p.first.getPartition()];
+                        Task targetTS = activityPlanMap.get(p.getLeft().getActivityId()).getTasks()[p.getLeft()
+                                .getPartition()];
                         TaskCluster targetTC = targetTS.getTaskCluster();
                         if (targetTC != tc) {
-                            ConnectorDescriptorId cdId = p.second;
-                            PartitionId pid = new PartitionId(jobRun.getJobId(), cdId, tid.getPartition(),
-                                    p.first.getPartition());
+                            ConnectorDescriptorId cdId = p.getRight();
+                            PartitionId pid = new PartitionId(jobRun.getJobId(), cdId, tid.getPartition(), p.getLeft()
+                                    .getPartition());
                             tc.getProducedPartitions().add(pid);
                             targetTC.getRequiredPartitions().add(pid);
                             partitionProducingTaskClusterMap.put(pid, tc);

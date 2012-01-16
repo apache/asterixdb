@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -40,7 +40,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	protected final IStorageManagerInterface storageManager;
 	protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
 
-	protected final ITypeTrait[] typeTraits;
+	protected final ITypeTraits[] typeTraits;
 	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
 
 	public AbstractTreeIndexOperatorDescriptor(JobSpecification spec,
@@ -49,7 +49,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 			IIndexRegistryProvider<IIndex> indexRegistryProvider,
 			IFileSplitProvider fileSplitProvider,
 			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
+			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
 			IIndexDataflowHelperFactory dataflowHelperFactory) {
 		super(spec, inputArity, outputArity);
@@ -77,7 +77,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	}
 
 	@Override
-	public ITypeTrait[] getTreeIndexTypeTraits() {
+	public ITypeTraits[] getTreeIndexTypeTraits() {
 		return typeTraits;
 	}
 

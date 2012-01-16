@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -25,6 +26,8 @@ import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 public class JobCleanupWork extends AbstractWork {
+    private static final Logger LOGGER = Logger.getLogger(JobCleanupWork.class.getName());
+
     private ClusterControllerService ccs;
     private JobId jobId;
     private JobStatus status;
@@ -40,6 +43,14 @@ public class JobCleanupWork extends AbstractWork {
     @Override
     public void run() {
         final JobRun run = ccs.getActiveRunMap().get(jobId);
+        if (run == null) {
+            LOGGER.warning("Unable to find JobRun with id: " + jobId);
+            return;
+        }
+        if (run.getPendingStatus() != null) {
+            LOGGER.warning("Ignoring duplicate cleanup for JobRun with id: " + jobId);
+            return;
+        }
         Set<String> targetNodes = run.getParticipatingNodeIds();
         run.getCleanupPendingNodeIds().addAll(targetNodes);
         run.setPendingStatus(status, exception);

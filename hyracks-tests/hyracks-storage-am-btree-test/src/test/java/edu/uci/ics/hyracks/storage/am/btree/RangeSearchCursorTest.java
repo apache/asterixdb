@@ -29,13 +29,13 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -60,434 +60,390 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 
 public class RangeSearchCursorTest extends AbstractBTreeTest {
-	// Declare fields
-	int fieldCount = 2;
-	ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+    // Declare fields
+    int fieldCount = 2;
+    ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
 
-	TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(
-			typeTraits);
-	ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-	ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
+    TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+    ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+    ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
-	Random rnd = new Random(50);
+    Random rnd = new Random(50);
 
-	@Before
-	public void setUp() throws HyracksDataException {
-		super.setUp();
-	    typeTraits[0] = new TypeTrait(4);
-		typeTraits[1] = new TypeTrait(4);
-	}
+    @Before
+    public void setUp() throws HyracksDataException {
+        super.setUp();
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+    }
 
-	@Test
-	public void uniqueIndexTest() throws Exception {
+    @Test
+    public void uniqueIndexTest() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
         }
 
-		// declare keys
-		int keyFieldCount = 1;
-		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        // declare keys
+        int keyFieldCount = 1;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-		ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-	            tupleWriterFactory);
-	    ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-	            tupleWriterFactory);
-		
-	    IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-	    IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
-	    
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
-		
-		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId);
-		btree.open(btreeFileId);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
-	    ArrayTupleReference tuple = new ArrayTupleReference();
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-	    ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-		// generate keys
-		int numKeys = 50;
-		int maxKey = 1000;
-		TreeSet<Integer> uniqueKeys = new TreeSet<Integer>();
-		ArrayList<Integer> keys = new ArrayList<Integer>();
-		while (uniqueKeys.size() < numKeys) {
-			int key = rnd.nextInt() % maxKey;
-			uniqueKeys.add(key);
-		}
-		for (Integer i : uniqueKeys) {
-			keys.add(i);
-		}
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
 
-		// insert keys into btree
-		for (int i = 0; i < keys.size(); i++) {
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
 
-		    TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);		    
-			tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
-			try {
-			    indexAccessor.insert(tuple);
-			} catch (BTreeException e) {
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+        // generate keys
+        int numKeys = 50;
+        int maxKey = 1000;
+        TreeSet<Integer> uniqueKeys = new TreeSet<Integer>();
+        ArrayList<Integer> keys = new ArrayList<Integer>();
+        while (uniqueKeys.size() < numKeys) {
+            int key = rnd.nextInt() % maxKey;
+            uniqueKeys.add(key);
+        }
+        for (Integer i : uniqueKeys) {
+            keys.add(i);
+        }
 
-		// btree.printTree(leafFrame, interiorFrame, recDescSers);
+        // insert keys into btree
+        for (int i = 0; i < keys.size(); i++) {
 
-		int minSearchKey = -100;
-		int maxSearchKey = 100;
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
-		// forward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
+            try {
+                indexAccessor.insert(tuple);
+            } catch (BTreeException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-		// backward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
+        // btree.printTree(leafFrame, interiorFrame, recDescSers);
 
-		btree.close();
-	}
+        int minSearchKey = -100;
+        int maxSearchKey = 100;
 
-	@Test
-	public void nonUniqueIndexTest() throws Exception {
+        // forward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
+
+        // backward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+
+        btree.close();
+    }
+
+    @Test
+    public void nonUniqueIndexTest() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
         }
 
-		// declare keys
-		int keyFieldCount = 2;
-		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
-		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+        // declare keys
+        int keyFieldCount = 2;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-                tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
-        
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
-		
-		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId);
-		btree.open(btreeFileId);
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
+
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
-		// generate keys
-		int numKeys = 50;
-		int maxKey = 10;
-		ArrayList<Integer> keys = new ArrayList<Integer>();
-		for (int i = 0; i < numKeys; i++) {
-			int k = rnd.nextInt() % maxKey;
-			keys.add(k);
-		}
-		Collections.sort(keys);
+        // generate keys
+        int numKeys = 50;
+        int maxKey = 10;
+        ArrayList<Integer> keys = new ArrayList<Integer>();
+        for (int i = 0; i < numKeys; i++) {
+            int k = rnd.nextInt() % maxKey;
+            keys.add(k);
+        }
+        Collections.sort(keys);
 
-		// insert keys into btree
-		for (int i = 0; i < keys.size(); i++) {
+        // insert keys into btree
+        for (int i = 0; i < keys.size(); i++) {
 
-		    TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);          
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
-			try {
-			    indexAccessor.insert(tuple);
-			} catch (BTreeException e) {
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+            try {
+                indexAccessor.insert(tuple);
+            } catch (BTreeException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-		// btree.printTree(leafFrame, interiorFrame, recDescSers);
+        // btree.printTree(leafFrame, interiorFrame, recDescSers);
 
-		int minSearchKey = -100;
-		int maxSearchKey = 100;
+        int minSearchKey = -100;
+        int maxSearchKey = 100;
 
-		// forward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
+        // forward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
 
-		// backward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
+        // backward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
 
-		btree.close();
-	}
+        btree.close();
+    }
 
-	@Test
-	public void nonUniqueFieldPrefixIndexTest() throws Exception {
+    @Test
+    public void nonUniqueFieldPrefixIndexTest() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
         }
 
-		// declare keys
-		int keyFieldCount = 2;
-		IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-		cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
-		cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE	;			
+        // declare keys
+        int keyFieldCount = 2;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-		MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(
-                tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(
-                tupleWriterFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame)leafFrameFactory.createFrame();
-        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame)interiorFrameFactory.createFrame();
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-		IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);		
-		
-		BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
-		btree.create(btreeFileId);
-		btree.open(btreeFileId);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-		ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
-		// generate keys
-		int numKeys = 50;
-		int maxKey = 10;
-		ArrayList<Integer> keys = new ArrayList<Integer>();
-		for (int i = 0; i < numKeys; i++) {
-			int k = rnd.nextInt() % maxKey;
-			keys.add(k);
-		}
-		Collections.sort(keys);
+        // generate keys
+        int numKeys = 50;
+        int maxKey = 10;
+        ArrayList<Integer> keys = new ArrayList<Integer>();
+        for (int i = 0; i < numKeys; i++) {
+            int k = rnd.nextInt() % maxKey;
+            keys.add(k);
+        }
+        Collections.sort(keys);
 
-		// insert keys into btree
-		for (int i = 0; i < keys.size(); i++) {
+        // insert keys into btree
+        for (int i = 0; i < keys.size(); i++) {
 
-		    TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);          
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
-			try {
-			    indexAccessor.insert(tuple);
-			} catch (BTreeException e) {
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+            try {
+                indexAccessor.insert(tuple);
+            } catch (BTreeException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-		// btree.printTree(leafFrame, interiorFrame, recDescSers);
+        // btree.printTree(leafFrame, interiorFrame, recDescSers);
 
-		int minSearchKey = -100;
-		int maxSearchKey = 100;
+        int minSearchKey = -100;
+        int maxSearchKey = 100;
 
-		// forward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, true, true, true, false);
+        // forward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
 
-		// backward searches
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, false, true, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, false, false);
-		performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey,
-				maxSearchKey, false, true, true, false);
+        // backward searches
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
 
-		btree.close();
-	}
+        btree.close();
+    }
 
-	public RangePredicate createRangePredicate(int lk, int hk,
-			boolean isForward, boolean lowKeyInclusive,
-			boolean highKeyInclusive, MultiComparator cmp) throws HyracksDataException {
+    public RangePredicate createRangePredicate(int lk, int hk, boolean isForward, boolean lowKeyInclusive,
+            boolean highKeyInclusive, MultiComparator cmp) throws HyracksDataException {
 
-		// create tuplereferences for search keys
-		ITupleReference lowKey = TupleUtils.createIntegerTuple(lk);
-		ITupleReference highKey = TupleUtils.createIntegerTuple(hk);
+        // create tuplereferences for search keys
+        ITupleReference lowKey = TupleUtils.createIntegerTuple(lk);
+        ITupleReference highKey = TupleUtils.createIntegerTuple(hk);
 
-		IBinaryComparator[] searchCmps = new IBinaryComparator[1];
-		searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator();
-		MultiComparator searchCmp = new MultiComparator(searchCmps);
+        IBinaryComparator[] searchCmps = new IBinaryComparator[1];
+        searchCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
-		RangePredicate rangePred = new RangePredicate(isForward, lowKey,
-				highKey, lowKeyInclusive, highKeyInclusive, searchCmp,
-				searchCmp);
-		return rangePred;
-	}
+        RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, lowKeyInclusive, highKeyInclusive,
+                searchCmp, searchCmp);
+        return rangePred;
+    }
 
-	public void getExpectedResults(ArrayList<Integer> expectedResults,
-			ArrayList<Integer> keys, int lk, int hk, boolean isForward,
-			boolean lowKeyInclusive, boolean highKeyInclusive) {
+    public void getExpectedResults(ArrayList<Integer> expectedResults, ArrayList<Integer> keys, int lk, int hk,
+            boolean isForward, boolean lowKeyInclusive, boolean highKeyInclusive) {
 
-		// special cases
-		if (lk == hk && (!lowKeyInclusive || !highKeyInclusive))
-			return;
-		if (lk > hk)
-			return;
+        // special cases
+        if (lk == hk && (!lowKeyInclusive || !highKeyInclusive))
+            return;
+        if (lk > hk)
+            return;
 
-		if (isForward) {
-			for (int i = 0; i < keys.size(); i++) {
-				if ((lk == keys.get(i) && lowKeyInclusive)
-						|| (hk == keys.get(i) && highKeyInclusive)) {
-					expectedResults.add(keys.get(i));
-					continue;
-				}
+        if (isForward) {
+            for (int i = 0; i < keys.size(); i++) {
+                if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
+                    expectedResults.add(keys.get(i));
+                    continue;
+                }
 
-				if (lk < keys.get(i) && hk > keys.get(i)) {
-					expectedResults.add(keys.get(i));
-					continue;
-				}
-			}
-		} else {
-			for (int i = keys.size() - 1; i >= 0; i--) {
-				if ((lk == keys.get(i) && lowKeyInclusive)
-						|| (hk == keys.get(i) && highKeyInclusive)) {
-					expectedResults.add(keys.get(i));
-					continue;
-				}
+                if (lk < keys.get(i) && hk > keys.get(i)) {
+                    expectedResults.add(keys.get(i));
+                    continue;
+                }
+            }
+        } else {
+            for (int i = keys.size() - 1; i >= 0; i--) {
+                if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
+                    expectedResults.add(keys.get(i));
+                    continue;
+                }
 
-				if (lk < keys.get(i) && hk > keys.get(i)) {
-					expectedResults.add(keys.get(i));
-					continue;
-				}
-			}
-		}
-	}
+                if (lk < keys.get(i) && hk > keys.get(i)) {
+                    expectedResults.add(keys.get(i));
+                    continue;
+                }
+            }
+        }
+    }
 
-	public boolean performSearches(ArrayList<Integer> keys, BTree btree,
-			IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
-			int minKey, int maxKey, boolean isForward, boolean lowKeyInclusive,
-			boolean highKeyInclusive, boolean printExpectedResults)
-			throws Exception {
+    public boolean performSearches(ArrayList<Integer> keys, BTree btree, IBTreeLeafFrame leafFrame,
+            IBTreeInteriorFrame interiorFrame, int minKey, int maxKey, boolean isForward, boolean lowKeyInclusive,
+            boolean highKeyInclusive, boolean printExpectedResults) throws Exception {
 
-		ArrayList<Integer> results = new ArrayList<Integer>();
-		ArrayList<Integer> expectedResults = new ArrayList<Integer>();
+        ArrayList<Integer> results = new ArrayList<Integer>();
+        ArrayList<Integer> expectedResults = new ArrayList<Integer>();
 
-		for (int i = minKey; i < maxKey; i++) {
-			for (int j = minKey; j < maxKey; j++) {
+        for (int i = minKey; i < maxKey; i++) {
+            for (int j = minKey; j < maxKey; j++) {
 
-				results.clear();
-				expectedResults.clear();
+                results.clear();
+                expectedResults.clear();
 
-				int lowKey = i;
-				int highKey = j;
+                int lowKey = i;
+                int highKey = j;
 
-				ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
-				RangePredicate rangePred = createRangePredicate(lowKey,
-						highKey, isForward, lowKeyInclusive, highKeyInclusive,
-						btree.getMultiComparator());
-				ITreeIndexAccessor indexAccessor = btree.createAccessor();
-				indexAccessor.search(rangeCursor, rangePred);
+                ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
+                RangePredicate rangePred = createRangePredicate(lowKey, highKey, isForward, lowKeyInclusive,
+                        highKeyInclusive, btree.getMultiComparator());
+                ITreeIndexAccessor indexAccessor = btree.createAccessor();
+                indexAccessor.search(rangeCursor, rangePred);
 
-				try {
-					while (rangeCursor.hasNext()) {
-						rangeCursor.next();
-						ITupleReference frameTuple = rangeCursor.getTuple();
-						ByteArrayInputStream inStream = new ByteArrayInputStream(
-								frameTuple.getFieldData(0), frameTuple
-										.getFieldStart(0), frameTuple
-										.getFieldLength(0));
-						DataInput dataIn = new DataInputStream(inStream);
-						Integer res = IntegerSerializerDeserializer.INSTANCE
-								.deserialize(dataIn);
-						results.add(res);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					rangeCursor.close();
-				}
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        ITupleReference frameTuple = rangeCursor.getTuple();
+                        ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(0),
+                                frameTuple.getFieldStart(0), frameTuple.getFieldLength(0));
+                        DataInput dataIn = new DataInputStream(inStream);
+                        Integer res = IntegerSerializerDeserializer.INSTANCE.deserialize(dataIn);
+                        results.add(res);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    rangeCursor.close();
+                }
 
-				getExpectedResults(expectedResults, keys, lowKey, highKey,
-						isForward, lowKeyInclusive, highKeyInclusive);
+                getExpectedResults(expectedResults, keys, lowKey, highKey, isForward, lowKeyInclusive, highKeyInclusive);
 
-				if (printExpectedResults) {
-					if (expectedResults.size() > 0) {
-						char l, u;
+                if (printExpectedResults) {
+                    if (expectedResults.size() > 0) {
+                        char l, u;
 
-						if (lowKeyInclusive)
-							l = '[';
-						else
-							l = '(';
+                        if (lowKeyInclusive)
+                            l = '[';
+                        else
+                            l = '(';
 
-						if (highKeyInclusive)
-							u = ']';
-						else
-							u = ')';
+                        if (highKeyInclusive)
+                            u = ']';
+                        else
+                            u = ')';
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);
                         }
-						StringBuilder strBuilder = new StringBuilder();
-						for (Integer r : expectedResults) {
-							strBuilder.append(r + " ");
-						}
+                        StringBuilder strBuilder = new StringBuilder();
+                        for (Integer r : expectedResults) {
+                            strBuilder.append(r + " ");
+                        }
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info(strBuilder.toString());
                         }
-					}
-				}
+                    }
+                }
 
-				if (results.size() == expectedResults.size()) {
-					for (int k = 0; k < results.size(); k++) {
-						if (!results.get(k).equals(expectedResults.get(k))) {
+                if (results.size() == expectedResults.size()) {
+                    for (int k = 0; k < results.size(); k++) {
+                        if (!results.get(k).equals(expectedResults.get(k))) {
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " j=" + j + " k=" + k);
                                 LOGGER.info(results.get(k) + " " + expectedResults.get(k));
                             }
-							return false;
-						}
-					}
-				} else {
+                            return false;
+                        }
+                    }
+                } else {
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i + " j=" + j);
                         LOGGER.info("RESULTS: " + results.size());
                         LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
                     }
-					return false;
-				}
-			}
-		}
+                    return false;
+                }
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 }

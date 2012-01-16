@@ -23,8 +23,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+import java.net.InetSocketAddress;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -58,6 +57,8 @@ import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
+import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
+import edu.uci.ics.hyracks.control.common.ipc.NodeControllerDelegateIPCI;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
@@ -74,17 +75,19 @@ import edu.uci.ics.hyracks.control.nc.work.CreateApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.DestroyApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
+import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
-
-    private static final long serialVersionUID = 1L;
 
     private NCConfig ncConfig;
 
     private final String id;
 
     private final IHyracksRootContext ctx;
+
+    private final IPCSystem ipc;
 
     private final PartitionManager partitionManager;
 
@@ -122,6 +125,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
         executor = Executors.newCachedThreadPool();
+        NodeControllerDelegateIPCI ipci = new NodeControllerDelegateIPCI(this);
+        ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci, executor);
         this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManager(getDevices(ncConfig.ioDevices), executor));
         if (id == null) {
             throw new Exception("id not set");
@@ -160,27 +165,28 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
+        ipc.start();
         connectionManager.start();
-        Registry registry = LocateRegistry.getRegistry(ncConfig.ccHost, ncConfig.ccPort);
-        IClusterController cc = (IClusterController) registry.lookup(IClusterController.class.getName());
+        IIPCHandle ccIPCHandle = ipc.getHandle(new InetSocketAddress(ncConfig.ccHost, ncConfig.ccPort));
+        this.ccs = new ClusterControllerRemoteProxy(ccIPCHandle);
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
         for (int i = 0; i < gcInfos.length; ++i) {
             gcInfos[i] = new HeartbeatSchema.GarbageCollectorInfo(gcMXBeans.get(i).getName());
         }
         HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
-        this.nodeParameters = cc.registerNode(new NodeRegistration(this, id, ncConfig, connectionManager
-                .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
-                .getAvailableProcessors(), hbSchema));
+        this.nodeParameters = ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig,
+                connectionManager.getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(),
+                osMXBean.getAvailableProcessors(), hbSchema));
         queue.start();
 
-        heartbeatTask = new HeartbeatTask(cc);
+        heartbeatTask = new HeartbeatTask(ccs);
 
         // Schedule heartbeat generator.
         timer.schedule(heartbeatTask, 0, nodeParameters.getHeartbeatPeriod());
 
         if (nodeParameters.getProfileDumpPeriod() > 0) {
             // Schedule profile dump generator.
-            timer.schedule(new ProfileDumpTask(cc), 0, nodeParameters.getProfileDumpPeriod());
+            timer.schedule(new ProfileDumpTask(ccs), 0, nodeParameters.getProfileDumpPeriod());
         }
 
         LOGGER.log(Level.INFO, "Started NodeControllerService");
@@ -196,7 +202,6 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
 
-    @Override
     public String getId() {
         return id;
     }
@@ -236,23 +241,17 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public void startTasks(String appName, final JobId jobId, byte[] jagBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, byte[] ctxVarBytes) throws Exception {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap) throws Exception {
         StartTasksWork stw = new StartTasksWork(this, appName, jobId, jagBytes, taskDescriptors, connectorPoliciesMap);
-        queue.scheduleAndSync(stw);
+        queue.schedule(stw);
     }
 
     @Override
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
         CleanupJobletWork cjw = new CleanupJobletWork(this, jobId, status);
-        queue.scheduleAndSync(cjw);
+        queue.schedule(cjw);
     }
 
-    @Override
-    public void notifyRegistration(IClusterController ccs) throws Exception {
-        this.ccs = ccs;
-    }
-
-    @Override
     public NCConfig getConfiguration() throws Exception {
         return ncConfig;
     }
@@ -260,20 +259,24 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     @Override
     public synchronized void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
         AbortTasksWork atw = new AbortTasksWork(this, jobId, tasks);
-        queue.scheduleAndSync(atw);
+        queue.schedule(atw);
     }
 
     @Override
     public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
             throws Exception {
-        CreateApplicationWork caw = new CreateApplicationWork(this, appName, deployHar, serializedDistributedState);
-        queue.scheduleAndSync(caw);
+        FutureValue<Object> fv = new FutureValue<Object>();
+        CreateApplicationWork caw = new CreateApplicationWork(this, appName, deployHar, serializedDistributedState, fv);
+        queue.schedule(caw);
+        fv.get();
     }
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        DestroyApplicationWork daw = new DestroyApplicationWork(this, appName);
-        queue.scheduleAndSync(daw);
+        FutureValue<Object> fv = new FutureValue<Object>();
+        DestroyApplicationWork daw = new DestroyApplicationWork(this, appName, fv);
+        queue.schedule(daw);
+        fv.get();
     }
 
     @Override

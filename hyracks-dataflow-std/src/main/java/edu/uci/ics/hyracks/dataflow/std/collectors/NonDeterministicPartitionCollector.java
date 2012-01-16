@@ -172,6 +172,7 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                 PartitionId pid = (PartitionId) channel.getAttachment();
                 int senderIndex = pid.getSenderIndex();
                 failSenders.set(senderIndex);
+                eosSenders.set(senderIndex);
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }

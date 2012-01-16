@@ -18,11 +18,14 @@ package edu.uci.ics.hyracks.dataflow.common.util;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.FloatBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.BooleanPointable;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
@@ -32,31 +35,31 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 
 @SuppressWarnings("rawtypes")
 public class SerdeUtils {
-    public static ITypeTrait[] serdesToTypeTraits(ISerializerDeserializer[] serdes, int numSerdes) {
-        ITypeTrait[] typeTraits = new ITypeTrait[numSerdes];
+    public static ITypeTraits[] serdesToTypeTraits(ISerializerDeserializer[] serdes, int numSerdes) {
+        ITypeTraits[] typeTraits = new ITypeTraits[numSerdes];
         for (int i = 0; i < numSerdes; i++) {
             typeTraits[i] = serdeToTypeTrait(serdes[i]);
         }
         return typeTraits;
     }
 
-    public static ITypeTrait serdeToTypeTrait(ISerializerDeserializer serde) {
+    public static ITypeTraits serdeToTypeTrait(ISerializerDeserializer serde) {
         if (serde instanceof IntegerSerializerDeserializer) {
-            return ITypeTrait.INTEGER_TYPE_TRAIT;
+            return IntegerPointable.TYPE_TRAITS;
         }
         if (serde instanceof Integer64SerializerDeserializer) {
-            return ITypeTrait.INTEGER64_TYPE_TRAIT;
+            return LongPointable.TYPE_TRAITS;
         }
         if (serde instanceof FloatSerializerDeserializer) {
-            return ITypeTrait.FLOAT_TYPE_TRAIT;
+            return FloatPointable.TYPE_TRAITS;
         }
         if (serde instanceof DoubleSerializerDeserializer) {
-            return ITypeTrait.DOUBLE_TYPE_TRAIT;
+            return DoublePointable.TYPE_TRAITS;
         }
         if (serde instanceof BooleanSerializerDeserializer) {
-            return ITypeTrait.BOOLEAN_TYPE_TRAIT;
+            return BooleanPointable.TYPE_TRAITS;
         }
-        return ITypeTrait.VARLEN_TYPE_TRAIT;
+        return UTF8StringPointable.TYPE_TRAITS;
     }
 
     public static IBinaryComparator[] serdesToComparators(ISerializerDeserializer[] serdes, int numSerdes) {
@@ -68,27 +71,10 @@ public class SerdeUtils {
     }
 
     public static IBinaryComparator serdeToComparator(ISerializerDeserializer serde) {
-        if (serde instanceof IntegerSerializerDeserializer) {
-            return IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        }
-        if (serde instanceof Integer64SerializerDeserializer) {
-            throw new UnsupportedOperationException("Binary comparator for Integer64 not implemented.");
-        }
-        if (serde instanceof FloatSerializerDeserializer) {
-            return FloatBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        }
-        if (serde instanceof DoubleSerializerDeserializer) {
-            return DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        }
-        if (serde instanceof BooleanSerializerDeserializer) {
-            throw new UnsupportedOperationException("Binary comparator for Boolean not implemented.");
-        }
-        if (serde instanceof UTF8StringSerializerDeserializer) {
-            return UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        }
-        throw new UnsupportedOperationException("Binary comparator for + " + serde.toString() + " not implemented.");
+        IBinaryComparatorFactory f = serdeToComparatorFactory(serde);
+        return f.createBinaryComparator();
     }
-    
+
     public static IBinaryComparatorFactory[] serdesToComparatorFactories(ISerializerDeserializer[] serdes, int numSerdes) {
         IBinaryComparatorFactory[] comparatorsFactories = new IBinaryComparatorFactory[numSerdes];
         for (int i = 0; i < numSerdes; i++) {
@@ -99,22 +85,22 @@ public class SerdeUtils {
 
     public static IBinaryComparatorFactory serdeToComparatorFactory(ISerializerDeserializer serde) {
         if (serde instanceof IntegerSerializerDeserializer) {
-            return IntegerBinaryComparatorFactory.INSTANCE;
+            return PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         }
         if (serde instanceof Integer64SerializerDeserializer) {
-            throw new UnsupportedOperationException("Binary comparator factory for Integer64 not implemented.");
+            return PointableBinaryComparatorFactory.of(LongPointable.FACTORY);
         }
         if (serde instanceof FloatSerializerDeserializer) {
-            return FloatBinaryComparatorFactory.INSTANCE;
+            return PointableBinaryComparatorFactory.of(FloatPointable.FACTORY);
         }
         if (serde instanceof DoubleSerializerDeserializer) {
-            return DoubleBinaryComparatorFactory.INSTANCE;
+            return PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
         }
         if (serde instanceof BooleanSerializerDeserializer) {
             throw new UnsupportedOperationException("Binary comparator factory for Boolean not implemented.");
         }
         if (serde instanceof UTF8StringSerializerDeserializer) {
-            return UTF8StringBinaryComparatorFactory.INSTANCE;
+            return PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
         }
         throw new UnsupportedOperationException("Binary comparator for + " + serde.toString() + " not implemented.");
     }

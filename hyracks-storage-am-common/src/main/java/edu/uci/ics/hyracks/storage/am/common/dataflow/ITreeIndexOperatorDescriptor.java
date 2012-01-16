@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 
 public interface ITreeIndexOperatorDescriptor extends IIndexOperatorDescriptor {
@@ -26,6 +26,6 @@ public interface ITreeIndexOperatorDescriptor extends IIndexOperatorDescriptor {
 
 	public ITreeIndexFrameFactory getTreeIndexLeafFactory();
 
-	public ITypeTrait[] getTreeIndexTypeTraits();
+	public ITypeTraits[] getTreeIndexTypeTraits();
 	
 }

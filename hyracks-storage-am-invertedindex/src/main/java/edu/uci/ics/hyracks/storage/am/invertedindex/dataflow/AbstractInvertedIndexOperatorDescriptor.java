@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -45,21 +45,21 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     // Btree.
     protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
-    protected final ITypeTrait[] btreeTypeTraits;
+    protected final ITypeTraits[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final IIndexDataflowHelperFactory btreeDataflowHelperFactory;
     protected final IFileSplitProvider btreeFileSplitProvider;
 
     // Inverted index.
-    protected final ITypeTrait[] invListsTypeTraits;
+    protected final ITypeTraits[] invListsTypeTraits;
     protected final IBinaryComparatorFactory[] invListComparatorFactories;
     protected final IFileSplitProvider invListsFileSplitProvider;
 
     public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
-            IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTrait[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTrait[] invListsTypeTraits,
+            IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory) {
         super(spec, inputArity, outputArity);
@@ -103,7 +103,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public ITypeTrait[] getTreeIndexTypeTraits() {
+    public ITypeTraits[] getTreeIndexTypeTraits() {
         return btreeTypeTraits;
     }
 
@@ -133,7 +133,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public ITypeTrait[] getInvListsTypeTraits() {
+    public ITypeTraits[] getInvListsTypeTraits() {
         return invListsTypeTraits;
     }
 

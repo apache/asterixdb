@@ -145,7 +145,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {
-        taskMap.remove(task);
+        taskMap.remove(task.getTaskAttemptId());
         try {
             TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile());
             task.dumpProfile(taskProfile);
@@ -159,7 +159,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public synchronized void notifyTaskFailed(Task task, String details) throws Exception {
-        taskMap.remove(task);
+        taskMap.remove(task.getTaskAttemptId());
         try {
             nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(),
                     nodeController.getId(), details);

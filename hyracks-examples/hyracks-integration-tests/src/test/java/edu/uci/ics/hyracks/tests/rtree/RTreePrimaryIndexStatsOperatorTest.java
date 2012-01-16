@@ -27,11 +27,12 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
@@ -77,7 +78,7 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
     // field, type and key declarations for primary R-tree index
     private int primaryFieldCount = 5;
     private int primaryKeyFieldCount = 4;
-    private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
+    private ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
     private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
 
     private RTreeTypeAwareTupleWriterFactory primaryTupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(
@@ -100,18 +101,18 @@ public class RTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
     @Before
     public void setup() throws Exception {
         // field, type and key declarations for primary R-tree index
-        primaryTypeTraits[0] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryTypeTraits[1] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryTypeTraits[2] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryTypeTraits[3] = ITypeTrait.DOUBLE_TYPE_TRAIT;
-        primaryTypeTraits[4] = ITypeTrait.VARLEN_TYPE_TRAIT;
-        primaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+        primaryTypeTraits[0] = DoublePointable.TYPE_TRAITS;
+        primaryTypeTraits[1] = DoublePointable.TYPE_TRAITS;
+        primaryTypeTraits[2] = DoublePointable.TYPE_TRAITS;
+        primaryTypeTraits[3] = DoublePointable.TYPE_TRAITS;
+        primaryTypeTraits[4] = DoublePointable.TYPE_TRAITS;
+        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
         primaryComparatorFactories[1] = primaryComparatorFactories[0];
         primaryComparatorFactories[2] = primaryComparatorFactories[0];
         primaryComparatorFactories[3] = primaryComparatorFactories[0];
 
         IPrimitiveValueProviderFactory[] primaryValueProviderFactories = RTreeUtils
-                .comparatorFactoriesToPrimitiveValueProviderFactories(primaryComparatorFactories);
+                .createPrimitiveValueProviderFactories(primaryComparatorFactories.length, DoublePointable.FACTORY);
 
         primaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(primaryTupleWriterFactory,
                 primaryValueProviderFactories);

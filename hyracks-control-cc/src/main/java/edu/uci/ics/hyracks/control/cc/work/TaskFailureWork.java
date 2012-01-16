@@ -31,7 +31,7 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
 
     @Override
     protected void performEvent(TaskAttempt ta) {
-        ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
+        ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
         ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, details);
     }
 

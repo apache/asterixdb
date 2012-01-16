@@ -27,16 +27,16 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
@@ -96,17 +96,17 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
         // declare fields
         int fieldCount = 3;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = new TypeTrait(4);
-        typeTraits[1] = new TypeTrait(4);
-        typeTraits[2] = new TypeTrait(4);
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
 
         // declare keys
         int keyFieldCount = 3;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        cmps[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing
@@ -120,7 +120,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         try {
 
             ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
-            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);            
+            BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
             frame.setPage(page);
             frame.initBuffer((byte) 0);
             frame.setMultiComparator(cmp);
@@ -148,7 +148,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
                 int a = rnd.nextInt() % smallMax;
                 int b = rnd.nextInt() % smallMax;
                 int c = i;
-                
+
                 ITupleReference tuple = createTuple(ctx, a, b, c, false);
                 try {
                     int targetTupleIndex = frame.findInsertTupleIndex(tuple);
@@ -213,19 +213,19 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
             bufferCache.unpin(page);
         }
     }
-    
+
     public int getPageSize() {
         return PAGE_SIZE;
     }
-    
+
     public int getNumPages() {
         return NUM_PAGES;
     }
-    
+
     public int getHyracksFrameSize() {
         return HYRACKS_FRAME_SIZE;
     }
-    
+
     public int getMaxOpenFiles() {
         return MAX_OPEN_FILES;
     }

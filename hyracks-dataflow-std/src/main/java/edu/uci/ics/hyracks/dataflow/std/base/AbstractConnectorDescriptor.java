@@ -41,7 +41,6 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     public JSONObject toJSON() throws JSONException {
         JSONObject jconn = new JSONObject();
 
-        jconn.put("type", "connector");
         jconn.put("id", getConnectorId().getId());
         jconn.put("java-class", getClass().getName());
 
