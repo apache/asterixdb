@@ -25,20 +25,17 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
  */
 public class FrameToolsForGroupers {
 
-    public static void writeFields(byte[] buf, int offset, int length,
-            ArrayTupleBuilder tupleBuilder) throws HyracksDataException {
-        writeFields(buf, offset, length, tupleBuilder.getFieldEndOffsets(),
-                tupleBuilder.getByteArray(), 0, tupleBuilder.getSize());
+    public static void writeFields(byte[] buf, int offset, int length, ArrayTupleBuilder tupleBuilder)
+            throws HyracksDataException {
+        writeFields(buf, offset, length, tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                tupleBuilder.getSize());
     }
 
-    public static void writeFields(byte[] buf, int offset, int length,
-            int[] fieldsOffset, byte[] data, int dataOffset, int dataLength)
-            throws HyracksDataException {
+    public static void writeFields(byte[] buf, int offset, int length, int[] fieldsOffset, byte[] data, int dataOffset,
+            int dataLength) throws HyracksDataException {
         if (dataLength + 4 * fieldsOffset.length > length) {
-            throw new HyracksDataException(
-                    "Out of buffer bound: try to write too much data ("
-                            + dataLength + ") to the given bound (" + length
-                            + ").");
+            throw new HyracksDataException("Out of buffer bound: try to write too much data (" + dataLength
+                    + ") to the given bound (" + length + ").");
         }
 
         ByteBuffer buffer = ByteBuffer.wrap(buf, offset, length);
@@ -48,60 +45,49 @@ public class FrameToolsForGroupers {
         buffer.put(data, dataOffset, dataLength);
     }
 
-    public static void updateFrameMetaForNewTuple(ByteBuffer buffer,
-            int addedTupleLength) throws HyracksDataException {
-        int currentTupleCount = buffer.getInt(FrameHelper
-                .getTupleCountOffset(buffer.capacity()));
-        int currentTupleEndOffset = buffer
-                .getInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
-                        * currentTupleCount);
+    public static void updateFrameMetaForNewTuple(ByteBuffer buffer, int addedTupleLength) throws HyracksDataException {
+        int currentTupleCount = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()));
+        int currentTupleEndOffset = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
+                * currentTupleCount);
         int newTupleEndOffset = currentTupleEndOffset + addedTupleLength;
 
         // update tuple end offset
-        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
-                * (currentTupleCount + 1), newTupleEndOffset);
+        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4 * (currentTupleCount + 1),
+                newTupleEndOffset);
         // Update the tuple count
-        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()),
-                currentTupleCount + 1);
+        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()), currentTupleCount + 1);
     }
 
-    public static void updateFrameMetaForNewTuple(ByteBuffer buffer,
-            int addedTupleLength, boolean isReset) throws HyracksDataException {
+    public static void updateFrameMetaForNewTuple(ByteBuffer buffer, int addedTupleLength, boolean isReset)
+            throws HyracksDataException {
         int currentTupleCount;
         int currentTupleEndOffset;
         if (isReset) {
             currentTupleCount = 0;
             currentTupleEndOffset = 0;
         } else {
-            currentTupleCount = buffer.getInt(FrameHelper
-                    .getTupleCountOffset(buffer.capacity()));
-            currentTupleEndOffset = buffer.getInt(FrameHelper
-                    .getTupleCountOffset(buffer.capacity())
-                    - 4
+            currentTupleCount = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()));
+            currentTupleEndOffset = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
                     * currentTupleCount);
         }
         int newTupleEndOffset = currentTupleEndOffset + addedTupleLength;
 
         // update tuple end offset
-        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
-                * (currentTupleCount + 1), newTupleEndOffset);
+        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4 * (currentTupleCount + 1),
+                newTupleEndOffset);
         // Update the tuple count
-        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()),
-                currentTupleCount + 1);
+        buffer.putInt(FrameHelper.getTupleCountOffset(buffer.capacity()), currentTupleCount + 1);
     }
 
     public static boolean isFrameOverflowing(ByteBuffer buffer, int length, boolean isReset)
             throws HyracksDataException {
-        
-        int currentTupleCount = buffer.getInt(FrameHelper
-                .getTupleCountOffset(buffer.capacity()));
-        if(currentTupleCount == 0 || isReset){
+
+        int currentTupleCount = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()));
+        if (currentTupleCount == 0 || isReset) {
             return length + 4 + 4 > buffer.capacity();
         }
-        int currentTupleEndOffset = buffer
-                .getInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
-                        * currentTupleCount);
-        return currentTupleEndOffset + length + 4 + (currentTupleCount + 1) * 4 > buffer
-                .capacity();
+        int currentTupleEndOffset = buffer.getInt(FrameHelper.getTupleCountOffset(buffer.capacity()) - 4
+                * currentTupleCount);
+        return currentTupleEndOffset + length + 4 + (currentTupleCount + 1) * 4 > buffer.capacity();
     }
 }

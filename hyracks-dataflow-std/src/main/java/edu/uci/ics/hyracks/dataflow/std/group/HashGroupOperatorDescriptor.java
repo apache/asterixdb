@@ -57,10 +57,8 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private final int tableSize;
 
-    public HashGroupOperatorDescriptor(JobSpecification spec, int[] keys,
-            ITuplePartitionComputerFactory tpcf,
-            IBinaryComparatorFactory[] comparatorFactories,
-            IAggregatorDescriptorFactory aggregatorFactory,
+    public HashGroupOperatorDescriptor(JobSpecification spec, int[] keys, ITuplePartitionComputerFactory tpcf,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor outRecordDescriptor, int tableSize) {
         super(spec, 1, 1);
         this.keys = keys;
@@ -80,12 +78,10 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
      */
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId,
-                HASH_BUILD_ACTIVITY_ID));
+        HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, HASH_BUILD_ACTIVITY_ID));
         builder.addActivity(ha);
 
-        OutputActivity oa = new OutputActivity(new ActivityId(odId,
-                OUTPUT_ACTIVITY_ID));
+        OutputActivity oa = new OutputActivity(new ActivityId(odId, OUTPUT_ACTIVITY_ID));
         builder.addActivity(oa);
 
         builder.addSourceEdge(0, ha, 0);
@@ -122,31 +118,24 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(
-                final IHyracksTaskContext ctx,
-                final IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions) {
-            final FrameTupleAccessor accessor = new FrameTupleAccessor(
-                    ctx.getFrameSize(),
-                    recordDescProvider.getInputRecordDescriptor(
-                            getOperatorId(), 0));
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+            final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
+                    recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private HashBuildActivityState state;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new HashBuildActivityState(ctx.getJobletContext()
-                            .getJobId(), new TaskId(getActivityId(), partition));
-                    state.table = new GroupingHashTable(ctx, keys,
-                            comparatorFactories, tpcf, aggregatorFactory,
-                            recordDescProvider.getInputRecordDescriptor(
-                                    getOperatorId(), 0), recordDescriptors[0],
+                    state = new HashBuildActivityState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
+                    state.table = new GroupingHashTable(ctx, keys, comparatorFactories, tpcf, aggregatorFactory,
+                            recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
                             tableSize);
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer)
-                        throws HyracksDataException {
+                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     accessor.reset(buffer);
                     int tupleCount = accessor.getTupleCount();
                     for (int i = 0; i < tupleCount; ++i) {
@@ -166,8 +155,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    throw new HyracksDataException(
-                            "HashGroupOperator is failed.");
+                    throw new HyracksDataException("HashGroupOperator is failed.");
                 }
             };
         }
@@ -181,17 +169,13 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(
-                final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    HashBuildActivityState buildState = (HashBuildActivityState) ctx
-                            .getTaskState(new TaskId(new ActivityId(
-                                    getOperatorId(), HASH_BUILD_ACTIVITY_ID),
-                                    partition));
+                    HashBuildActivityState buildState = (HashBuildActivityState) ctx.getTaskState(new TaskId(
+                            new ActivityId(getOperatorId(), HASH_BUILD_ACTIVITY_ID), partition));
                     GroupingHashTable table = buildState.table;
                     writer.open();
                     try {

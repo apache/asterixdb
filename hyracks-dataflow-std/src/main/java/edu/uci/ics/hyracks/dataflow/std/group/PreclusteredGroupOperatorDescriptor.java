@@ -29,17 +29,15 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
-public class PreclusteredGroupOperatorDescriptor extends
-        AbstractSingleActivityOperatorDescriptor {
+public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private final int[] groupFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IAggregatorDescriptorFactory aggregatorFactory;
 
     private static final long serialVersionUID = 1L;
 
-    public PreclusteredGroupOperatorDescriptor(JobSpecification spec,
-            int[] groupFields, IBinaryComparatorFactory[] comparatorFactories,
-            IAggregatorDescriptorFactory aggregatorFactory,
+    public PreclusteredGroupOperatorDescriptor(JobSpecification spec, int[] groupFields,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.groupFields = groupFields;
@@ -49,40 +47,33 @@ public class PreclusteredGroupOperatorDescriptor extends
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(
-            final IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, int partition,
-            int nPartitions) throws HyracksDataException {
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
-        final RecordDescriptor inRecordDesc = recordDescProvider
-                .getInputRecordDescriptor(getOperatorId(), 0);
-        final IAggregatorDescriptor aggregator = aggregatorFactory
-                .createAggregator(ctx, inRecordDesc, recordDescriptors[0],
-                        groupFields, groupFields);
+        final RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+        final IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
+                recordDescriptors[0], groupFields, groupFields);
         final ByteBuffer copyFrame = ctx.allocateFrame();
-        final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(
-                ctx.getFrameSize(), inRecordDesc);
+        final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
         copyFrameAccessor.reset(copyFrame);
         ByteBuffer outFrame = ctx.allocateFrame();
-        final FrameTupleAppender appender = new FrameTupleAppender(
-                ctx.getFrameSize());
+        final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(outFrame, true);
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             private PreclusteredGroupWriter pgw;
 
             @Override
             public void open() throws HyracksDataException {
-                pgw = new PreclusteredGroupWriter(ctx, groupFields,
-                        comparators, aggregator, inRecordDesc, recordDescriptors[0], writer);
+                pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
+                        recordDescriptors[0], writer);
                 pgw.open();
             }
 
             @Override
-            public void nextFrame(ByteBuffer buffer)
-                    throws HyracksDataException {
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 pgw.nextFrame(buffer);
             }
 

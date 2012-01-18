@@ -30,8 +30,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 /**
  *
  */
-public class IntSumFieldAggregatorFactory implements
-        IFieldAggregateDescriptorFactory {
+public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,8 +53,7 @@ public class IntSumFieldAggregatorFactory implements
      * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
      */
     @Override
-    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
-            RecordDescriptor inRecordDescriptor,
+    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
 
         return new IFieldAggregateDescriptor() {
@@ -65,8 +63,7 @@ public class IntSumFieldAggregatorFactory implements
             }
 
             @Override
-            public void outputPartialResult(DataOutput fieldOutput,
-                    byte[] data, int offset, AggregateState state)
+            public void outputPartialResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
                 if (!useObjectState) {
@@ -77,14 +74,12 @@ public class IntSumFieldAggregatorFactory implements
                 try {
                     fieldOutput.writeInt(sum);
                 } catch (IOException e) {
-                    throw new HyracksDataException(
-                            "I/O exception when writing aggregation to the output buffer.");
+                    throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
             }
 
             @Override
-            public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-                    int offset, AggregateState state)
+            public void outputFinalResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 int sum;
                 if (!useObjectState) {
@@ -95,31 +90,26 @@ public class IntSumFieldAggregatorFactory implements
                 try {
                     fieldOutput.writeInt(sum);
                 } catch (IOException e) {
-                    throw new HyracksDataException(
-                            "I/O exception when writing aggregation to the output buffer.");
+                    throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
             }
 
             @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex,
-                    DataOutput fieldOutput, AggregateState state)
+            public void init(IFrameTupleAccessor accessor, int tIndex, DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
 
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
 
-                sum += IntegerSerializerDeserializer.getInt(accessor
-                        .getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength()
-                                + fieldStart);
+                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);
                     } catch (IOException e) {
-                        throw new HyracksDataException(
-                                "I/O exception when initializing the aggregator.");
+                        throw new HyracksDataException("I/O exception when initializing the aggregator.");
                     }
                 } else {
                     state.state = sum;
@@ -144,16 +134,13 @@ public class IntSumFieldAggregatorFactory implements
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-                    byte[] data, int offset, AggregateState state)
-                    throws HyracksDataException {
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerSerializerDeserializer.getInt(accessor
-                        .getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength()
-                                + fieldStart);
+                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);

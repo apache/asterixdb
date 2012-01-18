@@ -120,6 +120,6 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
     @Override
     public void fail() throws HyracksDataException {
         // TODO Auto-generated method stub
-        
+
     }
 }

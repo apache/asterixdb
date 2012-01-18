@@ -41,8 +41,7 @@ public interface IFieldAggregateDescriptor {
      *            The state to be initialized.
      * @throws HyracksDataException
      */
-    public void init(IFrameTupleAccessor accessor, int tIndex,
-            DataOutput fieldOutput, AggregateState state)
+    public void init(IFrameTupleAccessor accessor, int tIndex, DataOutput fieldOutput, AggregateState state)
             throws HyracksDataException;
 
     /**
@@ -74,8 +73,7 @@ public interface IFieldAggregateDescriptor {
      *            The aggregate state.
      * @throws HyracksDataException
      */
-    public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-            byte[] data, int offset, AggregateState state)
+    public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, AggregateState state)
             throws HyracksDataException;
 
     /**
@@ -90,8 +88,8 @@ public interface IFieldAggregateDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputPartialResult(DataOutput fieldOutput, byte[] data,
-            int offset, AggregateState state) throws HyracksDataException;
+    public void outputPartialResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
+            throws HyracksDataException;
 
     /**
      * Output the final aggregation result.
@@ -105,8 +103,8 @@ public interface IFieldAggregateDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-            int offset, AggregateState state) throws HyracksDataException;
+    public void outputFinalResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
+            throws HyracksDataException;
 
     public boolean needsBinaryState();
 

@@ -25,8 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  */
 public interface IFieldAggregateDescriptorFactory extends Serializable {
 
-	public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
-			RecordDescriptor inRecordDescriptor,
-			RecordDescriptor outRecordDescriptor) throws HyracksDataException;
+    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
+            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
 
 }

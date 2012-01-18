@@ -74,14 +74,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     private final ISpillableTableFactory spillableTableFactory;
     private final boolean isOutputSorted;
 
-    public ExternalGroupOperatorDescriptor(JobSpecification spec,
-            int[] keyFields, int framesLimit,
-            IBinaryComparatorFactory[] comparatorFactories,
-            INormalizedKeyComputerFactory firstNormalizerFactory,
-            IAggregatorDescriptorFactory aggregatorFactory,
-            IAggregatorDescriptorFactory mergerFactory,
-            RecordDescriptor recordDescriptor,
-            ISpillableTableFactory spillableTableFactory, boolean isOutputSorted) {
+    public ExternalGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
+            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
+            IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
+            RecordDescriptor recordDescriptor, ISpillableTableFactory spillableTableFactory, boolean isOutputSorted) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
         if (framesLimit <= 1) {
@@ -89,9 +85,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
              * Minimum of 2 frames: 1 for input records, and 1 for output
              * aggregation results.
              */
-            throw new IllegalStateException(
-                    "frame limit should at least be 2, but it is "
-                            + framesLimit + "!");
+            throw new IllegalStateException("frame limit should at least be 2, but it is " + framesLimit + "!");
         }
         this.aggregatorFactory = aggregatorFactory;
         this.mergerFactory = mergerFactory;
@@ -117,10 +111,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
      */
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(
-                getOperatorId(), AGGREGATE_ACTIVITY_ID));
-        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId,
-                MERGE_ACTIVITY_ID));
+        AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID));
+        MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
         builder.addActivity(aggregateAct);
         builder.addSourceEdge(0, aggregateAct, 0);
@@ -162,35 +154,28 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(
-                final IHyracksTaskContext ctx,
-                final IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions)
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
-            final FrameTupleAccessor accessor = new FrameTupleAccessor(
-                    ctx.getFrameSize(),
-                    recordDescProvider.getInputRecordDescriptor(
-                            getOperatorId(), 0));
+            final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
+                    recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private AggregateActivityState state;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new AggregateActivityState(ctx.getJobletContext()
-                            .getJobId(), new TaskId(getActivityId(), partition));
+                    state = new AggregateActivityState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
                     state.runs = new LinkedList<RunFileReader>();
-                    state.gTable = spillableTableFactory.buildSpillableTable(
-                            ctx, keyFields, comparatorFactories,
+                    state.gTable = spillableTableFactory.buildSpillableTable(ctx, keyFields, comparatorFactories,
                             firstNormalizerFactory, aggregatorFactory,
-                            recordDescProvider.getInputRecordDescriptor(
-                                    getOperatorId(), 0), recordDescriptors[0],
+                            recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
                             ExternalGroupOperatorDescriptor.this.framesLimit);
                     state.gTable.reset();
                 }
 
                 @Override
-                public void nextFrame(ByteBuffer buffer)
-                        throws HyracksDataException {
+                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     accessor.reset(buffer);
                     int tupleCount = accessor.getTupleCount();
                     for (int i = 0; i < tupleCount; i++) {
@@ -230,15 +215,12 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private void flushFramesToRun() throws HyracksDataException {
                     FileReference runFile;
                     try {
-                        runFile = ctx.getJobletContext()
-                                .createManagedWorkspaceFile(
-                                        ExternalGroupOperatorDescriptor.class
-                                                .getSimpleName());
+                        runFile = ctx.getJobletContext().createManagedWorkspaceFile(
+                                ExternalGroupOperatorDescriptor.class.getSimpleName());
                     } catch (IOException e) {
                         throw new HyracksDataException(e);
                     }
-                    RunFileWriter writer = new RunFileWriter(runFile,
-                            ctx.getIOManager());
+                    RunFileWriter writer = new RunFileWriter(runFile, ctx.getIOManager());
                     writer.open();
                     try {
                         state.gTable.sortFrames();
@@ -264,15 +246,12 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(
-                final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions)
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
-                comparators[i] = comparatorFactories[i]
-                        .createBinaryComparator();
+                comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
 
             int[] keyFieldsInPartialResults = new int[keyFields.length];
@@ -280,12 +259,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 keyFieldsInPartialResults[i] = i;
             }
 
-            final IAggregatorDescriptor aggregator = mergerFactory
-                    .createAggregator(ctx, recordDescriptors[0],
-                            recordDescriptors[0], keyFields,
-                            keyFieldsInPartialResults);
-            final AggregateState aggregateState = aggregator
-                    .createAggregateStates();
+            final IAggregatorDescriptor aggregator = mergerFactory.createAggregator(ctx, recordDescriptors[0],
+                    recordDescriptors[0], keyFields, keyFieldsInPartialResults);
+            final AggregateState aggregateState = aggregator.createAggregateStates();
 
             final int[] storedKeys = new int[keyFields.length];
             /**
@@ -295,8 +271,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 storedKeys[i] = i;
             }
 
-            final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(
-                    recordDescriptors[0].getFields().length);
+            final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFields().length);
 
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 /**
@@ -308,8 +283,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                  * Output frame.
                  */
                 private ByteBuffer outFrame, writerFrame;
-                private final FrameTupleAppender outAppender = new FrameTupleAppender(
-                        ctx.getFrameSize());
+                private final FrameTupleAppender outAppender = new FrameTupleAppender(ctx.getFrameSize());
                 private FrameTupleAppender writerAppender;
 
                 private LinkedList<RunFileReader> runs;
@@ -326,14 +300,12 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private int[] currentFrameIndexInRun;
                 private int[] currentRunFrames;
 
-                private final FrameTupleAccessor outFrameAccessor = new FrameTupleAccessor(
-                        ctx.getFrameSize(), recordDescriptors[0]);
+                private final FrameTupleAccessor outFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(),
+                        recordDescriptors[0]);
 
                 public void initialize() throws HyracksDataException {
-                    aggState = (AggregateActivityState) ctx
-                            .getTaskState(new TaskId(new ActivityId(
-                                    getOperatorId(), AGGREGATE_ACTIVITY_ID),
-                                    partition));
+                    aggState = (AggregateActivityState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                            AGGREGATE_ACTIVITY_ID), partition));
                     runs = aggState.runs;
                     writer.open();
                     try {
@@ -368,8 +340,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
                 }
 
-                private void doPass(LinkedList<RunFileReader> runs)
-                        throws HyracksDataException {
+                private void doPass(LinkedList<RunFileReader> runs) throws HyracksDataException {
                     FileReference newRun = null;
                     IFrameWriter writer = this.writer;
                     boolean finalPass = false;
@@ -384,10 +355,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         runNumber = runs.size();
                     } else {
                         runNumber = framesLimit - 2;
-                        newRun = ctx.getJobletContext()
-                                .createManagedWorkspaceFile(
-                                        ExternalGroupOperatorDescriptor.class
-                                                .getSimpleName());
+                        newRun = ctx.getJobletContext().createManagedWorkspaceFile(
+                                ExternalGroupOperatorDescriptor.class.getSimpleName());
                         writer = new RunFileWriter(newRun, ctx.getIOManager());
                         writer.open();
                     }
@@ -399,12 +368,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          * the ones fit into the inFrames
                          */
                         RunFileReader[] runFileReaders = new RunFileReader[runNumber];
-                        FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames
-                                .size()];
+                        FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
                         Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-                        ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(
-                                ctx.getFrameSize(), recordDescriptors[0],
-                                runNumber, comparator);
+                        ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(),
+                                recordDescriptors[0], runNumber, comparator);
                         /**
                          * current tuple index in each run
                          */
@@ -417,26 +384,19 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             runFileReaders[runIndex].open();
 
                             currentRunFrames[runIndex] = 0;
-                            currentFrameIndexInRun[runIndex] = runIndex
-                                    * runFrameLimit;
+                            currentFrameIndexInRun[runIndex] = runIndex * runFrameLimit;
                             for (int j = 0; j < runFrameLimit; j++) {
-                                int frameIndex = currentFrameIndexInRun[runIndex]
-                                        + j;
-                                if (runFileReaders[runIndex].nextFrame(inFrames
-                                        .get(frameIndex))) {
-                                    tupleAccessors[frameIndex] = new FrameTupleAccessor(
-                                            ctx.getFrameSize(),
+                                int frameIndex = currentFrameIndexInRun[runIndex] + j;
+                                if (runFileReaders[runIndex].nextFrame(inFrames.get(frameIndex))) {
+                                    tupleAccessors[frameIndex] = new FrameTupleAccessor(ctx.getFrameSize(),
                                             recordDescriptors[0]);
-                                    tupleAccessors[frameIndex].reset(inFrames
-                                            .get(frameIndex));
+                                    tupleAccessors[frameIndex].reset(inFrames.get(frameIndex));
                                     currentRunFrames[runIndex]++;
                                     if (j == 0)
-                                        setNextTopTuple(runIndex, tupleIndices,
-                                                runFileReaders, tupleAccessors,
+                                        setNextTopTuple(runIndex, tupleIndices, runFileReaders, tupleAccessors,
                                                 topTuples);
                                 } else {
-                                    closeRun(runIndex, runFileReaders,
-                                            tupleAccessors);
+                                    closeRun(runIndex, runFileReaders, tupleAccessors);
                                     break;
                                 }
                             }
@@ -454,12 +414,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             int runIndex = topTuples.peek().getRunid();
                             FrameTupleAccessor fta = top.getAccessor();
 
-                            int currentTupleInOutFrame = outFrameAccessor
-                                    .getTupleCount() - 1;
+                            int currentTupleInOutFrame = outFrameAccessor.getTupleCount() - 1;
                             if (currentTupleInOutFrame < 0
-                                    || compareFrameTuples(fta, tupleIndex,
-                                            outFrameAccessor,
-                                            currentTupleInOutFrame) != 0) {
+                                    || compareFrameTuples(fta, tupleIndex, outFrameAccessor, currentTupleInOutFrame) != 0) {
                                 /**
                                  * Initialize the first output record Reset the
                                  * tuple builder
@@ -467,18 +424,13 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                                 tupleBuilder.reset();
 
-                                aggregator.init(tupleBuilder, fta, tupleIndex,
-                                        aggregateState);
+                                aggregator.init(tupleBuilder, fta, tupleIndex, aggregateState);
 
-                                if (!outAppender.appendSkipEmptyField(
-                                        tupleBuilder.getFieldEndOffsets(),
-                                        tupleBuilder.getByteArray(), 0,
-                                        tupleBuilder.getSize())) {
+                                if (!outAppender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(),
+                                        tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
                                     flushOutFrame(writer, finalPass);
-                                    if (!outAppender.appendSkipEmptyField(
-                                            tupleBuilder.getFieldEndOffsets(),
-                                            tupleBuilder.getByteArray(), 0,
-                                            tupleBuilder.getSize())) {
+                                    if (!outAppender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(),
+                                            tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
                                         throw new HyracksDataException(
                                                 "The partial result is too large to be initialized in a frame.");
                                     }
@@ -491,14 +443,12 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  * outFrame
                                  */
 
-                                aggregator.aggregate(fta, tupleIndex,
-                                        outFrameAccessor,
-                                        currentTupleInOutFrame, aggregateState);
+                                aggregator.aggregate(fta, tupleIndex, outFrameAccessor, currentTupleInOutFrame,
+                                        aggregateState);
 
                             }
                             tupleIndices[runIndex]++;
-                            setNextTopTuple(runIndex, tupleIndices,
-                                    runFileReaders, tupleAccessors, topTuples);
+                            setNextTopTuple(runIndex, tupleIndices, runFileReaders, tupleAccessors, topTuples);
                         }
 
                         if (outAppender.getTupleCount() > 0) {
@@ -523,12 +473,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
                 }
 
-                private void flushOutFrame(IFrameWriter writer, boolean isFinal)
-                        throws HyracksDataException {
+                private void flushOutFrame(IFrameWriter writer, boolean isFinal) throws HyracksDataException {
 
                     if (finalTupleBuilder == null) {
-                        finalTupleBuilder = new ArrayTupleBuilder(
-                                recordDescriptors[0].getFields().length);
+                        finalTupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFields().length);
                     }
 
                     if (writerFrame == null) {
@@ -536,8 +484,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
 
                     if (writerAppender == null) {
-                        writerAppender = new FrameTupleAppender(
-                                ctx.getFrameSize());
+                        writerAppender = new FrameTupleAppender(ctx.getFrameSize());
                         writerAppender.reset(writerFrame, true);
                     }
 
@@ -549,21 +496,19 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                         if (isFinal) {
 
-                            aggregator.outputFinalResult(finalTupleBuilder, outFrameAccessor, i,
-                                    aggregateState);
-
+                            aggregator.outputFinalResult(finalTupleBuilder, outFrameAccessor, i, aggregateState);
 
                         } else {
 
-                            aggregator.outputPartialResult(finalTupleBuilder, outFrameAccessor, i,
-                                    aggregateState);
+                            aggregator.outputPartialResult(finalTupleBuilder, outFrameAccessor, i, aggregateState);
                         }
-                        
-                        
-                        if(!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(), finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
+
+                        if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
+                                finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
                             FrameUtils.flushFrame(writerFrame, writer);
                             writerAppender.reset(writerFrame, true);
-                            if(!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(), finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
+                            if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
+                                    finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
                                 throw new HyracksDataException(
                                         "Aggregation output is too large to be fit into a frame.");
                             }
@@ -573,19 +518,16 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         FrameUtils.flushFrame(writerFrame, writer);
                         writerAppender.reset(writerFrame, true);
                     }
-                    
+
                     outAppender.reset(outFrame, true);
                 }
 
-                private void setNextTopTuple(int runIndex, int[] tupleIndices,
-                        RunFileReader[] runCursors,
-                        FrameTupleAccessor[] tupleAccessors,
-                        ReferencedPriorityQueue topTuples)
+                private void setNextTopTuple(int runIndex, int[] tupleIndices, RunFileReader[] runCursors,
+                        FrameTupleAccessor[] tupleAccessors, ReferencedPriorityQueue topTuples)
                         throws HyracksDataException {
                     int runStart = runIndex * runFrameLimit;
                     boolean existNext = false;
-                    if (tupleAccessors[currentFrameIndexInRun[runIndex]] == null
-                            || runCursors[runIndex] == null) {
+                    if (tupleAccessors[currentFrameIndexInRun[runIndex]] == null || runCursors[runIndex] == null) {
                         /**
                          * run already closed
                          */
@@ -595,8 +537,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          * not the last frame for this run
                          */
                         existNext = true;
-                        if (tupleIndices[runIndex] >= tupleAccessors[currentFrameIndexInRun[runIndex]]
-                                .getTupleCount()) {
+                        if (tupleIndices[runIndex] >= tupleAccessors[currentFrameIndexInRun[runIndex]].getTupleCount()) {
                             tupleIndices[runIndex] = 0;
                             currentFrameIndexInRun[runIndex]++;
                         }
@@ -619,15 +560,13 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          */
                         currentRunFrames[runIndex] = 0;
                         for (int j = 0; j < runFrameLimit; j++, frameOffset++) {
-                            ByteBuffer buffer = tupleAccessors[frameOffset]
-                                    .getBuffer();
+                            ByteBuffer buffer = tupleAccessors[frameOffset].getBuffer();
                             if (runCursors[runIndex].nextFrame(buffer)) {
                                 tupleAccessors[frameOffset].reset(buffer);
                                 if (tupleAccessors[frameOffset].getTupleCount() > 0) {
                                     existNext = true;
                                 } else {
-                                    throw new IllegalStateException(
-                                            "illegal: empty run file");
+                                    throw new IllegalStateException("illegal: empty run file");
                                 }
                                 currentRunFrames[runIndex]++;
                             } else {
@@ -637,10 +576,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
 
                     if (existNext) {
-                        topTuples
-                                .popAndReplace(
-                                        tupleAccessors[currentFrameIndexInRun[runIndex]],
-                                        tupleIndices[runIndex]);
+                        topTuples.popAndReplace(tupleAccessors[currentFrameIndexInRun[runIndex]],
+                                tupleIndices[runIndex]);
                     } else {
                         topTuples.pop();
                         closeRun(runIndex, runCursors, tupleAccessors);
@@ -656,8 +593,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                  * @param tupleAccessor
                  * @throws HyracksDataException
                  */
-                private void closeRun(int index, RunFileReader[] runCursors,
-                        IFrameTupleAccessor[] tupleAccessor)
+                private void closeRun(int index, RunFileReader[] runCursors, IFrameTupleAccessor[] tupleAccessor)
                         throws HyracksDataException {
                     if (runCursors[index] != null) {
                         runCursors[index].close();
@@ -666,18 +602,15 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     }
                 }
 
-                private int compareFrameTuples(IFrameTupleAccessor fta1,
-                        int j1, IFrameTupleAccessor fta2, int j2) {
+                private int compareFrameTuples(IFrameTupleAccessor fta1, int j1, IFrameTupleAccessor fta2, int j2) {
                     byte[] b1 = fta1.getBuffer().array();
                     byte[] b2 = fta2.getBuffer().array();
                     for (int f = 0; f < keyFields.length; ++f) {
                         int fIdx = f;
-                        int s1 = fta1.getTupleStartOffset(j1)
-                                + fta1.getFieldSlotsLength()
+                        int s1 = fta1.getTupleStartOffset(j1) + fta1.getFieldSlotsLength()
                                 + fta1.getFieldStartOffset(j1, fIdx);
                         int l1 = fta1.getFieldLength(j1, fIdx);
-                        int s2 = fta2.getTupleStartOffset(j2)
-                                + fta2.getFieldSlotsLength()
+                        int s2 = fta2.getTupleStartOffset(j2) + fta2.getFieldSlotsLength()
                                 + fta2.getFieldStartOffset(j2, fIdx);
                         int l2_start = fta2.getFieldStartOffset(j2, fIdx);
                         int l2_end = fta2.getFieldEndOffset(j2, fIdx);
@@ -693,32 +626,25 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             return op;
         }
 
-        private Comparator<ReferenceEntry> createEntryComparator(
-                final IBinaryComparator[] comparators) {
+        private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {
             return new Comparator<ReferenceEntry>() {
 
                 @Override
                 public int compare(ReferenceEntry o1, ReferenceEntry o2) {
-                    FrameTupleAccessor fta1 = (FrameTupleAccessor) o1
-                            .getAccessor();
-                    FrameTupleAccessor fta2 = (FrameTupleAccessor) o2
-                            .getAccessor();
+                    FrameTupleAccessor fta1 = (FrameTupleAccessor) o1.getAccessor();
+                    FrameTupleAccessor fta2 = (FrameTupleAccessor) o2.getAccessor();
                     int j1 = o1.getTupleIndex();
                     int j2 = o2.getTupleIndex();
                     byte[] b1 = fta1.getBuffer().array();
                     byte[] b2 = fta2.getBuffer().array();
                     for (int f = 0; f < keyFields.length; ++f) {
                         int fIdx = f;
-                        int s1 = fta1.getTupleStartOffset(j1)
-                                + fta1.getFieldSlotsLength()
+                        int s1 = fta1.getTupleStartOffset(j1) + fta1.getFieldSlotsLength()
                                 + fta1.getFieldStartOffset(j1, fIdx);
-                        int l1 = fta1.getFieldEndOffset(j1, fIdx)
-                                - fta1.getFieldStartOffset(j1, fIdx);
-                        int s2 = fta2.getTupleStartOffset(j2)
-                                + fta2.getFieldSlotsLength()
+                        int l1 = fta1.getFieldEndOffset(j1, fIdx) - fta1.getFieldStartOffset(j1, fIdx);
+                        int s2 = fta2.getTupleStartOffset(j2) + fta2.getFieldSlotsLength()
                                 + fta2.getFieldStartOffset(j2, fIdx);
-                        int l2 = fta2.getFieldEndOffset(j2, fIdx)
-                                - fta2.getFieldStartOffset(j2, fIdx);
+                        int l2 = fta2.getFieldEndOffset(j2, fIdx) - fta2.getFieldStartOffset(j2, fIdx);
                         int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
                         if (c != 0) {
                             return c;

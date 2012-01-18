@@ -33,8 +33,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 /**
  *
  */
-public class MinMaxStringFieldAggregatorFactory implements
-        IFieldAggregateDescriptorFactory {
+public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -44,8 +43,7 @@ public class MinMaxStringFieldAggregatorFactory implements
 
     private final boolean hasBinaryState;
 
-    public MinMaxStringFieldAggregatorFactory(int aggField, boolean isMax,
-            boolean hasBinaryState) {
+    public MinMaxStringFieldAggregatorFactory(int aggField, boolean isMax, boolean hasBinaryState) {
         this.aggField = aggField;
         this.isMax = isMax;
         this.hasBinaryState = hasBinaryState;
@@ -61,8 +59,7 @@ public class MinMaxStringFieldAggregatorFactory implements
      * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int[])
      */
     @Override
-    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx,
-            RecordDescriptor inRecordDescriptor,
+    public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
         return new IFieldAggregateDescriptor() {
 
@@ -71,13 +68,11 @@ public class MinMaxStringFieldAggregatorFactory implements
             }
 
             @Override
-            public void outputPartialResult(DataOutput fieldOutput,
-                    byte[] data, int offset, AggregateState state)
+            public void outputPartialResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(
-                                data, offset);
+                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
                         Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
@@ -90,13 +85,11 @@ public class MinMaxStringFieldAggregatorFactory implements
             }
 
             @Override
-            public void outputFinalResult(DataOutput fieldOutput, byte[] data,
-                    int offset, AggregateState state)
+            public void outputFinalResult(DataOutput fieldOutput, byte[] data, int offset, AggregateState state)
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(
-                                data, offset);
+                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
                         Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
@@ -109,18 +102,14 @@ public class MinMaxStringFieldAggregatorFactory implements
             }
 
             @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex,
-                    DataOutput fieldOutput, AggregateState state)
+            public void init(IFrameTupleAccessor accessor, int tIndex, DataOutput fieldOutput, AggregateState state)
                     throws HyracksDataException {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = UTF8StringSerializerDeserializer.INSTANCE
-                        .deserialize(new DataInputStream(
-                                new ByteArrayInputStream(accessor.getBuffer()
-                                        .array(), tupleOffset
-                                        + accessor.getFieldSlotsLength()
-                                        + fieldStart, fieldLength)));
+                String strField = UTF8StringSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
+                        new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
+                                + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
                     // Object-binary-state
                     Object[] storedState;
@@ -133,8 +122,7 @@ public class MinMaxStringFieldAggregatorFactory implements
                     }
                     int stateCount = (Integer) (storedState[0]);
                     if (stateCount + 1 >= storedState.length) {
-                        storedState = Arrays.copyOf(storedState,
-                                storedState.length * 2);
+                        storedState = Arrays.copyOf(storedState, storedState.length * 2);
                         state.state = storedState;
                     }
 
@@ -159,44 +147,35 @@ public class MinMaxStringFieldAggregatorFactory implements
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-                    byte[] data, int offset, AggregateState state)
-                    throws HyracksDataException {
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset,
+                    AggregateState state) throws HyracksDataException {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = UTF8StringSerializerDeserializer.INSTANCE
-                        .deserialize(new DataInputStream(
-                                new ByteArrayInputStream(accessor.getBuffer()
-                                        .array(), tupleOffset
-                                        + accessor.getFieldSlotsLength()
-                                        + fieldStart, fieldLength)));
+                String strField = UTF8StringSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
+                        new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
+                                + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
-                    int stateIdx = IntegerSerializerDeserializer.getInt(data,
-                            offset);
+                    int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
 
                     Object[] storedState = (Object[]) state.state;
 
                     if (isMax) {
-                        if (strField.length() > ((String) (storedState[stateIdx]))
-                                .length()) {
+                        if (strField.length() > ((String) (storedState[stateIdx])).length()) {
                             storedState[stateIdx] = strField;
                         }
                     } else {
-                        if (strField.length() < ((String) (storedState[stateIdx]))
-                                .length()) {
+                        if (strField.length() < ((String) (storedState[stateIdx])).length()) {
                             storedState[stateIdx] = strField;
                         }
                     }
                 } else {
                     if (isMax) {
-                        if (strField.length() > ((String) (state.state))
-                                .length()) {
+                        if (strField.length() > ((String) (state.state)).length()) {
                             state.state = strField;
                         }
                     } else {
-                        if (strField.length() < ((String) (state.state))
-                                .length()) {
+                        if (strField.length() < ((String) (state.state)).length()) {
                             state.state = strField;
                         }
                     }

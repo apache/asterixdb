@@ -20,25 +20,25 @@ import java.io.Serializable;
  *
  */
 public class AggregateState implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     public Object state = null;
-    
-    public AggregateState(){
+
+    public AggregateState() {
         state = null;
     }
-    
-    public AggregateState(Object obj){
+
+    public AggregateState(Object obj) {
         state = obj;
     }
 
     public void reset() {
         state = null;
     }
-    
+
     public void close() {
         state = null;
     }
-    
+
 }

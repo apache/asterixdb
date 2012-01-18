@@ -42,8 +42,8 @@ public interface IAggregatorDescriptor {
      *            The state to be initialized.
      * @throws HyracksDataException
      */
-    public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor,
-            int tIndex, AggregateState state) throws HyracksDataException;
+    public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+            throws HyracksDataException;
 
     /**
      * Reset the aggregator. The corresponding aggregate state should be reset
@@ -69,9 +69,8 @@ public interface IAggregatorDescriptor {
      *            The aggregate state.
      * @throws HyracksDataException
      */
-    public void aggregate(IFrameTupleAccessor accessor, int tIndex,
-            IFrameTupleAccessor stateAccessor, int stateTupleIndex,
-            AggregateState state) throws HyracksDataException;
+    public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
+            int stateTupleIndex, AggregateState state) throws HyracksDataException;
 
     /**
      * Output the partial aggregation result.
@@ -85,9 +84,8 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputPartialResult(ArrayTupleBuilder tupleBuilder,
-            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
-            throws HyracksDataException;
+    public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+            AggregateState state) throws HyracksDataException;
 
     /**
      * Output the final aggregation result.
@@ -101,9 +99,8 @@ public interface IAggregatorDescriptor {
      *            The aggregation state.
      * @throws HyracksDataException
      */
-    public void outputFinalResult(ArrayTupleBuilder tupleBuilder,
-            IFrameTupleAccessor accessor, int tIndex, AggregateState state)
-            throws HyracksDataException;
+    public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+            AggregateState state) throws HyracksDataException;
 
     public void close();
 
