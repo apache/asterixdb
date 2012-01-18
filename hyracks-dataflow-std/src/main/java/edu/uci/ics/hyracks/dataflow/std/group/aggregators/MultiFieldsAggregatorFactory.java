@@ -80,11 +80,6 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
             @Override
             public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-
-                tupleBuilder.reset();
-                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
-                    tupleBuilder.addField(accessor, tIndex, keyFieldsInPartialResults[i]);
-                }
                 DataOutput dos = tupleBuilder.getDataOutput();
 
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -101,13 +96,6 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-
-                tupleBuilder.reset();
-
-                for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
-                    tupleBuilder.addField(accessor, tIndex, keyFieldsInPartialResults[i]);
-                }
-
                 DataOutput dos = tupleBuilder.getDataOutput();
 
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -127,11 +115,6 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-
-                tupleBuilder.reset();
-                for (int i = 0; i < keys.length; i++) {
-                    tupleBuilder.addField(accessor, tIndex, keys[i]);
-                }
                 DataOutput dos = tupleBuilder.getDataOutput();
 
                 for (int i = 0; i < aggregators.length; i++) {

@@ -499,6 +499,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                         finalTupleBuilder.reset();
 
+                        for (int k = 0; k < storedKeys.length; k++) {
+                            finalTupleBuilder.addField(outFrameAccessor, i, storedKeys[k]);
+                        }
+
                         if (isFinal) {
 
                             aggregator.outputFinalResult(finalTupleBuilder, outFrameAccessor, i, aggregateState);

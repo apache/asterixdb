@@ -46,7 +46,6 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             @Override
             public void init(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex, AggregateState state)
                     throws HyracksDataException {
-                resetStateTupleBuilder(tb, keys, accessor, tIndex);
                 DataOutput output = tb.getDataOutput();
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < aggs.length; i++) {
@@ -77,16 +76,6 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
                 }
             }
 
-            private void resetStateTupleBuilder(ArrayTupleBuilder tb, final int[] keys, IFrameTupleAccessor accessor,
-                    int tIndex) throws HyracksDataException {
-                // reset
-                tb.reset();
-                // add keys
-                for (int i = 0; i < keys.length; i++) {
-                    tb.addField(accessor, tIndex, keys[i]);
-                }
-            }
-
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
@@ -107,7 +96,6 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             @Override
             public void outputPartialResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                resetStateTupleBuilder(tb, keys, accessor, tIndex);
                 byte[] data = accessor.getBuffer().array();
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);
@@ -127,7 +115,6 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             @Override
             public void outputFinalResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                resetStateTupleBuilder(tb, keys, accessor, tIndex);
                 byte[] data = accessor.getBuffer().array();
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);

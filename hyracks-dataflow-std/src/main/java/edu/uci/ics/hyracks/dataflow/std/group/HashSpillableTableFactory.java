@@ -285,6 +285,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             storedKeysAccessor1.reset(frames.get(bIndex));
 
                             outputTupleBuilder.reset();
+                            for (int k = 0; k < storedKeys.length; k++) {
+                                outputTupleBuilder.addField(storedKeysAccessor1, tIndex, storedKeys[k]);
+                            }
 
                             if (isPartial) {
 
@@ -329,6 +332,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     storedKeysAccessor1.reset(buffer);
 
                     outputTupleBuilder.reset();
+                    for (int k = 0; k < storedKeys.length; k++) {
+                        outputTupleBuilder.addField(storedKeysAccessor1, tupleIndex, storedKeys[k]);
+                    }
 
                     if (isPartial) {
 
