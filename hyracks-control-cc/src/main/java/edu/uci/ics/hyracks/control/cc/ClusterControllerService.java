@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
+import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
@@ -149,8 +150,9 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         this.timer = new Timer(true);
         ccContext = new ICCContext() {
             @Override
-            public Map<String, Set<String>> getIPAddressNodeMap() {
-                return ipAddressNodeNameMap;
+            public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception {
+                GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(ClusterControllerService.this, map);
+                workQueue.scheduleAndSync(ginmw);
             }
         };
         sweeper = new DeadNodeSweeper();
@@ -201,6 +203,10 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public Map<JobId, JobRun> getRunMapArchive() {
         return runMapArchive;
     }
+    
+    public Map<String, Set<String>> getIpAddressNodeNameMap() {
+        return ipAddressNodeNameMap;
+    }
 
     public LogFile getJobLogFile() {
         return jobLog;
@@ -237,7 +243,6 @@ public class ClusterControllerService extends AbstractRemoteService implements I
 
     @Override
     public NodeParameters registerNode(NodeRegistration reg) throws Exception {
-        InetSocketAddress ncAddress = reg.getNodeControllerAddress();
         String id = reg.getNodeId();
 
         IIPCHandle ncIPCHandle = clusterIPC.getHandle(reg.getNodeControllerAddress());

@@ -309,6 +309,10 @@ public class JobScheduler {
                 }
             }
             aggregateRunnability = Runnability.getWorstCase(aggregateRunnability, runnability);
+            if (aggregateRunnability.getTag() == Runnability.Tag.NOT_RUNNABLE) {
+                // already not runnable -- cannot get better. bail.
+                break;
+            }
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("aggregateRunnability: " + aggregateRunnability);
             }

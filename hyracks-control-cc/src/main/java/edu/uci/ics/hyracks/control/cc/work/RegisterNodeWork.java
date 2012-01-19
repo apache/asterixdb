@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
@@ -38,5 +40,13 @@ public class RegisterNodeWork extends SynchronizableWork {
             throw new Exception("Node with this name already registered.");
         }
         nodeMap.put(nodeId, state);
+        Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIpAddressNodeNameMap();
+        String ipAddress = state.getNCConfig().dataIPAddress;
+        Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
+        if (nodes == null) {
+            nodes = new HashSet<String>();
+            ipAddressNodeNameMap.put(ipAddress, nodes);
+        }
+        nodes.add(nodeId);
     }
 }

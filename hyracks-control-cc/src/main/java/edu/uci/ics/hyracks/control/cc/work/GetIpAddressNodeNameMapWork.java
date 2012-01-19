@@ -12,11 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.Map;
 import java.util.Set;
 
-public interface ICCContext {
-    public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
+import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+
+public class GetIpAddressNodeNameMapWork extends SynchronizableWork {
+    private final ClusterControllerService ccs;
+    private Map<String, Set<String>> map;
+
+    public GetIpAddressNodeNameMapWork(ClusterControllerService ccs, Map<String, Set<String>> map) {
+        this.ccs = ccs;
+    }
+
+    @Override
+    protected void doRun() throws Exception {
+        map.putAll(ccs.getIpAddressNodeNameMap());
+    }
 }
