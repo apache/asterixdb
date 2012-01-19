@@ -65,7 +65,7 @@ import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.control.nc.net.ConnectionManager;
+import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
@@ -91,7 +91,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
 
     private final PartitionManager partitionManager;
 
-    private final ConnectionManager connectionManager;
+    private final NetworkManager netManager;
 
     private final WorkQueue queue;
 
@@ -131,9 +131,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         if (id == null) {
             throw new Exception("id not set");
         }
-        connectionManager = new ConnectionManager(ctx, getIpAddress(ncConfig));
         partitionManager = new PartitionManager(this);
-        connectionManager.setPartitionRequestListener(partitionManager);
+        netManager = new NetworkManager(ctx, getIpAddress(ncConfig), partitionManager);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
@@ -166,7 +165,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
         ipc.start();
-        connectionManager.start();
+        netManager.start();
         IIPCHandle ccIPCHandle = ipc.getHandle(new InetSocketAddress(ncConfig.ccHost, ncConfig.ccPort));
         this.ccs = new ClusterControllerRemoteProxy(ccIPCHandle);
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
@@ -174,9 +173,9 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             gcInfos[i] = new HeartbeatSchema.GarbageCollectorInfo(gcMXBeans.get(i).getName());
         }
         HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
-        this.nodeParameters = ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig,
-                connectionManager.getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(),
-                osMXBean.getAvailableProcessors(), hbSchema));
+        this.nodeParameters = ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netManager
+                .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
+                .getAvailableProcessors(), hbSchema));
         queue.start();
 
         heartbeatTask = new HeartbeatTask(ccs);
@@ -197,7 +196,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
         partitionManager.close();
         heartbeatTask.cancel();
-        connectionManager.stop();
+        netManager.stop();
         queue.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
@@ -218,8 +217,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return jobletMap;
     }
 
-    public ConnectionManager getConnectionManager() {
-        return connectionManager;
+    public NetworkManager getNetworkManager() {
+        return netManager;
     }
 
     public PartitionManager getPartitionManager() {

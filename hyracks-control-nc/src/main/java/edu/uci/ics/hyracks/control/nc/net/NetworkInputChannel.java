@@ -14,65 +14,48 @@
  */
 package edu.uci.ics.hyracks.control.nc.net;
 
-import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
+import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
+import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
-public class NetworkInputChannel implements IInputChannel, INetworkChannel {
-    private static final Logger LOGGER = Logger.getLogger(NetworkInputChannel.class.getName());
+public class NetworkInputChannel implements IInputChannel {
+    private IHyracksRootContext ctx;
 
-    private final ConnectionManager connectionManager;
+    private final NetworkManager netManager;
 
     private final SocketAddress remoteAddress;
 
     private final PartitionId partitionId;
 
-    private final Queue<ByteBuffer> emptyQueue;
-
     private final Queue<ByteBuffer> fullQueue;
 
-    private SocketChannel socketChannel;
+    private final int nBuffers;
 
-    private SelectionKey key;
-
-    private ByteBuffer currentBuffer;
-
-    private boolean eos;
-
-    private boolean aborted;
+    private ChannelControlBlock ccb;
 
     private IInputChannelMonitor monitor;
 
     private Object attachment;
 
-    private ByteBuffer writeBuffer;
-
-    public NetworkInputChannel(IHyracksRootContext ctx, ConnectionManager connectionManager,
-            SocketAddress remoteAddress, PartitionId partitionId, int nBuffers) {
-        this.connectionManager = connectionManager;
+    public NetworkInputChannel(IHyracksRootContext ctx, NetworkManager netManager, SocketAddress remoteAddress,
+            PartitionId partitionId, int nBuffers) {
+        this.ctx = ctx;
+        this.netManager = netManager;
         this.remoteAddress = remoteAddress;
         this.partitionId = partitionId;
-        this.emptyQueue = new ArrayDeque<ByteBuffer>(nBuffers);
-        for (int i = 0; i < nBuffers; ++i) {
-            emptyQueue.add(ctx.allocateFrame());
-        }
         fullQueue = new ArrayDeque<ByteBuffer>(nBuffers);
-        aborted = false;
-        eos = false;
+        this.nBuffers = nBuffers;
     }
 
     @Override
@@ -96,29 +79,31 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
     }
 
     @Override
-    public synchronized void recycleBuffer(ByteBuffer buffer) {
+    public void recycleBuffer(ByteBuffer buffer) {
         buffer.clear();
-        emptyQueue.add(buffer);
-        if (!eos && !aborted) {
-            int ops = key.interestOps();
-            if ((ops & SelectionKey.OP_READ) == 0) {
-                key.interestOps(ops | SelectionKey.OP_READ);
-                key.selector().wakeup();
-                if (currentBuffer == null) {
-                    currentBuffer = emptyQueue.poll();
-                }
-            }
-        }
+        ccb.getReadInterface().getEmptyBufferAcceptor().accept(buffer);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        currentBuffer = emptyQueue.poll();
         try {
-            connectionManager.connect(this);
-        } catch (IOException e) {
+            ccb = netManager.connect(remoteAddress);
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
+        ccb.getReadInterface().setFullBufferAcceptor(new ReadFullBufferAcceptor());
+        ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
+        for (int i = 0; i < nBuffers; ++i) {
+            ccb.getReadInterface().getEmptyBufferAcceptor().accept(ctx.allocateFrame());
+        }
+        ByteBuffer writeBuffer = ByteBuffer.allocate(NetworkManager.INITIAL_MESSAGE_SIZE);
+        writeBuffer.putLong(partitionId.getJobId().getId());
+        writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
+        writeBuffer.putInt(partitionId.getSenderIndex());
+        writeBuffer.putInt(partitionId.getReceiverIndex());
+        writeBuffer.flip();
+        ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
+        ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 
     @Override
@@ -126,110 +111,28 @@ public class NetworkInputChannel implements IInputChannel, INetworkChannel {
 
     }
 
-    @Override
-    public synchronized boolean dispatchNetworkEvent() throws IOException {
-        if (aborted) {
-            eos = true;
-            monitor.notifyFailure(this);
-            return true;
+    private class ReadFullBufferAcceptor implements ICloseableBufferAcceptor {
+        @Override
+        public void accept(ByteBuffer buffer) {
+            fullQueue.add(buffer);
+            monitor.notifyDataAvailability(NetworkInputChannel.this, 1);
         }
-        if (key.isConnectable()) {
-            if (socketChannel.finishConnect()) {
-                key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT);
-                prepareForWrite();
-            }
-        } else if (key.isWritable()) {
-            socketChannel.write(writeBuffer);
-            if (writeBuffer.remaining() == 0) {
-                key.interestOps(SelectionKey.OP_READ);
-            }
-        } else if (key.isReadable()) {
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("Before read: " + currentBuffer.position() + " " + currentBuffer.limit());
-            }
-            int bytesRead = socketChannel.read(currentBuffer);
-            if (bytesRead < 0) {
-                eos = true;
-                monitor.notifyEndOfStream(this);
-                return true;
-            }
-            if (LOGGER.isLoggable(Level.FINER)) {
-                LOGGER.finer("After read: " + currentBuffer.position() + " " + currentBuffer.limit());
-            }
-            currentBuffer.flip();
-            int dataLen = currentBuffer.remaining();
-            if (dataLen >= currentBuffer.capacity() || aborted()) {
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NetworkInputChannel: frame received: sender = " + partitionId.getSenderIndex());
-                }
-                if (currentBuffer.getInt(FrameHelper.getTupleCountOffset(currentBuffer.capacity())) == 0) {
-                    eos = true;
-                    monitor.notifyEndOfStream(this);
-                    return true;
-                }
-                fullQueue.add(currentBuffer);
-                currentBuffer = emptyQueue.poll();
-                if (currentBuffer == null && key.isValid()) {
-                    int ops = key.interestOps();
-                    key.interestOps(ops & ~SelectionKey.OP_READ);
-                }
-                monitor.notifyDataAvailability(this, 1);
-                return false;
-            }
-            currentBuffer.compact();
+
+        @Override
+        public void close() {
+            monitor.notifyEndOfStream(NetworkInputChannel.this);
         }
-        return false;
+
+        @Override
+        public void error(int ecode) {
+            monitor.notifyFailure(NetworkInputChannel.this);
+        }
     }
 
-    private void prepareForConnect() {
-        key.interestOps(SelectionKey.OP_CONNECT);
-    }
-
-    private void prepareForWrite() {
-        writeBuffer = ByteBuffer.allocate(ConnectionManager.INITIAL_MESSAGE_SIZE);
-        writeBuffer.putLong(partitionId.getJobId().getId());
-        writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
-        writeBuffer.putInt(partitionId.getSenderIndex());
-        writeBuffer.putInt(partitionId.getReceiverIndex());
-        writeBuffer.flip();
-
-        key.interestOps(SelectionKey.OP_WRITE);
-    }
-
-    @Override
-    public void setSelectionKey(SelectionKey key) {
-        this.key = key;
-        socketChannel = (SocketChannel) key.channel();
-    }
-
-    @Override
-    public SocketAddress getRemoteAddress() {
-        return remoteAddress;
-    }
-
-    @Override
-    public SelectionKey getSelectionKey() {
-        return key;
-    }
-
-    public PartitionId getPartitionId() {
-        return partitionId;
-    }
-
-    public void abort() {
-        aborted = true;
-    }
-
-    public boolean aborted() {
-        return aborted;
-    }
-
-    @Override
-    public void notifyConnectionManagerRegistration() throws IOException {
-        if (socketChannel.connect(remoteAddress)) {
-            prepareForWrite();
-        } else {
-            prepareForConnect();
+    private class WriteEmptyBufferAcceptor implements IBufferAcceptor {
+        @Override
+        public void accept(ByteBuffer buffer) {
+            // do nothing
         }
     }
 }

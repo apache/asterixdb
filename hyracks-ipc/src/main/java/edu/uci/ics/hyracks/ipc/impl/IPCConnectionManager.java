@@ -59,6 +59,7 @@ public class IPCConnectionManager {
         this.system = system;
         this.networkThread = new NetworkThread();
         this.serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
         ServerSocket socket = serverSocketChannel.socket();
         socket.bind(socketAddress);
