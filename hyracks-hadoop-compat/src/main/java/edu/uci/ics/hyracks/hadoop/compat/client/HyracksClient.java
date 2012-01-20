@@ -25,7 +25,7 @@ public class HyracksClient {
 
     private void initialize(Properties properties) throws Exception {
         String clusterController = (String) properties.get(ConfigurationConstants.clusterControllerHost);
-        connection = new HyracksConnection(clusterController, 1099);
+        connection = new HyracksConnection(clusterController, 1098);
         systemLibs = new HashSet<String>();
         for (String systemLib : ConfigurationConstants.systemLibs) {
             String systemLibPath = properties.getProperty(systemLib);
