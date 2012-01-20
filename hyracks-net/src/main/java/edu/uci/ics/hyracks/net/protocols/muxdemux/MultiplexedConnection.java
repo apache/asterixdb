@@ -86,7 +86,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     @Override
-    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException, NetException {
+    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,
+            NetException {
         if (readable) {
             driveReaderStateMachine();
         }
@@ -146,7 +147,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     assert pendingWriteSize <= pendingBuffer.remaining();
                     int oldLimit = pendingBuffer.limit();
                     try {
-                        pendingBuffer.limit(pendingWriteSize);
+                        pendingBuffer.limit(pendingWriteSize + pendingBuffer.position());
                         int written = sc.write(pendingBuffer);
                         pendingWriteSize -= written;
                     } finally {
@@ -167,7 +168,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         }
     }
 
-    void driveWriterStateMachine() throws IOException {
+    void driveWriterStateMachine() throws IOException, NetException {
         SocketChannel sc = tcpConnection.getSocketChannel();
         if (writerState.writePending()) {
             if (!writerState.performPendingWrite(sc)) {
@@ -205,6 +206,18 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     ChannelControlBlock ccb = cSet.getCCB(j);
                     int credits = ccb.getAndResetReadCredits();
                     writerState.command.setData(credits);
+                    writerState.reset(null, 0, null);
+                    if (!writerState.performPendingWrite(sc)) {
+                        return;
+                    }
+                }
+                BitSet pendingEOSAckBitmap = cSet.getPendingEOSAckBitmap();
+                for (int j = pendingEOSAckBitmap.nextSetBit(0); j >= 0; j = pendingEOSAckBitmap.nextSetBit(j)) {
+                    pendingEOSAckBitmap.clear(j);
+                    pendingWriteEventsCounter.decrement();
+                    writerState.command.setChannelId(j);
+                    writerState.command.setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL_ACK);
+                    writerState.command.setData(0);
                     writerState.reset(null, 0, null);
                     if (!writerState.performPendingWrite(sc)) {
                         return;
@@ -262,9 +275,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received command: " + readerState.command);
             }
+            ChannelControlBlock ccb = null;
             switch (readerState.command.getCommandType()) {
                 case ADD_CREDITS: {
-                    ChannelControlBlock ccb;
                     synchronized (MultiplexedConnection.this) {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
@@ -272,15 +285,21 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     break;
                 }
                 case CLOSE_CHANNEL: {
-                    ChannelControlBlock ccb;
                     synchronized (MultiplexedConnection.this) {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
                     ccb.reportRemoteEOS();
+                    cSet.markEOSAck(ccb.getChannelId());
+                    break;
+                }
+                case CLOSE_CHANNEL_ACK: {
+                    synchronized (MultiplexedConnection.this) {
+                        ccb = cSet.getCCB(readerState.command.getChannelId());
+                    }
+                    ccb.reportLocalEOSAck();
                     break;
                 }
                 case DATA: {
-                    ChannelControlBlock ccb;
                     synchronized (MultiplexedConnection.this) {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
@@ -289,21 +308,21 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     break;
                 }
                 case ERROR: {
-                    ChannelControlBlock ccb;
                     synchronized (MultiplexedConnection.this) {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
                     ccb.reportRemoteError(readerState.command.getData());
+                    cSet.markEOSAck(ccb.getChannelId());
                     break;
                 }
                 case OPEN_CHANNEL: {
                     int channelId = readerState.command.getChannelId();
-                    ChannelControlBlock ccb;
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.registerChannel(channelId);
-                    }
+                    ccb = cSet.registerChannel(channelId);
                     muxDemux.getChannelOpenListener().channelOpened(ccb);
                 }
+            }
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Applied command: " + readerState.command + " on " + ccb);
             }
         }
         if (readerState.pendingReadSize > 0) {

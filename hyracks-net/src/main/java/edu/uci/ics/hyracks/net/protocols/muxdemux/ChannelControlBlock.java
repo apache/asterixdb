@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
+import edu.uci.ics.hyracks.net.exceptions.NetException;
 
 public class ChannelControlBlock {
     private final ChannelSet cSet;
@@ -36,6 +37,8 @@ public class ChannelControlBlock {
 
     private final AtomicBoolean localClose;
 
+    private final AtomicBoolean localCloseAck;
+
     private final AtomicBoolean remoteClose;
 
     ChannelControlBlock(ChannelSet cSet, int channelId) {
@@ -44,6 +47,7 @@ public class ChannelControlBlock {
         this.ri = new ReadInterface();
         this.wi = new WriteInterface();
         localClose = new AtomicBoolean();
+        localCloseAck = new AtomicBoolean();
         remoteClose = new AtomicBoolean();
     }
 
@@ -205,7 +209,7 @@ public class ChannelControlBlock {
             return fba;
         }
 
-        void write(MultiplexedConnection.WriterState writerState) {
+        void write(MultiplexedConnection.WriterState writerState) throws NetException {
             if (currentWriteBuffer == null) {
                 currentWriteBuffer = wiFullQueue.poll();
             }
@@ -261,7 +265,7 @@ public class ChannelControlBlock {
         }
     }
 
-    synchronized void write(MultiplexedConnection.WriterState writerState) {
+    synchronized void write(MultiplexedConnection.WriterState writerState) throws NetException {
         wi.write(writerState);
     }
 
@@ -291,6 +295,10 @@ public class ChannelControlBlock {
         remoteClose.set(true);
     }
 
+    synchronized void reportLocalEOSAck() {
+        localCloseAck.set(true);
+    }
+
     synchronized void reportRemoteError(int ecode) {
         ri.flush();
         ri.fba.error(ecode);
@@ -298,12 +306,12 @@ public class ChannelControlBlock {
     }
 
     boolean completelyClosed() {
-        return localClose.get() && remoteClose.get();
+        return localCloseAck.get() && remoteClose.get();
     }
 
     @Override
     public String toString() {
-        return "Channel:" + channelId + "[localClose: " + localClose + " remoteClose: " + remoteClose
-                + " readCredits: " + ri.credits + " writeCredits: " + wi.credits + "]";
+        return "Channel:" + channelId + "[localClose: " + localClose + " localCloseAck: " + localCloseAck
+                + " remoteClose: " + remoteClose + " readCredits: " + ri.credits + " writeCredits: " + wi.credits + "]";
     }
 }

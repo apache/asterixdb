@@ -16,10 +16,14 @@ package edu.uci.ics.hyracks.net.protocols.muxdemux;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 
 public class ChannelSet {
+    private static final Logger LOGGER = Logger.getLogger(ChannelSet.class.getName());
+
     private static final int MAX_OPEN_CHANNELS = 1024;
 
     private static final int INITIAL_SIZE = 16;
@@ -36,6 +40,8 @@ public class ChannelSet {
 
     private final BitSet pendingChannelSynBitmap;
 
+    private final BitSet pendingEOSAckBitmap;
+
     private int openChannelCount;
 
     private final IEventCounter pendingWriteEventsCounter;
@@ -47,6 +53,7 @@ public class ChannelSet {
         pendingChannelWriteBitmap = new BitSet();
         pendingChannelCreditsBitmap = new BitSet();
         pendingChannelSynBitmap = new BitSet();
+        pendingEOSAckBitmap = new BitSet();
         this.pendingWriteEventsCounter = pendingWriteEventsCounter;
         openChannelCount = 0;
     }
@@ -54,10 +61,10 @@ public class ChannelSet {
     ChannelControlBlock allocateChannel() throws NetException {
         synchronized (mConn) {
             int idx = allocationBitmap.nextClearBit(0);
-            if (idx < 0) {
+            if (idx < 0 || idx == ccbArray.length) {
                 cleanupClosedChannels();
                 idx = allocationBitmap.nextClearBit(0);
-                if (idx < 0) {
+                if (idx < 0 || idx == ccbArray.length) {
                     idx = ccbArray.length;
                 }
             }
@@ -70,6 +77,9 @@ public class ChannelSet {
             ChannelControlBlock ccb = ccbArray[i];
             if (ccb != null) {
                 if (ccb.completelyClosed()) {
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("Cleaning free channel: " + ccb);
+                    }
                     freeChannel(ccb);
                 }
             }
@@ -77,7 +87,9 @@ public class ChannelSet {
     }
 
     ChannelControlBlock registerChannel(int channelId) throws NetException {
-        return createChannel(channelId);
+        synchronized (mConn) {
+            return createChannel(channelId);
+        }
     }
 
     private void freeChannel(ChannelControlBlock channel) {
@@ -101,6 +113,10 @@ public class ChannelSet {
 
     BitSet getPendingChannelSynBitmap() {
         return pendingChannelSynBitmap;
+    }
+
+    BitSet getPendingEOSAckBitmap() {
+        return pendingEOSAckBitmap;
     }
 
     int getOpenChannelCount() {
@@ -132,11 +148,19 @@ public class ChannelSet {
         }
     }
 
-    public void unmarkPendingWrite(int channelId) {
+    void unmarkPendingWrite(int channelId) {
         synchronized (mConn) {
             assert pendingChannelWriteBitmap.get(channelId);
             pendingChannelWriteBitmap.clear(channelId);
             pendingWriteEventsCounter.decrement();
+        }
+    }
+
+    void markEOSAck(int channelId) {
+        synchronized (mConn) {
+            assert !pendingEOSAckBitmap.get(channelId);
+            pendingEOSAckBitmap.set(channelId);
+            pendingWriteEventsCounter.increment();
         }
     }
 
@@ -146,6 +170,15 @@ public class ChannelSet {
         }
         if (idx > MAX_OPEN_CHANNELS) {
             throw new NetException("More than " + MAX_OPEN_CHANNELS + " opened concurrently");
+        }
+        if (ccbArray[idx] != null) {
+            assert ccbArray[idx].completelyClosed();
+            if (ccbArray[idx].completelyClosed()) {
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Cleaning free channel: " + ccbArray[idx]);
+                }
+                freeChannel(ccbArray[idx]);
+            }
         }
         assert idx < ccbArray.length;
         assert !allocationBitmap.get(idx);
