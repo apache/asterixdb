@@ -40,34 +40,30 @@ public class ApplicationStartWork extends AbstractWork {
 
     @Override
     public void run() {
-        ApplicationContext appCtx = ccs.getApplicationMap().get(appName);
+        final ApplicationContext appCtx = ccs.getApplicationMap().get(appName);
         if (appCtx == null) {
             fv.setException(new HyracksException("No application with name: " + appName));
             return;
         }
-        try {
-            appCtx.initializeClassPath();
-            appCtx.initialize();
-            final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDistributedState());
-            final boolean deployHar = appCtx.containsHar();
-            List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
-            for (final String nodeId : ccs.getNodeMap().keySet()) {
-                opList.add(new ApplicationStarter(nodeId, appName, deployHar, distributedState));
-            }
-            final RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
-            ccs.getExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        RemoteRunner.runRemote(ccs, ops, null);
-                        fv.setValue(null);
-                    } catch (Exception e) {
-                        fv.setException(e);
+        ccs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    appCtx.initializeClassPath();
+                    appCtx.initialize();
+                    final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDistributedState());
+                    final boolean deployHar = appCtx.containsHar();
+                    List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
+                    for (final String nodeId : ccs.getNodeMap().keySet()) {
+                        opList.add(new ApplicationStarter(nodeId, appName, deployHar, distributedState));
                     }
+                    final RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
+                    RemoteRunner.runRemote(ccs, ops, null);
+                    fv.setValue(null);
+                } catch (Exception e) {
+                    fv.setException(e);
                 }
-            });
-        } catch (Exception e) {
-            fv.setException(e);
-        }
+            }
+        });
     }
 }
