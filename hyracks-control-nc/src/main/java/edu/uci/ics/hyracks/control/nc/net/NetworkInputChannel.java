@@ -18,6 +18,8 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
@@ -30,6 +32,8 @@ import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public class NetworkInputChannel implements IInputChannel {
+    private static final Logger LOGGER = Logger.getLogger(NetworkInputChannel.class.getName());
+
     private IHyracksRootContext ctx;
 
     private final NetworkManager netManager;
@@ -102,6 +106,9 @@ public class NetworkInputChannel implements IInputChannel {
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
         writeBuffer.flip();
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Sending partition request: " + partitionId + " on channel: " + ccb);
+        }
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }

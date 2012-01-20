@@ -300,4 +300,10 @@ public class ChannelControlBlock {
     boolean completelyClosed() {
         return localClose.get() && remoteClose.get();
     }
+
+    @Override
+    public String toString() {
+        return "Channel:" + channelId + "[localClose: " + localClose + " remoteClose: " + remoteClose
+                + " readCredits: " + ri.credits + " writeCredits: " + wi.credits + "]";
+    }
 }

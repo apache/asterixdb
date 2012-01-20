@@ -19,12 +19,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.BitSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 import edu.uci.ics.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
 
 public class MultiplexedConnection implements ITCPConnectionEventListener {
+    private static final Logger LOGGER = Logger.getLogger(MultiplexedConnection.class.getName());
+
     private final MuxDemux muxDemux;
 
     private final IEventCounter pendingWriteEventsCounter;
@@ -255,6 +259,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             }
             readerState.readBuffer.flip();
             readerState.command.read(readerState.readBuffer);
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Received command: " + readerState.command);
+            }
             switch (readerState.command.getCommandType()) {
                 case ADD_CREDITS: {
                     ChannelControlBlock ccb;

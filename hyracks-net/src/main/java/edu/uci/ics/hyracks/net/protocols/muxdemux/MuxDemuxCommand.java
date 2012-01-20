@@ -54,4 +54,9 @@ class MuxDemuxCommand {
         type = CommandType.values()[(cmd >> 19) & 0x7];
         data = cmd & 0x7ffff;
     }
+
+    @Override
+    public String toString() {
+        return channelId + ":" + type + ":" + data;
+    }
 }

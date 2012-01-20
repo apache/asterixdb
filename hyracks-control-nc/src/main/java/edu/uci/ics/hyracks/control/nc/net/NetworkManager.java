@@ -19,6 +19,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
@@ -35,6 +37,8 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemux;
 
 public class NetworkManager {
+    private static final Logger LOGGER = Logger.getLogger(NetworkManager.class.getName());
+
     static final int INITIAL_MESSAGE_SIZE = 20;
 
     private final IHyracksRootContext ctx;
@@ -91,6 +95,9 @@ public class NetworkManager {
         @Override
         public void accept(ByteBuffer buffer) {
             PartitionId pid = readInitialMessage(buffer);
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Received initial partition request: " + pid + " on channel: " + ccb);
+            }
             noc = new NetworkOutputChannel(ctx, ccb, 5);
             try {
                 partitionRequestListener.registerPartitionRequest(pid, noc);
