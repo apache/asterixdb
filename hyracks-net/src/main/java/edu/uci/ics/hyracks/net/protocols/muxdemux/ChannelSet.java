@@ -140,6 +140,15 @@ public class ChannelSet {
         }
     }
 
+    void unmarkPendingCredits(int channelId) {
+        synchronized (mConn) {
+            if (pendingChannelCreditsBitmap.get(channelId)) {
+                pendingChannelCreditsBitmap.clear(channelId);
+                pendingWriteEventsCounter.decrement();
+            }
+        }
+    }
+
     void markPendingWrite(int channelId) {
         synchronized (mConn) {
             assert !pendingChannelWriteBitmap.get(channelId);

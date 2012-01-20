@@ -33,4 +33,8 @@ public class HeartbeatData implements Serializable {
     public double systemLoadAverage;
     public long[] gcCollectionCounts;
     public long[] gcCollectionTimes;
+    public long netPayloadBytesRead;
+    public long netPayloadBytesWritten;
+    public long netSignalingBytesRead;
+    public long netSignalingBytesWritten;
 }

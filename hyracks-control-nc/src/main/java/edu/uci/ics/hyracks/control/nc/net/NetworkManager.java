@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemux;
+import edu.uci.ics.hyracks.net.protocols.muxdemux.PerformanceCounters;
 
 public class NetworkManager {
     private static final Logger LOGGER = Logger.getLogger(NetworkManager.class.getName());
@@ -125,5 +126,9 @@ public class NetworkManager {
         int senderIndex = buffer.getInt();
         int receiverIndex = buffer.getInt();
         return new PartitionId(jobId, cdid, senderIndex, receiverIndex);
+    }
+
+    public PerformanceCounters getPerformanceCounters() {
+        return md.getPerformanceCounters();
     }
 }

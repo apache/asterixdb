@@ -138,6 +138,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             int len = writeBuffer.remaining();
             if (len > 0) {
                 int written = sc.write(writeBuffer);
+                muxDemux.getPerformanceCounters().addSignalingBytesWritten(written);
                 if (written < len) {
                     return false;
                 }
@@ -149,6 +150,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     try {
                         pendingBuffer.limit(pendingWriteSize + pendingBuffer.position());
                         int written = sc.write(pendingBuffer);
+                        muxDemux.getPerformanceCounters().addPayloadBytesWritten(written);
                         pendingWriteSize -= written;
                     } finally {
                         pendingBuffer.limit(oldLimit);
@@ -266,7 +268,11 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     void driveReaderStateMachine() throws IOException, NetException {
         SocketChannel sc = tcpConnection.getSocketChannel();
         if (readerState.readBuffer.remaining() > 0) {
-            sc.read(readerState.readBuffer);
+            int read = sc.read(readerState.readBuffer);
+            if (read < 0) {
+                throw new NetException("Socket Closed");
+            }
+            muxDemux.getPerformanceCounters().addSignalingBytesRead(read);
             if (readerState.readBuffer.remaining() > 0) {
                 return;
             }
@@ -289,7 +295,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
                     ccb.reportRemoteEOS();
-                    cSet.markEOSAck(ccb.getChannelId());
+                    int channelId = ccb.getChannelId();
+                    cSet.markEOSAck(channelId);
+                    cSet.unmarkPendingCredits(channelId);
                     break;
                 }
                 case CLOSE_CHANNEL_ACK: {
@@ -312,7 +320,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         ccb = cSet.getCCB(readerState.command.getChannelId());
                     }
                     ccb.reportRemoteError(readerState.command.getData());
-                    cSet.markEOSAck(ccb.getChannelId());
+                    int channelId = ccb.getChannelId();
+                    cSet.markEOSAck(channelId);
+                    cSet.unmarkPendingCredits(channelId);
                     break;
                 }
                 case OPEN_CHANNEL: {
@@ -326,7 +336,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             }
         }
         if (readerState.pendingReadSize > 0) {
-            readerState.pendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
+            int newPendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
+            muxDemux.getPerformanceCounters().addPayloadBytesRead(newPendingReadSize - readerState.pendingReadSize);
+            readerState.pendingReadSize = newPendingReadSize;
             if (readerState.pendingReadSize > 0) {
                 return;
             }

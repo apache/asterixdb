@@ -69,6 +69,9 @@ public class ChannelControlBlock {
         private final IBufferAcceptor eba = new IBufferAcceptor() {
             @Override
             public void accept(ByteBuffer buffer) {
+                if (remoteClose.get()) {
+                    return;
+                }
                 int delta;
                 synchronized (ChannelControlBlock.this) {
                     riEmptyQueue.add(buffer);
@@ -102,7 +105,7 @@ public class ChannelControlBlock {
             return eba;
         }
 
-        int read(SocketChannel sc, int size) throws IOException {
+        int read(SocketChannel sc, int size) throws IOException, NetException {
             while (true) {
                 if (size <= 0) {
                     return size;
@@ -117,6 +120,9 @@ public class ChannelControlBlock {
                     int len;
                     try {
                         len = sc.read(ri.currentReadBuffer);
+                        if (len < 0) {
+                            throw new NetException("Socket Closed");
+                        }
                     } finally {
                         ri.currentReadBuffer.limit(ri.currentReadBuffer.capacity());
                     }
@@ -273,7 +279,7 @@ public class ChannelControlBlock {
         wi.writeComplete();
     }
 
-    synchronized int read(SocketChannel sc, int size) throws IOException {
+    synchronized int read(SocketChannel sc, int size) throws IOException, NetException {
         return ri.read(sc, size);
     }
 

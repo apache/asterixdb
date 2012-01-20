@@ -77,6 +77,7 @@ import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
+import edu.uci.ics.hyracks.net.protocols.muxdemux.PerformanceCounters;
 
 public class NodeControllerService extends AbstractRemoteService implements INodeController {
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
@@ -335,6 +336,11 @@ public class NodeControllerService extends AbstractRemoteService implements INod
                 hbData.gcCollectionCounts[i] = gcMXBean.getCollectionCount();
                 hbData.gcCollectionTimes[i] = gcMXBean.getCollectionTime();
             }
+            PerformanceCounters netPC = netManager.getPerformanceCounters();
+            hbData.netPayloadBytesRead = netPC.getPayloadBytesRead();
+            hbData.netPayloadBytesWritten = netPC.getPayloadBytesWritten();
+            hbData.netSignalingBytesRead = netPC.getSignalingBytesRead();
+            hbData.netSignalingBytesWritten = netPC.getSignalingBytesWritten();
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
