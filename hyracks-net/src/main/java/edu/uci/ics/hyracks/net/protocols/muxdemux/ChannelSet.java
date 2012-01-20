@@ -17,7 +17,11 @@ package edu.uci.ics.hyracks.net.protocols.muxdemux;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import edu.uci.ics.hyracks.net.exceptions.NetException;
+
 public class ChannelSet {
+    private static final int MAX_OPEN_CHANNELS = 1024;
+
     private static final int INITIAL_SIZE = 16;
 
     private final MultiplexedConnection mConn;
@@ -47,7 +51,7 @@ public class ChannelSet {
         openChannelCount = 0;
     }
 
-    ChannelControlBlock allocateChannel() {
+    ChannelControlBlock allocateChannel() throws NetException {
         synchronized (mConn) {
             int idx = allocationBitmap.nextClearBit(0);
             if (idx < 0) {
@@ -72,7 +76,7 @@ public class ChannelSet {
         }
     }
 
-    ChannelControlBlock registerChannel(int channelId) {
+    ChannelControlBlock registerChannel(int channelId) throws NetException {
         return createChannel(channelId);
     }
 
@@ -136,9 +140,12 @@ public class ChannelSet {
         }
     }
 
-    private ChannelControlBlock createChannel(int idx) {
+    private ChannelControlBlock createChannel(int idx) throws NetException {
         if (idx >= ccbArray.length) {
             expand(idx);
+        }
+        if (idx > MAX_OPEN_CHANNELS) {
+            throw new NetException("More than " + MAX_OPEN_CHANNELS + " opened concurrently");
         }
         assert idx < ccbArray.length;
         assert !allocationBitmap.get(idx);

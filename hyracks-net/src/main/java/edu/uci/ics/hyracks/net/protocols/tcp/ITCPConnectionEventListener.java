@@ -16,6 +16,9 @@ package edu.uci.ics.hyracks.net.protocols.tcp;
 
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.net.exceptions.NetException;
+
 public interface ITCPConnectionEventListener {
-    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException;
+    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,
+            NetException;
 }

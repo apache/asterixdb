@@ -86,7 +86,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     @Override
-    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException {
+    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException, NetException {
         if (readable) {
             driveReaderStateMachine();
         }
@@ -250,7 +250,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         }
     }
 
-    void driveReaderStateMachine() throws IOException {
+    void driveReaderStateMachine() throws IOException, NetException {
         SocketChannel sc = tcpConnection.getSocketChannel();
         if (readerState.readBuffer.remaining() > 0) {
             sc.read(readerState.readBuffer);
