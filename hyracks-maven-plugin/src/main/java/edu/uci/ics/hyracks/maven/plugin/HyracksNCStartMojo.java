@@ -54,6 +54,7 @@ public class HyracksNCStartMojo extends AbstractHyracksServerMojo {
         cmdLineBuffer.append(" -cc-host ").append(ccHost);
         cmdLineBuffer.append(" -data-ip-address ").append(dataIpAddress);
         cmdLineBuffer.append(" -node-id ").append(nodeId);
+        cmdLineBuffer.append(" -cluster-net-ip-address 127.0.0.1");
         if (ccPort != 0) {
             cmdLineBuffer.append(" -cc-port ").append(ccPort);
         }

@@ -36,6 +36,8 @@ public class HyracksCCStartMojo extends AbstractHyracksServerMojo {
         if (port != 0) {
             cmdLineBuffer.append("-port ").append(port);
         }
+        cmdLineBuffer.append(" -client-net-ip-address 127.0.0.1");
+        cmdLineBuffer.append(" -cluster-net-ip-address 127.0.0.1");
         String args = cmdLineBuffer.toString();
         final Process proc = launch(new File(hyracksServerHome, makeScriptName(HYRACKS_CC_SCRIPT)), args, workingDir);
         HyracksServiceRegistry.INSTANCE.addServiceProcess(proc);
