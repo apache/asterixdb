@@ -49,7 +49,7 @@ public class ReportPartitionAvailabilityWork extends SynchronizableWork {
         if (ji != null) {
             PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs.getRootContext(),
                     ncs.getNetworkManager(), new InetSocketAddress(networkAddress.getIpAddress(),
-                            networkAddress.getPort()), pid, 1));
+                            networkAddress.getPort()), pid, 5));
             ji.reportPartitionAvailability(channel);
         }
     }
