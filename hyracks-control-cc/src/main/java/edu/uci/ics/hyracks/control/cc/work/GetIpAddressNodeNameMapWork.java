@@ -26,6 +26,7 @@ public class GetIpAddressNodeNameMapWork extends SynchronizableWork {
 
     public GetIpAddressNodeNameMapWork(ClusterControllerService ccs, Map<String, Set<String>> map) {
         this.ccs = ccs;
+        this.map = map;
     }
 
     @Override
