@@ -263,6 +263,12 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             pendingReadSize = 0;
             ccb = null;
         }
+
+        private ChannelControlBlock getCCBInCommand() {
+            synchronized (MultiplexedConnection.this) {
+                return cSet.getCCB(command.getChannelId());
+            }
+        }
     }
 
     void driveReaderStateMachine() throws IOException, NetException {
@@ -286,16 +292,12 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 ChannelControlBlock ccb = null;
                 switch (readerState.command.getCommandType()) {
                     case ADD_CREDITS: {
-                        synchronized (MultiplexedConnection.this) {
-                            ccb = cSet.getCCB(readerState.command.getChannelId());
-                        }
+                        ccb = readerState.getCCBInCommand();
                         ccb.addWriteCredits(readerState.command.getData());
                         break;
                     }
                     case CLOSE_CHANNEL: {
-                        synchronized (MultiplexedConnection.this) {
-                            ccb = cSet.getCCB(readerState.command.getChannelId());
-                        }
+                        ccb = readerState.getCCBInCommand();
                         ccb.reportRemoteEOS();
                         int channelId = ccb.getChannelId();
                         cSet.markEOSAck(channelId);
@@ -303,24 +305,18 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         break;
                     }
                     case CLOSE_CHANNEL_ACK: {
-                        synchronized (MultiplexedConnection.this) {
-                            ccb = cSet.getCCB(readerState.command.getChannelId());
-                        }
+                        ccb = readerState.getCCBInCommand();
                         ccb.reportLocalEOSAck();
                         break;
                     }
                     case DATA: {
-                        synchronized (MultiplexedConnection.this) {
-                            ccb = cSet.getCCB(readerState.command.getChannelId());
-                        }
+                        ccb = readerState.getCCBInCommand();
                         readerState.pendingReadSize = readerState.command.getData();
                         readerState.ccb = ccb;
                         break;
                     }
                     case ERROR: {
-                        synchronized (MultiplexedConnection.this) {
-                            ccb = cSet.getCCB(readerState.command.getChannelId());
-                        }
+                        ccb = readerState.getCCBInCommand();
                         ccb.reportRemoteError(readerState.command.getData());
                         int channelId = ccb.getChannelId();
                         cSet.markEOSAck(channelId);
