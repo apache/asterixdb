@@ -35,7 +35,7 @@ public class NetworkOutputChannel implements IFrameWriter {
         this.ccb = ccb;
         emptyQueue = new ArrayDeque<ByteBuffer>(nBuffers);
         for (int i = 0; i < nBuffers; ++i) {
-            emptyQueue.add(ctx.allocateFrame());
+            emptyQueue.add(ByteBuffer.allocateDirect(ctx.getFrameSize()));
         }
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }

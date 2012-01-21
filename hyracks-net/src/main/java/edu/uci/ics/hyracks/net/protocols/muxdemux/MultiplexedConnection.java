@@ -115,7 +115,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         private ChannelControlBlock ccb;
 
         public WriterState() {
-            writeBuffer = ByteBuffer.allocate(MuxDemuxCommand.COMMAND_SIZE);
+            writeBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
             writeBuffer.flip();
             command = new MuxDemuxCommand();
             ccb = null;
@@ -254,7 +254,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         private ChannelControlBlock ccb;
 
         ReaderState() {
-            readBuffer = ByteBuffer.allocate(MuxDemuxCommand.COMMAND_SIZE);
+            readBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
             command = new MuxDemuxCommand();
         }
 
@@ -267,82 +267,86 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     void driveReaderStateMachine() throws IOException, NetException {
         SocketChannel sc = tcpConnection.getSocketChannel();
-        if (readerState.readBuffer.remaining() > 0) {
-            int read = sc.read(readerState.readBuffer);
-            if (read < 0) {
-                throw new NetException("Socket Closed");
-            }
-            muxDemux.getPerformanceCounters().addSignalingBytesRead(read);
+        boolean yield = false;
+        while (!yield) {
             if (readerState.readBuffer.remaining() > 0) {
-                return;
+                int read = sc.read(readerState.readBuffer);
+                if (read < 0) {
+                    throw new NetException("Socket Closed");
+                }
+                muxDemux.getPerformanceCounters().addSignalingBytesRead(read);
+                if (readerState.readBuffer.remaining() > 0) {
+                    return;
+                }
+                readerState.readBuffer.flip();
+                readerState.command.read(readerState.readBuffer);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Received command: " + readerState.command);
+                }
+                ChannelControlBlock ccb = null;
+                switch (readerState.command.getCommandType()) {
+                    case ADD_CREDITS: {
+                        synchronized (MultiplexedConnection.this) {
+                            ccb = cSet.getCCB(readerState.command.getChannelId());
+                        }
+                        ccb.addWriteCredits(readerState.command.getData());
+                        break;
+                    }
+                    case CLOSE_CHANNEL: {
+                        synchronized (MultiplexedConnection.this) {
+                            ccb = cSet.getCCB(readerState.command.getChannelId());
+                        }
+                        ccb.reportRemoteEOS();
+                        int channelId = ccb.getChannelId();
+                        cSet.markEOSAck(channelId);
+                        cSet.unmarkPendingCredits(channelId);
+                        break;
+                    }
+                    case CLOSE_CHANNEL_ACK: {
+                        synchronized (MultiplexedConnection.this) {
+                            ccb = cSet.getCCB(readerState.command.getChannelId());
+                        }
+                        ccb.reportLocalEOSAck();
+                        break;
+                    }
+                    case DATA: {
+                        synchronized (MultiplexedConnection.this) {
+                            ccb = cSet.getCCB(readerState.command.getChannelId());
+                        }
+                        readerState.pendingReadSize = readerState.command.getData();
+                        readerState.ccb = ccb;
+                        break;
+                    }
+                    case ERROR: {
+                        synchronized (MultiplexedConnection.this) {
+                            ccb = cSet.getCCB(readerState.command.getChannelId());
+                        }
+                        ccb.reportRemoteError(readerState.command.getData());
+                        int channelId = ccb.getChannelId();
+                        cSet.markEOSAck(channelId);
+                        cSet.unmarkPendingCredits(channelId);
+                        break;
+                    }
+                    case OPEN_CHANNEL: {
+                        int channelId = readerState.command.getChannelId();
+                        ccb = cSet.registerChannel(channelId);
+                        muxDemux.getChannelOpenListener().channelOpened(ccb);
+                    }
+                }
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Applied command: " + readerState.command + " on " + ccb);
+                }
             }
-            readerState.readBuffer.flip();
-            readerState.command.read(readerState.readBuffer);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Received command: " + readerState.command);
-            }
-            ChannelControlBlock ccb = null;
-            switch (readerState.command.getCommandType()) {
-                case ADD_CREDITS: {
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.getCCB(readerState.command.getChannelId());
-                    }
-                    ccb.addWriteCredits(readerState.command.getData());
-                    break;
-                }
-                case CLOSE_CHANNEL: {
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.getCCB(readerState.command.getChannelId());
-                    }
-                    ccb.reportRemoteEOS();
-                    int channelId = ccb.getChannelId();
-                    cSet.markEOSAck(channelId);
-                    cSet.unmarkPendingCredits(channelId);
-                    break;
-                }
-                case CLOSE_CHANNEL_ACK: {
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.getCCB(readerState.command.getChannelId());
-                    }
-                    ccb.reportLocalEOSAck();
-                    break;
-                }
-                case DATA: {
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.getCCB(readerState.command.getChannelId());
-                    }
-                    readerState.pendingReadSize = readerState.command.getData();
-                    readerState.ccb = ccb;
-                    break;
-                }
-                case ERROR: {
-                    synchronized (MultiplexedConnection.this) {
-                        ccb = cSet.getCCB(readerState.command.getChannelId());
-                    }
-                    ccb.reportRemoteError(readerState.command.getData());
-                    int channelId = ccb.getChannelId();
-                    cSet.markEOSAck(channelId);
-                    cSet.unmarkPendingCredits(channelId);
-                    break;
-                }
-                case OPEN_CHANNEL: {
-                    int channelId = readerState.command.getChannelId();
-                    ccb = cSet.registerChannel(channelId);
-                    muxDemux.getChannelOpenListener().channelOpened(ccb);
-                }
-            }
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Applied command: " + readerState.command + " on " + ccb);
-            }
-        }
-        if (readerState.pendingReadSize > 0) {
-            int newPendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
-            muxDemux.getPerformanceCounters().addPayloadBytesRead(readerState.pendingReadSize - newPendingReadSize);
-            readerState.pendingReadSize = newPendingReadSize;
             if (readerState.pendingReadSize > 0) {
-                return;
+                yield = true;
+                int newPendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
+                muxDemux.getPerformanceCounters().addPayloadBytesRead(readerState.pendingReadSize - newPendingReadSize);
+                readerState.pendingReadSize = newPendingReadSize;
+                if (readerState.pendingReadSize > 0) {
+                    return;
+                }
             }
+            readerState.reset();
         }
-        readerState.reset();
     }
 }
