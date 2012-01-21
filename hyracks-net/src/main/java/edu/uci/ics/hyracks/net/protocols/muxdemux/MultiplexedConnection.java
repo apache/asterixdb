@@ -337,7 +337,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         }
         if (readerState.pendingReadSize > 0) {
             int newPendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
-            muxDemux.getPerformanceCounters().addPayloadBytesRead(newPendingReadSize - readerState.pendingReadSize);
+            muxDemux.getPerformanceCounters().addPayloadBytesRead(readerState.pendingReadSize - newPendingReadSize);
             readerState.pendingReadSize = newPendingReadSize;
             if (readerState.pendingReadSize > 0) {
                 return;
