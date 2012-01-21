@@ -52,6 +52,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-dcache-client-path", usage = "Sets the path to store the files retrieved from the DCache server (default /tmp/dcache-client)")
     public String dcacheClientPath = "/tmp/dcache-client";
 
+    @Option(name = "-net-thread-count", usage = "Number of threads to use for Network I/O (default: 1)")
+    public int nNetThreads = 1;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-cc-host");
         cList.add(ccHost);
@@ -75,5 +78,7 @@ public class NCConfig implements Serializable {
         }
         cList.add("-dcache-client-path");
         cList.add(dcacheClientPath);
+        cList.add("-net-thread-count");
+        cList.add(String.valueOf(nNetThreads));
     }
 }

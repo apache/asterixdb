@@ -158,7 +158,7 @@ public class NetTest {
                 }.start();
             }
         };
-        return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener);
+        return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener, 1);
     }
 
     private class ChannelIO {

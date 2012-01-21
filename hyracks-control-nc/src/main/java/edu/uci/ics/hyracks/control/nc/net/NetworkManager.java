@@ -51,10 +51,10 @@ public class NetworkManager {
     private NetworkAddress networkAddress;
 
     public NetworkManager(IHyracksRootContext ctx, InetAddress inetAddress,
-            IPartitionRequestListener partitionRequestListener) throws IOException {
+            IPartitionRequestListener partitionRequestListener, int nThreads) throws IOException {
         this.ctx = ctx;
         this.partitionRequestListener = partitionRequestListener;
-        md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener());
+        md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads);
     }
 
     public void start() throws IOException {

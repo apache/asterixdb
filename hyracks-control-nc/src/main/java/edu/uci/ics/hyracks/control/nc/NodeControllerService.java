@@ -133,7 +133,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             throw new Exception("id not set");
         }
         partitionManager = new PartitionManager(this);
-        netManager = new NetworkManager(ctx, getIpAddress(ncConfig), partitionManager);
+        netManager = new NetworkManager(ctx, getIpAddress(ncConfig), partitionManager, ncConfig.nNetThreads);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();

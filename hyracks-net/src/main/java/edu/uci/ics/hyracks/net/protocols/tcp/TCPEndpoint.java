@@ -29,14 +29,19 @@ import java.util.List;
 public class TCPEndpoint {
     private final ITCPConnectionListener connectionListener;
 
+    private final int nThreads;
+
     private ServerSocketChannel serverSocketChannel;
 
     private InetSocketAddress localAddress;
 
-    private IOThread ioThread;
+    private IOThread[] ioThreads;
 
-    public TCPEndpoint(ITCPConnectionListener connectionListener) {
+    private int nextThread;
+
+    public TCPEndpoint(ITCPConnectionListener connectionListener, int nThreads) {
         this.connectionListener = connectionListener;
+        this.nThreads = nThreads;
     }
 
     public void start(InetSocketAddress localAddress) throws IOException {
@@ -44,13 +49,30 @@ public class TCPEndpoint {
         ServerSocket serverSocket = serverSocketChannel.socket();
         serverSocket.bind(localAddress);
         this.localAddress = (InetSocketAddress) serverSocket.getLocalSocketAddress();
-        ioThread = new IOThread();
-        ioThread.registerServerSocket(serverSocketChannel);
-        ioThread.start();
+        ioThreads = new IOThread[nThreads];
+        for (int i = 0; i < ioThreads.length; ++i) {
+            ioThreads[i] = new IOThread();
+        }
+        ioThreads[0].registerServerSocket(serverSocketChannel);
+        for (int i = 0; i < ioThreads.length; ++i) {
+            ioThreads[i].start();
+        }
+    }
+
+    private synchronized int getNextThread() {
+        int result = nextThread;
+        nextThread = (nextThread + 1) % nThreads;
+        return result;
     }
 
     public void initiateConnection(InetSocketAddress remoteAddress) {
-        ioThread.initiateConnection(remoteAddress);
+        int targetThread = getNextThread();
+        ioThreads[targetThread].initiateConnection(remoteAddress);
+    }
+
+    private void addIncomingConnection(SocketChannel channel) {
+        int targetThread = getNextThread();
+        ioThreads[targetThread].addIncomingConnection(channel);
     }
 
     public InetSocketAddress getLocalAddress() {
@@ -59,6 +81,8 @@ public class TCPEndpoint {
 
     private class IOThread extends Thread {
         private final List<InetSocketAddress>[] pendingConnections;
+
+        private final List<SocketChannel>[] incomingConnections;
 
         private int writerIndex;
 
@@ -71,6 +95,7 @@ public class TCPEndpoint {
             setPriority(MAX_PRIORITY);
             this.pendingConnections = new List[] { new ArrayList<InetSocketAddress>(),
                     new ArrayList<InetSocketAddress>() };
+            this.incomingConnections = new List[] { new ArrayList<SocketChannel>(), new ArrayList<SocketChannel>() };
             writerIndex = 0;
             readerIndex = 1;
             selector = Selector.open();
@@ -95,6 +120,18 @@ public class TCPEndpoint {
                         }
                         pendingConnections[readerIndex].clear();
                     }
+                    if (!incomingConnections[readerIndex].isEmpty()) {
+                        for (SocketChannel channel : incomingConnections[readerIndex]) {
+                            channel.configureBlocking(false);
+                            SelectionKey sKey = channel.register(selector, 0);
+                            TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector);
+                            sKey.attach(connection);
+                            synchronized (connectionListener) {
+                                connectionListener.acceptedConnection(connection);
+                            }
+                        }
+                        incomingConnections[readerIndex].clear();
+                    }
                     if (n > 0) {
                         Iterator<SelectionKey> i = selector.selectedKeys().iterator();
                         while (i.hasNext()) {
@@ -111,11 +148,7 @@ public class TCPEndpoint {
                             if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
-                                channel.configureBlocking(false);
-                                SelectionKey sKey = channel.register(selector, 0);
-                                TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector);
-                                sKey.attach(connection);
-                                connectionListener.acceptedConnection(connection);
+                                addIncomingConnection(channel);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
                                 if (channel.finishConnect()) {
@@ -139,6 +172,11 @@ public class TCPEndpoint {
 
         synchronized void initiateConnection(InetSocketAddress remoteAddress) {
             pendingConnections[writerIndex].add(remoteAddress);
+            selector.wakeup();
+        }
+
+        synchronized void addIncomingConnection(SocketChannel channel) {
+            incomingConnections[writerIndex].add(channel);
             selector.wakeup();
         }
 

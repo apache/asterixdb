@@ -34,7 +34,7 @@ public class MuxDemux {
 
     private final PerformanceCounters perfCounters;
 
-    public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener) {
+    public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
         connectionMap = new HashMap<InetSocketAddress, MultiplexedConnection>();
@@ -58,7 +58,7 @@ public class MuxDemux {
                 connection.setEventListener(mConn);
                 connection.setAttachment(mConn);
             }
-        });
+        }, nThreads);
         perfCounters = new PerformanceCounters();
     }
 
