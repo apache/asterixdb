@@ -29,6 +29,8 @@ import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
 public class MultiplexedConnection implements ITCPConnectionEventListener {
     private static final Logger LOGGER = Logger.getLogger(MultiplexedConnection.class.getName());
 
+    private static final int MAX_CHUNKS_READ_PER_CYCLE = 4;
+
     private final MuxDemux muxDemux;
 
     private final IEventCounter pendingWriteEventsCounter;
@@ -273,8 +275,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     void driveReaderStateMachine() throws IOException, NetException {
         SocketChannel sc = tcpConnection.getSocketChannel();
-        boolean yield = false;
-        while (!yield) {
+        int chunksRead = 0;
+        while (chunksRead < MAX_CHUNKS_READ_PER_CYCLE) {
             if (readerState.readBuffer.remaining() > 0) {
                 int read = sc.read(readerState.readBuffer);
                 if (read < 0) {
@@ -334,7 +336,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 }
             }
             if (readerState.pendingReadSize > 0) {
-                yield = true;
+                ++chunksRead;
                 int newPendingReadSize = readerState.ccb.read(sc, readerState.pendingReadSize);
                 muxDemux.getPerformanceCounters().addPayloadBytesRead(readerState.pendingReadSize - newPendingReadSize);
                 readerState.pendingReadSize = newPendingReadSize;
