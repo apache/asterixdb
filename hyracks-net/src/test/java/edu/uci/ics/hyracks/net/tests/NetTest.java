@@ -19,6 +19,9 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -32,17 +35,13 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemux;
 public class NetTest {
     @Test
     public void test() throws Exception {
-        MuxDemux md1 = createMuxDemux("md1");
-        md1.start();
-        InetSocketAddress md1Address = md1.getLocalAddress();
-        System.err.println("md1Address: " + md1Address);
+        AtomicBoolean failFlag = new AtomicBoolean();
 
-        MuxDemux md2 = createMuxDemux("md2");
+        MuxDemux md1 = createMuxDemux("md1", failFlag);
+        md1.start();
+        MuxDemux md2 = createMuxDemux("md2", failFlag);
         md2.start();
         InetSocketAddress md2Address = md2.getLocalAddress();
-        System.err.println("md2Address: " + md2Address);
-
-        System.err.println("Started");
 
         MultiplexedConnection md1md2 = md1.connect(md2Address);
 
@@ -53,6 +52,8 @@ public class NetTest {
 
         t1.join();
         t2.join();
+
+        Assert.assertFalse("Failure flag was set to true", failFlag.get());
     }
 
     private Thread createThread(final MultiplexedConnection md1md2, final int factor) {
@@ -104,12 +105,11 @@ public class NetTest {
 
     }
 
-    private MuxDemux createMuxDemux(final String label) {
+    private MuxDemux createMuxDemux(final String label, final AtomicBoolean failFlag) {
         IChannelOpenListener md1OpenListener = new IChannelOpenListener() {
             @Override
             public void channelOpened(final ChannelControlBlock channel) {
                 final ChannelIO cio = new ChannelIO(label, channel);
-                System.err.println(label + ": Channel Opened");
                 channel.getReadInterface().setFullBufferAcceptor(cio.rifba);
                 channel.getWriteInterface().setEmptyBufferAcceptor(cio.wieba);
 
@@ -118,6 +118,8 @@ public class NetTest {
                     rieba.accept(ByteBuffer.allocate(1024));
                 }
                 new Thread() {
+                    private int prevTotal = 0;
+
                     @Override
                     public void run() {
                         while (true) {
@@ -136,7 +138,6 @@ public class NetTest {
                                     throw new RuntimeException("Error: " + cio.ecode);
                                 } else if (cio.eos) {
                                     channel.getWriteInterface().getFullBufferAcceptor().close();
-                                    System.err.println("Channel Closed");
                                     return;
                                 }
                             }
@@ -144,9 +145,14 @@ public class NetTest {
                             while (fbuf.remaining() > 0) {
                                 counter += fbuf.getInt();
                             }
+                            if (prevTotal != 0) {
+                                if (Math.abs(counter - prevTotal) != 256) {
+                                    failFlag.set(true);
+                                }
+                            }
+                            prevTotal = counter;
                             fbuf.compact();
                             rieba.accept(fbuf);
-                            System.err.println("Received: total: " + counter);
                         }
                     }
                 }.start();
