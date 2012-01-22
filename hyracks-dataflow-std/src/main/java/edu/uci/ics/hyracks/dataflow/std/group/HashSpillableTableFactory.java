@@ -222,6 +222,10 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                     stateTupleBuilder.reset();
 
+                    for (int k = 0; k < keyFields.length; k++) {
+                        stateTupleBuilder.addField(accessor, tIndex, keyFields[k]);
+                    }
+                    
                     aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
                     if (!stateAppender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
                             stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {

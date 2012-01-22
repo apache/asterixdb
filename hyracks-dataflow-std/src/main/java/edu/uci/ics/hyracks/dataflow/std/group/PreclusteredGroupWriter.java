@@ -77,7 +77,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
                 tupleBuilder.reset();
                 for (int j = 0; j < groupFields.length; j++) {
-                    tupleBuilder.addField(inFrameAccessor, i, j);
+                    tupleBuilder.addField(inFrameAccessor, i, groupFields[j]);
                 }
                 aggregator.init(tupleBuilder, inFrameAccessor, i, aggregateState);
 
@@ -102,7 +102,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
             tupleBuilder.reset();
             for (int j = 0; j < groupFields.length; j++) {
-                tupleBuilder.addField(currTupleAccessor, currTupleIndex, j);
+                tupleBuilder.addField(currTupleAccessor, currTupleIndex, groupFields[j]);
             }
             aggregator.init(tupleBuilder, currTupleAccessor, currTupleIndex, aggregateState);
         } else {
@@ -115,7 +115,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
         tupleBuilder.reset();
         for (int j = 0; j < groupFields.length; j++) {
-            tupleBuilder.addField(lastTupleAccessor, lastTupleIndex, j);
+            tupleBuilder.addField(lastTupleAccessor, lastTupleIndex, groupFields[j]);
         }
         aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor, lastTupleIndex, aggregateState);
 
