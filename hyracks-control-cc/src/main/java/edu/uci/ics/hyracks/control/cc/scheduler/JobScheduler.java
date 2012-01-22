@@ -59,6 +59,7 @@ import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.work.JobCleanupWork;
+import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 
@@ -182,6 +183,9 @@ public class JobScheduler {
     }
 
     private void startRunnableActivityClusters() throws HyracksException {
+        if (jobRun.getStatus() == JobStatus.FAILURE || jobRun.getStatus() == JobStatus.TERMINATED) {
+            return;
+        }
         Set<TaskCluster> taskClusterRoots = new HashSet<TaskCluster>();
         findRunnableTaskClusterRoots(taskClusterRoots, rootActivityClusters);
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -676,5 +680,9 @@ public class JobScheduler {
         } catch (Exception e) {
             abortJob(e);
         }
+    }
+
+    public void notifyPartitionAvailability(PartitionDescriptor descriptor) throws HyracksException {
+        startRunnableActivityClusters();
     }
 }

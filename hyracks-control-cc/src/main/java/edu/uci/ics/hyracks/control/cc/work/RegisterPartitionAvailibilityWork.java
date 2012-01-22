@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -52,6 +53,11 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        try {
+            run.getScheduler().notifyPartitionAvailability(partitionDescriptor);
+        } catch (HyracksException e) {
+            e.printStackTrace();
         }
     }
 
