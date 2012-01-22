@@ -50,6 +50,15 @@ public class CleanupJobletWork extends SynchronizableWork {
         if (joblet != null) {
             joblet.cleanup(status);
         }
-        ncs.getClusterController().notifyJobletCleanup(jobId, ncs.getId());
+        ncs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ncs.getClusterController().notifyJobletCleanup(jobId, ncs.getId());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 }
