@@ -104,7 +104,9 @@ public class IPCConnectionManager {
     }
 
     synchronized void write(Message msg) {
-        LOGGER.fine("Enqueued message: " + msg);
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Enqueued message: " + msg);
+        }
         sendList.add(msg);
         networkThread.selector.wakeup();
     }
@@ -189,7 +191,9 @@ public class IPCConnectionManager {
                     if (!workingSendList.isEmpty()) {
                         for (Iterator<Message> i = workingSendList.iterator(); i.hasNext();) {
                             Message msg = i.next();
-                            LOGGER.fine("Processing send of message: " + msg);
+                            if (LOGGER.isLoggable(Level.FINE)) {
+                                LOGGER.fine("Processing send of message: " + msg);
+                            }
                             IPCHandle handle = msg.getIPCHandle();
                             if (handle.getState() == HandleState.CLOSED) {
                                 i.remove();
