@@ -125,4 +125,9 @@ class Message {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "MSG[" + messageId + ":" + requestMessageId + ":" + flag + ":" + payload + "]";
+    }
 }

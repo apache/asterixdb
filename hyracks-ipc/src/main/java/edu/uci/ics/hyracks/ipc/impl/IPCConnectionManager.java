@@ -43,13 +43,13 @@ public class IPCConnectionManager {
 
     private final Map<InetSocketAddress, IPCHandle> ipcHandleMap;
 
-    private final List<IPCHandle>[] pendingConnections;
+    private final List<IPCHandle> pendingConnections;
 
-    private final List<Message>[] sendList;
+    private final List<IPCHandle> workingPendingConnections;
 
-    private int writerIndex;
+    private final List<Message> sendList;
 
-    private int readerIndex;
+    private final List<Message> workingSendList;
 
     private final InetSocketAddress address;
 
@@ -65,10 +65,10 @@ public class IPCConnectionManager {
         socket.bind(socketAddress);
         address = new InetSocketAddress(socket.getInetAddress(), socket.getLocalPort());
         ipcHandleMap = new HashMap<InetSocketAddress, IPCHandle>();
-        pendingConnections = new ArrayList[] { new ArrayList<IPCHandle>(), new ArrayList<IPCHandle>() };
-        sendList = new ArrayList[] { new ArrayList<Message>(), new ArrayList<Message>() };
-        writerIndex = 0;
-        readerIndex = 1;
+        pendingConnections = new ArrayList<IPCHandle>();
+        workingPendingConnections = new ArrayList<IPCHandle>();
+        sendList = new ArrayList<Message>();
+        workingSendList = new ArrayList<Message>();
     }
 
     InetSocketAddress getAddress() {
@@ -91,7 +91,7 @@ public class IPCConnectionManager {
             handle = ipcHandleMap.get(remoteAddress);
             if (handle == null) {
                 handle = new IPCHandle(system, remoteAddress);
-                pendingConnections[writerIndex].add(handle);
+                pendingConnections.add(handle);
                 networkThread.selector.wakeup();
             }
         }
@@ -104,14 +104,20 @@ public class IPCConnectionManager {
     }
 
     synchronized void write(Message msg) {
-        sendList[writerIndex].add(msg);
+        LOGGER.fine("Enqueued message: " + msg);
+        sendList.add(msg);
         networkThread.selector.wakeup();
     }
 
-    private synchronized void swapReadersAndWriters() {
-        int temp = readerIndex;
-        readerIndex = writerIndex;
-        writerIndex = temp;
+    private synchronized void collectOutstandingWork() {
+        if (!pendingConnections.isEmpty()) {
+            workingPendingConnections.addAll(pendingConnections);
+            pendingConnections.clear();
+        }
+        if (!sendList.isEmpty()) {
+            workingSendList.addAll(sendList);
+            sendList.clear();
+        }
     }
 
     private Message createInitialReqMessage(IPCHandle handle) {
@@ -162,11 +168,9 @@ public class IPCConnectionManager {
                         LOGGER.fine("Starting Select");
                     }
                     int n = selector.select();
-                    if (pendingConnections[readerIndex].isEmpty() && sendList[readerIndex].isEmpty()) {
-                        swapReadersAndWriters();
-                    }
-                    if (!pendingConnections[readerIndex].isEmpty()) {
-                        for (IPCHandle handle : pendingConnections[readerIndex]) {
+                    collectOutstandingWork();
+                    if (!workingPendingConnections.isEmpty()) {
+                        for (IPCHandle handle : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
                             channel.configureBlocking(false);
                             SelectionKey cKey = null;
@@ -180,11 +184,12 @@ public class IPCConnectionManager {
                             handle.setKey(cKey);
                             cKey.attach(handle);
                         }
-                        pendingConnections[readerIndex].clear();
+                        workingPendingConnections.clear();
                     }
-                    if (!sendList[readerIndex].isEmpty()) {
-                        for (Iterator<Message> i = sendList[readerIndex].iterator(); i.hasNext();) {
+                    if (!workingSendList.isEmpty()) {
+                        for (Iterator<Message> i = workingSendList.iterator(); i.hasNext();) {
                             Message msg = i.next();
+                            LOGGER.fine("Processing send of message: " + msg);
                             IPCHandle handle = msg.getIPCHandle();
                             if (handle.getState() == HandleState.CLOSED) {
                                 i.remove();
