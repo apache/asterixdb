@@ -92,8 +92,8 @@
     <module>hyracks-storage-am-common</module>
     <module>hyracks-storage-am-btree</module>
     <module>hyracks-storage-am-invertedindex</module>
-    <module>hyracks-storage-am-lsmtree</module>
     <module>hyracks-storage-am-lsmtree-common</module>
+    <module>hyracks-storage-am-lsmtree-btree</module>
     <module>hyracks-storage-am-lsmtree-rtree</module>
     <module>hyracks-storage-am-rtree</module>
     <module>hyracks-test-support</module>
