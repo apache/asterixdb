@@ -25,10 +25,12 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 
 public class NodeControllerFunctions {
     public enum FunctionId {
+        NODE_REGISTRATION_RESULT,
         START_TASKS,
         ABORT_TASKS,
         CLEANUP_JOBLET,
@@ -41,6 +43,32 @@ public class NodeControllerFunctions {
         private static final long serialVersionUID = 1L;
 
         public abstract FunctionId getFunctionId();
+    }
+
+    public static class NodeRegistrationResult extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final NodeParameters params;
+
+        private final Exception exception;
+
+        public NodeRegistrationResult(NodeParameters params, Exception exception) {
+            this.params = params;
+            this.exception = exception;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.NODE_REGISTRATION_RESULT;
+        }
+
+        public NodeParameters getNodeParameters() {
+            return params;
+        }
+
+        public Exception getException() {
+            return exception;
+        }
     }
 
     public static class StartTasksFunction extends Function {

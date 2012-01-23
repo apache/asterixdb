@@ -39,18 +39,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
@@ -58,8 +51,7 @@ import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
 import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
-import edu.uci.ics.hyracks.control.common.ipc.NodeControllerDelegateIPCI;
-import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
+import edu.uci.ics.hyracks.control.common.ipc.NodeControllerFunctions;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
@@ -76,10 +68,11 @@ import edu.uci.ics.hyracks.control.nc.work.DestroyApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import edu.uci.ics.hyracks.ipc.api.IIPCI;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.PerformanceCounters;
 
-public class NodeControllerService extends AbstractRemoteService implements INodeController {
+public class NodeControllerService extends AbstractRemoteService {
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
 
     private NCConfig ncConfig;
@@ -97,6 +90,10 @@ public class NodeControllerService extends AbstractRemoteService implements INod
     private final WorkQueue queue;
 
     private final Timer timer;
+
+    private boolean registrationPending;
+
+    private Exception registrationException;
 
     private IClusterController ccs;
 
@@ -126,8 +123,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
         executor = Executors.newCachedThreadPool();
-        NodeControllerDelegateIPCI ipci = new NodeControllerDelegateIPCI(this);
-        ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci, executor);
+        NodeControllerIPCI ipci = new NodeControllerIPCI();
+        ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci);
         this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManager(getDevices(ncConfig.ioDevices), executor));
         if (id == null) {
             throw new Exception("id not set");
@@ -146,6 +143,7 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         threadMXBean = ManagementFactory.getThreadMXBean();
         runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
+        registrationPending = true;
     }
 
     public IHyracksRootContext getRootContext() {
@@ -162,6 +160,13 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return devices;
     }
 
+    private synchronized void setNodeRegistrationResult(NodeParameters parameters, Exception exception) {
+        this.nodeParameters = parameters;
+        this.registrationException = exception;
+        this.registrationPending = false;
+        notifyAll();
+    }
+
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
@@ -174,9 +179,19 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             gcInfos[i] = new HeartbeatSchema.GarbageCollectorInfo(gcMXBeans.get(i).getName());
         }
         HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
-        this.nodeParameters = ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netManager
-                .getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean
-                .getAvailableProcessors(), hbSchema));
+        ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netManager.getNetworkAddress(),
+                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean.getAvailableProcessors(),
+                hbSchema));
+
+        synchronized (this) {
+            while (registrationPending) {
+                wait();
+            }
+        }
+        if (registrationException != null) {
+            throw registrationException;
+        }
+
         queue.start();
 
         heartbeatTask = new HeartbeatTask(ccs);
@@ -238,51 +253,8 @@ public class NodeControllerService extends AbstractRemoteService implements INod
         return executor;
     }
 
-    @Override
-    public void startTasks(String appName, final JobId jobId, byte[] jagBytes,
-            List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap) throws Exception {
-        StartTasksWork stw = new StartTasksWork(this, appName, jobId, jagBytes, taskDescriptors, connectorPoliciesMap);
-        queue.schedule(stw);
-    }
-
-    @Override
-    public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
-        CleanupJobletWork cjw = new CleanupJobletWork(this, jobId, status);
-        queue.schedule(cjw);
-    }
-
     public NCConfig getConfiguration() throws Exception {
         return ncConfig;
-    }
-
-    @Override
-    public synchronized void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
-        AbortTasksWork atw = new AbortTasksWork(this, jobId, tasks);
-        queue.schedule(atw);
-    }
-
-    @Override
-    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
-            throws Exception {
-        FutureValue<Object> fv = new FutureValue<Object>();
-        CreateApplicationWork caw = new CreateApplicationWork(this, appName, deployHar, serializedDistributedState, fv);
-        queue.schedule(caw);
-        fv.get();
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-        FutureValue<Object> fv = new FutureValue<Object>();
-        DestroyApplicationWork daw = new DestroyApplicationWork(this, appName, fv);
-        queue.schedule(daw);
-        fv.get();
-    }
-
-    @Override
-    public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
-        ReportPartitionAvailabilityWork rpaw = new ReportPartitionAvailabilityWork(this, pid, networkAddress);
-        queue.scheduleAndSync(rpaw);
     }
 
     private static InetAddress getIpAddress(NCConfig ncConfig) throws Exception {
@@ -369,6 +341,61 @@ public class NodeControllerService extends AbstractRemoteService implements INod
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private final class NodeControllerIPCI implements IIPCI {
+        @Override
+        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+            NodeControllerFunctions.Function fn = (NodeControllerFunctions.Function) payload;
+            switch (fn.getFunctionId()) {
+                case START_TASKS: {
+                    NodeControllerFunctions.StartTasksFunction stf = (NodeControllerFunctions.StartTasksFunction) fn;
+                    queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getAppName(), stf.getJobId(), stf
+                            .getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies()));
+                    return;
+                }
+
+                case ABORT_TASKS: {
+                    NodeControllerFunctions.AbortTasksFunction atf = (NodeControllerFunctions.AbortTasksFunction) fn;
+                    queue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
+                    return;
+                }
+
+                case CLEANUP_JOBLET: {
+                    NodeControllerFunctions.CleanupJobletFunction cjf = (NodeControllerFunctions.CleanupJobletFunction) fn;
+                    queue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(), cjf.getStatus()));
+                    return;
+                }
+
+                case CREATE_APPLICATION: {
+                    NodeControllerFunctions.CreateApplicationFunction caf = (NodeControllerFunctions.CreateApplicationFunction) fn;
+                    queue.schedule(new CreateApplicationWork(NodeControllerService.this, caf.getAppName(), caf
+                            .isDeployHar(), caf.getSerializedDistributedState()));
+                    return;
+                }
+
+                case DESTROY_APPLICATION: {
+                    NodeControllerFunctions.DestroyApplicationFunction daf = (NodeControllerFunctions.DestroyApplicationFunction) fn;
+                    queue.schedule(new DestroyApplicationWork(NodeControllerService.this, daf.getAppName()));
+                    return;
+                }
+
+                case REPORT_PARTITION_AVAILABILITY: {
+                    NodeControllerFunctions.ReportPartitionAvailabilityFunction rpaf = (NodeControllerFunctions.ReportPartitionAvailabilityFunction) fn;
+                    queue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this, rpaf
+                            .getPartitionId(), rpaf.getNetworkAddress()));
+                    return;
+                }
+
+                case NODE_REGISTRATION_RESULT: {
+                    NodeControllerFunctions.NodeRegistrationResult nrrf = (NodeControllerFunctions.NodeRegistrationResult) fn;
+                    setNodeRegistrationResult(nrrf.getNodeParameters(), nrrf.getException());
+                    return;
+                }
+            }
+            throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
+
         }
     }
 }

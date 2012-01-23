@@ -18,31 +18,39 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class JobStartWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
+    private final IResultCallback<Object> callback;
 
-    public JobStartWork(ClusterControllerService ccs, JobId jobId) {
+    public JobStartWork(ClusterControllerService ccs, JobId jobId, IResultCallback<Object> callback) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.callback = callback;
     }
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getActiveRunMap().get(jobId);
-        if (run == null) {
-            throw new Exception("Unable to find job with id = " + jobId);
-        }
-        if (run.getStatus() != JobStatus.INITIALIZED) {
-            throw new Exception("Job already started");
-        }
-        run.setStatus(JobStatus.RUNNING, null);
         try {
-            run.getScheduler().startJob();
+            JobRun run = ccs.getActiveRunMap().get(jobId);
+            if (run == null) {
+                throw new Exception("Unable to find job with id = " + jobId);
+            }
+            if (run.getStatus() != JobStatus.INITIALIZED) {
+                throw new Exception("Job already started");
+            }
+            run.setStatus(JobStatus.RUNNING, null);
+            try {
+                run.getScheduler().startJob();
+            } catch (Exception e) {
+                ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+            }
+            callback.setValue(null);
         } catch (Exception e) {
-            ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+            callback.setException(e);
         }
     }
 }

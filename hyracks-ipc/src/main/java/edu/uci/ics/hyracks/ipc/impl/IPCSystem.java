@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.ipc.impl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
@@ -28,18 +27,15 @@ public class IPCSystem {
 
     private final IIPCI ipci;
 
-    private final Executor executor;
-
     private final AtomicLong midFactory;
 
     public IPCSystem(InetSocketAddress socketAddress) throws IOException {
-        this(socketAddress, null, null);
+        this(socketAddress, null);
     }
 
-    public IPCSystem(InetSocketAddress socketAddress, IIPCI ipci, Executor executor) throws IOException {
+    public IPCSystem(InetSocketAddress socketAddress, IIPCI ipci) throws IOException {
         cMgr = new IPCConnectionManager(this, socketAddress);
         this.ipci = ipci;
-        this.executor = executor;
         midFactory = new AtomicLong();
     }
 
@@ -66,25 +62,16 @@ public class IPCSystem {
     }
 
     void deliverIncomingMessage(final Message message) {
-        assert message.getFlag() == Message.NORMAL;
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                IPCHandle handle = message.getIPCHandle();
-                Message response = new Message(handle);
-                response.setMessageId(createMessageId());
-                response.setRequestMessageId(message.getMessageId());
-                response.setFlag(Message.NORMAL);
-                try {
-                    Object result = ipci.call(handle, message.getPayload());
-                    response.setPayload(result);
-                } catch (Exception e) {
-                    response.setFlag(Message.ERROR);
-                    response.setPayload(e);
-                }
-                cMgr.write(response);
-            }
-        });
+        long mid = message.getMessageId();
+        long rmid = message.getRequestMessageId();
+        Object payload = null;
+        Exception exception = null;
+        if (message.getFlag() == Message.ERROR) {
+            exception = (Exception) message.getPayload();
+        } else {
+            payload = message.getPayload();
+        }
+        ipci.deliverIncomingMessage(message.getIPCHandle(), mid, rmid, payload, exception);
     }
 
     IPCConnectionManager getConnectionManager() {

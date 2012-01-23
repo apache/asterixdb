@@ -18,7 +18,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
 public interface IClusterController {
-    public NodeParameters registerNode(NodeRegistration reg) throws Exception;
+    public void registerNode(NodeRegistration reg) throws Exception;
 
     public void unregisterNode(String nodeId) throws Exception;
 
@@ -45,4 +45,6 @@ public interface IClusterController {
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception;
 
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
+
+    public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception;
 }

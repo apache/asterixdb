@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.remote;
+package edu.uci.ics.hyracks.control.common.work;
 
-public interface Accumulator<T, R> {
-    public void accumulate(T o);
+public interface IResultCallback<T> {
+    public void setValue(T result);
 
-    public R getResult();
+    public void setException(Exception e);
 }

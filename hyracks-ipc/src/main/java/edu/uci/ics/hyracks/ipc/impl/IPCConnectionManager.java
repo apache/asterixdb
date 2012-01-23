@@ -162,7 +162,9 @@ public class IPCConnectionManager {
                         LOGGER.fine("Starting Select");
                     }
                     int n = selector.select();
-                    swapReadersAndWriters();
+                    if (pendingConnections[readerIndex].isEmpty() && sendList[readerIndex].isEmpty()) {
+                        swapReadersAndWriters();
+                    }
                     if (!pendingConnections[readerIndex].isEmpty()) {
                         for (IPCHandle handle : pendingConnections[readerIndex]) {
                             SocketChannel channel = SocketChannel.open();

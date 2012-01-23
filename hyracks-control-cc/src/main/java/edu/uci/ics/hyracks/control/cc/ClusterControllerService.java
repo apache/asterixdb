@@ -16,11 +16,9 @@ package edu.uci.ics.hyracks.control.cc;
 
 import java.io.File;
 import java.net.InetSocketAddress;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -31,23 +29,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
-import edu.uci.ics.hyracks.api.client.IHyracksClientInterface;
+import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.ICCContext;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
-import edu.uci.ics.hyracks.control.cc.ipc.HyracksClientInterfaceDelegateIPCI;
-import edu.uci.ics.hyracks.control.cc.job.IJobStatusConditionVariable;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationStateChangeWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
-import edu.uci.ics.hyracks.control.cc.work.GetJobStatusConditionVariableWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.JobCreateWork;
@@ -62,29 +56,21 @@ import edu.uci.ics.hyracks.control.cc.work.ReportProfilesWork;
 import edu.uci.ics.hyracks.control.cc.work.TaskCompleteWork;
 import edu.uci.ics.hyracks.control.cc.work.TaskFailureWork;
 import edu.uci.ics.hyracks.control.cc.work.UnregisterNodeWork;
+import edu.uci.ics.hyracks.control.cc.work.WaitForJobCompletionWork;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
-import edu.uci.ics.hyracks.control.common.base.IClusterController;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
-import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
-import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
-import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerDelegateIPCI;
-import edu.uci.ics.hyracks.control.common.ipc.NodeControllerRemoteProxy;
-import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
-import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
+import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerFunctions;
+import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerFunctions.Function;
 import edu.uci.ics.hyracks.control.common.logs.LogFile;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.IPCResponder;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
+import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
-public class ClusterControllerService extends AbstractRemoteService implements IClusterController,
-        IHyracksClientInterface {
+public class ClusterControllerService extends AbstractRemoteService {
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final CCConfig ccConfig;
@@ -132,11 +118,10 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         applications = new Hashtable<String, CCApplicationContext>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
         executor = Executors.newCachedThreadPool();
-        IIPCI ccIPCI = new ClusterControllerDelegateIPCI(this);
-        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI, executor);
-        IIPCI ciIPCI = new HyracksClientInterfaceDelegateIPCI(this);
-        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
-                executor);
+        IIPCI ccIPCI = new ClusterControllerIPCI();
+        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI);
+        IIPCI ciIPCI = new HyracksClientInterfaceIPCI();
+        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI);
         webServer = new WebServer(this);
         activeRunMap = new HashMap<JobId, JobRun>();
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
@@ -203,7 +188,7 @@ public class ClusterControllerService extends AbstractRemoteService implements I
     public Map<JobId, JobRun> getRunMapArchive() {
         return runMapArchive;
     }
-    
+
     public Map<String, Set<String>> getIpAddressNodeNameMap() {
         return ipAddressNodeNameMap;
     }
@@ -232,136 +217,174 @@ public class ClusterControllerService extends AbstractRemoteService implements I
         return new JobId(jobCounter++);
     }
 
-    @Override
-    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        JobId jobId = createJobId();
-        JobCreateWork jce = new JobCreateWork(this, jobId, appName, jobSpec, jobFlags);
-        workQueue.schedule(jce);
-        jce.sync();
-        return jobId;
-    }
-
-    @Override
-    public NodeParameters registerNode(NodeRegistration reg) throws Exception {
-        String id = reg.getNodeId();
-
-        IIPCHandle ncIPCHandle = clusterIPC.getHandle(reg.getNodeControllerAddress());
-        INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
-
-        NodeControllerState state = new NodeControllerState(nodeController, reg);
-        workQueue.scheduleAndSync(new RegisterNodeWork(this, id, state));
-        LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
-        NodeParameters params = new NodeParameters();
-        params.setClusterControllerInfo(info);
-        params.setHeartbeatPeriod(ccConfig.heartbeatPeriod);
-        params.setProfileDumpPeriod(ccConfig.profileDumpPeriod);
-        return params;
-    }
-
-    @Override
-    public void unregisterNode(String nodeId) throws Exception {
-        workQueue.schedule(new UnregisterNodeWork(this, nodeId));
-    }
-
-    @Override
-    public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
-            throws Exception {
-        TaskCompleteWork sce = new TaskCompleteWork(this, jobId, taskId, nodeId, statistics);
-        workQueue.schedule(sce);
-    }
-
-    @Override
-    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception {
-        TaskFailureWork tfe = new TaskFailureWork(this, jobId, taskId, nodeId, details);
-        workQueue.schedule(tfe);
-    }
-
-    @Override
-    public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception {
-        JobletCleanupNotificationWork jcnw = new JobletCleanupNotificationWork(this, jobId, nodeId);
-        workQueue.schedule(jcnw);
-    }
-
-    @Override
-    public JobStatus getJobStatus(JobId jobId) throws Exception {
-        GetJobStatusWork gse = new GetJobStatusWork(this, jobId);
-        workQueue.scheduleAndSync(gse);
-        return gse.getStatus();
-    }
-
-    @Override
-    public void startJob(JobId jobId) throws Exception {
-        JobStartWork jse = new JobStartWork(this, jobId);
-        workQueue.schedule(jse);
-    }
-
-    @Override
-    public void waitForCompletion(JobId jobId) throws Exception {
-        GetJobStatusConditionVariableWork e = new GetJobStatusConditionVariableWork(this, jobId);
-        workQueue.scheduleAndSync(e);
-        IJobStatusConditionVariable var = e.getConditionVariable();
-        if (var != null) {
-            var.waitForCompletion();
-        }
-    }
-
-    @Override
-    public void reportProfile(String id, List<JobProfile> profiles) throws Exception {
-        workQueue.schedule(new ReportProfilesWork(this, profiles));
-    }
-
-    @Override
-    public synchronized void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
-        workQueue.schedule(new NodeHeartbeatWork(this, id, hbData));
-    }
-
-    @Override
-    public void createApplication(String appName) throws Exception {
-        FutureValue<Object> fv = new FutureValue<Object>();
-        workQueue.schedule(new ApplicationCreateWork(this, appName, fv));
-        fv.get();
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-        FutureValue<Object> fv = new FutureValue<Object>();
-        workQueue.schedule(new ApplicationDestroyWork(this, appName, fv));
-        fv.get();
-    }
-
-    @Override
-    public void startApplication(final String appName) throws Exception {
-        FutureValue<Object> fv = new FutureValue<Object>();
-        workQueue.schedule(new ApplicationStartWork(this, appName, fv));
-        fv.get();
-    }
-
-    @Override
-    public ClusterControllerInfo getClusterControllerInfo() throws Exception {
+    public ClusterControllerInfo getClusterControllerInfo() {
         return info;
     }
 
-    @Override
-    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
-        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<Map<String, NodeControllerInfo>>();
-        workQueue.schedule(new GetNodeControllersInfoWork(this, fv));
-        return fv.get();
+    public CCConfig getCCConfig() {
+        return ccConfig;
     }
 
-    @Override
-    public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) {
-        workQueue.schedule(new RegisterPartitionAvailibilityWork(this, partitionDescriptor));
-    }
-
-    @Override
-    public void registerPartitionRequest(PartitionRequest partitionRequest) {
-        workQueue.schedule(new RegisterPartitionRequestWork(this, partitionRequest));
+    public IPCSystem getClusterIPC() {
+        return clusterIPC;
     }
 
     private class DeadNodeSweeper extends TimerTask {
         @Override
         public void run() {
             workQueue.schedule(new RemoveDeadNodesWork(ClusterControllerService.this));
+        }
+    }
+
+    private class HyracksClientInterfaceIPCI implements IIPCI {
+        @Override
+        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+            HyracksClientInterfaceFunctions.Function fn = (HyracksClientInterfaceFunctions.Function) payload;
+            switch (fn.getFunctionId()) {
+                case GET_CLUSTER_CONTROLLER_INFO: {
+                    try {
+                        handle.send(mid, info, null);
+                    } catch (IPCException e) {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
+
+                case CREATE_APPLICATION: {
+                    HyracksClientInterfaceFunctions.CreateApplicationFunction caf = (HyracksClientInterfaceFunctions.CreateApplicationFunction) fn;
+                    workQueue.schedule(new ApplicationCreateWork(ClusterControllerService.this, caf.getAppName(),
+                            new IPCResponder<Object>(handle, mid)));
+                    return;
+                }
+
+                case START_APPLICATION: {
+                    HyracksClientInterfaceFunctions.StartApplicationFunction saf = (HyracksClientInterfaceFunctions.StartApplicationFunction) fn;
+                    workQueue.schedule(new ApplicationStartWork(ClusterControllerService.this, saf.getAppName(),
+                            new IPCResponder<Object>(handle, mid)));
+                    return;
+                }
+
+                case DESTROY_APPLICATION: {
+                    HyracksClientInterfaceFunctions.DestroyApplicationFunction daf = (HyracksClientInterfaceFunctions.DestroyApplicationFunction) fn;
+                    workQueue.schedule(new ApplicationDestroyWork(ClusterControllerService.this, daf.getAppName(),
+                            new IPCResponder<Object>(handle, mid)));
+                    return;
+                }
+
+                case CREATE_JOB: {
+                    HyracksClientInterfaceFunctions.CreateJobFunction cjf = (HyracksClientInterfaceFunctions.CreateJobFunction) fn;
+                    JobId jobId = createJobId();
+                    workQueue.schedule(new JobCreateWork(ClusterControllerService.this, jobId, cjf.getAppName(), cjf
+                            .getJobSpec(), cjf.getJobFlags(), new IPCResponder<JobId>(handle, mid)));
+                    return;
+                }
+
+                case GET_JOB_STATUS: {
+                    HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = (HyracksClientInterfaceFunctions.GetJobStatusFunction) fn;
+                    workQueue.schedule(new GetJobStatusWork(ClusterControllerService.this, gjsf.getJobId(),
+                            new IPCResponder<JobStatus>(handle, mid)));
+                    return;
+                }
+
+                case START_JOB: {
+                    HyracksClientInterfaceFunctions.StartJobFunction sjf = (HyracksClientInterfaceFunctions.StartJobFunction) fn;
+                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getJobId(),
+                            new IPCResponder<Object>(handle, mid)));
+                    return;
+                }
+
+                case WAIT_FOR_COMPLETION: {
+                    HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf = (HyracksClientInterfaceFunctions.WaitForCompletionFunction) fn;
+                    workQueue.schedule(new WaitForJobCompletionWork(ClusterControllerService.this, wfcf.getJobId(),
+                            new IPCResponder<Object>(handle, mid)));
+                    return;
+                }
+
+                case GET_NODE_CONTROLLERS_INFO: {
+                    workQueue.schedule(new GetNodeControllersInfoWork(ClusterControllerService.this,
+                            new IPCResponder<Map<String, NodeControllerInfo>>(handle, mid)));
+                    return;
+                }
+            }
+            try {
+                handle.send(mid, null, new IllegalArgumentException("Unknown function " + fn.getFunctionId()));
+            } catch (IPCException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class ClusterControllerIPCI implements IIPCI {
+        @Override
+        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+            ClusterControllerFunctions.Function fn = (Function) payload;
+            switch (fn.getFunctionId()) {
+                case REGISTER_NODE: {
+                    ClusterControllerFunctions.RegisterNodeFunction rnf = (ClusterControllerFunctions.RegisterNodeFunction) fn;
+                    workQueue.schedule(new RegisterNodeWork(ClusterControllerService.this, rnf.getNodeRegistration()));
+                    return;
+                }
+
+                case UNREGISTER_NODE: {
+                    ClusterControllerFunctions.UnregisterNodeFunction unf = (ClusterControllerFunctions.UnregisterNodeFunction) fn;
+                    workQueue.schedule(new UnregisterNodeWork(ClusterControllerService.this, unf.getNodeId()));
+                    return;
+                }
+
+                case NODE_HEARTBEAT: {
+                    ClusterControllerFunctions.NodeHeartbeatFunction nhf = (ClusterControllerFunctions.NodeHeartbeatFunction) fn;
+                    workQueue.schedule(new NodeHeartbeatWork(ClusterControllerService.this, nhf.getNodeId(), nhf
+                            .getHeartbeatData()));
+                    return;
+                }
+
+                case NOTIFY_JOBLET_CLEANUP: {
+                    ClusterControllerFunctions.NotifyJobletCleanupFunction njcf = (ClusterControllerFunctions.NotifyJobletCleanupFunction) fn;
+                    workQueue.schedule(new JobletCleanupNotificationWork(ClusterControllerService.this,
+                            njcf.getJobId(), njcf.getNodeId()));
+                    return;
+                }
+
+                case REPORT_PROFILE: {
+                    ClusterControllerFunctions.ReportProfileFunction rpf = (ClusterControllerFunctions.ReportProfileFunction) fn;
+                    workQueue.schedule(new ReportProfilesWork(ClusterControllerService.this, rpf.getProfiles()));
+                    return;
+                }
+
+                case NOTIFY_TASK_COMPLETE: {
+                    ClusterControllerFunctions.NotifyTaskCompleteFunction ntcf = (ClusterControllerFunctions.NotifyTaskCompleteFunction) fn;
+                    workQueue.schedule(new TaskCompleteWork(ClusterControllerService.this, ntcf.getJobId(), ntcf
+                            .getTaskId(), ntcf.getNodeId(), ntcf.getStatistics()));
+                    return;
+                }
+                case NOTIFY_TASK_FAILURE: {
+                    ClusterControllerFunctions.NotifyTaskFailureFunction ntff = (ClusterControllerFunctions.NotifyTaskFailureFunction) fn;
+                    workQueue.schedule(new TaskFailureWork(ClusterControllerService.this, ntff.getJobId(), ntff
+                            .getTaskId(), ntff.getDetails(), ntff.getDetails()));
+                    return;
+                }
+
+                case REGISTER_PARTITION_PROVIDER: {
+                    ClusterControllerFunctions.RegisterPartitionProviderFunction rppf = (ClusterControllerFunctions.RegisterPartitionProviderFunction) fn;
+                    workQueue.schedule(new RegisterPartitionAvailibilityWork(ClusterControllerService.this, rppf
+                            .getPartitionDescriptor()));
+                    return;
+                }
+
+                case REGISTER_PARTITION_REQUEST: {
+                    ClusterControllerFunctions.RegisterPartitionRequestFunction rprf = (ClusterControllerFunctions.RegisterPartitionRequestFunction) fn;
+                    workQueue.schedule(new RegisterPartitionRequestWork(ClusterControllerService.this, rprf
+                            .getPartitionRequest()));
+                    return;
+                }
+
+                case APPLICATION_STATE_CHANGE_RESPONSE: {
+                    ClusterControllerFunctions.ApplicationStateChangeResponseFunction astrf = (ClusterControllerFunctions.ApplicationStateChangeResponseFunction) fn;
+                    workQueue.schedule(new ApplicationStateChangeWork(ClusterControllerService.this, astrf));
+                    return;
+                }
+            }
+            LOGGER.warning("Unknown function: " + fn.getFunctionId());
         }
     }
 }

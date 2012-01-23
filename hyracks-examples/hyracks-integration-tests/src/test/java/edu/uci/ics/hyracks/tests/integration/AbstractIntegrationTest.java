@@ -116,7 +116,7 @@ public abstract class AbstractIntegrationTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jobId.toString());
         }
-        cc.waitForCompletion(jobId);
+        hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
 

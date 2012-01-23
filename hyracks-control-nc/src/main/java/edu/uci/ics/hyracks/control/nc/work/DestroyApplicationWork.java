@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
@@ -30,12 +30,9 @@ public class DestroyApplicationWork extends SynchronizableWork {
 
     private final String appName;
 
-    private FutureValue<Object> fv;
-
-    public DestroyApplicationWork(NodeControllerService ncs, String appName, FutureValue<Object> fv) {
+    public DestroyApplicationWork(NodeControllerService ncs, String appName) {
         this.ncs = ncs;
         this.appName = appName;
-        this.fv = fv;
     }
 
     @Override
@@ -46,9 +43,9 @@ public class DestroyApplicationWork extends SynchronizableWork {
             if (appCtx != null) {
                 appCtx.deinitialize();
             }
-            fv.setValue(null);
         } catch (Exception e) {
-            fv.setException(e);
+            LOGGER.warning("Error destroying application: " + e.getMessage());
         }
+        ncs.getClusterController().notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.DEINITIALIZED);
     }
 }

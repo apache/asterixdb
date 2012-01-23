@@ -22,15 +22,16 @@ import edu.uci.ics.hyracks.api.client.NodeStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
 public class GetNodeControllersInfoWork extends AbstractWork {
     private final ClusterControllerService ccs;
-    private FutureValue<Map<String, NodeControllerInfo>> fv;
+    private IResultCallback<Map<String, NodeControllerInfo>> callback;
 
-    public GetNodeControllersInfoWork(ClusterControllerService ccs, FutureValue<Map<String, NodeControllerInfo>> fv) {
+    public GetNodeControllersInfoWork(ClusterControllerService ccs,
+            IResultCallback<Map<String, NodeControllerInfo>> callback) {
         this.ccs = ccs;
-        this.fv = fv;
+        this.callback = callback;
     }
 
     @Override
@@ -41,6 +42,6 @@ public class GetNodeControllersInfoWork extends AbstractWork {
             result.put(e.getKey(), new NodeControllerInfo(e.getKey(), e.getValue().getDataPort().getIpAddress(),
                     NodeStatus.ALIVE));
         }
-        fv.setValue(result);
+        callback.setValue(result);
     }
 }

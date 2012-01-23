@@ -25,7 +25,8 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
-import edu.uci.ics.hyracks.ipc.api.SyncRMI;
+import edu.uci.ics.hyracks.ipc.api.RPCInterface;
+import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
 public class IPCTest {
@@ -35,20 +36,18 @@ public class IPCTest {
         server.start();
         InetSocketAddress serverAddr = server.getSocketAddress();
 
-        IPCSystem client = createClientIPCSystem();
+        RPCInterface rpci = new RPCInterface();
+        IPCSystem client = createClientIPCSystem(rpci);
         client.start();
 
         IIPCHandle handle = client.getHandle(serverAddr);
 
-        SyncRMI rmi = new SyncRMI();
         for (int i = 0; i < 100; ++i) {
-            Assert.assertEquals(rmi.call(handle, Integer.valueOf(i)), Integer.valueOf(2 * i));
+            Assert.assertEquals(rpci.call(handle, Integer.valueOf(i)), Integer.valueOf(2 * i));
         }
 
-        IIPCHandle rHandle = server.getHandle(client.getSocketAddress());
-
         try {
-            rmi.call(rHandle, "Foo");
+            rpci.call(handle, "Foo");
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(true);
@@ -56,25 +55,35 @@ public class IPCTest {
     }
 
     private IPCSystem createServerIPCSystem() throws IOException {
-        Executor executor = Executors.newCachedThreadPool();
+        final Executor executor = Executors.newCachedThreadPool();
         IIPCI ipci = new IIPCI() {
             @Override
-            public Object call(IIPCHandle caller, Object req) throws Exception {
-                Integer i = (Integer) req;
-                return i.intValue() * 2;
+            public void deliverIncomingMessage(final IIPCHandle handle, final long mid, long rmid,
+                    final Object payload, Exception exception) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        Object result = null;
+                        Exception exception = null;
+                        try {
+                            Integer i = (Integer) payload;
+                            result = i.intValue() * 2;
+                        } catch (Exception e) {
+                            exception = e;
+                        }
+                        try {
+                            handle.send(mid, result, exception);
+                        } catch (IPCException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
         };
-        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), ipci, executor);
+        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), ipci);
     }
 
-    private IPCSystem createClientIPCSystem() throws IOException {
-        Executor executor = Executors.newCachedThreadPool();
-        IIPCI ipci = new IIPCI() {
-            @Override
-            public Object call(IIPCHandle caller, Object req) throws Exception {
-                throw new IllegalStateException();
-            }
-        };
-        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), ipci, executor);
+    private IPCSystem createClientIPCSystem(RPCInterface rpci) throws IOException {
+        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), rpci);
     }
 }

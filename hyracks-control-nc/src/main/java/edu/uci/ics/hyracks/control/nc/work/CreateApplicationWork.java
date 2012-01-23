@@ -27,9 +27,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
@@ -45,15 +45,12 @@ public class CreateApplicationWork extends SynchronizableWork {
 
     private final byte[] serializedDistributedState;
 
-    private final FutureValue<Object> fv;
-
     public CreateApplicationWork(NodeControllerService ncs, String appName, boolean deployHar,
-            byte[] serializedDistributedState, FutureValue<Object> fv) {
+            byte[] serializedDistributedState) {
         this.ncs = ncs;
         this.appName = appName;
         this.deployHar = deployHar;
         this.serializedDistributedState = serializedDistributedState;
-        this.fv = fv;
     }
 
     @Override
@@ -85,9 +82,10 @@ public class CreateApplicationWork extends SynchronizableWork {
             appCtx.initializeClassPath();
             appCtx.setDistributedState((Serializable) appCtx.deserialize(serializedDistributedState));
             appCtx.initialize();
-            fv.setValue(null);
+            ncs.getClusterController()
+                    .notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.INITIALIZED);
         } catch (Exception e) {
-            fv.setException(e);
+            LOGGER.warning("Error creating application: " + e.getMessage());
         }
     }
 }

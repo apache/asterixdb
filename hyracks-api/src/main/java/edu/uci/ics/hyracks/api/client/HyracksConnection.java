@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import edu.uci.ics.hyracks.ipc.api.RPCInterface;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
 
 /**
@@ -63,10 +64,11 @@ public final class HyracksConnection implements IHyracksClientConnection {
      */
     public HyracksConnection(String ccHost, int ccPort) throws Exception {
         this.ccHost = ccHost;
-        ipc = new IPCSystem(new InetSocketAddress(0));
+        RPCInterface rpci = new RPCInterface();
+        ipc = new IPCSystem(new InetSocketAddress(0), rpci);
         ipc.start();
         IIPCHandle ccIpchandle = ipc.getHandle(new InetSocketAddress(ccHost, ccPort));
-        this.hci = new HyracksClientInterfaceRemoteProxy(ccIpchandle);
+        this.hci = new HyracksClientInterfaceRemoteProxy(ccIpchandle, rpci);
         ccInfo = hci.getClusterControllerInfo();
     }
 

@@ -18,28 +18,31 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class GetJobStatusWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private JobStatus status;
+    private final IResultCallback<JobStatus> callback;
 
-    public GetJobStatusWork(ClusterControllerService ccs, JobId jobId) {
+    public GetJobStatusWork(ClusterControllerService ccs, JobId jobId, IResultCallback<JobStatus> callback) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.callback = callback;
     }
 
     @Override
     protected void doRun() throws Exception {
-        JobRun run = ccs.getActiveRunMap().get(jobId);
-        if (run == null) {
-            run = ccs.getRunMapArchive().get(jobId);
+        try {
+            JobRun run = ccs.getActiveRunMap().get(jobId);
+            if (run == null) {
+                run = ccs.getRunMapArchive().get(jobId);
+            }
+            JobStatus status = run == null ? null : run.getStatus();
+            callback.setValue(status);
+        } catch (Exception e) {
+            callback.setException(e);
         }
-        status = run == null ? null : run.getStatus();
-    }
-
-    public JobStatus getStatus() {
-        return status;
     }
 }
