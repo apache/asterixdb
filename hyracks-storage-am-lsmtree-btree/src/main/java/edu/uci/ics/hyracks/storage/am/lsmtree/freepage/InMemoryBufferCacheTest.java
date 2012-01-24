@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsmtree.freepage;
 
 import static org.junit.Assert.fail;
 

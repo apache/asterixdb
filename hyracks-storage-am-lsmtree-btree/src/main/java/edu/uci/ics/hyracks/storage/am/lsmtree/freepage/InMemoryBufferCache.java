@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsmtree.freepage;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.locks.ReadWriteLock;

@@ -15,7 +15,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.lsmtree.impls.InMemoryBufferCacheFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.InMemoryBufferCacheFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;

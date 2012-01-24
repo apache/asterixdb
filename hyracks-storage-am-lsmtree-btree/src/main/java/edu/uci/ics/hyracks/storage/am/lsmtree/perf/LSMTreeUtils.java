@@ -11,12 +11,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.FreePageManagerFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.BTreeFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.impls.FreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.impls.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMEntireTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTree;
-import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMEntireTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
