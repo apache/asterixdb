@@ -91,7 +91,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws Exception {
-        lsm.decreaseThreadReferenceCounter();
+        lsm.threadExit();
         outputPriorityQueue.clear();
         for (int i = 0; i < numberOfTrees; i++) {
             rangeCursors[i].close();
