@@ -16,8 +16,10 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -29,13 +31,13 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class LimitOperator extends AbstractLogicalOperator {
 
-    private final LogicalExpressionReference maxObjects; // mandatory
-    private final LogicalExpressionReference offset; // optional
+    private final Mutable<ILogicalExpression> maxObjects; // mandatory
+    private final Mutable<ILogicalExpression> offset; // optional
     private boolean topmost;
 
     public LimitOperator(ILogicalExpression maxObjectsExpr, ILogicalExpression offsetExpr, boolean topmost) {
-        this.maxObjects = new LogicalExpressionReference(maxObjectsExpr);
-        this.offset = new LogicalExpressionReference(offsetExpr);
+        this.maxObjects = new MutableObject<ILogicalExpression>(maxObjectsExpr);
+        this.offset = new MutableObject<ILogicalExpression>(offsetExpr);
         this.topmost = topmost;
     }
 
@@ -51,11 +53,11 @@ public class LimitOperator extends AbstractLogicalOperator {
         this(maxObjects, null, true);
     }
 
-    public LogicalExpressionReference getMaxObjects() {
+    public Mutable<ILogicalExpression> getMaxObjects() {
         return maxObjects;
     }
 
-    public LogicalExpressionReference getOffset() {
+    public Mutable<ILogicalExpression> getOffset() {
         return offset;
     }
 
@@ -66,7 +68,7 @@ public class LimitOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -80,7 +82,7 @@ public class LimitOperator extends AbstractLogicalOperator {
         if (visitor.transform(maxObjects)) {
             b = true;
         }
-        if (offset.getExpression() != null) {
+        if (offset.getValue() != null) {
             if (visitor.transform(offset)) {
                 b = true;
             }

@@ -18,6 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
@@ -31,6 +33,8 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class NonDeterministicPartitionCollector extends AbstractPartitionCollector {
+    private static final Logger LOGGER = Logger.getLogger(NonDeterministicPartitionCollector.class.getName());
+
     private final FrameReader reader;
 
     private final BitSet expectedPartitions;
@@ -172,6 +176,11 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                 PartitionId pid = (PartitionId) channel.getAttachment();
                 int senderIndex = pid.getSenderIndex();
                 failSenders.set(senderIndex);
+                eosSenders.set(senderIndex);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Failure: " + connectorId + " sender: " + senderIndex + " receiver: "
+                            + receiverIndex);
+                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }
@@ -183,6 +192,10 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                 int senderIndex = pid.getSenderIndex();
                 availableFrameCounts[senderIndex] += nFrames;
                 frameAvailability.set(senderIndex);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Data available: " + connectorId + " sender: " + senderIndex + " receiver: "
+                            + receiverIndex);
+                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }
@@ -193,6 +206,10 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
                 PartitionId pid = (PartitionId) channel.getAttachment();
                 int senderIndex = pid.getSenderIndex();
                 eosSenders.set(senderIndex);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("EOS: " + connectorId + " sender: " + senderIndex + " receiver: "
+                            + receiverIndex);
+                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }

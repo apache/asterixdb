@@ -7,23 +7,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysicalOperator {
@@ -64,7 +64,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         List<ILocalStructuralProperty> propsLocal = new LinkedList<ILocalStructuralProperty>();
         GroupByOperator gby = (GroupByOperator) op;
-        ILogicalOperator op2 = gby.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = gby.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childProp = op2.getDeliveredPhysicalProperties();
         IPartitioningProperty pp = childProp.getPartitioningProperty();
         List<ILocalStructuralProperty> childLocals = childProp.getLocalProperties();
@@ -126,10 +126,10 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         for (ILogicalPlan p : gby.getNestedPlans()) {
             // try to propagate secondary order requirements from nested
             // groupings
-            for (LogicalOperatorReference r : p.getRoots()) {
-                AbstractLogicalOperator op1 = (AbstractLogicalOperator) r.getOperator();
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                AbstractLogicalOperator op1 = (AbstractLogicalOperator) r.getValue();
                 if (op1.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
-                    AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getOperator();
+                    AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                     IPhysicalOperator pop2 = op2.getPhysicalOperator();
                     if (pop2 instanceof AbstractPreclusteredGroupByPOperator) {
                         List<LogicalVariable> sndOrder = ((AbstractPreclusteredGroupByPOperator) pop2).getGbyColumns();
@@ -160,7 +160,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     }
                     LocalOrderProperty lop = (LocalOrderProperty) prop;
                     LogicalVariable ord = lop.getColumn();
-                    Pair<LogicalVariable, LogicalExpressionReference> p = getGbyPairByRhsVar(gby, ord);
+                    Pair<LogicalVariable, Mutable<ILogicalExpression>> p = getGbyPairByRhsVar(gby, ord);
                     if (p == null) {
                         p = getDecorPairByRhsVar(gby, ord);
                         if (p == null) {
@@ -168,7 +168,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                             break;
                         }
                     }
-                    ILogicalExpression e = p.second.getExpression();
+                    ILogicalExpression e = p.second.getValue();
                     if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                         throw new IllegalStateException(
                                 "Right hand side of group-by assignment should have been normalized to a variable reference.");
@@ -177,10 +177,10 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     props.add(new LocalOrderProperty(new OrderColumn(v, lop.getOrder())));
                 }
                 List<FunctionalDependency> fdList = new ArrayList<FunctionalDependency>();
-                for (Pair<LogicalVariable, LogicalExpressionReference> decorPair : gby.getDecorList()) {
+                for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : gby.getDecorList()) {
                     List<LogicalVariable> hd = gby.getGbyVarList();
                     List<LogicalVariable> tl = new ArrayList<LogicalVariable>(1);
-                    tl.add(((VariableReferenceExpression) decorPair.second.getExpression()).getVariableReference());
+                    tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
                 if (allOk
@@ -200,9 +200,9 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
-    private static Pair<LogicalVariable, LogicalExpressionReference> getGbyPairByRhsVar(GroupByOperator gby,
+    private static Pair<LogicalVariable, Mutable<ILogicalExpression>> getGbyPairByRhsVar(GroupByOperator gby,
             LogicalVariable var) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> ve : gby.getGroupByList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getGroupByList()) {
             if (ve.first == var) {
                 return ve;
             }
@@ -210,9 +210,9 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         return null;
     }
 
-    private static Pair<LogicalVariable, LogicalExpressionReference> getDecorPairByRhsVar(GroupByOperator gby,
+    private static Pair<LogicalVariable, Mutable<ILogicalExpression>> getDecorPairByRhsVar(GroupByOperator gby,
             LogicalVariable var) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> ve : gby.getDecorList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getDecorList()) {
             if (ve.first == var) {
                 return ve;
             }
@@ -221,8 +221,8 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     }
 
     private static LogicalVariable getLhsGbyVar(GroupByOperator gby, LogicalVariable var) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> ve : gby.getGroupByList()) {
-            ILogicalExpression e = ve.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getGroupByList()) {
+            ILogicalExpression e = ve.second.getValue();
             if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new IllegalStateException(
                         "Right hand side of group by assignment should have been normalized to a variable reference.");

@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -27,18 +29,18 @@ public class ScalarFunctionCallExpression extends AbstractFunctionCallExpression
         super(FunctionKind.SCALAR, finfo);
     }
 
-    public ScalarFunctionCallExpression(IFunctionInfo finfo, List<LogicalExpressionReference> arguments) {
+    public ScalarFunctionCallExpression(IFunctionInfo finfo, List<Mutable<ILogicalExpression>> arguments) {
         super(FunctionKind.SCALAR, finfo, arguments);
     }
 
-    public ScalarFunctionCallExpression(IFunctionInfo finfo, LogicalExpressionReference... expressions) {
+    public ScalarFunctionCallExpression(IFunctionInfo finfo, Mutable<ILogicalExpression>... expressions) {
         super(FunctionKind.SCALAR, finfo, expressions);
     }
 
     @Override
     public ScalarFunctionCallExpression cloneExpression() {
         cloneAnnotations();
-        List<LogicalExpressionReference> clonedArgs = cloneArguments();
+        List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         return new ScalarFunctionCallExpression(finfo, clonedArgs);
     }
 

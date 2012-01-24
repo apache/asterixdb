@@ -3,8 +3,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.typing;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -40,8 +41,8 @@ public class PropagateOperatorInputsTypeEnvironment extends AbstractTypeEnvironm
         if (t != null) {
             return t;
         }
-        for (LogicalOperatorReference r : op.getInputs()) {
-            ILogicalOperator c = r.getOperator();
+        for (Mutable<ILogicalOperator> r : op.getInputs()) {
+            ILogicalOperator c = r.getValue();
             IVariableTypeEnvironment env = ctx.getOutputTypeEnvironment(c);
             Object t2 = env.getVarType(var, nonNullVariableList);
             if (t2 != null) {

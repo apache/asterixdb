@@ -17,9 +17,11 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -34,7 +36,8 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Triple;
 public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -44,8 +47,8 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
      * write order
      */
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.UNIONALL) {
             return false;
         }
@@ -60,10 +63,10 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
         }
 
         ArrayList<LogicalVariable> inputSchemaOne = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(opUnion.getInputs().get(0).getOperator(), inputSchemaOne);
+        VariableUtilities.getLiveVariables(opUnion.getInputs().get(0).getValue(), inputSchemaOne);
 
         ArrayList<LogicalVariable> inputSchemaTwo = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(opUnion.getInputs().get(1).getOperator(), inputSchemaTwo);
+        VariableUtilities.getLiveVariables(opUnion.getInputs().get(1).getValue(), inputSchemaTwo);
 
         boolean rewritten = false;
         if (!isIdentical(usedVariablesFromOne, inputSchemaOne)) {
@@ -80,9 +83,9 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
     private void insertProjectOperator(UnionAllOperator opUnion, int branch, ArrayList<LogicalVariable> usedVariables,
             IOptimizationContext context) throws AlgebricksException {
         ProjectOperator projectOp = new ProjectOperator(usedVariables);
-        ILogicalOperator parentOp = opUnion.getInputs().get(branch).getOperator();
-        projectOp.getInputs().add(new LogicalOperatorReference(parentOp));
-        opUnion.getInputs().get(branch).setOperator(projectOp);
+        ILogicalOperator parentOp = opUnion.getInputs().get(branch).getValue();
+        projectOp.getInputs().add(new MutableObject<ILogicalOperator>(parentOp));
+        opUnion.getInputs().get(branch).setValue(projectOp);
         projectOp.setPhysicalOperator(new StreamProjectPOperator());
         context.computeAndSetTypeEnvironmentForOperator(parentOp);
     }

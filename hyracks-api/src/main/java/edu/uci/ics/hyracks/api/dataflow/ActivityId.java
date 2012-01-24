@@ -52,6 +52,16 @@ public final class ActivityId implements Serializable {
     }
 
     public String toString() {
-        return "ANID:[" + odId + "]:" + id;
+        return "ANID:" + odId + ":" + id;
+    }
+
+    public static ActivityId parse(String str) {
+        if (str.startsWith("ANID:")) {
+            str = str.substring(5);
+            int idIdx = str.lastIndexOf(':');
+            return new ActivityId(OperatorDescriptorId.parse(str.substring(0, idIdx)), Integer.parseInt(str
+                    .substring(idIdx + 1)));
+        }
+        throw new IllegalArgumentException("Unable to parse: " + str);
     }
 }

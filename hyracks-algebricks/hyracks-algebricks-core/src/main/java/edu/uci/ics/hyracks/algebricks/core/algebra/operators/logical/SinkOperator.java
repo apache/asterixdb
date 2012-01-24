@@ -19,7 +19,7 @@ public class SinkOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() throws AlgebricksException {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getOperator().getSchema());
+        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
     @Override

@@ -16,34 +16,37 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public abstract class AbstractBinaryJoinOperator extends AbstractLogicalOperator {
-    protected final LogicalExpressionReference condition;
+    protected final Mutable<ILogicalExpression> condition;
     protected JoinKind joinKind;
 
     public enum JoinKind {
-        INNER, LEFT_OUTER
+        INNER,
+        LEFT_OUTER
     }
 
-    public AbstractBinaryJoinOperator(JoinKind joinKind, LogicalExpressionReference condition) {
+    public AbstractBinaryJoinOperator(JoinKind joinKind, Mutable<ILogicalExpression> condition) {
         this.joinKind = joinKind;
         this.condition = condition;
     }
 
-    public AbstractBinaryJoinOperator(JoinKind joinKind, LogicalExpressionReference condition, LogicalOperatorReference input1,
-            LogicalOperatorReference input2) {
+    public AbstractBinaryJoinOperator(JoinKind joinKind, Mutable<ILogicalExpression> condition,
+            Mutable<ILogicalOperator> input1, Mutable<ILogicalOperator> input2) {
         this(joinKind, condition);
         inputs.add(input1);
         inputs.add(input2);
     }
 
-    public LogicalExpressionReference getCondition() {
+    public Mutable<ILogicalExpression> getCondition() {
         return condition;
     }
 
@@ -54,8 +57,8 @@ public abstract class AbstractBinaryJoinOperator extends AbstractLogicalOperator
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
-        schema.addAll(inputs.get(1).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
+        schema.addAll(inputs.get(1).getValue().getSchema());
     }
 
     @Override

@@ -20,11 +20,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -47,18 +49,18 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.PROJECT) {
             return false;
         }
         ProjectOperator pi = (ProjectOperator) op;
-        LogicalOperatorReference opRef2 = pi.getInputs().get(0);
+        Mutable<ILogicalOperator> opRef2 = pi.getInputs().get(0);
 
         HashSet<LogicalVariable> toPush = new HashSet<LogicalVariable>();
         toPush.addAll(pi.getVariables());
@@ -66,7 +68,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context);
         boolean smthWasPushed = p.first;
         if (p.second) { // the original projection is redundant
-            opRef.setOperator(op.getInputs().get(0).getOperator());
+            opRef.setValue(op.getInputs().get(0).getValue());
             smthWasPushed = true;
         }
 
@@ -74,10 +76,10 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     }
 
     private static Pair<Boolean, Boolean> pushThroughOp(HashSet<LogicalVariable> toPush,
-            LogicalOperatorReference opRef2, ILogicalOperator initialOp, IOptimizationContext context)
+            Mutable<ILogicalOperator> opRef2, ILogicalOperator initialOp, IOptimizationContext context)
             throws AlgebricksException {
         List<LogicalVariable> initProjectList = new ArrayList<LogicalVariable>(toPush);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         do {
             if (op2.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
                     || op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE
@@ -96,7 +98,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             toPush.removeAll(producedVars);
             // we assume pipelineable ops. have only one input
             opRef2 = op2.getInputs().get(0);
-            op2 = (AbstractLogicalOperator) opRef2.getOperator();
+            op2 = (AbstractLogicalOperator) opRef2.getValue();
         } while (true);
 
         LinkedList<LogicalVariable> produced2 = new LinkedList<LogicalVariable>();
@@ -112,8 +114,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         if (!canCommuteProjection && op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
             boolean gbyChanged = false;
             GroupByOperator gby = (GroupByOperator) op2;
-            List<Pair<LogicalVariable, LogicalExpressionReference>> newDecorList = new ArrayList<Pair<LogicalVariable, LogicalExpressionReference>>();
-            for (Pair<LogicalVariable, LogicalExpressionReference> p : gby.getDecorList()) {
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newDecorList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+            for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
                 LogicalVariable decorVar = GroupByOperator.getDecorVariable(p);
                 if (!toPush.contains(decorVar)) {
                     used2.remove(decorVar);
@@ -139,7 +141,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         }
 
         boolean smthWasPushed = false;
-        for (LogicalOperatorReference c : op2.getInputs()) {
+        for (Mutable<ILogicalOperator> c : op2.getInputs()) {
             if (pushNeededProjections(toPush, c, context, initialOp)) {
                 smthWasPushed = true;
             }
@@ -147,7 +149,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         if (op2.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans n = (AbstractOperatorWithNestedPlans) op2;
             for (ILogicalPlan p : n.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     if (pushNeededProjections(toPush, r, context, initialOp)) {
                         smthWasPushed = true;
                     }
@@ -158,10 +160,10 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     }
 
     // It does not try to push above another Projection.
-    private static boolean pushNeededProjections(HashSet<LogicalVariable> toPush, LogicalOperatorReference opRef,
+    private static boolean pushNeededProjections(HashSet<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef,
             IOptimizationContext context, ILogicalOperator initialOp) throws AlgebricksException {
         HashSet<LogicalVariable> allP = new HashSet<LogicalVariable>();
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getLiveVariables(op, allP);
 
         HashSet<LogicalVariable> toProject = new HashSet<LogicalVariable>();
@@ -185,12 +187,12 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
     // It does not try to push above another Projection.
     private static boolean pushAllProjectionsOnTopOf(Collection<LogicalVariable> toPush,
-            LogicalOperatorReference opRef, IOptimizationContext context, ILogicalOperator initialOp)
+            Mutable<ILogicalOperator> opRef, IOptimizationContext context, ILogicalOperator initialOp)
             throws AlgebricksException {
         if (toPush.isEmpty()) {
             return false;
         }
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
         if (context.checkAndAddToAlreadyCompared(initialOp, op)) {
             return false;
@@ -198,8 +200,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
         switch (op.getOperatorTag()) {
             case EXCHANGE: {
-                opRef = opRef.getOperator().getInputs().get(0);
-                op = (AbstractLogicalOperator) opRef.getOperator();
+                opRef = opRef.getValue().getInputs().get(0);
+                op = (AbstractLogicalOperator) opRef.getValue();
                 break;
             }
             case PROJECT: {
@@ -208,8 +210,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         }
 
         ProjectOperator pi2 = new ProjectOperator(new ArrayList<LogicalVariable>(toPush));
-        pi2.getInputs().add(new LogicalOperatorReference(op));
-        opRef.setOperator(pi2);
+        pi2.getInputs().add(new MutableObject<ILogicalOperator>(op));
+        opRef.setValue(pi2);
         pi2.setExecutionMode(op.getExecutionMode());
         context.computeAndSetTypeEnvironmentForOperator(pi2);
         return true;

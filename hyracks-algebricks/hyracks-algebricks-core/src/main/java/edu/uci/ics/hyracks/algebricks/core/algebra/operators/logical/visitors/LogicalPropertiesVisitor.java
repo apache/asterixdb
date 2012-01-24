@@ -14,10 +14,11 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
@@ -66,8 +67,8 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
 
     private static void computeLogicalPropertiesRec(ILogicalOperator op, LogicalPropertiesVisitor visitor,
             IOptimizationContext context) throws AlgebricksException {
-        for (LogicalOperatorReference ref : op.getInputs()) {
-            computeLogicalPropertiesRec(ref.getOperator(), visitor, context);
+        for (Mutable<ILogicalOperator> ref : op.getInputs()) {
+            computeLogicalPropertiesRec(ref.getValue(), visitor, context);
         }
         op.accept(visitor, context);
         if (AlgebricksConfig.DEBUG) {
@@ -263,7 +264,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     }
 
     private LogicalPropertiesVectorImpl propagateCardinality(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
         ILogicalPropertiesVector v0 = context.getLogicalPropertiesVector(op0);
         if (v0 == null) {
             return null;
@@ -280,13 +281,13 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
             IVariableEvalSizeEnvironment varSizeEnv = context.getVariableEvalSizeEnvironment();
             IExpressionEvalSizeComputer evalSize = context.getExpressionEvalSizeComputer();
             if (evalSize != null) {
-                ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+                ILogicalOperator op0 = op.getInputs().get(0).getValue();
                 ILogicalPropertiesVector v0 = context.getLogicalPropertiesVector(op0);
                 if (v0 != null) {
                     long frames0 = v0.getMaxOutputFrames();
                     long overhead = 0; // added per tuple
-                    for (LogicalExpressionReference exprRef : op.getExpressions()) {
-                        int sz = evalSize.getEvalSize(exprRef.getExpression(), varSizeEnv);
+                    for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+                        int sz = evalSize.getEvalSize(exprRef.getValue(), varSizeEnv);
                         if (sz == -1) {
                             return;
                         }
@@ -310,7 +311,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
             throws AlgebricksException {
         LogicalPropertiesVectorImpl v = propagateCardinality(op, context);
         // propagate also max number of frames (conservatively)
-        ILogicalOperator op0 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op0 = op.getInputs().get(0).getValue();
         ILogicalPropertiesVector v0 = context.getLogicalPropertiesVector(op0);
         if (v0 != null) {
             v.setMaxOutputFrames(v0.getMaxOutputFrames());

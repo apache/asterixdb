@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -29,18 +31,18 @@ public class UnnestingFunctionCallExpression extends AbstractFunctionCallExpress
         super(FunctionKind.UNNEST, finfo);
     }
 
-    public UnnestingFunctionCallExpression(IFunctionInfo finfo, List<LogicalExpressionReference> arguments) {
+    public UnnestingFunctionCallExpression(IFunctionInfo finfo, List<Mutable<ILogicalExpression>> arguments) {
         super(FunctionKind.UNNEST, finfo, arguments);
     }
 
-    public UnnestingFunctionCallExpression(IFunctionInfo finfo, LogicalExpressionReference... expressions) {
+    public UnnestingFunctionCallExpression(IFunctionInfo finfo, Mutable<ILogicalExpression>... expressions) {
         super(FunctionKind.UNNEST, finfo, expressions);
     }
 
     @Override
     public UnnestingFunctionCallExpression cloneExpression() {
         cloneAnnotations();
-        List<LogicalExpressionReference> clonedArgs = cloneArguments();
+        List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         UnnestingFunctionCallExpression ufce = new UnnestingFunctionCallExpression(finfo, clonedArgs);
         ufce.setReturnsUniqueValues(returnsUniqueValues);
         return ufce;

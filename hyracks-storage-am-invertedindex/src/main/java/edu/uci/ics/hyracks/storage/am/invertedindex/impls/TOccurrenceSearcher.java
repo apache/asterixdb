@@ -72,7 +72,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
             new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
-    protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFields().length);
+    protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFieldCount());
     protected DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
     protected FrameTupleAppender queryTokenAppender;
     protected ByteBuffer queryTokenFrame;

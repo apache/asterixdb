@@ -48,8 +48,8 @@ public class ReportPartitionAvailabilityWork extends SynchronizableWork {
         Joblet ji = jobletMap.get(pid.getJobId());
         if (ji != null) {
             PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs.getRootContext(),
-                    ncs.getConnectionManager(), new InetSocketAddress(networkAddress.getIpAddress(),
-                            networkAddress.getPort()), pid, 1));
+                    ncs.getNetworkManager(), new InetSocketAddress(networkAddress.getIpAddress(),
+                            networkAddress.getPort()), pid, 5));
             ji.reportPartitionAvailability(channel);
         }
     }

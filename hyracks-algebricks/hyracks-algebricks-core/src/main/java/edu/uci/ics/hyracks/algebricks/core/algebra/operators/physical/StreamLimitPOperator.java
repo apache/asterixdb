@@ -55,7 +55,7 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -78,17 +78,17 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         LimitOperator limit = (LimitOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IEvaluatorFactory maxObjectsFact = exprJobGen.createEvaluatorFactory(limit.getMaxObjects().getExpression(),
+        IEvaluatorFactory maxObjectsFact = exprJobGen.createEvaluatorFactory(limit.getMaxObjects().getValue(),
                 env, inputSchemas, context);
-        ILogicalExpression offsetExpr = limit.getOffset().getExpression();
+        ILogicalExpression offsetExpr = limit.getOffset().getValue();
         IEvaluatorFactory offsetFact = (offsetExpr == null) ? null : exprJobGen.createEvaluatorFactory(offsetExpr, env,
                 inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
-        StreamLimitRuntimeFactory runtime = new StreamLimitRuntimeFactory(maxObjectsFact, offsetFact, null, context
-                .getBinaryIntegerInspector());
+        StreamLimitRuntimeFactory runtime = new StreamLimitRuntimeFactory(maxObjectsFact, offsetFact, null,
+                context.getBinaryIntegerInspector());
         builder.contributeMicroOperator(limit, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = limit.getInputs().get(0).getOperator();
+        ILogicalOperator src = limit.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, limit, 0);
     }
 

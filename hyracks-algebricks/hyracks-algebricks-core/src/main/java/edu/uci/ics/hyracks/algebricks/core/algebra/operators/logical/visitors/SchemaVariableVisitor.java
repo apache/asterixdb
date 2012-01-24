@@ -16,12 +16,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.Collection;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -103,20 +103,20 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getLiveVariables(r.getOperator(), schemaVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getLiveVariables(r.getValue(), schemaVariables);
             }
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : op.getGroupByList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getGroupByList()) {
             if (p.first != null) {
                 schemaVariables.add(p.first);
             }
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : op.getDecorList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
             if (p.first != null) {
                 schemaVariables.add(p.first);
             } else {
-                ILogicalExpression e = p.second.getExpression();
+                ILogicalExpression e = p.second.getValue();
                 if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     schemaVariables.add(((VariableReferenceExpression) e).getVariableReference());
                 }
@@ -194,13 +194,13 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
-        for (LogicalOperatorReference c : op.getInputs()) {
-            VariableUtilities.getLiveVariables(c.getOperator(), schemaVariables);
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            VariableUtilities.getLiveVariables(c.getValue(), schemaVariables);
         }
         VariableUtilities.getProducedVariables(op, schemaVariables);
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getLiveVariables(r.getOperator(), schemaVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getLiveVariables(r.getValue(), schemaVariables);
             }
         }
         return null;
@@ -237,8 +237,8 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
     }
 
     private void standardLayout(ILogicalOperator op) throws AlgebricksException {
-        for (LogicalOperatorReference c : op.getInputs()) {
-            VariableUtilities.getLiveVariables(c.getOperator(), schemaVariables);
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            VariableUtilities.getLiveVariables(c.getValue(), schemaVariables);
         }
         VariableUtilities.getProducedVariables(op, schemaVariables);
     }

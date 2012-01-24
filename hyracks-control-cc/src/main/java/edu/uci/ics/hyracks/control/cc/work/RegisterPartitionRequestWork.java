@@ -14,8 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
@@ -43,7 +44,11 @@ public class RegisterPartitionRequestWork extends AbstractWork {
         PartitionMatchMaker pmm = run.getPartitionMatchMaker();
         Pair<PartitionDescriptor, PartitionRequest> match = pmm.matchPartitionRequest(partitionRequest);
         if (match != null) {
-            PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            try {
+                PartitionUtils.reportPartitionMatch(ccs, pid, match);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

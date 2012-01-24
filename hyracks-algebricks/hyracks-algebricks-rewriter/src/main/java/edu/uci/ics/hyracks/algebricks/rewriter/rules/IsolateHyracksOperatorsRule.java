@@ -14,15 +14,17 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -37,8 +39,9 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         IPhysicalOperator pt = op.getPhysicalOperator();
 
         if (pt == null || op.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
@@ -52,17 +55,17 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
-    private boolean testIfExchangeBelow(LogicalOperatorReference opRef, IOptimizationContext context)
+    private boolean testIfExchangeBelow(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean exchInserted = false;
 
-        for (LogicalOperatorReference i : op.getInputs()) {
-            AbstractLogicalOperator c = (AbstractLogicalOperator) i.getOperator();
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            AbstractLogicalOperator c = (AbstractLogicalOperator) i.getValue();
             if (c.getOperatorTag() != LogicalOperatorTag.EXCHANGE) {
                 if (c.getPhysicalOperator() == null) {
                     return false;
@@ -73,8 +76,8 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
         }
         IPhysicalOperator pt = op.getPhysicalOperator();
         if (pt.isJobGenDisabledBelowMe() || arrayContains(operatorsBelowWhichJobGenIsDisabled, pt.getOperatorTag())) {
-            for (LogicalOperatorReference i : op.getInputs()) {
-                disableJobGenRec(i.getOperator());
+            for (Mutable<ILogicalOperator> i : op.getInputs()) {
+                disableJobGenRec(i.getValue());
             }
         }
         return exchInserted;
@@ -83,20 +86,20 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
     private void disableJobGenRec(ILogicalOperator operator) {
         AbstractLogicalOperator op = (AbstractLogicalOperator) operator;
         op.disableJobGen();
-        for (LogicalOperatorReference i : op.getInputs()) {
-            disableJobGenRec(i.getOperator());
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            disableJobGenRec(i.getValue());
         }
     }
 
-    private boolean testIfExchangeAbove(LogicalOperatorReference opRef, IOptimizationContext context)
+    private boolean testIfExchangeAbove(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
             return false;
         }
         boolean exchInserted = false;
-        for (LogicalOperatorReference i : op.getInputs()) {
-            AbstractLogicalOperator c = (AbstractLogicalOperator) i.getOperator();
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            AbstractLogicalOperator c = (AbstractLogicalOperator) i.getValue();
             IPhysicalOperator cpop = c.getPhysicalOperator();
             if (c.getOperatorTag() == LogicalOperatorTag.EXCHANGE || cpop == null) {
                 continue;
@@ -118,14 +121,14 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private final static void insertOneToOneExchange(LogicalOperatorReference i, IOptimizationContext context)
+    private final static void insertOneToOneExchange(Mutable<ILogicalOperator> i, IOptimizationContext context)
             throws AlgebricksException {
         ExchangeOperator e = new ExchangeOperator();
         e.setPhysicalOperator(new OneToOneExchangePOperator());
-        ILogicalOperator inOp = i.getOperator();
+        ILogicalOperator inOp = i.getValue();
 
-        e.getInputs().add(new LogicalOperatorReference(inOp));
-        i.setOperator(e);
+        e.getInputs().add(new MutableObject<ILogicalOperator>(inOp));
+        i.setValue(e);
         // e.recomputeSchema();
         OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(e, context);
         ExecutionMode em = ((AbstractLogicalOperator) inOp).getExecutionMode();

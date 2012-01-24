@@ -76,7 +76,7 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
             builder.contributeAlgebricksPartitionConstraint(p.first, p.second);
         }
 
-        ILogicalOperator srcExchange = scan.getInputs().get(0).getOperator();
+        ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, scan, 0);
     }
 

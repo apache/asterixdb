@@ -21,7 +21,6 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder.TargetConstraint;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksCountPartitionConstraint;
@@ -159,9 +158,9 @@ public class JobBuilder implements IHyracksJobBuilder {
         if (opInputs != null) {
             for (IConnectorDescriptor conn : opInputs) {
                 ConnectorDescriptorId cid = conn.getConnectorId();
-                edu.uci.ics.hyracks.api.util.Pair<edu.uci.ics.hyracks.api.util.Pair<IOperatorDescriptor, Integer>, edu.uci.ics.hyracks.api.util.Pair<IOperatorDescriptor, Integer>> p = jobSpec
+                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p = jobSpec
                         .getConnectorOperatorMap().get(cid);
-                IOperatorDescriptor src = p.first.first;
+                IOperatorDescriptor src = p.getLeft().getLeft();
                 // DFS
                 setPartitionConstraintsDFS(src.getOperatorId(), tgtConstraints, opDesc);
 

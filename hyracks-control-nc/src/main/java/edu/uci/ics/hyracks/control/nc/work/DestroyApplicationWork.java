@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
@@ -36,10 +37,15 @@ public class DestroyApplicationWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        Map<String, NCApplicationContext> applications = ncs.getApplications();
-        ApplicationContext appCtx = applications.remove(appName);
-        if (appCtx != null) {
-            appCtx.deinitialize();
+        try {
+            Map<String, NCApplicationContext> applications = ncs.getApplications();
+            ApplicationContext appCtx = applications.remove(appName);
+            if (appCtx != null) {
+                appCtx.deinitialize();
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Error destroying application: " + e.getMessage());
         }
+        ncs.getClusterController().notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.DEINITIALIZED);
     }
 }

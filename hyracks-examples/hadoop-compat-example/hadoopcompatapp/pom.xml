@@ -77,7 +77,7 @@
       <plugin>
       	<groupId>edu.uci.ics.hyracks</groupId>
       	<artifactId>hyracks-maven-plugin</artifactId>
-      	<version>0.0.1</version>
+      	<version>0.0.2</version>
         <configuration>
           <hyracksServerHome>${basedir}/../../../hyracks-server/target/hyracks-server-${project.version}-binary-assembly</hyracksServerHome>
           <hyracksCLIHome>${basedir}/../../../hyracks-cli/target/hyracks-cli-${project.version}-binary-assembly</hyracksCLIHome>

@@ -14,60 +14,67 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.remote.RemoteOp;
-import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
-import edu.uci.ics.hyracks.control.cc.remote.ops.ApplicationStarter;
-import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
+import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
 public class ApplicationStartWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final String appName;
-    private final FutureValue<Object> fv;
+    private final IResultCallback<Object> callback;
 
-    public ApplicationStartWork(ClusterControllerService ccs, String appName, FutureValue<Object> fv) {
+    public ApplicationStartWork(ClusterControllerService ccs, String appName, IResultCallback<Object> callback) {
         this.ccs = ccs;
         this.appName = appName;
-        this.fv = fv;
+        this.callback = callback;
     }
 
     @Override
     public void run() {
-        ApplicationContext appCtx = ccs.getApplicationMap().get(appName);
-        if (appCtx == null) {
-            fv.setException(new HyracksException("No application with name: " + appName));
-            return;
-        }
         try {
-            appCtx.initializeClassPath();
-            appCtx.initialize();
-            final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDistributedState());
-            final boolean deployHar = appCtx.containsHar();
-            List<RemoteOp<Void>> opList = new ArrayList<RemoteOp<Void>>();
-            for (final String nodeId : ccs.getNodeMap().keySet()) {
-                opList.add(new ApplicationStarter(nodeId, appName, deployHar, distributedState));
+            final CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
+            if (appCtx == null) {
+                callback.setException(new HyracksException("No application with name: " + appName));
+                return;
             }
-            final RemoteOp[] ops = opList.toArray(new RemoteOp[opList.size()]);
+            if (appCtx.getStatus() != ApplicationStatus.CREATED) {
+                callback.setException(new HyracksException("Application in incorrect state for starting: "
+                        + appCtx.getStatus()));
+            }
+            final Map<String, NodeControllerState> nodeMapCopy = new HashMap<String, NodeControllerState>(
+                    ccs.getNodeMap());
+            appCtx.getInitializationPendingNodeIds().addAll(nodeMapCopy.keySet());
+            appCtx.setStatus(ApplicationStatus.IN_INITIALIZATION);
+            appCtx.setInitializationCallback(callback);
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        RemoteRunner.runRemote(ccs, ops, null);
-                        fv.setValue(null);
+                        appCtx.initializeClassPath();
+                        appCtx.initialize();
+                        final byte[] distributedState = JavaSerializationUtils.serialize(appCtx.getDistributedState());
+                        final boolean deployHar = appCtx.containsHar();
+                        for (final String nodeId : nodeMapCopy.keySet()) {
+                            NodeControllerState nodeState = nodeMapCopy.get(nodeId);
+                            final INodeController node = nodeState.getNodeController();
+                            node.createApplication(appName, deployHar, distributedState);
+                        }
                     } catch (Exception e) {
-                        fv.setException(e);
+                        callback.setException(e);
                     }
                 }
             });
         } catch (Exception e) {
-            fv.setException(e);
+            callback.setException(e);
         }
     }
 }

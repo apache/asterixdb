@@ -20,10 +20,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -37,17 +39,17 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        if (context.checkIfInDontApplySet(this, opRef.getOperator())) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
         Set<LogicalVariable> toRemove = new HashSet<LogicalVariable>();
-        collectUnusedAssignedVars((AbstractLogicalOperator) opRef.getOperator(), toRemove, true, context);
+        collectUnusedAssignedVars((AbstractLogicalOperator) opRef.getValue(), toRemove, true, context);
         boolean smthToRemove = !toRemove.isEmpty();
         if (smthToRemove) {
             removeUnusedAssigns(opRef, toRemove, context);
@@ -55,19 +57,19 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         return smthToRemove;
     }
 
-    private void removeUnusedAssigns(LogicalOperatorReference opRef, Set<LogicalVariable> toRemove,
+    private void removeUnusedAssigns(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> toRemove,
             IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         while (removeFromAssigns(op, toRemove, context) == 0) {
             if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
                 break;
             }
-            op = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
-            opRef.setOperator(op);
+            op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            opRef.setValue(op);
         }
-        Iterator<LogicalOperatorReference> childIter = op.getInputs().iterator();
+        Iterator<Mutable<ILogicalOperator>> childIter = op.getInputs().iterator();
         while (childIter.hasNext()) {
-            LogicalOperatorReference cRef = childIter.next();
+            Mutable<ILogicalOperator> cRef = childIter.next();
             removeUnusedAssigns(cRef, toRemove, context);
         }
         if (op.hasNestedPlans()) {
@@ -75,7 +77,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             Iterator<ILogicalPlan> planIter = opWithNest.getNestedPlans().iterator();
             while (planIter.hasNext()) {
                 ILogicalPlan p = planIter.next();
-                for (LogicalOperatorReference r : p.getRoots()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     removeUnusedAssigns(r, toRemove, context);
                 }
             }
@@ -101,10 +103,10 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
     }
 
     private boolean removeUnusedVarsAndExprs(Set<LogicalVariable> toRemove, List<LogicalVariable> varList,
-            List<LogicalExpressionReference> exprList) {
+            List<Mutable<ILogicalExpression>> exprList) {
         boolean changed = false;
         Iterator<LogicalVariable> varIter = varList.iterator();
-        Iterator<LogicalExpressionReference> exprIter = exprList.iterator();
+        Iterator<Mutable<ILogicalExpression>> exprIter = exprList.iterator();
         while (varIter.hasNext()) {
             LogicalVariable v = varIter.next();
             exprIter.next();
@@ -122,14 +124,14 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         if (!first) {
             context.addToDontApplySet(this, op);
         }
-        for (LogicalOperatorReference c : op.getInputs()) {
-            collectUnusedAssignedVars((AbstractLogicalOperator) c.getOperator(), toRemove, false, context);
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            collectUnusedAssignedVars((AbstractLogicalOperator) c.getValue(), toRemove, false, context);
         }
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans opWithNested = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan plan : opWithNested.getNestedPlans()) {
-                for (LogicalOperatorReference r : plan.getRoots()) {
-                    collectUnusedAssignedVars((AbstractLogicalOperator) r.getOperator(), toRemove, false, context);
+                for (Mutable<ILogicalOperator> r : plan.getRoots()) {
+                    collectUnusedAssignedVars((AbstractLogicalOperator) r.getValue(), toRemove, false, context);
                 }
             }
         }

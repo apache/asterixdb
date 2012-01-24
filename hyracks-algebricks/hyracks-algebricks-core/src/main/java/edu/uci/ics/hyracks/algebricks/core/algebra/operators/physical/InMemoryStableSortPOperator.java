@@ -76,7 +76,7 @@ public class InMemoryStableSortPOperator extends AbstractStableSortPOperator {
 
         IPushRuntimeFactory runtime = new InMemorySortRuntimeFactory(sortFields, nkcf, comps, null);
         builder.contributeMicroOperator(op, runtime, recDescriptor);
-        ILogicalOperator src = op.getInputs().get(0).getOperator();
+        ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }
 }

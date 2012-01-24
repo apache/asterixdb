@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -29,15 +31,15 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class WriteOperator extends AbstractLogicalOperator {
-    private List<LogicalExpressionReference> expressions;
+    private List<Mutable<ILogicalExpression>> expressions;
     private IDataSink dataSink;
 
-    public WriteOperator(List<LogicalExpressionReference> expressions, IDataSink dataSink) {
+    public WriteOperator(List<Mutable<ILogicalExpression>> expressions, IDataSink dataSink) {
         this.expressions = expressions;
         this.dataSink = dataSink;
     }
 
-    public List<LogicalExpressionReference> getExpressions() {
+    public List<Mutable<ILogicalExpression>> getExpressions() {
         return expressions;
     }
 
@@ -80,7 +82,7 @@ public class WriteOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override

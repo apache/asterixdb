@@ -19,10 +19,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -36,13 +37,14 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushSubplanWithAggregateDownThroughProductRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
         }
@@ -54,44 +56,44 @@ public class PushSubplanWithAggregateDownThroughProductRule implements IAlgebrai
         if (p.getRoots().size() != 1) {
             return false;
         }
-        LogicalOperatorReference r = p.getRoots().get(0);
-        if (((AbstractLogicalOperator) r.getOperator()).getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+        Mutable<ILogicalOperator> r = p.getRoots().get(0);
+        if (((AbstractLogicalOperator) r.getValue()).getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
 
         Set<LogicalVariable> free = new HashSet<LogicalVariable>();
         OperatorPropertiesUtil.getFreeVariablesInSubplans(subplan, free);
 
-        LogicalOperatorReference op2Ref = op1.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getOperator();
+        Mutable<ILogicalOperator> op2Ref = op1.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.INNERJOIN) {
             return false;
         }
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op2;
-        if (!OperatorPropertiesUtil.isAlwaysTrueCond(join.getCondition().getExpression())) {
+        if (!OperatorPropertiesUtil.isAlwaysTrueCond(join.getCondition().getValue())) {
             return false;
         }
 
-        LogicalOperatorReference b0Ref = op2.getInputs().get(0);
-        ILogicalOperator b0 = b0Ref.getOperator();
+        Mutable<ILogicalOperator> b0Ref = op2.getInputs().get(0);
+        ILogicalOperator b0 = b0Ref.getValue();
         List<LogicalVariable> b0Scm = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(b0, b0Scm);
         if (b0Scm.containsAll(free)) {
             // push subplan on left branch
-            op2Ref.setOperator(b0);
-            b0Ref.setOperator(op1);
-            opRef.setOperator(op2);
+            op2Ref.setValue(b0);
+            b0Ref.setValue(op1);
+            opRef.setValue(op2);
             return true;
         } else {
-            LogicalOperatorReference b1Ref = op2.getInputs().get(1);
-            ILogicalOperator b1 = b1Ref.getOperator();
+            Mutable<ILogicalOperator> b1Ref = op2.getInputs().get(1);
+            ILogicalOperator b1 = b1Ref.getValue();
             List<LogicalVariable> b1Scm = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(b1, b1Scm);
             if (b1Scm.containsAll(free)) {
                 // push subplan on right branch
-                op2Ref.setOperator(b1);
-                b1Ref.setOperator(op1);
-                opRef.setOperator(op2);
+                op2Ref.setValue(b1);
+                b1Ref.setValue(op1);
+                opRef.setValue(op2);
                 return true;
             } else {
                 return false;

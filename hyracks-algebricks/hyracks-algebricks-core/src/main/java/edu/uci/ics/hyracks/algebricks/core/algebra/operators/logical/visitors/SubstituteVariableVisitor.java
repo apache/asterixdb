@@ -17,11 +17,11 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -53,7 +54,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -80,7 +80,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
             if (variables.get(i).equals(pair.first)) {
                 variables.set(i, pair.second);
             } else {
-                op.getExpressions().get(i).getExpression().substituteVar(pair.first, pair.second);
+                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
             }
         }
         substVarTypes(op, pair);
@@ -96,7 +96,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
             if (variables.get(i).equals(pair.first)) {
                 variables.set(i, pair.second);
             } else {
-                op.getExpressions().get(i).getExpression().substituteVar(pair.first, pair.second);
+                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
             }
         }
         substVarTypes(op, pair);
@@ -120,8 +120,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (LogicalExpressionReference eRef : op.getExpressions()) {
-            eRef.getExpression().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> eRef : op.getExpressions()) {
+            eRef.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
@@ -145,8 +145,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
         subst(pair.first, pair.second, op.getGroupByList());
         subst(pair.first, pair.second, op.getDecorList());
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getOperator(), pair.first,
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), pair.first,
                         pair.second, goThroughNts, ctx);
             }
         }
@@ -157,7 +157,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitInnerJoinOperator(InnerJoinOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getCondition().getExpression().substituteVar(pair.first, pair.second);
+        op.getCondition().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }
@@ -165,7 +165,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getCondition().getExpression().substituteVar(pair.first, pair.second);
+        op.getCondition().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }
@@ -173,8 +173,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitLimitOperator(LimitOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getMaxObjects().getExpression().substituteVar(pair.first, pair.second);
-        ILogicalExpression offset = op.getOffset().getExpression();
+        op.getMaxObjects().getValue().substituteVar(pair.first, pair.second);
+        ILogicalExpression offset = op.getOffset().getValue();
         if (offset != null) {
             offset.substituteVar(pair.first, pair.second);
         }
@@ -185,7 +185,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitDieOperator(DieOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getAfterObjects().getExpression().substituteVar(pair.first, pair.second);
+        op.getAfterObjects().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }
@@ -199,8 +199,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitOrderOperator(OrderOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (Pair<IOrder, LogicalExpressionReference> oe : op.getOrderExpressions()) {
-            oe.second.getExpression().substituteVar(pair.first, pair.second);
+        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
+            oe.second.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
@@ -209,8 +209,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitPartitioningSplitOperator(PartitioningSplitOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (LogicalExpressionReference e : op.getExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
@@ -240,7 +240,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
             if (variables.get(i).equals(pair.first)) {
                 variables.set(i, pair.second);
             } else {
-                op.getExpressions().get(i).getExpression().substituteVar(pair.first, pair.second);
+                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
             }
         }
         substVarTypes(op, pair);
@@ -258,7 +258,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
 
     @Override
     public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair) {
-        op.getCondition().getExpression().substituteVar(pair.first, pair.second);
+        op.getCondition().getValue().substituteVar(pair.first, pair.second);
         return null;
     }
 
@@ -266,8 +266,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     public Void visitSubplanOperator(SubplanOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getOperator(), pair.first,
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), pair.first,
                         pair.second, goThroughNts, ctx);
             }
         }
@@ -303,7 +303,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
                 return null;
             }
         }
-        op.getExpressionRef().getExpression().substituteVar(pair.first, pair.second);
+        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }
@@ -318,7 +318,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
                 return null;
             }
         }
-        op.getExpressionRef().getExpression().substituteVar(pair.first, pair.second);
+        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }
@@ -326,8 +326,8 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitWriteOperator(WriteOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (LogicalExpressionReference e : op.getExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
@@ -336,22 +336,22 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitWriteResultOperator(WriteResultOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getPayloadExpression().getExpression().substituteVar(pair.first, pair.second);
-        for (LogicalExpressionReference e : op.getKeyExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        op.getPayloadExpression().getValue().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
     }
 
     private void subst(LogicalVariable v1, LogicalVariable v2,
-            List<Pair<LogicalVariable, LogicalExpressionReference>> varExprPairList) {
-        for (Pair<LogicalVariable, LogicalExpressionReference> ve : varExprPairList) {
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> varExprPairList) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : varExprPairList) {
             if (ve.first != null && ve.first.equals(v1)) {
                 ve.first = v2;
                 return;
             }
-            ve.second.getExpression().substituteVar(v1, v2);
+            ve.second.getValue().substituteVar(v1, v2);
         }
     }
 
@@ -374,9 +374,9 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitInsertDeleteOperator(InsertDeleteOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getPayloadExpression().getExpression().substituteVar(pair.first, pair.second);
-        for (LogicalExpressionReference e : op.getPrimaryKeyExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        op.getPayloadExpression().getValue().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;
@@ -385,11 +385,11 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitIndexInsertDeleteOperator(IndexInsertDeleteOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (LogicalExpressionReference e : op.getPrimaryKeyExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
-        for (LogicalExpressionReference e : op.getSecondaryKeyExpressions()) {
-            e.getExpression().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
+            e.getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;

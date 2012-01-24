@@ -18,10 +18,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -54,13 +56,14 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class SubplanOutOfGroupRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getValue();
         if (op0.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;
         }
@@ -77,18 +80,18 @@ public class SubplanOutOfGroupRule implements IAlgebraicRewriteRule {
         if (p.getRoots().size() != 1) {
             return false;
         }
-        LogicalOperatorReference op1Ref = p.getRoots().get(0);
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) op1Ref.getOperator();
+        Mutable<ILogicalOperator> op1Ref = p.getRoots().get(0);
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) op1Ref.getValue();
         boolean found = false;
         while (op1.getInputs().size() == 1) {
             if (op1.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 SubplanOperator subplan = (SubplanOperator) op1;
-                AbstractLogicalOperator op2 = (AbstractLogicalOperator) subplan.getInputs().get(0).getOperator();
+                AbstractLogicalOperator op2 = (AbstractLogicalOperator) subplan.getInputs().get(0).getValue();
                 if (OperatorPropertiesUtil.isNullTest(op2)) {
                     if (subplan.getNestedPlans().size() == 1) {
                         ILogicalPlan p1 = subplan.getNestedPlans().get(0);
                         if (p1.getRoots().size() == 1) {
-                            AbstractLogicalOperator r1 = (AbstractLogicalOperator) p1.getRoots().get(0).getOperator();
+                            AbstractLogicalOperator r1 = (AbstractLogicalOperator) p1.getRoots().get(0).getValue();
                             if (r1.getOperatorTag() == LogicalOperatorTag.INNERJOIN
                                     || r1.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                                 // now, check that it propagates all variables,
@@ -107,20 +110,20 @@ public class SubplanOutOfGroupRule implements IAlgebraicRewriteRule {
                 }
             }
             op1Ref = op1.getInputs().get(0);
-            op1 = (AbstractLogicalOperator) op1Ref.getOperator();
+            op1 = (AbstractLogicalOperator) op1Ref.getValue();
         }
         if (!found) {
             return false;
         }
 
         ILogicalOperator subplan = op1;
-        ILogicalOperator op2 = op1.getInputs().get(0).getOperator();
-        op1Ref.setOperator(op2);
-        LogicalOperatorReference opUnderRef = gby.getInputs().get(0);
-        ILogicalOperator opUnder = opUnderRef.getOperator();
+        ILogicalOperator op2 = op1.getInputs().get(0).getValue();
+        op1Ref.setValue(op2);
+        Mutable<ILogicalOperator> opUnderRef = gby.getInputs().get(0);
+        ILogicalOperator opUnder = opUnderRef.getValue();
         subplan.getInputs().clear();
-        subplan.getInputs().add(new LogicalOperatorReference(opUnder));
-        opUnderRef.setOperator(subplan);
+        subplan.getInputs().add(new MutableObject<ILogicalOperator>(opUnder));
+        opUnderRef.setValue(subplan);
 
         return true;
     }

@@ -16,10 +16,12 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
@@ -53,7 +55,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -62,8 +64,8 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
             IPhysicalPropertiesVector reqdByParent) {
         IPartitioningProperty pp = null;
         RunningAggregateOperator ragg = (RunningAggregateOperator) op;
-        for (LogicalExpressionReference exprRef : ragg.getExpressions()) {
-            StatefulFunctionCallExpression f = (StatefulFunctionCallExpression) exprRef.getExpression();
+        for (Mutable<ILogicalExpression> exprRef : ragg.getExpressions()) {
+            StatefulFunctionCallExpression f = (StatefulFunctionCallExpression) exprRef.getValue();
             IPartitioningProperty p = f.getRequiredPartitioningProperty();
             if (p != null) {
                 if (pp == null) {
@@ -84,7 +86,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         RunningAggregateOperator ragg = (RunningAggregateOperator) op;
         List<LogicalVariable> variables = ragg.getVariables();
-        List<LogicalExpressionReference> expressions = ragg.getExpressions();
+        List<Mutable<ILogicalExpression>> expressions = ragg.getExpressions();
         int[] outColumns = new int[variables.size()];
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
@@ -92,9 +94,9 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         IRunningAggregateFunctionFactory[] runningAggFuns = new IRunningAggregateFunctionFactory[expressions.size()];
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         for (int i = 0; i < runningAggFuns.length; i++) {
-            StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) expressions.get(i).getExpression();
-            runningAggFuns[i] = exprJobGen.createRunningAggregateFunctionFactory(expr, context.getTypeEnvironment(op
-                    .getInputs().get(0).getOperator()), inputSchemas, context);
+            StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) expressions.get(i).getValue();
+            runningAggFuns[i] = exprJobGen.createRunningAggregateFunctionFactory(expr,
+                    context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
         // TODO push projections into the operator
@@ -107,7 +109,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(ragg, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = ragg.getInputs().get(0).getOperator();
+        ILogicalOperator src = ragg.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, ragg, 0);
 
     }

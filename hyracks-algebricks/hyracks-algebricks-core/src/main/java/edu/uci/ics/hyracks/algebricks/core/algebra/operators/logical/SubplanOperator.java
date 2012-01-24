@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -46,12 +48,12 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
     }
 
     public SubplanOperator(ILogicalOperator planRoot) {
-        ArrayList<LogicalOperatorReference> roots = new ArrayList<LogicalOperatorReference>(1);
-        roots.add(new LogicalOperatorReference(planRoot));
+        ArrayList<Mutable<ILogicalOperator>> roots = new ArrayList<Mutable<ILogicalOperator>>(1);
+        roots.add(new MutableObject<ILogicalOperator>(planRoot));
         nestedPlans.add(new ALogicalPlanImpl(roots));
     }
 
-    public void setRootOp(LogicalOperatorReference opRef) {
+    public void setRootOp(Mutable<ILogicalOperator> opRef) {
         ILogicalPlan p = new ALogicalPlanImpl(opRef);
         nestedPlans.add(p);
     }
@@ -97,7 +99,7 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
         envPointers[0] = new OpRefTypeEnvPointer(inputs.get(0), ctx);
         int i = 1;
         for (ILogicalPlan p : nestedPlans) {
-            for (LogicalOperatorReference r : p.getRoots()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 envPointers[i] = new OpRefTypeEnvPointer(r, ctx);
                 i++;
             }

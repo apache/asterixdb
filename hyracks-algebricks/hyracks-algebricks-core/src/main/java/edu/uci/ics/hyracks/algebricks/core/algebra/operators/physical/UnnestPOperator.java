@@ -21,9 +21,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -48,7 +48,7 @@ public class UnnestPOperator extends AbstractScanPOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -62,7 +62,7 @@ public class UnnestPOperator extends AbstractScanPOperator {
                     + unnest.getPositionalVariable());
         }
         int outCol = opSchema.findVariable(unnest.getVariable());
-        ILogicalExpression unnestExpr = unnest.getExpressionRef().getExpression();
+        ILogicalExpression unnestExpr = unnest.getExpressionRef().getValue();
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         boolean exit = false;
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -77,13 +77,13 @@ public class UnnestPOperator extends AbstractScanPOperator {
             throw new AlgebricksException("Unnest expression " + unnestExpr + " is not an unnesting function call.");
         }
         UnnestingFunctionCallExpression agg = (UnnestingFunctionCallExpression) unnestExpr;
-        IUnnestingFunctionFactory unnestingFactory = exprJobGen.createUnnestingFunctionFactory(agg, context
-                .getTypeEnvironment(op.getInputs().get(0).getOperator()), inputSchemas, context);
+        IUnnestingFunctionFactory unnestingFactory = exprJobGen.createUnnestingFunctionFactory(agg,
+                context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
         UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, unnestingFactory, projectionList);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(unnest, unnestRuntime, recDesc);
-        ILogicalOperator src = unnest.getInputs().get(0).getOperator();
+        ILogicalOperator src = unnest.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, unnest, 0);
     }
 }

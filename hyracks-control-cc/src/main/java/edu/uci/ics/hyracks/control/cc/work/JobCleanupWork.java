@@ -20,9 +20,8 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.remote.RemoteRunner;
-import edu.uci.ics.hyracks.control.cc.remote.ops.JobCompleteNotifier;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 public class JobCleanupWork extends AbstractWork {
@@ -54,22 +53,13 @@ public class JobCleanupWork extends AbstractWork {
         Set<String> targetNodes = run.getParticipatingNodeIds();
         run.getCleanupPendingNodeIds().addAll(targetNodes);
         run.setPendingStatus(status, exception);
-        final JobCompleteNotifier[] jcns = new JobCompleteNotifier[targetNodes.size()];
-        int i = 0;
         for (String n : targetNodes) {
-            jcns[i++] = new JobCompleteNotifier(n, jobId, status);
-        }
-        ccs.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                if (jcns.length > 0) {
-                    try {
-                        RemoteRunner.runRemote(ccs, jcns, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+            NodeControllerState ncs = ccs.getNodeMap().get(n);
+            try {
+                ncs.getNodeController().cleanUpJoblet(jobId, status);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+        }
     }
 }

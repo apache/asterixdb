@@ -75,7 +75,6 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject jop = new JSONObject();
-        jop.put("type", "operator");
         jop.put("id", getOperatorId().getId());
         jop.put("java-class", getClass().getName());
         jop.put("in-arity", getInputArity());

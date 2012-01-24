@@ -41,7 +41,7 @@ public class MultiAggregatorFactory implements IAccumulatingAggregatorFactory {
         for (int i = 0; i < aFactories.length; ++i) {
             aggregators[i] = aFactories[i].createFieldValueResultingAggregator();
         }
-        final ArrayTupleBuilder tb = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+        final ArrayTupleBuilder tb = new ArrayTupleBuilder(outRecordDescriptor.getFieldCount());
         return new IAccumulatingAggregator() {
 
             private boolean pending;

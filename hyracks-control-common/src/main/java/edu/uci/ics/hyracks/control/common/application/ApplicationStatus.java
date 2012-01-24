@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.control.common.application;
 
 public enum ApplicationStatus {
     CREATED,
+    IN_INITIALIZATION,
     INITIALIZED,
+    IN_DEINITIALIZATION,
     DEINITIALIZED
 }

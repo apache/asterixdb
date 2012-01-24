@@ -3,12 +3,14 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
@@ -16,6 +18,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReference
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -27,9 +30,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDelet
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.DataSourceScanPOperator;
@@ -66,13 +68,14 @@ import edu.uci.ics.hyracks.algebricks.rewriter.util.JoinUtils;
 public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         // if (context.checkIfInDontApplySet(this, op)) {
         // return false;
         // }
@@ -87,8 +90,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
 
     private static void setPhysicalOperators(ILogicalPlan plan, boolean topLevelOp, IOptimizationContext context)
             throws AlgebricksException {
-        for (LogicalOperatorReference root : plan.getRoots()) {
-            computeDefaultPhysicalOp((AbstractLogicalOperator) root.getOperator(), topLevelOp, context);
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            computeDefaultPhysicalOp((AbstractLogicalOperator) root.getValue(), topLevelOp, context);
         }
     }
 
@@ -144,10 +147,10 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                         }
                     }
 
-                    List<Pair<LogicalVariable, LogicalExpressionReference>> gbyList = gby.getGroupByList();
+                    List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
                     List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
-                    for (Pair<LogicalVariable, LogicalExpressionReference> p : gbyList) {
-                        ILogicalExpression expr = p.second.getExpression();
+                    for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
+                        ILogicalExpression expr = p.second.getValue();
                         if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                             VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
                             columnList.add(varRef.getVariableReference());
@@ -180,8 +183,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 }
                 case ORDER: {
                     OrderOperator oo = (OrderOperator) op;
-                    for (Pair<IOrder, LogicalExpressionReference> p : oo.getOrderExpressions()) {
-                        ILogicalExpression e = p.second.getExpression();
+                    for (Pair<IOrder, Mutable<ILogicalExpression>> p : oo.getOrderExpressions()) {
+                        ILogicalExpression e = p.second.getValue();
                         if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                             throw new AlgebricksException("Order expression " + e + " has not been normalized.");
                         }
@@ -284,14 +287,14 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 setPhysicalOperators(p, false, context);
             }
         }
-        for (LogicalOperatorReference opRef : op.getInputs()) {
-            computeDefaultPhysicalOp((AbstractLogicalOperator) opRef.getOperator(), topLevelOp, context);
+        for (Mutable<ILogicalOperator> opRef : op.getInputs()) {
+            computeDefaultPhysicalOp((AbstractLogicalOperator) opRef.getValue(), topLevelOp, context);
         }
     }
 
-    private static void getKeys(List<LogicalExpressionReference> keyExpressions, List<LogicalVariable> keys) {
-        for (LogicalExpressionReference kExpr : keyExpressions) {
-            ILogicalExpression e = kExpr.getExpression();
+    private static void getKeys(List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
+        for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
+            ILogicalExpression e = kExpr.getValue();
             if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new NotImplementedException();
             }
@@ -299,16 +302,16 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         }
     }
 
-    private static LogicalVariable getKeysAndLoad(LogicalExpressionReference payloadExpr,
-            List<LogicalExpressionReference> keyExpressions, List<LogicalVariable> keys) {
+    private static LogicalVariable getKeysAndLoad(Mutable<ILogicalExpression> payloadExpr,
+            List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
         LogicalVariable payload;
-        if (payloadExpr.getExpression().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+        if (payloadExpr.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             throw new NotImplementedException();
         }
-        payload = ((VariableReferenceExpression) payloadExpr.getExpression()).getVariableReference();
+        payload = ((VariableReferenceExpression) payloadExpr.getValue()).getVariableReference();
 
-        for (LogicalExpressionReference kExpr : keyExpressions) {
-            ILogicalExpression e = kExpr.getExpression();
+        for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
+            ILogicalExpression e = kExpr.getValue();
             if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new NotImplementedException();
             }
@@ -332,15 +335,15 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         }
         IMergeAggregationExpressionFactory mergeAggregationExpressionFactory = context
                 .getMergeAggregationExpressionFactory();
-        LogicalOperatorReference r0 = p0.getRoots().get(0);
-        AggregateOperator aggOp = (AggregateOperator) r0.getOperator();
-        List<LogicalExpressionReference> aggFuncRefs = aggOp.getExpressions();
+        Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
+        AggregateOperator aggOp = (AggregateOperator) r0.getValue();
+        List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
         int n = aggOp.getExpressions().size();
-        List<LogicalExpressionReference> mergeExpressionRefs = new ArrayList<LogicalExpressionReference>();
+        List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
         for (int i = 0; i < n; i++) {
             ILogicalExpression mergeExpr = mergeAggregationExpressionFactory.createMergeAggregation(aggFuncRefs.get(i)
-                    .getExpression(), context);
-            mergeExpressionRefs.add(new LogicalExpressionReference(mergeExpr));
+                    .getValue(), context);
+            mergeExpressionRefs.add(new MutableObject<ILogicalExpression>(mergeExpr));
         }
         aggOp.setMergeExpressions(mergeExpressionRefs);
     }

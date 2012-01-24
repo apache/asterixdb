@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -38,7 +40,7 @@ public class OrderOperator extends AbstractLogicalOperator {
             DESC
         };
 
-        public LogicalExpressionReference getExpressionRef();
+        public Mutable<ILogicalExpression> getExpressionRef();
 
         public OrderKind getKind();
     }
@@ -46,7 +48,7 @@ public class OrderOperator extends AbstractLogicalOperator {
     public static IOrder ASC_ORDER = new IOrder() {
 
         @Override
-        public LogicalExpressionReference getExpressionRef() {
+        public Mutable<ILogicalExpression> getExpressionRef() {
             return null;
         }
 
@@ -60,7 +62,7 @@ public class OrderOperator extends AbstractLogicalOperator {
     public static IOrder DESC_ORDER = new IOrder() {
 
         @Override
-        public LogicalExpressionReference getExpressionRef() {
+        public Mutable<ILogicalExpression> getExpressionRef() {
             return null;
         }
 
@@ -71,14 +73,14 @@ public class OrderOperator extends AbstractLogicalOperator {
     };
 
     public class FunOrder implements IOrder {
-        private final LogicalExpressionReference f;
+        private final Mutable<ILogicalExpression> f;
 
-        public FunOrder(LogicalExpressionReference f) {
+        public FunOrder(Mutable<ILogicalExpression> f) {
             this.f = f;
         }
 
         @Override
-        public LogicalExpressionReference getExpressionRef() {
+        public Mutable<ILogicalExpression> getExpressionRef() {
             return f;
         }
 
@@ -89,17 +91,17 @@ public class OrderOperator extends AbstractLogicalOperator {
 
     };
 
-    private final List<Pair<IOrder, LogicalExpressionReference>> orderExpressions;
+    private final List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions;
 
     // These are pairs of type (comparison, expr) where comparison is
     // ASC or DESC or a boolean function of arity 2 that can take as
     // arguments results of expr.
 
     public OrderOperator() {
-        orderExpressions = new ArrayList<Pair<IOrder, LogicalExpressionReference>>();
+        orderExpressions = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
     }
 
-    public OrderOperator(List<Pair<IOrder, LogicalExpressionReference>> orderExpressions) {
+    public OrderOperator(List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions) {
         this.orderExpressions = orderExpressions;
     }
 
@@ -108,13 +110,13 @@ public class OrderOperator extends AbstractLogicalOperator {
         return LogicalOperatorTag.ORDER;
     }
 
-    public List<Pair<IOrder, LogicalExpressionReference>> getOrderExpressions() {
+    public List<Pair<IOrder, Mutable<ILogicalExpression>>> getOrderExpressions() {
         return orderExpressions;
     }
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getOperator().getSchema());
+        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -125,10 +127,10 @@ public class OrderOperator extends AbstractLogicalOperator {
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
-        for (Pair<IOrder, LogicalExpressionReference> p : orderExpressions) {
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
             if (p.first.getKind() == OrderKind.FUNCTIONCALL) {
                 FunOrder fo = (FunOrder) p.first;
-                LogicalExpressionReference r1 = fo.getExpressionRef();
+                Mutable<ILogicalExpression> r1 = fo.getExpressionRef();
                 if (visitor.transform(r1)) {
                     b = true;
                 }

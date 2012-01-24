@@ -39,7 +39,7 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
     @Override
     protected void performEvent(TaskAttempt ta) {
         try {
-            ActivityCluster ac = ta.getTaskState().getTaskCluster().getActivityCluster();
+            ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
             JobRun run = ac.getJobRun();
             if (statistics != null) {
                 JobProfile jobProfile = run.getJobProfile();

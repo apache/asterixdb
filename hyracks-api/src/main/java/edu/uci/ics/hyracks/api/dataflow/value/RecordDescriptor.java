@@ -22,24 +22,28 @@ public final class RecordDescriptor implements Serializable {
 
     private final ISerializerDeserializer[] fields;
     private final ITypeTraits[] typeTraits;
-    
+
     // leaving this constructor for backwards-compatibility
     public RecordDescriptor(ISerializerDeserializer[] fields) {
         this.fields = fields;
         this.typeTraits = null;
     }
-    
+
     // temporarily adding constructor to include type traits
     public RecordDescriptor(ISerializerDeserializer[] fields, ITypeTraits[] typeTraits) {
-    	this.fields = fields;
+        this.fields = fields;
         this.typeTraits = typeTraits;
+    }
+
+    public int getFieldCount() {
+        return fields.length;
     }
 
     public ISerializerDeserializer[] getFields() {
         return fields;
     }
-    
+
     public ITypeTraits[] getTypeTraits() {
-    	return typeTraits;
+        return typeTraits;
     }
 }

@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.nc.profiling;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -23,10 +22,13 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.nc.Task;
 
 public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory {
+    private static final int N_SAMPLES = 64;
+
     private final IHyracksTaskContext ctx;
 
     private final IConnectorDescriptor cd;
@@ -52,31 +54,17 @@ public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory 
 
             private long closeTime;
 
-            private long prevTime;
-
-            private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            MultiResolutionEventProfiler mrep = new MultiResolutionEventProfiler(N_SAMPLES);
 
             @Override
             public void open() throws HyracksDataException {
-                baos.reset();
                 openTime = System.currentTimeMillis();
-                prevTime = openTime;
                 writer.open();
             }
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                long time = System.currentTimeMillis();
-                long diff = time - prevTime;
-                prevTime = time;
-                do {
-                    byte b = (byte) (diff & 0x7f);
-                    diff >>= 7;
-                    if (diff != 0) {
-                        b |= 0x80;
-                    }
-                    baos.write(b);
-                } while (diff != 0);
+                mrep.reportEvent();
                 writer.nextFrame(buffer);
             }
 
@@ -89,8 +77,7 @@ public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory 
             public void close() throws HyracksDataException {
                 closeTime = System.currentTimeMillis();
                 ((Task) ctx).setPartitionSendProfile(new PartitionProfile(new PartitionId(ctx.getJobletContext()
-                        .getJobId(), cd.getConnectorId(), senderIndex, receiverIndex), openTime, closeTime, baos
-                        .toByteArray()));
+                        .getJobId(), cd.getConnectorId(), senderIndex, receiverIndex), openTime, closeTime, mrep));
                 writer.close();
             }
         };

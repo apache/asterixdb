@@ -14,14 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.common;
 
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-
 import edu.uci.ics.hyracks.control.common.service.IService;
 
-public abstract class AbstractRemoteService extends UnicastRemoteObject implements IService {
-    private static final long serialVersionUID = 1L;
-
-    public AbstractRemoteService() throws RemoteException {
+public abstract class AbstractRemoteService implements IService {
+    public AbstractRemoteService() {
     }
 }

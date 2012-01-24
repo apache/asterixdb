@@ -44,7 +44,7 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        ILogicalOperator op2 = op.getInputs().get(0).getOperator();
+        ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
@@ -60,7 +60,7 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         SelectOperator select = (SelectOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(select.getCondition().getExpression(),
+        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(select.getCondition().getValue(),
                 context.getTypeEnvironment(op), inputSchemas, context);
         StreamSelectRuntimeFactory runtime = new StreamSelectRuntimeFactory(cond, null,
                 context.getBinaryBooleanInspector());
@@ -68,7 +68,7 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
         builder.contributeMicroOperator(select, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = select.getInputs().get(0).getOperator();
+        ILogicalOperator src = select.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, select, 0);
     }
 

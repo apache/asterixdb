@@ -19,7 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
@@ -165,7 +167,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
     }
 
     @Override
-    public boolean splitIntoConjuncts(List<LogicalExpressionReference> conjs) {
+    public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs) {
         return false;
     }
 }

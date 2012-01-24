@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
 import edu.uci.ics.hyracks.algebricks.compiler.api.ICompiler;
 import edu.uci.ics.hyracks.algebricks.compiler.api.ICompilerFactory;
@@ -17,8 +20,6 @@ import edu.uci.ics.hyracks.algebricks.compiler.rewriter.rulecontrollers.Sequenti
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -158,21 +159,21 @@ public class PigletCompiler {
 
     private ILogicalPlan translate(List<ASTNode> ast) throws PigletException {
         Map<String, Relation> symMap = new HashMap<String, Relation>();
-        List<LogicalOperatorReference> roots = new ArrayList<LogicalOperatorReference>();
+        List<Mutable<ILogicalOperator>> roots = new ArrayList<Mutable<ILogicalOperator>>();
         previousOp = null;
         for (ASTNode an : ast) {
             switch (an.getTag()) {
                 case DUMP: {
                     DumpNode dn = (DumpNode) an;
                     Relation input = symMap.get(dn.getAlias());
-                    List<LogicalExpressionReference> expressions = new ArrayList<LogicalExpressionReference>();
+                    List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
                     for (LogicalVariable v : input.schema.values()) {
-                        expressions.add(new LogicalExpressionReference(new VariableReferenceExpression(v)));
+                        expressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v)));
                     }
                     PigletFileDataSink dataSink = new PigletFileDataSink(dn.getFile());
                     ILogicalOperator op = new WriteOperator(expressions, dataSink);
-                    op.getInputs().add(new LogicalOperatorReference(input.op));
-                    roots.add(new LogicalOperatorReference(op));
+                    op.getInputs().add(new MutableObject<ILogicalOperator>(input.op));
+                    roots.add(new MutableObject<ILogicalOperator>(op));
                 }
                     break;
 
@@ -210,7 +211,8 @@ public class PigletCompiler {
                 PigletFileDataSource ds = new PigletFileDataSource(file, types.toArray());
                 rel.op = new DataSourceScanOperator(variables, ds);
                 rel.op.getInputs().add(
-                        new LogicalOperatorReference(previousOp == null ? new EmptyTupleSourceOperator() : previousOp));
+                        new MutableObject<ILogicalOperator>(previousOp == null ? new EmptyTupleSourceOperator()
+                                : previousOp));
                 return rel;
             }
 
@@ -221,9 +223,9 @@ public class PigletCompiler {
                 Relation inputRel = findInputRelation(alias, symMap);
                 Pair<Relation, LogicalVariable> tempInput = translateScalarExpression(inputRel, conditionNode);
                 Relation rel = new Relation();
-                rel.op = new SelectOperator(new LogicalExpressionReference(new VariableReferenceExpression(
+                rel.op = new SelectOperator(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                         tempInput.second)));
-                rel.op.getInputs().add(new LogicalOperatorReference(tempInput.first.op));
+                rel.op.getInputs().add(new MutableObject<ILogicalOperator>(tempInput.first.op));
                 rel.schema.putAll(tempInput.first.schema);
                 return rel;
             }
@@ -251,11 +253,11 @@ public class PigletCompiler {
                 List<LogicalVariable> vars = new ArrayList<LogicalVariable>();
                 vars.add(var);
 
-                List<LogicalExpressionReference> exprs = new ArrayList<LogicalExpressionReference>();
-                exprs.add(new LogicalExpressionReference(ce));
+                List<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
+                exprs.add(new MutableObject<ILogicalExpression>(ce));
 
                 rel.op = new AssignOperator(vars, exprs);
-                rel.op.getInputs().add(new LogicalOperatorReference(inputRel.op));
+                rel.op.getInputs().add(new MutableObject<ILogicalOperator>(inputRel.op));
                 rel.schema.putAll(inputRel.schema);
 
                 return new Pair<Relation, LogicalVariable>(rel, var);
@@ -263,13 +265,13 @@ public class PigletCompiler {
 
             case SCALAR_FUNCTION: {
                 ScalarFunctionExpressionNode sfen = (ScalarFunctionExpressionNode) expressionNode;
-                List<LogicalExpressionReference> argExprs = new ArrayList<LogicalExpressionReference>();
+                List<Mutable<ILogicalExpression>> argExprs = new ArrayList<Mutable<ILogicalExpression>>();
                 List<ASTNode> arguments = sfen.getArguments();
                 Relation rel = inputRel;
                 for (ASTNode a : arguments) {
                     Pair<Relation, LogicalVariable> argPair = translateScalarExpression(rel, (ExpressionNode) a);
                     rel = argPair.first;
-                    argExprs.add(new LogicalExpressionReference(new VariableReferenceExpression(argPair.second)));
+                    argExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(argPair.second)));
                 }
                 Relation outRel = new Relation();
                 outRel.schema.putAll(rel.schema);
@@ -279,10 +281,10 @@ public class PigletCompiler {
 
                 IFunctionInfo fInfo = lookupFunction(sfen.getFunctionTag(), sfen.getFunctionName());
 
-                List<LogicalExpressionReference> exprs = new ArrayList<LogicalExpressionReference>();
-                exprs.add(new LogicalExpressionReference(new ScalarFunctionCallExpression(fInfo, argExprs)));
+                List<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
+                exprs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(fInfo, argExprs)));
                 outRel.op = new AssignOperator(vars, exprs);
-                outRel.op.getInputs().add(new LogicalOperatorReference(rel.op));
+                outRel.op.getInputs().add(new MutableObject<ILogicalOperator>(rel.op));
                 return new Pair<Relation, LogicalVariable>(outRel, var);
             }
         }

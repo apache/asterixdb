@@ -256,7 +256,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             /**
              * Tuple builder
              */
-            final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFields().length);
+            final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFieldCount());
 
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 /**
@@ -457,7 +457,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 private void flushOutFrame(IFrameWriter writer, boolean isFinal) throws HyracksDataException {
                     if (finalTupleBuilder == null) {
-                        finalTupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFields().length);
+                        finalTupleBuilder = new ArrayTupleBuilder(recordDescriptors[0].getFieldCount());
                     }
                     if (writerFrame == null) {
                         writerFrame = ctx.allocateFrame();

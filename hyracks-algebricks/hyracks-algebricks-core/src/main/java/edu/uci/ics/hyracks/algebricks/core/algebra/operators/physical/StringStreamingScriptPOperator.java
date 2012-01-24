@@ -26,8 +26,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenCon
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.StringStreamingRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.IScriptDescription;
-import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.StringStreamingScriptDescription;
 import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.IScriptDescription.ScriptKind;
+import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.StringStreamingScriptDescription;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -64,7 +64,7 @@ public class StringStreamingScriptPOperator extends AbstractPropagatePropertiesF
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         builder.contributeMicroOperator(scriptOp, runtime, recDesc);
         // and contribute one edge from its child
-        ILogicalOperator src = scriptOp.getInputs().get(0).getOperator();
+        ILogicalOperator src = scriptOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, scriptOp, 0);
     }
 

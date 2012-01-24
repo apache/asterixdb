@@ -60,8 +60,8 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
      * @see edu.uci.ics.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.uci.ics.hyracks.api.context.IHyracksContext, edu.uci.ics.hyracks.api.job.IOperatorEnvironment, edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider, int, int)
      */
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
-            final int partition, int nPartitions)
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
@@ -96,7 +96,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                         int start = frameTupleAccessor.getTupleStartOffset(tIndex)
                                 + frameTupleAccessor.getFieldSlotsLength();
                         bbis.setByteBuffer(buffer, start);
-                        Object[] record = new Object[recordDescriptor.getFields().length];
+                        Object[] record = new Object[recordDescriptor.getFieldCount()];
                         for (int i = 0; i < record.length; ++i) {
                             Object instance = recordDescriptor.getFields()[i].deserialize(di);
                             if (i == 0) {

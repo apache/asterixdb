@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -99,16 +101,16 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getLiveVariables(r.getOperator(), producedVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getLiveVariables(r.getValue(), producedVariables);
             }
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : op.getGroupByList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getGroupByList()) {
             if (p.first != null) {
                 producedVariables.add(p.first);
             }
         }
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : op.getDecorList()) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
             if (p.first != null) {
                 producedVariables.add(p.first);
             }
@@ -182,8 +184,8 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                VariableUtilities.getLiveVariables(r.getOperator(), producedVariables);
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getLiveVariables(r.getValue(), producedVariables);
             }
         }
         return null;

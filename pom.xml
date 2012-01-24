@@ -25,7 +25,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
             <forkMode>pertest</forkMode>
-            <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties</argLine>
+            <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -79,12 +79,14 @@
   </pluginRepositories>
 
   <modules>
+    <module>hyracks-ipc</module>
     <module>hyracks-api</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control-common</module>
     <module>hyracks-control-cc</module>
+    <module>hyracks-net</module>
     <module>hyracks-control-nc</module>
     <module>hyracks-data</module>
     <module>hyracks-cli</module>

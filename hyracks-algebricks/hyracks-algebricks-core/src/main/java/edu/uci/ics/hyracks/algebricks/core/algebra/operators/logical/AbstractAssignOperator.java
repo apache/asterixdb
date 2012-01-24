@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -28,15 +30,14 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
  */
 public abstract class AbstractAssignOperator extends AbstractLogicalOperator {
     protected final List<LogicalVariable> variables;
-    protected final List<LogicalExpressionReference> expressions;
+    protected final List<Mutable<ILogicalExpression>> expressions;
 
     public AbstractAssignOperator() {
         this.variables = new ArrayList<LogicalVariable>();
-        this.expressions = new ArrayList<LogicalExpressionReference>();
+        this.expressions = new ArrayList<Mutable<ILogicalExpression>>();
     }
 
-    public AbstractAssignOperator(List<LogicalVariable> variables,
-            List<LogicalExpressionReference> expressions) {
+    public AbstractAssignOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
         this.variables = variables;
         this.expressions = expressions;
     }
@@ -45,14 +46,14 @@ public abstract class AbstractAssignOperator extends AbstractLogicalOperator {
         return variables;
     }
 
-    public List<LogicalExpressionReference> getExpressions() {
+    public List<Mutable<ILogicalExpression>> getExpressions() {
         return expressions;
     }
 
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
         schema.addAll(variables);
     }
 

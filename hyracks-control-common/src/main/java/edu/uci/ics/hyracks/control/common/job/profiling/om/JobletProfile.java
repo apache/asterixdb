@@ -47,7 +47,6 @@ public class JobletProfile extends AbstractProfile {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        json.put("type", "joblet-profile");
         json.put("node-id", nodeId.toString());
         populateCounters(json);
         JSONArray tasks = new JSONArray();

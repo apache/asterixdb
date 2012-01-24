@@ -16,8 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -36,9 +37,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class SelectOperator extends AbstractLogicalOperator {
-    private final LogicalExpressionReference condition;
+    private final Mutable<ILogicalExpression> condition;
 
-    public SelectOperator(LogicalExpressionReference condition) {
+    public SelectOperator(Mutable<ILogicalExpression> condition) {
         this.condition = condition;
     }
 
@@ -47,13 +48,13 @@ public class SelectOperator extends AbstractLogicalOperator {
         return LogicalOperatorTag.SELECT;
     }
 
-    public LogicalExpressionReference getCondition() {
+    public Mutable<ILogicalExpression> getCondition() {
         return condition;
     }
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getOperator().getSchema());
+        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -82,14 +83,14 @@ public class SelectOperator extends AbstractLogicalOperator {
         envPointers[0] = new OpRefTypeEnvPointer(inputs.get(0), ctx);
         PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
                 ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
-        if (condition.getExpression().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getExpression();
+        if (condition.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
             if (f1.getFunctionIdentifier() == AlgebricksBuiltinFunctions.NOT) {
-                ILogicalExpression a1 = f1.getArguments().get(0).getExpression();
+                ILogicalExpression a1 = f1.getArguments().get(0).getValue();
                 if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
                     if (f2.getFunctionIdentifier() == AlgebricksBuiltinFunctions.IS_NULL) {
-                        ILogicalExpression a2 = f2.getArguments().get(0).getExpression();
+                        ILogicalExpression a2 = f2.getArguments().get(0).getValue();
                         if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                             LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();
                             env.getNonNullVariables().add(var);

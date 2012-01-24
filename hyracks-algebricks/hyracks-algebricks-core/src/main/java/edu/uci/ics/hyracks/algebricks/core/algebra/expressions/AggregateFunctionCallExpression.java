@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -47,13 +49,13 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
     }
 
     public AggregateFunctionCallExpression(IFunctionInfo finfo, boolean isTwoStep,
-            List<LogicalExpressionReference> arguments) {
+            List<Mutable<ILogicalExpression>> arguments) {
         super(FunctionKind.AGGREGATE, finfo, arguments);
         this.twoStep = isTwoStep;
     }
 
     public AggregateFunctionCallExpression(IFunctionInfo finfo, boolean isTwoStep,
-            LogicalExpressionReference... expressions) {
+            Mutable<ILogicalExpression>... expressions) {
         super(FunctionKind.AGGREGATE, finfo, expressions);
         this.twoStep = isTwoStep;
     }
@@ -69,7 +71,7 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
     @Override
     public AggregateFunctionCallExpression cloneExpression() {
         cloneAnnotations();
-        List<LogicalExpressionReference> clonedArgs = cloneArguments();
+        List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         AggregateFunctionCallExpression fun = new AggregateFunctionCallExpression(finfo, twoStep, clonedArgs);
         fun.setStepTwoAggregate(stepTwoAggregate);
         fun.setStepOneAggregate(stepOneAggregate);

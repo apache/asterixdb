@@ -316,6 +316,8 @@ public class JobRun implements IJobStatusConditionVariable {
                             JSONObject attempt = new JSONObject();
                             attempt.put("attempt", tca.getAttempt());
                             attempt.put("status", tca.getStatus());
+                            attempt.put("start-time", tca.getStartTime());
+                            attempt.put("end-time", tca.getEndTime());
 
                             JSONArray taskAttempts = new JSONArray();
                             for (TaskAttempt ta : tca.getTaskAttempts()) {
@@ -324,6 +326,8 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("task-attempt-id", ta.getTaskAttemptId());
                                 taskAttempt.put("status", ta.getStatus());
                                 taskAttempt.put("node-id", ta.getNodeId());
+                                taskAttempt.put("start-time", ta.getStartTime());
+                                taskAttempt.put("end-time", ta.getEndTime());
                                 String failureDetails = ta.getFailureDetails();
                                 if (failureDetails != null) {
                                     taskAttempt.put("failure-details", failureDetails);

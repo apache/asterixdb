@@ -16,9 +16,12 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -31,34 +34,36 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             return false;
         }
 
-        LogicalOperatorReference opRef2 = op.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
 
         if (!(op2 instanceof AbstractScanOperator) && !descOrSelfIsSourceScan(op2)) {
             return false;
         }
-        InnerJoinOperator product = new InnerJoinOperator(new LogicalExpressionReference(ConstantExpression.TRUE));
+        InnerJoinOperator product = new InnerJoinOperator(
+                new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
 
         EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
         context.computeAndSetTypeEnvironmentForOperator(ets);
-        LogicalOperatorReference emptySrc = new LogicalOperatorReference(ets);
-        List<LogicalOperatorReference> opInpList = op.getInputs();
+        Mutable<ILogicalOperator> emptySrc = new MutableObject<ILogicalOperator>(ets);
+        List<Mutable<ILogicalOperator>> opInpList = op.getInputs();
         opInpList.clear();
         opInpList.add(emptySrc);
         product.getInputs().add(opRef2); // outer branch
-        product.getInputs().add(new LogicalOperatorReference(op));
-        opRef.setOperator(product); // plug the product in the plan
+        product.getInputs().add(new MutableObject<ILogicalOperator>(op));
+        opRef.setValue(product); // plug the product in the plan
         context.computeAndSetTypeEnvironmentForOperator(product);
         return true;
     }
@@ -67,8 +72,8 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
         if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             return true;
         }
-        for (LogicalOperatorReference cRef : op2.getInputs()) {
-            AbstractLogicalOperator alo = (AbstractLogicalOperator) cRef.getOperator();
+        for (Mutable<ILogicalOperator> cRef : op2.getInputs()) {
+            AbstractLogicalOperator alo = (AbstractLogicalOperator) cRef.getValue();
             if (descOrSelfIsSourceScan(alo)) {
                 return true;
             }

@@ -16,9 +16,10 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint;
 
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -32,6 +33,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -49,7 +51,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
@@ -104,14 +105,14 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitInnerJoinOperator(InnerJoinOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("join (").append(op.getCondition().getExpression()).append(")");
+        addIndent(buffer, indent).append("join (").append(op.getCondition().getValue()).append(")");
         return buffer.toString();
     }
 
     @Override
     public String visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("left outer join (").append(op.getCondition().getExpression()).append(")");
+        addIndent(buffer, indent).append("left outer join (").append(op.getCondition().getValue()).append(")");
         return buffer.toString();
     }
 
@@ -126,7 +127,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitOrderOperator(OrderOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("order ");
-        for (Pair<OrderOperator.IOrder, LogicalExpressionReference> p : op.getOrderExpressions()) {
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
             String fst;
             switch (p.first.getKind()) {
                 case ASC: {
@@ -141,7 +142,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
                     fst = p.first.getExpressionRef().toString();
                 }
             }
-            buffer.append("(" + fst + ", " + p.second.getExpression() + ") ");
+            buffer.append("(" + fst + ", " + p.second.getValue() + ") ");
         }
         return buffer.toString();
     }
@@ -172,7 +173,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitSelectOperator(SelectOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("select " + "(" + op.getCondition().getExpression() + ")");
+        addIndent(buffer, indent).append("select " + "(" + op.getCondition().getValue() + ")");
         return buffer.toString();
     }
 
@@ -215,7 +216,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         if (op.getPositionalVariable() != null) {
             buffer.append(" at " + op.getPositionalVariable());
         }
-        buffer.append(" <- " + op.getExpressionRef().getExpression());
+        buffer.append(" <- " + op.getExpressionRef().getValue());
         return buffer.toString();
     }
 
@@ -223,7 +224,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitUnnestMapOperator(UnnestMapOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append(
-                "unnest-map " + op.getVariables() + " <- " + op.getExpressionRef().getExpression());
+                "unnest-map " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
         return buffer.toString();
     }
 
@@ -238,8 +239,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitLimitOperator(LimitOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("limit " + op.getMaxObjects().getExpression());
-        ILogicalExpression offset = op.getOffset().getExpression();
+        addIndent(buffer, indent).append("limit " + op.getMaxObjects().getValue());
+        ILogicalExpression offset = op.getOffset().getValue();
         if (offset != null) {
             buffer.append(", " + offset);
         }
@@ -249,7 +250,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitDieOperator(DieOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("die after " + op.getAfterObjects().getExpression());
+        addIndent(buffer, indent).append("die after " + op.getAfterObjects().getValue());
         return buffer.toString();
     }
 
@@ -296,16 +297,16 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         return buffer.toString();
     }
 
-    private void pprintExprList(List<LogicalExpressionReference> expressions, StringBuilder buffer) {
+    private void pprintExprList(List<Mutable<ILogicalExpression>> expressions, StringBuilder buffer) {
         buffer.append("[");
         boolean first = true;
-        for (LogicalExpressionReference exprRef : expressions) {
+        for (Mutable<ILogicalExpression> exprRef : expressions) {
             if (first) {
                 first = false;
             } else {
                 buffer.append(", ");
             }
-            buffer.append(exprRef.getExpression());
+            buffer.append(exprRef.getValue());
         }
         buffer.append("]");
     }

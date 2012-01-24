@@ -80,6 +80,14 @@ public class NodeControllerState {
 
     private final long[][] gcCollectionTimes;
 
+    private final long[] netPayloadBytesRead;
+
+    private final long[] netPayloadBytesWritten;
+
+    private final long[] netSignalingBytesRead;
+
+    private final long[] netSignalingBytesWritten;
+
     private int rrdPtr;
 
     private int lastHeartbeatDuration;
@@ -116,6 +124,10 @@ public class NodeControllerState {
         }
         gcCollectionCounts = new long[gcN][RRD_SIZE];
         gcCollectionTimes = new long[gcN][RRD_SIZE];
+        netPayloadBytesRead = new long[RRD_SIZE];
+        netPayloadBytesWritten = new long[RRD_SIZE];
+        netSignalingBytesRead = new long[RRD_SIZE];
+        netSignalingBytesWritten = new long[RRD_SIZE];
         rrdPtr = 0;
     }
 
@@ -139,6 +151,10 @@ public class NodeControllerState {
             gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
             gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
         }
+        netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
+        netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
+        netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
+        netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
         rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
@@ -199,6 +215,10 @@ public class NodeControllerState {
         o.put("gc-names", gcNames);
         o.put("gc-collection-counts", gcCollectionCounts);
         o.put("gc-collection-times", gcCollectionTimes);
+        o.put("net-payload-bytes-read", netPayloadBytesRead);
+        o.put("net-payload-bytes-written", netPayloadBytesWritten);
+        o.put("net-signaling-bytes-read", netSignalingBytesRead);
+        o.put("net-signaling-bytes-written", netSignalingBytesWritten);
 
         return o;
     }

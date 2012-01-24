@@ -17,10 +17,11 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -57,7 +58,7 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
         // invalidate cache
         computeLocalProperties(op);
         // }
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getOperator();
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         StructuralPropertiesVector childProp = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties();
         deliveredProperties = new StructuralPropertiesVector(childProp.getPartitioningProperty(), orderProps);
     }
@@ -82,8 +83,8 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
         orderProps = new LinkedList<ILocalStructuralProperty>();
 
         OrderOperator ord = (OrderOperator) op;
-        for (Pair<IOrder, LogicalExpressionReference> p : ord.getOrderExpressions()) {
-            ILogicalExpression expr = p.second.getExpression();
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : ord.getOrderExpressions()) {
+            ILogicalExpression expr = p.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
                 LogicalVariable var = varRef.getVariableReference();

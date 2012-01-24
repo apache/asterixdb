@@ -19,8 +19,17 @@ import java.util.List;
 import org.kohsuke.args4j.Option;
 
 public class CCConfig {
-    @Option(name = "-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
-    public int port = 1099;
+    @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients", required = true)
+    public String clientNetIpAddress;
+
+    @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
+    public int clientNetPort = 1098;
+
+    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from ", required = true)
+    public String clusterNetIpAddress;
+
+    @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
+    public int clusterNetPort = 1099;
 
     @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 19001)")
     public int httpPort = 19001;
@@ -44,8 +53,14 @@ public class CCConfig {
     public String ccRoot = "ClusterControllerService";
 
     public void toCommandLine(List<String> cList) {
-        cList.add("-port");
-        cList.add(String.valueOf(port));
+        cList.add("-client-net-ip-address");
+        cList.add(clientNetIpAddress);
+        cList.add("-client-net-port");
+        cList.add(String.valueOf(clientNetPort));
+        cList.add("-cluster-net-ip-address");
+        cList.add(clusterNetIpAddress);
+        cList.add("-cluster-net-port");
+        cList.add(String.valueOf(clusterNetPort));
         cList.add("-http-port");
         cList.add(String.valueOf(httpPort));
         cList.add("-heartbeat-period");

@@ -27,6 +27,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
@@ -54,31 +55,37 @@ public class CreateApplicationWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        NCApplicationContext appCtx;
-        Map<String, NCApplicationContext> applications = ncs.getApplications();
-        if (applications.containsKey(appName)) {
-            throw new HyracksException("Duplicate application with name: " + appName + " being created.");
-        }
-        appCtx = new NCApplicationContext(ncs.getServerContext(), ncs.getRootContext(), appName, ncs.getId());
-        applications.put(appName, appCtx);
-        if (deployHar) {
-            NCConfig ncConfig = ncs.getConfiguration();
-            NodeParameters nodeParameters = ncs.getNodeParameters();
-            HttpClient hc = new DefaultHttpClient();
-            HttpGet get = new HttpGet("http://" + ncConfig.ccHost + ":"
-                    + nodeParameters.getClusterControllerInfo().getWebPort() + "/applications/" + appName);
-            HttpResponse response = hc.execute(get);
-            InputStream is = response.getEntity().getContent();
-            OutputStream os = appCtx.getHarOutputStream();
-            try {
-                IOUtils.copyLarge(is, os);
-            } finally {
-                os.close();
-                is.close();
+        try {
+            NCApplicationContext appCtx;
+            Map<String, NCApplicationContext> applications = ncs.getApplications();
+            if (applications.containsKey(appName)) {
+                throw new HyracksException("Duplicate application with name: " + appName + " being created.");
             }
+            appCtx = new NCApplicationContext(ncs.getServerContext(), ncs.getRootContext(), appName, ncs.getId());
+            applications.put(appName, appCtx);
+            if (deployHar) {
+                NCConfig ncConfig = ncs.getConfiguration();
+                NodeParameters nodeParameters = ncs.getNodeParameters();
+                HttpClient hc = new DefaultHttpClient();
+                HttpGet get = new HttpGet("http://" + ncConfig.ccHost + ":"
+                        + nodeParameters.getClusterControllerInfo().getWebPort() + "/applications/" + appName);
+                HttpResponse response = hc.execute(get);
+                InputStream is = response.getEntity().getContent();
+                OutputStream os = appCtx.getHarOutputStream();
+                try {
+                    IOUtils.copyLarge(is, os);
+                } finally {
+                    os.close();
+                    is.close();
+                }
+            }
+            appCtx.initializeClassPath();
+            appCtx.setDistributedState((Serializable) appCtx.deserialize(serializedDistributedState));
+            appCtx.initialize();
+            ncs.getClusterController()
+                    .notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.INITIALIZED);
+        } catch (Exception e) {
+            LOGGER.warning("Error creating application: " + e.getMessage());
         }
-        appCtx.initializeClassPath();
-        appCtx.setDistributedState((Serializable) appCtx.deserialize(serializedDistributedState));
-        appCtx.initialize();
     }
 }

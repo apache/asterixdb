@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +34,6 @@ import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.util.Pair;
 
 public class JobActivityGraph implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -148,8 +148,8 @@ public class JobActivityGraph implements Serializable {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
                 .getConnectorOperatorMap().get(cdId);
 
-        OperatorDescriptorId consumerOpId = connEdge.second.first.getOperatorId();
-        int consumerInputIdx = connEdge.second.second;
+        OperatorDescriptorId consumerOpId = connEdge.getRight().getLeft().getOperatorId();
+        int consumerInputIdx = connEdge.getRight().getRight();
 
         for (ActivityId anId : operatorActivityMap.get(consumerOpId)) {
             List<Integer> anInputs = activityInputMap.get(anId);
@@ -168,8 +168,8 @@ public class JobActivityGraph implements Serializable {
         Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
                 .getConnectorOperatorMap().get(cdId);
 
-        OperatorDescriptorId producerOpId = connEdge.first.first.getOperatorId();
-        int producerInputIdx = connEdge.first.second;
+        OperatorDescriptorId producerOpId = connEdge.getLeft().getLeft().getOperatorId();
+        int producerInputIdx = connEdge.getLeft().getRight();
 
         for (ActivityId anId : operatorActivityMap.get(producerOpId)) {
             List<Integer> anOutputs = activityOutputMap.get(anId);
@@ -209,13 +209,11 @@ public class JobActivityGraph implements Serializable {
     public JSONObject toJSON() throws JSONException {
         JSONObject jplan = new JSONObject();
 
-        jplan.put("type", "plan");
         jplan.put("flags", jobFlags.toString());
 
         JSONArray jans = new JSONArray();
         for (IActivity an : activityNodes.values()) {
             JSONObject jan = new JSONObject();
-            jan.put("type", "activity");
             jan.put("id", an.getActivityId().toString());
             jan.put("java-class", an.getClass().getName());
             jan.put("operator-id", an.getActivityId().getOperatorDescriptorId().toString());
@@ -225,7 +223,6 @@ public class JobActivityGraph implements Serializable {
                 JSONArray jInputs = new JSONArray();
                 for (int i = 0; i < inputs.size(); ++i) {
                     JSONObject jInput = new JSONObject();
-                    jInput.put("type", "activity-input");
                     jInput.put("input-port", i);
                     jInput.put("connector-id", inputs.get(i).getConnectorId().toString());
                     jInputs.put(jInput);
@@ -238,7 +235,6 @@ public class JobActivityGraph implements Serializable {
                 JSONArray jOutputs = new JSONArray();
                 for (int i = 0; i < outputs.size(); ++i) {
                     JSONObject jOutput = new JSONObject();
-                    jOutput.put("type", "activity-output");
                     jOutput.put("output-port", i);
                     jOutput.put("connector-id", outputs.get(i).getConnectorId().toString());
                     jOutputs.put(jOutput);

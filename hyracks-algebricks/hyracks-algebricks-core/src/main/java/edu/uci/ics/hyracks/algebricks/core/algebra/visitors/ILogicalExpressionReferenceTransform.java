@@ -14,10 +14,12 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.visitors;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public interface ILogicalExpressionReferenceTransform {
     // returns true if any change is made to the expression
-    public boolean transform(LogicalExpressionReference expression) throws AlgebricksException;
+    public boolean transform(Mutable<ILogicalExpression> expression) throws AlgebricksException;
 }

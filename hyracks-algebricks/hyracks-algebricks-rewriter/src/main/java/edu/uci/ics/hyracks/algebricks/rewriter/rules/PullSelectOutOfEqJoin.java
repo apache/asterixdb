@@ -17,11 +17,13 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -36,17 +38,18 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
 
-    private List<LogicalExpressionReference> eqVarVarComps = new ArrayList<LogicalExpressionReference>();
-    private List<LogicalExpressionReference> otherPredicates = new ArrayList<LogicalExpressionReference>();
+    private List<Mutable<ILogicalExpression>> eqVarVarComps = new ArrayList<Mutable<ILogicalExpression>>();
+    private List<Mutable<ILogicalExpression>> otherPredicates = new ArrayList<Mutable<ILogicalExpression>>();
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         return false;
     }
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
         if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN
                 && op.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
@@ -54,7 +57,7 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         }
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
 
-        ILogicalExpression expr = join.getCondition().getExpression();
+        ILogicalExpression expr = join.getCondition().getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
@@ -65,8 +68,8 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         }
         eqVarVarComps.clear();
         otherPredicates.clear();
-        for (LogicalExpressionReference arg : fexp.getArguments()) {
-            if (isEqVarVar(arg.getExpression())) {
+        for (Mutable<ILogicalExpression> arg : fexp.getArguments()) {
+            if (isEqVarVar(arg.getValue())) {
                 eqVarVarComps.add(arg);
             } else {
                 otherPredicates.add(arg);
@@ -77,21 +80,21 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         }
         // pull up
         ILogicalExpression pulledCond = makeCondition(otherPredicates);
-        SelectOperator select = new SelectOperator(new LogicalExpressionReference(pulledCond));
+        SelectOperator select = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
         ILogicalExpression newJoinCond = makeCondition(eqVarVarComps);
-        join.getCondition().setExpression(newJoinCond);
-        select.getInputs().add(new LogicalOperatorReference(join));
-        opRef.setOperator(select);
+        join.getCondition().setValue(newJoinCond);
+        select.getInputs().add(new MutableObject<ILogicalOperator>(join));
+        opRef.setValue(select);
         context.computeAndSetTypeEnvironmentForOperator(select);
         return true;
     }
 
-    private ILogicalExpression makeCondition(List<LogicalExpressionReference> predList) {
+    private ILogicalExpression makeCondition(List<Mutable<ILogicalExpression>> predList) {
         if (predList.size() > 1) {
             IFunctionInfo finfo = AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND);
             return new ScalarFunctionCallExpression(finfo, predList);
         } else {
-            return predList.get(0).getExpression();
+            return predList.get(0).getValue();
         }
     }
 
@@ -103,11 +106,11 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         if (f.getFunctionIdentifier() != AlgebricksBuiltinFunctions.EQ) {
             return false;
         }
-        ILogicalExpression e1 = f.getArguments().get(0).getExpression();
+        ILogicalExpression e1 = f.getArguments().get(0).getValue();
         if (e1.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         } else {
-            ILogicalExpression e2 = f.getArguments().get(1).getExpression();
+            ILogicalExpression e2 = f.getArguments().get(1).getValue();
             return e2.getExpressionTag() == LogicalExpressionTag.VARIABLE;
         }
     }

@@ -16,8 +16,11 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.LinkedList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -35,7 +38,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushLimitDownRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
@@ -46,8 +49,8 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
      */
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.LIMIT) {
             return false;
         }
@@ -56,8 +59,8 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        LogicalOperatorReference opRef2 = opLim.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        Mutable<ILogicalOperator> opRef2 = opLim.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
 
         if (context.checkAndAddToAlreadyCompared(op, op2)) {
             return false;
@@ -90,25 +93,25 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
             }
             // we assume pipelineable ops. have only one input
             opRef2 = op2.getInputs().get(0);
-            op2 = (AbstractLogicalOperator) opRef2.getOperator();
+            op2 = (AbstractLogicalOperator) opRef2.getValue();
         } while (true);
 
         LimitOperator clone2 = null;
-        if (opLim.getOffset().getExpression() == null) {
-            clone2 = new LimitOperator(opLim.getMaxObjects().getExpression(), false);
+        if (opLim.getOffset().getValue() == null) {
+            clone2 = new LimitOperator(opLim.getMaxObjects().getValue(), false);
         } else {
             // push limit (max+offset)
             IFunctionInfo finfoAdd = AlgebricksBuiltinFunctions
                     .getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NUMERIC_ADD);
-            ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd, opLim
-                    .getMaxObjects(), opLim.getOffset());
+            ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd,
+                    opLim.getMaxObjects(), opLim.getOffset());
             clone2 = new LimitOperator(maxPlusOffset, false);
         }
         clone2.setPhysicalOperator(new StreamLimitPOperator(false));
-        clone2.getInputs().add(new LogicalOperatorReference(op2));
+        clone2.getInputs().add(new MutableObject<ILogicalOperator>(op2));
         clone2.setExecutionMode(op2.getExecutionMode());
         clone2.recomputeSchema();
-        opRef2.setOperator(clone2);
+        opRef2.setValue(clone2);
         context.computeAndSetTypeEnvironmentForOperator(clone2);
         return true;
     }

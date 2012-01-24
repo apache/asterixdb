@@ -14,12 +14,11 @@
  */
 package edu.uci.ics.hyracks.control.common.base;
 
-import java.rmi.Remote;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
@@ -27,10 +26,10 @@ import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 
-public interface IClusterController extends Remote {
-    public NodeParameters registerNode(NodeRegistration reg) throws Exception;
+public interface IClusterController {
+    public void registerNode(NodeRegistration reg) throws Exception;
 
-    public void unregisterNode(INodeController nodeController) throws Exception;
+    public void unregisterNode(String nodeId) throws Exception;
 
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception;
@@ -46,4 +45,6 @@ public interface IClusterController extends Remote {
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception;
 
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
+
+    public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception;
 }

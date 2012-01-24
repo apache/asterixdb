@@ -16,21 +16,23 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public abstract class AbstractUnnestOperator extends AbstractScanOperator {
 
-    protected final LogicalExpressionReference expression;
+    protected final Mutable<ILogicalExpression> expression;
 
-    public AbstractUnnestOperator(List<LogicalVariable> variables, LogicalExpressionReference expression) {
+    public AbstractUnnestOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression) {
         super(variables);
         this.expression = expression;
     }
 
-    public LogicalExpressionReference getExpressionRef() {
+    public Mutable<ILogicalExpression> getExpressionRef() {
         return expression;
     }
 

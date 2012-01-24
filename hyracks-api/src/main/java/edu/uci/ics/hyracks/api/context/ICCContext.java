@@ -18,5 +18,5 @@ import java.util.Map;
 import java.util.Set;
 
 public interface ICCContext {
-    public Map<String, Set<String>> getIPAddressNodeMap();
+    public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
 }

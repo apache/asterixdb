@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -28,15 +30,15 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class PartitioningSplitOperator extends AbstractLogicalOperator {
 
-    private LogicalExpressionReference[] expressions;
+    private Mutable<ILogicalExpression>[] expressions;
     private boolean hasDefault;
 
-    public PartitioningSplitOperator(LogicalExpressionReference[] exprList, boolean defaultBranchDefined) {
+    public PartitioningSplitOperator(Mutable<ILogicalExpression>[] exprList, boolean defaultBranchDefined) {
         expressions = exprList;
         hasDefault = defaultBranchDefined;
     }
 
-    public LogicalExpressionReference[] getExpressions() {
+    public Mutable<ILogicalExpression>[] getExpressions() {
         return expressions;
     }
 
@@ -52,7 +54,7 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override

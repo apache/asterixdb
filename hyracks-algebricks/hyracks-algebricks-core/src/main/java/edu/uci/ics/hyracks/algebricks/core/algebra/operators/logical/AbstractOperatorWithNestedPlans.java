@@ -19,8 +19,10 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOperator {
@@ -43,10 +45,10 @@ public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOpe
         return true;
     }
 
-    public LinkedList<LogicalOperatorReference> allRootsInReverseOrder() {
-        LinkedList<LogicalOperatorReference> allRoots = new LinkedList<LogicalOperatorReference>();
+    public LinkedList<Mutable<ILogicalOperator>> allRootsInReverseOrder() {
+        LinkedList<Mutable<ILogicalOperator>> allRoots = new LinkedList<Mutable<ILogicalOperator>>();
         for (ILogicalPlan p : nestedPlans) {
-            for (LogicalOperatorReference r : p.getRoots()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 allRoots.addFirst(r);
             }
         }
@@ -68,10 +70,10 @@ public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOpe
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getOperator().getSchema());
+        schema.addAll(inputs.get(0).getValue().getSchema());
         for (ILogicalPlan p : nestedPlans) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                schema.addAll(r.getOperator().getSchema());
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                schema.addAll(r.getValue().getSchema());
             }
         }
     }

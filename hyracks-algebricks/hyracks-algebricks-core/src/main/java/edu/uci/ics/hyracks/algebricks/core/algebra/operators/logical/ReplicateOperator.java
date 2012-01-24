@@ -60,7 +60,7 @@ public class ReplicateOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getOperator().getSchema());
+        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
     public void substituteVar(LogicalVariable v1, LogicalVariable v2) {

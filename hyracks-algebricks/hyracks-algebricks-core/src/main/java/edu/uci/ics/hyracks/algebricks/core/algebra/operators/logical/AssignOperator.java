@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -35,11 +37,11 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class AssignOperator extends AbstractAssignOperator {
 
-    public AssignOperator(List<LogicalVariable> vars, List<LogicalExpressionReference> exprs) {
+    public AssignOperator(List<LogicalVariable> vars, List<Mutable<ILogicalExpression>> exprs) {
         super(vars, exprs);
     }
 
-    public AssignOperator(LogicalVariable var, LogicalExpressionReference expr) {
+    public AssignOperator(LogicalVariable var, Mutable<ILogicalExpression> expr) {
         super();
         this.variables.add(var);
         this.expressions.add(expr);
@@ -81,8 +83,10 @@ public class AssignOperator extends AbstractAssignOperator {
         IVariableTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         int n = variables.size();
         for (int i = 0; i < n; i++) {
-            env.setVarType(variables.get(i), ctx.getExpressionTypeComputer().getType(
-                    expressions.get(i).getExpression(), ctx.getMetadataProvider(), env));
+            env.setVarType(
+                    variables.get(i),
+                    ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(), ctx.getMetadataProvider(),
+                            env));
         }
         return env;
     }

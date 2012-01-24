@@ -16,11 +16,13 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.HashSet;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -37,21 +39,22 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator op = opRef.getOperator();
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        ILogicalOperator op = opRef.getValue();
         if (!(op instanceof AbstractScanOperator)) {
             return false;
         }
 
-        LogicalOperatorReference opRef2 = op.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getOperator();
+        Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
         }
         SubplanOperator subplan = (SubplanOperator) op2;
 
-        LogicalOperatorReference opRef3 = subplan.getInputs().get(0);
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getOperator();
+        Mutable<ILogicalOperator> opRef3 = subplan.getInputs().get(0);
+        AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
 
         if (op3.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
                 || op3.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
@@ -73,23 +76,23 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
         }
 
         ntsToEtsInSubplan(subplan, context);
-        InnerJoinOperator join = new InnerJoinOperator(new LogicalExpressionReference(ConstantExpression.TRUE));
+        InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
         join.getInputs().add(opRef3);
-        opRef2.setOperator(OperatorManipulationUtil.eliminateSingleSubplanOverEts(subplan));
-        join.getInputs().add(new LogicalOperatorReference(op));
-        opRef.setOperator(join);
+        opRef2.setValue(OperatorManipulationUtil.eliminateSingleSubplanOverEts(subplan));
+        join.getInputs().add(new MutableObject<ILogicalOperator>(op));
+        opRef.setValue(join);
         context.computeAndSetTypeEnvironmentForOperator(join);
         return true;
     }
 
     @Override
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
     private static void ntsToEtsInSubplan(SubplanOperator s, IOptimizationContext context) throws AlgebricksException {
         for (ILogicalPlan p : s.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 OperatorManipulationUtil.ntsToEts(r, context);
             }
         }
@@ -97,8 +100,8 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
 
     private static boolean subplanHasFreeVariables(SubplanOperator s) throws AlgebricksException {
         for (ILogicalPlan p : s.getNestedPlans()) {
-            for (LogicalOperatorReference r : p.getRoots()) {
-                if (OperatorPropertiesUtil.hasFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getOperator())) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                if (OperatorPropertiesUtil.hasFreeVariablesInSelfOrDesc((AbstractLogicalOperator) r.getValue())) {
                     return true;
                 }
             }

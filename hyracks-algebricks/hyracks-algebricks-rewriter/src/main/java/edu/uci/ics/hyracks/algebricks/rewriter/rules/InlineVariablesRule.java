@@ -19,13 +19,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -46,7 +47,7 @@ import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(LogicalOperatorReference opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
 
@@ -56,8 +57,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
      * Does one big DFS sweep over the plan.
      * 
      */
-    public boolean rewritePre(LogicalOperatorReference opRef, IOptimizationContext context) throws AlgebricksException {
-        if (context.checkIfInDontApplySet(this, opRef.getOperator())) {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
         VariableSubstitutionVisitor substVisitor = new VariableSubstitutionVisitor(false);
@@ -69,12 +70,12 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return bb.first;
     }
 
-    private Pair<Boolean, Boolean> collectEqClassesAndRemoveRedundantOps(LogicalOperatorReference opRef,
+    private Pair<Boolean, Boolean> collectEqClassesAndRemoveRedundantOps(Mutable<ILogicalOperator> opRef,
             IOptimizationContext context, boolean first, List<EquivalenceClass> equivClasses,
             VariableSubstitutionVisitor substVisitor, VariableSubstitutionVisitor substVisitorForWrites)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getOperator();
-        // if (context.checkIfInDontApplySet(this, opRef.getOperator())) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        // if (context.checkIfInDontApplySet(this, opRef.getValue())) {
         // return false;
         // }
         if (op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
@@ -83,7 +84,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         boolean modified = false;
         boolean ecChange = false;
         int cnt = 0;
-        for (LogicalOperatorReference i : op.getInputs()) {
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
             boolean isOuterInputBranch = op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN && cnt == 1;
             List<EquivalenceClass> eqc = isOuterInputBranch ? new LinkedList<EquivalenceClass>() : equivClasses;
 
@@ -120,7 +121,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                 eqc = equivClasses;
             }
             for (ILogicalPlan p : n.getNestedPlans()) {
-                for (LogicalOperatorReference r : p.getRoots()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     Pair<Boolean, Boolean> bb = collectEqClassesAndRemoveRedundantOps(r, context, false, eqc,
                             substVisitor, substVisitorForWrites);
                     if (bb.first) {
@@ -135,7 +136,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         // we assume a variable is assigned a value only once
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator a = (AssignOperator) op;
-            ILogicalExpression rhs = a.getExpressions().get(0).getExpression();
+            ILogicalExpression rhs = a.getExpressions().get(0).getValue();
             if (rhs.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable varLeft = a.getVariables().get(0);
                 VariableReferenceExpression varRef = (VariableReferenceExpression) rhs;
@@ -185,18 +186,18 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                     modified = true;
                     if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
                         GroupByOperator group = (GroupByOperator) op;
-                        for (Pair<LogicalVariable, LogicalExpressionReference> gp : group.getGroupByList()) {
+                        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gp : group.getGroupByList()) {
                             if (gp.first != null
-                                    && gp.second.getExpression().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                                LogicalVariable gv = ((VariableReferenceExpression) gp.second.getExpression())
+                                    && gp.second.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                LogicalVariable gv = ((VariableReferenceExpression) gp.second.getValue())
                                         .getVariableReference();
-                                Iterator<Pair<LogicalVariable, LogicalExpressionReference>> iter = group.getDecorList()
-                                        .iterator();
+                                Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = group
+                                        .getDecorList().iterator();
                                 while (iter.hasNext()) {
-                                    Pair<LogicalVariable, LogicalExpressionReference> dp = iter.next();
+                                    Pair<LogicalVariable, Mutable<ILogicalExpression>> dp = iter.next();
                                     if (dp.first == null
-                                            && dp.second.getExpression().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                                        LogicalVariable dv = ((VariableReferenceExpression) dp.second.getExpression())
+                                            && dp.second.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                        LogicalVariable dv = ((VariableReferenceExpression) dp.second.getValue())
                                                 .getVariableReference();
                                         if (dv == gv) {
                                             // The decor variable is redundant,
@@ -227,12 +228,12 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return new Pair<Boolean, Boolean>(modified, ecChange);
     }
 
-    private Pair<Boolean, Boolean> processVarExprPairs(List<Pair<LogicalVariable, LogicalExpressionReference>> vePairs,
-            List<EquivalenceClass> equivClasses) {
+    private Pair<Boolean, Boolean> processVarExprPairs(
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> vePairs, List<EquivalenceClass> equivClasses) {
         boolean ecFromGroup = false;
         boolean modified = false;
-        for (Pair<LogicalVariable, LogicalExpressionReference> p : vePairs) {
-            ILogicalExpression expr = p.second.getExpression();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : vePairs) {
+            ILogicalExpression expr = p.second.getValue();
             if (p.first != null && expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
                 LogicalVariable rhsVar = varRef.getVariableReference();
@@ -294,8 +295,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         }
 
         @Override
-        public boolean transform(LogicalExpressionReference exprRef) {
-            ILogicalExpression e = exprRef.getExpression();
+        public boolean transform(Mutable<ILogicalExpression> exprRef) {
+            ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
                 case VARIABLE: {
                     // look for a required substitution
@@ -311,12 +312,12 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                         if (doNotSubstWithConst) {
                             return false;
                         }
-                        exprRef.setExpression(ec.getConstRepresentative());
+                        exprRef.setValue(ec.getConstRepresentative());
                         return true;
                     } else {
                         LogicalVariable r = ec.getVariableRepresentative();
                         if (!r.equals(var)) {
-                            exprRef.setExpression(new VariableReferenceExpression(r));
+                            exprRef.setValue(new VariableReferenceExpression(r));
                             return true;
                         } else {
                             return false;
@@ -326,7 +327,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                 case FUNCTION_CALL: {
                     AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
                     boolean m = false;
-                    for (LogicalExpressionReference arg : fce.getArguments()) {
+                    for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
                         if (transform(arg)) {
                             m = true;
                         }

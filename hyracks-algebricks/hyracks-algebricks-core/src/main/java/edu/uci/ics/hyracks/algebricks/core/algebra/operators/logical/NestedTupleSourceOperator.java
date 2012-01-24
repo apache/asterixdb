@@ -16,8 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorReference;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -31,14 +32,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class NestedTupleSourceOperator extends AbstractLogicalOperator {
-    private final LogicalOperatorReference dataSourceReference;
+    private final Mutable<ILogicalOperator> dataSourceReference;
 
-    public NestedTupleSourceOperator(LogicalOperatorReference dataSourceReference) {
+    public NestedTupleSourceOperator(Mutable<ILogicalOperator> dataSourceReference) {
         this.dataSourceReference = dataSourceReference;
     }
 
     public ILogicalOperator getSourceOperator() {
-        return dataSourceReference.getOperator().getInputs().get(0).getOperator();
+        return dataSourceReference.getValue().getInputs().get(0).getValue();
     }
 
     @Override
@@ -46,16 +47,16 @@ public class NestedTupleSourceOperator extends AbstractLogicalOperator {
         return LogicalOperatorTag.NESTEDTUPLESOURCE;
     }
 
-    public LogicalOperatorReference getDataSourceReference() {
+    public Mutable<ILogicalOperator> getDataSourceReference() {
         return dataSourceReference;
     }
 
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
-        ILogicalOperator topOp = dataSourceReference.getOperator();
-        for (LogicalOperatorReference i : topOp.getInputs()) {
-            schema.addAll(i.getOperator().getSchema());
+        ILogicalOperator topOp = dataSourceReference.getValue();
+        for (Mutable<ILogicalOperator> i : topOp.getInputs()) {
+            schema.addAll(i.getValue().getSchema());
         }
     }
 
@@ -87,7 +88,7 @@ public class NestedTupleSourceOperator extends AbstractLogicalOperator {
 
             @Override
             public IVariableTypeEnvironment getTypeEnv() {
-                ILogicalOperator op = dataSourceReference.getOperator().getInputs().get(0).getOperator();
+                ILogicalOperator op = dataSourceReference.getValue().getInputs().get(0).getValue();
                 return ctx.getOutputTypeEnvironment(op);
             }
         };
