@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.perf;
+package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
 
 import java.io.File;
 

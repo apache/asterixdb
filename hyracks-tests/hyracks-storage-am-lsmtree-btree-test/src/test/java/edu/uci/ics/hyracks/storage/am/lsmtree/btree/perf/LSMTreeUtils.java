@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.perf;
+package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;

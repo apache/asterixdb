@@ -1,19 +1,21 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.perf;
+package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
+import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.TupleBatch;
 
-public class ConcurrentSkipListRunner implements IExperimentRunner {
+public class InMemorySortRunner implements IExperimentRunner {
     public class TupleComparator implements Comparator<ITupleReference> {
         private final MultiComparator cmp;
 
@@ -33,34 +35,47 @@ public class ConcurrentSkipListRunner implements IExperimentRunner {
     private final int tupleSize;
     private final ITypeTraits[] typeTraits;
     
-    public ConcurrentSkipListRunner(int numBatches, int batchSize, int tupleSize, ITypeTraits[] typeTraits, MultiComparator cmp) {
+    private final TypeAwareTupleWriterFactory tupleWriterFactory;
+    private final TypeAwareTupleWriter tupleWriter;
+    private final ArrayList<TypeAwareTupleReference> tuples;        
+    private final ByteBuffer tupleBuf; 
+    
+    public InMemorySortRunner(int numBatches, int batchSize, int tupleSize, ITypeTraits[] typeTraits, MultiComparator cmp) {
         this.numBatches = numBatches;
         this.tupleSize = tupleSize;
         this.batchSize = batchSize;
         this.typeTraits = typeTraits;
         tupleCmp = new TupleComparator(cmp);
+        tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+        tupleWriter = (TypeAwareTupleWriter) tupleWriterFactory.createTupleWriter();
+        int numTuples = numBatches * batchSize;
+        tuples = new ArrayList<TypeAwareTupleReference>();
+        tupleBuf = ByteBuffer.allocate(numTuples * tupleSize);
+        for (int i = 0; i < numTuples; i++) {
+            tuples.add((TypeAwareTupleReference) tupleWriter.createTupleReference());
+        }
     }
     
     @Override
     public long runExperiment(DataGenThread dataGen, int numThreads) throws InterruptedException {
-        ConcurrentSkipListSet<ITupleReference> skipList = new ConcurrentSkipListSet<ITupleReference>(tupleCmp);
-        SkipListThread[] threads = new SkipListThread[numThreads];
-        int threadNumBatches = numBatches / numThreads;
-        for (int i = 0; i < numThreads; i++) {
-            threads[i] = new SkipListThread(dataGen, skipList, threadNumBatches, batchSize);            
-        }
         // Wait until the tupleBatchQueue is completely full.
         while (dataGen.tupleBatchQueue.remainingCapacity() != 0) {
             Thread.sleep(10);
         }
         
         long start = System.currentTimeMillis();
-        for (int i = 0; i < numThreads; i++) {
-            threads[i].start();
+        int tupleIndex = 0;
+        for (int i = 0; i < numBatches; i++) {
+            TupleBatch batch = dataGen.tupleBatchQueue.take();
+            for (int j = 0; j < batch.size(); j++) {
+                // Copy the tuple to the buffer and set the pre-created tuple ref.                        
+                tupleWriter.writeTuple(batch.get(j), tupleBuf.array(), tupleIndex * tupleSize);
+                tuples.get(tupleIndex).resetByTupleOffset(tupleBuf, tupleIndex * tupleSize);
+                tupleIndex++;
+            }
         }
-        for (int i = 0; i < numThreads; i++) {
-            threads[i].join();
-        }
+        // Perform the sort.        
+        Collections.sort(tuples, tupleCmp);
         long end = System.currentTimeMillis();
         long time = end - start;
         return time;

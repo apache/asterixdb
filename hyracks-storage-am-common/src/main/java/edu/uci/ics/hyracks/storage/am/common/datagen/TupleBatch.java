@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.datagen;
+package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 import java.io.IOException;
 

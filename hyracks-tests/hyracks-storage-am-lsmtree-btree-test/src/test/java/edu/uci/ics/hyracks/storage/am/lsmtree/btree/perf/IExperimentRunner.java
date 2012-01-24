@@ -1,6 +1,6 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.perf;
+package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
 
-import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.DataGenThread;
+import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 public interface IExperimentRunner {
     public static int DEFAULT_MAX_OUTSTANDING = 100000;

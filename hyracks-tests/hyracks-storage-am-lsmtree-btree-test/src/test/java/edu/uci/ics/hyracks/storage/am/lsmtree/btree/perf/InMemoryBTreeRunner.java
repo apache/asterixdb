@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.perf;
+package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,13 +14,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
+import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;

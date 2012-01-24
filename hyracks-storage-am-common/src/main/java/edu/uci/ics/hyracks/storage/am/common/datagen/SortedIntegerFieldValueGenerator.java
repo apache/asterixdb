@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.datagen;
+package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 public class SortedIntegerFieldValueGenerator implements IFieldValueGenerator<Integer> {
     private int val = 0;
