@@ -2,8 +2,10 @@ package edu.uci.ics.hyracks.storage.am.lsmtree.freepage;
 
 import static org.junit.Assert.fail;
 
-import org.junit.*;
+import org.junit.Test;
 
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCacheInternal;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -16,9 +18,7 @@ public class InMemoryBufferCacheTest{
     //TEST InMemoryBufferCache.pin()
     @Test
     public void InMemoryBufferCacheTest01() throws Exception {
-    	
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         try {
         	ICachedPage memCachedPage = memBufferCache.pin(10, true);
@@ -43,8 +43,7 @@ public class InMemoryBufferCacheTest{
     @Test
     public void InMemoryBufferCacheTest02() throws Exception {
     	
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         try {
         	ICachedPage memCachedPage = memBufferCache.pin(500, true);
@@ -68,8 +67,7 @@ public class InMemoryBufferCacheTest{
     @Test
     public void InMemoryBufferCacheTest03() throws Exception {
     	
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         try {
         	ICachedPage memCachedPage = ((IBufferCacheInternal) memBufferCache).getPage(20);
@@ -94,8 +92,7 @@ public class InMemoryBufferCacheTest{
     @Test
     public void InMemoryBufferCacheTest04() throws Exception {
     	
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         try {
         	ICachedPage memCachedPage = ((IBufferCacheInternal) memBufferCache).getPage(1000);

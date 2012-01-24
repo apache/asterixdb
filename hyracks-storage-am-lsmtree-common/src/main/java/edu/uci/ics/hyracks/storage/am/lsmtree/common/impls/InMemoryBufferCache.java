@@ -1,6 +1,23 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsmtree.common.impls;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -13,77 +30,95 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPageInternal;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class InMemoryBufferCache implements IBufferCacheInternal {
-	
-	private final int pageSize;
-	private final int numPages;
-    protected final CachedPage[] cachedPages;
-
-	//Constructor
+    protected final ICacheMemoryAllocator allocator;
+    protected final int pageSize;
+    protected final CachedPage[] pages;
+    protected final List<CachedPage> overflowPages = new ArrayList<CachedPage>();
+    
 	public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages){
-		
-        this.pageSize = pageSize;
-        this.numPages = numPages;
-		ByteBuffer[] buffers = allocator.allocate(this.pageSize, this.numPages);
-		cachedPages = new CachedPage[buffers.length];
+        this.allocator = allocator;
+	    this.pageSize = pageSize;
+		ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
+		pages = new CachedPage[buffers.length];
         for (int i = 0; i < buffers.length; ++i) {
-            cachedPages[i] = new CachedPage(i, buffers[i]);
+            pages[i] = new CachedPage(i, buffers[i]);
         }
 	}
+
+	@Override
+	public ICachedPage pin(long dpid, boolean newPage) {
+	    int pageId = BufferedFileHandle.getPageId(dpid);
+	    if (pageId < pages.length) {
+	        // Common case: Return regular page.
+	        return pages[pageId];
+	    } else {
+	        // Rare case: Return overflow page, possibly expanding overflow array.
+	        synchronized(overflowPages) {
+	            int numNewPages = pageId - pages.length - overflowPages.size() + 1;          
+	            if (numNewPages > 0) {
+	                ByteBuffer[] buffers = allocator.allocate(pageSize, numNewPages);
+	                for (int i = 0; i < numNewPages; i++) {
+	                    CachedPage overflowPage = new CachedPage(pages.length + overflowPages.size(), buffers[i]);
+	                    overflowPages.add(overflowPage);
+	                }
+	            }
+	            return overflowPages.get(pageId - pages.length);
+	        }
+	    }
+	}
+
+	@Override
+    public ICachedPage tryPin(long dpid) throws HyracksDataException {
+        return pin(dpid, false);
+    }
 	
 	@Override
-	public void createFile(FileReference fileRef) throws HyracksDataException {
-		// Do nothing
-	}
+    public int getPageSize() {
+        return pageSize;
+    }
 
+    @Override
+    public int getNumPages() {
+        return pages.length;
+    }
+
+    @Override
+    public ICachedPageInternal getPage(int cpid) {
+        return pages[cpid];
+    }
+    
+    public int getNumOverflowPages() {
+        return overflowPages.size();
+    }
+	
 	@Override
-	public void openFile(int fileId) throws HyracksDataException {
-		// Do nothing		
-	}
+    public void createFile(FileReference fileRef) throws HyracksDataException {
+        // Do nothing.
+    }
 
-	@Override
-	public void closeFile(int fileId) throws HyracksDataException {
-		// Do nothing
-	}
+    @Override
+    public void openFile(int fileId) throws HyracksDataException {
+        // Do nothing.
+    }
 
-	@Override
-	public void deleteFile(int fileId) throws HyracksDataException {
-		// Do nothing
-	}
+    @Override
+    public void closeFile(int fileId) throws HyracksDataException {
+        // Do nothing.
+    }
 
-	@Override
-	public ICachedPage tryPin(long dpid) throws HyracksDataException {
-		// Just call pin!
-		return null;
-	}
-
-	@Override
-	public ICachedPage pin(long dpid, boolean newPage){
-		return cachedPages[BufferedFileHandle.getPageId(dpid)];
-	}
-
+    @Override
+    public void deleteFile(int fileId) throws HyracksDataException {
+        // Do nothing.
+    }
+	
 	@Override
 	public void unpin(ICachedPage page) throws HyracksDataException {
-		//Do Nothing
-	}
-
-	@Override
-	public int getPageSize() {
-		return pageSize;
-	}
-
-	@Override
-	public int getNumPages() {
-		return numPages;
+		// Do Nothing.
 	}
 
 	@Override
 	public void close() {
-		// Do nothing	
-	}
-
-	@Override
-	public ICachedPageInternal getPage(int cpid) {
-		return cachedPages[cpid];
+		// Do nothing.
 	}
 
     private class CachedPage implements ICachedPageInternal {
@@ -104,13 +139,13 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
         @Override
         public Object getReplacementStrategyObject() {
-        	//Do nothing
+        	// Do nothing.
             return null;
         }
 
         @Override
         public boolean pinIfGoodVictim() {
-        	//Do nothing
+        	// Do nothing.
         	return false;
         }
 
@@ -124,13 +159,9 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
             latch.readLock().lock();
         }
 
-        private void acquireWriteLatch(boolean markDirty) {
-            latch.writeLock().lock();
-        }
-
         @Override
         public void acquireWriteLatch() {
-            acquireWriteLatch(true);
+            latch.writeLock().lock();
         }
 
         @Override

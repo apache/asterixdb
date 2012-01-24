@@ -17,9 +17,9 @@ public class LSMRTreeInMemoryBufferCache extends InMemoryBufferCache {
         int fileId = BufferedFileHandle.getFileId(dpid);
 
         if (pageId == 0 || pageId == 1) {
-            return cachedPages[pageId + 2 * fileId];
+            return pages[pageId + 2 * fileId];
         } else {
-            return cachedPages[pageId];
+            return pages[pageId];
         }
     }
 

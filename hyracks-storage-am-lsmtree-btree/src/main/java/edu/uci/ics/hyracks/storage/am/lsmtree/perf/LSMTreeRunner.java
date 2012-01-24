@@ -13,10 +13,11 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.lsmtree.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.InMemoryBufferCacheFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTree;
+import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -44,7 +45,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     private final int onDiskPageSize;
     private final int onDiskNumPages;
     
-    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMeNumPages, int onDiskPageSize, int onDiskNumPages, ITypeTraits[] typeTraits, MultiComparator cmp) throws HyracksDataException, BTreeException {
+    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages, ITypeTraits[] typeTraits, MultiComparator cmp) throws HyracksDataException, BTreeException {
         this.numBatches = numBatches;
         
         this.onDiskPageSize = onDiskPageSize;
@@ -62,10 +63,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         lsmtreeFileId = fmp.lookupFileId(file);
         bufferCache.openFile(lsmtreeFileId);
         
-        
-        // In Memory
-		InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(inMemPageSize, inMeNumPages);
-		memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize, inMemNumPages);
 		
         lsmtree = LSMTreeUtils.createLSMTree(memBufferCache, bufferCache, lsmtreeFileId, typeTraits, cmp.getComparators(), BTreeLeafFrameType.REGULAR_NSM, (IFileMapManager)fmp);
     }
