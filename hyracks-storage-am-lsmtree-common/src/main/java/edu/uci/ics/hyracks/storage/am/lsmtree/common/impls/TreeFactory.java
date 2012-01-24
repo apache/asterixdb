@@ -3,6 +3,7 @@ package edu.uci.ics.hyracks.storage.am.lsmtree.common.impls;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public abstract class TreeFactory {

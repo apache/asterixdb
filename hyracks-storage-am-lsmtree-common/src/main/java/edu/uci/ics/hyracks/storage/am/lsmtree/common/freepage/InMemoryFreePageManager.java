@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;

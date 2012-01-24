@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.freepage;
+package edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;

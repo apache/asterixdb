@@ -3,7 +3,7 @@ package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 
 public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
 

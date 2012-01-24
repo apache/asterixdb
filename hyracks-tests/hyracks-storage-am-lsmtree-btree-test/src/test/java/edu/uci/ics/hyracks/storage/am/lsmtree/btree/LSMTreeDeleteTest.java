@@ -38,13 +38,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.FreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.InMemoryBufferCacheFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTree;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -73,9 +74,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in memory
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;
@@ -223,9 +222,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in memory
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;
@@ -407,9 +404,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in mem
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;
@@ -589,9 +584,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in memory
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;
@@ -700,9 +693,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in memory
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;
@@ -885,9 +876,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);
 
-        // in mem
-        InMemoryBufferCacheFactory InMemBufferCacheFactory = new InMemoryBufferCacheFactory(PAGE_SIZE, NUM_PAGES);
-        IBufferCache memBufferCache = InMemBufferCacheFactory.createInMemoryBufferCache();
+        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
 
         // declare fields
         int fieldCount = 2;

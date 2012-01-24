@@ -1,6 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
 
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
