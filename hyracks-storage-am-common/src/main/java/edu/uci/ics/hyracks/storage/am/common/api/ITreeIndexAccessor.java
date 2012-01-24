@@ -36,10 +36,9 @@ public interface ITreeIndexAccessor {
 	 * @throws TreeIndexException
 	 *             If an index-specific constraint is violated, e.g., the key
 	 *             already exists.
-	 * @throws PageAllocationException
 	 */
 	public void insert(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
+			TreeIndexException;
 
 	/**
 	 * Updates the tuple in the index matching the given tuple with the new
@@ -52,10 +51,9 @@ public interface ITreeIndexAccessor {
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 * @throws TreeIndexException
 	 *             If there is no matching tuple in the index.
-	 * @throws PageAllocationException
 	 */
 	public void update(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
+			TreeIndexException;
 
 	/**
 	 * Deletes the tuple in the index matching the given tuple.
@@ -66,10 +64,9 @@ public interface ITreeIndexAccessor {
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 * @throws TreeIndexException
 	 *             If there is no matching tuple in the index.
-	 * @throws PageAllocationException
 	 */
 	public void delete(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
+			TreeIndexException;
 
 	/**
 	 * Open the given cursor for an index search using the given predicate as
@@ -82,10 +79,9 @@ public interface ITreeIndexAccessor {
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 * @throws TreeIndexException
-	 * @throws PageAllocationException
 	 */
 	public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred)
-			throws HyracksDataException, TreeIndexException, PageAllocationException;
+			throws HyracksDataException, TreeIndexException;
 
 	/**
 	 * Open the given cursor for a disk-order scan, positioning the cursor to

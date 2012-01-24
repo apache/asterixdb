@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -97,7 +96,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
@@ -245,7 +244,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
@@ -428,7 +427,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
@@ -607,7 +606,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
@@ -716,7 +715,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
@@ -899,7 +898,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,

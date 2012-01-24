@@ -91,7 +91,7 @@ public class LSMTreeMergeTest extends AbstractLSMTreeTest {
         IBTreeLeafFrame insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(NUM_PAGES, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(NUM_PAGES, metaFrameFactory);
 
         // For the Flush Mechanism
         LSMEntireTupleWriterFactory flushTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits);

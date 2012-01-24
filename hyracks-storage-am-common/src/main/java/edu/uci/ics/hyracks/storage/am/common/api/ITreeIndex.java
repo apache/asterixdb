@@ -47,12 +47,10 @@ public interface ITreeIndex extends IIndex {
 	 *             If the BufferCache throws while un/pinning or un/latching.
 	 * @throws TreeIndexException
 	 *             If the tree is not empty.
-	 * @throws PageAllocationException
 	 * @returns A new context for bulk loading, required for appending tuples.
 	 */
 	public IIndexBulkLoadContext beginBulkLoad(float fillFactor)
-			throws TreeIndexException, HyracksDataException,
-			PageAllocationException;
+			throws TreeIndexException, HyracksDataException;
 
 	/**
 	 * Append a tuple to the index in the context of a bulk load.
@@ -63,11 +61,9 @@ public interface ITreeIndex extends IIndex {
 	 *            Existing bulk load context.
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws PageAllocationException
 	 */
 	public void bulkLoadAddTuple(ITupleReference tuple,
-			IIndexBulkLoadContext ictx) throws HyracksDataException,
-			PageAllocationException;
+			IIndexBulkLoadContext ictx) throws HyracksDataException;
 
 	/**
 	 * Finalize the bulk loading operation in the given context.
@@ -76,10 +72,9 @@ public interface ITreeIndex extends IIndex {
 	 *            Existing bulk load context to be finalized.
 	 * @throws HyracksDataException
 	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws PageAllocationException
 	 */
 	public void endBulkLoad(IIndexBulkLoadContext ictx)
-			throws HyracksDataException, PageAllocationException;
+			throws HyracksDataException;
 
 	/**
 	 * @return The index's leaf frame factory.

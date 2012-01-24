@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private float fillFactor;
@@ -70,11 +69,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            try {
-                treeIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
-            } catch (PageAllocationException e) {
-                throw new HyracksDataException(e);
-            }
+            treeIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
         }
     }
 
@@ -82,7 +77,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     public void close() throws HyracksDataException {
         try {
             treeIndex.endBulkLoad(bulkLoadCtx);
-        } catch (PageAllocationException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
             treeIndexHelper.deinit();

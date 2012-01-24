@@ -18,7 +18,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -43,7 +42,7 @@ public class LSMRTree implements ILSMTree {
     private int btreeFileId;
     private boolean created;
 
-    private final IFreePageManager memFreePageManager;
+    private final InMemoryFreePageManager memFreePageManager;
     private final ITreeIndexFrameFactory rtreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory btreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory rtreeLeafFrameFactory;
@@ -63,7 +62,7 @@ public class LSMRTree implements ILSMTree {
     private boolean flushFlag;
 
     public LSMRTree(IBufferCache rtreeMemCache, IBufferCache bufferCache, int fieldCount, MultiComparator cmp,
-            IFreePageManager memFreePageManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+    		InMemoryFreePageManager memFreePageManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, RTreeFactory rTreeFactory, BTreeFactory bTreeFactory,
             IFileMapManager fileMapManager) {
@@ -109,21 +108,19 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException,
-            PageAllocationException {
+    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException,
-            PageAllocationException {
+    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException, PageAllocationException {
+    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         // TODO Auto-generated method stub
 
     }
@@ -314,23 +311,26 @@ public class LSMRTree implements ILSMTree {
         }
     }
 
-    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException,
-            PageAllocationException {
+    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         try {
             boolean continuePerformOp = false;
-            try {
-                while (continuePerformOp == false) {
-                    synchronized (this) {
-                        if (!flushFlag) {
-                            threadReferenceCounter++;
-                            continuePerformOp = true;
-                        }
-                    }
-                }
-                ctx.LSMRTreeOpContext.memRtreeAccessor.insert(tuple);
-                decreaseThreadReferenceCounter();
-            } catch (PageAllocationException e) {
-                synchronized (this) {
+            while (continuePerformOp == false) {
+            	synchronized (this) {
+            		if (!flushFlag) {
+            			threadReferenceCounter++;
+            			continuePerformOp = true;
+            		}
+            	}
+            }
+            ctx.LSMRTreeOpContext.memRtreeAccessor.insert(tuple);
+            decreaseThreadReferenceCounter();
+            // Check if we've reached or exceeded the maximum number of pages.
+            // Note: It doesn't matter if this inserter or another concurrent
+            // inserter caused the overflow.
+            // The first inserter reaching this code, should set the flush flag.
+            // Also, setting the flush flag multiple times doesn't hurt.
+            if (memFreePageManager.isFull()) {
+            	synchronized (this) {
                     // If flushFlag is false it means we are the first inserter
                     // to
                     // trigger the flush. If flushFlag is already set to true,
@@ -347,32 +347,32 @@ public class LSMRTree implements ILSMTree {
                         throw new Error("Thread reference counter is below zero. This indicates a programming error!");
                     }
                 }
-                insert(tuple, ctx);
-                return;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void delete(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException,
-            PageAllocationException {
+    private void delete(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         try {
-            boolean continuePerformOp = false;
-            try {
-                while (continuePerformOp == false) {
-                    synchronized (this) {
-                        if (!flushFlag) {
-                            threadReferenceCounter++;
-                            continuePerformOp = true;
-                        }
-                    }
-                }
-                ctx.LSMBTreeOpContext.memBtreeAccessor.insert(tuple);
-                decreaseThreadReferenceCounter();
-            } catch (PageAllocationException e) {
-                synchronized (this) {
+        	boolean continuePerformOp = false;
+        	while (continuePerformOp == false) {
+        		synchronized (this) {
+        			if (!flushFlag) {
+        				threadReferenceCounter++;
+        				continuePerformOp = true;
+        			}
+        		}
+        	}
+        	ctx.LSMBTreeOpContext.memBtreeAccessor.insert(tuple);
+        	decreaseThreadReferenceCounter();
+            // Check if we've reached or exceeded the maximum number of pages.
+            // Note: It doesn't matter if this inserter or another concurrent
+            // inserter caused the overflow.
+            // The first inserter reaching this code, should set the flush flag.
+            // Also, setting the flush flag multiple times doesn't hurt.
+            if (memFreePageManager.isFull()) {
+            	synchronized (this) {
                     // If flushFlag is false it means we are the first inserter
                     // to
                     // trigger the flush. If flushFlag is already set to true,
@@ -389,10 +389,7 @@ public class LSMRTree implements ILSMTree {
                         throw new Error("Thread reference counter is below zero. This indicates a programming error!");
                     }
                 }
-                delete(tuple, ctx);
-                return;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -474,28 +471,25 @@ public class LSMRTree implements ILSMTree {
         }
 
         @Override
-        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException,
-                PageAllocationException {
+        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             ctx.LSMRTreeOpContext.reset(IndexOp.INSERT);
             lsmRTree.insert(tuple, ctx);
         }
 
         @Override
-        public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException,
-                PageAllocationException {
+        public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             throw new UnsupportedOperationException("Update not supported by LSMRTree");
         }
 
         @Override
-        public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException,
-                PageAllocationException {
+        public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             ctx.LSMBTreeOpContext.reset(IndexOp.INSERT);
             lsmRTree.delete(tuple, ctx);
         }
 
         @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
-                TreeIndexException, PageAllocationException {
+                TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
             // TODO: fix exception handling throughout LSM tree.
             try {

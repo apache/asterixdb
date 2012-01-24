@@ -105,7 +105,7 @@ public class LSMTreeSearchTest extends AbstractLSMTreeTest {
         IBTreeLeafFrame insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
         LSMEntireTupleWriterFactory flushTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory flushLeafFrameFactory = new BTreeNSMLeafFrameFactory(flushTupleWriterFactory);

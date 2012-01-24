@@ -4,7 +4,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFreePageManager {
 	public int getFreePage(ITreeIndexMetaDataFrame metaFrame)
-			throws HyracksDataException, PageAllocationException;
+			throws HyracksDataException;
 
 	public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage)
 			throws HyracksDataException;

@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
@@ -130,7 +129,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 		}
 	}
 
-	public void loadData() throws IOException, TreeIndexException, PageAllocationException {
+	public void loadData() throws IOException, TreeIndexException {
 		List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
 		// generate pairs for subsequent sorting and bulk-loading
 		int id = 0;

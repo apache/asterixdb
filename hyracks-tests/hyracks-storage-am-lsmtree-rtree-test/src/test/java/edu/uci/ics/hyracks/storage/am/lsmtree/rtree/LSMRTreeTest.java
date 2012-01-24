@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDese
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -35,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeInMemoryBufferCacheFactory;
@@ -113,7 +113,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
 
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(100, metaFrameFactory);
+        InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(100, metaFrameFactory);
 
         FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
 

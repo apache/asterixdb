@@ -117,7 +117,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
-        ByteBuffer right = rightFrame.getBuffer();
+    	ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();        
         
         // Find split point, and determine into which frame the new tuple should be inserted into.

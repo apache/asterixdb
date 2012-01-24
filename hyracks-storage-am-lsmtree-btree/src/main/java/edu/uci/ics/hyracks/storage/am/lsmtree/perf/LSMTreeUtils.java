@@ -6,7 +6,6 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
@@ -31,7 +30,7 @@ public class LSMTreeUtils {
 		ITreeIndexFrameFactory deleteLeafFrameFactory = BTreeUtils.getLeafFrameFactory(deleteTupleWriterFactory,leafType);
 		ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
 		ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-		IFreePageManager memFreePageManager = new InMemoryFreePageManager(memCache.getNumPages(), metaFrameFactory);
+		InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memCache.getNumPages(), metaFrameFactory);
 	
 		// For the Flush Mechanism
 		LSMEntireTupleWriterFactory flushTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits);

@@ -9,15 +9,15 @@ public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
 
     public LSMRTreeInMemoryFreePageManager(int maxCapacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
         super(maxCapacity, metaDataFrameFactory);
-        currentCapacity = 3;
+        currentPageId.set(3);
     }
 
     @Override
     public void init(ITreeIndexMetaDataFrame metaFrame, int currentMaxPage) throws HyracksDataException {
-        currentCapacity = 3;
+        currentPageId.set(3);
     }
 
     public void reset() {
-        currentCapacity = 3;
+        currentPageId.set(3);
     }
 }

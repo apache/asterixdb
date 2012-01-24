@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
@@ -97,11 +96,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            try {
-                invIndex.bulkLoadAddTuple(bulkLoadCtx, tuple);
-            } catch (PageAllocationException e) {
-                throw new HyracksDataException(e);
-            }
+            invIndex.bulkLoadAddTuple(bulkLoadCtx, tuple);
         }
     }
 
@@ -109,7 +104,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
     public void close() throws HyracksDataException {
         try {
             invIndex.endBulkLoad(bulkLoadCtx);
-        } catch (PageAllocationException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
             try {
