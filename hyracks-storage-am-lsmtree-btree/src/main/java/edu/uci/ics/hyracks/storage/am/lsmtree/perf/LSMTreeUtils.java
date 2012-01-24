@@ -9,8 +9,8 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.LSMTree;
@@ -35,7 +35,7 @@ public class LSMTreeUtils {
 		// For the Flush Mechanism
 		LSMEntireTupleWriterFactory flushTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits);
 		ITreeIndexFrameFactory flushLeafFrameFactory = BTreeUtils.getLeafFrameFactory(flushTupleWriterFactory,leafType); 
-		FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+		LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
 		BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, typeTraits.length, interiorFrameFactory, flushLeafFrameFactory);
         
         LSMTree lsmtree = new LSMTree(memCache, bufferCache, typeTraits.length, cmp, memFreePageManager, 

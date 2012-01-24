@@ -15,21 +15,51 @@
 
 package edu.uci.ics.hyracks.storage.am.lsmtree.common;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 
 public class InMemoryFreePageManagerTest {
 
-    @Test
-    public void InMemoryFreePageManagerTest01() throws Exception {
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager memFreePageManager = new InMemoryFreePageManager(10, metaFrameFactory);
-        for (int i = 0; i < 5; i++) {
-            memFreePageManager.getFreePage(null);
+    private final int NUM_PAGES = 100;
+    
+    private void testInMemoryFreePageManager(InMemoryFreePageManager memFreePageManager) throws HyracksDataException {
+        // The first two pages are reserved for the BTree's metadata page and
+        // root page.
+        // The "actual" capacity is therefore numPages - 2.
+        int capacity = memFreePageManager.getCapacity();
+        assertEquals(capacity, NUM_PAGES - 2);
+        for (int i = 0; i < capacity; i++) {
+            int pageId = memFreePageManager.getFreePage(null);
+            // The free pages start from page 2;
+            assertEquals(i + 2, pageId);
+            assertFalse(memFreePageManager.isFull());
         }
+        // Start asking for 100 pages above the capacity.
+        // Asking for pages above the capacity should be very rare, but
+        // nevertheless succeed.
+        // We expect isFull() to return true.
+        for (int i = 0; i < 100; i++) {
+            int pageId = memFreePageManager.getFreePage(null);
+            assertEquals(capacity + i + 2, pageId);
+            assertTrue(memFreePageManager.isFull());
+        }
+    }
+    
+    @Test
+    public void test01() throws HyracksDataException {
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(NUM_PAGES, metaFrameFactory);
+        testInMemoryFreePageManager(memFreePageManager);
+        // We expect exactly the same behavior after a reset().
+        memFreePageManager.reset();
+        testInMemoryFreePageManager(memFreePageManager);
     }
 }

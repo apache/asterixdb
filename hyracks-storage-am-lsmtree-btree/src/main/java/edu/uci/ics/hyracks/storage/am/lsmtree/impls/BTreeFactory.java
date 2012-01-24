@@ -2,8 +2,8 @@ package edu.uci.ics.hyracks.storage.am.lsmtree.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeFactory {
@@ -13,9 +13,9 @@ public class BTreeFactory {
 	private MultiComparator cmp;
 	private ITreeIndexFrameFactory interiorFrameFactory;
 	private ITreeIndexFrameFactory leafFrameFactory;
-	private FreePageManagerFactory freePageManagerFactory;
+	private LinkedListFreePageManagerFactory freePageManagerFactory;
 	
-	public BTreeFactory(IBufferCache bufferCache, FreePageManagerFactory freePageManagerFactory, MultiComparator cmp, 
+	public BTreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory, MultiComparator cmp, 
 			int fieldCount, ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
 		this.bufferCache = bufferCache;
 		this.fieldCount = fieldCount;

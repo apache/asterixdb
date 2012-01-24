@@ -27,25 +27,20 @@ public class InMemoryFreePageManager implements IFreePageManager {
     protected final AtomicInteger currentPageId = new AtomicInteger();
     protected final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
 
-    public InMemoryFreePageManager(int maxCapacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
-        // Since the range of CacheArray in InMemoryBufferCache is 0 ~
-        // maxCapacity-1
-        this.capacity = maxCapacity - 1;
+    public InMemoryFreePageManager(int capacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+        // We start the currentPageId from 1, because the BTree uses
+        // the first page as metadata page, and the second page as root page.
+        // (when returning free pages we first increment, then get)
         currentPageId.set(1);
+        this.capacity = capacity;
         this.metaDataFrameFactory = metaDataFrameFactory;
-    }
-
-    public int getCurrentCapacity() {
-        return currentPageId.get();
     }
 
     @Override
     public int getFreePage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+        // The very call returns page id 2 because the BTree uses
+        // the first page as metadata page, and the second page as root page.
         return currentPageId.incrementAndGet();
-    }
-
-    @Override
-    public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException {
     }
 
     @Override
@@ -61,6 +56,22 @@ public class InMemoryFreePageManager implements IFreePageManager {
     @Override
     public ITreeIndexMetaDataFrameFactory getMetaDataFrameFactory() {
         return metaDataFrameFactory;
+    }
+
+    public int getCapacity() {
+        return capacity - 2;
+    }
+    
+    public void reset() {
+        currentPageId.set(1);
+    }
+
+    public boolean isFull() {
+        return currentPageId.get() >= capacity;
+    }
+
+    @Override
+    public void addFreePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException {
     }
 
     @Override
@@ -81,13 +92,5 @@ public class InMemoryFreePageManager implements IFreePageManager {
     @Override
     public boolean isFreePage(ITreeIndexMetaDataFrame metaFrame) {
         return false;
-    }
-
-    public void reset() {
-        currentPageId.set(1);
-    }
-    
-    public boolean isFull() {
-        return currentPageId.get() >= capacity;
     }
 }

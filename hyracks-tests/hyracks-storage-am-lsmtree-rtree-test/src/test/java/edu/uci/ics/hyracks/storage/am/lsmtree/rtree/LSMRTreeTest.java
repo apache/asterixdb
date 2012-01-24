@@ -32,8 +32,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTree;
@@ -115,7 +115,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
 
         RTreeFactory rTreeFactory = new RTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);

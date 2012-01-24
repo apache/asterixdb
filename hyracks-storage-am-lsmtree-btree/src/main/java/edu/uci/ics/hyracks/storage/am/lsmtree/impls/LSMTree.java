@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMTypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;

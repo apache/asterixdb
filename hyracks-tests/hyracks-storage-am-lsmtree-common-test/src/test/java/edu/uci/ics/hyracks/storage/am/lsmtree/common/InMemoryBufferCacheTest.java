@@ -15,115 +15,46 @@
 
 package edu.uci.ics.hyracks.storage.am.lsmtree.common;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import java.util.HashSet;
 
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCacheInternal;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class InMemoryBufferCacheTest{
-	
     private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-	
-    //TEST InMemoryBufferCache.pin()
+    private static final int NUM_PAGES = 100;
+    private HashSet<ICachedPage> pinnedPages = new HashSet<ICachedPage>();
+    
     @Test
-    public void InMemoryBufferCacheTest01() throws Exception {
-        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
-
-        try {
-        	ICachedPage memCachedPage = memBufferCache.pin(10, true);
-        	if(memCachedPage != null) {
-        		return;
-        	}
-        	else {
-        		fail("fail to pin");
-        	}
+    public void test01() throws Exception {
+        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
+        int dummyFileId = 0;
+        // Pin all pages, and make sure they return unique ICachedPages.
+        // We expect no overflow pages.
+        for (int i = 0; i < NUM_PAGES; i++) {
+            ICachedPage page = memBufferCache.pin(BufferedFileHandle.getDiskPageId(dummyFileId, i), false);
+            if (pinnedPages.contains(page)) {
+                fail("Id collision for ICachedPage, caused by id: " + i);
+            }
+            pinnedPages.add(page);
+            assertEquals(0, memBufferCache.getNumOverflowPages());
         }
-        catch (ArrayIndexOutOfBoundsException e){
-        	System.out.println("Catch exception: " + e);
-        	return;
-        }
-        catch (Exception e) {
-        	fail("Unexpected exception!");
+        // Pin pages above capacity. We expect to be given new overflow pages.
+        // Going above capacity should be very rare, but nevertheless succeed.
+        for (int i = 0; i < 100; i++) {
+            ICachedPage page = memBufferCache.pin(BufferedFileHandle.getDiskPageId(dummyFileId, i + NUM_PAGES), false);
+            if (pinnedPages.contains(page)) {
+                fail("Id collision for ICachedPage, caused by overflow id: " + i);
+            }
+            pinnedPages.add(page);
+            assertEquals(i + 1, memBufferCache.getNumOverflowPages());
         }
     }
-    
-    //TEST InMemoryBufferCache.pin()
-	//expect ArrayIndexOutOfBoundsException
-    @Test
-    public void InMemoryBufferCacheTest02() throws Exception {
-    	
-        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
-
-        try {
-        	ICachedPage memCachedPage = memBufferCache.pin(500, true);
-        	if(memCachedPage != null) {
-        		return;
-        	}
-        	else {
-        		fail("fail to pin");
-        	}
-        }
-        catch (ArrayIndexOutOfBoundsException e){
-        	System.out.println("Catch exception: " + e);
-        	return;
-        }
-        catch (Exception e) {
-        	fail("Unexpected exception!");
-        }
-    }
-    
-    //TEST InMemoryBufferCache.getPage()
-    @Test
-    public void InMemoryBufferCacheTest03() throws Exception {
-    	
-        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
-
-        try {
-        	ICachedPage memCachedPage = ((IBufferCacheInternal) memBufferCache).getPage(20);
-        	if(memCachedPage != null) {
-        		return;
-        	}
-        	else {
-        		fail("fail to pin");
-        	}
-        }
-        catch (ArrayIndexOutOfBoundsException e){
-        	System.out.println("Catch exception: " + e);
-        	return;
-        }
-        catch (Exception e) {
-        	fail("Unexpected exception!");
-        }
-    } 
-    
-    //TEST InMemoryBufferCache.getPage()
-    //expect ArrayIndexOutOfBoundsException
-    @Test
-    public void InMemoryBufferCacheTest04() throws Exception {
-    	
-        IBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
-
-        try {
-        	ICachedPage memCachedPage = ((IBufferCacheInternal) memBufferCache).getPage(1000);
-        	if(memCachedPage != null) {
-        		return;
-        	}
-        	else {
-        		fail("fail to pin");
-        	}
-        }
-        catch (ArrayIndexOutOfBoundsException e){
-        	System.out.println("Catch exception: " + e);
-        	return;
-        }
-        catch (Exception e) {
-        	fail("Unexpected exception!");
-        }
-    } 
 }

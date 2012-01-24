@@ -36,8 +36,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.FreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsmtree.impls.BTreeFactory;
@@ -98,7 +98,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
@@ -246,7 +246,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
@@ -429,7 +429,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
@@ -608,7 +608,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
@@ -717,7 +717,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
@@ -900,7 +900,7 @@ public class LSMTreeDeleteTest extends AbstractLSMTreeTest {
 
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(100, metaFrameFactory);
 
-        FreePageManagerFactory freePageManagerFactory = new FreePageManagerFactory(bufferCache, metaFrameFactory);
+        LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache, metaFrameFactory);
         BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, cmp, fieldCount,
                 interiorFrameFactory, insertLeafFrameFactory);
 
