@@ -208,7 +208,7 @@ public class IPCConnectionManager {
                                         SelectionKey key = handle.getKey();
                                         key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
                                     } else {
-                                        if (buffer.position() == 0) {
+                                        if (!buffer.hasRemaining()) {
                                             handle.resizeOutBuffer();
                                             continue;
                                         }
@@ -251,7 +251,10 @@ public class IPCConnectionManager {
                                 } else if (!writeBuffer.hasRemaining()) {
                                     key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
                                 }
-                                handle.clearFull();
+                                if (handle.full()) {
+                                    handle.clearFull();
+                                    selector.wakeup();
+                                }
                             } else if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
