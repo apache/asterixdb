@@ -1,18 +1,27 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsmtree.impls;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -29,112 +38,107 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsmtree.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMTypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMTree implements ITreeIndex {
+public class LSMTree implements ITreeIndex, ILSMTree {
+    // In-memory components.
+    private final BTree memBTree;
+    private final InMemoryFreePageManager memFreePageManager;    
 
-    private final IBufferCache bufferCache;
-    private BTree memBTree;
-    private String fileName;
-    private int fileId;
-    private boolean created;
-
-    private final InMemoryFreePageManager memFreePageManager;
+    // On-disk components.
+    private final String onDiskDir;
+    private final BTreeFactory diskBTreeFactory;
+    private final IBufferCache diskBufferCache;
+    private final IFileMapProvider diskFileMapProvider;    
+    private LinkedList<BTree> onDiskBTrees = new LinkedList<BTree>();
+    private LinkedList<BTree> mergedBTrees = new LinkedList<BTree>();
+    private int onDiskBTreeCount;
+    
+    // Common for in-memory and on-disk components.
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory insertLeafFrameFactory;
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final MultiComparator cmp;
-
-    // TODO: change to private, it's public only for LSMTreeSearchTest
-    public LinkedList<InDiskTreeInfo> inDiskTreeInfoList;
-    private LinkedList<InDiskTreeInfo> mergedInDiskTreeInfoList;
-    private int inDiskTreeCounter;
-    private final BTreeFactory bTreeFactory;
-    private final IFileMapManager fileMapManager;
+    
+    // For dealing with concurrent accesses.
     private int threadRefCount;
     private boolean flushFlag;
 
-    public LSMTree(IBufferCache memCache, IBufferCache bufferCache, int fieldCount, MultiComparator cmp,
-            InMemoryFreePageManager memFreePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
-            BTreeFactory bTreeFactory, IFileMapManager fileMapManager) {
-        this.bufferCache = bufferCache;
-        this.cmp = cmp;
+    public LSMTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
+            ITreeIndexFrameFactory deleteLeafFrameFactory, String onDiskDir, BTreeFactory diskBTreeFactory,
+            IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator cmp) {
+        memBTree = new BTree(memBufferCache, fieldCount, cmp, memFreePageManager, interiorFrameFactory,
+                insertLeafFrameFactory);
+        this.memFreePageManager = memFreePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
-        this.memFreePageManager = memFreePageManager;
-        this.bTreeFactory = bTreeFactory;
-        this.inDiskTreeInfoList = new LinkedList<InDiskTreeInfo>();
-        this.inDiskTreeCounter = 0;
-        this.fileMapManager = fileMapManager;
+        this.diskBufferCache = diskBTreeFactory.getBufferCache();
+        this.diskFileMapProvider = diskFileMapProvider;
+        this.diskBTreeFactory = diskBTreeFactory;
+        this.cmp = cmp;
+        this.onDiskBTrees = new LinkedList<BTree>();
+        this.onDiskBTreeCount = 0;
         this.threadRefCount = 0;
-        this.created = false;
         this.flushFlag = false;
-
-        try {
-            this.fileName = this.fileMapManager.lookupFileName(this.fileId).toString();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!onDiskDir.endsWith(System.getProperty("file.separator"))) {
+            onDiskDir += System.getProperty("file.separator");
         }
-
-        memBTree = new BTree(memCache, fieldCount, cmp, memFreePageManager, interiorFrameFactory,
-                insertLeafFrameFactory);
+        this.onDiskDir = onDiskDir;
     }
 
     @Override
     public void create(int indexFileId) throws HyracksDataException {
-        if (created) {
-            return;
-        } else {
-            memBTree.create(indexFileId);
-            this.fileId = indexFileId;
-            created = true;
-        }
+        memBTree.create(indexFileId);
     }
 
     @Override
     public void open(int indexFileId) {
         memBTree.open(indexFileId);
-        this.fileId = indexFileId;
     }
 
     @Override
     public void close() {
         memBTree.close();
-        this.fileId = -1;
     }
 
-    private void lsmPerformOp(ITupleReference tuple, LSMTreeOpContext ctx) throws Exception {
-        boolean waitForFlush = false;
-        do {
-            synchronized (this) {
-                if (!flushFlag) {
-                    threadEnter();
-                    waitForFlush = false;
-                }
-            }
-        } while (waitForFlush == true);
-        try {
-            ctx.memBtreeAccessor.insert(tuple);
-        } catch (BTreeDuplicateKeyException e) {
-            ctx.reset(IndexOp.UPDATE);
-            // We don't need to deal with a nonexistent key here, because a
-            // deleter will actually update the key and it's value, and not
-            // delete it from the BTree.
-            ctx.memBtreeAccessor.update(tuple);    
-        }
-        threadExit();
-    }
+	private void lsmPerformOp(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+		boolean waitForFlush = true;
+		do {
+		    // Wait for ongoing flush to complete.
+			synchronized (this) {
+				if (!flushFlag) {
+					// Increments threadRefCount, to force a flush to wait for this operation to finish.
+				    // (a flush can only begin once threadRefCount == 0).
+				    threadEnter();
+				    // Proceed with operation.
+					waitForFlush = false;
+				}
+			}
+		} while (waitForFlush);
+		try {
+			ctx.memBtreeAccessor.insert(tuple);
+		} catch (BTreeDuplicateKeyException e) {
+			// We don't need to deal with a nonexistent key here, because a
+			// deleter will actually update the key and it's value, and not
+			// delete it from the BTree.
+			// Also notice that a flush must wait for the current operation to
+			// finish (threadRefCount must reach zero).
+			ctx.reset(IndexOp.UPDATE);
+			ctx.memBtreeAccessor.update(tuple);
+		}
+		threadExit();
+	}
 
     public void threadEnter() {
         threadRefCount++;
     }
     
-    public void threadExit() throws Exception {
+    public void threadExit() throws HyracksDataException, TreeIndexException {
         synchronized (this) {
             threadRefCount--;
             // Check if we've reached or exceeded the maximum number of pages.
@@ -143,199 +147,135 @@ public class LSMTree implements ITreeIndex {
             }
             // Flush will only be handled by last exiting thread.
             if (flushFlag && threadRefCount == 0) {
-                flushInMemoryBtree();
+                flush();
                 flushFlag = false;
             }
         }
     }
 
-    private String getNextFileName() {
-        int newDiskBTreeId = inDiskTreeCounter++;
-        String LSMFileName = new String(this.fileName);
-        return LSMFileName.concat("-" + Integer.toString(newDiskBTreeId));
-    }
-
-    public void flushInMemoryBtree() throws Exception {
-        // read the tuple from InMemoryBtree, and bulkload into the disk
-
-        // scan
+    @Override
+    public void flush() throws HyracksDataException, TreeIndexException {
+        System.out.println("FLUSHING!");
+        // Bulk load a new on-disk BTree from the in-memory BTree.
         ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(
                 (IBTreeLeafFrame) insertLeafFrameFactory.createFrame(), false);
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        ITreeIndexAccessor memBtreeAccessor = memBTree.createAccessor();
-        memBtreeAccessor.search(scanCursor, nullPred);
-
-        // Create a new in-Disk BTree, which have full fillfactor.
-
-        // Register the BTree information into system.
-        FileReference file = new FileReference(new File(getNextFileName()));
-        // TODO: Delete the file during cleanup.
-        bufferCache.createFile(file);
-        int newDiskBTreeId = fileMapManager.lookupFileId(file);
-        // TODO: Close the file during cleanup.
-        bufferCache.openFile(newDiskBTreeId);
-
-        // Create new in-Disk Btree.
-        BTree inDiskBTree = this.bTreeFactory.createBTreeInstance(newDiskBTreeId);
-        inDiskBTree.create(newDiskBTreeId);
-        // TODO: Close the BTree during cleanup.
-        inDiskBTree.open(newDiskBTreeId);
-
-        // BulkLoad the tuples from the in-memory tree into the new disk BTree.
-        IIndexBulkLoadContext bulkLoadCtx = inDiskBTree.beginBulkLoad(1.0f);
+        ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
+        memBTreeAccessor.search(scanCursor, nullPred);
+        BTree diskBTree = createDiskBTree();
+        // Bulk load the tuples from the in-memory BTree into the new disk BTree.
+        IIndexBulkLoadContext bulkLoadCtx = diskBTree.beginBulkLoad(1.0f);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
-                inDiskBTree.bulkLoadAddTuple(frameTuple, bulkLoadCtx);
+                diskBTree.bulkLoadAddTuple(frameTuple, bulkLoadCtx);
             }
         } finally {
             scanCursor.close();
         }
-        inDiskBTree.endBulkLoad(bulkLoadCtx);
-
-        // After BulkLoading, Clear the in-memTree
-        resetInMemoryTree();
-
-        InDiskTreeInfo newLinkedListNode = new InDiskTreeInfo(inDiskBTree);
-        synchronized (inDiskTreeInfoList) {
-            inDiskTreeInfoList.addFirst(newLinkedListNode);
-        }
+        diskBTree.endBulkLoad(bulkLoadCtx);
+        resetMemBTree();
+        onDiskBTrees.addFirst(diskBTree);
     }
 
-    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        try {
-            lsmPerformOp(tuple, ctx);
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void resetMemBTree() throws HyracksDataException {
+        memFreePageManager.reset();
+        memBTree.create(memBTree.getFileId());
+    }
+    
+    private String getNextFileName() {
+        return onDiskDir + "btree_" + onDiskBTreeCount++;
+    }
+    
+    private BTree createDiskBTree() throws HyracksDataException {
+        // Register the new BTree file.
+        FileReference file = new FileReference(new File(getNextFileName()));
+        // TODO: Delete the file during cleanup.
+        diskBufferCache.createFile(file);
+        int diskBTreeFileId = diskFileMapProvider.lookupFileId(file);
+        // TODO: Close the file during cleanup.
+        diskBufferCache.openFile(diskBTreeFileId);
+        // Create new BTree instance.
+        BTree diskBTree = diskBTreeFactory.createBTreeInstance(diskBTreeFileId);
+        diskBTree.create(diskBTreeFileId);
+        // TODO: Close the BTree during cleanup.
+        diskBTree.open(diskBTreeFileId);
+        return diskBTree;
+    }
+    
+    private void search(ITreeIndexCursor cursor, RangePredicate pred, LSMTreeOpContext ctx, boolean includeMemBTree) throws HyracksDataException, TreeIndexException {                
+        boolean waitForFlush = true;
+        do {
+            synchronized (this) {
+                if (!flushFlag) {
+                    // The corresponding threadExit() is in LSMTreeRangeSearchCursor.close().
+                    threadEnter();
+                    waitForFlush = false;
+                }
+            }
+        } while (waitForFlush);
+        
+        // TODO: Think about what happens with possibly concurrent merges.
+        LSMTreeRangeSearchCursor lsmTreeCursor = (LSMTreeRangeSearchCursor) cursor;
+        int numDiskBTrees = onDiskBTrees.size();
+        int numBTrees = (includeMemBTree) ? numDiskBTrees + 1 : numDiskBTrees;        
+        ListIterator<BTree> diskBTreesIter = onDiskBTrees.listIterator();
+        LSMTreeCursorInitialState initialState = new LSMTreeCursorInitialState(numBTrees,
+                insertLeafFrameFactory, cmp, this);
+        lsmTreeCursor.open(initialState, pred);                  
+        
+        int cursorIx;
+        if (includeMemBTree) {
+            // Open cursor of in-memory BTree at index 0.
+            ctx.memBtreeAccessor.search(lsmTreeCursor.getCursor(0), pred);
+            // Skip 0 because it is the in-memory BTree.
+            cursorIx = 1;
+        } else {
+            cursorIx = 0;
         }
+        
+        // Open cursors of on-disk BTrees.
+        ITreeIndexAccessor[] diskBTreeAccessors = new ITreeIndexAccessor[numDiskBTrees];
+        int diskBTreeIx = 0;
+        while(diskBTreesIter.hasNext()) {
+            BTree diskBTree = diskBTreesIter.next();
+            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor();
+            diskBTreeAccessors[diskBTreeIx].search(lsmTreeCursor.getCursor(cursorIx), pred);
+            cursorIx++;
+            diskBTreeIx++;
+        }
+        LSMPriorityQueueComparator LSMPriorityQueueCmp = new LSMPriorityQueueComparator(cmp);
+        lsmTreeCursor.initPriorityQueue(LSMPriorityQueueCmp);
+    }
+    
+    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        lsmPerformOp(tuple, ctx);
     }
 
     private void delete(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        try {
-            lsmPerformOp(tuple, ctx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        return null;
-    }
-
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-    }
-
-    public void search(ITreeIndexCursor cursor, RangePredicate pred, LSMTreeOpContext ctx) throws Exception {
-        int numberOfInDiskTrees;
-        ListIterator<InDiskTreeInfo> inDiskTreeInfoListIterator;
-        boolean continuePerformOp = false;
-
-        ctx.reset(IndexOp.SEARCH);
-
-        while (continuePerformOp == false) {
-            synchronized (this) {
-                if (!flushFlag) {
-                    threadRefCount++;
-                    continuePerformOp = true;
-                }
-            }
-        }
-
-        // in-disk
-        synchronized (inDiskTreeInfoList) {
-            numberOfInDiskTrees = inDiskTreeInfoList.size();
-            inDiskTreeInfoListIterator = inDiskTreeInfoList.listIterator();
-        }
-
-        LSMTreeCursorInitialState initialState = new LSMTreeCursorInitialState(numberOfInDiskTrees + 1,
-                insertLeafFrameFactory, cmp, this);
-        cursor.open(initialState, pred);
-
-        BTree[] onDiskBtrees = new BTree[numberOfInDiskTrees];
-        ITreeIndexAccessor[] onDiskBtreeAccessors = new ITreeIndexAccessor[numberOfInDiskTrees];
-
-        for (int i = 0; i < numberOfInDiskTrees; i++) {
-            // get btree instances for in-disk trees
-            if (inDiskTreeInfoListIterator.hasNext()) {
-                onDiskBtrees[i] = ((InDiskTreeInfo) inDiskTreeInfoListIterator.next()).getBTree();
-            } else {
-                throw new HyracksDataException("Cannot find in-disk tree instance");
-            }
-            onDiskBtreeAccessors[i] = onDiskBtrees[i].createAccessor();
-            onDiskBtreeAccessors[i].search(((LSMTreeRangeSearchCursor) cursor).getCursor(i + 1), pred);
-        }
-
-        // in-memory
-        ctx.memBtreeAccessor.search(((LSMTreeRangeSearchCursor) cursor).getCursor(0), pred);
-
-        LSMPriorityQueueComparator LSMPriorityQueueCmp = new LSMPriorityQueueComparator(cmp);
-        ((LSMTreeRangeSearchCursor) cursor).initPriorityQueue(numberOfInDiskTrees + 1, LSMPriorityQueueCmp);
+        lsmPerformOp(tuple, ctx);
     }
 
     public void merge() throws Exception {
-        ITreeIndexCursor rangeCursor = new LSMTreeRangeSearchCursor();
+        LSMTreeOpContext ctx = createOpContext();
+        ITreeIndexCursor cursor = new LSMTreeRangeSearchCursor();
         RangePredicate rangePred = new RangePredicate(true, null, null, true, true, null, null);
-
-        // Cursor setting -- almost the same as search, only difference is
-        // "no cursor for in-memory tree"
-        int numberOfInDiskTrees;
-        ListIterator<InDiskTreeInfo> inDiskTreeInfoListIterator;
-        boolean continuePerformOp = false;
-        while (continuePerformOp == false) {
-            synchronized (this) {
-                if (!flushFlag) {
-                    threadRefCount++;
-                    continuePerformOp = true;
-                }
-            }
-        }
-
-        synchronized (inDiskTreeInfoList) {
-            numberOfInDiskTrees = inDiskTreeInfoList.size();
-            inDiskTreeInfoListIterator = inDiskTreeInfoList.listIterator();
-        }
-
-        LSMTreeCursorInitialState initialState = new LSMTreeCursorInitialState(numberOfInDiskTrees,
-                insertLeafFrameFactory, cmp, this);
-        rangeCursor.open(initialState, rangePred);
-
-        BTree[] onDiskBtrees = new BTree[numberOfInDiskTrees];
-        ITreeIndexAccessor[] onDiskBtreeAccessors = new ITreeIndexAccessor[numberOfInDiskTrees];
-
-        for (int i = 0; i < numberOfInDiskTrees; i++) {
-            // get btree instances for in-disk trees
-            if (inDiskTreeInfoListIterator.hasNext()) {
-                onDiskBtrees[i] = ((InDiskTreeInfo) inDiskTreeInfoListIterator.next()).getBTree();
-            } else {
-                throw new Exception("Cannot find in-disk tree instance");
-            }
-            onDiskBtreeAccessors[i] = onDiskBtrees[i].createAccessor();
-            onDiskBtreeAccessors[i].search(((LSMTreeRangeSearchCursor) rangeCursor).getCursor(i), rangePred);
-        }
-
-        LSMPriorityQueueComparator LSMPriorityQueueCmp = new LSMPriorityQueueComparator(cmp);
-        ((LSMTreeRangeSearchCursor) rangeCursor).initPriorityQueue(numberOfInDiskTrees, LSMPriorityQueueCmp);
-        // End of Cursor setting
+        // Ordered scan, ignoring the in-memory BTree.
+        search(cursor, (RangePredicate) rangePred, ctx, false);
 
         // Create a new Merged BTree, which have full fillfactor.
         // Register the BTree information into system.
         // TODO: change the naming schema for the new tree
         FileReference file = new FileReference(new File(getNextFileName()));
         // TODO: Delete the file during cleanup.
-        bufferCache.createFile(file);
-        int mergedBTreeId = fileMapManager.lookupFileId(file);
+        diskBufferCache.createFile(file);
+        int mergedBTreeId = diskFileMapProvider.lookupFileId(file);
         // TODO: Close the file during cleanup.
-        bufferCache.openFile(mergedBTreeId);
+        diskBufferCache.openFile(mergedBTreeId);
 
         // Create new in-Disk BTree.
-        BTree mergedBTree = this.bTreeFactory.createBTreeInstance(mergedBTreeId);
+        BTree mergedBTree = this.diskBTreeFactory.createBTreeInstance(mergedBTreeId);
         mergedBTree.create(mergedBTreeId);
         // TODO: Close the BTree during cleanup.
         mergedBTree.open(mergedBTreeId);
@@ -344,34 +284,32 @@ public class LSMTree implements ITreeIndex {
         IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
 
         try {
-            while (rangeCursor.hasNext()) {
-                rangeCursor.next();
-                ITupleReference frameTuple = rangeCursor.getTuple();
+            while (cursor.hasNext()) {
+                cursor.next();
+                ITupleReference frameTuple = cursor.getTuple();
                 mergedBTree.bulkLoadAddTuple(frameTuple, bulkLoadCtx);
             }
         } finally {
-            rangeCursor.close();
+            cursor.close();
         }
-
         mergedBTree.endBulkLoad(bulkLoadCtx);
 
-        InDiskTreeInfo newLinkedListNode = new InDiskTreeInfo(mergedBTree);
-        LinkedList<InDiskTreeInfo> tempInDiskTreeInfo;
-        synchronized (inDiskTreeInfoList) {
-            mergedInDiskTreeInfoList = (LinkedList<InDiskTreeInfo>) inDiskTreeInfoList.clone();
+        /*
+        synchronized (onDiskBTrees) {
+            mergedBTrees = (LinkedList<BTree>) onDiskBTrees.clone();
             // Remove the redundant trees, and add the new merged tree in the
             // last off the list
             for (int i = 0; i < numberOfInDiskTrees; i++) {
-                mergedInDiskTreeInfoList.removeLast();
+                mergedBTrees.removeLast();
             }
-            mergedInDiskTreeInfoList.addLast(newLinkedListNode);
+            mergedBTrees.addLast(mergedBTree);
 
             // TODO: to swap the linkedlists
-            /*
-             * tempInDiskTreeInfo = inDiskTreeInfoList; inDiskTreeInfoList =
-             * mergedInDiskTreeInfoList; mergedInDiskTreeInfoList =
-             * tempInDiskTreeInfo;
-             */
+            //
+            // tempInDiskTreeInfo = inDiskTreeInfoList; inDiskTreeInfoList =
+            // mergedInDiskTreeInfoList; mergedInDiskTreeInfoList =
+            // tempInDiskTreeInfo;
+            //
             // TODO: to swap the searchThreadCounters
 
             // 1. should add the searcherReferenceCounter
@@ -382,6 +320,49 @@ public class LSMTree implements ITreeIndex {
 
         }
         // TODO: to wake up the cleaning thread
+         */
+    }
+    
+    public class LSMTreeBulkLoadContext implements IIndexBulkLoadContext {
+        private final BTree btree;
+        private IIndexBulkLoadContext bulkLoadCtx;
+        
+        public LSMTreeBulkLoadContext(BTree btree) {
+            this.btree = btree;
+        }
+
+        public void beginBulkLoad(float fillFactor) throws HyracksDataException, TreeIndexException {
+            bulkLoadCtx = btree.beginBulkLoad(fillFactor);
+        }
+    
+        public BTree getBTree() {
+            return btree;
+        }
+        
+        public IIndexBulkLoadContext getBulkLoadCtx() {
+            return bulkLoadCtx;
+        }
+    }
+    
+    @Override
+    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {        
+        BTree diskBTree = createDiskBTree();
+        LSMTreeBulkLoadContext bulkLoadCtx = new LSMTreeBulkLoadContext(diskBTree);
+        bulkLoadCtx.beginBulkLoad(fillFactor);
+        return bulkLoadCtx;
+    }
+
+    @Override
+    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
+        LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
+        bulkLoadCtx.getBTree().bulkLoadAddTuple(tuple, bulkLoadCtx.getBulkLoadCtx());
+    }
+
+    @Override
+    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
+        LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
+        bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());
+        onDiskBTrees.addFirst(bulkLoadCtx.getBTree());
     }
 
     @Override
@@ -412,96 +393,6 @@ public class LSMTree implements ITreeIndex {
     @Override
     public IndexType getIndexType() {
         return memBTree.getIndexType();
-    }
-
-    public void resetInMemoryTree() throws HyracksDataException {
-        ((InMemoryFreePageManager) memFreePageManager).reset();
-        memBTree.create(fileId);
-    }
-
-    // This function is just for testing flushInMemoryBtree()
-    public void scanDiskTree(int treeIndex) throws Exception {
-        BTree onDiskBtree = inDiskTreeInfoList.get(treeIndex).getBTree();
-        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
-        RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(
-                (IBTreeLeafFrame) this.insertLeafFrameFactory.createFrame(), false);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        ITreeIndexAccessor onDiskBtreeAccessor = onDiskBtree.createAccessor();
-        onDiskBtreeAccessor.search(scanCursor, nullPred);
-        try {
-            int scanTupleIndex = 0;
-            while (scanCursor.hasNext()) {
-                scanCursor.hasNext();
-                scanCursor.next();
-                ITupleReference frameTuple = scanCursor.getTuple();
-                int numPrintFields = Math.min(frameTuple.getFieldCount(), recDescSers.length);
-
-                for (int i = 0; i < numPrintFields; i++) {
-                    ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(i),
-                            frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-                    DataInput dataIn = new DataInputStream(inStream);
-                    Object o = recDescSers[i].deserialize(dataIn);
-
-                    if (i == 1)
-                        System.out.printf("LSMTree.scanDiskTree(): scanTupleIndex[%d]; Value is [%d]; ",
-                                scanTupleIndex, Integer.parseInt(o.toString()));
-
-                }
-
-                if (((LSMTypeAwareTupleReference) frameTuple).isDelete()) {
-                    System.out.printf(" DELETE\n");
-                } else {
-                    System.out.printf(" INSERT\n");
-                }
-                scanTupleIndex++;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            scanCursor.close();
-        }
-    }
-
-    // This function is just for testing flushInMemoryBtree()
-    public void scanInMemoryTree() throws Exception {
-        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
-        RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(
-                (IBTreeLeafFrame) this.insertLeafFrameFactory.createFrame(), false);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        ITreeIndexAccessor inMemBtreeAccessor = memBTree.createAccessor();
-        inMemBtreeAccessor.search(scanCursor, nullPred);
-        try {
-            int scanTupleIndex = 0;
-            while (scanCursor.hasNext()) {
-                scanCursor.hasNext();
-                scanCursor.next();
-                ITupleReference frameTuple = scanCursor.getTuple();
-                int numPrintFields = Math.min(frameTuple.getFieldCount(), recDescSers.length);
-                for (int i = 0; i < numPrintFields; i++) {
-                    ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(i),
-                            frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-                    DataInput dataIn = new DataInputStream(inStream);
-                    Object o = recDescSers[i].deserialize(dataIn);
-                    if (i == 1)
-                        System.out.printf("LSMTree.scanMemoryTree(): scanTupleIndex[%d]; Value is [%d]; ",
-                                scanTupleIndex, Integer.parseInt(o.toString()));
-                }
-                if (((LSMTypeAwareTupleReference) frameTuple).isDelete()) {
-                    System.out.printf(" DELETE\n");
-                } else {
-                    System.out.printf(" INSERT\n");
-                }
-                scanTupleIndex++;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            scanCursor.close();
-        }
     }
 
     public LSMTreeOpContext createOpContext() {
@@ -545,12 +436,7 @@ public class LSMTree implements ITreeIndex {
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
-            // TODO: fix exception handling throughout LSM tree.
-            try {
-                lsmTree.search(cursor, (RangePredicate) searchPred, ctx);
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
+            lsmTree.search(cursor, (RangePredicate) searchPred, ctx, true);
         }
 
         @Override

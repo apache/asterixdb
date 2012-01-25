@@ -62,7 +62,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws HyracksDataException {
         if (page != null) {
             if (exclusiveLatchNodes) {
                 page.releaseWriteLatch();
@@ -100,7 +100,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws Exception {
+    public boolean hasNext() throws HyracksDataException {
         if (pred.isForward()) {
             if (tupleIndex >= frame.getTupleCount()) {
                 int nextLeafPage = frame.getNextLeaf();
@@ -145,7 +145,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() throws Exception {
+    public void next() throws HyracksDataException {
         tupleIndex += tupleIndexInc;
     }
 

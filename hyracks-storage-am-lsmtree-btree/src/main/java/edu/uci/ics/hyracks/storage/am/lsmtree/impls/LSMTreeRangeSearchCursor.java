@@ -9,6 +9,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsmtree.tuples.LSMTypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -21,19 +22,18 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
     private MultiComparator cmp;
     private LSMPriorityQueueElement outputElement;
     private LSMPriorityQueueElement reusedElement;
-    private int numberOfTrees;
     private boolean needPush;
-    private LSMTree lsm;
+    private LSMTree lsmTree;
 
     public LSMTreeRangeSearchCursor() {
         outputElement = null;
         needPush = false;
     }
 
-    public void initPriorityQueue(int numberOfTrees, LSMPriorityQueueComparator LSMPriorityQueueCmp) throws Exception {
-        this.numberOfTrees = numberOfTrees;
-        outputPriorityQueue = new PriorityQueue<LSMPriorityQueueElement>(numberOfTrees, LSMPriorityQueueCmp);
-        for (int i = 0; i < numberOfTrees; i++) {
+    public void initPriorityQueue(LSMPriorityQueueComparator LSMPriorityQueueCmp)
+            throws HyracksDataException {
+        outputPriorityQueue = new PriorityQueue<LSMPriorityQueueElement>(rangeCursors.length, LSMPriorityQueueCmp);
+        for (int i = 0; i < rangeCursors.length; i++) {
             LSMPriorityQueueElement element;
             if (rangeCursors[i].hasNext()) {
                 rangeCursors[i].next();
@@ -54,32 +54,30 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws Exception {
+    public boolean hasNext() throws HyracksDataException {
         checkPriorityQueue();
         return !outputPriorityQueue.isEmpty();
     }
 
     @Override
-    public void next() throws Exception {
-
+    public void next() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
         needPush = true;
         if (outputElement == null) {
-            throw new Exception("The outputPriorityQueue is empty");
+            throw new HyracksDataException("The outputPriorityQueue is empty");
         }
     }
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-
-        lsm = ((LSMTreeCursorInitialState) initialState).getLsm();
-        cmp = ((LSMTreeCursorInitialState) initialState).getCmp();
-
-        rangeCursors = new BTreeRangeSearchCursor[((LSMTreeCursorInitialState) initialState).getNumberOfTrees()];
-
-        for (int i = 0; i < ((LSMTreeCursorInitialState) initialState).getNumberOfTrees(); i++) {
-            rangeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) ((LSMTreeCursorInitialState) initialState)
-                    .getLeafFrameFactory().createFrame(), false);
+        LSMTreeCursorInitialState lsmInitialState = (LSMTreeCursorInitialState) initialState;
+        lsmTree = lsmInitialState.getLsm();
+        cmp = lsmInitialState.getCmp();
+        int numBTrees = lsmInitialState.getNumBTrees();
+        rangeCursors = new BTreeRangeSearchCursor[numBTrees];
+        for (int i = 0; i < numBTrees; i++) {
+            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
+            rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
         }
     }
 
@@ -90,13 +88,17 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws Exception {
-        lsm.threadExit();
+    public void close() throws HyracksDataException {
         outputPriorityQueue.clear();
-        for (int i = 0; i < numberOfTrees; i++) {
+        for (int i = 0; i < rangeCursors.length; i++) {
             rangeCursors[i].close();
         }
         rangeCursors = null;
+        try {
+            lsmTree.threadExit();
+        } catch (TreeIndexException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
@@ -114,8 +116,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
         return (ITupleReference) outputElement.getTuple();
     }
 
-    private void pushIntoPriorityQueue(int cursorIndex) throws Exception {
-
+    private void pushIntoPriorityQueue(int cursorIndex) throws HyracksDataException {
         if (rangeCursors[cursorIndex].hasNext()) {
             rangeCursors[cursorIndex].next();
             reusedElement.reset(rangeCursors[cursorIndex].getTuple(), cursorIndex);
@@ -123,7 +124,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
         }
     }
 
-    private void checkPriorityQueue() throws Exception {
+    private void checkPriorityQueue() throws HyracksDataException {
 
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {

@@ -23,16 +23,16 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public interface ITreeIndexCursor {
 	public void reset();
 
-	public boolean hasNext() throws Exception;
+	public boolean hasNext() throws HyracksDataException;
 
-	public void next() throws Exception;
+	public void next() throws HyracksDataException;
 
 	public void open(ICursorInitialState initialState,
 			ISearchPredicate searchPred) throws HyracksDataException;
 
 	public ICachedPage getPage();
 
-	public void close() throws Exception;
+	public void close() throws HyracksDataException;
 
 	public void setBufferCache(IBufferCache bufferCache);
 

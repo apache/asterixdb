@@ -7,20 +7,20 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMTreeCursorInitialState implements ICursorInitialState {
 
-	private int numberOfTrees;
+	private int numBTrees;
 	private ITreeIndexFrameFactory leafFrameFactory;
 	private MultiComparator cmp;
 	private LSMTree lsm;
 	
-	public LSMTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp, LSMTree lsm) {
-		this.numberOfTrees = numberOfTrees;
+	public LSMTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp, LSMTree lsm) {
+		this.numBTrees = numBTrees;
 		this.leafFrameFactory = leafFrameFactory;
 		this.cmp = cmp;
 		this.lsm = lsm;
 	}
 	
-	public int getNumberOfTrees() {
-		return numberOfTrees;
+	public int getNumBTrees() {
+		return numBTrees;
 	}
 
 	public ITreeIndexFrameFactory getLeafFrameFactory() {

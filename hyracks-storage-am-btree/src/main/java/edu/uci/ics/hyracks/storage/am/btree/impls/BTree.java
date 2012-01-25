@@ -809,7 +809,7 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    public final class BulkLoadContext implements IIndexBulkLoadContext {
+    public class BulkLoadContext implements IIndexBulkLoadContext {
         public final int slotSize;
         public final int leafMaxBytes;
         public final int interiorMaxBytes;
@@ -1033,6 +1033,10 @@ public class BTree implements ITreeIndex {
     @Override
     public IndexType getIndexType() {
         return IndexType.BTREE;
+    }
+    
+    public int getFileId() {
+    	return fileId;
     }
     
     public byte getTreeHeight(IBTreeLeafFrame leafFrame) throws HyracksDataException {

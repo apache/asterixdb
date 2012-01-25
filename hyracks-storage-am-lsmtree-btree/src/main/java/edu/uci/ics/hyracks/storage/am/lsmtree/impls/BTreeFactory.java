@@ -30,5 +30,8 @@ public class BTreeFactory {
                 interiorFrameFactory, leafFrameFactory);
     }
 	
-	
+    public IBufferCache getBufferCache() {
+        return bufferCache;
+    }
+    
 }

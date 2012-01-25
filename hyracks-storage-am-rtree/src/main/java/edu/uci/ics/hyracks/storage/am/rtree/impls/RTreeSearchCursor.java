@@ -56,7 +56,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws HyracksDataException {
         if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
@@ -142,7 +142,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws Exception {
+    public boolean hasNext() throws HyracksDataException {
         if (page == null) {
             return false;
         }
@@ -172,7 +172,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() throws Exception {
+    public void next() throws HyracksDataException {
         tupleIndex = tupleIndexInc;
     }
 
