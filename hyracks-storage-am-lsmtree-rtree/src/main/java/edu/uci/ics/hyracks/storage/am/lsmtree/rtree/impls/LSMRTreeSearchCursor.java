@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
-    private BTreeRangeSearchCursor[] btreeCursors;
     private RTreeSearchCursor[] rtreeCursors;
+    private BTreeRangeSearchCursor[] btreeCursors;
     private BTree.BTreeAccessor memBtreeAccessor;
     private ITreeIndexAccessor[] onDiskBTreeAccessors;
     private int currentCursror;
@@ -100,15 +100,8 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         onDiskBTreeAccessors = new ITreeIndexAccessor[numberOfTrees - 1];
 
         for (int i = 0; i < numberOfTrees; i++) {
-            if (i < ((LSMRTreeCursorInitialState) initialState).getNumberOfTrees() - 1) { // we
-                                                                                          // already
-                                                                                          // have
-                                                                                          // an
-                                                                                          // accessor
-                                                                                          // for
-                                                                                          // the
-                                                                                          // in-memory
-                                                                                          // b-tree
+            // we already have an accessor for the in-memory b-tree
+            if (i < numberOfTrees - 1) {
                 onDiskBTreeAccessors[i] = lsmRTree.getInDiskBTreeList().get(i).createAccessor();
             }
 
@@ -131,7 +124,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws Exception {
-        lsmRTree.decreaseThreadReferenceCounter();
+        lsmRTree.threadExit();
         for (int i = 0; i < numberOfTrees; i++) {
             rtreeCursors[i].close();
             btreeCursors[i].close();
