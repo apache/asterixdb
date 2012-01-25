@@ -59,7 +59,8 @@ public interface IOperatorDescriptor extends Serializable {
     public RecordDescriptor[] getOutputRecordDescriptors();
 
     /**
-     * Contributes the activity graph that describes the behavior of this operator.
+     * Contributes the activity graph that describes the behavior of this
+     * operator.
      * 
      * @param builder
      *            - graph builder
@@ -76,6 +77,16 @@ public interface IOperatorDescriptor extends Serializable {
      */
     public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
             ICCApplicationContext appCtx);
+
+    /**
+     * Gets the display name.
+     */
+    public String getDisplayName();
+
+    /**
+     * Sets the display name.
+     */
+    public void setDisplayName(String displayName);
 
     /**
      * Translates this operator descriptor to JSON.
