@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsmtree.common;
+package edu.uci.ics.hyracks.storage.am.lsm.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;

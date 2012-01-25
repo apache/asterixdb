@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;

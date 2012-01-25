@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;

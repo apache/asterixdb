@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -40,14 +40,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.BTreeFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTree;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeInMemoryBufferCacheFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMRTreeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.LSMTypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls.RTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.BTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCacheFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.RTreeFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;

@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.common.api;
+package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 

@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.tuples;
+package edu.uci.ics.hyracks.storage.am.lsm.tuples;
 
 import static org.junit.Assert.fail;
 

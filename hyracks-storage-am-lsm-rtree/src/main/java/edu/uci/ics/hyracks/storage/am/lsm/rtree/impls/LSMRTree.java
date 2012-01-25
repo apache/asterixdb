@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -21,10 +21,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.api.ILSMTree;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.LSMTreeBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.lsmtree.common.impls.TreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;

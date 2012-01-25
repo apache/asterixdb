@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;

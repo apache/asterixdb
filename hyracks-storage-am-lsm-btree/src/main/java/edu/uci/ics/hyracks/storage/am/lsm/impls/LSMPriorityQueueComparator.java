@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-
-package edu.uci.ics.hyracks.storage.am.lsmtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.impls;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 

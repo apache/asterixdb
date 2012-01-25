@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage;
+package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

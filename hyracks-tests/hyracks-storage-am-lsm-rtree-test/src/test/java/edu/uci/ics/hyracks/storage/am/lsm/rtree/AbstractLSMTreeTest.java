@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.rtree;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

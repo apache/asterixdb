@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsmtree.btree.perf;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
 import java.util.Enumeration;
 import java.util.logging.Level;
