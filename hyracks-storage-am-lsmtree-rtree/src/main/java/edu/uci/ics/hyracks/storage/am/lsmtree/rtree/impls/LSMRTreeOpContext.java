@@ -9,16 +9,16 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 
 public final class LSMRTreeOpContext extends RTreeOpContext {
     
-    public final RTree.RTreeAccessor memRtreeAccessor;
+    public final RTree.RTreeAccessor memRTreeAccessor;
 
     public LSMRTreeOpContext(RTree.RTreeAccessor memRtreeAccessor, IRTreeLeafFrame leafFrame,
             IRTreeInteriorFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
 
         super(leafFrame, interiorFrame, metaFrame, treeHeightHint);
 
-        this.memRtreeAccessor = memRtreeAccessor;
+        this.memRTreeAccessor = memRtreeAccessor;
         // Overwrite the RTree accessor's op context with our LSMRTreeOpContext.
-        this.memRtreeAccessor.setOpContext(this);
+        this.memRTreeAccessor.setOpContext(this);
 
         reset(op);
     }

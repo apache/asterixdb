@@ -7,8 +7,12 @@ import edu.uci.ics.hyracks.storage.am.lsmtree.common.freepage.InMemoryFreePageMa
 
 public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
 
-    public LSMRTreeInMemoryFreePageManager(int maxCapacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
-        super(maxCapacity, metaDataFrameFactory);
+    public LSMRTreeInMemoryFreePageManager(int capacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+        super(capacity, metaDataFrameFactory);
+        // We start the currentPageId from 3, because the RTree uses
+        // the first page as metadata page, and the second page as root page.
+        // And the BTree uses the third page as metadata, and the third page as root page 
+        // (when returning free pages we first increment, then get)
         currentPageId.set(3);
     }
 
@@ -17,6 +21,10 @@ public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
         currentPageId.set(3);
     }
 
+    public int getCapacity() {
+        return capacity - 4;
+    }
+    
     public void reset() {
         currentPageId.set(3);
     }

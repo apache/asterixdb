@@ -9,15 +9,15 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public final class LSMBTreeOpContext extends BTreeOpContext {
 
-    public final BTree.BTreeAccessor memBtreeAccessor;
+    public final BTree.BTreeAccessor memBTreeAccessor;
 
     public LSMBTreeOpContext(BTree.BTreeAccessor memBtreeAccessor, ITreeIndexFrameFactory leafFrameFactory,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
         super(leafFrameFactory, interiorFrameFactory, metaFrame, cmp);
 
-        this.memBtreeAccessor = memBtreeAccessor;
+        this.memBTreeAccessor = memBtreeAccessor;
         // Overwrite the BTree accessor's op context with our LSMBTreeOpContext.
-        this.memBtreeAccessor.setOpContext(this);
+        this.memBTreeAccessor.setOpContext(this);
 
         reset(op);
     }

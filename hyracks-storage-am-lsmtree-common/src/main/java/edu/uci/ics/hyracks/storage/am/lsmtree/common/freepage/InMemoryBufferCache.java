@@ -121,7 +121,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 		// Do nothing.
 	}
 
-    private class CachedPage implements ICachedPageInternal {
+    public class CachedPage implements ICachedPageInternal {
         private final int cpid;
         private final ByteBuffer buffer;
         private final ReadWriteLock latch;
