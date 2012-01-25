@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.ipc.api.IIPCI;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
 import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
+import edu.uci.ics.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
 public class IPCTest {
     @Test
@@ -80,10 +81,12 @@ public class IPCTest {
                 });
             }
         };
-        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), ipci);
+        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), ipci,
+                new JavaSerializationBasedPayloadSerializerDeserializer());
     }
 
     private IPCSystem createClientIPCSystem(RPCInterface rpci) throws IOException {
-        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), rpci);
+        return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), rpci,
+                new JavaSerializationBasedPayloadSerializerDeserializer());
     }
 }

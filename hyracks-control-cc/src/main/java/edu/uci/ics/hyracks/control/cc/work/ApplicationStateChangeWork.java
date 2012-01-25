@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
-import edu.uci.ics.hyracks.control.common.ipc.ClusterControllerFunctions;
+import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
@@ -14,10 +14,10 @@ public class ApplicationStateChangeWork extends AbstractWork {
     private static final Logger LOGGER = Logger.getLogger(ApplicationStateChangeWork.class.getName());
 
     private final ClusterControllerService ccs;
-    private final ClusterControllerFunctions.ApplicationStateChangeResponseFunction ascrf;
+    private final CCNCFunctions.ApplicationStateChangeResponseFunction ascrf;
 
     public ApplicationStateChangeWork(ClusterControllerService ccs,
-            ClusterControllerFunctions.ApplicationStateChangeResponseFunction ascrf) {
+            CCNCFunctions.ApplicationStateChangeResponseFunction ascrf) {
         this.ccs = ccs;
         this.ascrf = ascrf;
     }

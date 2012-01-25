@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.ipc.NodeControllerFunctions;
+import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
 import edu.uci.ics.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
@@ -46,7 +46,7 @@ public class RegisterNodeWork extends SynchronizableWork {
         String id = reg.getNodeId();
 
         IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
-        NodeControllerFunctions.NodeRegistrationResult result = null;
+        CCNCFunctions.NodeRegistrationResult result = null;
         try {
             INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
 
@@ -69,9 +69,9 @@ public class RegisterNodeWork extends SynchronizableWork {
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
             params.setHeartbeatPeriod(ccs.getCCConfig().heartbeatPeriod);
             params.setProfileDumpPeriod(ccs.getCCConfig().profileDumpPeriod);
-            result = new NodeControllerFunctions.NodeRegistrationResult(params, null);
+            result = new CCNCFunctions.NodeRegistrationResult(params, null);
         } catch (Exception e) {
-            result = new NodeControllerFunctions.NodeRegistrationResult(null, e);
+            result = new CCNCFunctions.NodeRegistrationResult(null, e);
         }
         ncIPCHandle.send(-1, result, null);
     }

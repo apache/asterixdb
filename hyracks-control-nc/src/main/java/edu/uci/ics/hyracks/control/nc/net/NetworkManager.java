@@ -60,7 +60,7 @@ public class NetworkManager {
     public void start() throws IOException {
         md.start();
         InetSocketAddress sockAddr = md.getLocalAddress();
-        networkAddress = new NetworkAddress(sockAddr.getAddress(), sockAddr.getPort());
+        networkAddress = new NetworkAddress(sockAddr.getAddress().getAddress(), sockAddr.getPort());
     }
 
     public NetworkAddress getNetworkAddress() {

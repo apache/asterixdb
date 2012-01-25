@@ -12,27 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.client;
+package edu.uci.ics.hyracks.ipc.api;
 
-import java.io.Serializable;
+import java.nio.ByteBuffer;
 
-public class NodeControllerInfo implements Serializable {
-    private static final long serialVersionUID = 1L;
+public interface IPayloadSerializerDeserializer {
+    public Object deserializeObject(ByteBuffer buffer, int length) throws Exception;
 
-    private final String nodeId;
+    public Exception deserializeException(ByteBuffer buffer, int length) throws Exception;
 
-    private final NodeStatus status;
+    public byte[] serializeObject(Object object) throws Exception;
 
-    public NodeControllerInfo(String nodeId, NodeStatus status) {
-        this.nodeId = nodeId;
-        this.status = status;
-    }
-
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    public NodeStatus getStatus() {
-        return status;
-    }
+    public byte[] serializeException(Exception object) throws Exception;
 }

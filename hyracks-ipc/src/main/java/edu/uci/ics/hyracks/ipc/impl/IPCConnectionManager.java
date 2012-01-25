@@ -276,7 +276,7 @@ public class IPCConnectionManager {
                             }
                         }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
