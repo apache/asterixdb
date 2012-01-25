@@ -53,7 +53,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -138,14 +137,14 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(bufferCache,
                 metaFrameFactory);
 
-        RTreeFactory rTreeFactory = new RTreeFactory(bufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
+        RTreeFactory diskRTreeFactory = new RTreeFactory(bufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory bTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, btreeCmp, fieldCount,
+        BTreeFactory diskBTreeFactory = new BTreeFactory(bufferCache, freePageManagerFactory, btreeCmp, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        LSMRTree lsmRTree = new LSMRTree(memBufferCache, bufferCache, fieldCount, rtreeCmp, btreeCmp,
-                memFreePageManager, rtreeInteriorFrameFactory, btreeInteriorFrameFactory, rtreeLeafFrameFactory,
-                btreeLeafFrameFactory, rTreeFactory, bTreeFactory, (IFileMapManager) fmp);
+        LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
+                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, tmpDir, diskRTreeFactory,
+                diskBTreeFactory, fmp, fieldCount, rtreeCmp, btreeCmp);
 
         lsmRTree.create(fileId);
         lsmRTree.open(fileId);
@@ -336,5 +335,4 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         bufferCache.closeFile(fileId);
         memBufferCache.close();
     }
-
 }

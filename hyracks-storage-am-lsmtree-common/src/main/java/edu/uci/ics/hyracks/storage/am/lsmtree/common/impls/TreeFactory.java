@@ -27,4 +27,7 @@ public abstract class TreeFactory {
 
     public abstract ITreeIndex createIndexInstance(int fileId);
 
+    public IBufferCache getBufferCache() {
+        return bufferCache;
+    }
 }
