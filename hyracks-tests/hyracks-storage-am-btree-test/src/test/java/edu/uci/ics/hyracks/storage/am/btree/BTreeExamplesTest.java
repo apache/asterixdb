@@ -32,14 +32,12 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -49,11 +47,16 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 @SuppressWarnings("rawtypes")
 public class BTreeExamplesTest extends AbstractBTreeTest {
 
+	protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps) throws TreeIndexException {
+		return BTreeUtils
+                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
+	}
+	
     /**
      * Fixed-Length Key,Value Example.
      * 
-     * Create a BTree with one fixed-length key field and one fixed-length value
-     * field. Fill BTree with random values using insertions (not bulk load).
+     * Create a tree index with one fixed-length key field and one fixed-length value
+     * field. Fill index with random values using insertions (not bulk load).
      * Perform scans and range search.
      */
     @Test
@@ -76,10 +79,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -87,7 +89,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int f0 = rnd.nextInt() % numInserts;
@@ -108,8 +110,8 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 
-        orderedScan(btree, indexAccessor, fieldSerdes);
-        diskOrderScan(btree, indexAccessor, fieldSerdes);
+        orderedScan(indexAccessor, fieldSerdes);
+        diskOrderScan(indexAccessor, fieldSerdes);
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(keyFieldCount);
@@ -121,16 +123,16 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 1000);
 
-        rangeSearch(btree, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        btree.close();
+        treeIndex.close();
     }
 
     /**
-     * Composite Key Example (Non-Unique B-Tree).
+     * Composite Key Example (Non-Unique Index).
      * 
-     * Create a BTree with two fixed-length key fields and one fixed-length
-     * value field. Fill BTree with random values using insertions (not bulk
+     * Create a tree index with two fixed-length key fields and one fixed-length
+     * value field. Fill index with random values using insertions (not bulk
      * load) Perform scans and range search.
      */
     @Test
@@ -155,10 +157,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -166,7 +167,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < 10000; i++) {
             int f0 = rnd.nextInt() % 2000;
@@ -188,8 +189,8 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 
-        orderedScan(btree, indexAccessor, fieldSerdes);
-        diskOrderScan(btree, indexAccessor, fieldSerdes);
+        orderedScan(indexAccessor, fieldSerdes);
+        diskOrderScan(indexAccessor, fieldSerdes);
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -202,9 +203,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 3);
 
         // Prefix-Range search in [-3, 3]
-        rangeSearch(btree, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        btree.close();
+        treeIndex.close();
     }
 
     /**
@@ -232,10 +233,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -243,7 +243,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
         // Max string length to be generated.
         int maxLength = 10;
         int numInserts = 10000;
@@ -266,8 +266,8 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 
-        orderedScan(btree, indexAccessor, fieldSerdes);
-        diskOrderScan(btree, indexAccessor, fieldSerdes);
+        orderedScan(indexAccessor, fieldSerdes);
+        diskOrderScan(indexAccessor, fieldSerdes);
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -279,9 +279,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createTuple(highKeyTb, highKey, fieldSerdes, "cc7");
 
-        rangeSearch(btree, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        btree.close();
+        treeIndex.close();
     }
 
     /**
@@ -311,14 +311,13 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
         // Max string length to be generated.
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -382,7 +381,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
                 break;
             }
         }
-        btree.close();
+        treeIndex.close();
     }
 
     /**
@@ -412,15 +411,14 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
         }
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         int maxLength = 10;
@@ -442,7 +440,7 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
             }
         }
         // Print before doing any updates.
-        orderedScan(btree, indexAccessor, fieldSerdes);
+        orderedScan(indexAccessor, fieldSerdes);
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -456,18 +454,19 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
                 TupleUtils.createTuple(tb, tuple, fieldSerdes, keys[i], f1);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     if (i % 1000 == 0) {
-                        LOGGER.info("UPDATING " + i);
+                        LOGGER.info("Updating " + i);
                     }
                 }
                 try {
                     indexAccessor.update(tuple);
                 } catch (TreeIndexException e) {
+                } catch (UnsupportedOperationException e) {
                 }
             }
             // Do another scan after a round of updates.
-            orderedScan(btree, indexAccessor, fieldSerdes);
+            orderedScan(indexAccessor, fieldSerdes);
         }
-        btree.close();
+        treeIndex.close();
     }
 
     /**
@@ -498,10 +497,9 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
-        BTree btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        treeIndex.create(btreeFileId);
+        treeIndex.open(btreeFileId);
 
         // Load sorted records.
         int ins = 100000;
@@ -509,20 +507,20 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoadContext bulkLoadCtx = btree.beginBulkLoad(0.7f);
+        IIndexBulkLoadContext bulkLoadCtx = treeIndex.beginBulkLoad(0.7f);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
             TupleUtils.createIntegerTuple(tb, tuple, i, i, 5);
-            btree.bulkLoadAddTuple(tuple, bulkLoadCtx);
+            treeIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
         }
-        btree.endBulkLoad(bulkLoadCtx);
+        treeIndex.endBulkLoad(bulkLoadCtx);
         long end = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(ins + " tuples loaded in " + (end - start) + "ms");
         }
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -535,18 +533,17 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 44500);
 
         // Prefix-Range search in [44444, 44500]
-        rangeSearch(btree, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        btree.close();
+        treeIndex.close();
     }
 
-    private void orderedScan(BTree btree, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
+    private void orderedScan(ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
             throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, false);
+        ITreeIndexCursor scanCursor = indexAccessor.createSearchCursor();        
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -563,13 +560,17 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
     }
 
-    private void diskOrderScan(BTree btree, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
+    private void diskOrderScan(ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
             throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Disk-Order Scan:");
         }
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-        TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
+        TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) indexAccessor.createDiskOrderScanCursor();
+        if (diskOrderCursor == null) {
+        	if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Ignoring disk-order scan since it's not supported.");
+            }
+        }
         indexAccessor.diskOrderScan(diskOrderCursor);
         try {
             while (diskOrderCursor.hasNext()) {
@@ -585,17 +586,16 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         }
     }
 
-    private void rangeSearch(BTree btree, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes,
+    private void rangeSearch(IBinaryComparator[] cmps, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes,
             ITupleReference lowKey, ITupleReference highKey) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String lowKeyString = TupleUtils.printTuple(lowKey, fieldSerdes);
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
             LOGGER.info("Range-Search in: [" + lowKeyString + ", " + highKeyString + "]");
         }
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-        MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), lowKey);
-        MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), highKey);
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
+        ITreeIndexCursor rangeCursor = indexAccessor.createSearchCursor();
+        MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, lowKey);
+        MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, highKey);
         RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, lowKeySearchCmp,
                 highKeySearchCmp);
         indexAccessor.search(rangeCursor, rangePred);

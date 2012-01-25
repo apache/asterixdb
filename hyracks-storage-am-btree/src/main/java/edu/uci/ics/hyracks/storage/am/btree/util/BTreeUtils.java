@@ -31,18 +31,18 @@ public class BTreeUtils {
         return btree;
     }
     
-    public static MultiComparator getSearchMultiComparator(MultiComparator btreeCmp, ITupleReference searchKey) {
+    public static MultiComparator getSearchMultiComparator(IBinaryComparator[] cmps, ITupleReference searchKey) {
         if (searchKey == null) {
-        	return btreeCmp;
+        	return new MultiComparator(cmps);
         }
-    	if (btreeCmp.getKeyFieldCount() == searchKey.getFieldCount()) {
-            return btreeCmp;
+    	if (cmps.length == searchKey.getFieldCount()) {
+            return new MultiComparator(cmps);
         }
-        IBinaryComparator[] cmps = new IBinaryComparator[searchKey.getFieldCount()];
+        IBinaryComparator[] newCmps = new IBinaryComparator[searchKey.getFieldCount()];
         for (int i = 0; i < searchKey.getFieldCount(); i++) {
-            cmps[i] = btreeCmp.getComparators()[i];
+        	newCmps[i] = cmps[i];
         }
-        return new MultiComparator(cmps);
+        return new MultiComparator(newCmps);
     }
     
     public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType) throws BTreeException {

@@ -1080,6 +1080,13 @@ public class RTree implements ITreeIndex {
             rtree.delete(tuple, ctx);
         }
 
+		@Override
+		public ITreeIndexCursor createSearchCursor() {
+			return new RTreeSearchCursor(
+					(IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
+					(IRTreeLeafFrame) leafFrameFactory.createFrame());
+		}
+        
         @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
@@ -1087,6 +1094,11 @@ public class RTree implements ITreeIndex {
             rtree.search(cursor, searchPred, ctx);
         }
 
+        @Override
+		public ITreeIndexCursor createDiskOrderScanCursor() {
+        	return new TreeDiskOrderScanCursor(leafFrameFactory.createFrame());
+		}
+        
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.reset(IndexOp.DISKORDERSCAN);

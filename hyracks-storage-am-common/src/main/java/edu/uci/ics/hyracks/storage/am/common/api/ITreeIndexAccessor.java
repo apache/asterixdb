@@ -69,6 +69,12 @@ public interface ITreeIndexAccessor {
 			TreeIndexException;
 
 	/**
+	 * Creates a cursor appropriate for passing into search().
+	 * 
+	 */
+	public ITreeIndexCursor createSearchCursor();
+	
+	/**
 	 * Open the given cursor for an index search using the given predicate as
 	 * search condition.
 	 * 
@@ -83,6 +89,12 @@ public interface ITreeIndexAccessor {
 	public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred)
 			throws HyracksDataException, TreeIndexException;
 
+	/**
+	 * Creates a cursor appropriate for passing into diskOrderScan().
+	 * 
+	 */
+	public ITreeIndexCursor createDiskOrderScanCursor();
+	
 	/**
 	 * Open the given cursor for a disk-order scan, positioning the cursor to
 	 * the first leaf tuple.

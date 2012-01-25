@@ -90,7 +90,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
 
         cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        setCursor();        
+        setCursor();
         writer.open();
 
         try {
@@ -98,8 +98,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             btree = (BTree) treeIndexHelper.getIndex();
 
             // Construct range predicate.
-            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), lowKey);
-            highKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator(), highKey);
+            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator().getComparators(), lowKey);
+            highKeySearchCmp = BTreeUtils
+                    .getSearchMultiComparator(btree.getMultiComparator().getComparators(), highKey);
             rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 

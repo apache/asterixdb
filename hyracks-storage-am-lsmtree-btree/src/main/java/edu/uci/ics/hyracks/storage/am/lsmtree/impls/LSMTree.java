@@ -433,12 +433,23 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         }
 
         @Override
+        public ITreeIndexCursor createSearchCursor() {
+            return new LSMTreeRangeSearchCursor();
+        }
+        
+        @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
             lsmTree.search(cursor, (RangePredicate) searchPred, ctx, true);
         }
 
+        @Override
+        public ITreeIndexCursor createDiskOrderScanCursor() {
+            // TODO: Not implemented yet.
+            return null;
+        }
+        
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree");

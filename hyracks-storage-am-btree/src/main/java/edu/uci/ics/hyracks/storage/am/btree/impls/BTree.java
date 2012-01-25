@@ -1154,12 +1154,24 @@ public class BTree implements ITreeIndex {
         }
 
         @Override
+		public ITreeIndexCursor createSearchCursor() {
+			IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
+	        return new BTreeRangeSearchCursor(leafFrame, false);
+		}
+        
+        @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
             btree.search(cursor, searchPred, ctx);
         }
 
+        @Override
+		public ITreeIndexCursor createDiskOrderScanCursor() {
+			IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
+	        return new TreeDiskOrderScanCursor(leafFrame);
+		}
+        
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.reset(IndexOp.DISKORDERSCAN);

@@ -10,6 +10,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -44,7 +45,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws Exception {
+    public boolean hasNext() throws HyracksDataException {
         for (int i = currentCursror; i < numberOfTrees; i++) {
             while (rtreeCursors[i].hasNext()) {
                 rtreeCursors[i].next();
@@ -54,11 +55,17 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
                     btreeRangePredicate.setHighKey(currentTuple, true);
                     btreeRangePredicate.setLowKey(currentTuple, true);
 
-                    if (j == 0) {
-                        memBtreeAccessor.search(btreeCursors[j], btreeRangePredicate);
-                    } else {
-                        onDiskBTreeAccessors[j - 1].search(btreeCursors[j], btreeRangePredicate);
-                    }
+					try {
+						if (j == 0) {
+							memBtreeAccessor.search(btreeCursors[j],
+									btreeRangePredicate);
+						} else {
+							onDiskBTreeAccessors[j - 1].search(btreeCursors[j],
+									btreeRangePredicate);
+						}
+					} catch (TreeIndexException e) {
+						throw new HyracksDataException(e);
+					}
 
                     if (btreeCursors[j].hasNext()) {
                         killerTupleFound = true;
@@ -75,7 +82,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() throws Exception {
+    public void next() throws HyracksDataException {
         while (true) {
             if (currentCursror < numberOfTrees || rtreeCursors[currentCursror].hasNext()) {
                 break;
@@ -102,7 +109,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         for (int i = 0; i < numberOfTrees; i++) {
             // we already have an accessor for the in-memory b-tree
             if (i < numberOfTrees - 1) {
-                onDiskBTreeAccessors[i] = lsmRTree.getInDiskBTreeList().get(i).createAccessor();
+                onDiskBTreeAccessors[i] = lsmRTree.getOnDiskBTrees().get(i).createAccessor();
             }
 
             rtreeCursors[i] = new RTreeSearchCursor((IRTreeInteriorFrame) ((LSMRTreeCursorInitialState) initialState)
@@ -122,16 +129,20 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         return null;
     }
 
-    @Override
-    public void close() throws Exception {
-        lsmRTree.threadExit();
-        for (int i = 0; i < numberOfTrees; i++) {
-            rtreeCursors[i].close();
-            btreeCursors[i].close();
-        }
-        rtreeCursors = null;
-        btreeCursors = null;
-    }
+	@Override
+	public void close() throws HyracksDataException {
+		try {
+			lsmRTree.threadExit();
+		} catch (TreeIndexException e) {
+			throw new HyracksDataException(e);
+		}
+		for (int i = 0; i < numberOfTrees; i++) {
+			rtreeCursors[i].close();
+			btreeCursors[i].close();
+		}
+		rtreeCursors = null;
+		btreeCursors = null;
+	}
 
     @Override
     public void setBufferCache(IBufferCache bufferCache) {

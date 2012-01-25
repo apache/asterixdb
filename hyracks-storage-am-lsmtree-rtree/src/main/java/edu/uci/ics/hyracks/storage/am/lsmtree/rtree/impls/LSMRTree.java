@@ -282,7 +282,7 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public void flush() throws Exception {
+    public void flush() throws HyracksDataException, TreeIndexException {
 
         // scan the RTree
         ITreeIndexCursor rtreeScanCursor = new RTreeSearchCursor(
@@ -348,7 +348,7 @@ public class LSMRTree implements ILSMTree {
         threadRefCount++;
     }
 
-    public void threadExit() throws Exception {
+    public void threadExit() throws HyracksDataException, TreeIndexException {
         synchronized (this) {
             threadRefCount--;
             // Check if we've reached or exceeded the maximum number of pages.
@@ -478,6 +478,11 @@ public class LSMRTree implements ILSMTree {
         }
 
         @Override
+		public ITreeIndexCursor createSearchCursor() {			
+			return new LSMRTreeSearchCursor();
+		}
+        
+        @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
@@ -489,6 +494,12 @@ public class LSMRTree implements ILSMTree {
             }
         }
 
+        @Override
+		public ITreeIndexCursor createDiskOrderScanCursor() {
+			// TODO: Not implemented yet.
+			return null;
+		}
+        
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             throw new UnsupportedOperationException("DiskOrderScan not supported by LSMRTree");
