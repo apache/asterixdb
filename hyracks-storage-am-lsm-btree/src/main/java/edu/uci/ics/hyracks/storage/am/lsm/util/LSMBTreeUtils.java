@@ -24,9 +24,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.impls.BTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTreeFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -47,8 +49,9 @@ public class LSMBTreeUtils {
                 metaFrameFactory);
         BTreeFactory btreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmp, typeTraits.length,
                 interiorFrameFactory, insertLeafFrameFactory);
+        ILSMFileNameManager fileNameManager = new LSMBTreeFileNameManager(onDiskDir);
         LSMTree lsmTree = new LSMTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
-                deleteLeafFrameFactory, onDiskDir, btreeFactory, diskFileMapProvider, typeTraits.length, cmp);
+                deleteLeafFrameFactory, fileNameManager, btreeFactory, diskFileMapProvider, typeTraits.length, cmp);
         return lsmTree;
     }
 }
