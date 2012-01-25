@@ -21,12 +21,16 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 
 public class ChannelControlBlock {
+    private static final Logger LOGGER = Logger.getLogger(ChannelControlBlock.class.getName());
+
     private final ChannelSet cSet;
 
     private final int channelId;
@@ -166,6 +170,9 @@ public class ChannelControlBlock {
             public void close() {
                 synchronized (ChannelControlBlock.this) {
                     if (eos) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Received duplicate close() on channel: " + channelId);
+                        }
                         return;
                     }
                     eos = true;

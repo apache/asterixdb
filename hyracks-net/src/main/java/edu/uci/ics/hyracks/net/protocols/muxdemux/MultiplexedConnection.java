@@ -178,6 +178,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             if (!writerState.performPendingWrite(sc)) {
                 return;
             }
+            pendingWriteEventsCounter.decrement();
         }
         int numCycles;
 
@@ -239,9 +240,11 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             }
             writeCCB.write(writerState);
             if (writerState.writePending()) {
+                pendingWriteEventsCounter.increment();
                 if (!writerState.performPendingWrite(sc)) {
                     return;
                 }
+                pendingWriteEventsCounter.decrement();
             }
         }
     }
