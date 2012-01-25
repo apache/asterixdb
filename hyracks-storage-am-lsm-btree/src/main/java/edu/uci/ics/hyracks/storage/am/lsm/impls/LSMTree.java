@@ -123,8 +123,8 @@ public class LSMTree implements ITreeIndex, ILSMTree {
             }
         };
         String[] files = dir.list(filter);
-        Comparator<String> cmp = fileNameManager.getFileNameComparator();
-        Arrays.sort(files, cmp);
+        Comparator<String> fileNameCmp = fileNameManager.getFileNameComparator();
+        Arrays.sort(files, fileNameCmp);
         for (String fileName : files) {
             BTree btree = createDiskBTree(fileName, false);
             onDiskBTrees.add(btree);

@@ -27,30 +27,32 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestUtils;
  * Tests the BTree insert operation with strings and integer fields using
  * various numbers of key and payload fields.
  * 
- * Each tests first fills a BTree with randomly generated tuples.
- * We compare the following operations against expected results:
- * 1. Point searches for all tuples.
- * 2. Ordered scan.
- * 3. Disk-order scan.
- * 4. Range search (and prefix search for composite keys).
+ * Each tests first fills a BTree with randomly generated tuples. We compare the
+ * following operations against expected results: 1. Point searches for all
+ * tuples. 2. Ordered scan. 3. Disk-order scan. 4. Range search (and prefix
+ * search for composite keys).
  * 
  */
 @SuppressWarnings("rawtypes")
-public class InsertTest extends BTreeTestDriver {        
+public class InsertTest extends BTreeTestDriver {
     @Override
-    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType, ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey) throws Exception {
-        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(bufferCache, btreeFileId, fieldSerdes, numKeys, leafType);
-        // We assume all fieldSerdes are of the same type. Check the first one to determine which field types to generate.
+    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
+            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
+            throws Exception {
+        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
+                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+        // We assume all fieldSerdes are of the same type. Check the first one
+        // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            BTreeTestUtils.insertIntTuples(testCtx, numTuplesToInsert, rnd);
+            BTreeTestUtils.insertIntTuples(testCtx, numTuplesToInsert, harness.getRandom());
         } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            BTreeTestUtils.insertStringTuples(testCtx, numTuplesToInsert, rnd);
+            BTreeTestUtils.insertStringTuples(testCtx, numTuplesToInsert, harness.getRandom());
         }
-        
+
         BTreeTestUtils.checkPointSearches(testCtx);
         BTreeTestUtils.checkOrderedScan(testCtx);
         BTreeTestUtils.checkDiskOrderScan(testCtx);
-                
+
         BTreeTestUtils.checkRangeSearch(testCtx, lowKey, highKey, true, true);
         if (prefixLowKey != null && prefixHighKey != null) {
             BTreeTestUtils.checkRangeSearch(testCtx, prefixLowKey, prefixHighKey, true, true);

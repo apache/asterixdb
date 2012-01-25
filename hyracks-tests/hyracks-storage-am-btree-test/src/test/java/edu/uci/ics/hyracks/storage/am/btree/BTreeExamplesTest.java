@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.util.Random;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -47,10 +48,18 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 @SuppressWarnings("rawtypes")
 public class BTreeExamplesTest extends AbstractBTreeTest {
 
-	protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps) throws TreeIndexException {
-		return BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmps, BTreeLeafFrameType.REGULAR_NSM);
-	}
+	protected static final Logger LOGGER = Logger.getLogger(BTreeExamplesTest.class.getName());
+	
+	protected final Random rnd = new Random(50);
+	
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps) throws TreeIndexException {
+        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmps,
+                BTreeLeafFrameType.REGULAR_NSM);
+    }
+
+    protected int getIndexFileId() {
+        return harness.getBTreeFileId();
+    }
 	
     /**
      * Fixed-Length Key,Value Example.
@@ -79,9 +88,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -157,9 +167,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -233,9 +244,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -311,9 +323,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -411,9 +424,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
         cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
@@ -497,9 +511,10 @@ public class BTreeExamplesTest extends AbstractBTreeTest {
         cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
+        int indexFileId = getIndexFileId();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
-        treeIndex.create(btreeFileId);
-        treeIndex.open(btreeFileId);
+        treeIndex.create(indexFileId);
+        treeIndex.open(indexFileId);
 
         // Load sorted records.
         int ins = 100000;

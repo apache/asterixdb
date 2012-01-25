@@ -48,10 +48,6 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class StatsTest extends AbstractBTreeTest {
-
-    // private static final int PAGE_SIZE = 256;
-    // private static final int NUM_PAGES = 10;
-    // private static final int PAGE_SIZE = 32768;
     private static final int PAGE_SIZE = 4096;
     private static final int NUM_PAGES = 1000;
     private static final int MAX_OPEN_FILES = 10;
@@ -64,7 +60,7 @@ public class StatsTest extends AbstractBTreeTest {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
+        FileReference file = new FileReference(new File(harness.getFileName()));
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
         bufferCache.openFile(fileId);

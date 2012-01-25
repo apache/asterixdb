@@ -33,12 +33,16 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class UpdateSearchTest extends AbstractBTreeTest {
 
     // Update scan test on fixed-length tuples.
     @Test
     public void test01() throws Exception {
+        IBufferCache bufferCache = harness.getBufferCache();
+        int btreeFileId = harness.getBTreeFileId();
+        
         // declare fields
         int fieldCount = 2;
         ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
@@ -81,7 +85,7 @@ public class UpdateSearchTest extends AbstractBTreeTest {
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
         int numInserts = 10000;
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < numInserts; i++) {
             int f0 = rnd.nextInt() % 10000;
             int f1 = 5;
             TupleUtils.createIntegerTuple(tb, insertTuple, f0, f1);

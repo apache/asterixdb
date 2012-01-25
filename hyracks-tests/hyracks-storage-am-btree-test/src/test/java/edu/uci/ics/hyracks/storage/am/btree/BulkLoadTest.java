@@ -25,16 +25,20 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
 public class BulkLoadTest extends BTreeTestDriver {
-    
-    @Override
-    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType, ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey) throws Exception {
-        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(bufferCache, btreeFileId, fieldSerdes, numKeys, leafType);
 
-        // We assume all fieldSerdes are of the same type. Check the first one to determine which field types to generate.
+    @Override
+    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
+            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
+            throws Exception {
+        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
+                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+
+        // We assume all fieldSerdes are of the same type. Check the first one
+        // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            BTreeTestUtils.bulkLoadIntTuples(testCtx, numTuplesToInsert, rnd);
+            BTreeTestUtils.bulkLoadIntTuples(testCtx, numTuplesToInsert, harness.getRandom());
         } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            BTreeTestUtils.bulkLoadStringTuples(testCtx, numTuplesToInsert, rnd);
+            BTreeTestUtils.bulkLoadStringTuples(testCtx, numTuplesToInsert, harness.getRandom());
         }
 
         BTreeTestUtils.checkPointSearches(testCtx);

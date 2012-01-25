@@ -58,6 +58,7 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class RangeSearchCursorTest extends AbstractBTreeTest {
     // Declare fields
@@ -83,6 +84,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
         }
 
+        IBufferCache bufferCache = harness.getBufferCache();
+        int btreeFileId = harness.getBTreeFileId();
+        
         // declare keys
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
@@ -160,6 +164,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
         }
 
+        IBufferCache bufferCache = harness.getBufferCache();
+        int btreeFileId = harness.getBTreeFileId();
+        
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
@@ -235,6 +242,9 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
             LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
         }
 
+        IBufferCache bufferCache = harness.getBufferCache();
+        int btreeFileId = harness.getBTreeFileId();
+        
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];

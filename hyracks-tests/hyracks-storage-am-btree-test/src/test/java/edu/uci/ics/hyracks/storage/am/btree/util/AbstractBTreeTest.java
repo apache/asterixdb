@@ -1,76 +1,46 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.btree.util;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public abstract class AbstractBTreeTest {
-    protected static final Logger LOGGER = Logger.getLogger(AbstractBTreeTest.class.getName());
-    public static final long RANDOM_SEED = 50;
-    
-    private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-    private static final int MAX_OPEN_FILES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 128;
-        
-    protected IHyracksTaskContext ctx; 
-    protected IBufferCache bufferCache;
-    protected int btreeFileId;
-    
-    protected final Random rnd = new Random();
-    protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected final static String tmpDir = System.getProperty("java.io.tmpdir");
-    protected final static String sep = System.getProperty("file.separator");
-    protected String fileName;   
-    
-    @Before
-    public void setUp() throws HyracksDataException {
-        fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        ctx = TestUtils.create(getHyracksFrameSize());
-        TestStorageManagerComponentHolder.init(getPageSize(), getNumPages(), getMaxOpenFiles());
-        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        btreeFileId = fmp.lookupFileId(file);
-        bufferCache.openFile(btreeFileId);
-        rnd.setSeed(RANDOM_SEED);
+	protected final Logger LOGGER = Logger.getLogger(BTreeTestHarness.class.getName());
+	protected final BTreeTestHarness harness;
+	
+	public AbstractBTreeTest() {
+		harness = new BTreeTestHarness();
     }
     
-    @After
+    public AbstractBTreeTest(int pageSize, int numPages, int maxOpenFiles, int hyracksFrameSize) {
+    	harness = new BTreeTestHarness(pageSize, numPages, maxOpenFiles, hyracksFrameSize);
+    }
+	
+	@Before
+	public void setUp() throws HyracksDataException {
+		harness.setUp();
+    }
+	
+	@After
     public void tearDown() throws HyracksDataException {
-        bufferCache.closeFile(btreeFileId);
-        bufferCache.close();
-        File f = new File(fileName);
-        f.deleteOnExit();
-    }
-    
-    public int getPageSize() {
-        return PAGE_SIZE;
-    }
-    
-    public int getNumPages() {
-        return NUM_PAGES;
-    }
-    
-    public int getHyracksFrameSize() {
-        return HYRACKS_FRAME_SIZE;
-    }
-    
-    public int getMaxOpenFiles() {
-        return MAX_OPEN_FILES;
+		harness.tearDown();
     }
 }

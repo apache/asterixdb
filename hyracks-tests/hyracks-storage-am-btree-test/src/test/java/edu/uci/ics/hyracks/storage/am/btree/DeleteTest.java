@@ -25,26 +25,29 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
 public class DeleteTest extends BTreeTestDriver {
-    
+
     private static final int numInsertRounds = 3;
     private static final int numDeleteRounds = 3;
-    
+
     @Override
-    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType, ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey) throws Exception {
-        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(bufferCache, btreeFileId, fieldSerdes, numKeys, leafType);
+    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
+            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
+            throws Exception {
+        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
+                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
         for (int i = 0; i < numInsertRounds; i++) {
-            
-            // We assume all fieldSerdes are of the same type. Check the first one to determine which field types to generate.
+            // We assume all fieldSerdes are of the same type. Check the first
+            // one to determine which field types to generate.
             if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                BTreeTestUtils.insertIntTuples(testCtx, numTuplesToInsert, rnd);
+                BTreeTestUtils.insertIntTuples(testCtx, numTuplesToInsert, harness.getRandom());
             } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-                BTreeTestUtils.insertStringTuples(testCtx, numTuplesToInsert, rnd);
+                BTreeTestUtils.insertStringTuples(testCtx, numTuplesToInsert, harness.getRandom());
             }
-            
-            int numTuplesPerDeleteRound = (int)Math.ceil((float)testCtx.checkTuples.size() / (float)numDeleteRounds);
-            for(int j = 0; j < numDeleteRounds; j++) {
-                BTreeTestUtils.deleteTuples(testCtx, numTuplesPerDeleteRound, rnd);
-                
+
+            int numTuplesPerDeleteRound = (int) Math.ceil((float) testCtx.checkTuples.size() / (float) numDeleteRounds);
+            for (int j = 0; j < numDeleteRounds; j++) {
+                BTreeTestUtils.deleteTuples(testCtx, numTuplesPerDeleteRound, harness.getRandom());
+
                 BTreeTestUtils.checkPointSearches(testCtx);
                 BTreeTestUtils.checkOrderedScan(testCtx);
                 BTreeTestUtils.checkDiskOrderScan(testCtx);
