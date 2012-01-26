@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree;
+package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,17 +21,30 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexExamplesTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.util.LSMBTreeUtils;
 
-public class BTreeExamplesTest extends OrderedIndexExamplesTest {
-    private final BTreeTestHarness harness = new BTreeTestHarness();
+public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
+	private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+	
+	@Override
+	protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
+			IBinaryComparator[] cmps) throws TreeIndexException {
+		return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
+				harness.getMemFreePageManager(), harness.getOnDiskDir(),
+				harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+				typeTraits, cmps);
+	}
 
-    @Before
+	@Override
+	protected int getIndexFileId() {
+		return harness.getFileId();
+	}
+
+	@Before
     public void setUp() throws HyracksDataException {
         harness.setUp();
     }
@@ -39,14 +52,5 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
     @After
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
-    }
-    
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmps,
-                BTreeLeafFrameType.REGULAR_NSM);
-    }
-    
-    protected int getIndexFileId() {
-        return harness.getBTreeFileId();
     }
 }

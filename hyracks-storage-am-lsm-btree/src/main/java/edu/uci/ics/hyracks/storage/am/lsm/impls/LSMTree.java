@@ -123,6 +123,9 @@ public class LSMTree implements ITreeIndex, ILSMTree {
             }
         };
         String[] files = dir.list(filter);
+        if (files == null) {
+        	return;
+        }
         Comparator<String> fileNameCmp = fileNameManager.getFileNameComparator();
         Arrays.sort(files, fileNameCmp);
         for (String fileName : files) {
@@ -132,7 +135,11 @@ public class LSMTree implements ITreeIndex, ILSMTree {
     }
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
+        for (BTree btree : onDiskBTrees) {
+            diskBufferCache.closeFile(btree.getFileId());
+            btree.close();
+        }
         onDiskBTrees.clear();
         onDiskBTreeCount = 0;
         memBTree.close();
@@ -467,7 +474,8 @@ public class LSMTree implements ITreeIndex, ILSMTree {
 
         @Override
         public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            throw new UnsupportedOperationException("Update not supported by LSMTree");
+            // Update is the same as insert.
+            insert(tuple);
         }
 
         @Override
@@ -490,13 +498,14 @@ public class LSMTree implements ITreeIndex, ILSMTree {
 
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
-            // TODO: Not implemented yet.
-            return null;
+            // Disk-order scan doesn't make sense for the LSMBTree because it must correctly resolve deleted tuples.
+            throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree.");
         }
         
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
-            throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree");
+            // Disk-order scan doesn't make sense for the LSMBTree because it must correctly resolve deleted tuples.
+            throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree.");
         }
     }
 }

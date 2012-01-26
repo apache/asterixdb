@@ -15,54 +15,41 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.util.Random;
+
+import org.junit.After;
+import org.junit.Before;
+
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexUpdateTest;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
-public class UpdateTest extends BTreeTestDriver {
-    private static final int numUpdateRounds = 3;
-    
-    @Override
-    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
-            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
-            throws Exception {
-        // This is a noop because we can only update non-key fields.
-        if (fieldSerdes.length == numKeys) {
-            return;
-        }
+public class UpdateTest extends OrderedIndexUpdateTest {
+    private final BTreeTestHarness harness = new BTreeTestHarness();
 
-        BTreeTestContext testCtx = BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
-                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+    @Before
+    public void setUp() throws HyracksDataException {
+        harness.setUp();
+    }
 
-        // We assume all fieldSerdes are of the same type. Check the first one
-        // to determine which field types to generate.
-        if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            BTreeTestUtils.insertIntTuples(testCtx, numTuplesToInsert, harness.getRandom());
-        } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            BTreeTestUtils.insertStringTuples(testCtx, numTuplesToInsert, harness.getRandom());
-        }
-
-        int numTuplesPerDeleteRound = (int) Math.ceil((float) testCtx.checkTuples.size() / (float) numUpdateRounds);
-        for (int j = 0; j < numUpdateRounds; j++) {
-            BTreeTestUtils.updateTuples(testCtx, numTuplesPerDeleteRound, harness.getRandom());
-
-            BTreeTestUtils.checkPointSearches(testCtx);
-            BTreeTestUtils.checkOrderedScan(testCtx);
-            BTreeTestUtils.checkDiskOrderScan(testCtx);
-            BTreeTestUtils.checkRangeSearch(testCtx, lowKey, highKey, true, true);
-            if (prefixLowKey != null && prefixHighKey != null) {
-                BTreeTestUtils.checkRangeSearch(testCtx, prefixLowKey, prefixHighKey, true, true);
-            }
-        }
+    @After
+    public void tearDown() throws HyracksDataException {
+        harness.tearDown();
     }
 
     @Override
-    protected String getTestOpName() {
-        return "Update";
+    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception {
+        return BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
+                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+    }
+
+    @Override
+    protected Random getRandom() {
+        return harness.getRandom();
     }
 }

@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
+@SuppressWarnings("rawtypes")
 public class UpdateSearchTest extends AbstractBTreeTest {
 
     // Update scan test on fixed-length tuples.

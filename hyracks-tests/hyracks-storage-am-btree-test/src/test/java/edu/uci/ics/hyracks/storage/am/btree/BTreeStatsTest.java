@@ -47,7 +47,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class StatsTest extends AbstractBTreeTest {
+@SuppressWarnings("rawtypes")
+public class BTreeStatsTest extends AbstractBTreeTest {
     private static final int PAGE_SIZE = 4096;
     private static final int NUM_PAGES = 1000;
     private static final int MAX_OPEN_FILES = 10;

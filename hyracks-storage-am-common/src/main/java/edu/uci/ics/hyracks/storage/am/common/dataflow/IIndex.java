@@ -43,5 +43,5 @@ public interface IIndex {
     /**
      * Closes the index.
      */
-    public void close();
+    public void close() throws HyracksDataException;
 }

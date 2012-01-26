@@ -1,6 +1,25 @@
-package edu.uci.ics.hyracks.storage.am.btree;
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+package edu.uci.ics.hyracks.storage.am.btree.tests;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -10,15 +29,24 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 
 @SuppressWarnings("rawtypes")
-public abstract class BTreeTestDriver extends AbstractBTreeTest {
-
+public abstract class OrderedIndexTestDriver {
+    protected final Logger LOGGER = Logger.getLogger(OrderedIndexTestDriver.class.getName());
+    
     protected static final int numTuplesToInsert = 10000;
     
+    protected abstract IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception;
+    protected abstract Random getRandom();
     protected abstract void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType, ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey) throws Exception;
     protected abstract String getTestOpName();
+    
+    protected List<BTreeLeafFrameType> leafFrameTypesToTest = new ArrayList<BTreeLeafFrameType>();
+    
+    public OrderedIndexTestDriver() {
+        leafFrameTypesToTest.add(BTreeLeafFrameType.REGULAR_NSM);
+        leafFrameTypesToTest.add(BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM);
+    }
     
     @Test
     public void oneIntKeyAndValue() throws Exception {        
@@ -31,8 +59,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference lowKey = TupleUtils.createIntegerTuple(-1000);
         ITupleReference highKey = TupleUtils.createIntegerTuple(1000);
         
-        runTest(fieldSerdes, 1, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, null, null);
-        runTest(fieldSerdes, 1, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, null, null);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 1, leafFrameType, lowKey, highKey, null, null);
+        }
     }
     
     @Test
@@ -51,8 +80,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference prefixLowKey = TupleUtils.createIntegerTuple(50);
         ITupleReference prefixHighKey = TupleUtils.createIntegerTuple(50);
         
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 2, leafFrameType, lowKey, highKey, prefixLowKey, prefixHighKey);
+        }
     }
     
     @Test
@@ -71,8 +101,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference prefixLowKey = TupleUtils.createIntegerTuple(50);
         ITupleReference prefixHighKey = TupleUtils.createIntegerTuple(50);
         
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 2, leafFrameType, lowKey, highKey, prefixLowKey, prefixHighKey);
+        }
     }        
     
     @Test
@@ -87,8 +118,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference lowKey = TupleUtils.createTuple(fieldSerdes, "cbf");
         ITupleReference highKey = TupleUtils.createTuple(fieldSerdes, "cc7");
         
-        runTest(fieldSerdes, 1, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, null, null);
-        runTest(fieldSerdes, 1, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, null, null);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 1, leafFrameType, lowKey, highKey, null, null);
+        }
     }
     
     @Test
@@ -107,8 +139,9 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference prefixLowKey = TupleUtils.createTuple(fieldSerdes, "cbf");
         ITupleReference prefixHighKey = TupleUtils.createTuple(fieldSerdes, "cc7");
         
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 2, leafFrameType, lowKey, highKey, prefixLowKey, prefixHighKey);
+        }
     }
     
     @Test
@@ -127,7 +160,8 @@ public abstract class BTreeTestDriver extends AbstractBTreeTest {
         ITupleReference prefixLowKey = TupleUtils.createTuple(fieldSerdes, "cbf");
         ITupleReference prefixHighKey = TupleUtils.createTuple(fieldSerdes, "cc7");
         
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.REGULAR_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
-        runTest(fieldSerdes, 2, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM, lowKey, highKey, prefixLowKey, prefixHighKey);
+        for (BTreeLeafFrameType leafFrameType : leafFrameTypesToTest) {
+            runTest(fieldSerdes, 2, leafFrameType, lowKey, highKey, prefixLowKey, prefixHighKey);
+        }
     }
 }

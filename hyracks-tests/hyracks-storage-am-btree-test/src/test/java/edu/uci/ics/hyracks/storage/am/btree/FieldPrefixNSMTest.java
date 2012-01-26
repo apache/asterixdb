@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
+@SuppressWarnings("rawtypes")
 public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
     private static final int PAGE_SIZE = 32768; // 32K
@@ -72,7 +73,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
         DataOutput dos = tb.getDataOutput();
-
+        
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
