@@ -46,8 +46,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCacheFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.RTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.tuples.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -91,26 +91,22 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         rtreeCmps[3] = rtreeCmps[0];
 
         // declare b-tree keys
-        int btreeKeyFieldCount = 7;
+        int btreeKeyFieldCount = 5;
         IBinaryComparator[] btreeCmps = new IBinaryComparator[btreeKeyFieldCount];
         btreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
         btreeCmps[1] = btreeCmps[0];
         btreeCmps[2] = btreeCmps[0];
         btreeCmps[3] = btreeCmps[0];
-        btreeCmps[4] = btreeCmps[0];
-        btreeCmps[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        btreeCmps[6] = btreeCmps[0];
+        btreeCmps[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
 
         // declare tuple fields
-        int fieldCount = 7;
+        int fieldCount = 5;
         ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
         typeTraits[0] = DoublePointable.TYPE_TRAITS;
         typeTraits[1] = DoublePointable.TYPE_TRAITS;
         typeTraits[2] = DoublePointable.TYPE_TRAITS;
         typeTraits[3] = DoublePointable.TYPE_TRAITS;
-        typeTraits[4] = DoublePointable.TYPE_TRAITS;
-        typeTraits[5] = IntegerPointable.TYPE_TRAITS;
-        typeTraits[6] = DoublePointable.TYPE_TRAITS;
+        typeTraits[4] = IntegerPointable.TYPE_TRAITS;
 
         MultiComparator rtreeCmp = new MultiComparator(rtreeCmps);
         MultiComparator btreeCmp = new MultiComparator(btreeCmps);
@@ -158,8 +154,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] recDescSers = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
+                DoubleSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
 
         IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
@@ -172,8 +167,6 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
         Random rnd = new Random();
         rnd.setSeed(50);
 
-        Random rnd2 = new Random();
-        rnd2.setSeed(50);
         for (int i = 0; i < 5000; i++) {
 
             double p1x = rnd.nextDouble();
@@ -181,9 +174,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
             double p2x = rnd.nextDouble();
             double p2y = rnd.nextDouble();
 
-            double pk1 = rnd2.nextDouble();
-            int pk2 = rnd2.nextInt();
-            double pk3 = rnd2.nextDouble();
+            int pk = rnd.nextInt();
 
             tb.reset();
             DoubleSerializerDeserializer.INSTANCE.serialize(Math.min(p1x, p2x), dos);
@@ -194,11 +185,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
             tb.addFieldEndOffset();
             DoubleSerializerDeserializer.INSTANCE.serialize(Math.max(p1y, p2y), dos);
             tb.addFieldEndOffset();
-            DoubleSerializerDeserializer.INSTANCE.serialize(pk1, dos);
-            tb.addFieldEndOffset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(pk2, dos);
-            tb.addFieldEndOffset();
-            DoubleSerializerDeserializer.INSTANCE.serialize(pk3, dos);
+            IntegerSerializerDeserializer.INSTANCE.serialize(pk, dos);
             tb.addFieldEndOffset();
 
             appender.reset(frame, true);
@@ -291,9 +278,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
             double p2x = rnd.nextDouble();
             double p2y = rnd.nextDouble();
 
-            double pk1 = rnd.nextDouble();
-            int pk2 = rnd.nextInt();
-            double pk3 = rnd.nextDouble();
+            int pk = rnd.nextInt();
 
             tb.reset();
             DoubleSerializerDeserializer.INSTANCE.serialize(Math.min(p1x, p2x), dos);
@@ -304,11 +289,7 @@ public class LSMRTreeTest extends AbstractLSMTreeTest {
             tb.addFieldEndOffset();
             DoubleSerializerDeserializer.INSTANCE.serialize(Math.max(p1y, p2y), dos);
             tb.addFieldEndOffset();
-            DoubleSerializerDeserializer.INSTANCE.serialize(pk1, dos);
-            tb.addFieldEndOffset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(pk2, dos);
-            tb.addFieldEndOffset();
-            DoubleSerializerDeserializer.INSTANCE.serialize(pk3, dos);
+            IntegerSerializerDeserializer.INSTANCE.serialize(pk, dos);
             tb.addFieldEndOffset();
 
             appender.reset(frame, true);

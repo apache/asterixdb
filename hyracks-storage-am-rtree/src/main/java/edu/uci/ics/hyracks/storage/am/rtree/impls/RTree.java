@@ -1104,13 +1104,5 @@ public class RTree implements ITreeIndex {
             ctx.reset(IndexOp.DISKORDERSCAN);
             rtree.diskOrderScan(cursor, ctx);
         }
-
-        // TODO: Ideally, this method should not exist. But we need it for
-        // the LSM tree to work correctly, so we can use the LSMOpContext inside
-        // a BTreeAccessor.
-        // Making the appropriate change will involve changing lots of code.
-        public void setOpContext(RTreeOpContext ctx) {
-            this.ctx = ctx;
-        }
     }
 }

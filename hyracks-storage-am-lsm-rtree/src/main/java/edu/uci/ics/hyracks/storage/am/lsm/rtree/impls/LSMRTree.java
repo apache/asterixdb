@@ -2,6 +2,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -96,6 +97,8 @@ public class LSMRTree implements ILSMTree {
             onDiskDir += System.getProperty("file.separator");
         }
         this.onDiskDir = onDiskDir;
+        this.rtreeFileId = 0;
+        this.btreeFileId = 1;
     }
 
     @Override
@@ -213,10 +216,7 @@ public class LSMRTree implements ILSMTree {
 
         // Cursor setting -- almost the same as search, only difference is
         // "no cursor for in-memory tree"
-        int numberOfInDiskTrees;
-        synchronized (onDiskRTrees) {
-            numberOfInDiskTrees = onDiskRTrees.size();
-        }
+        int numberOfInDiskTrees = onDiskRTrees.size();
 
         RTreeSearchCursor[] rtreeCursors = new RTreeSearchCursor[numberOfInDiskTrees];
         BTreeRangeSearchCursor[] btreeCursors = new BTreeRangeSearchCursor[numberOfInDiskTrees];
@@ -363,7 +363,7 @@ public class LSMRTree implements ILSMTree {
         }
     }
 
-    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void insert(ITupleReference tuple, LSMRTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         boolean waitForFlush = false;
         do {
             synchronized (this) {
@@ -373,7 +373,7 @@ public class LSMRTree implements ILSMTree {
                 }
             }
         } while (waitForFlush == true);
-        ctx.LSMRTreeOpContext.memRTreeAccessor.insert(tuple);
+        ctx.memRTreeAccessor.insert(tuple);
         try {
             threadExit();
         } catch (Exception e) {
@@ -381,7 +381,7 @@ public class LSMRTree implements ILSMTree {
         }
     }
 
-    private void delete(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void delete(ITupleReference tuple, LSMRTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         boolean waitForFlush = false;
         do {
             synchronized (this) {
@@ -391,7 +391,7 @@ public class LSMRTree implements ILSMTree {
                 }
             }
         } while (waitForFlush == true);
-        ctx.LSMBTreeOpContext.memBTreeAccessor.insert(tuple);
+        ctx.memBTreeAccessor.insert(tuple);
         try {
             threadExit();
         } catch (Exception e) {
@@ -399,12 +399,11 @@ public class LSMRTree implements ILSMTree {
         }
     }
 
-    private void search(ITreeIndexCursor cursor, ISearchPredicate rtreeSearchPred, LSMTreeOpContext ctx)
-            throws Exception {
+    private void search(ITreeIndexCursor cursor, ISearchPredicate rtreeSearchPred, LSMRTreeOpContext ctx,
+            boolean includeMemTree) throws Exception {
 
         boolean continuePerformOp = false;
         ctx.reset(IndexOp.SEARCH);
-
         while (continuePerformOp == false) {
             synchronized (this) {
                 if (!flushFlag) {
@@ -414,45 +413,70 @@ public class LSMRTree implements ILSMTree {
             }
         }
 
-        int numberOfInDiskTrees;
-        synchronized (onDiskRTrees) {
-            numberOfInDiskTrees = onDiskRTrees.size();
+        int numDiskTrees = onDiskRTrees.size();
+
+        ITreeIndexAccessor[] bTreeAccessors;
+        int diskBTreeIx = 0;
+        if (includeMemTree) {
+            bTreeAccessors = new ITreeIndexAccessor[numDiskTrees + 1];
+            bTreeAccessors[0] = ctx.memBTreeAccessor;
+            diskBTreeIx++;
+        } else {
+            bTreeAccessors = new ITreeIndexAccessor[numDiskTrees];
         }
 
-        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numberOfInDiskTrees + 1,
-                rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmp,
-                ctx.LSMBTreeOpContext.memBTreeAccessor, this);
-        cursor.open(initialState, rtreeSearchPred);
-
-        ITreeIndexAccessor[] onDiskRTreeAccessors = new ITreeIndexAccessor[numberOfInDiskTrees];
-
-        for (int i = 0; i < numberOfInDiskTrees; i++) {
-            onDiskRTreeAccessors[i] = onDiskRTrees.get(i).createAccessor();
-            onDiskRTreeAccessors[i].search(((LSMRTreeSearchCursor) cursor).getRTreeCursor(i + 1), rtreeSearchPred);
+        ListIterator<BTree> diskBTreesIter = onDiskBTrees.listIterator();
+        while (diskBTreesIter.hasNext()) {
+            BTree diskBTree = diskBTreesIter.next();
+            bTreeAccessors[diskBTreeIx] = diskBTree.createAccessor();
+            diskBTreeIx++;
         }
 
-        // in-memory
-        ctx.LSMRTreeOpContext.memRTreeAccessor.search(((LSMRTreeSearchCursor) cursor).getRTreeCursor(0),
-                rtreeSearchPred);
+        LSMRTreeSearchCursor lsmRTreeCursor = (LSMRTreeSearchCursor) cursor;
+        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numDiskTrees + 1,
+                rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmp, bTreeAccessors, this);
+        lsmRTreeCursor.open(initialState, rtreeSearchPred);
+
+        int cursorIx = 1;
+        if (includeMemTree) {
+            ctx.memRTreeAccessor.search(((LSMRTreeSearchCursor) lsmRTreeCursor).getCursor(0), rtreeSearchPred);
+            cursorIx = 1;
+        } else {
+            cursorIx = 0;
+        }
+
+        // Open cursors of on-disk RTrees
+        ITreeIndexAccessor[] diskRTreeAccessors = new ITreeIndexAccessor[numDiskTrees];
+        ListIterator<RTree> diskRTreesIter = onDiskRTrees.listIterator();
+
+        int diskRTreeIx = 0;
+        while (diskRTreesIter.hasNext()) {
+            RTree diskRTree = diskRTreesIter.next();
+            diskRTreeAccessors[diskRTreeIx] = diskRTree.createAccessor();
+            diskRTreeAccessors[diskRTreeIx].search(lsmRTreeCursor.getCursor(cursorIx), rtreeSearchPred);
+            cursorIx++;
+            diskRTreeIx++;
+        }
+
     }
 
     public LinkedList<BTree> getOnDiskBTrees() {
         return onDiskBTrees;
     }
 
-    private LSMTreeOpContext createOpContext() {
+    private LSMRTreeOpContext createOpContext() {
 
-        return new LSMTreeOpContext(new LSMRTreeOpContext((RTree.RTreeAccessor) memRTree.createAccessor(),
+        return new LSMRTreeOpContext((RTree.RTreeAccessor) memRTree.createAccessor(),
                 (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
-                        .getMetaDataFrameFactory().createFrame(), 8), new LSMBTreeOpContext(
-                (BTree.BTreeAccessor) memBTree.createAccessor(), btreeLeafFrameFactory, btreeInteriorFrameFactory,
-                memFreePageManager.getMetaDataFrameFactory().createFrame(), btreeCmp));
+                        .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memBTree.createAccessor(),
+                btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
+                        .createFrame(), btreeCmp);
     }
 
     private class LSMRTreeAccessor implements ITreeIndexAccessor {
         private LSMRTree lsmRTree;
-        private LSMTreeOpContext ctx;
+        private LSMRTreeOpContext ctx;
 
         public LSMRTreeAccessor(LSMRTree lsmRTree) {
             this.lsmRTree = lsmRTree;
@@ -462,7 +486,7 @@ public class LSMRTree implements ILSMTree {
 
         @Override
         public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.LSMRTreeOpContext.reset(IndexOp.INSERT);
+            ctx.reset(IndexOp.INSERT);
             lsmRTree.insert(tuple, ctx);
         }
 
@@ -473,33 +497,33 @@ public class LSMRTree implements ILSMTree {
 
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.LSMBTreeOpContext.reset(IndexOp.INSERT);
+            ctx.reset(IndexOp.DELETE);
             lsmRTree.delete(tuple, ctx);
         }
 
         @Override
-		public ITreeIndexCursor createSearchCursor() {			
-			return new LSMRTreeSearchCursor();
-		}
-        
+        public ITreeIndexCursor createSearchCursor() {
+            return new LSMRTreeSearchCursor();
+        }
+
         @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
             // TODO: fix exception handling throughout LSM tree.
             try {
-                lsmRTree.search(cursor, searchPred, ctx);
+                lsmRTree.search(cursor, searchPred, ctx, true);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
         }
 
         @Override
-		public ITreeIndexCursor createDiskOrderScanCursor() {
-			// TODO: Not implemented yet.
-			return null;
-		}
-        
+        public ITreeIndexCursor createDiskOrderScanCursor() {
+            // TODO: Not implemented yet.
+            return null;
+        }
+
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             throw new UnsupportedOperationException("DiskOrderScan not supported by LSMRTree");

@@ -102,7 +102,7 @@ public class RTreeTest extends AbstractRTreeTest {
         typeTraits[2] = DoublePointable.TYPE_TRAITS;
         typeTraits[3] = DoublePointable.TYPE_TRAITS;
         typeTraits[4] = DoublePointable.TYPE_TRAITS;
-        typeTraits[5] = DoublePointable.TYPE_TRAITS;
+        typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
         // create value providers
