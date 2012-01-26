@@ -20,10 +20,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.OrderedIndexTestUtils;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
+
+    public OrderedIndexDeleteTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
+        super(leafFrameTypesToTest);
+    }
 
     private static final int numInsertRounds = 3;
     private static final int numDeleteRounds = 3;

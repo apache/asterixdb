@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -34,6 +35,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class LSMBTreeTestHarness {
     protected static final Logger LOGGER = Logger.getLogger(LSMBTreeTestHarness.class.getName());
+    
+    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST = new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM };
     
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_DISK_PAGE_SIZE = 256;
@@ -151,5 +154,9 @@ public class LSMBTreeTestHarness {
     
     public String getOnDiskDir() {
     	return onDiskDir;
+    }
+    
+    public Random getRandom() {
+        return rnd;
     }
 }

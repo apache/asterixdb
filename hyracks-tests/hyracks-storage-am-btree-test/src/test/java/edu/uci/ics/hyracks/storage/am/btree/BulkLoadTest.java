@@ -25,11 +25,16 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexBulkLoadTest;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
 public class BulkLoadTest extends OrderedIndexBulkLoadTest {
+    
+    public BulkLoadTest() {
+        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
+    }
+
     private final BTreeTestHarness harness = new BTreeTestHarness();
 
     @Before
@@ -44,7 +49,7 @@ public class BulkLoadTest extends OrderedIndexBulkLoadTest {
 
     @Override
     protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestUtils.createBTreeTestContext(harness.getBufferCache(),
+        return BTreeTestContext.create(harness.getBufferCache(),
                 harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
     }
 

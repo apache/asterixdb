@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree;
+package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import java.util.Random;
 
@@ -24,28 +24,18 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexInsertTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexUpdateTest;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 
-/**
- * Tests the BTree insert operation with strings and integer fields using
- * various numbers of key and payload fields.
- * 
- * Each tests first fills a BTree with randomly generated tuples. We compare the
- * following operations against expected results: 1. Point searches for all
- * tuples. 2. Ordered scan. 3. Disk-order scan. 4. Range search (and prefix
- * search for composite keys).
- * 
- */
 @SuppressWarnings("rawtypes")
-public class InsertTest extends OrderedIndexInsertTest {
-
-    public InsertTest() {
-        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
+public class UpdateTest extends OrderedIndexUpdateTest {
+    
+    public UpdateTest() {
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 
-    private final BTreeTestHarness harness = new BTreeTestHarness();
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -56,11 +46,13 @@ public class InsertTest extends OrderedIndexInsertTest {
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
     }
-    
+
     @Override
-    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(),
-                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
+            BTreeLeafFrameType leafType) throws Exception {
+        return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
+                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                numKeys, harness.getFileId());
     }
 
     @Override

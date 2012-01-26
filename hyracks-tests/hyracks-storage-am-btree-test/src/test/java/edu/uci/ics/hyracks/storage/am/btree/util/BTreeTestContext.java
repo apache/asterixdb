@@ -15,107 +15,42 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.util;
 
-import java.util.TreeSet;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.tests.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 @SuppressWarnings("rawtypes")
-public final class BTreeTestContext implements IOrderedIndexTestContext {
-    // TODO: Change to private or protected.
-    public final ISerializerDeserializer[] fieldSerdes;
-    public final IBufferCache bufferCache;
-    public final BTree btree;
-    public final IBTreeLeafFrame leafFrame;
-    public final IBTreeInteriorFrame interiorFrame;
-    public final ITreeIndexMetaDataFrame metaFrame;
-    public final ArrayTupleBuilder tupleBuilder;
-    public final ArrayTupleReference tuple = new ArrayTupleReference();
-    public final TreeSet<CheckTuple> checkTuples = new TreeSet<CheckTuple>();
-    public final ITreeIndexAccessor indexAccessor;
-
-    public BTreeTestContext(IBufferCache bufferCache, ISerializerDeserializer[] fieldSerdes, BTree btree,
-            IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame,
-            ITreeIndexAccessor indexAccessor) {
-        this.bufferCache = bufferCache;
-        this.fieldSerdes = fieldSerdes;
-        this.btree = btree;
-        this.leafFrame = leafFrame;
-        this.interiorFrame = interiorFrame;
-        this.metaFrame = metaFrame;
-        this.indexAccessor = indexAccessor;
-        this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
+public class BTreeTestContext extends OrderedIndexTestContext {
+    
+    public BTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
+        super(fieldSerdes, treeIndex);
     }
 
-    public int getFieldCount() {
-        return fieldSerdes.length;
-    }
-
+    @Override
     public int getKeyFieldCount() {
+        BTree btree = (BTree) treeIndex;
         return btree.getMultiComparator().getKeyFieldCount();
     }
 
     @Override
-    public ITreeIndexAccessor getIndexAccessor() {
-        return indexAccessor;
-    }
-
-    @Override
-    public ArrayTupleReference getTuple() {
-        return tuple;
-    }
-
-    @Override
-    public ArrayTupleBuilder getTupleBuilder() {
-        return tupleBuilder;
-    }
-
-    @Override
-    public void insertIntCheckTuple(int[] fieldValues) {        
-        CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(getFieldCount(), getKeyFieldCount());
-        for(int v : fieldValues) {
-            checkTuple.add(v);
-        }
-        checkTuples.add(checkTuple);
-    }
-
-    @Override
-    public void insertStringCheckTuple(String[] fieldValues) {
-        CheckTuple<String> checkTuple = new CheckTuple<String>(getFieldCount(), getKeyFieldCount());
-        for(String s : fieldValues) {
-            checkTuple.add((String)s);
-        }
-        checkTuples.add(checkTuple);
-    }
-
-    @Override
-    public ISerializerDeserializer[] getFieldSerdes() {
-        return fieldSerdes;
-    }
-
-    @Override
     public IBinaryComparator[] getComparators() {
+        BTree btree = (BTree) treeIndex;
         return btree.getMultiComparator().getComparators();
     }
-
-    @Override
-    public TreeSet<CheckTuple> getCheckTuples() {
-        return checkTuples;
-    }
-
-    @Override
-    public ITreeIndex getIndex() {
-        return btree;
+    
+    public static BTreeTestContext create(IBufferCache bufferCache, int btreeFileId, ISerializerDeserializer[] fieldSerdes, int numKeyFields, BTreeLeafFrameType leafType) throws Exception {        
+        ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
+        IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, numKeyFields);
+        BTree btree = BTreeUtils.createBTree(bufferCache, btreeFileId, typeTraits, cmps, leafType);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+        BTreeTestContext testCtx = new BTreeTestContext(fieldSerdes, btree);
+        return testCtx;
     }
 }

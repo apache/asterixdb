@@ -59,7 +59,7 @@ public class MultiComparator {
 		return cmps;
 	}
 
-	public int getKeyFieldCount() {
+    public int getKeyFieldCount() {
 		return cmps.length;
 	}
 }

@@ -14,30 +14,27 @@ public final class LSMTreeOpContext extends BTreeOpContext {
 	public ITreeIndexFrameFactory deleteLeafFrameFactory;
 	public IBTreeLeafFrame insertLeafFrame;
 	public IBTreeLeafFrame deleteLeafFrame;
-	public final BTree.BTreeAccessor memBtreeAccessor;
+	public final BTree.BTreeAccessor memBTreeAccessor;
 
-	public LSMTreeOpContext(BTree.BTreeAccessor memBtreeAccessor, ITreeIndexFrameFactory insertLeafFrameFactory,
+	public LSMTreeOpContext(BTree.BTreeAccessor memBTreeAccessor, ITreeIndexFrameFactory insertLeafFrameFactory,
 			ITreeIndexFrameFactory deleteLeafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
 			ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
 		super(insertLeafFrameFactory, interiorFrameFactory, metaFrame, cmp);		
 		
-		this.memBtreeAccessor = memBtreeAccessor;
+		this.memBTreeAccessor = memBTreeAccessor;
         // Overwrite the BTree accessor's op context with our LSMTreeOpContext.
-		this.memBtreeAccessor.setOpContext(this);
+		this.memBTreeAccessor.setOpContext(this);
 		
 		this.insertLeafFrameFactory = insertLeafFrameFactory;
 		this.deleteLeafFrameFactory = deleteLeafFrameFactory;
 		this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
 		this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
-		
 		if (insertLeafFrame != null) {
 			insertLeafFrame.setMultiComparator(cmp);
         }
-		
         if (deleteLeafFrame != null) {
         	deleteLeafFrame.setMultiComparator(cmp);
         }
-        
         reset(op);
 	}
 

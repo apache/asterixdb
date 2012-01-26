@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.OrderedIndexTestUtils;
 
 /**
  * Tests the BTree insert operation with strings and integer fields using
@@ -35,6 +34,10 @@ import edu.uci.ics.hyracks.storage.am.btree.util.OrderedIndexTestUtils;
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexInsertTest extends OrderedIndexTestDriver {
     
+    public OrderedIndexInsertTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
+        super(leafFrameTypesToTest);
+    }
+
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)

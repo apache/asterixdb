@@ -20,10 +20,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.OrderedIndexTestUtils;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
+
+    public OrderedIndexBulkLoadTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
+        super(leafFrameTypesToTest);
+    }
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,

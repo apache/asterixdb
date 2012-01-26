@@ -23,12 +23,16 @@ import java.util.Random;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class BTreeTestHarness {    
+    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST = new BTreeLeafFrameType[] {
+        BTreeLeafFrameType.REGULAR_NSM, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM };
+    
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_PAGE_SIZE = 256;
     private static final int DEFAULT_NUM_PAGES = 10;

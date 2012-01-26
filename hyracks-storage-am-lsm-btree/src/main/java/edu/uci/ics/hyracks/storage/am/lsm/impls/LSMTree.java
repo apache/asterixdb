@@ -160,15 +160,17 @@ public class LSMTree implements ITreeIndex, ILSMTree {
 			}
 		} while (waitForFlush);
 		try {
-			ctx.memBtreeAccessor.insert(tuple);
+			ctx.memBTreeAccessor.insert(tuple);
 		} catch (BTreeDuplicateKeyException e) {
 			// We don't need to deal with a nonexistent key here, because a
 			// deleter will actually update the key and it's value, and not
 			// delete it from the BTree.
 			// Also notice that a flush must wait for the current operation to
 			// finish (threadRefCount must reach zero).
-			ctx.reset(IndexOp.UPDATE);
-			ctx.memBtreeAccessor.update(tuple);
+            if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
+                ctx.reset(IndexOp.UPDATE);
+                ctx.memBTreeAccessor.update(tuple);
+            }
 		}
 		threadExit();
 	}
@@ -275,7 +277,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         int cursorIx;
         if (includeMemBTree) {
             // Open cursor of in-memory BTree at index 0.
-            ctx.memBtreeAccessor.search(lsmTreeCursor.getCursor(0), pred);
+            ctx.memBTreeAccessor.search(lsmTreeCursor.getCursor(0), pred);
             // Skip 0 because it is the in-memory BTree.
             cursorIx = 1;
         } else {
@@ -446,6 +448,10 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         return memBTree.getIndexType();
     }
 
+    public MultiComparator getMultiComparator() {
+        return cmp;
+    }
+    
     public LSMTreeOpContext createOpContext() {
         return new LSMTreeOpContext((BTree.BTreeAccessor) memBTree.createAccessor(), insertLeafFrameFactory,
                 deleteLeafFrameFactory, interiorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
@@ -475,6 +481,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         @Override
         public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             // Update is the same as insert.
+            ctx.reset(IndexOp.INSERT);
             insert(tuple);
         }
 
