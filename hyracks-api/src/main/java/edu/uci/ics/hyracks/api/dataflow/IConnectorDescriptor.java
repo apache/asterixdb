@@ -44,7 +44,8 @@ public interface IConnectorDescriptor extends Serializable {
     public ConnectorDescriptorId getConnectorId();
 
     /**
-     * Factory method to create the send side writer that writes into this connector.
+     * Factory method to create the send side writer that writes into this
+     * connector.
      * 
      * @param ctx
      *            Context
@@ -66,7 +67,8 @@ public interface IConnectorDescriptor extends Serializable {
             throws HyracksDataException;
 
     /**
-     * Factory metod to create the receive side reader that reads data from this connector.
+     * Factory metod to create the receive side reader that reads data from this
+     * connector.
      * 
      * @param ctx
      *            Context
@@ -96,10 +98,21 @@ public interface IConnectorDescriptor extends Serializable {
             ICCApplicationContext appCtx);
 
     /**
-     * Indicate which consumer partitions may receive data from the given producer partition.
+     * Indicate which consumer partitions may receive data from the given
+     * producer partition.
      */
     public void indicateTargetPartitions(int nProducerPartitions, int nConsumerPartitions, int producerIndex,
             BitSet targetBitmap);
+
+    /**
+     * Gets the display name.
+     */
+    public String getDisplayName();
+
+    /**
+     * Sets the display name.
+     */
+    public void setDisplayName(String displayName);
 
     /**
      * Translate this connector descriptor to JSON.

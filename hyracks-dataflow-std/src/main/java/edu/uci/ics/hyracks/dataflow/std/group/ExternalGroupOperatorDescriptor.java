@@ -428,6 +428,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  */
 
                                 tupleBuilder.reset();
+                                
+                                for(int k = 0; k < storedKeys.length; k++){
+                                	tupleBuilder.addField(fta, tupleIndex, storedKeys[k]);
+                                }
 
                                 aggregator.init(tupleBuilder, fta, tupleIndex, aggregateState);
 

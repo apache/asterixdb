@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.work;
 
-public class FutureValue<T> {
+public class FutureValue<T> implements IResultCallback<T> {
     private boolean done;
 
     private T value;
@@ -27,6 +27,7 @@ public class FutureValue<T> {
         e = null;
     }
 
+    @Override
     public synchronized void setValue(T value) {
         done = true;
         this.value = value;
@@ -34,6 +35,7 @@ public class FutureValue<T> {
         notifyAll();
     }
 
+    @Override
     public synchronized void setException(Exception e) {
         done = true;
         this.e = e;

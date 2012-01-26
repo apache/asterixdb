@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.control.cc.application;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
@@ -30,9 +32,16 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.job.DeserializingJobSpecificationFactory;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
 public class CCApplicationContext extends ApplicationContext implements ICCApplicationContext {
     private final ICCContext ccContext;
+
+    protected final Set<String> initPendingNodeIds;
+    protected final Set<String> deinitPendingNodeIds;
+
+    protected IResultCallback<Object> initializationCallback;
+    protected IResultCallback<Object> deinitializationCallback;
 
     private IJobSpecificationFactory jobSpecFactory;
 
@@ -41,6 +50,8 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext, String appName) throws IOException {
         super(serverCtx, appName);
         this.ccContext = ccContext;
+        initPendingNodeIds = new HashSet<String>();
+        deinitPendingNodeIds = new HashSet<String>();
         jobSpecFactory = DeserializingJobSpecificationFactory.INSTANCE;
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
     }
@@ -97,5 +108,29 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, specification);
         }
+    }
+
+    public Set<String> getInitializationPendingNodeIds() {
+        return initPendingNodeIds;
+    }
+
+    public Set<String> getDeinitializationPendingNodeIds() {
+        return deinitPendingNodeIds;
+    }
+
+    public IResultCallback<Object> getInitializationCallback() {
+        return initializationCallback;
+    }
+
+    public void setInitializationCallback(IResultCallback<Object> initializationCallback) {
+        this.initializationCallback = initializationCallback;
+    }
+
+    public IResultCallback<Object> getDeinitializationCallback() {
+        return deinitializationCallback;
+    }
+
+    public void setDeinitializationCallback(IResultCallback<Object> deinitializationCallback) {
+        this.deinitializationCallback = deinitializationCallback;
     }
 }

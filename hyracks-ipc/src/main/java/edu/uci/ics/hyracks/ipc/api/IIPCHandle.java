@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 public interface IIPCHandle {
     public InetSocketAddress getRemoteAddress();
 
-    public void send(Object request, IResponseCallback callback) throws IPCException;
+    public long send(long requestId, Object payload, Exception exception) throws IPCException;
 
     public void setAttachment(Object attachment);
 

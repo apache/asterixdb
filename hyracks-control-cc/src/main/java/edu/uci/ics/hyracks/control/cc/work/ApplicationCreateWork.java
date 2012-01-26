@@ -20,34 +20,42 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
+import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
 public class ApplicationCreateWork extends AbstractWork {
     private final ClusterControllerService ccs;
     private final String appName;
-    private FutureValue<Object> fv;
+    private IResultCallback<Object> callback;
 
-    public ApplicationCreateWork(ClusterControllerService ccs, String appName, FutureValue<Object> fv) {
+    public ApplicationCreateWork(ClusterControllerService ccs, String appName, IResultCallback<Object> callback) {
         this.ccs = ccs;
         this.appName = appName;
-        this.fv = fv;
+        this.callback = callback;
     }
 
     @Override
     public void run() {
-        Map<String, CCApplicationContext> applications = ccs.getApplicationMap();
-        if (applications.containsKey(appName)) {
-            fv.setException(new HyracksException("Duplicate application with name: " + appName + " being created."));
-        }
-        CCApplicationContext appCtx;
         try {
-            appCtx = new CCApplicationContext(ccs.getServerContext(), ccs.getCCContext(), appName);
-        } catch (IOException e) {
-            fv.setException(e);
-            return;
+            Map<String, CCApplicationContext> applications = ccs.getApplicationMap();
+            if (applications.containsKey(appName)) {
+                callback.setException(new HyracksException("Duplicate application with name: " + appName
+                        + " being created."));
+                return;
+            }
+            CCApplicationContext appCtx;
+            try {
+                appCtx = new CCApplicationContext(ccs.getServerContext(), ccs.getCCContext(), appName);
+            } catch (IOException e) {
+                callback.setException(e);
+                return;
+            }
+            appCtx.setStatus(ApplicationStatus.CREATED);
+            applications.put(appName, appCtx);
+            callback.setValue(null);
+        } catch (Exception e) {
+            callback.setException(e);
         }
-        applications.put(appName, appCtx);
-        fv.setValue(null);
     }
 }

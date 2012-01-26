@@ -21,82 +21,76 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
-import edu.uci.ics.hyracks.ipc.api.SyncRMI;
+import edu.uci.ics.hyracks.ipc.api.RPCInterface;
 
 public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterface {
     private final IIPCHandle ipcHandle;
 
-    public HyracksClientInterfaceRemoteProxy(IIPCHandle ipcHandle) {
+    private final RPCInterface rpci;
+
+    public HyracksClientInterfaceRemoteProxy(IIPCHandle ipcHandle, RPCInterface rpci) {
         this.ipcHandle = ipcHandle;
+        this.rpci = rpci;
     }
 
     @Override
     public ClusterControllerInfo getClusterControllerInfo() throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction gccif = new HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction();
-        return (ClusterControllerInfo) sync.call(ipcHandle, gccif);
+        return (ClusterControllerInfo) rpci.call(ipcHandle, gccif);
     }
 
     @Override
     public void createApplication(String appName) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.CreateApplicationFunction caf = new HyracksClientInterfaceFunctions.CreateApplicationFunction(
                 appName);
-        sync.call(ipcHandle, caf);
+        rpci.call(ipcHandle, caf);
     }
 
     @Override
     public void startApplication(String appName) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.StartApplicationFunction saf = new HyracksClientInterfaceFunctions.StartApplicationFunction(
                 appName);
-        sync.call(ipcHandle, saf);
+        rpci.call(ipcHandle, saf);
     }
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.DestroyApplicationFunction daf = new HyracksClientInterfaceFunctions.DestroyApplicationFunction(
                 appName);
-        sync.call(ipcHandle, daf);
+        rpci.call(ipcHandle, daf);
     }
 
     @Override
     public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.CreateJobFunction cjf = new HyracksClientInterfaceFunctions.CreateJobFunction(
                 appName, jobSpec, jobFlags);
-        return (JobId) sync.call(ipcHandle, cjf);
+        return (JobId) rpci.call(ipcHandle, cjf);
     }
 
     @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = new HyracksClientInterfaceFunctions.GetJobStatusFunction(
                 jobId);
-        return (JobStatus) sync.call(ipcHandle, gjsf);
+        return (JobStatus) rpci.call(ipcHandle, gjsf);
     }
 
     @Override
     public void startJob(JobId jobId) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
                 jobId);
-        sync.call(ipcHandle, sjf);
+        rpci.call(ipcHandle, sjf);
     }
 
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf = new HyracksClientInterfaceFunctions.WaitForCompletionFunction(
                 jobId);
-        sync.call(ipcHandle, wfcf);
+        rpci.call(ipcHandle, wfcf);
     }
 
     @Override
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
-        SyncRMI sync = new SyncRMI();
         HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction gncif = new HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction();
-        return (Map<String, NodeControllerInfo>) sync.call(ipcHandle, gncif);
+        return (Map<String, NodeControllerInfo>) rpci.call(ipcHandle, gncif);
     }
 }

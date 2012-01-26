@@ -15,5 +15,5 @@
 package edu.uci.ics.hyracks.ipc.api;
 
 public interface IIPCI {
-    public Object call(IIPCHandle caller, Object req) throws Exception;
+    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception);
 }

@@ -14,12 +14,9 @@
  */
 package edu.uci.ics.hyracks.ipc.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+
+import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
 
 class Message {
     private static final int MSG_SIZE_SIZE = 4;
@@ -92,29 +89,26 @@ class Message {
         return buffer.remaining() >= msgSize + MSG_SIZE_SIZE;
     }
 
-    void read(ByteBuffer buffer) throws IOException, ClassNotFoundException {
+    void read(ByteBuffer buffer) throws Exception {
         assert hasMessage(buffer);
         int msgSize = buffer.getInt();
         messageId = buffer.getLong();
         requestMessageId = buffer.getLong();
         flag = buffer.get();
         int finalPosition = buffer.position() + msgSize - HEADER_SIZE;
+        int length = msgSize - HEADER_SIZE;
         try {
-            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer.array(), buffer.position(),
-                    msgSize - HEADER_SIZE));
-            payload = ois.readObject();
-            ois.close();
+            IPayloadSerializerDeserializer serde = ipcHandle.getIPCSystem().getSerializerDeserializer();
+            payload = flag == ERROR ? serde.deserializeException(buffer, length) : serde.deserializeObject(buffer,
+                    length);
         } finally {
             buffer.position(finalPosition);
         }
     }
 
-    boolean write(ByteBuffer buffer) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(payload);
-        oos.close();
-        byte[] bytes = baos.toByteArray();
+    boolean write(ByteBuffer buffer) throws Exception {
+        IPayloadSerializerDeserializer serde = ipcHandle.getIPCSystem().getSerializerDeserializer();
+        byte[] bytes = flag == ERROR ? serde.serializeException((Exception) payload) : serde.serializeObject(payload);
         if (buffer.remaining() >= MSG_SIZE_SIZE + HEADER_SIZE + bytes.length) {
             buffer.putInt(HEADER_SIZE + bytes.length);
             buffer.putLong(messageId);
@@ -124,5 +118,10 @@ class Message {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "MSG[" + messageId + ":" + requestMessageId + ":" + flag + ":" + payload + "]";
     }
 }

@@ -17,11 +17,8 @@ package edu.uci.ics.hyracks.ipc.impl;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.util.HashMap;
-import java.util.Map;
 
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
-import edu.uci.ics.hyracks.ipc.api.IResponseCallback;
 import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 
 final class IPCHandle implements IIPCHandle {
@@ -30,8 +27,6 @@ final class IPCHandle implements IIPCHandle {
     private final IPCSystem system;
 
     private InetSocketAddress remoteAddress;
-
-    private final Map<Long, IResponseCallback> pendingRequestMap;
 
     private HandleState state;
 
@@ -48,7 +43,6 @@ final class IPCHandle implements IIPCHandle {
     IPCHandle(IPCSystem system, InetSocketAddress remoteAddress) {
         this.system = system;
         this.remoteAddress = remoteAddress;
-        pendingRequestMap = new HashMap<Long, IResponseCallback>();
         inBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
         outBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
         outBuffer.flip();
@@ -60,24 +54,32 @@ final class IPCHandle implements IIPCHandle {
         return remoteAddress;
     }
 
+    IPCSystem getIPCSystem() {
+        return system;
+    }
+
     void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
     }
 
     @Override
-    public synchronized void send(Object req, IResponseCallback callback) throws IPCException {
+    public synchronized long send(long requestId, Object req, Exception exception) throws IPCException {
         if (state != HandleState.CONNECTED) {
             throw new IPCException("Handle is not in Connected state");
         }
         Message msg = new Message(this);
         long mid = system.createMessageId();
         msg.setMessageId(mid);
-        msg.setRequestMessageId(-1);
-        msg.setPayload(req);
-        if (callback != null) {
-            pendingRequestMap.put(mid, callback);
+        msg.setRequestMessageId(requestId);
+        if (exception != null) {
+            msg.setFlag(Message.ERROR);
+            msg.setPayload(exception);
+        } else {
+            msg.setFlag(Message.NORMAL);
+            msg.setPayload(req);
         }
         system.getConnectionManager().write(msg);
+        return mid;
     }
 
     @Override
@@ -110,7 +112,7 @@ final class IPCHandle implements IIPCHandle {
         this.state = state;
         notifyAll();
     }
-    
+
     synchronized void waitTillConnected() throws InterruptedException {
         while (!isConnected()) {
             wait();
@@ -127,9 +129,6 @@ final class IPCHandle implements IIPCHandle {
 
     synchronized void close() {
         setState(HandleState.CLOSED);
-        for (IResponseCallback cb : pendingRequestMap.values()) {
-            cb.callback(this, null, new IPCException("IPC Handle Closed"));
-        }
     }
 
     synchronized void processIncomingMessages() {
@@ -157,19 +156,7 @@ final class IPCHandle implements IIPCHandle {
                 }
                 continue;
             }
-            long requestMessageId = message.getRequestMessageId();
-            if (requestMessageId < 0) {
-                system.deliverIncomingMessage(message);
-            } else {
-                Long rid = Long.valueOf(requestMessageId);
-                IResponseCallback cb = pendingRequestMap.remove(rid);
-                if (cb != null) {
-                    byte flag = message.getFlag();
-                    Object payload = flag == Message.ERROR ? null : message.getPayload();
-                    Exception exception = (Exception) (flag == Message.ERROR ? message.getPayload() : null);
-                    cb.callback(this, payload, exception);
-                }
-            }
+            system.deliverIncomingMessage(message);
         }
         inBuffer.compact();
     }
@@ -178,14 +165,12 @@ final class IPCHandle implements IIPCHandle {
         inBuffer.flip();
         ByteBuffer readBuffer = ByteBuffer.allocate(inBuffer.capacity() * 2);
         readBuffer.put(inBuffer);
-        readBuffer.compact();
         inBuffer = readBuffer;
     }
 
     void resizeOutBuffer() {
         ByteBuffer writeBuffer = ByteBuffer.allocate(outBuffer.capacity() * 2);
         writeBuffer.put(outBuffer);
-        writeBuffer.compact();
         writeBuffer.flip();
         outBuffer = writeBuffer;
     }

@@ -15,29 +15,21 @@
 package edu.uci.ics.hyracks.api.client;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 
 public class NodeControllerInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String nodeId;
 
-    private final InetAddress ipAddress;
-
     private final NodeStatus status;
 
-    public NodeControllerInfo(String nodeId, InetAddress ipAddress, NodeStatus status) {
+    public NodeControllerInfo(String nodeId, NodeStatus status) {
         this.nodeId = nodeId;
-        this.ipAddress = ipAddress;
         this.status = status;
     }
 
     public String getNodeId() {
         return nodeId;
-    }
-
-    public InetAddress getIpAddress() {
-        return ipAddress;
     }
 
     public NodeStatus getStatus() {

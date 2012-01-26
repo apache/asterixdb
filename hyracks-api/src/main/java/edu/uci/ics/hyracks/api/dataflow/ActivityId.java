@@ -19,9 +19,9 @@ import java.io.Serializable;
 public final class ActivityId implements Serializable {
     private static final long serialVersionUID = 1L;
     private final OperatorDescriptorId odId;
-    private final long id;
+    private final int id;
 
-    public ActivityId(OperatorDescriptorId odId, long id) {
+    public ActivityId(OperatorDescriptorId odId, int id) {
         this.odId = odId;
         this.id = id;
     }
@@ -30,7 +30,7 @@ public final class ActivityId implements Serializable {
         return odId;
     }
 
-    public long getLocalId() {
+    public int getLocalId() {
         return id;
     }
 

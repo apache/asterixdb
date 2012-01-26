@@ -14,124 +14,44 @@
  */
 package edu.uci.ics.hyracks.control.nc.net;
 
-import java.io.IOException;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
+import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
-public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
-    private final IHyracksRootContext ctx;
+public class NetworkOutputChannel implements IFrameWriter {
+    private final ChannelControlBlock ccb;
 
     private final Queue<ByteBuffer> emptyQueue;
 
-    private final Queue<ByteBuffer> fullQueue;
-
-    private SelectionKey key;
-
     private boolean aborted;
 
-    private boolean eos;
-
-    private boolean eosSent;
-
-    private boolean failed;
-
-    private ByteBuffer currentBuffer;
-
-    public NetworkOutputChannel(IHyracksRootContext ctx, int nBuffers) {
-        this.ctx = ctx;
+    public NetworkOutputChannel(IHyracksRootContext ctx, ChannelControlBlock ccb, int nBuffers) {
+        this.ccb = ccb;
         emptyQueue = new ArrayDeque<ByteBuffer>(nBuffers);
         for (int i = 0; i < nBuffers; ++i) {
-            emptyQueue.add(ctx.allocateFrame());
+            emptyQueue.add(ByteBuffer.allocateDirect(ctx.getFrameSize()));
         }
-        fullQueue = new ArrayDeque<ByteBuffer>(nBuffers);
-    }
-
-    @Override
-    public synchronized boolean dispatchNetworkEvent() throws IOException {
-        if (failed || aborted) {
-            eos = true;
-            return true;
-        } else if (key.isWritable()) {
-            while (true) {
-                if (currentBuffer == null) {
-                    if (eosSent) {
-                        return true;
-                    }
-                    currentBuffer = fullQueue.poll();
-                    if (currentBuffer == null) {
-                        if (eos) {
-                            currentBuffer = emptyQueue.poll();
-                            currentBuffer.clear();
-                            currentBuffer.putInt(FrameHelper.getTupleCountOffset(ctx.getFrameSize()), 0);
-                            eosSent = true;
-                        } else {
-                            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
-                            return false;
-                        }
-                    }
-                }
-                int bytesWritten = ((SocketChannel) key.channel()).write(currentBuffer);
-                if (bytesWritten < 0) {
-                    eos = true;
-                    return true;
-                }
-                if (currentBuffer.remaining() == 0) {
-                    emptyQueue.add(currentBuffer);
-                    notifyAll();
-                    currentBuffer = null;
-                    if (eosSent) {
-                        return true;
-                    }
-                } else {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void setSelectionKey(SelectionKey key) {
-        this.key = key;
-    }
-
-    @Override
-    public SelectionKey getSelectionKey() {
-        return key;
-    }
-
-    @Override
-    public SocketAddress getRemoteAddress() {
-        return ((SocketChannel) key.channel()).socket().getRemoteSocketAddress();
-    }
-
-    @Override
-    public synchronized void abort() {
-        aborted = true;
+        ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }
 
     @Override
     public void open() throws HyracksDataException {
-        currentBuffer = null;
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         ByteBuffer destBuffer = null;
         synchronized (this) {
-            if (aborted) {
-                throw new HyracksDataException("Connection has been aborted");
-            }
             while (true) {
+                if (aborted) {
+                    throw new HyracksDataException("Connection has been aborted");
+                }
                 destBuffer = emptyQueue.poll();
                 if (destBuffer != null) {
                     break;
@@ -148,26 +68,34 @@ public class NetworkOutputChannel implements INetworkChannel, IFrameWriter {
         destBuffer.clear();
         destBuffer.put(buffer);
         destBuffer.flip();
-        synchronized (this) {
-            fullQueue.add(destBuffer);
-        }
-        key.interestOps(SelectionKey.OP_WRITE);
-        key.selector().wakeup();
+        ccb.getWriteInterface().getFullBufferAcceptor().accept(destBuffer);
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        failed = true;
+        ccb.getWriteInterface().getFullBufferAcceptor().error(1);
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
-        eos = true;
-        key.interestOps(SelectionKey.OP_WRITE);
-        key.selector().wakeup();
+    public void close() throws HyracksDataException {
+        ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 
-    @Override
-    public void notifyConnectionManagerRegistration() throws IOException {
+    void abort() {
+        ccb.getWriteInterface().getFullBufferAcceptor().error(1);
+        synchronized (NetworkOutputChannel.this) {
+            aborted = true;
+            NetworkOutputChannel.this.notifyAll();
+        }
+    }
+
+    private class WriteEmptyBufferAcceptor implements IBufferAcceptor {
+        @Override
+        public void accept(ByteBuffer buffer) {
+            synchronized (NetworkOutputChannel.this) {
+                emptyQueue.add(buffer);
+                NetworkOutputChannel.this.notifyAll();
+            }
+        }
     }
 }

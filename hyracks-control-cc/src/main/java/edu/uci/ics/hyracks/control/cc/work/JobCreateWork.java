@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.control.cc.job.JobActivityGraphBuilder;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
 import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class JobCreateWork extends SynchronizableWork {
@@ -38,42 +39,50 @@ public class JobCreateWork extends SynchronizableWork {
     private final EnumSet<JobFlag> jobFlags;
     private final JobId jobId;
     private final String appName;
+    private final IResultCallback<JobId> callback;
 
     public JobCreateWork(ClusterControllerService ccs, JobId jobId, String appName, byte[] jobSpec,
-            EnumSet<JobFlag> jobFlags) {
+            EnumSet<JobFlag> jobFlags, IResultCallback<JobId> callback) {
         this.jobId = jobId;
         this.ccs = ccs;
         this.jobSpec = jobSpec;
         this.jobFlags = jobFlags;
         this.appName = appName;
+        this.callback = callback;
     }
 
     @Override
     protected void doRun() throws Exception {
-        CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
-        if (appCtx == null) {
-            throw new HyracksException("No application with id " + appName + " found");
-        }
-        JobSpecification spec = appCtx.createJobSpecification(jobSpec);
-
-        final JobActivityGraphBuilder builder = new JobActivityGraphBuilder();
-        builder.init(appName, spec, jobFlags);
-        PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
-            @Override
-            public void visit(IOperatorDescriptor op) {
-                op.contributeActivities(builder);
+        try {
+            CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
+            if (appCtx == null) {
+                throw new HyracksException("No application with id " + appName + " found");
             }
-        });
-        final JobActivityGraph jag = builder.getActivityGraph();
+            JobSpecification spec = appCtx.createJobSpecification(jobSpec);
 
-        JobRun run = new JobRun(jobId, jag);
+            final JobActivityGraphBuilder builder = new JobActivityGraphBuilder();
+            builder.init(appName, spec, jobFlags);
+            PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
+                @Override
+                public void visit(IOperatorDescriptor op) {
+                    op.contributeActivities(builder);
+                }
+            });
+            final JobActivityGraph jag = builder.getActivityGraph();
 
-        run.setStatus(JobStatus.INITIALIZED, null);
+            JobRun run = new JobRun(jobId, jag);
 
-        ccs.getActiveRunMap().put(jobId, run);
-        JobScheduler jrs = new JobScheduler(ccs, run);
-        run.setScheduler(jrs);
-        appCtx.notifyJobCreation(jobId, spec);
+            run.setStatus(JobStatus.INITIALIZED, null);
+
+            ccs.getActiveRunMap().put(jobId, run);
+            JobScheduler jrs = new JobScheduler(ccs, run);
+            run.setScheduler(jrs);
+            appCtx.notifyJobCreation(jobId, spec);
+            callback.setValue(jobId);
+        } catch (Exception e) {
+            callback.setException(e);
+            return;
+        }
     }
 
     public JobId getJobId() {
