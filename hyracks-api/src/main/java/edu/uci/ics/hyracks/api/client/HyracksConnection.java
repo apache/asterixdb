@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
+import edu.uci.ics.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
 /**
  * Connection Class used by a Hyracks Client to interact with a Hyracks Cluster
@@ -65,7 +66,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public HyracksConnection(String ccHost, int ccPort) throws Exception {
         this.ccHost = ccHost;
         RPCInterface rpci = new RPCInterface();
-        ipc = new IPCSystem(new InetSocketAddress(0), rpci);
+        ipc = new IPCSystem(new InetSocketAddress(0), rpci, new JavaSerializationBasedPayloadSerializerDeserializer());
         ipc.start();
         IIPCHandle ccIpchandle = ipc.getHandle(new InetSocketAddress(ccHost, ccPort));
         this.hci = new HyracksClientInterfaceRemoteProxy(ccIpchandle, rpci);

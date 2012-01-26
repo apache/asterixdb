@@ -54,6 +54,10 @@ final class IPCHandle implements IIPCHandle {
         return remoteAddress;
     }
 
+    IPCSystem getIPCSystem() {
+        return system;
+    }
+
     void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
     }
@@ -161,14 +165,12 @@ final class IPCHandle implements IIPCHandle {
         inBuffer.flip();
         ByteBuffer readBuffer = ByteBuffer.allocate(inBuffer.capacity() * 2);
         readBuffer.put(inBuffer);
-        readBuffer.compact();
         inBuffer = readBuffer;
     }
 
     void resizeOutBuffer() {
         ByteBuffer writeBuffer = ByteBuffer.allocate(outBuffer.capacity() * 2);
         writeBuffer.put(outBuffer);
-        writeBuffer.compact();
         writeBuffer.flip();
         outBuffer = writeBuffer;
     }

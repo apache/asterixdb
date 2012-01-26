@@ -28,13 +28,24 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     private static final long serialVersionUID = 1L;
     protected final ConnectorDescriptorId id;
 
+    protected String displayName;
+
     public AbstractConnectorDescriptor(JobSpecification spec) {
         this.id = spec.createConnectorDescriptor();
         spec.getConnectorMap().put(id, this);
+        displayName = getClass().getName() + "[" + id + "]";
     }
 
     public ConnectorDescriptorId getConnectorId() {
         return id;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     @Override
@@ -43,6 +54,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
 
         jconn.put("id", getConnectorId().getId());
         jconn.put("java-class", getClass().getName());
+        jconn.put("display-name", displayName);
 
         return jconn;
     }
