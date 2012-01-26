@@ -28,13 +28,15 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 
 class GroupingHashTable {
     /**
-     * The pointers in the link store 3 int values for each entry in the hashtable: (bufferIdx, tIndex, accumulatorIdx).
+     * The pointers in the link store 3 int values for each entry in the
+     * hashtable: (bufferIdx, tIndex, accumulatorIdx).
      * 
      * @author vinayakb
      */
@@ -59,55 +61,82 @@ class GroupingHashTable {
         }
     }
 
-    private static final int INIT_ACCUMULATORS_SIZE = 8;
+    private static final int INIT_AGG_STATE_SIZE = 8;
     private final IHyracksTaskContext ctx;
-    private final FrameTupleAppender appender;
+
     private final List<ByteBuffer> buffers;
     private final Link[] table;
-    private IAccumulatingAggregator[] accumulators;
+    /**
+     * Aggregate states: a list of states for all groups maintained in the main
+     * memory.
+     */
+    private AggregateState[] aggregateStates;
     private int accumulatorSize;
 
     private int lastBIndex;
-    private final int[] fields;
     private final int[] storedKeys;
+    private final int[] keys;
     private final IBinaryComparator[] comparators;
     private final FrameTuplePairComparator ftpc;
     private final ITuplePartitionComputer tpc;
-    private final IAccumulatingAggregatorFactory aggregatorFactory;
-    private final RecordDescriptor inRecordDescriptor;
-    private final RecordDescriptor outRecordDescriptor;
+    private final IAggregatorDescriptor aggregator;
+
+    private final FrameTupleAppender appender;
 
     private final FrameTupleAccessor storedKeysAccessor;
 
+    private final ArrayTupleBuilder stateTupleBuilder, outputTupleBuilder;
+
     GroupingHashTable(IHyracksTaskContext ctx, int[] fields, IBinaryComparatorFactory[] comparatorFactories,
-            ITuplePartitionComputerFactory tpcf, IAccumulatingAggregatorFactory aggregatorFactory,
-            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize) {
+            ITuplePartitionComputerFactory tpcf, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int tableSize)
+            throws HyracksDataException {
         this.ctx = ctx;
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+
         buffers = new ArrayList<ByteBuffer>();
         table = new Link[tableSize];
-        accumulators = new IAccumulatingAggregator[INIT_ACCUMULATORS_SIZE];
-        accumulatorSize = 0;
-        this.fields = fields;
+
+        keys = fields;
         storedKeys = new int[fields.length];
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] storedKeySerDeser = new ISerializerDeserializer[fields.length];
         for (int i = 0; i < fields.length; ++i) {
             storedKeys[i] = i;
             storedKeySerDeser[i] = inRecordDescriptor.getFields()[fields[i]];
         }
+
         comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         ftpc = new FrameTuplePairComparator(fields, storedKeys, comparators);
         tpc = tpcf.createPartitioner();
-        this.aggregatorFactory = aggregatorFactory;
-        this.inRecordDescriptor = inRecordDescriptor;
-        this.outRecordDescriptor = outRecordDescriptor;
+
+        int[] keyFieldsInPartialResults = new int[fields.length];
+        for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+            keyFieldsInPartialResults[i] = i;
+        }
+
+        this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDescriptor, outRecordDescriptor, fields,
+                keyFieldsInPartialResults);
+
+        this.aggregateStates = new AggregateState[INIT_AGG_STATE_SIZE];
+        accumulatorSize = 0;
+
         RecordDescriptor storedKeysRecordDescriptor = new RecordDescriptor(storedKeySerDeser);
         storedKeysAccessor = new FrameTupleAccessor(ctx.getFrameSize(), storedKeysRecordDescriptor);
         lastBIndex = -1;
+
+        appender = new FrameTupleAppender(ctx.getFrameSize());
+
         addNewBuffer();
+
+        if (fields.length < outRecordDescriptor.getFields().length) {
+            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+        } else {
+            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
+        }
+        outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
     }
 
     private void addNewBuffer() {
@@ -119,57 +148,64 @@ class GroupingHashTable {
         ++lastBIndex;
     }
 
-    private void flushFrame(FrameTupleAppender appender, IFrameWriter writer) throws HyracksDataException {
-        ByteBuffer frame = appender.getBuffer();
-        frame.position(0);
-        frame.limit(frame.capacity());
-        writer.nextFrame(appender.getBuffer());
-        appender.reset(appender.getBuffer(), true);
-    }
-
-    void insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+    void insert(FrameTupleAccessor accessor, int tIndex) throws Exception {
         int entry = tpc.partition(accessor, tIndex, table.length);
         Link link = table[entry];
         if (link == null) {
             link = table[entry] = new Link();
         }
-        IAccumulatingAggregator aggregator = null;
+        int saIndex = -1;
         for (int i = 0; i < link.size; i += 3) {
             int sbIndex = link.pointers[i];
             int stIndex = link.pointers[i + 1];
-            int saIndex = link.pointers[i + 2];
             storedKeysAccessor.reset(buffers.get(sbIndex));
             int c = ftpc.compare(accessor, tIndex, storedKeysAccessor, stIndex);
             if (c == 0) {
-                aggregator = accumulators[saIndex];
+                saIndex = link.pointers[i + 2];
                 break;
             }
         }
-        if (aggregator == null) {
+        if (saIndex < 0) {
             // Did not find the key. Insert a new entry.
-            if (!appender.appendProjection(accessor, tIndex, fields)) {
+            saIndex = accumulatorSize++;
+            // Add keys
+
+            // Add aggregation fields
+            AggregateState newState = aggregator.createAggregateStates();
+
+            stateTupleBuilder.reset();
+            for (int k = 0; k < keys.length; k++) {
+                stateTupleBuilder.addField(accessor, tIndex, keys[k]);
+            }
+
+            aggregator.init(stateTupleBuilder, accessor, tIndex, newState);
+
+            if (!appender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
+                    stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
                 addNewBuffer();
-                if (!appender.appendProjection(accessor, tIndex, fields)) {
-                    throw new IllegalStateException();
+                if (!appender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
+                        stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
+                    throw new HyracksDataException("Cannot init the aggregate state in a single frame.");
                 }
             }
-            int sbIndex = lastBIndex;
-            int stIndex = appender.getTupleCount() - 1;
-            if (accumulatorSize >= accumulators.length) {
-                accumulators = Arrays.copyOf(accumulators, accumulators.length * 2);
+
+            if (accumulatorSize >= aggregateStates.length) {
+                aggregateStates = Arrays.copyOf(aggregateStates, aggregateStates.length * 2);
             }
-            int saIndex = accumulatorSize++;
-            aggregator = accumulators[saIndex] = aggregatorFactory.createAggregator(ctx, inRecordDescriptor,
-                    outRecordDescriptor);
-            aggregator.init(accessor, tIndex);
-            link.add(sbIndex, stIndex, saIndex);
+
+            aggregateStates[saIndex] = newState;
+
+            link.add(lastBIndex, appender.getTupleCount() - 1, saIndex);
+
+        } else {
+            aggregator.aggregate(accessor, tIndex, null, 0, aggregateStates[saIndex]);
         }
-        aggregator.accumulate(accessor, tIndex);
     }
 
     void write(IFrameWriter writer) throws HyracksDataException {
         ByteBuffer buffer = ctx.allocateFrame();
         appender.reset(buffer, true);
+
         for (int i = 0; i < table.length; ++i) {
             Link link = table[i];
             if (link != null) {
@@ -179,15 +215,37 @@ class GroupingHashTable {
                     int aIndex = link.pointers[j + 2];
                     ByteBuffer keyBuffer = buffers.get(bIndex);
                     storedKeysAccessor.reset(keyBuffer);
-                    IAccumulatingAggregator aggregator = accumulators[aIndex];
-                    while (!aggregator.output(appender, storedKeysAccessor, tIndex, storedKeys)) {
-                        flushFrame(appender, writer);
+
+                    // copy keys
+                    outputTupleBuilder.reset();
+                    for (int k = 0; k < storedKeys.length; k++) {
+                        outputTupleBuilder.addField(storedKeysAccessor, tIndex, storedKeys[k]);
                     }
+
+                    aggregator.outputFinalResult(outputTupleBuilder, storedKeysAccessor, tIndex,
+                            aggregateStates[aIndex]);
+
+                    if (!appender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                            outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                        writer.nextFrame(buffer);
+                        appender.reset(buffer, true);
+                        if (!appender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                                outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                            throw new HyracksDataException("Cannot write the aggregation output into a frame.");
+                        }
+                    }
+
                 }
             }
         }
         if (appender.getTupleCount() != 0) {
-            flushFrame(appender, writer);
+            writer.nextFrame(buffer);
+        }
+    }
+
+    void close() throws HyracksDataException {
+        for (AggregateState aState : aggregateStates) {
+            aState.close();
         }
     }
 }

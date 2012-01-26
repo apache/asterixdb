@@ -14,8 +14,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.std.group.IAccumulatingAggregator;
-import edu.uci.ics.hyracks.dataflow.std.group.IAccumulatingAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupWriter;
 
 public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -23,12 +23,12 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
     private static final long serialVersionUID = 1L;
     private final int[] groupFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
-    private final IAccumulatingAggregatorFactory aggregatorFactory;
+    private final IAggregatorDescriptorFactory aggregatorFactory;
     private final RecordDescriptor inRecordDesc;
     private final RecordDescriptor outRecordDesc;
 
     public MicroPreClusteredGroupRuntimeFactory(int[] groupFields, IBinaryComparatorFactory[] comparatorFactories,
-            IAccumulatingAggregatorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
+            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDesc, int[] projectionList) {
         super(projectionList);
         // Obs: the projection list is currently ignored.
@@ -51,8 +51,8 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
             final IHyracksTaskContext ctx = context.getHyracksContext();
-            final IAccumulatingAggregator aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
-                    outRecordDesc);
+            final IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
+                    outRecordDesc, groupFields, groupFields);
             final ByteBuffer copyFrame = ctx.allocateFrame();
             final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
             copyFrameAccessor.reset(copyFrame);
@@ -66,7 +66,8 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
 
                 @Override
                 public void open() throws HyracksDataException {
-                    pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc, writer);
+                    pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
+                            outRecordDesc, writer);
                     pgw.open();
                 }
 
