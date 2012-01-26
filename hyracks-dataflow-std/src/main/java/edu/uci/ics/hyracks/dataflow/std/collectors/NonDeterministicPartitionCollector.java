@@ -172,44 +172,42 @@ public class NonDeterministicPartitionCollector extends AbstractPartitionCollect
 
         @Override
         public void notifyFailure(IInputChannel channel) {
+            PartitionId pid = (PartitionId) channel.getAttachment();
+            int senderIndex = pid.getSenderIndex();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Failure: " + connectorId + " sender: " + senderIndex + " receiver: " + receiverIndex);
+            }
             synchronized (NonDeterministicPartitionCollector.this) {
-                PartitionId pid = (PartitionId) channel.getAttachment();
-                int senderIndex = pid.getSenderIndex();
                 failSenders.set(senderIndex);
                 eosSenders.set(senderIndex);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("Failure: " + connectorId + " sender: " + senderIndex + " receiver: "
-                            + receiverIndex);
-                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }
 
         @Override
         public void notifyDataAvailability(IInputChannel channel, int nFrames) {
+            PartitionId pid = (PartitionId) channel.getAttachment();
+            int senderIndex = pid.getSenderIndex();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Data available: " + connectorId + " sender: " + senderIndex + " receiver: "
+                        + receiverIndex);
+            }
             synchronized (NonDeterministicPartitionCollector.this) {
-                PartitionId pid = (PartitionId) channel.getAttachment();
-                int senderIndex = pid.getSenderIndex();
                 availableFrameCounts[senderIndex] += nFrames;
                 frameAvailability.set(senderIndex);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("Data available: " + connectorId + " sender: " + senderIndex + " receiver: "
-                            + receiverIndex);
-                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }
 
         @Override
         public void notifyEndOfStream(IInputChannel channel) {
+            PartitionId pid = (PartitionId) channel.getAttachment();
+            int senderIndex = pid.getSenderIndex();
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("EOS: " + connectorId + " sender: " + senderIndex + " receiver: " + receiverIndex);
+            }
             synchronized (NonDeterministicPartitionCollector.this) {
-                PartitionId pid = (PartitionId) channel.getAttachment();
-                int senderIndex = pid.getSenderIndex();
                 eosSenders.set(senderIndex);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("EOS: " + connectorId + " sender: " + senderIndex + " receiver: "
-                            + receiverIndex);
-                }
                 NonDeterministicPartitionCollector.this.notifyAll();
             }
         }

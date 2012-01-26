@@ -183,7 +183,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public void start() throws HyracksException {
         aborted = false;
-        joblet.getExecutor().execute(this);
+        executor.execute(this);
     }
 
     public synchronized void abort() {

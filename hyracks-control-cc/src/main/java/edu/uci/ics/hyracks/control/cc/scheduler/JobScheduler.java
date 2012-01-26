@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +22,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -435,31 +433,26 @@ public class JobScheduler {
     }
 
     private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) throws HyracksException {
-        Executor executor = ccs.getExecutor();
         final JobId jobId = jobRun.getJobId();
         final JobActivityGraph jag = jobRun.getJobActivityGraph();
         final String appName = jag.getApplicationName();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = jobRun.getConnectorPolicyMap();
-        for (Map.Entry<String, List<TaskAttemptDescriptor>> e : taskAttemptMap.entrySet()) {
-            String nodeId = e.getKey();
-            final List<TaskAttemptDescriptor> taskDescriptors = e.getValue();
+        for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
+            String nodeId = entry.getKey();
+            final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();
             final NodeControllerState node = ccs.getNodeMap().get(nodeId);
             if (node != null) {
                 node.getActiveJobIds().add(jobRun.getJobId());
                 jobRun.getParticipatingNodeIds().add(nodeId);
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            node.getNodeController().startTasks(appName, jobId, JavaSerializationUtils.serialize(jag),
-                                    taskDescriptors, connectorPolicies);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
+                }
+                try {
+                    node.getNodeController().startTasks(appName, jobId, JavaSerializationUtils.serialize(jag),
+                            taskDescriptors, connectorPolicies);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -495,21 +488,18 @@ public class JobScheduler {
         }
         final JobId jobId = jobRun.getJobId();
         LOGGER.fine("Abort map for job: " + jobId + ": " + abortTaskAttemptMap);
-        for (Map.Entry<String, List<TaskAttemptId>> e : abortTaskAttemptMap.entrySet()) {
-            final NodeControllerState node = ccs.getNodeMap().get(e.getKey());
-            final List<TaskAttemptId> abortTaskAttempts = e.getValue();
+        for (Map.Entry<String, List<TaskAttemptId>> entry : abortTaskAttemptMap.entrySet()) {
+            final NodeControllerState node = ccs.getNodeMap().get(entry.getKey());
+            final List<TaskAttemptId> abortTaskAttempts = entry.getValue();
             if (node != null) {
-                LOGGER.fine("Aborting: " + abortTaskAttempts + " at " + e.getKey());
-                ccs.getExecutor().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            node.getNodeController().abortTasks(jobId, abortTaskAttempts);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Aborting: " + abortTaskAttempts + " at " + entry.getKey());
+                }
+                try {
+                    node.getNodeController().abortTasks(jobId, abortTaskAttempts);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         inProgressTaskClusters.remove(tcAttempt.getTaskCluster());

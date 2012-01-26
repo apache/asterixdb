@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
@@ -138,10 +137,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         public ITaskState getTaskState(TaskId taskId) {
             return taskStateMap.get(taskId);
         }
-    }
-
-    public Executor getExecutor() {
-        return nodeController.getExecutor();
     }
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {
