@@ -131,9 +131,16 @@ public class ChannelSet {
         }
     }
 
-    void markPendingCredits(int channelId) {
+    void addPendingCredits(int channelId, int delta) {
+        if (delta <= 0) {
+            return;
+        }
         synchronized (mConn) {
-            if (!pendingChannelCreditsBitmap.get(channelId)) {
+            ChannelControlBlock ccb = ccbArray[channelId];
+            int oldCredits = ccb.getReadCredits();
+            ccb.setReadCredits(oldCredits + delta);
+            if (oldCredits == 0) {
+                assert !pendingChannelCreditsBitmap.get(channelId);
                 pendingChannelCreditsBitmap.set(channelId);
                 pendingWriteEventsCounter.increment();
             }

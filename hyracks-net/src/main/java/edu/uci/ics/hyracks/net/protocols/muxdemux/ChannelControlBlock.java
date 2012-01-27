@@ -76,27 +76,23 @@ public class ChannelControlBlock {
                 if (remoteClose.get()) {
                     return;
                 }
-                int delta;
+                int delta = buffer.remaining();
                 synchronized (ChannelControlBlock.this) {
                     riEmptyQueue.add(buffer);
-                    delta = buffer.remaining();
                 }
-                credits.addAndGet(delta);
-                if (delta != 0) {
-                    cSet.markPendingCredits(channelId);
-                }
+                cSet.addPendingCredits(channelId, delta);
             }
         };
 
         private ICloseableBufferAcceptor fba;
 
-        private final AtomicInteger credits;
+        private volatile int credits;
 
         private ByteBuffer currentReadBuffer;
 
         ReadInterface() {
             riEmptyQueue = new LinkedList<ByteBuffer>();
-            credits = new AtomicInteger();
+            credits = 0;
         }
 
         @Override
@@ -290,12 +286,12 @@ public class ChannelControlBlock {
         return ri.read(sc, size);
     }
 
-    void addReadCredits(int delta) {
-        ri.credits.addAndGet(delta);
+    int getReadCredits() {
+        return ri.credits;
     }
 
-    int getAndResetReadCredits() {
-        return ri.credits.getAndSet(0);
+    void setReadCredits(int credits) {
+        this.ri.credits = credits;
     }
 
     void addWriteCredits(int delta) {

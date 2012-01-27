@@ -192,7 +192,6 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 BitSet pendingChannelSynBitmap = cSet.getPendingChannelSynBitmap();
                 for (int j = pendingChannelSynBitmap.nextSetBit(0); j >= 0; j = pendingChannelSynBitmap.nextSetBit(j)) {
                     pendingChannelSynBitmap.clear(j);
-                    pendingWriteEventsCounter.decrement();
                     writerState.command.setChannelId(j);
                     writerState.command.setCommandType(MuxDemuxCommand.CommandType.OPEN_CHANNEL);
                     writerState.command.setData(0);
@@ -200,26 +199,36 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     if (!writerState.performPendingWrite(sc)) {
                         return;
                     }
+                    pendingWriteEventsCounter.decrement();
                 }
                 BitSet pendingChannelCreditsBitmap = cSet.getPendingChannelCreditsBitmap();
                 for (int j = pendingChannelCreditsBitmap.nextSetBit(0); j >= 0; j = pendingChannelCreditsBitmap
                         .nextSetBit(j)) {
-                    pendingChannelCreditsBitmap.clear(j);
-                    pendingWriteEventsCounter.decrement();
                     writerState.command.setChannelId(j);
                     writerState.command.setCommandType(MuxDemuxCommand.CommandType.ADD_CREDITS);
                     ChannelControlBlock ccb = cSet.getCCB(j);
-                    int credits = ccb.getAndResetReadCredits();
-                    writerState.command.setData(credits);
+                    int credits = ccb.getReadCredits();
+                    int effectiveCredits;
+                    if (credits <= MuxDemuxCommand.MAX_DATA_VALUE) {
+                        effectiveCredits = credits;
+                        ccb.setReadCredits(0);
+                        pendingChannelCreditsBitmap.clear(j);
+                    } else {
+                        effectiveCredits = MuxDemuxCommand.MAX_DATA_VALUE;
+                        ccb.setReadCredits(credits - effectiveCredits);
+                    }
+                    writerState.command.setData(effectiveCredits);
                     writerState.reset(null, 0, null);
                     if (!writerState.performPendingWrite(sc)) {
                         return;
+                    }
+                    if (credits == effectiveCredits) {
+                        pendingWriteEventsCounter.decrement();
                     }
                 }
                 BitSet pendingEOSAckBitmap = cSet.getPendingEOSAckBitmap();
                 for (int j = pendingEOSAckBitmap.nextSetBit(0); j >= 0; j = pendingEOSAckBitmap.nextSetBit(j)) {
                     pendingEOSAckBitmap.clear(j);
-                    pendingWriteEventsCounter.decrement();
                     writerState.command.setChannelId(j);
                     writerState.command.setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL_ACK);
                     writerState.command.setData(0);
@@ -227,6 +236,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     if (!writerState.performPendingWrite(sc)) {
                         return;
                     }
+                    pendingWriteEventsCounter.decrement();
                 }
                 BitSet pendingChannelWriteBitmap = cSet.getPendingChannelWriteBitmap();
                 lastChannelWritten = pendingChannelWriteBitmap.nextSetBit(lastChannelWritten + 1);

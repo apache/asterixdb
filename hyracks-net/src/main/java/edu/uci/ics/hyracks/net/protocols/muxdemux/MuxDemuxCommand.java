@@ -50,7 +50,7 @@ class MuxDemuxCommand {
     }
 
     public void setData(int data) throws NetException {
-        if (channelId > MAX_DATA_VALUE) {
+        if (data > MAX_DATA_VALUE) {
             throw new NetException("data " + data + " exceeds " + MAX_DATA_VALUE);
         }
         this.data = data;
