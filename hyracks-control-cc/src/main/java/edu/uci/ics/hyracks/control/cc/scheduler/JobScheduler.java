@@ -443,13 +443,13 @@ public class JobScheduler {
             final NodeControllerState node = ccs.getNodeMap().get(nodeId);
             if (node != null) {
                 node.getActiveJobIds().add(jobRun.getJobId());
-                jobRun.getParticipatingNodeIds().add(nodeId);
+                boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
                 if (LOGGER.isLoggable(Level.FINE)) {
                     LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
                 }
                 try {
-                    node.getNodeController().startTasks(appName, jobId, JavaSerializationUtils.serialize(jag),
-                            taskDescriptors, connectorPolicies);
+                    byte[] jagBytes = changed ? JavaSerializationUtils.serialize(jag) : null;
+                    node.getNodeController().startTasks(appName, jobId, jagBytes, taskDescriptors, connectorPolicies);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

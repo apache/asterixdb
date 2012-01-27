@@ -38,8 +38,8 @@ public class NodeControllerRemoteProxy implements INodeController {
     @Override
     public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception {
-        CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(appName, jobId,
-                planBytes, taskDescriptors, connectorPolicies);
+        CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(appName, jobId, planBytes,
+                taskDescriptors, connectorPolicies);
         ipcHandle.send(-1, stf, null);
     }
 
@@ -51,23 +51,21 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
-        CCNCFunctions.CleanupJobletFunction cjf = new CCNCFunctions.CleanupJobletFunction(jobId,
-                status);
+        CCNCFunctions.CleanupJobletFunction cjf = new CCNCFunctions.CleanupJobletFunction(jobId, status);
         ipcHandle.send(-1, cjf, null);
     }
 
     @Override
     public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
             throws Exception {
-        CCNCFunctions.CreateApplicationFunction caf = new CCNCFunctions.CreateApplicationFunction(
-                appName, deployHar, serializedDistributedState);
+        CCNCFunctions.CreateApplicationFunction caf = new CCNCFunctions.CreateApplicationFunction(appName, deployHar,
+                serializedDistributedState);
         ipcHandle.send(-1, caf, null);
     }
 
     @Override
     public void destroyApplication(String appName) throws Exception {
-        CCNCFunctions.DestroyApplicationFunction daf = new CCNCFunctions.DestroyApplicationFunction(
-                appName);
+        CCNCFunctions.DestroyApplicationFunction daf = new CCNCFunctions.DestroyApplicationFunction(appName);
         ipcHandle.send(-1, daf, null);
     }
 
