@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree;
+package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.util.Random;
 
@@ -25,17 +25,17 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexUpdateTest;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 
 @SuppressWarnings("rawtypes")
-public class UpdateTest extends OrderedIndexUpdateTest {
+public class BTreeUpdateTest extends OrderedIndexUpdateTest {
     
-    public UpdateTest() {
-        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
+    public BTreeUpdateTest() {
+        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 
-    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+    private final BTreeTestHarness harness = new BTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -48,11 +48,9 @@ public class UpdateTest extends OrderedIndexUpdateTest {
     }
 
     @Override
-    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
-            BTreeLeafFrameType leafType) throws Exception {
-        return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
-                numKeys, harness.getFileId());
+    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception {
+        return BTreeTestContext.create(harness.getBufferCache(),
+                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
     }
 
     @Override

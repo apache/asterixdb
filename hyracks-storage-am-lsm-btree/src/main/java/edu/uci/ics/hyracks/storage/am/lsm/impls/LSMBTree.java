@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -46,7 +48,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMTree implements ILSMTree {
+public class LSMBTree implements ILSMTree {
+    protected final Logger LOGGER = Logger.getLogger(LSMBTree.class.getName());
+    
     // In-memory components.
     private final BTree memBTree;
     private final InMemoryFreePageManager memFreePageManager;    
@@ -60,12 +64,9 @@ public class LSMTree implements ILSMTree {
     private final BTreeFactory bulkLoadBTreeFactory;
     private final IBufferCache diskBufferCache;
     private final IFileMapProvider diskFileMapProvider;
-    private LinkedList<BTree> onDiskBTrees = new LinkedList<BTree>();
-    private LinkedList<BTree> mergedBTrees = new LinkedList<BTree>();
-    private int onDiskBTreeCount;
+    private LinkedList<BTree> diskBTrees = new LinkedList<BTree>();
     
     // Common for in-memory and on-disk components.
-    private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory insertLeafFrameFactory;
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final MultiComparator cmp;
@@ -74,14 +75,13 @@ public class LSMTree implements ILSMTree {
     private int threadRefCount;
     private boolean flushFlag;
 
-    public LSMTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+    public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileNameManager fileNameManager, BTreeFactory diskBTreeFactory,
             BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator cmp) {
         memBTree = new BTree(memBufferCache, fieldCount, cmp, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
-        this.interiorFrameFactory = interiorFrameFactory;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.diskBufferCache = diskBTreeFactory.getBufferCache();
@@ -89,8 +89,7 @@ public class LSMTree implements ILSMTree {
         this.diskBTreeFactory = diskBTreeFactory;
         this.bulkLoadBTreeFactory = bulkLoadBTreeFactory;
         this.cmp = cmp;
-        this.onDiskBTrees = new LinkedList<BTree>();
-        this.onDiskBTreeCount = 0;
+        this.diskBTrees = new LinkedList<BTree>();
         this.threadRefCount = 0;
         this.flushFlag = false;
         this.fileNameManager = fileNameManager;
@@ -134,22 +133,21 @@ public class LSMTree implements ILSMTree {
         Arrays.sort(files, fileNameCmp);
         for (String fileName : files) {
             BTree btree = createDiskBTree(diskBTreeFactory, fileName, false);
-            onDiskBTrees.add(btree);
+            diskBTrees.add(btree);
         }
     }
 
     @Override
     public void close() throws HyracksDataException {
-        for (BTree btree : onDiskBTrees) {
+        for (BTree btree : diskBTrees) {
             diskBufferCache.closeFile(btree.getFileId());
             btree.close();
         }
-        onDiskBTrees.clear();
-        onDiskBTreeCount = 0;
+        diskBTrees.clear();
         memBTree.close();
     }
 
-	private void lsmPerformOp(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+	private void lsmPerformOp(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
 		boolean waitForFlush = true;
 		do {
 		    // Wait for ongoing flush to complete.
@@ -180,7 +178,7 @@ public class LSMTree implements ILSMTree {
 		threadExit();
 	}
 
-	private void deleteExistingKey(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+	private void deleteExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         // We assume that tuple given by the user for deletion only contains the
         // key fields, but not any non-key fields.
         // Therefore, to set the delete bit in the tuple that already exist in
@@ -215,7 +213,7 @@ public class LSMTree implements ILSMTree {
         }            
 	}
 	
-    private void insertOrUpdateExistingKey(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+    private void insertOrUpdateExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {        
         // If all fields are keys, and the key we are trying to insert/update
         // already exists, then we are already done.
@@ -228,7 +226,7 @@ public class LSMTree implements ILSMTree {
         }
     }
     
-    private void memBTreeDeleteAndReinsert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+    private void memBTreeDeleteAndReinsert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {
         // All fields are key fields, therefore a true BTree update is not
         // allowed.
@@ -249,7 +247,7 @@ public class LSMTree implements ILSMTree {
         lsmPerformOp(tuple, ctx);
     }
     
-    private void memBTreeUpdate(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+    private void memBTreeUpdate(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {
         IndexOp originalOp = ctx.getIndexOp();
         try {
@@ -285,7 +283,9 @@ public class LSMTree implements ILSMTree {
 
     @Override
     public void flush() throws HyracksDataException, TreeIndexException {
-        System.out.println("FLUSHING!");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Flushing LSM-BTree.");
+        }
         // Bulk load a new on-disk BTree from the in-memory BTree.        
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
@@ -304,7 +304,7 @@ public class LSMTree implements ILSMTree {
         }
         diskBTree.endBulkLoad(bulkLoadCtx);
         resetMemBTree();
-        onDiskBTrees.addFirst(diskBTree);
+        diskBTrees.addFirst(diskBTree);
     }
 
     private void resetMemBTree() throws HyracksDataException {
@@ -347,7 +347,7 @@ public class LSMTree implements ILSMTree {
         return diskBTree;
     }
     
-    private void search(ITreeIndexCursor cursor, RangePredicate pred, LSMTreeOpContext ctx, boolean includeMemBTree) throws HyracksDataException, TreeIndexException {                
+    private void search(ITreeIndexCursor cursor, RangePredicate pred, LSMBTreeOpContext ctx, boolean includeMemBTree) throws HyracksDataException, TreeIndexException {                
         boolean waitForFlush = true;
         do {
             synchronized (this) {
@@ -360,13 +360,13 @@ public class LSMTree implements ILSMTree {
         } while (waitForFlush);
         
         // TODO: Think about what happens with possibly concurrent merges.
-        LSMTreeRangeSearchCursor lsmTreeCursor = (LSMTreeRangeSearchCursor) cursor;
-        int numDiskBTrees = onDiskBTrees.size();
+        LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
+        int numDiskBTrees = diskBTrees.size();
         int numBTrees = (includeMemBTree) ? numDiskBTrees + 1 : numDiskBTrees;        
-        ListIterator<BTree> diskBTreesIter = onDiskBTrees.listIterator();
-        LSMTreeCursorInitialState initialState = new LSMTreeCursorInitialState(numBTrees,
+        ListIterator<BTree> diskBTreesIter = diskBTrees.listIterator();
+        LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees,
                 insertLeafFrameFactory, cmp, this);
-        lsmTreeCursor.open(initialState, pred);                  
+        lsmTreeCursor.open(initialState, pred);
         
         int cursorIx;
         if (includeMemBTree) {
@@ -388,44 +388,29 @@ public class LSMTree implements ILSMTree {
             cursorIx++;
             diskBTreeIx++;
         }
-        LSMPriorityQueueComparator LSMPriorityQueueCmp = new LSMPriorityQueueComparator(cmp);
-        lsmTreeCursor.initPriorityQueue(LSMPriorityQueueCmp);
+        lsmTreeCursor.initPriorityQueue();
     }
     
-    private void insert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         lsmPerformOp(tuple, ctx);
     }
 
-    private void delete(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void delete(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         lsmPerformOp(tuple, ctx);
     }
 
     public void merge() throws Exception {
-        LSMTreeOpContext ctx = createOpContext();
-        ITreeIndexCursor cursor = new LSMTreeRangeSearchCursor();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Merging LSM-BTree.");
+        }
+        LSMBTreeOpContext ctx = createOpContext();
+        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
         RangePredicate rangePred = new RangePredicate(true, null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
         search(cursor, (RangePredicate) rangePred, ctx, false);
 
-        // Create a new Merged BTree, which have full fillfactor.
-        // Register the BTree information into system.
-        // TODO: change the naming schema for the new tree
-        // TODO: Alex. fix this.
-        String dummy = "abc";
-        FileReference file = new FileReference(new File(dummy));
-        // TODO: Delete the file during cleanup.
-        diskBufferCache.createFile(file);
-        int mergedBTreeId = diskFileMapProvider.lookupFileId(file);
-        // TODO: Close the file during cleanup.
-        diskBufferCache.openFile(mergedBTreeId);
-
-        // Create new in-Disk BTree.
-        BTree mergedBTree = this.diskBTreeFactory.createBTreeInstance(mergedBTreeId);
-        mergedBTree.create(mergedBTreeId);
-        // TODO: Close the BTree during cleanup.
-        mergedBTree.open(mergedBTreeId);
-
-        // BulkLoad the tuples from the in-memory tree into the new disk BTree.
+        // Bulk load the tuples from all on-disk BTrees into the new BTree.
+        BTree mergedBTree = createMergeTargetBTree();
         IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
         try {
             while (cursor.hasNext()) {
@@ -437,34 +422,6 @@ public class LSMTree implements ILSMTree {
             cursor.close();
         }
         mergedBTree.endBulkLoad(bulkLoadCtx);
-
-        /*
-        synchronized (onDiskBTrees) {
-            mergedBTrees = (LinkedList<BTree>) onDiskBTrees.clone();
-            // Remove the redundant trees, and add the new merged tree in the
-            // last off the list
-            for (int i = 0; i < numberOfInDiskTrees; i++) {
-                mergedBTrees.removeLast();
-            }
-            mergedBTrees.addLast(mergedBTree);
-
-            // TODO: to swap the linkedlists
-            //
-            // tempInDiskTreeInfo = inDiskTreeInfoList; inDiskTreeInfoList =
-            // mergedInDiskTreeInfoList; mergedInDiskTreeInfoList =
-            // tempInDiskTreeInfo;
-            //
-            // TODO: to swap the searchThreadCounters
-
-            // 1. should add the searcherReferenceCounter
-            // 2. Wrap the searcherReferenceCounter as Integer object,
-            // otherwise, the reference cannot be swapped
-            // 3. modify the "decrease counter part" in search(), and let the
-            // searcher remember the localReferences
-
-        }
-        // TODO: to wake up the cleaning thread
-         */
     }
     
     public class LSMTreeBulkLoadContext implements IIndexBulkLoadContext {
@@ -506,7 +463,7 @@ public class LSMTree implements ILSMTree {
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
         bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());
-        onDiskBTrees.addFirst(bulkLoadCtx.getBTree());
+        diskBTrees.addFirst(bulkLoadCtx.getBTree());
     }
 
     @Override
@@ -543,8 +500,8 @@ public class LSMTree implements ILSMTree {
         return cmp;
     }
     
-    public LSMTreeOpContext createOpContext() {
-        return new LSMTreeOpContext(memBTree, insertLeafFrameFactory, deleteLeafFrameFactory);
+    public LSMBTreeOpContext createOpContext() {
+        return new LSMBTreeOpContext(memBTree, insertLeafFrameFactory, deleteLeafFrameFactory);
     }
 
     @Override
@@ -553,10 +510,10 @@ public class LSMTree implements ILSMTree {
     }
 
     private class LSMTreeIndexAccessor implements ITreeIndexAccessor {
-        private LSMTree lsmTree;
-        private LSMTreeOpContext ctx;
+        private LSMBTree lsmTree;
+        private LSMBTreeOpContext ctx;
 
-        public LSMTreeIndexAccessor(LSMTree lsmTree) {
+        public LSMTreeIndexAccessor(LSMBTree lsmTree) {
             this.lsmTree = lsmTree;
             this.ctx = lsmTree.createOpContext();
         }
@@ -582,7 +539,7 @@ public class LSMTree implements ILSMTree {
 
         @Override
         public ITreeIndexCursor createSearchCursor() {
-            return new LSMTreeRangeSearchCursor();
+            return new LSMBTreeRangeSearchCursor();
         }
         
         @Override

@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 
-public class LSMTypeAwareTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
+public class LSMBTreeTupleReference extends TypeAwareTupleReference implements ILSMBTreeTupleReference {
 
     // Indicates whether the last call to setFieldCount() was initiated by
     // by the outside or whether it was called internally to set up an
@@ -29,7 +29,7 @@ public class LSMTypeAwareTupleReference extends TypeAwareTupleReference implemen
     private boolean resetFieldCount = false;
     private final int numKeyFields;
     
-    public LSMTypeAwareTupleReference(ITypeTraits[] typeTraits, int numKeyFields) {
+    public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields) {
 		super(typeTraits);
 		this.numKeyFields = numKeyFields;
 	}

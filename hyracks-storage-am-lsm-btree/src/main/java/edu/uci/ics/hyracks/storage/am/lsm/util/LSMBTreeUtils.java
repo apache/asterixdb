@@ -29,22 +29,22 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTreeFileNameManager;
-import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMTree;
-import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMEntireTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMBTreeCopyTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMBTreeTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeUtils {
-    public static LSMTree createLSMTree(InMemoryBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+    public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             String onDiskDir, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparator[] cmps) {
         MultiComparator cmp = new MultiComparator(cmps);
-        LSMTypeAwareTupleWriterFactory insertTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits,
+        LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmps.length, false);
-        LSMTypeAwareTupleWriterFactory deleteTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits,
+        LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmps.length, true);
-        LSMEntireTupleWriterFactory copyTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits, cmps.length);
+        LSMBTreeCopyTupleWriterFactory copyTupleWriterFactory = new LSMBTreeCopyTupleWriterFactory(typeTraits, cmps.length);
         ITreeIndexFrameFactory insertLeafFrameFactory = new BTreeNSMLeafFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory copyTupleLeafFrameFactory = new BTreeNSMLeafFrameFactory(copyTupleWriterFactory);
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
@@ -57,7 +57,7 @@ public class LSMBTreeUtils {
         BTreeFactory bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmp,
                 typeTraits.length, interiorFrameFactory, insertLeafFrameFactory);
         ILSMFileNameManager fileNameManager = new LSMBTreeFileNameManager(onDiskDir);
-        LSMTree lsmTree = new LSMTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
+        LSMBTree lsmTree = new LSMBTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, diskFileMapProvider,
                 typeTraits.length, cmp);
         return lsmTree;

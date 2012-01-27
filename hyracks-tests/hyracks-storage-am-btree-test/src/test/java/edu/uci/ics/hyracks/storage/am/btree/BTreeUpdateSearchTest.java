@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 @SuppressWarnings("rawtypes")
-public class UpdateSearchTest extends AbstractBTreeTest {
+public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
     // Update scan test on fixed-length tuples.
     @Test

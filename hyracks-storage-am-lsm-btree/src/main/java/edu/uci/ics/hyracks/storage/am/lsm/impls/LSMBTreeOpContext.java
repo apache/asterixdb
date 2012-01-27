@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
-public final class LSMTreeOpContext implements IIndexOpContext {
+public final class LSMBTreeOpContext implements IIndexOpContext {
     
 	public ITreeIndexFrameFactory insertLeafFrameFactory;
 	public ITreeIndexFrameFactory deleteLeafFrameFactory;
@@ -33,7 +33,7 @@ public final class LSMTreeOpContext implements IIndexOpContext {
 	public BTreeOpContext memBTreeOpCtx;
 	public IndexOp op;
 	
-    public LSMTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
+    public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory) {
 		this.memBTree = memBTree;
 		this.insertLeafFrameFactory = insertLeafFrameFactory;

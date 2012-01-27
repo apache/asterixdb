@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class RangeSearchCursorTest extends AbstractBTreeTest {
+public class BTreeSearchCursorTest extends AbstractBTreeTest {
     // Declare fields
     int fieldCount = 2;
     ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];

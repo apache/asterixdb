@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
 import java.text.SimpleDateFormat;
@@ -15,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMTree;
+import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -39,7 +54,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     protected String onDiskDir;
     
     protected final int numBatches;
-    protected final LSMTree lsmtree;
+    protected final LSMBTree lsmtree;
     protected IBufferCache memBufferCache;
     private final int onDiskPageSize;
     private final int onDiskNumPages;
@@ -105,10 +120,10 @@ public class LSMTreeRunner implements IExperimentRunner {
 
 	public class LSMTreeThread extends Thread {
         private final DataGenThread dataGen;
-        private final LSMTree lsmTree;
+        private final LSMBTree lsmTree;
         private final int numBatches;
         private final ITreeIndexAccessor lsmTreeAccessor;
-        public LSMTreeThread(DataGenThread dataGen, LSMTree lsmTree, int numBatches) {
+        public LSMTreeThread(DataGenThread dataGen, LSMBTree lsmTree, int numBatches) {
             this.dataGen = dataGen;
             this.lsmTree = lsmTree;
             this.numBatches = numBatches;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree;
+package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import java.util.Random;
 
@@ -24,18 +24,18 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexBulkLoadTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexUpdateTest;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 
 @SuppressWarnings("rawtypes")
-public class BulkLoadTest extends OrderedIndexBulkLoadTest {
+public class LSMBTreeUpdateTest extends OrderedIndexUpdateTest {
     
-    public BulkLoadTest() {
-        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
+    public LSMBTreeUpdateTest() {
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 
-    private final BTreeTestHarness harness = new BTreeTestHarness();
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -48,9 +48,11 @@ public class BulkLoadTest extends OrderedIndexBulkLoadTest {
     }
 
     @Override
-    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(),
-                harness.getBTreeFileId(), fieldSerdes, numKeys, leafType);
+    protected IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
+            BTreeLeafFrameType leafType) throws Exception {
+        return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
+                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                numKeys, harness.getFileId());
     }
 
     @Override

@@ -17,6 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.tuples;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
-public interface ILSMTreeTupleReference extends ITreeIndexTupleReference {
+public interface ILSMBTreeTupleReference extends ITreeIndexTupleReference {
 	public boolean isAntimatter();
 }

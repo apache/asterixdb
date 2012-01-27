@@ -20,11 +20,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
-public class LSMTypeAwareTupleWriter extends TypeAwareTupleWriter {
+public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
 	private final boolean isDelete;
 	private final int numKeyFields;
 	
-	public LSMTypeAwareTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
+	public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
 		super(typeTraits);
 		this.numKeyFields = numKeyFields;
 		this.isDelete = isDelete;
@@ -32,7 +32,7 @@ public class LSMTypeAwareTupleWriter extends TypeAwareTupleWriter {
 
 	@Override
     public ITreeIndexTupleReference createTupleReference() {
-        return new LSMTypeAwareTupleReference(typeTraits, numKeyFields);
+        return new LSMBTreeTupleReference(typeTraits, numKeyFields);
     }
 	
 	@Override

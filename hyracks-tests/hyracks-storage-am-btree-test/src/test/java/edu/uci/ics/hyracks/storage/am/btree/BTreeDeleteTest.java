@@ -24,14 +24,14 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexUpdateTest;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexDeleteTest;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 
 @SuppressWarnings("rawtypes")
-public class UpdateTest extends OrderedIndexUpdateTest {
+public class BTreeDeleteTest extends OrderedIndexDeleteTest {
     
-    public UpdateTest() {
+    public BTreeDeleteTest() {
         super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 

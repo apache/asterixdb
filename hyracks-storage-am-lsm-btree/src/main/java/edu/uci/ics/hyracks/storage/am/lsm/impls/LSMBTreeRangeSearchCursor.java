@@ -1,5 +1,21 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsm.impls;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -11,33 +27,33 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMTypeAwareTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
-
+public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
     private BTreeRangeSearchCursor[] rangeCursors;
-    private PriorityQueue<LSMPriorityQueueElement> outputPriorityQueue;
+    private PriorityQueue<PriorityQueueElement> outputPriorityQueue;
     private MultiComparator cmp;
-    private LSMPriorityQueueElement outputElement;
-    private LSMPriorityQueueElement reusedElement;
+    private PriorityQueueComparator pqCmp;
+    private PriorityQueueElement outputElement;
+    private PriorityQueueElement reusedElement;
     private boolean needPush;
-    private LSMTree lsmTree;
+    private LSMBTree lsmTree;
 
-    public LSMTreeRangeSearchCursor() {
+    public LSMBTreeRangeSearchCursor() {
         outputElement = null;
         needPush = false;
     }
 
-    public void initPriorityQueue(LSMPriorityQueueComparator LSMPriorityQueueCmp)
-            throws HyracksDataException {
-        outputPriorityQueue = new PriorityQueue<LSMPriorityQueueElement>(rangeCursors.length, LSMPriorityQueueCmp);
+    public void initPriorityQueue()
+            throws HyracksDataException {                
+        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(rangeCursors.length, pqCmp);
         for (int i = 0; i < rangeCursors.length; i++) {
-            LSMPriorityQueueElement element;
+            PriorityQueueElement element;
             if (rangeCursors[i].hasNext()) {
                 rangeCursors[i].next();
-                element = new LSMPriorityQueueElement(rangeCursors[i].getTuple(), i);
+                element = new PriorityQueueElement(rangeCursors[i].getTuple(), i);
                 outputPriorityQueue.offer(element);
             }
         }
@@ -71,7 +87,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        LSMTreeCursorInitialState lsmInitialState = (LSMTreeCursorInitialState) initialState;
+        LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         lsmTree = lsmInitialState.getLsm();
         cmp = lsmInitialState.getCmp();
         int numBTrees = lsmInitialState.getNumBTrees();
@@ -79,6 +95,13 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
         for (int i = 0; i < numBTrees; i++) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
+        }
+        setPriorityQueueComparator();
+    }
+    
+    private void setPriorityQueueComparator() {
+        if (pqCmp == null || cmp != pqCmp.getMultiComparator()) {
+            pqCmp = new PriorityQueueComparator(cmp);
         }
     }
 
@@ -128,12 +151,12 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
     private void checkPriorityQueue() throws HyracksDataException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
-                LSMPriorityQueueElement checkElement = outputPriorityQueue.peek();
+                PriorityQueueElement checkElement = outputPriorityQueue.peek();
                 // If there is no previous tuple or the previous tuple can be
                 // ignored
                 if (outputElement == null) {
                     // Test the tuple is a delete tuple or not
-                    if (((LSMTypeAwareTupleReference) checkElement.getTuple()).isAntimatter() == true) {
+                    if (((LSMBTreeTupleReference) checkElement.getTuple()).isAntimatter() == true) {
                         // If the tuple is a delete tuple then pop it and mark
                         // it "needPush"
                         // Cannot push at this time because the tuple may be
@@ -180,5 +203,53 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public boolean exclusiveLatchNodes() {
         return false;
+    }
+    
+    public class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
+
+        private final MultiComparator cmp;
+
+        public PriorityQueueComparator(MultiComparator cmp) {
+            this.cmp = cmp;
+        }
+
+        @Override
+        public int compare(PriorityQueueElement elementA, PriorityQueueElement elementB) {
+            int result = cmp.compare(elementA.getTuple(), elementB.getTuple());
+            if (result != 0) {
+                return result;
+            }
+            if (elementA.getCursorIndex() > elementB.getCursorIndex()) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+
+        public MultiComparator getMultiComparator() {
+            return cmp;
+        }
+    }
+    
+    public class PriorityQueueElement {
+        private ITupleReference tuple;
+        private int cursorIndex;
+        
+        public PriorityQueueElement(ITupleReference tuple, int cursorIndex) {
+            reset(tuple, cursorIndex);
+        }
+
+        public ITupleReference getTuple() {
+            return tuple;
+        }
+
+        public int getCursorIndex() {
+            return cursorIndex;
+        }
+        
+        public void reset(ITupleReference tuple, int cursorIndex) {
+            this.tuple = tuple;
+            this.cursorIndex = cursorIndex;
+        }
     }
 }

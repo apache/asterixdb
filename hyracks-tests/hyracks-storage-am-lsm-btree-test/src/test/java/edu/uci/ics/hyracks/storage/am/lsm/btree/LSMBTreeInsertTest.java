@@ -24,17 +24,17 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexBulkLoadTest;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexInsertTest;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 
 @SuppressWarnings("rawtypes")
-public class BulkLoadTest extends OrderedIndexBulkLoadTest {
+public class LSMBTreeInsertTest extends OrderedIndexInsertTest {
     
-    public BulkLoadTest() {
+    public LSMBTreeInsertTest() {
         super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
-    
+
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
     @Before

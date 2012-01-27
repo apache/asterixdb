@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMTree;
+import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -38,13 +38,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
 
     @Override
     public int getKeyFieldCount() {
-        LSMTree lsmTree = (LSMTree) treeIndex;
+        LSMBTree lsmTree = (LSMBTree) treeIndex;
         return lsmTree.getMultiComparator().getKeyFieldCount();
     }
 
     @Override
     public IBinaryComparator[] getComparators() {
-        LSMTree lsmTree = (LSMTree) treeIndex;
+        LSMBTree lsmTree = (LSMBTree) treeIndex;
         return lsmTree.getMultiComparator().getComparators();
     }
 
@@ -84,7 +84,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, numKeyFields);
-        LSMTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, diskBufferCache,
+        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, diskBufferCache,
                 diskFileMapProvider, typeTraits, cmps);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
