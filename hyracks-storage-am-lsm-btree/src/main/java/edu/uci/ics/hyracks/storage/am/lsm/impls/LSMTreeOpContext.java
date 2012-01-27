@@ -53,6 +53,9 @@ public final class LSMTreeOpContext implements IIndexOpContext {
     	this.op = newOp;
         switch (newOp) {
     	    case SEARCH:
+    	        setMemBTreeAccessor();
+    	        break;
+    	        
     	    case DISKORDERSCAN:
     	    case UPDATE:
                 // Attention: It is important to leave the leafFrame and

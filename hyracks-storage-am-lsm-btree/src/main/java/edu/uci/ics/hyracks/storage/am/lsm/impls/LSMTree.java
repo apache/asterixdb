@@ -22,11 +22,9 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
@@ -45,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMTypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -56,7 +53,11 @@ public class LSMTree implements ILSMTree {
 
     // On-disk components.
     private final ILSMFileNameManager fileNameManager;
+    // For creating BTree's used in flush and merge.
     private final BTreeFactory diskBTreeFactory;
+    // For creating BTree's used in bulk load. Different from diskBTreeFactory
+    // because it should have a different tuple writer in it's leaf frames.
+    private final BTreeFactory bulkLoadBTreeFactory;
     private final IBufferCache diskBufferCache;
     private final IFileMapProvider diskFileMapProvider;
     private LinkedList<BTree> onDiskBTrees = new LinkedList<BTree>();
@@ -76,7 +77,7 @@ public class LSMTree implements ILSMTree {
     public LSMTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileNameManager fileNameManager, BTreeFactory diskBTreeFactory,
-            IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator cmp) {
+            BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator cmp) {
         memBTree = new BTree(memBufferCache, fieldCount, cmp, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
@@ -86,6 +87,7 @@ public class LSMTree implements ILSMTree {
         this.diskBufferCache = diskBTreeFactory.getBufferCache();
         this.diskFileMapProvider = diskFileMapProvider;
         this.diskBTreeFactory = diskBTreeFactory;
+        this.bulkLoadBTreeFactory = bulkLoadBTreeFactory;
         this.cmp = cmp;
         this.onDiskBTrees = new LinkedList<BTree>();
         this.onDiskBTreeCount = 0;
@@ -131,7 +133,7 @@ public class LSMTree implements ILSMTree {
         Comparator<String> fileNameCmp = fileNameManager.getFileNameComparator();
         Arrays.sort(files, fileNameCmp);
         for (String fileName : files) {
-            BTree btree = createDiskBTree(fileName, false);
+            BTree btree = createDiskBTree(diskBTreeFactory, fileName, false);
             onDiskBTrees.add(btree);
         }
     }
@@ -176,26 +178,6 @@ public class LSMTree implements ILSMTree {
 		    }
 		}
 		threadExit();
-		
-		// DEBUG check the in-mem tree
-		/*
-		RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
-        ITreeIndexAccessor accessor = memBTree.createAccessor();
-        ITreeIndexCursor cursor = accessor.createSearchCursor();
-        accessor.search(cursor, nullPred);
-        int count = 0;
-        try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                count++;
-                String s = printTuple(cursor.getTuple());
-                System.out.println(count + " INMEM CHECK: " + s);
-            }
-        } finally {
-            cursor.close();
-        }
-        System.out.println("");
-        */
 	}
 
 	private void deleteExistingKey(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
@@ -250,16 +232,16 @@ public class LSMTree implements ILSMTree {
             TreeIndexException {
         // All fields are key fields, therefore a true BTree update is not
         // allowed.
-        // In order to set/unset the delete bit, we
+        // In order to set/unset the antimatter bit, we
         // must truly delete the existing tuple from the BTree, and then
-        // re-insert it (with the delete bit set/unset).
+        // re-insert it (with the antimatter bit set/unset).
         // Since the tuple given by the user already has all fields, we
         // don't need to retrieve the already existing tuple.
         IndexOp originalOp = ctx.getIndexOp();
         try {
             ctx.memBTreeAccessor.delete(tuple);
         } catch (BTreeNonExistentKeyException e) {
-            // Somebody else has truly deleted the tuple, but we will restart
+            // Tuple has been deleted in the meantime. We will restart
             // our operation anyway.
         }
         // Restart performOp to insert the tuple.
@@ -323,94 +305,31 @@ public class LSMTree implements ILSMTree {
         diskBTree.endBulkLoad(bulkLoadCtx);
         resetMemBTree();
         onDiskBTrees.addFirst(diskBTree);
-        
-        // DEBUG check the on-disk tree
-        /*
-        ITreeIndexAccessor accessor = diskBTree.createAccessor();
-        ITreeIndexCursor cursor = accessor.createSearchCursor();
-        accessor.search(cursor, nullPred);
-        try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                String s = printTuple(cursor.getTuple());
-                System.out.println("FLUSH CHECK: " + s);
-            }
-        } finally {
-            cursor.close();
-        }
-        */
     }
 
-    // DEBUG
-    /*
-    private String printTuple(ITupleReference tuple) {
-        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-        ISerializerDeserializer[] keyOnlyFieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
-        String s = null;
-        try {
-            if (lsmTuple.isDelete()) {
-                s = TupleUtils.printTuple(lsmTuple, keyOnlyFieldSerdes) + " " + "D";
-            } else {
-                s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
-            }
-        } catch (HyracksDataException e) {
-            e.printStackTrace();
-        }
-        s += " " + lsmTuple.isDelete();
-        return s;
-    }
-    */
-    
-    /*
-    private String printTuple(ITupleReference tuple) {
-        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-        String s = null;
-        try {
-            s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
-        } catch (HyracksDataException e) {
-            e.printStackTrace();
-        }
-        s += " " + lsmTuple.isDelete();
-        return s;
-    }
-    */
-    
-    private String printTuple(ITupleReference tuple) {
-        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
-        ISerializerDeserializer[] keyOnlyFieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE };
-        String s = null;
-        try {
-            if (lsmTuple.isDelete()) {
-                s = TupleUtils.printTuple(lsmTuple, keyOnlyFieldSerdes) + " " + "D";
-            } else {
-                s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
-            }
-        } catch (HyracksDataException e) {
-            e.printStackTrace();
-        }
-        s += " " + lsmTuple.isDelete();
-        return s;
-    }
-    
     private void resetMemBTree() throws HyracksDataException {
         memFreePageManager.reset();
         memBTree.create(memBTree.getFileId());
     }
     
+    private BTree bulkLoadTargetBTree() throws HyracksDataException {
+        // Note that by using a flush target file name, we state that the new
+        // bulk loaded tree is "newer" than any other merged tree.
+        String fileName = fileNameManager.getFlushFileName();
+        return createDiskBTree(bulkLoadBTreeFactory, fileName, true);
+    }
+    
     private BTree createFlushTargetBTree() throws HyracksDataException {
         String fileName = fileNameManager.getFlushFileName();
-        return createDiskBTree(fileName, true);
+        return createDiskBTree(diskBTreeFactory, fileName, true);
     }
     
     private BTree createMergeTargetBTree() throws HyracksDataException {
         String fileName = fileNameManager.getMergeFileName();
-        return createDiskBTree(fileName, true);
+        return createDiskBTree(diskBTreeFactory, fileName, true);
     }
     
-    private BTree createDiskBTree(String fileName, boolean createBTree) throws HyracksDataException {
+    private BTree createDiskBTree(BTreeFactory factory, String fileName, boolean createBTree) throws HyracksDataException {
         // Register the new BTree file.        
         FileReference file = new FileReference(new File(fileName));
         // TODO: Delete the file during cleanup.
@@ -419,7 +338,7 @@ public class LSMTree implements ILSMTree {
         // TODO: Close the file during cleanup.
         diskBufferCache.openFile(diskBTreeFileId);
         // Create new BTree instance.
-        BTree diskBTree = diskBTreeFactory.createBTreeInstance(diskBTreeFileId);
+        BTree diskBTree = factory.createBTreeInstance(diskBTreeFileId);
         if (createBTree) {
             diskBTree.create(diskBTreeFileId);
         }
@@ -508,7 +427,6 @@ public class LSMTree implements ILSMTree {
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
         IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
-
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -572,10 +490,8 @@ public class LSMTree implements ILSMTree {
     
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        // Note that by using a flush target file name, we state that the new
-        // bulk loaded tree is "newer" than any other merged tree.
-        BTree diskBTree = createFlushTargetBTree();
-        LSMTreeBulkLoadContext bulkLoadCtx = new LSMTreeBulkLoadContext(diskBTree);
+        BTree diskBTree = bulkLoadTargetBTree();
+        LSMTreeBulkLoadContext bulkLoadCtx = new LSMTreeBulkLoadContext(diskBTree);        
         bulkLoadCtx.beginBulkLoad(fillFactor);
         return bulkLoadCtx;
     }
@@ -678,13 +594,13 @@ public class LSMTree implements ILSMTree {
 
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
-            // Disk-order scan doesn't make sense for the LSMBTree because it must correctly resolve deleted tuples.
+            // Disk-order scan doesn't make sense for the LSMBTree because it cannot correctly resolve deleted tuples.
             throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree.");
         }
         
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
-            // Disk-order scan doesn't make sense for the LSMBTree because it must correctly resolve deleted tuples.
+            // Disk-order scan doesn't make sense for the LSMBTree because it cannot correctly resolve deleted tuples.
             throw new UnsupportedOperationException("DiskOrderScan not supported by LSMTree.");
         }
     }

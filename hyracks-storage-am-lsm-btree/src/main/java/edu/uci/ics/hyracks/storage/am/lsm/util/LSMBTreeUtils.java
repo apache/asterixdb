@@ -40,8 +40,10 @@ public class LSMBTreeUtils {
             String onDiskDir, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparator[] cmps) {
         MultiComparator cmp = new MultiComparator(cmps);
-        LSMTypeAwareTupleWriterFactory insertTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, cmps.length, false);
-        LSMTypeAwareTupleWriterFactory deleteTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, cmps.length, true);
+        LSMTypeAwareTupleWriterFactory insertTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits,
+                cmps.length, false);
+        LSMTypeAwareTupleWriterFactory deleteTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits,
+                cmps.length, true);
         LSMEntireTupleWriterFactory copyTupleWriterFactory = new LSMEntireTupleWriterFactory(typeTraits, cmps.length);
         ITreeIndexFrameFactory insertLeafFrameFactory = new BTreeNSMLeafFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory copyTupleLeafFrameFactory = new BTreeNSMLeafFrameFactory(copyTupleWriterFactory);
@@ -50,11 +52,14 @@ public class LSMBTreeUtils {
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmp, typeTraits.length,
-                interiorFrameFactory, copyTupleLeafFrameFactory);
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmp,
+                typeTraits.length, interiorFrameFactory, copyTupleLeafFrameFactory);
+        BTreeFactory bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmp,
+                typeTraits.length, interiorFrameFactory, insertLeafFrameFactory);
         ILSMFileNameManager fileNameManager = new LSMBTreeFileNameManager(onDiskDir);
         LSMTree lsmTree = new LSMTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
-                deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, diskFileMapProvider, typeTraits.length, cmp);
+                deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, diskFileMapProvider,
+                typeTraits.length, cmp);
         return lsmTree;
     }
 }

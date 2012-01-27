@@ -276,7 +276,6 @@ public class OrderedIndexTestUtils {
                 }
             }
             try {
-            	//System.out.println("INSERTING: " + TupleUtils.printTuple(ctx.getTuple(), ctx.getFieldSerdes()));
             	ctx.getIndexAccessor().insert(ctx.getTuple());
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
                 ctx.insertIntCheckTuple(fieldValues);
@@ -396,7 +395,6 @@ public class OrderedIndexTestUtils {
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];            
             createTupleFromCheckTuple(checkTuple, deleteTupleBuilder, deleteTuple, ctx.getFieldSerdes());
-            //System.out.println("DELETING:  " + TupleUtils.printTuple(deleteTuple, ctx.getFieldSerdes()));
             ctx.getIndexAccessor().delete(deleteTuple);
             
             // Remove check tuple from expected results.

@@ -44,9 +44,8 @@ public class BTreeFactory {
         return new BTree(bufferCache, fieldCount, cmp, freePageManagerFactory.createFreePageManager(fileId),
                 interiorFrameFactory, leafFrameFactory);
     }
-	
+    
     public IBufferCache getBufferCache() {
         return bufferCache;
     }
-    
 }
