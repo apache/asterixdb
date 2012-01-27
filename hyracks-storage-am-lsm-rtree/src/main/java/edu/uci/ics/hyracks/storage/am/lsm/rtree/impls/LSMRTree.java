@@ -1,6 +1,9 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -22,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeBulkLoadContext;
@@ -44,7 +48,7 @@ public class LSMRTree implements ILSMTree {
     private int btreeFileId;
 
     // On-disk components.
-    private final String onDiskDir;
+    private final ILSMFileNameManager fileNameManager;
     private final RTreeFactory diskRTreeFactory;
     private final BTreeFactory diskBTreeFactory;
     private final IBufferCache diskBufferCache;
@@ -70,7 +74,7 @@ public class LSMRTree implements ILSMTree {
     public LSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            String onDiskDir, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
+            ILSMFileNameManager fileNameManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator rtreeCmp, MultiComparator btreeCmp) {
 
         memRTree = new RTree(memBufferCache, fieldCount, rtreeCmp, memFreePageManager, rtreeInteriorFrameFactory,
@@ -93,10 +97,7 @@ public class LSMRTree implements ILSMTree {
         this.onDiskBTreeCount = 0;
         this.threadRefCount = 0;
         this.flushFlag = false;
-        if (!onDiskDir.endsWith(System.getProperty("file.separator"))) {
-            onDiskDir += System.getProperty("file.separator");
-        }
-        this.onDiskDir = onDiskDir;
+        this.fileNameManager = fileNameManager;
         this.rtreeFileId = 0;
         this.btreeFileId = 1;
     }
@@ -108,7 +109,14 @@ public class LSMRTree implements ILSMTree {
 
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        RTree diskRTree = (RTree) createDiskTree(TreeType.rtree, diskRTreeFactory);
+        // Note that by using a flush target file name, we state that the new
+        // bulk loaded tree is "newer" than any other merged tree.
+
+        String fileName = fileNameManager.getFlushFileName();
+        RTree diskRTree = (RTree) createDiskTree(fileName + "-rtree", diskRTreeFactory, true);
+        // For each RTree, we require to have a buddy BTree. thus, we create an
+        // empty BTree. This can be optimized later.
+        createDiskTree(fileName + "-btree", diskBTreeFactory, true);
         LSMTreeBulkLoadContext bulkLoadCtx = new LSMTreeBulkLoadContext(diskRTree);
         bulkLoadCtx.beginBulkLoad(fillFactor);
         return bulkLoadCtx;
@@ -171,21 +179,81 @@ public class LSMRTree implements ILSMTree {
         memBTree.create(btreeFileId);
     }
 
+    /**
+     * Opens LSMRTree, assuming a consistent state of the disk-resident
+     * components. In particular, registers all files in in base dir of
+     * fileNameManager as on-disk RTrees and BTrees.
+     * 
+     * Example pathological scenario to explain "consistent state assumption":
+     * Suppose a merge finished, but before the original files were deleted the
+     * system crashes. We are left in a state where we have the original RTrees
+     * and BTrees in addition to the merged ones. We assume that prior to
+     * calling this method a separate recovery process has ensured the
+     * consistent of the disk-resident components.
+     * 
+     * @param indexFileId
+     *            Dummy file id.
+     * @throws HyracksDataException
+     */
     @Override
-    public void open(int indexFileId) {
+    public void open(int indexFileId) throws HyracksDataException {
         memRTree.open(rtreeFileId);
         memBTree.open(btreeFileId);
+        File dir = new File(fileNameManager.getBaseDir());
+        FilenameFilter rtreeFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".") && !name.endsWith("btree");
+            }
+        };
+        String[] rtreeFiles = dir.list(rtreeFilter);
+
+        FilenameFilter btreeFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".") && !name.endsWith("rtree");
+            }
+        };
+        String[] btreeFiles = dir.list(btreeFilter);
+
+        if (rtreeFiles == null || btreeFiles == null) {
+            return;
+        }
+        
+        Comparator<String> fileNameCmp = fileNameManager.getFileNameComparator();
+        Arrays.sort(rtreeFiles, fileNameCmp);
+        for (String fileName : rtreeFiles) {
+            RTree rtree = (RTree) createDiskTree(fileName, diskRTreeFactory, false);
+            onDiskRTrees.add(rtree);
+        }
+
+        Arrays.sort(btreeFiles, fileNameCmp);
+        for (String fileName : btreeFiles) {
+            BTree btree = (BTree) createDiskTree(fileName, diskBTreeFactory, false);
+            onDiskBTrees.add(btree);
+        }
     }
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
+        for (RTree rtree : onDiskRTrees) {
+            diskBufferCache.closeFile(rtree.getFileId());
+            rtree.close();
+        }
+        for (BTree btree : onDiskBTrees) {
+            diskBufferCache.closeFile(btree.getFileId());
+            btree.close();
+        }
+        onDiskRTrees.clear();
+        onDiskBTrees.clear();
+        onDiskRTreeCount = 0;
+        onDiskBTreeCount = 0;
         memRTree.close();
         memBTree.close();
     }
 
-    private ITreeIndex createDiskTree(TreeType treeType, TreeFactory diskTreeFactory) throws HyracksDataException {
+    private ITreeIndex createDiskTree(String fileName, TreeFactory diskTreeFactory, boolean createTree)
+            throws HyracksDataException {
         // Register the new tree file.
-        FileReference file = new FileReference(new File(getNextFileName(treeType)));
+        FileReference file = new FileReference(new File(fileName));
         // TODO: Delete the file during cleanup.
         diskBufferCache.createFile(file);
         int diskTreeFileId = diskFileMapProvider.lookupFileId(file);
@@ -193,22 +261,12 @@ public class LSMRTree implements ILSMTree {
         diskBufferCache.openFile(diskTreeFileId);
         // Create new tree instance.
         ITreeIndex diskTree = diskTreeFactory.createIndexInstance(diskTreeFileId);
-        diskTree.create(diskTreeFileId);
+        if (createTree) {
+            diskTree.create(diskTreeFileId);
+        }
         // TODO: Close the tree during cleanup.
         diskTree.open(diskTreeFileId);
         return diskTree;
-    }
-
-    private enum TreeType {
-        rtree, btree
-    }
-
-    private String getNextFileName(TreeType treeType) {
-        if (treeType == TreeType.rtree) {
-            return onDiskDir + treeType + "_" + onDiskRTreeCount++;
-        } else {
-            return onDiskDir + treeType + "_" + onDiskBTreeCount++;
-        }
     }
 
     @Override
@@ -228,8 +286,9 @@ public class LSMRTree implements ILSMTree {
             btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) btreeLeafFrameFactory.createFrame(), false);
         }
 
-        RTree mergedRTree = (RTree) createDiskTree(TreeType.rtree, diskRTreeFactory);
-        BTree mergedBTree = (BTree) createDiskTree(TreeType.btree, diskBTreeFactory);
+        String fileName = fileNameManager.getMergeFileName();
+        RTree mergedRTree = (RTree) createDiskTree(fileName + "-rtree", diskRTreeFactory, true);
+        BTree mergedBTree = (BTree) createDiskTree(fileName + "-btree", diskBTreeFactory, true);
 
         // BulkLoad the tuples from the trees into the new merged trees.
         IIndexBulkLoadContext rtreeBulkLoadCtx = mergedRTree.beginBulkLoad(1.0f);
@@ -293,7 +352,8 @@ public class LSMRTree implements ILSMTree {
         ITreeIndexAccessor memRTreeAccessor = memRTree.createAccessor();
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
 
-        RTree diskRTree = (RTree) createDiskTree(TreeType.rtree, diskRTreeFactory);
+        String fileName = fileNameManager.getFlushFileName();
+        RTree diskRTree = (RTree) createDiskTree(fileName + "-rtree", diskRTreeFactory, true);
 
         // BulkLoad the tuples from the in-memory tree into the new disk RTree.
         IIndexBulkLoadContext rtreeBulkLoadCtx = diskRTree.beginBulkLoad(1.0f);
@@ -316,7 +376,7 @@ public class LSMRTree implements ILSMTree {
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
         memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
 
-        BTree diskBTree = (BTree) createDiskTree(TreeType.btree, diskBTreeFactory);
+        BTree diskBTree = (BTree) createDiskTree(fileName + "-btree", diskBTreeFactory, true);
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
         IIndexBulkLoadContext btreeBulkLoadCtx = diskBTree.beginBulkLoad(1.0f);
@@ -339,7 +399,7 @@ public class LSMRTree implements ILSMTree {
     }
 
     public void resetInMemoryTrees() throws HyracksDataException {
-        ((InMemoryFreePageManager) memFreePageManager).reset();
+        memFreePageManager.reset();
         memRTree.create(rtreeFileId);
         memBTree.create(btreeFileId);
     }
@@ -520,13 +580,12 @@ public class LSMRTree implements ILSMTree {
 
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
-            // TODO: Not implemented yet.
-            return null;
+            throw new UnsupportedOperationException("DiskOrderScan not supported by LSM-RTree.");
         }
-
+        
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
-            throw new UnsupportedOperationException("DiskOrderScan not supported by LSMRTree");
+            throw new UnsupportedOperationException("DiskOrderScan not supported by LSM-RTree.");
         }
     }
 

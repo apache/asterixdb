@@ -237,6 +237,10 @@ public class RTree implements ITreeIndex {
         fileId = -1;
     }
 
+    public int getFileId() {
+        return fileId;
+    }
+    
     private RTreeOpContext createOpContext() {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()

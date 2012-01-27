@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -22,13 +22,13 @@ import java.util.Date;
 
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 
-public class LSMRTreeFileNameManager implements ILSMFileNameManager {
+public class LSMTreeFileNameManager implements ILSMFileNameManager {
 
     private final String baseDir;
     private final Format formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS");
     private final Comparator<String> cmp = new FileNameComparator();
     
-    public LSMRTreeFileNameManager(String baseDir) {
+    public LSMTreeFileNameManager(String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
