@@ -40,10 +40,11 @@ public class LSMBTreeTestHarness {
     
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_DISK_PAGE_SIZE = 256;
-    private static final int DEFAULT_DISK_NUM_PAGES = 100;
-    private static final int DEFAULT_DISK_MAX_OPEN_FILES = 100;
+    private static final int DEFAULT_DISK_NUM_PAGES = 1000;
+    private static final int DEFAULT_DISK_MAX_OPEN_FILES = 200;
     private static final int DEFAULT_MEM_PAGE_SIZE = 256;
     private static final int DEFAULT_MEM_NUM_PAGES = 100;
+    //private static final int DEFAULT_MEM_NUM_PAGES = 10;
     private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
     private static final int DUMMY_FILE_ID = -1;           
     
@@ -92,7 +93,7 @@ public class LSMBTreeTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), getMemPageSize(), getDiskPageSize());
+        memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
         memFreePageManager = new InMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         rnd.setSeed(RANDOM_SEED);
     }

@@ -38,9 +38,7 @@ public abstract class OrderedIndexUpdateTest extends OrderedIndexTestDriver {
         if (fieldSerdes.length == numKeys) {
             return;
         }
-
         IOrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
-
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
@@ -48,11 +46,9 @@ public abstract class OrderedIndexUpdateTest extends OrderedIndexTestDriver {
         } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
             OrderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, getRandom());
         }
-
         int numTuplesPerDeleteRound = (int) Math.ceil((float) ctx.getCheckTuples().size() / (float) numUpdateRounds);
         for (int j = 0; j < numUpdateRounds; j++) {
             OrderedIndexTestUtils.updateTuples(ctx, numTuplesPerDeleteRound, getRandom());
-
             OrderedIndexTestUtils.checkPointSearches(ctx);
             OrderedIndexTestUtils.checkOrderedScan(ctx);
             OrderedIndexTestUtils.checkDiskOrderScan(ctx);

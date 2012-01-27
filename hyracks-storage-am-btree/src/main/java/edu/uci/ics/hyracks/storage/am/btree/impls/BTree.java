@@ -1177,13 +1177,12 @@ public class BTree implements ITreeIndex {
             ctx.reset(IndexOp.DISKORDERSCAN);
             btree.diskOrderScan(cursor, ctx);
         }
-        
+		
 		// TODO: Ideally, this method should not exist. But we need it for
-		// the LSM tree to work correctly, so we can use the LSMOpContext inside
-		// a BTreeAccessor.
-		// Making the appropriate change will involve changing lots of code.
-		public void setOpContext(BTreeOpContext ctx) {
-			this.ctx = ctx;
+		// the changing the leafFrame and leafFrameFactory of the op context for
+		// the LSM-BTree to work correctly.
+		public BTreeOpContext getOpContext() {
+			return ctx;
 		}
     }
 }

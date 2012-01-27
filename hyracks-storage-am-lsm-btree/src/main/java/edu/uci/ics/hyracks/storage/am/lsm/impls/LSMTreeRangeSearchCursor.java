@@ -2,8 +2,11 @@ package edu.uci.ics.hyracks.storage.am.lsm.impls;
 
 import java.util.PriorityQueue;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
@@ -39,6 +42,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
                 rangeCursors[i].next();
                 element = new LSMPriorityQueueElement(rangeCursors[i].getTuple(), i);
                 outputPriorityQueue.offer(element);
+                //System.out.println("INITIALIZING PQ WITH: " + printTuple(rangeCursors[i].getTuple(), i));
             }
         }
         checkPriorityQueue();
@@ -50,7 +54,8 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void reset() {
-        // do nothing
+        outputElement = null;
+        needPush = false;
     }
 
     @Override
@@ -100,7 +105,25 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
             throw new HyracksDataException(e);
         }
     }
-
+   
+    private String printTuple(ITupleReference tuple, int cursorIndex) {
+        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyOnlyFieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+        String s = null;
+        try {
+            if (lsmTuple.isDelete()) {
+                s = TupleUtils.printTuple(lsmTuple, keyOnlyFieldSerdes) + " " + "D";
+            } else {
+                s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
+            }
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+        }
+        s += " " + lsmTuple.isDelete() + " " + cursorIndex;
+        return s;
+    }
+    
     @Override
     public void setBufferCache(IBufferCache bufferCache) {
         // do nothing
@@ -113,6 +136,7 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public ITupleReference getTuple() {
+        //System.out.println("RETURNING: " + printTuple(outputElement.getTuple(), outputElement.getCursorIndex()));
         return (ITupleReference) outputElement.getTuple();
     }
 
@@ -121,11 +145,11 @@ public class LSMTreeRangeSearchCursor implements ITreeIndexCursor {
             rangeCursors[cursorIndex].next();
             reusedElement.reset(rangeCursors[cursorIndex].getTuple(), cursorIndex);
             outputPriorityQueue.offer(reusedElement);
+            //System.out.println("PUSHING TO PQ: " + printTuple(reusedElement.getTuple(), cursorIndex));
         }
     }
 
     private void checkPriorityQueue() throws HyracksDataException {
-
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 LSMPriorityQueueElement checkElement = outputPriorityQueue.peek();

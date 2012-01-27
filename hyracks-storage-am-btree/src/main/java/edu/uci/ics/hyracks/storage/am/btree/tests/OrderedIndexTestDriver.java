@@ -32,8 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 public abstract class OrderedIndexTestDriver {
     protected final Logger LOGGER = Logger.getLogger(OrderedIndexTestDriver.class.getName());
     
-    //protected static final int numTuplesToInsert = 10000;
-    protected static final int numTuplesToInsert = 2;
+    protected static final int numTuplesToInsert = 10000;
     
     protected abstract IOrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType) throws Exception;
     protected abstract Random getRandom();
@@ -62,7 +61,7 @@ public abstract class OrderedIndexTestDriver {
         }
     }
     
-    //@Test
+    @Test
     public void twoIntKeys() throws Exception {    
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys.");
@@ -83,7 +82,7 @@ public abstract class OrderedIndexTestDriver {
         }
     }
     
-    //@Test
+    @Test
     public void twoIntKeysAndValues() throws Exception {  
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys And Values.");
@@ -104,7 +103,7 @@ public abstract class OrderedIndexTestDriver {
         }
     }        
     
-    //@Test
+    @Test
     public void oneStringKeyAndValue() throws Exception {        
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
@@ -121,7 +120,7 @@ public abstract class OrderedIndexTestDriver {
         }
     }
     
-    //@Test
+    @Test
     public void twoStringKeys() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
@@ -142,7 +141,7 @@ public abstract class OrderedIndexTestDriver {
         }
     }
     
-    //@Test
+    @Test
     public void twoStringKeysAndValues() throws Exception {      
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");

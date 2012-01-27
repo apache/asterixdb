@@ -1,63 +1,101 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsm.impls;
 
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public final class LSMTreeOpContext extends BTreeOpContext {
-
+public final class LSMTreeOpContext implements IIndexOpContext {
+    
 	public ITreeIndexFrameFactory insertLeafFrameFactory;
 	public ITreeIndexFrameFactory deleteLeafFrameFactory;
 	public IBTreeLeafFrame insertLeafFrame;
 	public IBTreeLeafFrame deleteLeafFrame;
-	public final BTree.BTreeAccessor memBTreeAccessor;
-
-	public LSMTreeOpContext(BTree.BTreeAccessor memBTreeAccessor, ITreeIndexFrameFactory insertLeafFrameFactory,
-			ITreeIndexFrameFactory deleteLeafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
-		super(insertLeafFrameFactory, interiorFrameFactory, metaFrame, cmp);		
-		
-		this.memBTreeAccessor = memBTreeAccessor;
-        // Overwrite the BTree accessor's op context with our LSMTreeOpContext.
-		this.memBTreeAccessor.setOpContext(this);
-		
+	public final BTree memBTree;
+	public BTree.BTreeAccessor memBTreeAccessor;
+	public BTreeOpContext memBTreeOpCtx;
+	public IndexOp op;
+	
+    public LSMTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
+            ITreeIndexFrameFactory deleteLeafFrameFactory) {
+		this.memBTree = memBTree;
 		this.insertLeafFrameFactory = insertLeafFrameFactory;
 		this.deleteLeafFrameFactory = deleteLeafFrameFactory;
 		this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
 		this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
 		if (insertLeafFrame != null) {
-			insertLeafFrame.setMultiComparator(cmp);
+			insertLeafFrame.setMultiComparator(memBTree.getMultiComparator());
         }
         if (deleteLeafFrame != null) {
-        	deleteLeafFrame.setMultiComparator(cmp);
+        	deleteLeafFrame.setMultiComparator(memBTree.getMultiComparator());
         }
-        reset(op);
 	}
 
     @Override
     public void reset(IndexOp newOp) {
-    	super.reset(newOp);
-    	if(newOp == IndexOp.INSERT) {
-    		setInsertMode();
-    	}
-    	if(newOp == IndexOp.DELETE) {
-    		super.reset(IndexOp.INSERT);
-    		setDeleteMode();
+    	this.op = newOp;
+        switch (newOp) {
+    	    case SEARCH:
+    	    case DISKORDERSCAN:
+    	    case UPDATE:
+                // Attention: It is important to leave the leafFrame and
+                // leafFrameFactory of the memBTree as is when doing an update.
+                // Update will only be set if a previous attempt to delete or
+                // insert failed, so we must preserve the semantics of the
+                // previously requested operation.
+    	        return;
+    	        
+    	    case INSERT:    	    
+    	        setInsertMode();
+    	        break;
+    	        
+    	    case DELETE:
+                setDeleteMode();
+                break;
     	}
     }
 	
+    private void setMemBTreeAccessor() {
+        if (memBTreeAccessor == null) {
+            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor();
+            memBTreeOpCtx = memBTreeAccessor.getOpContext();
+        }
+    }
+    
 	public void setInsertMode() {
-		this.leafFrame = insertLeafFrame;
-		leafFrameFactory = insertLeafFrameFactory;
+	    setMemBTreeAccessor();
+	    memBTreeOpCtx.leafFrame = insertLeafFrame;
+	    memBTreeOpCtx.leafFrameFactory = insertLeafFrameFactory;
 	}
 	
 	public void setDeleteMode() {
-		this.leafFrame = deleteLeafFrame;
-		leafFrameFactory = deleteLeafFrameFactory;
+	    setMemBTreeAccessor();
+	    memBTreeOpCtx.leafFrame = deleteLeafFrame;
+        memBTreeOpCtx.leafFrameFactory = deleteLeafFrameFactory;
 	}
-	
+
+    @Override
+    public void reset() {
+    }
+    
+    public IndexOp getIndexOp() {
+        return op;
+    }
 }

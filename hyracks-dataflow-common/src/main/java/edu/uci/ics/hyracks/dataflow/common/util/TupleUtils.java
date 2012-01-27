@@ -83,4 +83,14 @@ public class TupleUtils {
         }        
         return strBuilder.toString();
     }
+    
+    public static ITupleReference copyTuple(ITupleReference tuple) throws HyracksDataException {
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(tuple.getFieldCount());
+        for (int i = 0; i < tuple.getFieldCount(); i++) {
+            tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+        }
+        ArrayTupleReference tupleCopy = new ArrayTupleReference();
+        tupleCopy.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+        return tupleCopy;
+    }
 }

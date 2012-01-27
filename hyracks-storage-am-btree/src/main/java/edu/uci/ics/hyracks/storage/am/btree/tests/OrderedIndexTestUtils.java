@@ -41,7 +41,7 @@ public class OrderedIndexTestUtils {
             DataInput dataIn = new DataInputStream(inStream);
             Object actualObj = fieldSerdes[i].deserialize(dataIn);            
             if (!actualObj.equals(expected.get(i))) {
-                fail("Actual and expected fields do not match.\nExpected: " + expected.get(i) + "\nActual  : " + actualObj);
+                fail("Actual and expected fields do not match on field " + i + ".\nExpected: " + expected.get(i) + "\nActual  : " + actualObj);
             }
         }
     }
@@ -113,20 +113,13 @@ public class OrderedIndexTestUtils {
         int actualCount = 0;
         try {
             while (scanCursor.hasNext()) {
-                // START DEBUG
+                if (!checkIter.hasNext()) {
+                    fail("Ordered scan returned more answers than expected.\nExpected: " + ctx.getCheckTuples().size());
+                }
                 scanCursor.next();
+                CheckTuple expectedTuple = checkIter.next();
                 ITupleReference tuple = scanCursor.getTuple();
-                System.out.println("SCANNED: " + TupleUtils.printTuple(tuple, ctx.getFieldSerdes()));
-                // END DEBUG
-                //if (!checkIter.hasNext()) {
-                //    fail("Ordered scan returned more answers than expected.\nExpected: " + ctx.getCheckTuples().size());
-                //}
-                //scanCursor.next();
-                //CheckTuple expectedTuple = checkIter.next();
-                //ITupleReference tuple = scanCursor.getTuple();
-                //System.out.println("SCANNED: " + TupleUtils.printTuple(tuple, ctx.getFieldSerdes()));
-                //System.out.println("CHECKTUPLES: " + ctx.getCheckTuples().size());
-                //compareActualAndExpected(tuple, expectedTuple, ctx.getFieldSerdes());
+                compareActualAndExpected(tuple, expectedTuple, ctx.getFieldSerdes());
                 actualCount++;
             }
             if (actualCount < ctx.getCheckTuples().size()) {
@@ -283,14 +276,13 @@ public class OrderedIndexTestUtils {
                 }
             }
             try {
-                ctx.getIndexAccessor().insert(ctx.getTuple());
+            	//System.out.println("INSERTING: " + TupleUtils.printTuple(ctx.getTuple(), ctx.getFieldSerdes()));
+            	ctx.getIndexAccessor().insert(ctx.getTuple());
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
                 ctx.insertIntCheckTuple(fieldValues);
             } catch (BTreeDuplicateKeyException e) {
                 // Ignore duplicate key insertions.
-            }
-            
-            System.out.println("INSERTED: " + TupleUtils.printTuple(ctx.getTuple(), ctx.getFieldSerdes()));
+            }                        
         }
     }
 	
@@ -403,10 +395,8 @@ public class OrderedIndexTestUtils {
             }
             int checkTupleIdx = Math.abs(rnd.nextInt() % numCheckTuples);
             CheckTuple checkTuple = checkTuples[checkTupleIdx];            
-            createTupleFromCheckTuple(checkTuple, deleteTupleBuilder, deleteTuple, ctx.getFieldSerdes());        
-            
-            System.out.println("DELETED: " + TupleUtils.printTuple(ctx.getTuple(), ctx.getFieldSerdes()));
-            
+            createTupleFromCheckTuple(checkTuple, deleteTupleBuilder, deleteTuple, ctx.getFieldSerdes());
+            //System.out.println("DELETING:  " + TupleUtils.printTuple(deleteTuple, ctx.getFieldSerdes()));
             ctx.getIndexAccessor().delete(deleteTuple);
             
             // Remove check tuple from expected results.
@@ -416,7 +406,7 @@ public class OrderedIndexTestUtils {
             CheckTuple tmp = checkTuples[numCheckTuples - 1];
             checkTuples[numCheckTuples - 1] = checkTuple;
             checkTuples[checkTupleIdx] = tmp;
-            numCheckTuples--;
+            numCheckTuples--;                        
         }
     }
     

@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeOpContext implements IIndexOpContext {
     private final int INIT_ARRAYLIST_SIZE = 6; 
-    protected ITreeIndexFrameFactory leafFrameFactory;
-    protected ITreeIndexFrameFactory interiorFrameFactory;
+    public ITreeIndexFrameFactory leafFrameFactory;
+    public ITreeIndexFrameFactory interiorFrameFactory;
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
     public ITreeIndexMetaDataFrame metaFrame;

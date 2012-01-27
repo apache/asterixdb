@@ -76,7 +76,7 @@ public class InMemoryFreePageManager implements IFreePageManager {
 
     @Override
     public byte getMetaPageLevelIndicator() {
-        return 0;
+    	return 0;
     }
 
     @Override

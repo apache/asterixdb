@@ -22,18 +22,19 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -44,10 +45,11 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.tuples.LSMTypeAwareTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMTree implements ITreeIndex, ILSMTree {
+public class LSMTree implements ILSMTree {
     // In-memory components.
     private final BTree memBTree;
     private final InMemoryFreePageManager memFreePageManager;    
@@ -56,7 +58,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
     private final ILSMFileNameManager fileNameManager;
     private final BTreeFactory diskBTreeFactory;
     private final IBufferCache diskBufferCache;
-    private final IFileMapProvider diskFileMapProvider;    
+    private final IFileMapProvider diskFileMapProvider;
     private LinkedList<BTree> onDiskBTrees = new LinkedList<BTree>();
     private LinkedList<BTree> mergedBTrees = new LinkedList<BTree>();
     private int onDiskBTreeCount;
@@ -159,22 +161,127 @@ public class LSMTree implements ITreeIndex, ILSMTree {
 				}
 			}
 		} while (waitForFlush);
+		// TODO: This will become much simpler once the BTree supports a true upsert operation.
 		try {
 			ctx.memBTreeAccessor.insert(tuple);
 		} catch (BTreeDuplicateKeyException e) {
-			// We don't need to deal with a nonexistent key here, because a
-			// deleter will actually update the key and it's value, and not
-			// delete it from the BTree.
-			// Also notice that a flush must wait for the current operation to
+			// Notice that a flush must wait for the current operation to
 			// finish (threadRefCount must reach zero).
-            if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
-                ctx.reset(IndexOp.UPDATE);
-                ctx.memBTreeAccessor.update(tuple);
-            }
+            // TODO: This methods below are very inefficient, we'd rather like
+            // to flip the antimatter bit one single BTree traversal.
+		    if (ctx.getIndexOp() == IndexOp.DELETE) {
+		        deleteExistingKey(tuple, ctx);
+		    } else {
+		        insertOrUpdateExistingKey(tuple, ctx);
+		    }
 		}
 		threadExit();
+		
+		// DEBUG check the in-mem tree
+		/*
+		RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        ITreeIndexAccessor accessor = memBTree.createAccessor();
+        ITreeIndexCursor cursor = accessor.createSearchCursor();
+        accessor.search(cursor, nullPred);
+        int count = 0;
+        try {
+            while (cursor.hasNext()) {
+                cursor.next();
+                count++;
+                String s = printTuple(cursor.getTuple());
+                System.out.println(count + " INMEM CHECK: " + s);
+            }
+        } finally {
+            cursor.close();
+        }
+        System.out.println("");
+        */
 	}
 
+	private void deleteExistingKey(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        // We assume that tuple given by the user for deletion only contains the
+        // key fields, but not any non-key fields.
+        // Therefore, to set the delete bit in the tuple that already exist in
+        // the BTree, we must retrieve the original tuple first. This is to
+        // ensure that we have the proper value field.
+        if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
+            ctx.reset(IndexOp.SEARCH);
+            RangePredicate rangePredicate = new RangePredicate(true, tuple, tuple, true, true, cmp, cmp);
+            ITreeIndexCursor cursor = ctx.memBTreeAccessor.createSearchCursor();
+            ctx.memBTreeAccessor.search(cursor, rangePredicate);
+            ITupleReference tupleCopy = null;
+            try {
+                if (cursor.hasNext()) {
+                    cursor.next();
+                    tupleCopy = TupleUtils.copyTuple(cursor.getTuple());
+                }
+            } finally {
+                cursor.close();
+            }
+            // This means the tuple we are looking for must have been truly deleted by another thread.
+            // Simply restart the original operation to insert the antimatter tuple. 
+            // There is a remote chance of livelocks due to this behavior.
+            if (tupleCopy == null) {
+                ctx.reset(IndexOp.DELETE);
+                lsmPerformOp(tuple, ctx);
+                return;
+            }
+            memBTreeUpdate(tupleCopy, ctx);
+        } else {
+            // Since the existing tuple could be a matter tuple, we must delete it and re-insert.
+            memBTreeDeleteAndReinsert(tuple, ctx);
+        }            
+	}
+	
+    private void insertOrUpdateExistingKey(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+            TreeIndexException {        
+        // If all fields are keys, and the key we are trying to insert/update
+        // already exists, then we are already done.
+        // Otherwise, we must update the non-key fields.        
+        if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
+            memBTreeUpdate(tuple, ctx);
+        } else {
+            // Since the existing tuple could be an antimatter tuple, we must delete it and re-insert.
+            memBTreeDeleteAndReinsert(tuple, ctx);
+        }
+    }
+    
+    private void memBTreeDeleteAndReinsert(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+            TreeIndexException {
+        // All fields are key fields, therefore a true BTree update is not
+        // allowed.
+        // In order to set/unset the delete bit, we
+        // must truly delete the existing tuple from the BTree, and then
+        // re-insert it (with the delete bit set/unset).
+        // Since the tuple given by the user already has all fields, we
+        // don't need to retrieve the already existing tuple.
+        IndexOp originalOp = ctx.getIndexOp();
+        try {
+            ctx.memBTreeAccessor.delete(tuple);
+        } catch (BTreeNonExistentKeyException e) {
+            // Somebody else has truly deleted the tuple, but we will restart
+            // our operation anyway.
+        }
+        // Restart performOp to insert the tuple.
+        ctx.reset(originalOp);
+        lsmPerformOp(tuple, ctx);
+    }
+    
+    private void memBTreeUpdate(ITupleReference tuple, LSMTreeOpContext ctx) throws HyracksDataException,
+            TreeIndexException {
+        IndexOp originalOp = ctx.getIndexOp();
+        try {
+            ctx.reset(IndexOp.UPDATE);
+            ctx.memBTreeAccessor.update(tuple);
+        } catch (BTreeNonExistentKeyException e) {
+            // It is possible that the key has truly been deleted.
+            // Simply restart the operation. There is a remote chance of
+            // livelocks due to this behavior.
+            ctx.reset(originalOp);
+            lsmPerformOp(tuple, ctx);
+        }
+    }
+    
     public void threadEnter() {
         threadRefCount++;
     }
@@ -197,11 +304,10 @@ public class LSMTree implements ITreeIndex, ILSMTree {
     @Override
     public void flush() throws HyracksDataException, TreeIndexException {
         System.out.println("FLUSHING!");
-        // Bulk load a new on-disk BTree from the in-memory BTree.
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(
-                (IBTreeLeafFrame) insertLeafFrameFactory.createFrame(), false);
+        // Bulk load a new on-disk BTree from the in-memory BTree.        
         RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
+        ITreeIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
         memBTreeAccessor.search(scanCursor, nullPred);
         BTree diskBTree = createFlushTargetBTree();
         // Bulk load the tuples from the in-memory BTree into the new disk BTree.
@@ -209,8 +315,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                ITupleReference frameTuple = scanCursor.getTuple();
-                diskBTree.bulkLoadAddTuple(frameTuple, bulkLoadCtx);
+                diskBTree.bulkLoadAddTuple(scanCursor.getTuple(), bulkLoadCtx);
             }
         } finally {
             scanCursor.close();
@@ -218,8 +323,78 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         diskBTree.endBulkLoad(bulkLoadCtx);
         resetMemBTree();
         onDiskBTrees.addFirst(diskBTree);
+        
+        // DEBUG check the on-disk tree
+        /*
+        ITreeIndexAccessor accessor = diskBTree.createAccessor();
+        ITreeIndexCursor cursor = accessor.createSearchCursor();
+        accessor.search(cursor, nullPred);
+        try {
+            while (cursor.hasNext()) {
+                cursor.next();
+                String s = printTuple(cursor.getTuple());
+                System.out.println("FLUSH CHECK: " + s);
+            }
+        } finally {
+            cursor.close();
+        }
+        */
     }
 
+    // DEBUG
+    /*
+    private String printTuple(ITupleReference tuple) {
+        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyOnlyFieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+        String s = null;
+        try {
+            if (lsmTuple.isDelete()) {
+                s = TupleUtils.printTuple(lsmTuple, keyOnlyFieldSerdes) + " " + "D";
+            } else {
+                s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
+            }
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+        }
+        s += " " + lsmTuple.isDelete();
+        return s;
+    }
+    */
+    
+    /*
+    private String printTuple(ITupleReference tuple) {
+        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        String s = null;
+        try {
+            s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+        }
+        s += " " + lsmTuple.isDelete();
+        return s;
+    }
+    */
+    
+    private String printTuple(ITupleReference tuple) {
+        LSMTypeAwareTupleReference lsmTuple = (LSMTypeAwareTupleReference)tuple;
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyOnlyFieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE };
+        String s = null;
+        try {
+            if (lsmTuple.isDelete()) {
+                s = TupleUtils.printTuple(lsmTuple, keyOnlyFieldSerdes) + " " + "D";
+            } else {
+                s = TupleUtils.printTuple(lsmTuple, fieldSerdes);
+            }
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+        }
+        s += " " + lsmTuple.isDelete();
+        return s;
+    }
+    
     private void resetMemBTree() throws HyracksDataException {
         memFreePageManager.reset();
         memBTree.create(memBTree.getFileId());
@@ -453,9 +628,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
     }
     
     public LSMTreeOpContext createOpContext() {
-        return new LSMTreeOpContext((BTree.BTreeAccessor) memBTree.createAccessor(), insertLeafFrameFactory,
-                deleteLeafFrameFactory, interiorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
-                        .createFrame(), cmp);
+        return new LSMTreeOpContext(memBTree, insertLeafFrameFactory, deleteLeafFrameFactory);
     }
 
     @Override
@@ -488,7 +661,7 @@ public class LSMTree implements ITreeIndex, ILSMTree {
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             ctx.reset(IndexOp.DELETE);
-            lsmTree.delete(tuple, ctx);
+            lsmTree.delete(tuple, ctx);            
         }
 
         @Override
