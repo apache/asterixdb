@@ -17,7 +17,8 @@ package edu.uci.ics.hyracks.net.protocols.muxdemux;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,7 +69,7 @@ public class ChannelControlBlock {
     }
 
     private final class ReadInterface implements IChannelReadInterface {
-        private final Queue<ByteBuffer> riEmptyQueue;
+        private final Deque<ByteBuffer> riEmptyStack;
 
         private final IBufferAcceptor eba = new IBufferAcceptor() {
             @Override
@@ -78,7 +79,7 @@ public class ChannelControlBlock {
                 }
                 int delta = buffer.remaining();
                 synchronized (ChannelControlBlock.this) {
-                    riEmptyQueue.add(buffer);
+                    riEmptyStack.push(buffer);
                 }
                 cSet.addPendingCredits(channelId, delta);
             }
@@ -91,7 +92,7 @@ public class ChannelControlBlock {
         private ByteBuffer currentReadBuffer;
 
         ReadInterface() {
-            riEmptyQueue = new LinkedList<ByteBuffer>();
+            riEmptyStack = new ArrayDeque<ByteBuffer>();
             credits = 0;
         }
 
@@ -111,7 +112,7 @@ public class ChannelControlBlock {
                     return size;
                 }
                 if (ri.currentReadBuffer == null) {
-                    ri.currentReadBuffer = ri.riEmptyQueue.poll();
+                    ri.currentReadBuffer = ri.riEmptyStack.poll();
                     assert ri.currentReadBuffer != null;
                 }
                 int rSize = Math.min(size, ri.currentReadBuffer.remaining());
@@ -200,7 +201,7 @@ public class ChannelControlBlock {
         private ByteBuffer currentWriteBuffer;
 
         WriteInterface() {
-            wiFullQueue = new LinkedList<ByteBuffer>();
+            wiFullQueue = new ArrayDeque<ByteBuffer>();
             credits = new AtomicInteger();
             eos = false;
             eosSent = false;

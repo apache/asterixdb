@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.control.nc.net;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
@@ -27,15 +27,15 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 public class NetworkOutputChannel implements IFrameWriter {
     private final ChannelControlBlock ccb;
 
-    private final Queue<ByteBuffer> emptyQueue;
+    private final Deque<ByteBuffer> emptyStack;
 
     private boolean aborted;
 
     public NetworkOutputChannel(IHyracksRootContext ctx, ChannelControlBlock ccb, int nBuffers) {
         this.ccb = ccb;
-        emptyQueue = new ArrayDeque<ByteBuffer>(nBuffers);
+        emptyStack = new ArrayDeque<ByteBuffer>(nBuffers);
         for (int i = 0; i < nBuffers; ++i) {
-            emptyQueue.add(ByteBuffer.allocateDirect(ctx.getFrameSize()));
+            emptyStack.push(ByteBuffer.allocateDirect(ctx.getFrameSize()));
         }
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }
@@ -52,7 +52,7 @@ public class NetworkOutputChannel implements IFrameWriter {
                 if (aborted) {
                     throw new HyracksDataException("Connection has been aborted");
                 }
-                destBuffer = emptyQueue.poll();
+                destBuffer = emptyStack.poll();
                 if (destBuffer != null) {
                     break;
                 }
@@ -93,7 +93,7 @@ public class NetworkOutputChannel implements IFrameWriter {
         @Override
         public void accept(ByteBuffer buffer) {
             synchronized (NetworkOutputChannel.this) {
-                emptyQueue.add(buffer);
+                emptyStack.push(buffer);
                 NetworkOutputChannel.this.notifyAll();
             }
         }
