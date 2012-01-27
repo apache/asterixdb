@@ -11,12 +11,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class SerializableAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-
     private ISerializableAggregateFunctionFactory[] aggFactories;
 
     public SerializableAggregatorDescriptorFactory(ISerializableAggregateFunctionFactory[] aggFactories) {
@@ -25,9 +25,9 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields) throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults)
+            throws HyracksDataException {
         final int[] keys = keyFields;
-        final int OFFSET_INT_LENGTH = 4;
 
         /**
          * one IAggregatorDescriptor instance per Gby operator
@@ -39,11 +39,15 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             private int stateFieldLength[] = new int[aggFactories.length];
 
             @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex, ArrayTupleBuilder tb)
+            public AggregateState createAggregateStates() {
+                return null;
+            }
+
+            @Override
+            public void init(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex, AggregateState state)
                     throws HyracksDataException {
                 DataOutput output = tb.getDataOutput();
                 ftr.reset(accessor, tIndex);
-                int startSize = tb.getSize();
                 for (int i = 0; i < aggs.length; i++) {
                     try {
                         int begin = tb.getSize();
@@ -57,35 +61,41 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
                         throw new HyracksDataException(e);
                     }
                 }
-                int startOffset = 0;
-                if (offsetFieldIndex > 0)
-                    startOffset = tb.getFieldEndOffsets()[offsetFieldIndex - 1];
-                else
-                    startOffset = 0;
-                int endSize = tb.getSize();
-                int len = endSize - startSize;
-                aggregate(accessor, tIndex, tb.getByteArray(), startOffset, len);
-            }
 
-            @Override
-            public int aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length)
-                    throws HyracksDataException {
+                // doing initial aggregate
                 ftr.reset(accessor, tIndex);
-                int start = offset;
                 for (int i = 0; i < aggs.length; i++) {
                     try {
+                        byte[] data = tb.getByteArray();
+                        int prevFieldPos = i + keys.length - 1;
+                        int start = prevFieldPos >= 0 ? tb.getFieldEndOffsets()[prevFieldPos] : 0;
                         aggs[i].step(ftr, data, start, stateFieldLength[i]);
-                        start += stateFieldLength[i];
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);
                     }
                 }
-                return OFFSET_INT_LENGTH;
             }
 
             @Override
-            public void outputPartialResult(IFrameTupleAccessor accessor, int tIndex, ArrayTupleBuilder tb)
-                    throws HyracksDataException {
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
+                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
+                ftr.reset(accessor, tIndex);
+                int stateTupleStart = stateAccessor.getTupleStartOffset(stateTupleIndex);
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        byte[] data = stateAccessor.getBuffer().array();
+                        int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length)
+                                + stateTupleStart;
+                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void outputPartialResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
                 byte[] data = accessor.getBuffer().array();
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);
@@ -103,8 +113,8 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             }
 
             @Override
-            public void outputResult(IFrameTupleAccessor accessor, int tIndex, ArrayTupleBuilder tb)
-                    throws HyracksDataException {
+            public void outputFinalResult(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
                 byte[] data = accessor.getBuffer().array();
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int aggFieldOffset = accessor.getFieldStartOffset(tIndex, offsetFieldIndex);
@@ -123,6 +133,7 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
 
             @Override
             public void reset() {
+
             }
 
             @Override

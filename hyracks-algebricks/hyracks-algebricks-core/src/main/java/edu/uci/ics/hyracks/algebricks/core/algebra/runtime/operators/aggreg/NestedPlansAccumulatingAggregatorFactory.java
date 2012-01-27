@@ -29,11 +29,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.std.group.IAccumulatingAggregator;
-import edu.uci.ics.hyracks.dataflow.std.group.IAccumulatingAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAggregatorFactory {
+public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
     private AlgebricksPipeline[] subplans;
@@ -48,8 +48,8 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
     }
 
     @Override
-    public IAccumulatingAggregator createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor) throws HyracksDataException {
+    public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
+            RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys) throws HyracksDataException {
 
         final RuntimeContext rc = new RuntimeContext();
         rc.setHyracksContext(ctx);
@@ -64,12 +64,11 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
             }
         }
 
-        return new IAccumulatingAggregator() {
-
-            private boolean pending;
+        return new IAggregatorDescriptor() {
 
             @Override
-            public void init(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
                 ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
                 tb.reset();
                 for (int i = 0; i < keyFieldIdx.length; ++i) {
@@ -81,11 +80,16 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
                 for (int i = 0; i < pipelines.length; ++i) {
                     pipelines[i].open();
                 }
-                pending = false;
+
+                // aggregate the first tuple
+                for (int i = 0; i < pipelines.length; i++) {
+                    pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
+                }
             }
 
             @Override
-            public void accumulate(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
+                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 // it only works if the output of the aggregator fits in one
                 // frame
                 for (int i = 0; i < pipelines.length; i++) {
@@ -94,20 +98,46 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
             }
 
             @Override
-            public boolean output(FrameTupleAppender appender, IFrameTupleAccessor accessor, int tIndex,
-                    int[] keyFieldIndexes) throws HyracksDataException {
-                if (!pending) {
-                    for (int i = 0; i < pipelines.length; i++) {
-                        outputWriter.setInputIdx(i);
-                        pipelines[i].close();
-                    }
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                for (int i = 0; i < pipelines.length; i++) {
+                    outputWriter.setInputIdx(i);
+                    pipelines[i].close();
                 }
-                if (!outputWriter.writeTuple(appender)) {
-                    pending = true;
-                    return false;
-                } else {
-                    return true;
+                // outputWriter.writeTuple(appender);
+                tupleBuilder.reset();
+                ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
+                byte[] data = tb.getByteArray();
+                int[] fieldEnds = tb.getFieldEndOffsets();
+                int start = 0;
+                int offset = 0;
+                for (int i = 0; i < fieldEnds.length; i++) {
+                    if (i > 0)
+                        start = fieldEnds[i - 1];
+                    offset = fieldEnds[i] - start;
+                    tupleBuilder.addField(data, start, offset);
                 }
+            }
+
+            @Override
+            public AggregateState createAggregateStates() {
+                return new AggregateState();
+            }
+
+            @Override
+            public void reset() {
+
+            }
+
+            @Override
+            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                throw new IllegalStateException("this method should not be called");
+            }
+
+            @Override
+            public void close() {
+
             }
 
         };
@@ -168,6 +198,7 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
 
         @Override
         public void open() throws HyracksDataException {
+
         }
 
         /**
@@ -194,10 +225,6 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAccumulatingAg
 
         public void setInputIdx(int inputIdx) {
             this.inputIdx = inputIdx;
-        }
-
-        public boolean writeTuple(FrameTupleAppender appender) {
-            return appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
 
         public ArrayTupleBuilder getTupleBuilder() {

@@ -86,7 +86,9 @@ public class StartTasksWork extends SynchronizableWork {
         try {
             Map<String, NCApplicationContext> applications = ncs.getApplications();
             NCApplicationContext appCtx = applications.get(appName);
-            final JobActivityGraph jag = (JobActivityGraph) appCtx.deserialize(jagBytes);
+            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, jagBytes == null ? null
+                    : (JobActivityGraph) appCtx.deserialize(jagBytes));
+            final JobActivityGraph jag = joblet.getJobActivityGraph();
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -99,8 +101,6 @@ public class StartTasksWork extends SynchronizableWork {
                     return jag.getJobSpecification().getOperatorInputRecordDescriptor(opId, inputIndex);
                 }
             };
-
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, jag);
 
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
@@ -164,7 +164,10 @@ public class StartTasksWork extends SynchronizableWork {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
-            ji = new Joblet(ncs, jobId, appCtx);
+            if (jag == null) {
+                throw new NullPointerException("JobActivityGraph was null");
+            }
+            ji = new Joblet(ncs, jobId, appCtx, jag);
             IJobletEventListenerFactory jelf = jag.getJobSpecification().getJobletEventListenerFactory();
             if (jelf != null) {
                 IJobletEventListener listener = jelf.createListener(ji);

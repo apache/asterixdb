@@ -38,7 +38,11 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
+/**
+ *
+ */
 public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
+
     private static final int HASH_BUILD_ACTIVITY_ID = 0;
 
     private static final int OUTPUT_ACTIVITY_ID = 1;
@@ -48,21 +52,30 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     private final int[] keys;
     private final ITuplePartitionComputerFactory tpcf;
     private final IBinaryComparatorFactory[] comparatorFactories;
-    private final IAccumulatingAggregatorFactory aggregatorFactory;
+
+    private final IAggregatorDescriptorFactory aggregatorFactory;
+
     private final int tableSize;
 
     public HashGroupOperatorDescriptor(JobSpecification spec, int[] keys, ITuplePartitionComputerFactory tpcf,
-            IBinaryComparatorFactory[] comparatorFactories, IAccumulatingAggregatorFactory aggregatorFactory,
-            RecordDescriptor recordDescriptor, int tableSize) {
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor outRecordDescriptor, int tableSize) {
         super(spec, 1, 1);
         this.keys = keys;
         this.tpcf = tpcf;
         this.comparatorFactories = comparatorFactories;
         this.aggregatorFactory = aggregatorFactory;
-        recordDescriptors[0] = recordDescriptor;
+        recordDescriptors[0] = outRecordDescriptor;
         this.tableSize = tableSize;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor#contributeActivities
+     * (edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder)
+     */
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, HASH_BUILD_ACTIVITY_ID));
@@ -105,8 +118,8 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
             return new AbstractUnaryInputSinkOperatorNodePushable() {
@@ -126,7 +139,12 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                     accessor.reset(buffer);
                     int tupleCount = accessor.getTupleCount();
                     for (int i = 0; i < tupleCount; ++i) {
-                        state.table.insert(accessor, i);
+                        try {
+                            state.table.insert(accessor, i);
+                        } catch (Exception e) {
+                            System.out.println(e.toString());
+                            throw new HyracksDataException(e);
+                        }
                     }
                 }
 
@@ -137,6 +155,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    throw new HyracksDataException("HashGroupOperator is failed.");
                 }
             };
         }
@@ -150,8 +169,8 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
-                final int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {

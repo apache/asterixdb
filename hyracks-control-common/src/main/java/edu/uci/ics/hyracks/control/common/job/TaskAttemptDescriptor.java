@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.common.job;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 
@@ -50,5 +51,12 @@ public class TaskAttemptDescriptor implements Serializable {
 
     public int[] getOutputPartitionCounts() {
         return nOutputPartitions;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskAttemptDescriptor[taId = " + taId + ", nPartitions = " + nPartitions + ", nInputPartitions = "
+                + Arrays.toString(nInputPartitions) + ", nOutputPartitions = " + Arrays.toString(nOutputPartitions)
+                + "]";
     }
 }

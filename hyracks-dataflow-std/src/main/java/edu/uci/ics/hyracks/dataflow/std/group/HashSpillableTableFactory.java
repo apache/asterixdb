@@ -35,28 +35,42 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
-public class HashSpillableGroupingTableFactory implements ISpillableTableFactory {
+/**
+ *
+ */
+public class HashSpillableTableFactory implements ISpillableTableFactory {
+
     private static final long serialVersionUID = 1L;
     private final ITuplePartitionComputerFactory tpcf;
     private final int tableSize;
 
-    public HashSpillableGroupingTableFactory(ITuplePartitionComputerFactory tpcf, int tableSize) {
+    public HashSpillableTableFactory(ITuplePartitionComputerFactory tpcf, int tableSize) {
         this.tpcf = tpcf;
         this.tableSize = tableSize;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * edu.uci.ics.hyracks.dataflow.std.aggregations.ISpillableTableFactory#
+     * buildSpillableTable(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
+     * int[], edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory[],
+     * edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory,
+     * edu.
+     * uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory
+     * [], edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int)
+     */
     @Override
     public ISpillableTable buildSpillableTable(final IHyracksTaskContext ctx, final int[] keyFields,
-            final IBinaryComparatorFactory[] comparatorFactories,
-            final INormalizedKeyComputerFactory firstKeyNormalizerFactory,
-            final IAggregatorDescriptorFactory aggregateDescriptorFactory, final RecordDescriptor inRecordDescriptor,
-            final RecordDescriptor outRecordDescriptor, final int framesLimit) throws HyracksDataException {
+            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
+            IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
+            RecordDescriptor outRecordDescriptor, final int framesLimit) throws HyracksDataException {
         final int[] storedKeys = new int[keyFields.length];
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] storedKeySerDeser = new ISerializerDeserializer[keyFields.length];
@@ -92,28 +106,45 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
         }
 
         final FrameTuplePairComparator ftpcPartial = new FrameTuplePairComparator(keyFields, storedKeys, comparators);
-        final FrameTuplePairComparator ftpcTuple = new FrameTuplePairComparator(storedKeys, storedKeys, comparators);
-        final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        final ITuplePartitionComputer tpc = tpcf.createPartitioner();
-        final ByteBuffer outFrame = ctx.allocateFrame();
 
-        final ArrayTupleBuilder internalTupleBuilder;
-        if (keyFields.length < outRecordDescriptor.getFields().length)
-            internalTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
-        else
-            internalTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
-        final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+        final FrameTuplePairComparator ftpcTuple = new FrameTuplePairComparator(storedKeys, storedKeys, comparators);
+
+        final ITuplePartitionComputer tpc = tpcf.createPartitioner();
+
         final INormalizedKeyComputer nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory
                 .createNormalizedKeyComputer();
 
+        int[] keyFieldsInPartialResults = new int[keyFields.length];
+        for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
+            keyFieldsInPartialResults[i] = i;
+        }
+
+        final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
+                outRecordDescriptor, keyFields, keyFieldsInPartialResults);
+
+        final AggregateState aggregateState = aggregator.createAggregateStates();
+
+        final ArrayTupleBuilder stateTupleBuilder;
+        if (keyFields.length < outRecordDescriptor.getFields().length) {
+            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+        } else {
+            stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
+        }
+
+        final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+
         return new ISpillableTable() {
-            private int dataFrameCount;
-            private final ISerializableTable table = new SerializableHashTable(tableSize, ctx);;
+
+            private int lastBufIndex;
+
+            private ByteBuffer outputFrame;
+            private FrameTupleAppender outputAppender;
+
+            private FrameTupleAppender stateAppender = new FrameTupleAppender(ctx.getFrameSize());
+
+            private final ISerializableTable table = new SerializableHashTable(tableSize, ctx);
             private final TuplePointer storedTuplePointer = new TuplePointer();
             private final List<ByteBuffer> frames = new ArrayList<ByteBuffer>();
-            private int groupSize = 0;
-            private IAggregatorDescriptor aggregator = aggregateDescriptorFactory.createAggregator(ctx,
-                    inRecordDescriptor, outRecordDescriptor, keyFields);
 
             /**
              * A tuple is "pointed" to by 3 entries in the tPointers array. [0]
@@ -121,189 +152,6 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
              * frame, [2] = Poor man's normalized key for the tuple.
              */
             private int[] tPointers;
-
-            @Override
-            public void reset() {
-                groupSize = 0;
-                dataFrameCount = -1;
-                tPointers = null;
-                table.reset();
-                aggregator.close();
-            }
-
-            @Override
-            public boolean insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                if (dataFrameCount < 0)
-                    nextAvailableFrame();
-                int entry = tpc.partition(accessor, tIndex, tableSize);
-                boolean foundGroup = false;
-                int offset = 0;
-                do {
-                    table.getTuplePointer(entry, offset++, storedTuplePointer);
-                    if (storedTuplePointer.frameIndex < 0)
-                        break;
-                    storedKeysAccessor1.reset(frames.get(storedTuplePointer.frameIndex));
-                    int c = ftpcPartial.compare(accessor, tIndex, storedKeysAccessor1, storedTuplePointer.tupleIndex);
-                    if (c == 0) {
-                        foundGroup = true;
-                        break;
-                    }
-                } while (true);
-
-                if (!foundGroup) {
-                    /**
-                     * If no matching group is found, create a new aggregator
-                     * Create a tuple for the new group
-                     */
-                    internalTupleBuilder.reset();
-                    for (int i = 0; i < keyFields.length; i++) {
-                        internalTupleBuilder.addField(accessor, tIndex, keyFields[i]);
-                    }
-                    aggregator.init(accessor, tIndex, internalTupleBuilder);
-                    if (!appender.append(internalTupleBuilder.getFieldEndOffsets(),
-                            internalTupleBuilder.getByteArray(), 0, internalTupleBuilder.getSize())) {
-                        if (!nextAvailableFrame()) {
-                            return false;
-                        } else {
-                            if (!appender.append(internalTupleBuilder.getFieldEndOffsets(),
-                                    internalTupleBuilder.getByteArray(), 0, internalTupleBuilder.getSize())) {
-                                throw new IllegalStateException("Failed to init an aggregator");
-                            }
-                        }
-                    }
-
-                    storedTuplePointer.frameIndex = dataFrameCount;
-                    storedTuplePointer.tupleIndex = appender.getTupleCount() - 1;
-                    table.insert(entry, storedTuplePointer);
-                    groupSize++;
-                } else {
-                    // If there is a matching found, do aggregation directly
-                    int tupleOffset = storedKeysAccessor1.getTupleStartOffset(storedTuplePointer.tupleIndex);
-                    int aggFieldOffset = storedKeysAccessor1.getFieldStartOffset(storedTuplePointer.tupleIndex,
-                            keyFields.length);
-                    int tupleLength = storedKeysAccessor1.getFieldLength(storedTuplePointer.tupleIndex,
-                            keyFields.length);
-                    aggregator.aggregate(accessor, tIndex, storedKeysAccessor1.getBuffer().array(), tupleOffset
-                            + storedKeysAccessor1.getFieldSlotsLength() + aggFieldOffset, tupleLength);
-                }
-                return true;
-            }
-
-            @Override
-            public List<ByteBuffer> getFrames() {
-                return frames;
-            }
-
-            @Override
-            public int getFrameCount() {
-                return dataFrameCount;
-            }
-
-            @Override
-            public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException {
-                FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-                writer.open();
-                appender.reset(outFrame, true);
-                if (tPointers == null) {
-                    // Not sorted
-                    for (int i = 0; i < tableSize; ++i) {
-                        int entry = i;
-                        int offset = 0;
-                        do {
-                            table.getTuplePointer(entry, offset++, storedTuplePointer);
-                            if (storedTuplePointer.frameIndex < 0)
-                                break;
-                            int bIndex = storedTuplePointer.frameIndex;
-                            int tIndex = storedTuplePointer.tupleIndex;
-                            storedKeysAccessor1.reset(frames.get(bIndex));
-                            // Reset the tuple for the partial result
-                            outputTupleBuilder.reset();
-                            for (int k = 0; k < keyFields.length; k++) {
-                                outputTupleBuilder.addField(storedKeysAccessor1, tIndex, k);
-                            }
-                            if (isPartial)
-                                aggregator.outputPartialResult(storedKeysAccessor1, tIndex, outputTupleBuilder);
-                            else
-                                aggregator.outputResult(storedKeysAccessor1, tIndex, outputTupleBuilder);
-                            while (!appender.append(outputTupleBuilder.getFieldEndOffsets(),
-                                    outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                                FrameUtils.flushFrame(outFrame, writer);
-                                appender.reset(outFrame, true);
-                            }
-                        } while (true);
-                    }
-                    if (appender.getTupleCount() != 0) {
-                        FrameUtils.flushFrame(outFrame, writer);
-                    }
-                    aggregator.close();
-                    return;
-                }
-                int n = tPointers.length / 3;
-                for (int ptr = 0; ptr < n; ptr++) {
-                    int tableIndex = tPointers[ptr * 3];
-                    int rowIndex = tPointers[ptr * 3 + 1];
-                    table.getTuplePointer(tableIndex, rowIndex, storedTuplePointer);
-                    int frameIndex = storedTuplePointer.frameIndex;
-                    int tupleIndex = storedTuplePointer.tupleIndex;
-                    // Get the frame containing the value
-                    ByteBuffer buffer = frames.get(frameIndex);
-                    storedKeysAccessor1.reset(buffer);
-
-                    outputTupleBuilder.reset();
-                    for (int k = 0; k < keyFields.length; k++) {
-                        outputTupleBuilder.addField(storedKeysAccessor1, tupleIndex, k);
-                    }
-                    if (isPartial)
-                        aggregator.outputPartialResult(storedKeysAccessor1, tupleIndex, outputTupleBuilder);
-                    else
-                        aggregator.outputResult(storedKeysAccessor1, tupleIndex, outputTupleBuilder);
-                    if (!appender.append(outputTupleBuilder.getFieldEndOffsets(), outputTupleBuilder.getByteArray(), 0,
-                            outputTupleBuilder.getSize())) {
-                        FrameUtils.flushFrame(outFrame, writer);
-                        appender.reset(outFrame, true);
-                        if (!appender.append(outputTupleBuilder.getFieldEndOffsets(),
-                                outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                            throw new IllegalStateException();
-                        }
-                    }
-                }
-                if (appender.getTupleCount() > 0) {
-                    FrameUtils.flushFrame(outFrame, writer);
-                }
-                aggregator.close();
-            }
-
-            /**
-             * Set the working frame to the next available frame in the frame
-             * list. There are two cases:<br>
-             * 1) If the next frame is not initialized, allocate a new frame. 2)
-             * When frames are already created, they are recycled.
-             * 
-             * @return Whether a new frame is added successfully.
-             */
-            private boolean nextAvailableFrame() {
-                // Return false if the number of frames is equal to the limit.
-                if (dataFrameCount + 1 >= framesLimit)
-                    return false;
-
-                if (frames.size() < framesLimit) {
-                    // Insert a new frame
-                    ByteBuffer frame = ctx.allocateFrame();
-                    frame.position(0);
-                    frame.limit(frame.capacity());
-                    frames.add(frame);
-                    appender.reset(frame, true);
-                    dataFrameCount = frames.size() - 1;
-                } else {
-                    // Reuse an old frame
-                    dataFrameCount++;
-                    ByteBuffer frame = frames.get(dataFrameCount);
-                    frame.position(0);
-                    frame.limit(frame.capacity());
-                    appender.reset(frame, true);
-                }
-                return true;
-            }
 
             @Override
             public void sortFrames() {
@@ -341,6 +189,224 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
                 if (tPointers.length > 0) {
                     sort(tPointers, 0, totalTCount);
                 }
+            }
+
+            @Override
+            public void reset() {
+                lastBufIndex = -1;
+                tPointers = null;
+                table.reset();
+                aggregator.reset();
+            }
+
+            @Override
+            public boolean insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                if (lastBufIndex < 0)
+                    nextAvailableFrame();
+                int entry = tpc.partition(accessor, tIndex, tableSize);
+                boolean foundGroup = false;
+                int offset = 0;
+                do {
+                    table.getTuplePointer(entry, offset++, storedTuplePointer);
+                    if (storedTuplePointer.frameIndex < 0)
+                        break;
+                    storedKeysAccessor1.reset(frames.get(storedTuplePointer.frameIndex));
+                    int c = ftpcPartial.compare(accessor, tIndex, storedKeysAccessor1, storedTuplePointer.tupleIndex);
+                    if (c == 0) {
+                        foundGroup = true;
+                        break;
+                    }
+                } while (true);
+
+                if (!foundGroup) {
+
+                    stateTupleBuilder.reset();
+
+                    for (int k = 0; k < keyFields.length; k++) {
+                        stateTupleBuilder.addField(accessor, tIndex, keyFields[k]);
+                    }
+                    
+                    aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
+                    if (!stateAppender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
+                            stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
+                        if (!nextAvailableFrame()) {
+                            return false;
+                        }
+                        if (!stateAppender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
+                                stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
+                            throw new HyracksDataException("Cannot init external aggregate state in a frame.");
+                        }
+                    }
+
+                    storedTuplePointer.frameIndex = lastBufIndex;
+                    storedTuplePointer.tupleIndex = stateAppender.getTupleCount() - 1;
+                    table.insert(entry, storedTuplePointer);
+                } else {
+
+                    aggregator.aggregate(accessor, tIndex, storedKeysAccessor1, storedTuplePointer.tupleIndex,
+                            aggregateState);
+
+                }
+                return true;
+            }
+
+            @Override
+            public List<ByteBuffer> getFrames() {
+                return frames;
+            }
+
+            @Override
+            public int getFrameCount() {
+                return lastBufIndex;
+            }
+
+            @Override
+            public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException {
+                if (outputFrame == null) {
+                    outputFrame = ctx.allocateFrame();
+                }
+
+                if (outputAppender == null) {
+                    outputAppender = new FrameTupleAppender(outputFrame.capacity());
+                }
+
+                outputAppender.reset(outputFrame, true);
+
+                writer.open();
+
+                if (tPointers == null) {
+                    // Not sorted
+                    for (int i = 0; i < tableSize; ++i) {
+                        int entry = i;
+                        int offset = 0;
+                        do {
+                            table.getTuplePointer(entry, offset++, storedTuplePointer);
+                            if (storedTuplePointer.frameIndex < 0)
+                                break;
+                            int bIndex = storedTuplePointer.frameIndex;
+                            int tIndex = storedTuplePointer.tupleIndex;
+
+                            storedKeysAccessor1.reset(frames.get(bIndex));
+
+                            outputTupleBuilder.reset();
+                            for (int k = 0; k < storedKeys.length; k++) {
+                                outputTupleBuilder.addField(storedKeysAccessor1, tIndex, storedKeys[k]);
+                            }
+
+                            if (isPartial) {
+
+                                aggregator.outputPartialResult(outputTupleBuilder, storedKeysAccessor1, tIndex,
+                                        aggregateState);
+
+                            } else {
+
+                                aggregator.outputFinalResult(outputTupleBuilder, storedKeysAccessor1, tIndex,
+                                        aggregateState);
+                            }
+
+                            if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                                    outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                                FrameUtils.flushFrame(outputFrame, writer);
+                                outputAppender.reset(outputFrame, true);
+                                if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                                        outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                                    throw new HyracksDataException(
+                                            "The output item is too large to be fit into a frame.");
+                                }
+                            }
+
+                        } while (true);
+                    }
+                    if (outputAppender.getTupleCount() > 0) {
+                        FrameUtils.flushFrame(outputFrame, writer);
+                        outputAppender.reset(outputFrame, true);
+                    }
+                    aggregator.close();
+                    return;
+                }
+                int n = tPointers.length / 3;
+                for (int ptr = 0; ptr < n; ptr++) {
+                    int tableIndex = tPointers[ptr * 3];
+                    int rowIndex = tPointers[ptr * 3 + 1];
+                    table.getTuplePointer(tableIndex, rowIndex, storedTuplePointer);
+                    int frameIndex = storedTuplePointer.frameIndex;
+                    int tupleIndex = storedTuplePointer.tupleIndex;
+                    // Get the frame containing the value
+                    ByteBuffer buffer = frames.get(frameIndex);
+                    storedKeysAccessor1.reset(buffer);
+
+                    outputTupleBuilder.reset();
+                    for (int k = 0; k < storedKeys.length; k++) {
+                        outputTupleBuilder.addField(storedKeysAccessor1, tupleIndex, storedKeys[k]);
+                    }
+
+                    if (isPartial) {
+
+                        aggregator.outputPartialResult(outputTupleBuilder, storedKeysAccessor1, tupleIndex,
+                                aggregateState);
+
+                    } else {
+
+                        aggregator.outputFinalResult(outputTupleBuilder, storedKeysAccessor1, tupleIndex,
+                                aggregateState);
+                    }
+
+                    if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                            outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                        FrameUtils.flushFrame(outputFrame, writer);
+                        outputAppender.reset(outputFrame, true);
+                        if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
+                                outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
+                            throw new HyracksDataException("The output item is too large to be fit into a frame.");
+                        }
+                    }
+                }
+                if (outputAppender.getTupleCount() > 0) {
+                    FrameUtils.flushFrame(outputFrame, writer);
+                    outputAppender.reset(outputFrame, true);
+                }
+                aggregator.close();
+            }
+
+            @Override
+            public void close() {
+                lastBufIndex = -1;
+                tPointers = null;
+                table.close();
+                frames.clear();
+                aggregateState.close();
+            }
+
+            /**
+             * Set the working frame to the next available frame in the frame
+             * list. There are two cases:<br>
+             * 1) If the next frame is not initialized, allocate a new frame. 2)
+             * When frames are already created, they are recycled.
+             * 
+             * @return Whether a new frame is added successfully.
+             */
+            private boolean nextAvailableFrame() {
+                // Return false if the number of frames is equal to the limit.
+                if (lastBufIndex + 1 >= framesLimit)
+                    return false;
+
+                if (frames.size() < framesLimit) {
+                    // Insert a new frame
+                    ByteBuffer frame = ctx.allocateFrame();
+                    frame.position(0);
+                    frame.limit(frame.capacity());
+                    frames.add(frame);
+                    stateAppender.reset(frame, true);
+                    lastBufIndex = frames.size() - 1;
+                } else {
+                    // Reuse an old frame
+                    lastBufIndex++;
+                    ByteBuffer frame = frames.get(lastBufIndex);
+                    frame.position(0);
+                    frame.limit(frame.capacity());
+                    stateAppender.reset(frame, true);
+                }
+                return true;
             }
 
             private void sort(int[] tPointers, int offset, int length) {
@@ -437,14 +503,7 @@ public class HashSpillableGroupingTableFactory implements ISpillableTableFactory
                 }
             }
 
-            @Override
-            public void close() {
-                groupSize = 0;
-                dataFrameCount = -1;
-                tPointers = null;
-                table.close();
-                frames.clear();
-            }
         };
     }
+
 }

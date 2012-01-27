@@ -59,6 +59,25 @@ public class FrameTupleAppender {
         }
         return false;
     }
+    
+    public boolean appendSkipEmptyField(int[] fieldSlots, byte[] bytes, int offset, int length){
+        if (tupleDataEndOffset + fieldSlots.length * 4 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+            int effectiveSlots = 0;
+            for (int i = 0; i < fieldSlots.length; ++i) {
+                if(fieldSlots[i] > 0){
+                    buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots[i]);
+                    effectiveSlots++;
+                }
+            }
+            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + effectiveSlots * 4, length);
+            tupleDataEndOffset += effectiveSlots * 4 + length;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            ++tupleCount;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            return true;
+        }
+        return false;
+    }
 
     public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
         int length = tEndOffset - tStartOffset;

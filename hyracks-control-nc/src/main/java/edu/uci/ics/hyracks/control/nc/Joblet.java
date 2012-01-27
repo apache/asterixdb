@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
@@ -37,6 +36,7 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
@@ -60,6 +60,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final JobId jobId;
 
+    private final JobActivityGraph jag;
+
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
     private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
@@ -80,10 +82,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private boolean cleanupPending;
 
-    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx) {
+    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
+        this.jag = jag;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
         taskStateMap = new HashMap<TaskId, ITaskState>();
@@ -97,6 +100,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public JobId getJobId() {
         return jobId;
+    }
+
+    public JobActivityGraph getJobActivityGraph() {
+        return jag;
     }
 
     public synchronized IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
@@ -138,10 +145,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         public ITaskState getTaskState(TaskId taskId) {
             return taskStateMap.get(taskId);
         }
-    }
-
-    public Executor getExecutor() {
-        return nodeController.getExecutor();
     }
 
     public synchronized void notifyTaskComplete(Task task) throws Exception {

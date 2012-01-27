@@ -16,11 +16,29 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+/**
+ *
+ */
+public class AggregateState implements Serializable {
 
-public interface IAccumulatingAggregatorFactory extends Serializable {
-    IAccumulatingAggregator createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor) throws HyracksDataException;
+    private static final long serialVersionUID = 1L;
+
+    public Object state = null;
+
+    public AggregateState() {
+        state = null;
+    }
+
+    public AggregateState(Object obj) {
+        state = obj;
+    }
+
+    public void reset() {
+        state = null;
+    }
+
+    public void close() {
+        state = null;
+    }
+
 }

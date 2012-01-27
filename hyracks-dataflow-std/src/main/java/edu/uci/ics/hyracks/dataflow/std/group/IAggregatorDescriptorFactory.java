@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.aggregators;
+package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.io.Serializable;
 
@@ -20,18 +20,13 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ *
+ */
 public interface IAggregatorDescriptorFactory extends Serializable {
 
-    /**
-     * Create an aggregator.
-     * 
-     * @param ctx
-     * @param inRecordDescriptor
-     * @param outRecordDescriptor
-     * @param keyFields
-     * @return
-     * @throws HyracksDataException
-     */
     IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields) throws HyracksDataException;
+            RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults)
+            throws HyracksDataException;
+
 }

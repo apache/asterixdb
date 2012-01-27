@@ -17,7 +17,8 @@ package edu.uci.ics.hyracks.net.protocols.muxdemux;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,7 +69,7 @@ public class ChannelControlBlock {
     }
 
     private final class ReadInterface implements IChannelReadInterface {
-        private final Queue<ByteBuffer> riEmptyQueue;
+        private final Deque<ByteBuffer> riEmptyStack;
 
         private final IBufferAcceptor eba = new IBufferAcceptor() {
             @Override
@@ -76,27 +77,23 @@ public class ChannelControlBlock {
                 if (remoteClose.get()) {
                     return;
                 }
-                int delta;
+                int delta = buffer.remaining();
                 synchronized (ChannelControlBlock.this) {
-                    riEmptyQueue.add(buffer);
-                    delta = buffer.remaining();
+                    riEmptyStack.push(buffer);
                 }
-                credits.addAndGet(delta);
-                if (delta != 0) {
-                    cSet.markPendingCredits(channelId);
-                }
+                cSet.addPendingCredits(channelId, delta);
             }
         };
 
         private ICloseableBufferAcceptor fba;
 
-        private final AtomicInteger credits;
+        private volatile int credits;
 
         private ByteBuffer currentReadBuffer;
 
         ReadInterface() {
-            riEmptyQueue = new LinkedList<ByteBuffer>();
-            credits = new AtomicInteger();
+            riEmptyStack = new ArrayDeque<ByteBuffer>();
+            credits = 0;
         }
 
         @Override
@@ -115,7 +112,7 @@ public class ChannelControlBlock {
                     return size;
                 }
                 if (ri.currentReadBuffer == null) {
-                    ri.currentReadBuffer = ri.riEmptyQueue.poll();
+                    ri.currentReadBuffer = ri.riEmptyStack.poll();
                     assert ri.currentReadBuffer != null;
                 }
                 int rSize = Math.min(size, ri.currentReadBuffer.remaining());
@@ -204,7 +201,7 @@ public class ChannelControlBlock {
         private ByteBuffer currentWriteBuffer;
 
         WriteInterface() {
-            wiFullQueue = new LinkedList<ByteBuffer>();
+            wiFullQueue = new ArrayDeque<ByteBuffer>();
             credits = new AtomicInteger();
             eos = false;
             eosSent = false;
@@ -290,12 +287,12 @@ public class ChannelControlBlock {
         return ri.read(sc, size);
     }
 
-    void addReadCredits(int delta) {
-        ri.credits.addAndGet(delta);
+    int getReadCredits() {
+        return ri.credits;
     }
 
-    int getAndResetReadCredits() {
-        return ri.credits.getAndSet(0);
+    void setReadCredits(int credits) {
+        this.ri.credits = credits;
     }
 
     void addWriteCredits(int delta) {

@@ -21,9 +21,6 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
-/**
- * @author jarodwen
- */
 public interface ISpillableTable {
 
     public void close();
