@@ -29,12 +29,6 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 		buf[targetOff + 1] = (byte)(s >> 0);
 	}
 	
-	// Write short in big endian to target byte array at given offset.
-	private static void writeShortB(short s, byte[] buf, int targetOff) {
-		buf[targetOff] = (byte) (s >> 0);
-		buf[targetOff + 1] = (byte) (s >> 8);
-	}
-	
     @Override
     public int bytesRequired(ITupleReference tuple) {
         int bytes = getNullFlagsBytes(tuple) + getFieldSlotsBytes(tuple);
@@ -84,23 +78,23 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
 	}
 
     @Override
-    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
+    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf,
             int targetOff) {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(tuple, startField, numFields);
         for (int i = 0; i < nullFlagsBytes; i++) {
-            targetBuf.put(runner++, (byte) 0);
+            targetBuf[runner++] = (byte) 0;
         }
         runner += getFieldSlotsBytes(tuple, startField, numFields);
 
         int fieldEndOff = 0;
         int fieldCounter = 0;
         for (int i = startField; i < startField + numFields; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner,
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner,
                     tuple.getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
-            runner += tuple.getFieldLength(i);
-            targetBuf.putShort(targetOff + nullFlagsBytes + fieldCounter * 2, (short) fieldEndOff);
+            runner += tuple.getFieldLength(i);            
+            writeShortL((short) fieldEndOff, targetBuf, targetOff + nullFlagsBytes + fieldCounter * 2);
             fieldCounter++;
         }
 

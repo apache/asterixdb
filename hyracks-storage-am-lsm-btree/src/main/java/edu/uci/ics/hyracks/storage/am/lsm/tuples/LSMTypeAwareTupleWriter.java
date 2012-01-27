@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.tuples;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -53,9 +51,7 @@ public class LSMTypeAwareTupleWriter extends TypeAwareTupleWriter {
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {	    
 	    int bytesWritten = -1;
 	    if (isDelete) {
-	        // TODO: Avoid generating an object here.
-	        ByteBuffer buf = ByteBuffer.wrap(targetBuf);
-	        bytesWritten = super.writeTupleFields(tuple, 0, numKeyFields, buf, targetOff);
+	        bytesWritten = super.writeTupleFields(tuple, 0, numKeyFields, targetBuf, targetOff);
 	        setAntimatterBit(targetBuf, targetOff);
 		} else {
 		    bytesWritten = super.writeTuple(tuple, targetBuf, targetOff);
