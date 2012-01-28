@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexExamplesTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 
 public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
 	private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();

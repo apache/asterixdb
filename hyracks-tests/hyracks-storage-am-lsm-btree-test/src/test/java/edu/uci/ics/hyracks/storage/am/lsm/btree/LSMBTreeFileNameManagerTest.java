@@ -31,8 +31,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
-import edu.uci.ics.hyracks.storage.am.lsm.impls.LSMBTreeFileNameManager;
 
 public class LSMBTreeFileNameManagerTest {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.tuples;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.tuples;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 

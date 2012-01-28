@@ -13,25 +13,28 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.tuples;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.tuples;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
-public class LSMBTreeCopyTupleWriterFactory extends TypeAwareTupleWriterFactory {
+public class LSMBTreeTupleWriterFactory extends TypeAwareTupleWriterFactory {
+
 	private static final long serialVersionUID = 1L;
 	private final ITypeTraits[] typeTraits;
 	private final int numKeyFields;
+	private final boolean isDelete;
 	
-	public LSMBTreeCopyTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields) {
+	public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
 		super(typeTraits);
 		this.typeTraits = typeTraits;
 		this.numKeyFields = numKeyFields;
+		this.isDelete = isDelete;
 	}
 
 	@Override
 	public ITreeIndexTupleWriter createTupleWriter() {
-		return new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields);
+		return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isDelete);
 	}
 }

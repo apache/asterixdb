@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
