@@ -549,7 +549,9 @@ public class LSMBTree implements ILSMTree {
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
         bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());
-        diskBTrees.addFirst(bulkLoadCtx.getBTree());
+        synchronized (diskBTrees) {
+            diskBTrees.addFirst(bulkLoadCtx.getBTree());
+        }
     }
 
     @Override
