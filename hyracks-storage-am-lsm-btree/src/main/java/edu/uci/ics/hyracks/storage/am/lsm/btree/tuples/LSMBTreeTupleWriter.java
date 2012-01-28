@@ -21,15 +21,25 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
-	private final boolean isDelete;
+	private final boolean isAntimatter;
 	private final int numKeyFields;
 	
-	public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
+	public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter) {
 		super(typeTraits);
 		this.numKeyFields = numKeyFields;
-		this.isDelete = isDelete;
+		this.isAntimatter = isAntimatter;
 	}
 
+	@Override
+    public int bytesRequired(ITupleReference tuple) {
+	    if (isAntimatter) {
+	        // Only requires space for the key fields.
+	        return super.bytesRequired(tuple, 0, numKeyFields);
+	    } else {
+	        return super.bytesRequired(tuple);
+	    }
+    }
+	
 	@Override
     public ITreeIndexTupleReference createTupleReference() {
         return new LSMBTreeTupleReference(typeTraits, numKeyFields);
@@ -50,7 +60,7 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
 	@Override
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {	    
 	    int bytesWritten = -1;
-	    if (isDelete) {
+	    if (isAntimatter) {
 	        bytesWritten = super.writeTupleFields(tuple, 0, numKeyFields, targetBuf, targetOff);
 	        setAntimatterBit(targetBuf, targetOff);
 		} else {

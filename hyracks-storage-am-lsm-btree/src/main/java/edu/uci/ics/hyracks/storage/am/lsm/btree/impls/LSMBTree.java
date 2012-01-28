@@ -319,7 +319,9 @@ public class LSMBTree implements ILSMTree {
         }
         diskBTree.endBulkLoad(bulkLoadCtx);
         resetMemBTree();
-        diskBTrees.addFirst(diskBTree);
+        synchronized (diskBTrees) {
+            diskBTrees.addFirst(diskBTree);
+        }
     }
 
     private void resetMemBTree() throws HyracksDataException {
@@ -385,7 +387,7 @@ public class LSMBTree implements ILSMTree {
         // If includeMemBTree is false, then it is possible that a concurrent
         // flush adds another on-disk BTree.
         // Since this mode is only used for merging trees, it doesn't really
-        // matter if the merge excludes the new on-disk BTree,
+        // matter if the merge excludes the new on-disk BTree.
         List<BTree> diskBTreesSnapshot = new ArrayList<BTree>();
         AtomicInteger localSearcherRefCount = null;
         synchronized (diskBTrees) {

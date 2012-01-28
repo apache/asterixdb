@@ -84,6 +84,19 @@ public class TupleUtils {
         return strBuilder.toString();
     }
     
+    public static Object[] deserializeTuple(ITupleReference tuple, ISerializerDeserializer[] fields)
+            throws HyracksDataException {
+        int numFields = Math.min(tuple.getFieldCount(), fields.length);
+        Object[] objs = new Object[numFields];
+        for (int i = 0; i < numFields; i++) {
+            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
+                    tuple.getFieldLength(i));
+            DataInput dataIn = new DataInputStream(inStream);
+            objs[i] = fields[i].deserialize(dataIn);
+        }
+        return objs;
+    }
+    
     public static ITupleReference copyTuple(ITupleReference tuple) throws HyracksDataException {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(tuple.getFieldCount());
         for (int i = 0; i < tuple.getFieldCount(); i++) {
