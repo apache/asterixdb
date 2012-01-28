@@ -1,5 +1,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -28,6 +30,8 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     private LSMRTree lsmRTree;
     private RangePredicate btreeRangePredicate;
     private ITupleReference frameTuple;
+    private boolean includeMemRTree;
+    private AtomicInteger searcherRefCount;
 
     public LSMRTreeSearchCursor() {
         currentCursror = 0;
@@ -86,25 +90,24 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-
-        lsmRTree = ((LSMRTreeCursorInitialState) initialState).getLsmRTree();
-        btreeCmp = ((LSMRTreeCursorInitialState) initialState).getBTreeCmp();
-
-        numberOfTrees = ((LSMRTreeCursorInitialState) initialState).getNumberOfTrees();
-
-        diskBTreeAccessors = ((LSMRTreeCursorInitialState) initialState).getBTreeAccessors();
+        LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
+        lsmRTree = lsmInitialState.getLsmRTree();
+        btreeCmp = lsmInitialState.getBTreeCmp();
+        includeMemRTree = lsmInitialState.getIncludeMemRTree();
+        searcherRefCount = lsmInitialState.getSearcherRefCount();
+        numberOfTrees = lsmInitialState.getNumberOfTrees();
+        diskBTreeAccessors = lsmInitialState.getBTreeAccessors();
 
         rtreeCursors = new RTreeSearchCursor[numberOfTrees];
         btreeCursors = new BTreeRangeSearchCursor[numberOfTrees];
 
         for (int i = 0; i < numberOfTrees; i++) {
-            rtreeCursors[i] = new RTreeSearchCursor((IRTreeInteriorFrame) ((LSMRTreeCursorInitialState) initialState)
-                    .getRTreeInteriorFrameFactory().createFrame(),
-                    (IRTreeLeafFrame) ((LSMRTreeCursorInitialState) initialState).getRTreeLeafFrameFactory()
-                            .createFrame());
+            rtreeCursors[i] = new RTreeSearchCursor((IRTreeInteriorFrame) lsmInitialState
+                    .getRTreeInteriorFrameFactory().createFrame(), (IRTreeLeafFrame) lsmInitialState
+                    .getRTreeLeafFrameFactory().createFrame());
 
-            btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) ((LSMRTreeCursorInitialState) initialState)
-                    .getBTreeLeafFrameFactory().createFrame(), false);
+            btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory()
+                    .createFrame(), false);
         }
         btreeRangePredicate = new RangePredicate(true, null, null, true, true, btreeCmp, btreeCmp);
     }
@@ -124,10 +127,17 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         rtreeCursors = null;
         btreeCursors = null;
 
-        try {
-            lsmRTree.threadExit();
-        } catch (TreeIndexException e) {
-            throw new HyracksDataException(e);
+        // If the in-memory RTree was not included in the search, then we don't
+        // need to synchronize with a flush.
+        if (includeMemRTree) {
+            try {
+                lsmRTree.threadExit();
+            } catch (TreeIndexException e) {
+                throw new HyracksDataException(e);
+            }
+        } else {
+            // Synchronize with ongoing merges.
+            searcherRefCount.decrementAndGet();
         }
     }
 

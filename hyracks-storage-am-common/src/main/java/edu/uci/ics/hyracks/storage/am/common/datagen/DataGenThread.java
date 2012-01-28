@@ -6,6 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 /**
@@ -69,6 +71,18 @@ public class DataGenThread extends Thread {
                 return new SortedIntegerFieldValueGenerator();
             } else {
                 return new IntegerFieldValueGenerator(rnd);
+            }
+        } else if (serde instanceof FloatSerializerDeserializer) {
+            if (sorted) {
+                return new SortedFloatFieldValueGenerator();
+            } else {
+                return new FloatFieldValueGenerator(rnd);
+            }
+        } else if (serde instanceof DoubleSerializerDeserializer) {
+            if (sorted) {
+                return new SortedDoubleFieldValueGenerator();
+            } else {
+                return new DoubleFieldValueGenerator(rnd);
             }
         }
         System.out.println("NULL");
