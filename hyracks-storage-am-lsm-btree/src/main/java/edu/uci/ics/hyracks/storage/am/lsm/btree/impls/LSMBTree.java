@@ -443,10 +443,9 @@ public class LSMBTree implements ILSMTree {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Merging LSM-BTree.");
         }
-        if (isMerging.get()) {
+        if (!isMerging.compareAndSet(false, true)) {
             throw new TreeIndexException("Merge already in progress in LSMBTree. Only one concurrent merge allowed.");
         }
-        isMerging.set(true);
         
         // Point to the current searcher ref count, so we can wait for it later
         // (after we swap the searcher ref count).
