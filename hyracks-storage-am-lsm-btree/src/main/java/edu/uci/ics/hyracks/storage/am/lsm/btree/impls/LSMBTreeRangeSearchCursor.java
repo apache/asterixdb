@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -40,6 +41,8 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
     private PriorityQueueElement reusedElement;
     private boolean needPush;
     private LSMBTree lsmTree;
+    private boolean includeMemBTree;
+    private AtomicInteger searcherRefCount;
 
     public LSMBTreeRangeSearchCursor() {
         outputElement = null;
@@ -96,6 +99,8 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
         }
+        includeMemBTree = lsmInitialState.getIncludeMemBTree();
+        searcherRefCount = lsmInitialState.getSearcherRefCount();
         setPriorityQueueComparator();
     }
     
@@ -118,10 +123,17 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
             rangeCursors[i].close();
         }
         rangeCursors = null;
-        try {
-            lsmTree.threadExit();
-        } catch (TreeIndexException e) {
-            throw new HyracksDataException(e);
+        // If the in-memory BTree was not included in the search, then we don't
+        // need to synchronize with a flush.
+        if (includeMemBTree) {
+            try {
+                lsmTree.threadExit();
+            } catch (TreeIndexException e) {
+                throw new HyracksDataException(e);
+            }
+        } else {
+            // Synchronize with ongoing merges.
+            searcherRefCount.decrementAndGet();
         }
     }
     

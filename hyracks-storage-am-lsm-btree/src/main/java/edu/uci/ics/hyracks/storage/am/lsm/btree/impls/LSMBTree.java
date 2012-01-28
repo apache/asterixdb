@@ -17,10 +17,14 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +54,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTree implements ILSMTree {
     protected final Logger LOGGER = Logger.getLogger(LSMBTree.class.getName());
+    private static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
     
     // In-memory components.
     private final BTree memBTree;
@@ -71,10 +76,20 @@ public class LSMBTree implements ILSMTree {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final MultiComparator cmp;
     
-    // For dealing with concurrent accesses.
+    // For synchronizing all operations with flushes.
+    // Currently, all operations block during a flush.
     private int threadRefCount;
     private boolean flushFlag;
 
+    // For synchronizing searchers with a concurrent merge.
+    private AtomicBoolean isMerging = new AtomicBoolean(false);
+    private AtomicInteger searcherRefCountA = new AtomicInteger(0);
+    private AtomicInteger searcherRefCountB = new AtomicInteger(0);
+    // Represents the current number of searcher threads that are operating on
+    // the unmerged on-disk BTrees.
+    // We alternate between searcherRefCountA and searcherRefCountB.
+    private AtomicInteger searcherRefCount = searcherRefCountA;
+    
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileNameManager fileNameManager, BTreeFactory diskBTreeFactory,
@@ -332,40 +347,61 @@ public class LSMBTree implements ILSMTree {
     private BTree createDiskBTree(BTreeFactory factory, String fileName, boolean createBTree) throws HyracksDataException {
         // Register the new BTree file.        
         FileReference file = new FileReference(new File(fileName));
-        // TODO: Delete the file during cleanup.
+        // File will be deleted during cleanup of merge().
         diskBufferCache.createFile(file);
         int diskBTreeFileId = diskFileMapProvider.lookupFileId(file);
-        // TODO: Close the file during cleanup.
+        // File will be closed during cleanup of merge().
         diskBufferCache.openFile(diskBTreeFileId);
         // Create new BTree instance.
         BTree diskBTree = factory.createBTreeInstance(diskBTreeFileId);
         if (createBTree) {
             diskBTree.create(diskBTreeFileId);
         }
-        // TODO: Close the BTree during cleanup.
+        // BTree will be closed during cleanup of merge().
         diskBTree.open(diskBTreeFileId);
         return diskBTree;
     }
     
-    private void search(ITreeIndexCursor cursor, RangePredicate pred, LSMBTreeOpContext ctx, boolean includeMemBTree) throws HyracksDataException, TreeIndexException {                
-        boolean waitForFlush = true;
-        do {
-            synchronized (this) {
-                if (!flushFlag) {
-                    // The corresponding threadExit() is in LSMTreeRangeSearchCursor.close().
-                    threadEnter();
-                    waitForFlush = false;
+    private List<BTree> search(ITreeIndexCursor cursor, RangePredicate pred, LSMBTreeOpContext ctx, boolean includeMemBTree) throws HyracksDataException, TreeIndexException {                
+        // If the search doesn't include the in-memory BTree, then we don't have
+        // to synchronize with a flush.
+        if (includeMemBTree) {
+            boolean waitForFlush = true;
+            do {
+                synchronized (this) {
+                    if (!flushFlag) {
+                        // The corresponding threadExit() is in
+                        // LSMTreeRangeSearchCursor.close().
+                        threadEnter();
+                        waitForFlush = false;
+                    }
                 }
+            } while (waitForFlush);
+        }
+
+        // Get a snapshot of the current on-disk BTrees.
+        // If includeMemBTree is true, then no concurrent
+        // flush can add another on-disk BTree (due to threadEnter());
+        // If includeMemBTree is false, then it is possible that a concurrent
+        // flush adds another on-disk BTree.
+        // Since this mode is only used for merging trees, it doesn't really
+        // matter if the merge excludes the new on-disk BTree,
+        List<BTree> diskBTreesSnapshot = new ArrayList<BTree>();
+        AtomicInteger localSearcherRefCount = null;
+        synchronized (diskBTrees) {
+            diskBTreesSnapshot.addAll(diskBTrees);
+            // Only remember the search ref count when performing a merge (i.e., includeMemBTree is false).
+            if (!includeMemBTree) {
+                localSearcherRefCount = searcherRefCount;
+                localSearcherRefCount.incrementAndGet();
             }
-        } while (waitForFlush);
+        }
         
-        // TODO: Think about what happens with possibly concurrent merges.
         LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
-        int numDiskBTrees = diskBTrees.size();
-        int numBTrees = (includeMemBTree) ? numDiskBTrees + 1 : numDiskBTrees;        
-        ListIterator<BTree> diskBTreesIter = diskBTrees.listIterator();
+        int numDiskBTrees = diskBTreesSnapshot.size();
+        int numBTrees = (includeMemBTree) ? numDiskBTrees + 1 : numDiskBTrees;                
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees,
-                insertLeafFrameFactory, cmp, this);
+                insertLeafFrameFactory, cmp, this, includeMemBTree, localSearcherRefCount);
         lsmTreeCursor.open(initialState, pred);
         
         int cursorIx;
@@ -381,6 +417,7 @@ public class LSMBTree implements ILSMTree {
         // Open cursors of on-disk BTrees.
         ITreeIndexAccessor[] diskBTreeAccessors = new ITreeIndexAccessor[numDiskBTrees];
         int diskBTreeIx = 0;
+        ListIterator<BTree> diskBTreesIter = diskBTreesSnapshot.listIterator();
         while(diskBTreesIter.hasNext()) {
             BTree diskBTree = diskBTreesIter.next();
             diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor();
@@ -389,6 +426,7 @@ public class LSMBTree implements ILSMTree {
             diskBTreeIx++;
         }
         lsmTreeCursor.initPriorityQueue();
+        return diskBTreesSnapshot;
     }
     
     private void insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
@@ -399,15 +437,26 @@ public class LSMBTree implements ILSMTree {
         lsmPerformOp(tuple, ctx);
     }
 
-    public void merge() throws Exception {
+    public void merge() throws HyracksDataException, TreeIndexException  {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Merging LSM-BTree.");
         }
+        if (isMerging.get()) {
+            throw new TreeIndexException("Merge already in progress in LSMBTree. Only one concurrent merge allowed.");
+        }
+        isMerging.set(true);
+        
+        // Point to the current searcher ref count, so we can wait for it later
+        // (after we swap the searcher ref count).
+        AtomicInteger localSearcherRefCount = searcherRefCount;
+        
         LSMBTreeOpContext ctx = createOpContext();
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
         RangePredicate rangePred = new RangePredicate(true, null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
-        search(cursor, (RangePredicate) rangePred, ctx, false);
+        // We get back a snapshot of the on-disk BTrees that are going to be
+        // merged now, so we can clean them up after the merge has completed.
+        List<BTree> mergingDiskBTrees = search(cursor, (RangePredicate) rangePred, ctx, false);
 
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
         BTree mergedBTree = createMergeTargetBTree();
@@ -422,6 +471,43 @@ public class LSMBTree implements ILSMTree {
             cursor.close();
         }
         mergedBTree.endBulkLoad(bulkLoadCtx);
+        
+        // Remove the old BTrees from the list, and add the new merged BTree.
+        // Also, swap the searchRefCount.
+        synchronized (diskBTrees) {
+            diskBTrees.removeAll(mergingDiskBTrees);
+            diskBTrees.addLast(mergedBTree);
+            // Swap the searcher ref count reference, and reset it to zero.
+            if (searcherRefCount == searcherRefCountA) {
+                searcherRefCount = searcherRefCountB;
+            } else {
+                searcherRefCount = searcherRefCountA;
+            }
+            searcherRefCount.set(0);
+        }
+        
+        // Wait for all searchers that are still accessing the old on-disk
+        // BTrees, then perform the final cleanup of the old BTrees.
+        while (localSearcherRefCount.get() != 0) {
+            try {
+                Thread.sleep(AFTER_MERGE_CLEANUP_SLEEP);
+            } catch (InterruptedException e) {
+                // Propagate the exception to the caller, so that an appropriate
+                // cleanup action can be taken.
+                throw new HyracksDataException(e);
+            }
+        }
+        
+        // Cleanup. At this point we have guaranteed that no searchers are
+        // touching the old on-disk BTrees (localSearcherRefCount == 0).
+        for (BTree oldBTree : mergingDiskBTrees) {
+            oldBTree.close();
+            FileReference fileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
+            diskBufferCache.closeFile(oldBTree.getFileId());
+            diskBufferCache.deleteFile(oldBTree.getFileId());
+            fileRef.getFile().delete();
+        }
+        isMerging.set(false);
     }
     
     public class LSMTreeBulkLoadContext implements IIndexBulkLoadContext {
