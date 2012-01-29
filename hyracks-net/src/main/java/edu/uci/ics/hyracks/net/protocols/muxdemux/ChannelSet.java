@@ -96,6 +96,10 @@ public class ChannelSet {
         int idx = channel.getChannelId();
         ccbArray[idx] = null;
         allocationBitmap.clear(idx);
+        pendingChannelWriteBitmap.clear(idx);
+        pendingChannelCreditsBitmap.clear(idx);
+        pendingChannelSynBitmap.clear(idx);
+        pendingEOSAckBitmap.clear(idx);
         --openChannelCount;
     }
 
