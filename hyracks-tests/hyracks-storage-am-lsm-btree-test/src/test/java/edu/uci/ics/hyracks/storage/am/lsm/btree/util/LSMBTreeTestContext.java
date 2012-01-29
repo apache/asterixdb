@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
+import java.util.TreeSet;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -52,26 +54,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
      * Override to provide upsert semantics for the check tuples.
      */
     @Override
-    public void insertIntCheckTuple(int[] fieldValues) {        
-        CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(getFieldCount(), getKeyFieldCount());
-        for(int v : fieldValues) {
-            checkTuple.add(v);
-        }
-        if (checkTuples.contains(checkTuple)) {
-            checkTuples.remove(checkTuple);
-        }
-        checkTuples.add(checkTuple);
-    }
-
-    /**
-     * Override to provide upsert semantics for the check tuples.
-     */
-    @Override
-    public void insertStringCheckTuple(String[] fieldValues) {
-        CheckTuple<String> checkTuple = new CheckTuple<String>(getFieldCount(), getKeyFieldCount());
-        for(String s : fieldValues) {
-            checkTuple.add((String)s);
-        }
+    public void insertCheckTuple(CheckTuple checkTuple, TreeSet<CheckTuple> checkTuples) {        
         if (checkTuples.contains(checkTuple)) {
             checkTuples.remove(checkTuple);
         }

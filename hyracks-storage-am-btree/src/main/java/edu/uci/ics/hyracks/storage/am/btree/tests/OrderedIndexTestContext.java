@@ -60,20 +60,25 @@ public abstract class OrderedIndexTestContext implements IOrderedIndexTestContex
     }
 
     @Override
-    public void insertIntCheckTuple(int[] fieldValues) {        
+    public CheckTuple createIntCheckTuple(int[] fieldValues) {        
         CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(getFieldCount(), getKeyFieldCount());
         for(int v : fieldValues) {
             checkTuple.add(v);
         }
-        checkTuples.add(checkTuple);
+        return checkTuple;
     }
 
     @Override
-    public void insertStringCheckTuple(String[] fieldValues) {
+    public CheckTuple createStringCheckTuple(String[] fieldValues) {
         CheckTuple<String> checkTuple = new CheckTuple<String>(getFieldCount(), getKeyFieldCount());
         for(String s : fieldValues) {
             checkTuple.add((String)s);
         }
+        return checkTuple;
+    }
+    
+    @Override
+    public void insertCheckTuple(CheckTuple checkTuple, TreeSet<CheckTuple> checkTuples) {        
         checkTuples.add(checkTuple);
     }
 

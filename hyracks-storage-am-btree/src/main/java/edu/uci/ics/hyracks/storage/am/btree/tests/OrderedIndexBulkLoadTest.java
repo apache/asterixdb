@@ -24,8 +24,11 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
 
-    public OrderedIndexBulkLoadTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
+    private final int bulkLoadRounds;
+    
+    public OrderedIndexBulkLoadTest(BTreeLeafFrameType[] leafFrameTypesToTest, int bulkLoadRounds) {
         super(leafFrameTypesToTest);
+        this.bulkLoadRounds = bulkLoadRounds;
     }
 
     @Override
@@ -33,21 +36,21 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
         IOrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
-
-        // We assume all fieldSerdes are of the same type. Check the first one
-        // to determine which field types to generate.
-        if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            OrderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
-        } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            OrderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
-        }
-
-        OrderedIndexTestUtils.checkPointSearches(ctx);
-        OrderedIndexTestUtils.checkOrderedScan(ctx);
-        OrderedIndexTestUtils.checkDiskOrderScan(ctx);
-        OrderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
-        if (prefixLowKey != null && prefixHighKey != null) {
-            OrderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
+        for (int i = 0; i < bulkLoadRounds; i++) {
+            // We assume all fieldSerdes are of the same type. Check the first one
+            // to determine which field types to generate.
+            if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+                OrderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+            } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
+                OrderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
+            }
+            OrderedIndexTestUtils.checkPointSearches(ctx);
+            OrderedIndexTestUtils.checkOrderedScan(ctx);
+            OrderedIndexTestUtils.checkDiskOrderScan(ctx);
+            OrderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
+            if (prefixLowKey != null && prefixHighKey != null) {
+                OrderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
+            }
         }
     }
 

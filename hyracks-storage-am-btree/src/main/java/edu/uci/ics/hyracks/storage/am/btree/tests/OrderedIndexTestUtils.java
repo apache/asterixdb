@@ -278,7 +278,7 @@ public class OrderedIndexTestUtils {
             try {
             	ctx.getIndexAccessor().insert(ctx.getTuple());
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                ctx.insertIntCheckTuple(fieldValues);
+                ctx.insertCheckTuple(ctx.createIntCheckTuple(fieldValues), ctx.getCheckTuples());
             } catch (BTreeDuplicateKeyException e) {
                 // Ignore duplicate key insertions.
             }                        
@@ -308,7 +308,7 @@ public class OrderedIndexTestUtils {
             try {
                 ctx.getIndexAccessor().insert(ctx.getTuple());
                 // Set expected values. Do this only after insertion succeeds because we ignore duplicate keys.
-                ctx.insertStringCheckTuple(fieldValues);
+                ctx.insertCheckTuple(ctx.createStringCheckTuple(fieldValues), ctx.getCheckTuples());
             } catch (BTreeDuplicateKeyException e) {
                 // Ignore duplicate key insertions.
             }
@@ -320,6 +320,7 @@ public class OrderedIndexTestUtils {
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
         int maxValue = (int)Math.ceil(Math.pow(numTuples, 1.0/(double)numKeyFields));
+        TreeSet<CheckTuple> tmpCheckTuples = new TreeSet<CheckTuple>();
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -331,15 +332,21 @@ public class OrderedIndexTestUtils {
             }
             
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            ctx.insertIntCheckTuple(fieldValues);
+            ctx.insertCheckTuple(ctx.createIntCheckTuple(fieldValues), tmpCheckTuples);
         }
-        bulkLoadCheckTuples(ctx, numTuples);
+        bulkLoadCheckTuples(ctx, tmpCheckTuples);
+        
+        // Add tmpCheckTuples to ctx check tuples for comparing searches.
+        for (CheckTuple checkTuple : tmpCheckTuples) {
+            ctx.insertCheckTuple(checkTuple, ctx.getCheckTuples());
+        }
     }
     
     public static void bulkLoadStringTuples(IOrderedIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
+        TreeSet<CheckTuple> tmpCheckTuples = new TreeSet<CheckTuple>();
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             for (int j = 0; j < numKeyFields; j++) {
@@ -351,19 +358,25 @@ public class OrderedIndexTestUtils {
                 fieldValues[j] = getRandomString(5, rnd);
             }
             // Set expected values. We also use these as the pre-sorted stream for bulk loading.
-            ctx.insertStringCheckTuple(fieldValues);
+            ctx.insertCheckTuple(ctx.createStringCheckTuple(fieldValues), tmpCheckTuples);
         }
-        bulkLoadCheckTuples(ctx, numTuples);
+        bulkLoadCheckTuples(ctx, tmpCheckTuples);
+        
+        // Add tmpCheckTuples to ctx check tuples for comparing searches.
+        for (CheckTuple checkTuple : tmpCheckTuples) {
+            ctx.insertCheckTuple(checkTuple, ctx.getCheckTuples());
+        }
     }
     
-    private static void bulkLoadCheckTuples(IOrderedIndexTestContext ctx, int numTuples) throws HyracksDataException, TreeIndexException {
+    private static void bulkLoadCheckTuples(IOrderedIndexTestContext ctx, TreeSet<CheckTuple> checkTuples) throws HyracksDataException, TreeIndexException {
         int fieldCount = ctx.getFieldCount();
+        int numTuples = checkTuples.size();
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
         IIndexBulkLoadContext bulkLoadCtx = ctx.getIndex().beginBulkLoad(0.7f);
         int c = 1;
-        for (CheckTuple checkTuple : ctx.getCheckTuples()) {
+        for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 if (c % (numTuples / 10) == 0) {
                     LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);

@@ -42,9 +42,11 @@ public interface IOrderedIndexTestContext {
 
     public IBinaryComparator[] getComparators();
     
-    public void insertIntCheckTuple(int[] fieldValues);
+    public CheckTuple createIntCheckTuple(int[] fieldValues);
     
-    public void insertStringCheckTuple(String[] fieldValues);
+    public CheckTuple createStringCheckTuple(String[] fieldValues);
+    
+    public void insertCheckTuple(CheckTuple checkTuple, TreeSet<CheckTuple> checkTuples);
     
     public TreeSet<CheckTuple> getCheckTuples();
 }
