@@ -501,11 +501,10 @@ public class LSMBTree implements ILSMTree {
         
         // Cleanup. At this point we have guaranteed that no searchers are
         // touching the old on-disk BTrees (localSearcherRefCount == 0).
-        for (BTree oldBTree : mergingDiskBTrees) {
-            oldBTree.close();
+        for (BTree oldBTree : mergingDiskBTrees) {            
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
             diskBufferCache.closeFile(oldBTree.getFileId());
-            diskBufferCache.deleteFile(oldBTree.getFileId());
+            oldBTree.close();
             fileRef.getFile().delete();
         }
         isMerging.set(false);
