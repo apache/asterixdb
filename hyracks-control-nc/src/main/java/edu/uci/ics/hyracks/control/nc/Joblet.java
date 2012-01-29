@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
@@ -64,7 +63,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
-    private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
+    private final IOperatorEnvironment env;
 
     private final Map<TaskId, ITaskState> taskStateMap;
 
@@ -88,7 +87,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jobId = jobId;
         this.jag = jag;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
-        envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
+        env = new OperatorEnvironmentImpl(nodeController.getId());
         taskStateMap = new HashMap<TaskId, ITaskState>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
@@ -106,15 +105,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jag;
     }
 
-    public synchronized IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
-        if (!envMap.containsKey(opId)) {
-            envMap.put(opId, new HashMap<Integer, IOperatorEnvironment>());
-        }
-        Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(opId);
-        if (!opEnvMap.containsKey(partition)) {
-            opEnvMap.put(partition, new OperatorEnvironmentImpl(nodeController.getId()));
-        }
-        return opEnvMap.get(partition);
+    public IOperatorEnvironment getEnvironment() {
+        return env;
     }
 
     public void addTask(Task task) {
