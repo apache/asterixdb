@@ -74,11 +74,11 @@ public class ChannelControlBlock {
         private final IBufferAcceptor eba = new IBufferAcceptor() {
             @Override
             public void accept(ByteBuffer buffer) {
-                if (remoteClose.get()) {
-                    return;
-                }
                 int delta = buffer.remaining();
                 synchronized (ChannelControlBlock.this) {
+                    if (remoteClose.get()) {
+                        return;
+                    }
                     riEmptyStack.push(buffer);
                 }
                 cSet.addPendingCredits(channelId, delta);
@@ -303,6 +303,10 @@ public class ChannelControlBlock {
         ri.flush();
         ri.fba.close();
         remoteClose.set(true);
+    }
+
+    boolean getRemoteEOS() {
+        return remoteClose.get();
     }
 
     synchronized void reportLocalEOSAck() {

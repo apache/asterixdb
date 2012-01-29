@@ -141,12 +141,17 @@ public class ChannelSet {
         }
         synchronized (mConn) {
             ChannelControlBlock ccb = ccbArray[channelId];
-            int oldCredits = ccb.getReadCredits();
-            ccb.setReadCredits(oldCredits + delta);
-            if (oldCredits == 0) {
-                assert !pendingChannelCreditsBitmap.get(channelId);
-                pendingChannelCreditsBitmap.set(channelId);
-                pendingWriteEventsCounter.increment();
+            if (ccb != null) {
+                if (ccb.getRemoteEOS()) {
+                    return;
+                }
+                int oldCredits = ccb.getReadCredits();
+                ccb.setReadCredits(oldCredits + delta);
+                if (oldCredits == 0) {
+                    assert !pendingChannelCreditsBitmap.get(channelId);
+                    pendingChannelCreditsBitmap.set(channelId);
+                    pendingWriteEventsCounter.increment();
+                }
             }
         }
     }
