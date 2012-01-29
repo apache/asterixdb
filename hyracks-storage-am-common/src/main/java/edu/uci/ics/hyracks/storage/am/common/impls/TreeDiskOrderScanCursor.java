@@ -61,7 +61,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
 	private boolean positionToNextLeaf(boolean skipCurrent)
 			throws HyracksDataException {
-		while ((frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId)) {
+		while ((frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) && (currentPageId <= maxPageId)) {
 			currentPageId++;
 
 			ICachedPage nextPage = bufferCache.pin(
@@ -77,10 +77,11 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 			tupleIndex = 0;
 			skipCurrent = false;
 		}
-		if (currentPageId <= maxPageId)
+		if (currentPageId <= maxPageId) {
 			return true;
-		else
+		} else {
 			return false;
+		}
 	}
 
 	@Override

@@ -32,8 +32,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
-    protected static final int prevLeafOff = smFlagOff + 1;
-    protected static final int nextLeafOff = prevLeafOff + 4;
+    protected static final int nextLeafOff = smFlagOff + 1;
     private MultiComparator cmp;
     
     public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
@@ -43,7 +42,6 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
-        buf.putInt(prevLeafOff, -1);
         buf.putInt(nextLeafOff, -1);
     }
 
@@ -53,18 +51,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public void setPrevLeaf(int page) {
-        buf.putInt(prevLeafOff, page);
-    }
-
-    @Override
     public int getNextLeaf() {
         return buf.getInt(nextLeafOff);
-    }
-
-    @Override
-    public int getPrevLeaf() {
-        return buf.getInt(prevLeafOff);
     }
 
     @Override

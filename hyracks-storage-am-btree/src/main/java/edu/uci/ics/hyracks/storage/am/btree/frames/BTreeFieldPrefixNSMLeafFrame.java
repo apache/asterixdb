@@ -58,8 +58,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 22
     protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 26
 
-    protected static final int prevLeafOff = prefixTupleCountOff + 4; // 30
-    protected static final int nextLeafOff = prevLeafOff + 4; // 34
+    protected static final int nextLeafOff = prefixTupleCountOff + 4; // 30
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -343,7 +342,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         buf.putInt(prefixTupleCountOff, 0);
         buf.put(levelOff, level);
         buf.put(smFlagOff, (byte) 0);
-        buf.putInt(prevLeafOff, -1);
         buf.putInt(nextLeafOff, -1);
     }
 
@@ -402,7 +400,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         strBuilder.append("smFlagOff:                 " + smFlagOff + "\n");
         strBuilder.append("uncompressedTupleCountOff: " + uncompressedTupleCountOff + "\n");
         strBuilder.append("prefixTupleCountOff:       " + prefixTupleCountOff + "\n");
-        strBuilder.append("prevLeafOff:               " + prevLeafOff + "\n");
         strBuilder.append("nextLeafOff:               " + nextLeafOff + "\n");
         return strBuilder.toString();
     }
@@ -658,18 +655,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void setPrevLeaf(int page) {
-        buf.putInt(prevLeafOff, page);
-    }
-
-    @Override
     public int getNextLeaf() {
         return buf.getInt(nextLeafOff);
-    }
-
-    @Override
-    public int getPrevLeaf() {
-        return buf.getInt(prevLeafOff);
     }
 
     public int getUncompressedTupleCount() {
