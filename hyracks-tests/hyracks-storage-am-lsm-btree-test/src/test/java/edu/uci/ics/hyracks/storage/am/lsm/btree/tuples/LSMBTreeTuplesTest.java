@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.tuples;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
@@ -83,6 +82,7 @@ public class LSMBTreeTuplesTest {
                 ITupleReference tuple = TupleUtils.createTuple(fieldSerdes, (Object[])fields);
                 LSMBTreeTupleWriter matterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, false);
                 LSMBTreeTupleWriter antimatterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, true);
+                LSMBTreeCopyTupleWriter copyTupleWriter = new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields);
                 ByteBuffer matterBuf = writeTuple(tuple, matterTupleWriter);
                 ByteBuffer antimatterBuf = writeTuple(tuple, antimatterTupleWriter);
 
@@ -92,7 +92,7 @@ public class LSMBTreeTuplesTest {
                 }
 
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
-                LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) matterTupleWriter.createTupleReference();
+                LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) matterTupleWriter.createTupleReference();                
                 
                 // Use LSMBTree tuple reference to interpret the written tuples.
                 // Repeat the block inside to test that repeated resetting to matter/antimatter tuples works.
@@ -100,56 +100,51 @@ public class LSMBTreeTuplesTest {
                     
                     // Check matter tuple with lsmBTreeTuple.
                     lsmBTreeTuple.resetByTupleOffset(matterBuf, 0);
-                    assertEquals(numFields, lsmBTreeTuple.getFieldCount());
-                    assertFalse(lsmBTreeTuple.isAntimatter());
-                    Object[] deserMatterTuple = TupleUtils.deserializeTuple(lsmBTreeTuple, fieldSerdes);
-                    for (int j = 0; j < numFields; j++) {
-                        assertEquals(fields[j], deserMatterTuple[j]);
-                    }
+                    checkTuple(lsmBTreeTuple, numFields, false, fieldSerdes, fields);
+                    
+                    // Create a copy using copyTupleWriter, and verify again.
+                    ByteBuffer copyMatterBuf = writeTuple(lsmBTreeTuple, copyTupleWriter);
+                    lsmBTreeTuple.resetByTupleOffset(copyMatterBuf, 0);
+                    checkTuple(lsmBTreeTuple, numFields, false, fieldSerdes, fields);
                     
                     // Check antimatter tuple with lsmBTreeTuple.
-                    lsmBTreeTuple.resetByTupleOffset(antimatterBuf, 0);
+                    lsmBTreeTuple.resetByTupleOffset(antimatterBuf, 0);                                        
                     // Should only contain keys.
-                    assertEquals(numKeyFields, lsmBTreeTuple.getFieldCount());
-                    assertTrue(lsmBTreeTuple.isAntimatter());
-                    Object[] deserAntimatterTuple = TupleUtils.deserializeTuple(lsmBTreeTuple, fieldSerdes);
-                    for (int j = 0; j < numKeyFields; j++) {
-                        assertEquals(fields[j], deserAntimatterTuple[j]);
-                    }
+                    checkTuple(lsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
+                    
+                    // Create a copy using copyTupleWriter, and verify again.
+                    ByteBuffer copyAntimatterBuf = writeTuple(lsmBTreeTuple, copyTupleWriter);
+                    lsmBTreeTuple.resetByTupleOffset(copyAntimatterBuf, 0);
+                    // Should only contain keys.
+                    checkTuple(lsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
                     
                     // Check matter tuple with maxLsmBTreeTuple.
                     // We should be able to manually set a prefix of the fields 
                     // (the passed type traits in the tuple factory's constructor).
                     maxLsmBTreeTuple.setFieldCount(numFields);
                     maxLsmBTreeTuple.resetByTupleOffset(matterBuf, 0);
-                    assertEquals(numFields, maxLsmBTreeTuple.getFieldCount());
-                    assertFalse(maxLsmBTreeTuple.isAntimatter());
-                    Object[] maxDeserMatterTuple = TupleUtils.deserializeTuple(maxLsmBTreeTuple, fieldSerdes);
-                    for (int j = 0; j < numFields; j++) {
-                        assertEquals(fields[j], maxDeserMatterTuple[j]);
-                    }
+                    checkTuple(maxLsmBTreeTuple, numFields, false, fieldSerdes, fields);
                     
                     // Check antimatter tuple with maxLsmBTreeTuple.
                     maxLsmBTreeTuple.resetByTupleOffset(antimatterBuf, 0);
-                    // Should only contain keys (hardcoded as 1 in the factory at beginning of this method).
-                    assertEquals(numKeyFields, maxLsmBTreeTuple.getFieldCount());
-                    assertTrue(maxLsmBTreeTuple.isAntimatter());
-                    Object[] maxDeserAntimatterTuple = TupleUtils.deserializeTuple(maxLsmBTreeTuple, fieldSerdes);
-                    for (int j = 0; j < numKeyFields; j++) {
-                        assertEquals(fields[j], maxDeserAntimatterTuple[j]);
-                    }
+                    // Should only contain keys.
+                    checkTuple(maxLsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
                     
                     // Resetting maxLsmBTreeTuple should set its field count to
                     // maxFieldSerdes.length, based on the its type traits.
                     maxLsmBTreeTuple.resetByTupleOffset(maxMatterBuf, 0);
-                    assertEquals(maxFieldSerdes.length, maxLsmBTreeTuple.getFieldCount());
-                    assertFalse(maxLsmBTreeTuple.isAntimatter());
-                    Object[] maxMaxMatterTuple = TupleUtils.deserializeTuple(maxLsmBTreeTuple, maxFieldSerdes);
-                    for (int j = 0; j < maxFieldSerdes.length; j++) {
-                        assertEquals(maxFields[j], maxMaxMatterTuple[j]);
-                    }
+                    checkTuple(maxLsmBTreeTuple, maxFieldSerdes.length, false, maxFieldSerdes, maxFields);
                 }
             }
+        }
+    }
+    
+    private void checkTuple(LSMBTreeTupleReference tuple, int expectedFieldCount, boolean expectedAntimatter, ISerializerDeserializer[] fieldSerdes, Object[] expectedFields) throws HyracksDataException {
+        assertEquals(expectedFieldCount, tuple.getFieldCount());
+        assertEquals(expectedAntimatter, tuple.isAntimatter());
+        Object[] deserMatterTuple = TupleUtils.deserializeTuple(tuple, fieldSerdes);
+        for (int j = 0; j < expectedFieldCount; j++) {
+            assertEquals(expectedFields[j], deserMatterTuple[j]);
         }
     }
     
