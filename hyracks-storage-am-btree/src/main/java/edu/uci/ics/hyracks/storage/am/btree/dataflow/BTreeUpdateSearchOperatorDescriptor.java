@@ -25,11 +25,11 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
             IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields,
+            IBinaryComparatorFactory[] comparatorFactories, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory dataflowHelperFactory,
             ITupleUpdaterFactory tupleUpdaterFactory) {
         super(spec, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, isForward, lowKeyFields, highKeyFields, lowKeyInclusive,
+                leafFrameFactory, typeTraits, comparatorFactories, lowKeyFields, highKeyFields, lowKeyInclusive,
                 highKeyInclusive, dataflowHelperFactory);
         this.tupleUpdaterFactory = tupleUpdaterFactory;
     }
@@ -37,7 +37,7 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions) {
-        return new BTreeUpdateSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, isForward, lowKeyFields,
+        return new BTreeUpdateSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, lowKeyFields,
                 highKeyFields, lowKeyInclusive, highKeyInclusive, tupleUpdaterFactory.createTupleUpdater());
     }
 }

@@ -34,7 +34,6 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
 
     private static final long serialVersionUID = 1L;
 
-    protected boolean isForward;
     protected int[] lowKeyFields; // fields in input tuple to be used as low keys
     protected int[] highKeyFields; // fields in input tuple to be used as high
     // keys
@@ -45,11 +44,10 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields,
+            IBinaryComparatorFactory[] comparatorFactories, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory dataflowHelperFactory) {
         super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, comparatorFactories, dataflowHelperFactory);
-        this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
         this.lowKeyInclusive = lowKeyInclusive;
@@ -59,7 +57,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions) {
-        return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, isForward, lowKeyFields,
+        return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, lowKeyFields,
                 highKeyFields, lowKeyInclusive, highKeyInclusive);
     }
 }

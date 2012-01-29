@@ -109,7 +109,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
             btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory()
                     .createFrame(), false);
         }
-        btreeRangePredicate = new RangePredicate(true, null, null, true, true, btreeCmp, btreeCmp);
+        btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
     }
 
     @Override

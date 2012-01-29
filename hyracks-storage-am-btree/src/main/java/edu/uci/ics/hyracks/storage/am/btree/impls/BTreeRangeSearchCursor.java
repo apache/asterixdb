@@ -101,49 +101,29 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public boolean hasNext() throws HyracksDataException {
-        if (pred.isForward()) {
-            if (tupleIndex >= frame.getTupleCount()) {
-                int nextLeafPage = frame.getNextLeaf();
-                if (nextLeafPage >= 0) {
-                    fetchNextLeafPage(nextLeafPage);
-                    tupleIndex = 0;
+        if (tupleIndex >= frame.getTupleCount()) {
+            int nextLeafPage = frame.getNextLeaf();
+            if (nextLeafPage >= 0) {
+                fetchNextLeafPage(nextLeafPage);
+                tupleIndex = 0;
 
-                    stopTupleIndex = getHighKeyIndex();
-                    if (stopTupleIndex < 0)
-                        return false;
-                } else {
+                stopTupleIndex = getHighKeyIndex();
+                if (stopTupleIndex < 0) {
                     return false;
                 }
-            }
-
-            frameTuple.resetByTupleIndex(frame, tupleIndex);
-            if (highKey == null || tupleIndex <= stopTupleIndex) {
-                return true;
-            } else
+            } else {
                 return false;
+            }
+        }
+
+        frameTuple.resetByTupleIndex(frame, tupleIndex);
+        if (highKey == null || tupleIndex <= stopTupleIndex) {
+            return true;
         } else {
-            if (tupleIndex < 0) {
-                int nextLeafPage = frame.getPrevLeaf();
-                if (nextLeafPage >= 0) {
-                    fetchNextLeafPage(nextLeafPage);
-                    tupleIndex = frame.getTupleCount() - 1;
-
-                    stopTupleIndex = getLowKeyIndex();
-                    if (stopTupleIndex >= frame.getTupleCount())
-                        return false;
-                } else {
-                    return false;
-                }
-            }
-
-            frameTuple.resetByTupleIndex(frame, tupleIndex);
-            if (lowKey == null || tupleIndex >= stopTupleIndex) {
-                return true;
-            } else
-                return false;
+            return false;
         }
     }
-
+    
     @Override
     public void next() throws HyracksDataException {
         tupleIndex += tupleIndexInc;
@@ -217,15 +197,9 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             highKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         }
 
-        if (pred.isForward()) {
-            tupleIndex = getLowKeyIndex();
-            stopTupleIndex = getHighKeyIndex();
-            tupleIndexInc = 1;
-        } else {
-            tupleIndex = getHighKeyIndex();
-            stopTupleIndex = getLowKeyIndex();
-            tupleIndexInc = -1;
-        }
+        tupleIndex = getLowKeyIndex();
+        stopTupleIndex = getHighKeyIndex();
+        tupleIndexInc = 1;
     }
 
     @Override

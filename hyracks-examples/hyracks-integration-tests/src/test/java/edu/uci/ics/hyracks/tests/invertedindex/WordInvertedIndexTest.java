@@ -200,7 +200,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         int[] highKeyFields = null; // + infinity
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
                 highKeyFields, true, true, btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;

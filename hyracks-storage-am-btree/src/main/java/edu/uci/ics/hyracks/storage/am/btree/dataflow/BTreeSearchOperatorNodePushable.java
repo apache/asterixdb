@@ -50,7 +50,6 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 	protected DataOutput dos;
 
 	protected BTree btree;
-	protected boolean isForward;
 	protected PermutingFrameTupleReference lowKey;
 	protected PermutingFrameTupleReference highKey;
 	protected boolean lowKeyInclusive;
@@ -65,11 +64,10 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 	protected RecordDescriptor recDesc;
 
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward, int[] lowKeyFields,
+            int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition, false);
-        this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
@@ -101,7 +99,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator().getComparators(), lowKey);
             highKeySearchCmp = BTreeUtils
                     .getSearchMultiComparator(btree.getMultiComparator().getComparators(), highKey);
-            rangePred = new RangePredicate(isForward, null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
+            rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 
             writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();

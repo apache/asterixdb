@@ -201,7 +201,7 @@ public class LSMBTree implements ILSMTree {
         // ensure that we have the proper value field.
         if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
             ctx.reset(IndexOp.SEARCH);
-            RangePredicate rangePredicate = new RangePredicate(true, tuple, tuple, true, true, cmp, cmp);
+            RangePredicate rangePredicate = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
             ITreeIndexCursor cursor = ctx.memBTreeAccessor.createSearchCursor();
             ctx.memBTreeAccessor.search(cursor, rangePredicate);
             ITupleReference tupleCopy = null;
@@ -302,7 +302,7 @@ public class LSMBTree implements ILSMTree {
             LOGGER.info("Flushing LSM-BTree.");
         }
         // Bulk load a new on-disk BTree from the in-memory BTree.        
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
         ITreeIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
         memBTreeAccessor.search(scanCursor, nullPred);
@@ -453,7 +453,7 @@ public class LSMBTree implements ILSMTree {
         
         LSMBTreeOpContext ctx = createOpContext();
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
-        RangePredicate rangePred = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
         // We get back a snapshot of the on-disk BTrees that are going to be
         // merged now, so we can clean them up after the merge has completed.

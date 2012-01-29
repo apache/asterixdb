@@ -176,7 +176,7 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractIntegrationTest {
 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
                 highKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 

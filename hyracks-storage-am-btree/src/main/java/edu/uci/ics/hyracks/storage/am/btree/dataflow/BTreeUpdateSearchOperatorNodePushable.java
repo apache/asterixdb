@@ -15,10 +15,10 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
 	public BTreeUpdateSearchOperatorNodePushable(
 			AbstractTreeIndexOperatorDescriptor opDesc,
 			IHyracksTaskContext ctx, int partition,
-			IRecordDescriptorProvider recordDescProvider, boolean isForward,
+			IRecordDescriptorProvider recordDescProvider,
 			int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive,
 			boolean highKeyInclusive, ITupleUpdater tupleUpdater) {
-		super(opDesc, ctx, partition, recordDescProvider, isForward, lowKeyFields,
+		super(opDesc, ctx, partition, recordDescProvider, lowKeyFields,
 				highKeyFields, lowKeyInclusive, highKeyInclusive);
 		this.tupleUpdater = tupleUpdater;
 	}

@@ -116,7 +116,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         }
         // Set the cursor to X latch nodes.
         ITreeIndexCursor updateScanCursor = new BTreeRangeSearchCursor(leafFrame, true);
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(updateScanCursor, nullPred);
         try {
             while (updateScanCursor.hasNext()) {

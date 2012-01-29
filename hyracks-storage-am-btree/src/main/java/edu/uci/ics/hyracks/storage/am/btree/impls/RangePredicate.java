@@ -23,7 +23,6 @@ public class RangePredicate implements ISearchPredicate {
 
     private static final long serialVersionUID = 1L;
 
-    protected boolean isForward = true;
     protected ITupleReference lowKey = null;
     protected ITupleReference highKey = null;
     protected boolean lowKeyInclusive = true;
@@ -34,9 +33,8 @@ public class RangePredicate implements ISearchPredicate {
     public RangePredicate() {
     }
 
-    public RangePredicate(boolean isForward, ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive,
+    public RangePredicate(ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive,
             boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp) {
-        this.isForward = isForward;
         this.lowKey = lowKey;
         this.highKey = highKey;
         this.lowKeyInclusive = lowKeyInclusive;
@@ -59,10 +57,6 @@ public class RangePredicate implements ISearchPredicate {
 
     public void setHighKeyComparator(MultiComparator highKeyCmp) {
         this.highKeyCmp = highKeyCmp;
-    }
-
-    public boolean isForward() {
-        return isForward;
     }
 
     public ITupleReference getLowKey() {

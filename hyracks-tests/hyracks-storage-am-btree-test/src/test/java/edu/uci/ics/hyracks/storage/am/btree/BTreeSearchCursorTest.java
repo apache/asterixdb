@@ -144,16 +144,10 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-
-        // backward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
     }
@@ -222,16 +216,10 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-
-        // backward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
     }
@@ -300,21 +288,15 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, true, false);
-
-        // backward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
+        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
     }
 
-    public RangePredicate createRangePredicate(int lk, int hk, boolean isForward, boolean lowKeyInclusive,
+    public RangePredicate createRangePredicate(int lk, int hk, boolean lowKeyInclusive,
             boolean highKeyInclusive, MultiComparator cmp) throws HyracksDataException {
 
         // create tuplereferences for search keys
@@ -325,13 +307,13 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         searchCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps);
 
-        RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, lowKeyInclusive, highKeyInclusive,
+        RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive,
                 searchCmp, searchCmp);
         return rangePred;
     }
 
     public void getExpectedResults(ArrayList<Integer> expectedResults, ArrayList<Integer> keys, int lk, int hk,
-            boolean isForward, boolean lowKeyInclusive, boolean highKeyInclusive) {
+            boolean lowKeyInclusive, boolean highKeyInclusive) {
 
         // special cases
         if (lk == hk && (!lowKeyInclusive || !highKeyInclusive))
@@ -339,35 +321,21 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         if (lk > hk)
             return;
 
-        if (isForward) {
-            for (int i = 0; i < keys.size(); i++) {
-                if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
-                    expectedResults.add(keys.get(i));
-                    continue;
-                }
-
-                if (lk < keys.get(i) && hk > keys.get(i)) {
-                    expectedResults.add(keys.get(i));
-                    continue;
-                }
+        for (int i = 0; i < keys.size(); i++) {
+            if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
+                expectedResults.add(keys.get(i));
+                continue;
             }
-        } else {
-            for (int i = keys.size() - 1; i >= 0; i--) {
-                if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
-                    expectedResults.add(keys.get(i));
-                    continue;
-                }
 
-                if (lk < keys.get(i) && hk > keys.get(i)) {
-                    expectedResults.add(keys.get(i));
-                    continue;
-                }
+            if (lk < keys.get(i) && hk > keys.get(i)) {
+                expectedResults.add(keys.get(i));
+                continue;
             }
         }
     }
 
     public boolean performSearches(ArrayList<Integer> keys, BTree btree, IBTreeLeafFrame leafFrame,
-            IBTreeInteriorFrame interiorFrame, int minKey, int maxKey, boolean isForward, boolean lowKeyInclusive,
+            IBTreeInteriorFrame interiorFrame, int minKey, int maxKey, boolean lowKeyInclusive,
             boolean highKeyInclusive, boolean printExpectedResults) throws Exception {
 
         ArrayList<Integer> results = new ArrayList<Integer>();
@@ -383,7 +351,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                 int highKey = j;
 
                 ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
-                RangePredicate rangePred = createRangePredicate(lowKey, highKey, isForward, lowKeyInclusive,
+                RangePredicate rangePred = createRangePredicate(lowKey, highKey, lowKeyInclusive,
                         highKeyInclusive, btree.getMultiComparator());
                 ITreeIndexAccessor indexAccessor = btree.createAccessor();
                 indexAccessor.search(rangeCursor, rangePred);
@@ -404,7 +372,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                     rangeCursor.close();
                 }
 
-                getExpectedResults(expectedResults, keys, lowKey, highKey, isForward, lowKeyInclusive, highKeyInclusive);
+                getExpectedResults(expectedResults, keys, lowKey, highKey, lowKeyInclusive, highKeyInclusive);
 
                 if (printExpectedResults) {
                     if (expectedResults.size() > 0) {

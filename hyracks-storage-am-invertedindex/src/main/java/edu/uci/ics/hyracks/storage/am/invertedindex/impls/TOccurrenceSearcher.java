@@ -67,7 +67,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected final ITreeIndexFrame interiorFrame;
     protected final ITreeIndexCursor btreeCursor;
     protected final FrameTupleReference searchKey = new FrameTupleReference();
-    protected final RangePredicate btreePred = new RangePredicate(true, null, null, true, true, null, null);
+    protected final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
     protected final ITreeIndexAccessor btreeAccessor;
 
     protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(

@@ -551,7 +551,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Ordered Scan:");
         }
         ITreeIndexCursor scanCursor = indexAccessor.createSearchCursor();        
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
             while (scanCursor.hasNext()) {
@@ -607,7 +607,7 @@ public abstract class OrderedIndexExamplesTest {
         ITreeIndexCursor rangeCursor = indexAccessor.createSearchCursor();
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, highKey);
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, lowKeySearchCmp,
+        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp,
                 highKeySearchCmp);
         indexAccessor.search(rangeCursor, rangePred);
         try {

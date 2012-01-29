@@ -207,7 +207,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractIntegrationTe
         // scan primary index
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
                 highKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
@@ -316,7 +316,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractIntegrationTe
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 secondaryRecDesc, storageManager, indexRegistryProvider, secondaryBtreeSplitProvider,
                 secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
+                secondaryComparatorFactories, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
                 dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -328,7 +328,7 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractIntegrationTe
         // search primary index
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, primaryLowKeyFields,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryLowKeyFields,
                 primaryHighKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 

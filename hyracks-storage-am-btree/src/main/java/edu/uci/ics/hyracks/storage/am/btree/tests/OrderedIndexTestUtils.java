@@ -107,7 +107,7 @@ public class OrderedIndexTestUtils {
             LOGGER.info("Testing Ordered Scan.");
         }
         ITreeIndexCursor scanCursor = ctx.getIndexAccessor().createSearchCursor();
-        RangePredicate nullPred = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         ctx.getIndexAccessor().search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = ctx.getCheckTuples().iterator();
         int actualCount = 0;
@@ -175,7 +175,7 @@ public class OrderedIndexTestUtils {
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), highKey);
         ITreeIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
+        RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
         ctx.getIndexAccessor().search(searchCursor, rangePred);
         // Get the subset of elements from the expected set within given key range.
         CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
@@ -221,7 +221,7 @@ public class OrderedIndexTestUtils {
         ArrayTupleReference lowKey = new ArrayTupleReference();
         ArrayTupleBuilder highKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
         ArrayTupleReference highKey = new ArrayTupleReference();
-        RangePredicate rangePred = new RangePredicate(true, lowKey, highKey, true, true, null, null);
+        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, null, null);
 
         // Iterate through expected tuples, and perform a point search in the BTree to verify the tuple can be reached.
         for (CheckTuple checkTuple : ctx.getCheckTuples()) {

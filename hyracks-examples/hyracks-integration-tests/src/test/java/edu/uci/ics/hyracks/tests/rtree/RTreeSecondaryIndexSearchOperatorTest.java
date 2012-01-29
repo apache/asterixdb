@@ -249,7 +249,7 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
         BTreeSearchOperatorDescriptor primaryBTreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 primaryBTreeRecDesc, storageManager, indexRegistryProvider, primaryBTreeSplitProvider,
                 primaryBTreeInteriorFrameFactory, primaryBTreeLeafFrameFactory, primaryBTreeTypeTraits,
-                primaryBTreeComparatorFactories, true, lowKeyFields, highKeyFields, true, true,
+                primaryBTreeComparatorFactories, lowKeyFields, highKeyFields, true, true,
                 btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBTreeSearchOp, NC1_ID);
 

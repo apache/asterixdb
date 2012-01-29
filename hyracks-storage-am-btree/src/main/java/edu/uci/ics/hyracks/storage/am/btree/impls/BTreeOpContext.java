@@ -86,7 +86,7 @@ public class BTreeOpContext implements IIndexOpContext {
                 freePages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
             }
             if (pred == null) {
-                pred = new RangePredicate(true, null, null, true, true, null, null);
+                pred = new RangePredicate(null, null, true, true, null, null);
             }
             if (splitKey == null) {
                 splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());

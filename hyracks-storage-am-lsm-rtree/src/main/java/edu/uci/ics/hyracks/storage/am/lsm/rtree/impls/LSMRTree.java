@@ -426,7 +426,7 @@ public class LSMRTree implements ILSMTree {
         // scan the BTree
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
         ITreeIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
-        RangePredicate btreeNullPredicate = new RangePredicate(true, null, null, true, true, null, null);
+        RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
         memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
 
         BTree diskBTree = (BTree) createDiskTree(fileName + "-btree", diskBTreeFactory, true);

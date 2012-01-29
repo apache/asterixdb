@@ -184,7 +184,7 @@ public class SecondaryIndexSearchExample {
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, indexRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, searchComparatorFactories, true, secondaryLowKeyFields,
+                secondaryLeafFrameFactory, secondaryTypeTraits, searchComparatorFactories, secondaryLowKeyFields,
                 secondaryHighKeyFields, true, true, dataflowHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondarySearchOp, splitNCs);
 
@@ -200,7 +200,7 @@ public class SecondaryIndexSearchExample {
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, primaryLowKeyFields,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, primaryLowKeyFields,
                 primaryHighKeyFields, true, true, dataflowHelperFactory);
         JobHelper.createPartitionConstraint(spec, primarySearchOp, splitNCs);
 

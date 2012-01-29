@@ -76,7 +76,7 @@ public class BTree implements ITreeIndex {
         this.leafFrameFactory = leafFrameFactory;        
         this.freePageManager = freePageManager;
         this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new RangePredicate(true, null, null, true, true, cmp, cmp);
+        this.diskOrderScanPredicate = new RangePredicate(null, null, true, true, cmp, cmp);
     }
 
     @Override
