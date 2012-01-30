@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -34,13 +33,13 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
     private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
 
     private final IHyracksTaskContext ctx;
-    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+    private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
     private int partition;
 
     public TreeIndexDropOperatorNodePushable(IHyracksTaskContext ctx, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+            IIndexRegistryProvider<IIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
             int partition) {
         this.ctx = ctx;
         this.storageManager = storageManager;
@@ -66,7 +65,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
     @Override
     public void initialize() throws HyracksDataException {
         try {
-            IndexRegistry<ITreeIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
+            IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
             IBufferCache bufferCache = storageManager.getBufferCache(ctx);
             IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
             
