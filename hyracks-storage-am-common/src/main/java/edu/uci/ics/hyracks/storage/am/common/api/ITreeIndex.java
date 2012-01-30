@@ -105,4 +105,9 @@ public interface ITreeIndex extends IIndex {
 	 * @return An enum of the concrete type of this index.
 	 */
 	public IndexType getIndexType();
+	
+	/**
+     * @return The file id of this index.
+     */
+    public int getFileId();
 }

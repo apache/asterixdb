@@ -229,18 +229,21 @@ public class RTree implements ITreeIndex {
         }
     }
 
+    @Override
     public void open(int fileId) {
         this.fileId = fileId;
     }
 
+    @Override
     public void close() {
         fileId = -1;
     }
 
+    @Override
     public int getFileId() {
         return fileId;
     }
-    
+
     private RTreeOpContext createOpContext() {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
@@ -325,7 +328,7 @@ public class RTree implements ITreeIndex {
                         incrementReadLatchesAcquired();
                     }
                 }
-                
+
                 if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
                     // Concurrent split detected, go back to parent and
                     // re-choose
@@ -958,10 +961,12 @@ public class RTree implements ITreeIndex {
         ctx.cursor.open(ctx.cursorInitialState, (SearchPredicate) searchPred);
     }
 
+    @Override
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }
 
+    @Override
     public ITreeIndexFrameFactory getLeafFrameFactory() {
         return leafFrameFactory;
     }
@@ -970,6 +975,7 @@ public class RTree implements ITreeIndex {
         return cmp;
     }
 
+    @Override
     public IFreePageManager getFreePageManager() {
         return freePageManager;
     }
@@ -1084,13 +1090,12 @@ public class RTree implements ITreeIndex {
             rtree.delete(tuple, ctx);
         }
 
-		@Override
-		public ITreeIndexCursor createSearchCursor() {
-			return new RTreeSearchCursor(
-					(IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
-					(IRTreeLeafFrame) leafFrameFactory.createFrame());
-		}
-        
+        @Override
+        public ITreeIndexCursor createSearchCursor() {
+            return new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
+                    (IRTreeLeafFrame) leafFrameFactory.createFrame());
+        }
+
         @Override
         public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
@@ -1099,10 +1104,10 @@ public class RTree implements ITreeIndex {
         }
 
         @Override
-		public ITreeIndexCursor createDiskOrderScanCursor() {
-        	return new TreeDiskOrderScanCursor(leafFrameFactory.createFrame());
-		}
-        
+        public ITreeIndexCursor createDiskOrderScanCursor() {
+            return new TreeDiskOrderScanCursor(leafFrameFactory.createFrame());
+        }
+
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.reset(IndexOp.DISKORDERSCAN);

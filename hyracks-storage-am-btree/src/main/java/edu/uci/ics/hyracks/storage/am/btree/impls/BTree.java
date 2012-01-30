@@ -868,6 +868,7 @@ public class BTree implements ITreeIndex {
         return IndexType.BTREE;
     }
     
+    @Override
     public int getFileId() {
     	return fileId;
     }

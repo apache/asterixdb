@@ -39,8 +39,8 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerF
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileNameManager;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeSearchCursor;
@@ -53,7 +53,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 public class LSMRTreeSerachTest extends AbstractLSMRTreeTest {
 
-    // create LSM-RTree of two dimensions
+    // create LSMRTree of two dimensions
     // fill the tree with random values using insertions
     // and then perform range search
     @Test

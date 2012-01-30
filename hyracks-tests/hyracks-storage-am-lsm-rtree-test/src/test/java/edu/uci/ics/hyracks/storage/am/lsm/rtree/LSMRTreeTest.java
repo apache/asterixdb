@@ -48,8 +48,8 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerF
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileNameManager;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.RTreeFactory;
@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
-    // create an LSM-RTree of two dimensions
+    // create an LSMRTree of two dimensions
     // fill the tree with random values using insertions
     @Test
     public void test01() throws Exception {
@@ -208,9 +208,9 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
     }
 
-    // create an LSM-RTree of two dimensions
+    // create an LSMRTree of two dimensions
     // fill the tree with random values using insertions
-    // and then delete all the tuples which result of an empty LSM-RTree
+    // and then delete all the tuples which result of an empty LSMRTree
     @Test
     public void test02() throws Exception {
 
@@ -403,7 +403,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
     }
 
-    // create an LSM-RTree of three dimensions
+    // create an LSMRTree of three dimensions
     // fill the tree with random values using insertions
     @Test
     public void test03() throws Exception {
@@ -563,7 +563,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
     }
 
-    // create an LSM-RTree of two dimensions
+    // create an LSMRTree of two dimensions
     // fill the tree with random integer key values using insertions
     @Test
     public void test04() throws Exception {
