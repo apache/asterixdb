@@ -222,7 +222,8 @@ public class LSMRTree extends LSMTree {
             // Wait for ongoing flush to complete.
             synchronized (this) {
                 if (!flushFlag) {
-                    // Increments threadRefCount, to force a flush to wait for this operation to finish.
+                    // Increments threadRefCount, to force a flush to wait for
+                    // this operation to finish.
                     // (a flush can only begin once threadRefCount == 0).
                     threadEnter();
                     // Proceed with operation.
@@ -394,7 +395,6 @@ public class LSMRTree extends LSMTree {
         if (!isMerging.compareAndSet(false, true)) {
             throw new TreeIndexException("Merge already in progress in LSMRTree. Only one concurrent merge allowed.");
         }
-        isMerging.set(true);
 
         // Point to the current searcher ref count, so we can wait for it later
         // (after we swap the searcher ref count).
