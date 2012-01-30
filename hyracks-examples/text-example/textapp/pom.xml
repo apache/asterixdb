@@ -74,7 +74,6 @@
           </execution>
         </executions>
       </plugin>
-      <!--
       <plugin>
       	<groupId>edu.uci.ics.hyracks</groupId>
       	<artifactId>hyracks-maven-plugin</artifactId>
@@ -136,7 +135,6 @@
           </execution>
         </executions>
       </plugin>
-      -->
       <plugin>
       	<groupId>org.apache.maven.plugins</groupId>
       	<artifactId>maven-compiler-plugin</artifactId>
@@ -146,7 +144,6 @@
           <target>1.6</target>
         </configuration>
       </plugin>
-      <!--
       <plugin>
       	<groupId>org.apache.maven.plugins</groupId>
       	<artifactId>maven-failsafe-plugin</artifactId>
@@ -161,7 +158,6 @@
       	  </execution>
       	</executions>
       </plugin>
-      -->
     </plugins>
   </build>
   <dependencies>
