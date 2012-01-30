@@ -119,10 +119,9 @@ public abstract class LSMTree implements ILSMTree {
 
     protected void cleanupTrees(List<ITreeIndex> mergingDiskTrees) throws HyracksDataException {
         for (ITreeIndex oldTree : mergingDiskTrees) {
-            oldTree.close();
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldTree.getFileId());
             diskBufferCache.closeFile(oldTree.getFileId());
-            diskBufferCache.deleteFile(oldTree.getFileId());
+            oldTree.close();
             fileRef.getFile().delete();
         }
     }
