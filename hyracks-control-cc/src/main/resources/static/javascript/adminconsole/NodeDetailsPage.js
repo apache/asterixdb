@@ -1,4 +1,6 @@
 $(function() {
+    $('#tabs').tabs();
+
     var options = {
         lines : {
             show : true,
