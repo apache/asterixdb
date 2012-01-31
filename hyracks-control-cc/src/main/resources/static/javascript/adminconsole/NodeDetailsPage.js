@@ -1,7 +1,8 @@
 $(function() {
     var options = {
         lines : {
-            show : true
+            show : true,
+            fill : true
         },
         points : {
             show : false
@@ -12,8 +13,17 @@ $(function() {
         }
     };
 
+    function computeBandwidth(bytes, rrdPtr) {
+        return (bytes[(rrdPtr + 1) % bytes.length] - bytes[rrdPtr]) / 10;
+    }
+
     function onDataReceived(data) {
         var result = data.result;
+        $('#node-id')[0].innerHTML = result['node-id'];
+        $('#arch')[0].innerHTML = result['arch'];
+        $('#os-name')[0].innerHTML = result['os-name'];
+        $('#os-version')[0].innerHTML = result['os-version'];
+        $('#num-processors')[0].innerHTML = result['num-processors'];
         var sysLoad = result['system-load-averages'];
         var heapUsageInitSizes = result['heap-init-sizes'];
         var heapUsageUsedSizes = result['heap-used-sizes'];
@@ -27,6 +37,10 @@ $(function() {
         var peakThreadCounts = result['peak-thread-counts'];
         var gcCollectionCounts = result['gc-collection-counts'];
         var gcCollectionTimes = result['gc-collection-times'];
+        var netPayloadBytesRead = result['net-payload-bytes-read'];
+        var netPayloadBytesWritten = result['net-payload-bytes-written'];
+        var netSignalingBytesRead = result['net-signaling-bytes-read'];
+        var netSignalingBytesWritten = result['net-signaling-bytes-written'];
         var sysLoadArray = [];
         var heapUsageInitSizesArray = [];
         var heapUsageUsedSizesArray = [];
@@ -40,6 +54,10 @@ $(function() {
         var peakThreadCountsArray = [];
         var gcCollectionCountsArray = [];
         var gcCollectionTimesArray = [];
+        var netPayloadReadBWArray = [];
+        var netPayloadWriteBWArray = [];
+        var netSignalingReadBWArray = [];
+        var netSignalingWriteBWArray = [];
         var gcChartsDiv = document.getElementById('gc-charts');
         for ( var i = 0; i < gcCollectionCounts.length; ++i) {
             gcCollectionCountsArray.push([]);
@@ -70,6 +88,12 @@ $(function() {
             }
             for ( var j = 0; j < gcCollectionTimes.length; ++j) {
                 gcCollectionTimesArray[j].push([ i, gcCollectionTimes[j][rrdPtr] ]);
+            }
+            if (i < sysLoad.length - 1) {
+                netPayloadReadBWArray.push([ i, computeBandwidth(netPayloadBytesRead, rrdPtr) ]);
+                netPayloadWriteBWArray.push([ i, computeBandwidth(netPayloadBytesWritten, rrdPtr) ]);
+                netSignalingReadBWArray.push([ i, computeBandwidth(netSignalingBytesRead, rrdPtr) ]);
+                netSignalingWriteBWArray.push([ i, computeBandwidth(netSignalingBytesWritten, rrdPtr) ]);
             }
             rrdPtr = (rrdPtr + 1) % sysLoad.length;
         }
@@ -128,6 +152,22 @@ $(function() {
         }, {
             label : 'Peak Thread Count',
             data : peakThreadCountsArray
+        } ], options);
+
+        $.plot($('#net-payload-bandwidth'), [ {
+            label : 'Payload Read Bandwidth (bytes/sec)',
+            data : netPayloadReadBWArray
+        }, {
+            label : 'Payload Write Bandwidth (bytes/sec)',
+            data : netPayloadWriteBWArray
+        } ], options);
+
+        $.plot($('#net-signaling-bandwidth'), [ {
+            label : 'Signaling Read Bandwidth (bytes/sec)',
+            data : netSignalingReadBWArray
+        }, {
+            label : 'Signaling Write Bandwidth (bytes/sec)',
+            data : netSignalingWriteBWArray
         } ], options);
     }
 
