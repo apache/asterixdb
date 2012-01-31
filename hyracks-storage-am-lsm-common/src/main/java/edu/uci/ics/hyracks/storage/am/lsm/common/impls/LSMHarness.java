@@ -56,7 +56,7 @@ public class LSMHarness {
     private AtomicInteger searcherRefCountA = new AtomicInteger(0);
     private AtomicInteger searcherRefCountB = new AtomicInteger(0);
     // Represents the current number of searcher threads that are operating on
-    // the unmerged on-disk BTrees.
+    // the unmerged on-disk Trees.
     // We alternate between searcherRefCountA and searcherRefCountB.
     private AtomicInteger searcherRefCount = searcherRefCountA;
     
@@ -134,13 +134,13 @@ public class LSMHarness {
             } while (waitForFlush);
         }
 
-        // Get a snapshot of the current on-disk BTrees.
-        // If includeMemBTree is true, then no concurrent
-        // flush can add another on-disk BTree (due to threadEnter());
-        // If includeMemBTree is false, then it is possible that a concurrent
-        // flush adds another on-disk BTree.
+        // Get a snapshot of the current on-disk Trees.
+        // If includeMemComponent is true, then no concurrent
+        // flush can add another on-disk Tree (due to threadEnter());
+        // If includeMemComponent is false, then it is possible that a concurrent
+        // flush adds another on-disk Tree.
         // Since this mode is only used for merging trees, it doesn't really
-        // matter if the merge excludes the new on-disk BTree.
+        // matter if the merge excludes the new on-disk Tree.
         List<Object> diskComponentSnapshot = new ArrayList<Object>();
         AtomicInteger localSearcherRefCount = null;
         synchronized (diskComponentsSync) {
@@ -158,10 +158,10 @@ public class LSMHarness {
 
     public void merge() throws HyracksDataException, TreeIndexException  {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Merging LSM-BTree.");
+            LOGGER.info("Merging LSM-Tree.");
         }
         if (!isMerging.compareAndSet(false, true)) {
-            throw new TreeIndexException("Merge already in progress in LSMBTree. Only one concurrent merge allowed.");
+            throw new TreeIndexException("Merge already in progress in LSMTree. Only one concurrent merge allowed.");
         }
         
         // Point to the current searcher ref count, so we can wait for it later
@@ -171,7 +171,7 @@ public class LSMHarness {
         List<Object> mergedComponents = new ArrayList<Object>();
         Object newComponent = lsmTree.merge(mergedComponents);
         
-        // Remove the old BTrees from the list, and add the new merged BTree.
+        // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
         	lsmTree.addMergedComponent(newComponent, mergedComponents);
@@ -185,7 +185,7 @@ public class LSMHarness {
         }
         
         // Wait for all searchers that are still accessing the old on-disk
-        // BTrees, then perform the final cleanup of the old BTrees.
+        // Trees, then perform the final cleanup of the old Trees.
         while (localSearcherRefCount.get() != 0) {
             try {
                 Thread.sleep(AFTER_MERGE_CLEANUP_SLEEP);
@@ -197,7 +197,7 @@ public class LSMHarness {
         }
         
         // Cleanup. At this point we have guaranteed that no searchers are
-        // touching the old on-disk BTrees (localSearcherRefCount == 0).
+        // touching the old on-disk Trees (localSearcherRefCount == 0).
         lsmTree.cleanUpAfterMerge(mergedComponents);
         isMerging.set(false);
     }
@@ -207,7 +207,7 @@ public class LSMHarness {
     }
     
     public void closeSearchCursor(boolean includeMemComponent) throws HyracksDataException {
-        // If the in-memory BTree was not included in the search, then we don't
+        // If the in-memory Tree was not included in the search, then we don't
         // need to synchronize with a flush.
         if (includeMemComponent) {
             try {
