@@ -33,7 +33,8 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
     private BTreeOpContext btreeOpContext;
     public final RTree.RTreeAccessor memRTreeAccessor;
     public final BTree.BTreeAccessor memBTreeAccessor;
-
+    private IndexOp op;
+    
     public LSMRTreeOpContext(RTree.RTreeAccessor memRtreeAccessor, IRTreeLeafFrame rtreeLeafFrame,
             IRTreeInteriorFrame rtreeInteriorFrame, ITreeIndexMetaDataFrame rtreeMetaFrame, int rTreeHeightHint,
             BTree.BTreeAccessor memBtreeAccessor, ITreeIndexFrameFactory btreeLeafFrameFactory,
@@ -53,6 +54,7 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
         } else if (newOp == IndexOp.DELETE) {
             btreeOpContext.reset(IndexOp.INSERT);
         }
+        this.op = newOp;
     }
 
     @Override
@@ -60,4 +62,7 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
 
     }
 
+    public IndexOp getIndexOp() {
+    	return op;
+    }
 }

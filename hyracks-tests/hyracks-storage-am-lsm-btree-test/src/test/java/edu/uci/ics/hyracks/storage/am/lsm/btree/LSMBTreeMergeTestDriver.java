@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestDriver;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
 
 @SuppressWarnings("rawtypes")
 public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
@@ -57,8 +57,8 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
                 }
             }
 
-            LSMBTree lsmBTree = (LSMBTree) ctx.getIndex();
-            lsmBTree.merge();
+            ILSMTreeIndexAccessor accessor = (ILSMTreeIndexAccessor) ctx.getIndexAccessor();
+            accessor.merge();
             
             OrderedIndexTestUtils.checkPointSearches(ctx);
             OrderedIndexTestUtils.checkOrderedScan(ctx);

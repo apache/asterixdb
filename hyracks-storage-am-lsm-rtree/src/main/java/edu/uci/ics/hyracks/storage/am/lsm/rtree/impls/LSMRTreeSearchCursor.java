@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -28,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -42,11 +41,10 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     private int currentCursror;
     private MultiComparator btreeCmp;
     private int numberOfTrees;
-    private LSMRTree lsmRTree;
     private RangePredicate btreeRangePredicate;
     private ITupleReference frameTuple;
     private boolean includeMemRTree;
-    private AtomicInteger searcherRefCount;
+    private LSMHarness lsmHarness;
 
     public LSMRTreeSearchCursor() {
         currentCursror = 0;
@@ -106,10 +104,9 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
-        lsmRTree = lsmInitialState.getLsmRTree();
         btreeCmp = lsmInitialState.getBTreeCmp();
         includeMemRTree = lsmInitialState.getIncludeMemRTree();
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
+        lsmHarness = lsmInitialState.getLSMHarness();
         numberOfTrees = lsmInitialState.getNumberOfTrees();
         diskBTreeAccessors = lsmInitialState.getBTreeAccessors();
 
@@ -135,24 +132,15 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        for (int i = 0; i < numberOfTrees; i++) {
+        try {
+    	for (int i = 0; i < numberOfTrees; i++) {
             rtreeCursors[i].close();
             btreeCursors[i].close();
         }
         rtreeCursors = null;
         btreeCursors = null;
-
-        // If the in-memory RTree was not included in the search, then we don't
-        // need to synchronize with a flush.
-        if (includeMemRTree) {
-            try {
-                lsmRTree.threadExit();
-            } catch (TreeIndexException e) {
-                throw new HyracksDataException(e);
-            }
-        } else {
-            // Synchronize with ongoing merges.
-            searcherRefCount.decrementAndGet();
+        } finally {
+        	lsmHarness.closeSearchCursor(includeMemRTree);
         }
     }
 

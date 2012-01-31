@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -26,9 +25,9 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -40,9 +39,8 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
     private PriorityQueueElement outputElement;
     private PriorityQueueElement reusedElement;
     private boolean needPush;
-    private LSMBTree lsmTree;
     private boolean includeMemBTree;
-    private AtomicInteger searcherRefCount;
+    private LSMHarness lsmHarness;
 
     public LSMBTreeRangeSearchCursor() {
         outputElement = null;
@@ -91,7 +89,6 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
-        lsmTree = lsmInitialState.getLsm();
         cmp = lsmInitialState.getCmp();
         int numBTrees = lsmInitialState.getNumBTrees();
         rangeCursors = new BTreeRangeSearchCursor[numBTrees];
@@ -100,7 +97,7 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
         }
         includeMemBTree = lsmInitialState.getIncludeMemBTree();
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
+        lsmHarness = lsmInitialState.getLSMHarness();
         setPriorityQueueComparator();
     }
     
@@ -118,22 +115,14 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        outputPriorityQueue.clear();
-        for (int i = 0; i < rangeCursors.length; i++) {
-            rangeCursors[i].close();
-        }
-        rangeCursors = null;
-        // If the in-memory BTree was not included in the search, then we don't
-        // need to synchronize with a flush.
-        if (includeMemBTree) {
-            try {
-                lsmTree.threadExit();
-            } catch (TreeIndexException e) {
-                throw new HyracksDataException(e);
+        try {
+            outputPriorityQueue.clear();
+            for (int i = 0; i < rangeCursors.length; i++) {
+                rangeCursors[i].close();
             }
-        } else {
-            // Synchronize with ongoing merges.
-            searcherRefCount.decrementAndGet();
+            rangeCursors = null;
+        } finally {
+            lsmHarness.closeSearchCursor(includeMemBTree);
         }
     }
     
