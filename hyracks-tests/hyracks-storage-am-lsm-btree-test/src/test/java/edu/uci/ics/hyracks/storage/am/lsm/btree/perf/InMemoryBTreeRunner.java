@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
@@ -32,7 +33,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -52,13 +52,13 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected final int numBatches;
     protected BTree btree;    
     
-    public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, MultiComparator cmp) throws HyracksDataException, BTreeException {
+    public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
         this.numBatches = numBatches;
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        init(pageSize, numPages, typeTraits, cmp);
+        init(pageSize, numPages, typeTraits, cmpFactories);
     }
     
-    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, MultiComparator cmp) throws HyracksDataException, BTreeException {
+    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
     	ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         bufferCache = new InMemoryBufferCache(allocator, pageSize, numPages);
         // Chose an aribtrary file id.
@@ -68,7 +68,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
-        btree = new BTree(bufferCache, typeTraits.length, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
     }
 
     @Override

@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.util;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
@@ -35,19 +35,19 @@ public class BTreeTestContext extends OrderedIndexTestContext {
     @Override
     public int getKeyFieldCount() {
         BTree btree = (BTree) treeIndex;
-        return btree.getMultiComparator().getKeyFieldCount();
+        return btree.getComparatorFactories().length;
     }
-
+    
     @Override
-    public IBinaryComparator[] getComparators() {
+    public IBinaryComparatorFactory[] getComparatorFactories() {
         BTree btree = (BTree) treeIndex;
-        return btree.getMultiComparator().getComparators();
+        return btree.getComparatorFactories();
     }
     
     public static BTreeTestContext create(IBufferCache bufferCache, int btreeFileId, ISerializerDeserializer[] fieldSerdes, int numKeyFields, BTreeLeafFrameType leafType) throws Exception {        
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, numKeyFields);
-        BTree btree = BTreeUtils.createBTree(bufferCache, btreeFileId, typeTraits, cmps, leafType);
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
+        BTree btree = BTreeUtils.createBTree(bufferCache, btreeFileId, typeTraits, cmpFactories, leafType);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
         BTreeTestContext testCtx = new BTreeTestContext(fieldSerdes, btree);

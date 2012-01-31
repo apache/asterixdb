@@ -15,26 +15,26 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public abstract class TreeFactory {
 
     protected IBufferCache bufferCache;
     protected int fieldCount;
-    protected MultiComparator cmp;
+    protected IBinaryComparatorFactory[] cmpFactories;
     protected ITreeIndexFrameFactory interiorFrameFactory;
     protected ITreeIndexFrameFactory leafFrameFactory;
     protected LinkedListFreePageManagerFactory freePageManagerFactory;
 
-    public TreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory, MultiComparator cmp,
+    public TreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory, IBinaryComparatorFactory[] cmpFactories,
             int fieldCount, ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
         this.fieldCount = fieldCount;
-        this.cmp = cmp;
+        this.cmpFactories = cmpFactories;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.freePageManagerFactory = freePageManagerFactory;

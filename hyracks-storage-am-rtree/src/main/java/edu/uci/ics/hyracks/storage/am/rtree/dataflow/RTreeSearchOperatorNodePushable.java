@@ -86,10 +86,10 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             writer.open();
             try {
                 rtree = (RTree) treeIndexHelper.getIndex();
-                int keySearchFields = rtree.getCmp().getComparators().length;
+                int keySearchFields = rtree.getComparatorFactories().length;
                 IBinaryComparator[] keySearchComparators = new IBinaryComparator[keySearchFields];
                 for (int i = 0; i < keySearchFields; i++) {
-                    keySearchComparators[i] = rtree.getCmp().getComparators()[i];
+                    keySearchComparators[i] = rtree.getComparatorFactories()[i].createBinaryComparator();
                 }
                 cmp = new MultiComparator(keySearchComparators);
                 searchPred = new SearchPredicate(searchKey, cmp);

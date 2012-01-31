@@ -78,6 +78,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected ByteBuffer queryTokenFrame;
 
     protected final InvertedIndex invIndex;
+    protected final MultiComparator invListCmp;
     protected final IBinaryTokenizer queryTokenizer;
     protected final ITypeTraits[] invListFieldsWithCount;
     protected int occurrenceThreshold;
@@ -89,6 +90,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     public TOccurrenceSearcher(IHyracksTaskContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer) {
         this.ctx = ctx;
         this.invIndex = invIndex;
+        this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
         this.queryTokenizer = queryTokenizer;
 
         leafFrame = invIndex.getBTree().getLeafFrameFactory().createFrame();
@@ -112,7 +114,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         newResultBuffers.add(ctx.allocateFrame());
         prevResultBuffers.add(ctx.allocateFrame());
 
-        MultiComparator searchCmp = invIndex.getBTree().getMultiComparator();
+        MultiComparator searchCmp = MultiComparator.create(invIndex.getBTree().getComparatorFactories());
         btreePred.setLowKeyComparator(searchCmp);
         btreePred.setHighKeyComparator(searchCmp);
         btreePred.setLowKey(searchKey, true);
@@ -246,8 +248,6 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
         currentNumResults = 0;
 
-        MultiComparator invListCmp = invIndex.getInvListElementCmp();
-
         resultFrameTupleAcc.reset(prevCurrentBuffer);
         resultFrameTupleApp.reset(newCurrentBuffer, true);
 
@@ -291,8 +291,6 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         boolean advanceCursor = true;
         boolean advancePrevResult = false;
         int resultTidx = 0;
-
-        MultiComparator invListCmp = invIndex.getInvListElementCmp();
 
         resultFrameTupleAcc.reset(prevCurrentBuffer);
         resultFrameTupleApp.reset(newCurrentBuffer, true);
@@ -385,8 +383,6 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         boolean advanceCursor = true;
         boolean advancePrevResult = false;
         int resultTidx = 0;
-
-        MultiComparator invListCmp = invIndex.getInvListElementCmp();
 
         resultFrameTupleAcc.reset(prevCurrentBuffer);
         resultFrameTupleApp.reset(newCurrentBuffer, true);

@@ -15,15 +15,18 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
 public class RTreeOpContext implements IIndexOpContext {
+	public final MultiComparator cmp;
 	public final IRTreeInteriorFrame interiorFrame;
 	public final IRTreeLeafFrame leafFrame;
 	public IndexOp op;
@@ -35,11 +38,12 @@ public class RTreeOpContext implements IIndexOpContext {
 	public PathList pathList; // used to record the pageIds and pageLsns
 								// of the visited pages
 	public PathList traverseList; // used for traversing the tree
-	private static final int initTraverseListSize = 100;
-
+	private static final int initTraverseListSize = 100;	
+	
 	public RTreeOpContext(IRTreeLeafFrame leafFrame,
 			IRTreeInteriorFrame interiorFrame,
-			ITreeIndexMetaDataFrame metaFrame, int treeHeightHint) {
+			ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories, int treeHeightHint) {
+		this.cmp = MultiComparator.create(cmpFactories);
 		this.interiorFrame = interiorFrame;
 		this.leafFrame = leafFrame;
 		this.metaFrame = metaFrame;

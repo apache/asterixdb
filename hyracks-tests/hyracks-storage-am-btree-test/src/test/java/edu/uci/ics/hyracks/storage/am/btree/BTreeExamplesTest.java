@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree;
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
@@ -41,8 +41,8 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
         harness.tearDown();
     }
     
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmps,
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
+        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM);
     }
     

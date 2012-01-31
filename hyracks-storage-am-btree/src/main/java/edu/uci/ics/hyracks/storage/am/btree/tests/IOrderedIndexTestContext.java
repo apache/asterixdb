@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.tests;
 
 import java.util.TreeSet;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -31,6 +31,8 @@ public interface IOrderedIndexTestContext {
     public int getKeyFieldCount();
         
 	public ISerializerDeserializer[] getFieldSerdes();
+	
+	public IBinaryComparatorFactory[] getComparatorFactories();
     
     public ITreeIndexAccessor getIndexAccessor();
     
@@ -40,8 +42,6 @@ public interface IOrderedIndexTestContext {
     
     public ArrayTupleBuilder getTupleBuilder();
 
-    public IBinaryComparator[] getComparators();
-    
     public CheckTuple createIntCheckTuple(int[] fieldValues);
     
     public CheckTuple createStringCheckTuple(String[] fieldValues);

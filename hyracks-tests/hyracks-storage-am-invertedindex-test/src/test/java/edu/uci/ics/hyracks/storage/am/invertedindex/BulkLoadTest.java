@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -109,10 +109,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         // declare btree keys
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
-
-        MultiComparator btreeCmp = new MultiComparator(cmps);
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -123,7 +121,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory,
+        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
                 leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
@@ -133,12 +131,10 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
 
         int invListKeys = 1;
-        IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
-        invListBinCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[invListKeys];
+        invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        MultiComparator invListCmp = new MultiComparator(invListBinCmps);
-
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
+        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories);
         invIndex.open(invListsFileId);
 
         Random rnd = new Random();
@@ -216,6 +212,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
         FrameTupleReference searchKey = new FrameTupleReference();
+        MultiComparator btreeCmp = MultiComparator.create(cmpFactories);
         RangePredicate btreePred = new RangePredicate(searchKey, searchKey, true, true, btreeCmp, btreeCmp);
 
         IInvertedListCursor invListCursor = new FixedSizeElementInvertedListCursor(bufferCache, invListsFileId,

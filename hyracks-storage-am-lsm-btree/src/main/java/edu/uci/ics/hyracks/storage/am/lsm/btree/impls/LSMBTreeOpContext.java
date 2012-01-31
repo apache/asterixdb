@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public final class LSMBTreeOpContext implements IIndexOpContext {
     
@@ -32,19 +33,21 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
 	public BTree.BTreeAccessor memBTreeAccessor;
 	public BTreeOpContext memBTreeOpCtx;
 	public IndexOp op;
+	public final MultiComparator cmp;
 	
     public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory) {
-		this.memBTree = memBTree;
+		this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
+        this.memBTree = memBTree;
 		this.insertLeafFrameFactory = insertLeafFrameFactory;
 		this.deleteLeafFrameFactory = deleteLeafFrameFactory;
 		this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
 		this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
 		if (insertLeafFrame != null) {
-			insertLeafFrame.setMultiComparator(memBTree.getMultiComparator());
+			insertLeafFrame.setMultiComparator(cmp);
         }
         if (deleteLeafFrame != null) {
-        	deleteLeafFrame.setMultiComparator(memBTree.getMultiComparator());
+        	deleteLeafFrame.setMultiComparator(cmp);
         }
 	}
 

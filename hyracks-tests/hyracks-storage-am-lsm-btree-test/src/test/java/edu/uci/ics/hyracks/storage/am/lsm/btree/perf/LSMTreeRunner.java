@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
@@ -27,7 +28,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
@@ -59,7 +59,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     private final int onDiskPageSize;
     private final int onDiskNumPages;
     
-    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages, ITypeTraits[] typeTraits, MultiComparator cmp) throws HyracksDataException, BTreeException {
+    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
         this.numBatches = numBatches;
         
         this.onDiskPageSize = onDiskPageSize;
@@ -75,7 +75,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize, inMemNumPages);
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages, new LIFOMetaDataFrameFactory());
         
-        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, bufferCache, fmp, typeTraits, cmp.getComparators());
+        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories);
     }
 	@Override
 	public void init() throws Exception {

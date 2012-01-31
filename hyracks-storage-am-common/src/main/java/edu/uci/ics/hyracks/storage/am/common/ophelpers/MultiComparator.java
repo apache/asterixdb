@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class MultiComparator {
@@ -62,4 +63,12 @@ public class MultiComparator {
     public int getKeyFieldCount() {
 		return cmps.length;
 	}
+    
+    public static MultiComparator create(IBinaryComparatorFactory[] cmpFactories) {
+        IBinaryComparator[] cmps = new IBinaryComparator[cmpFactories.length];
+        for (int i = 0; i < cmpFactories.length; i++) {
+            cmps[i] = cmpFactories[i].createBinaryComparator();
+        }
+        return new MultiComparator(cmps);
+    }
 }

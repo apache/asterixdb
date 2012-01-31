@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -51,7 +51,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
@@ -88,11 +87,11 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // declare keys
         int keyFieldCount = 4;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        cmps[1] = cmps[0];
-        cmps[2] = cmps[0];
-        cmps[3] = cmps[0];
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        cmpFactories[1] = cmpFactories[0];
+        cmpFactories[2] = cmpFactories[0];
+        cmpFactories[3] = cmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -107,9 +106,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmps.length, DoublePointable.FACTORY);
-
-        MultiComparator cmp = new MultiComparator(cmps);
+                cmpFactories.length, DoublePointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
@@ -124,7 +121,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         rtree.create(fileId);
         rtree.open(fileId);
 
@@ -253,11 +250,11 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // declare keys
         int keyFieldCount = 4;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        cmps[1] = cmps[0];
-        cmps[2] = cmps[0];
-        cmps[3] = cmps[0];
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        cmpFactories[1] = cmpFactories[0];
+        cmpFactories[2] = cmpFactories[0];
+        cmpFactories[3] = cmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -272,9 +269,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmps.length, DoublePointable.FACTORY);
-
-        MultiComparator cmp = new MultiComparator(cmps);
+                cmpFactories.length, DoublePointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
@@ -289,7 +284,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         rtree.create(fileId);
         rtree.open(fileId);
 
@@ -443,13 +438,13 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // declare keys
         int keyFieldCount = 6;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        cmps[1] = cmps[0];
-        cmps[2] = cmps[0];
-        cmps[3] = cmps[0];
-        cmps[4] = cmps[0];
-        cmps[5] = cmps[0];
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        cmpFactories[1] = cmpFactories[0];
+        cmpFactories[2] = cmpFactories[0];
+        cmpFactories[3] = cmpFactories[0];
+        cmpFactories[4] = cmpFactories[0];
+        cmpFactories[5] = cmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 9;
@@ -466,9 +461,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmps.length, DoublePointable.FACTORY);
-
-        MultiComparator cmp = new MultiComparator(cmps);
+                cmpFactories.length, DoublePointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
@@ -483,7 +476,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         rtree.create(fileId);
         rtree.open(fileId);
 
@@ -618,11 +611,11 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // declare keys
         int keyFieldCount = 4;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        cmps[1] = cmps[0];
-        cmps[2] = cmps[0];
-        cmps[3] = cmps[0];
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = cmpFactories[0];
+        cmpFactories[2] = cmpFactories[0];
+        cmpFactories[3] = cmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -637,9 +630,7 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmps.length, IntegerPointable.FACTORY);
-
-        MultiComparator cmp = new MultiComparator(cmps);
+                cmpFactories.length, IntegerPointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
@@ -654,7 +645,7 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         rtree.create(fileId);
         rtree.open(fileId);
 

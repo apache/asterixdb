@@ -15,20 +15,17 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class PerfExperiment {
     public static void main(String[] args) throws Exception {
@@ -40,8 +37,6 @@ public class PerfExperiment {
             logger.setLevel(Level.OFF);
         }
         
-        //int numTuples = 1000;
-        //int batchSize = 100;
         int numTuples = 100000; // 100K
         //int numTuples = 1000000; // 1M
         //int numTuples = 2000000; // 2M
@@ -59,115 +54,34 @@ public class PerfExperiment {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, 30);
         
-        FileOutputStream out;
-        PrintStream p;
-        out = new FileOutputStream("/tmp/testOutput.txt");  
-        p = new PrintStream( out );  
-        
-        
-        // Add 1 byte for the null flags.
-        // TODO: hide this in some method.
-        int tupleSize = 4 + 30 + 1;
-        
-        IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, fieldSerdes.length);
-        MultiComparator cmp = new MultiComparator(cmps);
-        
-        
-        //Test 30M Btree
-        try{
-        	p.println ("Start for test 30M BTree"); 
-        }catch (Exception e){
-    		System.err.println ("Error writing to file"); 
-    	} 
-        
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         
         //int repeats = 1000;
         int repeats = 1;
         long[] times = new long[repeats];
 
-        int numThreads = 1;
+        int numThreads = 2;
         for (int i = 0; i < repeats; i++) {
             //ConcurrentSkipListRunner runner = new ConcurrentSkipListRunner(numBatches, batchSize, tupleSize, typeTraits, cmp);
-            
-            //InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
+            InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, 8192, 100000, typeTraits, cmpFactories);
             //BTreeBulkLoadRunner runner = new BTreeBulkLoadRunner(numBatches, 8192, 100000, typeTraits, cmp, 1.0f);
-
         	//BTreeRunner runner = new BTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
         	//String btreeName = "071211";
         	//BTreeSearchRunner runner = new BTreeSearchRunner(btreeName, 10, numBatches, 8192, 25000, typeTraits, cmp);
-        	LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100, 8192, 250, typeTraits, cmp);
+        	//LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100, 8192, 250, typeTraits, cmp);
         	//LSMTreeSearchRunner runner = new LSMTreeSearchRunner(100000, numBatches, 8192, 24750, 8192, 250, typeTraits, cmp); 
             DataGenThread dataGen = new DataGenThread(numBatches, batchSize, 10, numThreads, fieldSerdes, 30, 50, false);
             dataGen.start();
             runner.reset();
             times[i] = runner.runExperiment(dataGen, numThreads);
             System.out.println("TIME " + i + ": " + times[i] + "ms");
-            try{
-            	p.println ("TIME " + i + ": " + times[i] + "ms"); 
-            }catch (Exception e){
-        		System.err.println ("Error writing to file"); 
-        	} 
             runner.deinit();
         }
-        
         long avgTime = 0;
         for (int i = 0; i < repeats; i++) {
             avgTime += times[i];
         }
-        
         avgTime /= repeats;
         System.out.println("AVG TIME: " + avgTime + "ms");
-        try{
-        	p.println ("AVG TIME: " + avgTime + "ms"); 
-        }catch (Exception e){
-    		System.err.println ("Error writing to file"); 
-    	} 
-        
-        
-        
-/*        
-        //Test 30M Btree
-        try{
-        	p.println ("Start for test 40M LSMTree"); 
-        }catch (Exception e){
-    		System.err.println ("Error writing to file"); 
-    	} 
-        
-        numTuples = 40000000; // 40M
-        //numTuples = 1000000; // 100K
-        numBatches = numTuples / batchSize;
-        runner = new BTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
-        
-        runner.init();
-        for (int i = 0; i < repeats; i++) {
-        //	LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
-            DataGenThread dataGen = new DataGenThread(numBatches, 	batchSize, 10, numThreads, fieldSerdes, 30, 50, false);
-            dataGen.start();
-            runner.reset();
-            times[i] = runner.runExperiment(dataGen, numThreads);
-            System.out.println("TIME " + i + ": " + times[i] + "ms");
-            try{
-            	p.println ("TIME " + i + ": " + times[i] + "ms"); 
-            }catch (Exception e){
-        		System.err.println ("Error writing to file"); 
-        	} 
-        //    runner.deinit();
-        }
-        runner.deinit();
-        
-        avgTime = 0;
-        for (int i = 0; i < repeats; i++) {
-            avgTime += times[i];
-        }
-        
-        avgTime /= repeats;
-        System.out.println("AVG TIME: " + avgTime + "ms");
-        try{
-        	p.println ("AVG TIME: " + avgTime + "ms"); 
-        }catch (Exception e){
-    		System.err.println ("Error writing to file"); 
-    	} 
-  */      
-        p.close();
     }
 }

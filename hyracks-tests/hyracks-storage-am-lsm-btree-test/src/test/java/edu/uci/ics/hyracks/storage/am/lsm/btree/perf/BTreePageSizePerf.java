@@ -20,13 +20,12 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreePageSizePerf {
     public static void main(String[] args) throws Exception {
@@ -45,28 +44,27 @@ public class BTreePageSizePerf {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, 30);
         
-        IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, fieldSerdes.length);
-        MultiComparator cmp = new MultiComparator(cmps);
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         
-        runExperiment(numBatches, batchSize, 1024, 100000, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 2048, 100000, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 4096, 25000, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 8192, 12500, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 16384, 6250, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 32768, 3125, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 65536, 1564, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 131072, 782, fieldSerdes, cmp, typeTraits);
-        runExperiment(numBatches, batchSize, 262144, 391, fieldSerdes, cmp, typeTraits);
+        runExperiment(numBatches, batchSize, 1024, 100000, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 2048, 100000, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 4096, 25000, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 8192, 12500, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 16384, 6250, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 32768, 3125, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 65536, 1564, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 131072, 782, fieldSerdes, cmpFactories, typeTraits);
+        runExperiment(numBatches, batchSize, 262144, 391, fieldSerdes, cmpFactories, typeTraits);
     }
     
-    private static void runExperiment(int numBatches, int batchSize, int pageSize, int numPages, ISerializerDeserializer[] fieldSerdes, MultiComparator cmp, ITypeTraits[] typeTraits) throws Exception {
+    private static void runExperiment(int numBatches, int batchSize, int pageSize, int numPages, ISerializerDeserializer[] fieldSerdes, IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] typeTraits) throws Exception {
         System.out.println("PAGE SIZE: " + pageSize);
         System.out.println("NUM PAGES: " + numPages);
         System.out.println("MEMORY: " + (pageSize * numPages));
         int repeats = 5;
         long[] times = new long[repeats];
         //BTreeRunner runner = new BTreeRunner(numTuples, pageSize, numPages, typeTraits, cmp);
-        InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, pageSize, numPages, typeTraits, cmp);
+        InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, pageSize, numPages, typeTraits, cmpFactories);
         runner.init();
         int numThreads = 1;
         for (int i = 0; i < repeats; i++) {

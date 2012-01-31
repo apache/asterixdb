@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -39,13 +40,13 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
             IRTreeInteriorFrame rtreeInteriorFrame, ITreeIndexMetaDataFrame rtreeMetaFrame, int rTreeHeightHint,
             BTree.BTreeAccessor memBtreeAccessor, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexMetaDataFrame btreeMetaFrame,
-            MultiComparator btreeCmp) {
-
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories) {
         this.memRTreeAccessor = memRtreeAccessor;
         this.memBTreeAccessor = memBtreeAccessor;
-        this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rTreeHeightHint);
+        // TODO: Alex. is there a reason we need to create new OpContexts?
+        this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories, rTreeHeightHint);
         this.btreeOpContext = new BTreeOpContext(btreeLeafFrameFactory, btreeInteriorFrameFactory, btreeMetaFrame,
-                btreeCmp);
+        		btreeCmpFactories);
     }
 
     public void reset(IndexOp newOp) {
@@ -64,5 +65,9 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
 
     public IndexOp getIndexOp() {
     	return op;
+    }
+    
+    public MultiComparator getBTreeMultiComparator() {
+    	return btreeOpContext.cmp;
     }
 }

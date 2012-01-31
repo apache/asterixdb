@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -39,7 +40,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -93,7 +93,8 @@ public class LSMRTree implements ILSMTree {
     // List of LSMRTreeComponent instances. Using Object for better sharing via ILSMTree + LSMHarness.
     private final LinkedList<Object> diskComponents = new LinkedList<Object>();
 
-    private MultiComparator btreeCmp;
+    private IBinaryComparatorFactory[] btreeCmpFactories;
+    private IBinaryComparatorFactory[] rtreeCmpFactories;
     
     // Common for in-memory and on-disk components.
     private final ITreeIndexFrameFactory rtreeInteriorFrameFactory;
@@ -105,10 +106,10 @@ public class LSMRTree implements ILSMTree {
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMFileNameManager fileNameManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
-            IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator rtreeCmp, MultiComparator btreeCmp) {
-        RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmp, memFreePageManager, rtreeInteriorFrameFactory,
+            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories) {
+        RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory);
-        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmp, memFreePageManager, btreeInteriorFrameFactory,
+        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
@@ -121,7 +122,8 @@ public class LSMRTree implements ILSMTree {
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
         this.diskRTreeFactory = diskRTreeFactory;
-        this.btreeCmp = btreeCmp;
+        this.btreeCmpFactories = btreeCmpFactories;
+        this.rtreeCmpFactories = rtreeCmpFactories;
         this.lsmHarness = new LSMHarness(this);
     }
 
@@ -318,7 +320,7 @@ public class LSMRTree implements ILSMTree {
 
         LSMRTreeSearchCursor lsmRTreeCursor = (LSMRTreeSearchCursor) cursor;
         LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numDiskTrees + 1,
-                rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmp, bTreeAccessors, 
+                rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), bTreeAccessors, 
                 includeMemComponent, lsmHarness);
         lsmRTreeCursor.open(initialState, pred);
 
@@ -472,7 +474,7 @@ public class LSMRTree implements ILSMTree {
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
                         .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memComponent.getBTree().createAccessor(),
                 btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
-                        .createFrame(), btreeCmp);
+                        .createFrame(), rtreeCmpFactories, btreeCmpFactories);
     }
     
     @Override

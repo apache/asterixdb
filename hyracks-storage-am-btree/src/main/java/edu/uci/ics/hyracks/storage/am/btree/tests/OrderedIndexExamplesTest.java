@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -48,7 +48,7 @@ public abstract class OrderedIndexExamplesTest {
     protected static final Logger LOGGER = Logger.getLogger(OrderedIndexExamplesTest.class.getName());
     protected final Random rnd = new Random(50);
 
-    protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparator[] cmps)
+    protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException;
 
     protected abstract int getIndexFileId();
@@ -77,11 +77,11 @@ public abstract class OrderedIndexExamplesTest {
 
         // Declare keys.
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -125,7 +125,7 @@ public abstract class OrderedIndexExamplesTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 1000);
 
-        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
     }
@@ -155,12 +155,12 @@ public abstract class OrderedIndexExamplesTest {
 
         // declare keys
         int keyFieldCount = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -206,7 +206,7 @@ public abstract class OrderedIndexExamplesTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 3);
 
         // Prefix-Range search in [-3, 3]
-        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
     }
@@ -233,11 +233,11 @@ public abstract class OrderedIndexExamplesTest {
 
         // Declare keys.
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -283,7 +283,7 @@ public abstract class OrderedIndexExamplesTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createTuple(highKeyTb, highKey, fieldSerdes, "cc7");
 
-        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
     }
@@ -312,11 +312,11 @@ public abstract class OrderedIndexExamplesTest {
 
         // Declare keys.
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -413,11 +413,11 @@ public abstract class OrderedIndexExamplesTest {
 
         // Declare keys.
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -499,12 +499,12 @@ public abstract class OrderedIndexExamplesTest {
 
         // declare keys
         int keyFieldCount = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         int indexFileId = getIndexFileId();
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmps);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create(indexFileId);
         treeIndex.open(indexFileId);
 
@@ -540,7 +540,7 @@ public abstract class OrderedIndexExamplesTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 44500);
 
         // Prefix-Range search in [44444, 44500]
-        rangeSearch(cmps, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
     }
@@ -597,7 +597,7 @@ public abstract class OrderedIndexExamplesTest {
 		}
 	}
 
-    private void rangeSearch(IBinaryComparator[] cmps, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes,
+    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes,
             ITupleReference lowKey, ITupleReference highKey) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String lowKeyString = TupleUtils.printTuple(lowKey, fieldSerdes);
@@ -605,8 +605,8 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Range-Search in: [ " + lowKeyString + ", " + highKeyString + "]");
         }
         ITreeIndexCursor rangeCursor = indexAccessor.createSearchCursor();
-        MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, lowKey);
-        MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmps, highKey);
+        MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
+        MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp,
                 highKeySearchCmp);
         indexAccessor.search(rangeCursor, rangePred);

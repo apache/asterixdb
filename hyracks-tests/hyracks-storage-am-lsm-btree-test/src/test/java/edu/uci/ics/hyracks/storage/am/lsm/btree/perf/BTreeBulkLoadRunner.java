@@ -15,21 +15,21 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeBulkLoadRunner extends BTreeRunner {
 
     protected final float fillFactor;
     
-    public BTreeBulkLoadRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, MultiComparator cmp, float fillFactor)
+    public BTreeBulkLoadRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, float fillFactor)
             throws HyracksDataException, BTreeException {
-        super(numBatches, pageSize, numPages, typeTraits, cmp);
+        super(numBatches, pageSize, numPages, typeTraits, cmpFactories);
         this.fillFactor = fillFactor;
     }
 

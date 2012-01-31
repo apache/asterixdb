@@ -28,9 +28,12 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 
 public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
 
+	protected final MultiComparator invListCmp;
+	
     public TOccurrenceSearcherSuffixScanOnly(IHyracksTaskContext ctx, InvertedIndex invIndex,
             IBinaryTokenizer queryTokenizer) {
         super(ctx, invIndex, queryTokenizer);
+        this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
     }
 
     protected int mergeSuffixLists(int numPrefixTokens, int numQueryTokens, int maxPrevBufIdx) throws IOException {
@@ -60,8 +63,6 @@ public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
         boolean advanceCursor = true;
         boolean advancePrevResult = false;
         int resultTidx = 0;
-
-        MultiComparator invListCmp = invIndex.getInvListElementCmp();
 
         resultFrameTupleAcc.reset(prevCurrentBuffer);
         resultFrameTupleApp.reset(newCurrentBuffer, true);

@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -51,9 +52,15 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 	protected List<String> firstNames = new ArrayList<String>();
 	protected List<String> lastNames = new ArrayList<String>();
 
+	protected IBinaryComparator[] btreeBinCmps;
+	
 	@Before
 	public void start() throws Exception {
 		super.start();
+		btreeBinCmps = new IBinaryComparator[btreeCmpFactories.length];
+		for (int i = 0; i < btreeCmpFactories.length; i++) {
+			btreeBinCmps[i] = btreeCmpFactories[i].createBinaryComparator();
+		}
 		tokenFactory = new UTF8NGramTokenFactory();
 		tokenizer = new NGramUTF8StringBinaryTokenizer(3, false, true, false,
 				tokenFactory);

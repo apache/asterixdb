@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -27,7 +28,8 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeOpContext implements IIndexOpContext {
-    private final int INIT_ARRAYLIST_SIZE = 6; 
+    private final int INIT_ARRAYLIST_SIZE = 6;
+    public MultiComparator cmp;
     public ITreeIndexFrameFactory leafFrameFactory;
     public ITreeIndexFrameFactory interiorFrameFactory;
     public IBTreeLeafFrame leafFrame;
@@ -45,7 +47,8 @@ public class BTreeOpContext implements IIndexOpContext {
     public boolean exceptionHandled;
     
     public BTreeOpContext(ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
+            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories) {
+        this.cmp = MultiComparator.create(cmpFactories);
         this.leafFrameFactory = leafFrameFactory;
         this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
         if (leafFrame != null) {

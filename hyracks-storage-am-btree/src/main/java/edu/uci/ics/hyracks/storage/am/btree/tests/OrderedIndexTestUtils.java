@@ -172,8 +172,8 @@ public class OrderedIndexTestUtils {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Range Search.");
         }
-        MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), lowKey);
-        MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), highKey);
+        MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
+        MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
         ITreeIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
         ctx.getIndexAccessor().search(searchCursor, rangePred);
@@ -227,8 +227,8 @@ public class OrderedIndexTestUtils {
         for (CheckTuple checkTuple : ctx.getCheckTuples()) {
             createTupleFromCheckTuple(checkTuple, lowKeyBuilder, lowKey, ctx.getFieldSerdes());
             createTupleFromCheckTuple(checkTuple, highKeyBuilder, highKey, ctx.getFieldSerdes());
-            MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), lowKey);
-            MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparators(), highKey);
+            MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
+            MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
                         
             rangePred.setLowKey(lowKey, true);
             rangePred.setHighKey(highKey, true);

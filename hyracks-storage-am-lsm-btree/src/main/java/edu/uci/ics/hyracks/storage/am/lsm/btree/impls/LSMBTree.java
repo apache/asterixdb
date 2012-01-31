@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -43,7 +44,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -76,13 +76,13 @@ public class LSMBTree implements ILSMTree {
     // Common for in-memory and on-disk components.
     private final ITreeIndexFrameFactory insertLeafFrameFactory;
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
-    private final MultiComparator cmp;
+    private final IBinaryComparatorFactory[] cmpFactories;
     
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileNameManager fileNameManager, BTreeFactory diskBTreeFactory,
-            BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider, int fieldCount, MultiComparator cmp) {
-        memBTree = new BTree(memBufferCache, fieldCount, cmp, memFreePageManager, interiorFrameFactory,
+            BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories) {
+        memBTree = new BTree(memBufferCache, fieldCount, cmpFactories, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
@@ -91,7 +91,7 @@ public class LSMBTree implements ILSMTree {
         this.diskFileMapProvider = diskFileMapProvider;
         this.diskBTreeFactory = diskBTreeFactory;
         this.bulkLoadBTreeFactory = bulkLoadBTreeFactory;
-        this.cmp = cmp;
+        this.cmpFactories = cmpFactories;
         this.diskBTrees = new LinkedList<Object>();
         this.fileNameManager = fileNameManager;
         lsmHarness = new LSMHarness(this);
@@ -175,9 +175,9 @@ public class LSMBTree implements ILSMTree {
         // Therefore, to set the delete bit in the tuple that already exist in
         // the BTree, we must retrieve the original tuple first. This is to
         // ensure that we have the proper value field.
-        if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
+        if (cmpFactories.length != memBTree.getFieldCount()) {
             ctx.reset(IndexOp.SEARCH);
-            RangePredicate rangePredicate = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
+            RangePredicate rangePredicate = new RangePredicate(tuple, tuple, true, true, ctx.cmp, ctx.cmp);
             ITreeIndexCursor cursor = ctx.memBTreeAccessor.createSearchCursor();
             ctx.memBTreeAccessor.search(cursor, rangePredicate);
             ITupleReference tupleCopy = null;
@@ -209,7 +209,7 @@ public class LSMBTree implements ILSMTree {
         // If all fields are keys, and the key we are trying to insert/update
         // already exists, then we are already done.
         // Otherwise, we must update the non-key fields.        
-        if (cmp.getKeyFieldCount() != memBTree.getFieldCount()) {
+        if (cmpFactories.length != memBTree.getFieldCount()) {
             memBTreeUpdate(tuple, ctx);
         } else {
             // Since the existing tuple could be an antimatter tuple, we must delete it and re-insert.
@@ -327,7 +327,7 @@ public class LSMBTree implements ILSMTree {
         int numDiskBTrees = diskComponents.size();
         int numBTrees = (includeMemComponent) ? numDiskBTrees + 1 : numDiskBTrees;                
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees,
-                insertLeafFrameFactory, cmp, includeMemComponent, lsmHarness);
+                insertLeafFrameFactory, ctx.cmp, includeMemComponent, lsmHarness);
         lsmTreeCursor.open(initialState, pred);
         
         int cursorIx;
@@ -484,8 +484,8 @@ public class LSMBTree implements ILSMTree {
         return memBTree.getFileId();
     }
     
-    public MultiComparator getMultiComparator() {
-        return cmp;
+    public IBinaryComparatorFactory[] getComparatorFactories() {
+        return cmpFactories;
     }
     
     public LSMBTreeOpContext createOpContext() {

@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -45,7 +45,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -67,22 +66,22 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
         // declare r-tree keys
         int rtreeKeyFieldCount = 4;
-        IBinaryComparator[] rtreeCmps = new IBinaryComparator[rtreeKeyFieldCount];
-        rtreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        rtreeCmps[1] = rtreeCmps[0];
-        rtreeCmps[2] = rtreeCmps[0];
-        rtreeCmps[3] = rtreeCmps[0];
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        rtreeCmpFactories[1] = rtreeCmpFactories[0];
+        rtreeCmpFactories[2] = rtreeCmpFactories[0];
+        rtreeCmpFactories[3] = rtreeCmpFactories[0];
 
         // declare b-tree keys
         int btreeKeyFieldCount = 7;
-        IBinaryComparator[] btreeCmps = new IBinaryComparator[btreeKeyFieldCount];
-        btreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        btreeCmps[1] = btreeCmps[0];
-        btreeCmps[2] = btreeCmps[0];
-        btreeCmps[3] = btreeCmps[0];
-        btreeCmps[4] = btreeCmps[0];
-        btreeCmps[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        btreeCmps[6] = btreeCmps[0];
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        btreeCmpFactories[1] = btreeCmpFactories[0];
+        btreeCmpFactories[2] = btreeCmpFactories[0];
+        btreeCmpFactories[3] = btreeCmpFactories[0];
+        btreeCmpFactories[4] = btreeCmpFactories[0];
+        btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[6] = btreeCmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -95,12 +94,9 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        MultiComparator rtreeCmp = new MultiComparator(rtreeCmps);
-        MultiComparator btreeCmp = new MultiComparator(btreeCmps);
-
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmps.length, DoublePointable.FACTORY);
+        		rtreeCmpFactories.length, DoublePointable.FACTORY);
 
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
         LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
@@ -120,15 +116,15 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
+        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmpFactories, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmp, fieldCount,
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
         ILSMFileNameManager fileNameManager = new LSMTreeFileNameManager(onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmp, btreeCmp);
+                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
 
         lsmRTree.create(getFileId());
         lsmRTree.open(getFileId());
@@ -216,22 +212,22 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
         // declare r-tree keys
         int rtreeKeyFieldCount = 4;
-        IBinaryComparator[] rtreeCmps = new IBinaryComparator[rtreeKeyFieldCount];
-        rtreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        rtreeCmps[1] = rtreeCmps[0];
-        rtreeCmps[2] = rtreeCmps[0];
-        rtreeCmps[3] = rtreeCmps[0];
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        rtreeCmpFactories[1] = rtreeCmpFactories[0];
+        rtreeCmpFactories[2] = rtreeCmpFactories[0];
+        rtreeCmpFactories[3] = rtreeCmpFactories[0];
 
         // declare b-tree keys
         int btreeKeyFieldCount = 7;
-        IBinaryComparator[] btreeCmps = new IBinaryComparator[btreeKeyFieldCount];
-        btreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        btreeCmps[1] = btreeCmps[0];
-        btreeCmps[2] = btreeCmps[0];
-        btreeCmps[3] = btreeCmps[0];
-        btreeCmps[4] = btreeCmps[0];
-        btreeCmps[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        btreeCmps[6] = btreeCmps[0];
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        btreeCmpFactories[1] = btreeCmpFactories[0];
+        btreeCmpFactories[2] = btreeCmpFactories[0];
+        btreeCmpFactories[3] = btreeCmpFactories[0];
+        btreeCmpFactories[4] = btreeCmpFactories[0];
+        btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[6] = btreeCmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -244,12 +240,9 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        MultiComparator rtreeCmp = new MultiComparator(rtreeCmps);
-        MultiComparator btreeCmp = new MultiComparator(btreeCmps);
-
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmps.length, DoublePointable.FACTORY);
+        		rtreeCmpFactories.length, DoublePointable.FACTORY);
 
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
         LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
@@ -269,15 +262,15 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
+        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmpFactories, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmp, fieldCount,
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
         ILSMFileNameManager fileNameManager = new LSMTreeFileNameManager(onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmp, btreeCmp);
+                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
 
         lsmRTree.create(getFileId());
         lsmRTree.open(getFileId());
@@ -410,26 +403,26 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
         // declare r-tree keys
         int rtreeKeyFieldCount = 6;
-        IBinaryComparator[] rtreeCmps = new IBinaryComparator[rtreeKeyFieldCount];
-        rtreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        rtreeCmps[1] = rtreeCmps[0];
-        rtreeCmps[2] = rtreeCmps[0];
-        rtreeCmps[3] = rtreeCmps[0];
-        rtreeCmps[4] = rtreeCmps[0];
-        rtreeCmps[5] = rtreeCmps[0];
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        rtreeCmpFactories[1] = rtreeCmpFactories[0];
+        rtreeCmpFactories[2] = rtreeCmpFactories[0];
+        rtreeCmpFactories[3] = rtreeCmpFactories[0];
+        rtreeCmpFactories[4] = rtreeCmpFactories[0];
+        rtreeCmpFactories[5] = rtreeCmpFactories[0];
 
         // declare b-tree keys
         int btreeKeyFieldCount = 9;
-        IBinaryComparator[] btreeCmps = new IBinaryComparator[btreeKeyFieldCount];
-        btreeCmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        btreeCmps[1] = btreeCmps[0];
-        btreeCmps[2] = btreeCmps[0];
-        btreeCmps[3] = btreeCmps[0];
-        btreeCmps[4] = btreeCmps[0];
-        btreeCmps[5] = btreeCmps[0];
-        btreeCmps[6] = btreeCmps[0];
-        btreeCmps[7] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        btreeCmps[8] = btreeCmps[0];
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        btreeCmpFactories[1] = btreeCmpFactories[0];
+        btreeCmpFactories[2] = btreeCmpFactories[0];
+        btreeCmpFactories[3] = btreeCmpFactories[0];
+        btreeCmpFactories[4] = btreeCmpFactories[0];
+        btreeCmpFactories[5] = btreeCmpFactories[0];
+        btreeCmpFactories[6] = btreeCmpFactories[0];
+        btreeCmpFactories[7] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[8] = btreeCmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 9;
@@ -444,12 +437,9 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         typeTraits[7] = IntegerPointable.TYPE_TRAITS;
         typeTraits[8] = DoublePointable.TYPE_TRAITS;
 
-        MultiComparator rtreeCmp = new MultiComparator(rtreeCmps);
-        MultiComparator btreeCmp = new MultiComparator(btreeCmps);
-
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmps.length, DoublePointable.FACTORY);
+        		rtreeCmpFactories.length, DoublePointable.FACTORY);
 
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
         LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
@@ -469,15 +459,15 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
+        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmpFactories, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmp, fieldCount,
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
         ILSMFileNameManager fileNameManager = new LSMTreeFileNameManager(onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmp, btreeCmp);
+                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
 
         lsmRTree.create(getFileId());
         lsmRTree.open(getFileId());
@@ -570,22 +560,22 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
 
         // declare r-tree keys
         int rtreeKeyFieldCount = 4;
-        IBinaryComparator[] rtreeCmps = new IBinaryComparator[rtreeKeyFieldCount];
-        rtreeCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        rtreeCmps[1] = rtreeCmps[0];
-        rtreeCmps[2] = rtreeCmps[0];
-        rtreeCmps[3] = rtreeCmps[0];
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[1] = rtreeCmpFactories[0];
+        rtreeCmpFactories[2] = rtreeCmpFactories[0];
+        rtreeCmpFactories[3] = rtreeCmpFactories[0];
 
         // declare b-tree keys
         int btreeKeyFieldCount = 7;
-        IBinaryComparator[] btreeCmps = new IBinaryComparator[btreeKeyFieldCount];
-        btreeCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        btreeCmps[1] = btreeCmps[0];
-        btreeCmps[2] = btreeCmps[0];
-        btreeCmps[3] = btreeCmps[0];
-        btreeCmps[4] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        btreeCmps[5] = btreeCmps[0];
-        btreeCmps[6] = btreeCmps[4];
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[1] = btreeCmpFactories[0];
+        btreeCmpFactories[2] = btreeCmpFactories[0];
+        btreeCmpFactories[3] = btreeCmpFactories[0];
+        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        btreeCmpFactories[5] = btreeCmpFactories[0];
+        btreeCmpFactories[6] = btreeCmpFactories[4];
 
         // declare tuple fields
         int fieldCount = 7;
@@ -598,12 +588,9 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        MultiComparator rtreeCmp = new MultiComparator(rtreeCmps);
-        MultiComparator btreeCmp = new MultiComparator(btreeCmps);
-
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmps.length, IntegerPointable.FACTORY);
+        		rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
         LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
@@ -623,15 +610,15 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmp, fieldCount,
+        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmpFactories, fieldCount,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmp, fieldCount,
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
         ILSMFileNameManager fileNameManager = new LSMTreeFileNameManager(onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmp, btreeCmp);
+                diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
 
         lsmRTree.create(getFileId());
         lsmRTree.open(getFileId());

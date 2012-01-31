@@ -26,7 +26,7 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -51,7 +51,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
@@ -86,8 +85,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
     // declare btree keys
     protected int btreeKeyFieldCount = 1;
-    protected IBinaryComparator[] btreeBinCmps = new IBinaryComparator[btreeKeyFieldCount];
-    protected MultiComparator btreeCmp = new MultiComparator(btreeBinCmps);
+    protected IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
 
     // btree frame factories
     protected TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
@@ -112,8 +110,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
 
     protected int invListKeys = 1;
-    protected IBinaryComparator[] invListBinCmps = new IBinaryComparator[invListKeys];
-    protected MultiComparator invListCmp = new MultiComparator(invListBinCmps);
+    protected IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[invListKeys];
 
     protected InvertedIndex invIndex;
 
@@ -169,11 +166,11 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         btreeFileId = fmp.lookupFileId(btreeFile);
         bufferCache.openFile(btreeFileId);
 
-        btreeBinCmps[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmp, freePageManager, interiorFrameFactory,
+        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmpFactories, freePageManager, interiorFrameFactory,
                 leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
@@ -185,9 +182,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         bufferCache.openFile(invListsFileId);
 
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
-        invListBinCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmp);
+        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories);
         invIndex.open(invListsFileId);
 
         rnd.setSeed(50);

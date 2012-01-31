@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -61,11 +62,10 @@ public class RTree implements ITreeIndex {
     private final IBufferCache bufferCache;
     private int fileId;
 
-    private final SearchPredicate diskOrderScanPredicate;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
     private final int fieldCount;
-    private final MultiComparator cmp;
+    private final IBinaryComparatorFactory[] cmpFactories;
 
     public int rootSplits = 0;
     public int[] splitsByLevel = new int[500];
@@ -78,17 +78,16 @@ public class RTree implements ITreeIndex {
     public byte currentLevel = 0;
 
     // TODO: is MultiComparator needed at all?
-    public RTree(IBufferCache bufferCache, int fieldCount, MultiComparator cmp, IFreePageManager freePageManager,
+    public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
         this.fieldCount = fieldCount;
-        this.cmp = cmp;
+        this.cmpFactories = cmpFactories;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         globalNsn = new AtomicLong();
-        this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new SearchPredicate(null, cmp);
+        this.treeLatch = new ReentrantReadWriteLock(true);        
     }
 
     public void incrementGlobalNsn() {
@@ -181,7 +180,7 @@ public class RTree implements ITreeIndex {
 
             System.out.format(keyString);
             if (!interiorFrame.isLeaf()) {
-                ArrayList<Integer> children = ((RTreeNSMFrame) (interiorFrame)).getChildren(cmp);
+                ArrayList<Integer> children = ((RTreeNSMFrame) (interiorFrame)).getChildren(cmpFactories.length);
                 for (int i = 0; i < children.size(); i++) {
                     printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, keySerdes);
                 }
@@ -247,7 +246,7 @@ public class RTree implements ITreeIndex {
     private RTreeOpContext createOpContext() {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
-                        .createFrame(), 8);
+                        .createFrame(), cmpFactories, 8);
     }
 
     private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
@@ -255,13 +254,13 @@ public class RTree implements ITreeIndex {
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
-        ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
-        ctx.splitKey.getRightTuple().setFieldCount(cmp.getKeyFieldCount());
+        ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
+        ctx.splitKey.getRightTuple().setFieldCount(cmpFactories.length);
 
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        int maxFieldPos = cmpFactories.length / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
-            int c = cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
+            int c = ctx.cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i), tuple.getFieldData(j), tuple.getFieldStart(j), tuple.getFieldLength(j));
             if (c > 0) {
                 throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
@@ -360,11 +359,11 @@ public class RTree implements ITreeIndex {
 
                 if (!isLeaf) {
                     // findBestChild must be called *before* getBestChildPageId
-                    ctx.interiorFrame.findBestChild(ctx.getTuple(), cmp);
+                    ctx.interiorFrame.findBestChild(ctx.getTuple(), ctx.cmp);
                     int childPageId = ctx.interiorFrame.getBestChildPageId();
 
                     // check if enlargement is needed
-                    boolean enlarementIsNeeded = ctx.interiorFrame.checkEnlargement(ctx.getTuple(), cmp);
+                    boolean enlarementIsNeeded = ctx.interiorFrame.checkEnlargement(ctx.getTuple(), ctx.cmp);
                     if (enlarementIsNeeded) {
                         if (!writeLatched) {
                             node.releaseReadLatch();
@@ -392,7 +391,7 @@ public class RTree implements ITreeIndex {
                         }
                         // We don't need to reset the frameTuple because it is
                         // already pointing to the best child
-                        ctx.interiorFrame.enlarge(ctx.getTuple(), cmp);
+                        ctx.interiorFrame.enlarge(ctx.getTuple(), ctx.cmp);
 
                         node.releaseWriteLatch();
                         writeLatched = false;
@@ -585,7 +584,7 @@ public class RTree implements ITreeIndex {
             if (ctx.interiorFrame.getPageLsn() != ctx.pathList.getLastPageLsn()) {
                 foundParent = false;
                 while (true) {
-                    if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp) != -1) {
+                    if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.cmp) != -1) {
                         // found the parent
                         foundParent = true;
                         break;
@@ -611,7 +610,7 @@ public class RTree implements ITreeIndex {
                 }
             }
             if (foundParent) {
-                ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), -1, cmp);
+                ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), -1, ctx.cmp);
                 insertTuple(parentNode, parentId, ctx.splitKey.getRightTuple(), ctx, ctx.interiorFrame.isLeaf());
                 ctx.pathList.moveLast();
 
@@ -676,7 +675,7 @@ public class RTree implements ITreeIndex {
                 }
                 parentLsn = pageLsn;
 
-                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex, cmp) != -1) {
+                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex, ctx.cmp) != -1) {
                     fillPath(ctx, pageIndex);
                     return;
                 }
@@ -708,7 +707,7 @@ public class RTree implements ITreeIndex {
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
-        ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
+        ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
 
         int tupleIndex = findTupleToDelete(ctx);
 
@@ -748,7 +747,7 @@ public class RTree implements ITreeIndex {
             if (ctx.interiorFrame.getPageLsn() != ctx.pathList.getLastPageLsn()) {
                 foundParent = false;
                 while (true) {
-                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp);
+                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.cmp);
                     if (tupleIndex != -1) {
                         // found the parent
                         foundParent = true;
@@ -776,12 +775,12 @@ public class RTree implements ITreeIndex {
             }
             if (foundParent) {
                 if (tupleIndex == -1) {
-                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp);
+                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.cmp);
                 }
-                boolean recomputeMBR = ctx.interiorFrame.recomputeMBR(ctx.splitKey.getLeftTuple(), tupleIndex, cmp);
+                boolean recomputeMBR = ctx.interiorFrame.recomputeMBR(ctx.splitKey.getLeftTuple(), tupleIndex, ctx.cmp);
 
                 if (recomputeMBR) {
-                    ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), tupleIndex, cmp);
+                    ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), tupleIndex, ctx.cmp);
                     ctx.pathList.moveLast();
 
                     incrementGlobalNsn();
@@ -860,7 +859,7 @@ public class RTree implements ITreeIndex {
 
                 if (!isLeaf) {
                     for (int i = 0; i < ctx.interiorFrame.getTupleCount(); i++) {
-                        int childPageId = ctx.interiorFrame.getChildPageIdIfIntersect(ctx.tuple, i, cmp);
+                        int childPageId = ctx.interiorFrame.getChildPageIdIfIntersect(ctx.tuple, i, ctx.cmp);
                         if (childPageId != -1) {
                             ctx.traverseList.add(childPageId, -1, pageIndex);
                             ctx.pathList.add(childPageId, pageLsn, ctx.traverseList.size() - 1);
@@ -868,7 +867,7 @@ public class RTree implements ITreeIndex {
                     }
                 } else {
                     ctx.leafFrame.setPage(node);
-                    int tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, cmp);
+                    int tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, ctx.cmp);
                     if (tupleIndex != -1) {
 
                         node.releaseReadLatch();
@@ -887,7 +886,7 @@ public class RTree implements ITreeIndex {
                         if (ctx.leafFrame.getPageLsn() != pageLsn) {
                             // The page was changed while we unlocked it
 
-                            tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, cmp);
+                            tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, ctx.cmp);
                             if (tupleIndex == -1) {
                                 ctx.traverseList.add(pageId, -1, parentIndex);
                                 ctx.pathList.add(pageId, parentLsn, ctx.traverseList.size() - 1);
@@ -939,7 +938,7 @@ public class RTree implements ITreeIndex {
     }
 
     private void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws HyracksDataException {
-        ctx.leafFrame.delete(tupleIndex, cmp);
+        ctx.leafFrame.delete(tupleIndex, ctx.cmp);
         incrementGlobalNsn();
         ctx.leafFrame.setPageLsn(getGlobalNsn());
 
@@ -971,8 +970,8 @@ public class RTree implements ITreeIndex {
         return leafFrameFactory;
     }
 
-    public MultiComparator getCmp() {
-        return cmp;
+    public IBinaryComparatorFactory[] getComparatorFactories() {
+        return cmpFactories;
     }
 
     @Override
@@ -1024,6 +1023,9 @@ public class RTree implements ITreeIndex {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         ctx.reset();
 
+        MultiComparator cmp = MultiComparator.create(cmpFactories);
+        SearchPredicate searchPred = new SearchPredicate(null, cmp);
+        
         int currentPageId = rootPage + 1;
         int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 
@@ -1035,7 +1037,7 @@ public class RTree implements ITreeIndex {
             cursor.setCurrentPageId(currentPageId);
             cursor.setMaxPageId(maxPageId);
             ctx.cursorInitialState.setPage(page);
-            cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
+            cursor.open(ctx.cursorInitialState, searchPred);
         } catch (Exception e) {
             page.releaseReadLatch();
             bufferCache.unpin(page);

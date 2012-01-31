@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
@@ -125,9 +124,9 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	// for debugging
-	public ArrayList<Integer> getChildren(MultiComparator cmp) {
+	public ArrayList<Integer> getChildren(int numKeyFields) {
 		ArrayList<Integer> ret = new ArrayList<Integer>();
-		frameTuple.setFieldCount(cmp.getKeyFieldCount());
+		frameTuple.setFieldCount(numKeyFields);
 		int tupleCount = buf.getInt(tupleCountOff);
 		for (int i = 0; i < tupleCount; i++) {
 			int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));

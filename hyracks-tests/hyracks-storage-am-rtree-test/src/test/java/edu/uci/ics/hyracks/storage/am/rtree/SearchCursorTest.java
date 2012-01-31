@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -49,7 +49,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
@@ -92,11 +91,11 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
         // declare keys
         int keyFieldCount = 4;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
-        cmps[1] = cmps[0];
-        cmps[2] = cmps[0];
-        cmps[3] = cmps[0];
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        cmpFactories[1] = cmpFactories[0];
+        cmpFactories[2] = cmpFactories[0];
+        cmpFactories[3] = cmpFactories[0];
 
         // declare tuple fields
         int fieldCount = 5;
@@ -109,9 +108,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                cmps.length, DoublePointable.FACTORY);
-
-        MultiComparator cmp = new MultiComparator(cmps);
+                cmpFactories.length, DoublePointable.FACTORY);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
@@ -125,7 +122,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
         IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         rtree.create(fileId);
         rtree.open(fileId);
 
@@ -188,6 +185,7 @@ public class SearchCursorTest extends AbstractRTreeTest {
             }
         }
 
+        MultiComparator cmp = MultiComparator.create(cmpFactories);
         for (int i = 0; i < 50; i++) {
             double p1x = rnd.nextDouble();
             double p1y = rnd.nextDouble();

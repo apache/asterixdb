@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class AbstractLSMRTreeTest {
+public abstract class AbstractLSMRTreeTest {
     protected static final Logger LOGGER = Logger.getLogger(AbstractLSMRTreeTest.class.getName());
 
     private static final long RANDOM_SEED = 50;

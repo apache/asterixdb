@@ -96,9 +96,9 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             btree = (BTree) treeIndexHelper.getIndex();
 
             // Construct range predicate.
-            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getMultiComparator().getComparators(), lowKey);
+            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getComparatorFactories(), lowKey);
             highKeySearchCmp = BTreeUtils
-                    .getSearchMultiComparator(btree.getMultiComparator().getComparators(), highKey);
+                    .getSearchMultiComparator(btree.getComparatorFactories(), highKey);
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 

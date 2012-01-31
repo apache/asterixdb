@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
 import java.util.TreeSet;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.storage.am.btree.tests.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -41,13 +40,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
     @Override
     public int getKeyFieldCount() {
         LSMBTree lsmTree = (LSMBTree) treeIndex;
-        return lsmTree.getMultiComparator().getKeyFieldCount();
+        return lsmTree.getComparatorFactories().length;
     }
 
     @Override
-    public IBinaryComparator[] getComparators() {
+    public IBinaryComparatorFactory[] getComparatorFactories() {
         LSMBTree lsmTree = (LSMBTree) treeIndex;
-        return lsmTree.getMultiComparator().getComparators();
+        return lsmTree.getComparatorFactories();
     }
 
     /**
@@ -66,9 +65,9 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes, int numKeyFields, int fileId)
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        IBinaryComparator[] cmps = SerdeUtils.serdesToComparators(fieldSerdes, numKeyFields);
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, diskBufferCache,
-                diskFileMapProvider, typeTraits, cmps);
+                diskFileMapProvider, typeTraits, cmpFactories);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
