@@ -44,7 +44,7 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -78,8 +78,9 @@ public class RTree implements ITreeIndex {
     public byte currentLevel = 0;
 
     // TODO: is MultiComparator needed at all?
-    public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
+    public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
+            IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
         this.fieldCount = fieldCount;
         this.cmpFactories = cmpFactories;
@@ -87,7 +88,7 @@ public class RTree implements ITreeIndex {
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         globalNsn = new AtomicLong();
-        this.treeLatch = new ReentrantReadWriteLock(true);        
+        this.treeLatch = new ReentrantReadWriteLock(true);
     }
 
     public void incrementGlobalNsn() {
@@ -141,34 +142,46 @@ public class RTree implements ITreeIndex {
         return strBuilder.toString();
     }
 
-    public void printTree(IRTreeFrame leafFrame, IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes)
-            throws Exception {
-        printTree(rootPage, null, false, leafFrame, interiorFrame, keySerdes);
+    public byte getTreeHeight(IRTreeLeafFrame leafFrame) throws HyracksDataException {
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+        rootNode.acquireReadLatch();
+        try {
+            leafFrame.setPage(rootNode);
+            return leafFrame.getLevel();
+        } finally {
+            rootNode.releaseReadLatch();
+            bufferCache.unpin(rootNode);
+        }
     }
 
-    public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeFrame leafFrame,
-            IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes) throws Exception {
+    @SuppressWarnings("rawtypes")
+    public String printTree(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
+            ISerializerDeserializer[] keySerdes) throws Exception {
+        MultiComparator cmp = MultiComparator.create(cmpFactories);
+        byte treeHeight = getTreeHeight(leafFrame);
+        StringBuilder strBuilder = new StringBuilder();
+        printTree(rootPage, null, false, leafFrame, interiorFrame, treeHeight, keySerdes, strBuilder, cmp);
+        return strBuilder.toString();
+    }
 
+    @SuppressWarnings("rawtypes")
+    public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeLeafFrame leafFrame,
+            IRTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] keySerdes,
+            StringBuilder strBuilder, MultiComparator cmp) throws Exception {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-        incrementPins();
         node.acquireReadLatch();
-        incrementReadLatchesAcquired();
-
         try {
             if (parent != null && unpin == true) {
                 parent.releaseReadLatch();
-                incrementReadLatchesReleased();
                 bufferCache.unpin(parent);
-                incrementUnpins();
             }
-
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
-
-            System.out.format("%1d ", level);
-            System.out.format("%3d ", pageId);
-            for (int i = 0; i < currentLevel - level; i++)
-                System.out.format("    ");
+            strBuilder.append(String.format("%1d ", level));
+            strBuilder.append(String.format("%3d ", pageId) + ": ");
+            for (int i = 0; i < treeHeight - level; i++) {
+                strBuilder.append("    ");
+            }
 
             String keyString;
             if (interiorFrame.isLeaf()) {
@@ -178,24 +191,21 @@ public class RTree implements ITreeIndex {
                 keyString = TreeIndexUtils.printFrameTuples(interiorFrame, keySerdes);
             }
 
-            System.out.format(keyString);
+            strBuilder.append(keyString + "\n");
             if (!interiorFrame.isLeaf()) {
-                ArrayList<Integer> children = ((RTreeNSMFrame) (interiorFrame)).getChildren(cmpFactories.length);
+                ArrayList<Integer> children = ((RTreeNSMInteriorFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {
-                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, keySerdes);
+                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, treeHeight,
+                            keySerdes, strBuilder, cmp);
                 }
             } else {
                 node.releaseReadLatch();
-                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                incrementUnpins();
             }
         } catch (Exception e) {
             node.releaseReadLatch();
-            incrementReadLatchesReleased();
             bufferCache.unpin(node);
-            incrementUnpins();
-            throw e;
+            e.printStackTrace();
         }
     }
 
@@ -675,7 +685,8 @@ public class RTree implements ITreeIndex {
                 }
                 parentLsn = pageLsn;
 
-                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex, ctx.cmp) != -1) {
+                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex,
+                        ctx.cmp) != -1) {
                     fillPath(ctx, pageIndex);
                     return;
                 }
@@ -1025,7 +1036,7 @@ public class RTree implements ITreeIndex {
 
         MultiComparator cmp = MultiComparator.create(cmpFactories);
         SearchPredicate searchPred = new SearchPredicate(null, cmp);
-        
+
         int currentPageId = rootPage + 1;
         int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 

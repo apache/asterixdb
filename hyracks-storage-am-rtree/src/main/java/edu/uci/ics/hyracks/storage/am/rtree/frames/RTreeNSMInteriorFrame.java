@@ -45,10 +45,12 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     private static final int childPtrSize = 4;
     private static IBinaryComparator childPtrCmp = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY)
             .createBinaryComparator();
+    private final int keyFieldCount;
 
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
         super(tupleWriter, keyValueProviders);
-        frameTuple.setFieldCount(keyValueProviders.length);
+        keyFieldCount = keyValueProviders.length;
+        frameTuple.setFieldCount(keyFieldCount);
     }
 
     @Override
@@ -148,6 +150,13 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         } else {
             return false;
         }
+    }
+
+    @Override
+    public ITreeIndexTupleReference createTupleReference() {
+        ITreeIndexTupleReference tuple = tupleWriter.createTupleReference();
+        tuple.setFieldCount(keyFieldCount);
+        return tuple;
     }
 
     @Override
@@ -641,5 +650,22 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         }
 
         adjustMBRImpl(tuples);
+    }
+
+    // For debugging.
+    public ArrayList<Integer> getChildren(MultiComparator cmp) {
+        ArrayList<Integer> ret = new ArrayList<Integer>();
+        frameTuple.setFieldCount(cmp.getKeyFieldCount());
+        int tupleCount = buf.getInt(tupleCountOff);
+        for (int i = 0; i < tupleCount; i++) {
+            int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
+            frameTuple.resetByTupleOffset(buf, tupleOff);
+            int intVal = IntegerSerializerDeserializer.getInt(
+                    buf.array(),
+                    frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+                            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
+            ret.add(intVal);
+        }
+        return ret;
     }
 }

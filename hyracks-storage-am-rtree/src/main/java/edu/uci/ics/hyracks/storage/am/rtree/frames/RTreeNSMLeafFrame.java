@@ -37,6 +37,11 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
+    public ITreeIndexTupleReference createTupleReference() {
+        return tupleWriter.createTupleReference();
+    }
+
+    @Override
     public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) {
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
     }
@@ -85,10 +90,10 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
                 frameTuple.resetByTupleIndex(this, k);
 
-                double LowerKey = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
-                        frameTuple.getFieldStart(i));
-                double UpperKey = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
-                        frameTuple.getFieldStart(j));
+                double LowerKey = keyValueProviders[i]
+                        .getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
+                double UpperKey = keyValueProviders[j]
+                        .getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
 
                 tupleEntries1.add(k, LowerKey);
                 tupleEntries2.add(k, UpperKey);

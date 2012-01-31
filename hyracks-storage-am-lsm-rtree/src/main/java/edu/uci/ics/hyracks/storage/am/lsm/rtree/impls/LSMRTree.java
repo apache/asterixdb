@@ -55,29 +55,29 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTree implements ILSMTree {
-	
-	public class LSMRTreeComponent {
-		private final RTree rtree;
-		private final BTree btree;
-		
-		LSMRTreeComponent (RTree rtree, BTree btree) {
-			this.rtree = rtree;
-			this.btree = btree;
-		}
-		
-		public RTree getRTree() {
-			return rtree;
-		}
-		
-		public BTree getBTree() {
-			return btree;
-		}
-	}
-	
-	private final LSMHarness lsmHarness;
-	
+
+    public class LSMRTreeComponent {
+        private final RTree rtree;
+        private final BTree btree;
+
+        LSMRTreeComponent(RTree rtree, BTree btree) {
+            this.rtree = rtree;
+            this.btree = btree;
+        }
+
+        public RTree getRTree() {
+            return rtree;
+        }
+
+        public BTree getBTree() {
+            return btree;
+        }
+    }
+
+    private final LSMHarness lsmHarness;
+
     // In-memory components.
-	private final LSMRTreeComponent memComponent;
+    private final LSMRTreeComponent memComponent;
     protected final InMemoryFreePageManager memFreePageManager;
     private final static int MEM_RTREE_FILE_ID = 0;
     private final static int MEM_BTREE_FILE_ID = 1;
@@ -90,12 +90,13 @@ public class LSMRTree implements ILSMTree {
     private final RTreeFactory diskRTreeFactory;
     // For creating BTree's used in flush and merge.
     private final BTreeFactory diskBTreeFactory;
-    // List of LSMRTreeComponent instances. Using Object for better sharing via ILSMTree + LSMHarness.
+    // List of LSMRTreeComponent instances. Using Object for better sharing via
+    // ILSMTree + LSMHarness.
     private final LinkedList<Object> diskComponents = new LinkedList<Object>();
 
     private IBinaryComparatorFactory[] btreeCmpFactories;
     private IBinaryComparatorFactory[] rtreeCmpFactories;
-    
+
     // Common for in-memory and on-disk components.
     private final ITreeIndexFrameFactory rtreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory btreeInteriorFrameFactory;
@@ -106,11 +107,12 @@ public class LSMRTree implements ILSMTree {
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMFileNameManager fileNameManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories) {
-        RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager, rtreeInteriorFrameFactory,
-                rtreeLeafFrameFactory);
-        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager, btreeInteriorFrameFactory,
-                btreeLeafFrameFactory);
+            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories) {
+        RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
+                rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
+        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBTreeFactory.getBufferCache();
@@ -129,8 +131,8 @@ public class LSMRTree implements ILSMTree {
 
     @Override
     public void create(int indexFileId) throws HyracksDataException {
-    	memComponent.getRTree().create(MEM_RTREE_FILE_ID);
-    	memComponent.getBTree().create(MEM_BTREE_FILE_ID);
+        memComponent.getRTree().create(MEM_RTREE_FILE_ID);
+        memComponent.getBTree().create(MEM_BTREE_FILE_ID);
     }
 
     /**
@@ -151,8 +153,8 @@ public class LSMRTree implements ILSMTree {
      */
     @Override
     public void open(int indexFileId) throws HyracksDataException {
-    	memComponent.getRTree().open(MEM_RTREE_FILE_ID);
-    	memComponent.getBTree().open(MEM_BTREE_FILE_ID);
+        memComponent.getRTree().open(MEM_RTREE_FILE_ID);
+        memComponent.getBTree().open(MEM_BTREE_FILE_ID);
         File dir = new File(fileNameManager.getBaseDir());
         FilenameFilter rtreeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -175,12 +177,12 @@ public class LSMRTree implements ILSMTree {
         Comparator<String> fileNameCmp = fileNameManager.getFileNameComparator();
         Arrays.sort(rtreeFiles, fileNameCmp);
         Arrays.sort(btreeFiles, fileNameCmp);
-        // Assert rtreeFiles.size() == btreeFiles.size() 
+        // Assert rtreeFiles.size() == btreeFiles.size()
         for (int i = 0; i < rtreeFiles.length; i++) {
-        	RTree rtree = (RTree) createDiskTree(diskRTreeFactory, rtreeFiles[i], false);
-        	BTree btree = (BTree) createDiskTree(diskBTreeFactory, btreeFiles[i], false);
-        	LSMRTreeComponent diskComponent = new LSMRTreeComponent(rtree, btree);
-        	diskComponents.add(diskComponent);
+            RTree rtree = (RTree) createDiskTree(diskRTreeFactory, rtreeFiles[i], false);
+            BTree btree = (BTree) createDiskTree(diskBTreeFactory, btreeFiles[i], false);
+            LSMRTreeComponent diskComponent = new LSMRTreeComponent(rtree, btree);
+            diskComponents.add(diskComponent);
         }
     }
 
@@ -219,7 +221,7 @@ public class LSMRTree implements ILSMTree {
         diskTree.open(diskTreeFileId);
         return diskTree;
     }
-    
+
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
         // Note that by using a flush target file name, we state that the new
@@ -300,14 +302,12 @@ public class LSMRTree implements ILSMTree {
             IIndexOpContext ictx, boolean includeMemComponent) throws HyracksDataException, TreeIndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         int numDiskTrees = diskComponents.size();
-        ITreeIndexAccessor[] bTreeAccessors;
+        int numTrees = (includeMemComponent) ? numDiskTrees + 1 : numDiskTrees;
+        ITreeIndexAccessor[] bTreeAccessors = new ITreeIndexAccessor[numTrees];
         int diskBTreeIx = 0;
         if (includeMemComponent) {
-            bTreeAccessors = new ITreeIndexAccessor[numDiskTrees + 1];
             bTreeAccessors[0] = ctx.memBTreeAccessor;
             diskBTreeIx++;
-        } else {
-            bTreeAccessors = new ITreeIndexAccessor[numDiskTrees];
         }
 
         ListIterator<Object> diskBTreesIter = diskComponents.listIterator();
@@ -319,12 +319,12 @@ public class LSMRTree implements ILSMTree {
         }
 
         LSMRTreeSearchCursor lsmRTreeCursor = (LSMRTreeSearchCursor) cursor;
-        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numDiskTrees + 1,
-                rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), bTreeAccessors, 
+        LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numTrees, rtreeLeafFrameFactory,
+                rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), bTreeAccessors,
                 includeMemComponent, lsmHarness);
         lsmRTreeCursor.open(initialState, pred);
 
-        int cursorIx = 1;
+        int cursorIx;
         if (includeMemComponent) {
             ctx.memRTreeAccessor.search(((LSMRTreeSearchCursor) lsmRTreeCursor).getCursor(0), pred);
             cursorIx = 1;
@@ -430,10 +430,10 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException {        
+    public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException {
         for (Object o : mergedComponents) {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
-            BTree oldBTree = component.getBTree();            
+            BTree oldBTree = component.getBTree();
             FileReference btreeFileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
             diskBufferCache.closeFile(oldBTree.getFileId());
             oldBTree.close();
@@ -458,7 +458,7 @@ public class LSMRTree implements ILSMTree {
 
     @Override
     public void resetInMemoryComponent() throws HyracksDataException {
-        memComponent.getRTree().create(MEM_RTREE_FILE_ID);        
+        memComponent.getRTree().create(MEM_RTREE_FILE_ID);
         memComponent.getBTree().create(MEM_BTREE_FILE_ID);
         memFreePageManager.reset();
     }
@@ -467,21 +467,21 @@ public class LSMRTree implements ILSMTree {
     public List<Object> getDiskComponents() {
         return diskComponents;
     }
-    
+
     protected LSMRTreeOpContext createOpContext() {
         return new LSMRTreeOpContext((RTree.RTreeAccessor) memComponent.getRTree().createAccessor(),
                 (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
-                        .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memComponent.getBTree().createAccessor(),
-                btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
-                        .createFrame(), rtreeCmpFactories, btreeCmpFactories);
+                        .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memComponent.getBTree()
+                        .createAccessor(), btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager
+                        .getMetaDataFrameFactory().createFrame(), rtreeCmpFactories, btreeCmpFactories);
     }
-    
+
     @Override
     public ITreeIndexAccessor createAccessor() {
         return new LSMRTreeAccessor(lsmHarness, createOpContext());
     }
-    
+
     private class LSMRTreeAccessor extends LSMTreeIndexAccessor {
         public LSMRTreeAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
             super(lsmHarness, ctx);

@@ -45,6 +45,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     private ITupleReference frameTuple;
     private boolean includeMemRTree;
     private LSMHarness lsmHarness;
+    private boolean foundNext = false;
 
     public LSMRTreeSearchCursor() {
         currentCursror = 0;
@@ -61,44 +62,44 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public boolean hasNext() throws HyracksDataException {
-        for (int i = currentCursror; i < numberOfTrees; i++) {
-            while (rtreeCursors[i].hasNext()) {
-                rtreeCursors[i].next();
-                ITupleReference currentTuple = rtreeCursors[i].getTuple();
+        if (foundNext) {
+            return true;
+        }
+        while (currentCursror < numberOfTrees) {
+            while (rtreeCursors[currentCursror].hasNext()) {
+                rtreeCursors[currentCursror].next();
+                ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
+
                 boolean killerTupleFound = false;
-                for (int j = 0; j <= i; j++) {
+                for (int i = 0; i <= currentCursror; i++) {
                     btreeRangePredicate.setHighKey(currentTuple, true);
                     btreeRangePredicate.setLowKey(currentTuple, true);
 
                     try {
-                        diskBTreeAccessors[j].search(btreeCursors[j], btreeRangePredicate);
+                        diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                     } catch (TreeIndexException e) {
                         throw new HyracksDataException(e);
                     }
 
-                    if (btreeCursors[j].hasNext()) {
+                    if (btreeCursors[i].hasNext()) {
                         killerTupleFound = true;
                         break;
                     }
                 }
                 if (!killerTupleFound) {
                     frameTuple = currentTuple;
+                    foundNext = true;
                     return true;
                 }
             }
+            currentCursror++;
         }
         return false;
     }
 
     @Override
     public void next() throws HyracksDataException {
-        while (true) {
-            if (currentCursror < numberOfTrees || rtreeCursors[currentCursror].hasNext()) {
-                break;
-            } else {
-                currentCursror++;
-            }
-        }
+        foundNext = false;
     }
 
     @Override
@@ -133,14 +134,14 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     @Override
     public void close() throws HyracksDataException {
         try {
-    	for (int i = 0; i < numberOfTrees; i++) {
-            rtreeCursors[i].close();
-            btreeCursors[i].close();
-        }
-        rtreeCursors = null;
-        btreeCursors = null;
+            for (int i = 0; i < numberOfTrees; i++) {
+                rtreeCursors[i].close();
+                btreeCursors[i].close();
+            }
+            rtreeCursors = null;
+            btreeCursors = null;
         } finally {
-        	lsmHarness.closeSearchCursor(includeMemRTree);
+            lsmHarness.closeSearchCursor(includeMemRTree);
         }
     }
 
