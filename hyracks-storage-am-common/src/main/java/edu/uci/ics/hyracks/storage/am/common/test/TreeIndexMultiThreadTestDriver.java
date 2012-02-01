@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
@@ -38,9 +39,14 @@ public class TreeIndexMultiThreadTestDriver {
         this.workerFactory = workerFactory;
         this.fieldSerdes = fieldSerdes;
         this.opSelector = new TestOperationSelector(ops, opProbs);
+    }      
+    
+    public void init(int fileId) throws HyracksDataException {
+    	index.create(fileId);
+    	index.open(fileId);
     }
     
-    public void run(int numThreads, int numRepeats, int numTuples, int batchSize) throws InterruptedException, TreeIndexException {
+    public long[] run(int numThreads, int numRepeats, int numTuples, int batchSize) throws InterruptedException, TreeIndexException {
         int numBatches = numTuples / batchSize;
         int threadNumBatches = numBatches / numThreads;
         if (threadNumBatches <= 0) {
@@ -69,6 +75,11 @@ public class TreeIndexMultiThreadTestDriver {
             long end = System.currentTimeMillis();
             times[i] = end - start;
         }
+        return times;
+    }
+    
+    public void deinit() throws HyracksDataException {
+    	index.close();
     }
     
     // To allow subclasses to override the data gen params.
