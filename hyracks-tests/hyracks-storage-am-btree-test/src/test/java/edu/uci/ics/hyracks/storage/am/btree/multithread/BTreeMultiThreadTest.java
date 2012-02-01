@@ -37,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.common.test.TreeIndexMultiThreadTestDriver
 public class BTreeMultiThreadTest {    
     
     private final int PAGE_SIZE = 8192;
+    //private final int PAGE_SIZE = 64;
     private final int NUM_PAGES = 1000;
     private final int MAX_OPEN_FILES = 10;
     private final int HYRACKS_FRAME_SIZE = 32768;
@@ -71,8 +72,7 @@ public class BTreeMultiThreadTest {
         
         TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(btree, workerFactory, fieldSerdes, ops, opProbs);
         
-        //driver.run(10, 1, 10000000, 1000);
-        driver.run(6, 1, 10000000, 1000);
+        driver.run(10, 1, 10000000, 1000);
         
         btree.close();
     }

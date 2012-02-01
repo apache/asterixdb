@@ -309,6 +309,10 @@ public class BTree implements ITreeIndex {
     }
     
     private boolean performLeafSplit(int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {    	
+        // We must never hold a latch on a page while waiting to obtain the tree
+        // latch, because it this could lead to a latch-deadlock.
+        // If we can't get the tree latch, we return, release our page latches,
+        // and restart the operation from one level above.
         // Lock is released in unsetSmPages(), after sm has fully completed.
         if (!treeLatch.writeLock().tryLock()) {
             return true;
@@ -529,11 +533,13 @@ public class BTree implements ITreeIndex {
 
                         if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {
                             // Pop the restart op indicator.
-                            ctx.pageLsns.removeLast();
+                            ctx.pageLsns.removeLast();                            
                             if (isConsistent(pageId, ctx)) {
-                                // Don't unpin and unlatch node again in recursive call.
-                                node = null; 
-                                // Descend the tree again.
+                                // Pin and latch page again, since it was unpinned and unlatched in call to performOp (passed as parent).
+                                node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                                node.acquireReadLatch();
+                                ctx.interiorFrame.setPage(node);
+                                // Descend the tree again.                                
                                 continue;
                             } else {
                                 // Pop pageLsn of this page (version seen by this op during descent).
