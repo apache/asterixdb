@@ -37,7 +37,8 @@ public class BufferCache implements IBufferCacheInternal {
     private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 2;
 
-    private static final int MAX_VICTIMIZATION_TRY_COUNT = 3;
+    //private static final int MAX_VICTIMIZATION_TRY_COUNT = 3;
+    private static final int MAX_VICTIMIZATION_TRY_COUNT = 1000000;
 
     private final int maxOpenFiles;
 
@@ -137,7 +138,8 @@ public class BufferCache implements IBufferCacheInternal {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info(dumpState());
             }
-            throw new HyracksDataException("Failed to pin page because all pages are pinned.");
+            throw new HyracksDataException("Failed to pin page " + BufferedFileHandle.getFileId(dpid) + ":"
+                    + BufferedFileHandle.getPageId(dpid) + " because all pages are pinned.");
         }
         if (!newPage) {
             if (!cPage.valid) {
@@ -380,6 +382,9 @@ public class BufferCache implements IBufferCacheInternal {
 
     private void write(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
+        if(fInfo.fileHasBeenDeleted()){
+            return;
+        }
         cPage.buffer.position(0);
         cPage.buffer.limit(pageSize);
         ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
@@ -525,7 +530,7 @@ public class BufferCache implements IBufferCacheInternal {
                                         cPage.pinCount.decrementAndGet();
                                         synchronized (cleanNotification) {
                                             ++cleanCount;
-                                            cleanNotification.notifyAll();
+                                            cleanNotification.notify();
                                         }
                                     }
                                 } finally {

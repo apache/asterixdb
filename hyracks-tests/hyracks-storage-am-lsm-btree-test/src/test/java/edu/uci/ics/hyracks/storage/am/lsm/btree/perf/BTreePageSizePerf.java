@@ -68,7 +68,7 @@ public class BTreePageSizePerf {
         runner.init();
         int numThreads = 1;
         for (int i = 0; i < repeats; i++) {
-            DataGenThread dataGen = new DataGenThread(numBatches, batchSize, 10, numThreads, fieldSerdes, 30, 50, false);
+            DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, 30, 50, 10, false);
             dataGen.start();            
             times[i] = runner.runExperiment(dataGen, numThreads);
             System.out.println("TIME " + i + ": " + times[i] + "ms");

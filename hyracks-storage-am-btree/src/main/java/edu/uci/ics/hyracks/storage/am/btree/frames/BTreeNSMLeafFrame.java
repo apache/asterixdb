@@ -91,7 +91,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
         int freeSpace = buf.getInt(freeSpaceOff);
-        slotManager.insertSlot(tupleIndex, freeSpace);        
+        slotManager.insertSlot(tupleIndex, freeSpace);
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
         buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
         buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);

@@ -22,7 +22,7 @@ public class DataGenThread extends Thread {
     private TupleBatch[] tupleBatches;
     private int ringPos;
     
-    public DataGenThread(int maxNumBatches, int batchSize, int maxOutstandingBatches, int numConsumers, ISerializerDeserializer[] fieldSerdes, int payloadSize, int rndSeed, boolean sorted) {
+    public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes, int payloadSize, int rndSeed, int maxOutstandingBatches, boolean sorted) {
         this.maxNumBatches = maxNumBatches;
         this.maxOutstandingBatches = maxOutstandingBatches;
         rnd = new Random(rndSeed);

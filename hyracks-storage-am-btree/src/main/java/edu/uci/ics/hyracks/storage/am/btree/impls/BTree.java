@@ -549,14 +549,14 @@ public class BTree implements ITreeIndex {
                             case UPDATE: {
                                 // Is there a propagated split key?
                                 if (ctx.splitKey.getBuffer() != null) {
-                                    node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                                    node.acquireWriteLatch();
+                                    ICachedPage interiorNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                                    interiorNode.acquireWriteLatch();
                                     try {
                                         // Insert or update op. Both can cause split keys to propagate upwards.                                            
-                                        insertInterior(node, pageId, ctx.splitKey.getTuple(), ctx);
+                                        insertInterior(interiorNode, pageId, ctx.splitKey.getTuple(), ctx);
                                     } finally {
-                                        node.releaseWriteLatch();
-                                        bufferCache.unpin(node);
+                                    	interiorNode.releaseWriteLatch();
+                                        bufferCache.unpin(interiorNode);
                                     }
                                 } else {
                                     unsetSmPages(ctx);
@@ -628,15 +628,19 @@ public class BTree implements ITreeIndex {
             }
         } catch (TreeIndexException e) {
         	if (!ctx.exceptionHandled) {
-                releaseLatch(node, ctx, unsafeIsLeaf);
-                bufferCache.unpin(node);
-                ctx.exceptionHandled = true;
+        		if (node != null) {
+        			releaseLatch(node, ctx, unsafeIsLeaf);
+        			bufferCache.unpin(node);
+        			ctx.exceptionHandled = true;
+        		}
             }
             throw e;
         } catch (Exception e) {
         	e.printStackTrace();
-            releaseLatch(node, ctx, unsafeIsLeaf);
-            bufferCache.unpin(node);
+        	if (node != null) {
+        		releaseLatch(node, ctx, unsafeIsLeaf);
+        		bufferCache.unpin(node);
+        	}
             BTreeException wrappedException = new BTreeException(e);
             ctx.exceptionHandled = true;
             throw wrappedException;

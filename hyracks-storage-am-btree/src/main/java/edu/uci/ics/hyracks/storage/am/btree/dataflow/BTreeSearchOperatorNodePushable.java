@@ -99,7 +99,7 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getComparatorFactories(), lowKey);
             highKeySearchCmp = BTreeUtils
                     .getSearchMultiComparator(btree.getComparatorFactories(), highKey);
-            rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
+            rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 
             writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
@@ -151,8 +151,6 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 if (highKey != null) {
                     highKey.reset(accessor, i);
                 }
-                rangePred.setLowKey(lowKey, lowKeyInclusive);
-                rangePred.setHighKey(highKey, highKeyInclusive);
                 cursor.reset();
                 indexAccessor.search(cursor, rangePred);
                 writeSearchResults();
