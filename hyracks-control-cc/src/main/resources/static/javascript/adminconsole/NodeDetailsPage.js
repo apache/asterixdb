@@ -26,6 +26,21 @@ $(function() {
         $('#os-name')[0].innerHTML = result['os-name'];
         $('#os-version')[0].innerHTML = result['os-version'];
         $('#num-processors')[0].innerHTML = result['num-processors'];
+        $('#vm-name')[0].innerHTML = result['vm-name'];
+        $('#vm-version')[0].innerHTML = result['vm-version'];
+        $('#vm-vendor')[0].innerHTML = result['vm-vendor'];
+        $('#classpath')[0].innerHTML = result['classpath'];
+        $('#library-path')[0].innerHTML = result['library-path'];
+        $('#boot-classpath')[0].innerHTML = result['boot-classpath'];
+        var argsHTML = "";
+        var args = result['input-arguments'];
+        for ( var i = 0; i < args.length; ++i) {
+            if (argsHTML != "") {
+                argsHTML += "<br/>";
+            }
+            argsHTML += "<span>" + args[i] + "</span>";
+        }
+        $('#input-arguments')[0].innerHTML = argsHTML;
         var sysLoad = result['system-load-averages'];
         var heapUsageInitSizes = result['heap-init-sizes'];
         var heapUsageUsedSizes = result['heap-used-sizes'];

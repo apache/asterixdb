@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.control.common.controllers;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
@@ -39,10 +41,28 @@ public final class NodeRegistration implements Serializable {
 
     private final int nProcessors;
 
+    private final String vmName;
+
+    private final String vmVersion;
+
+    private final String vmVendor;
+
+    private final String classpath;
+
+    private final String libraryPath;
+
+    private final String bootClasspath;
+
+    private final List<String> inputArguments;
+
+    private final Map<String, String> systemProperties;
+
     private final HeartbeatSchema hbSchema;
 
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
-            String osName, String arch, String osVersion, int nProcessors, HeartbeatSchema hbSchema) {
+            String osName, String arch, String osVersion, int nProcessors, String vmName, String vmVersion,
+            String vmVendor, String classpath, String libraryPath, String bootClasspath, List<String> inputArguments,
+            Map<String, String> systemProperties, HeartbeatSchema hbSchema) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
@@ -51,6 +71,14 @@ public final class NodeRegistration implements Serializable {
         this.arch = arch;
         this.osVersion = osVersion;
         this.nProcessors = nProcessors;
+        this.vmName = vmName;
+        this.vmVersion = vmVersion;
+        this.vmVendor = vmVendor;
+        this.classpath = classpath;
+        this.libraryPath = libraryPath;
+        this.bootClasspath = bootClasspath;
+        this.inputArguments = inputArguments;
+        this.systemProperties = systemProperties;
         this.hbSchema = hbSchema;
     }
 
@@ -88,5 +116,37 @@ public final class NodeRegistration implements Serializable {
 
     public HeartbeatSchema getHeartbeatSchema() {
         return hbSchema;
+    }
+
+    public String getVmName() {
+        return vmName;
+    }
+
+    public String getVmVersion() {
+        return vmVersion;
+    }
+
+    public String getVmVendor() {
+        return vmVendor;
+    }
+
+    public String getClasspath() {
+        return classpath;
+    }
+
+    public String getLibraryPath() {
+        return libraryPath;
+    }
+
+    public String getBootClasspath() {
+        return bootClasspath;
+    }
+
+    public List<String> getInputArguments() {
+        return inputArguments;
+    }
+
+    public Map<String, String> getSystemProperties() {
+        return systemProperties;
     }
 }
