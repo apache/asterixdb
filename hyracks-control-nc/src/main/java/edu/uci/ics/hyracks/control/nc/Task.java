@@ -93,8 +93,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
-        opEnv = joblet.getEnvironment(taskId.getTaskId().getActivityId().getOperatorDescriptorId(), taskId.getTaskId()
-                .getPartition());
+        opEnv = joblet.getEnvironment();
         partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
         pendingThreads = new LinkedHashSet<Thread>();
         failed = false;

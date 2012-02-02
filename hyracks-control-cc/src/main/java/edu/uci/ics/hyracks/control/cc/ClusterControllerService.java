@@ -142,6 +142,11 @@ public class ClusterControllerService extends AbstractRemoteService {
                 GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(ClusterControllerService.this, map);
                 workQueue.scheduleAndSync(ginmw);
             }
+
+            @Override
+            public ClusterControllerInfo getClusterControllerInfo() {
+                return info;
+            }
         };
         sweeper = new DeadNodeSweeper();
         jobCounter = 0;
@@ -155,8 +160,8 @@ public class ClusterControllerService extends AbstractRemoteService {
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
         workQueue.start();
-        info = new ClusterControllerInfo();
-        info.setWebPort(webServer.getListeningPort());
+        info = new ClusterControllerInfo(ccConfig.clientNetIpAddress, ccConfig.clientNetPort,
+                webServer.getListeningPort());
         timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
         jobLog.open();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");

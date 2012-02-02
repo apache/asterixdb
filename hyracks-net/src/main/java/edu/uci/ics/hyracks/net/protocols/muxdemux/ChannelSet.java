@@ -96,6 +96,10 @@ public class ChannelSet {
         int idx = channel.getChannelId();
         ccbArray[idx] = null;
         allocationBitmap.clear(idx);
+        pendingChannelWriteBitmap.clear(idx);
+        pendingChannelCreditsBitmap.clear(idx);
+        pendingChannelSynBitmap.clear(idx);
+        pendingEOSAckBitmap.clear(idx);
         --openChannelCount;
     }
 
@@ -137,12 +141,17 @@ public class ChannelSet {
         }
         synchronized (mConn) {
             ChannelControlBlock ccb = ccbArray[channelId];
-            int oldCredits = ccb.getReadCredits();
-            ccb.setReadCredits(oldCredits + delta);
-            if (oldCredits == 0) {
-                assert !pendingChannelCreditsBitmap.get(channelId);
-                pendingChannelCreditsBitmap.set(channelId);
-                pendingWriteEventsCounter.increment();
+            if (ccb != null) {
+                if (ccb.getRemoteEOS()) {
+                    return;
+                }
+                int oldCredits = ccb.getReadCredits();
+                ccb.setReadCredits(oldCredits + delta);
+                if (oldCredits == 0) {
+                    assert !pendingChannelCreditsBitmap.get(channelId);
+                    pendingChannelCreditsBitmap.set(channelId);
+                    pendingWriteEventsCounter.increment();
+                }
             }
         }
     }

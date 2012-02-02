@@ -401,7 +401,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                         setNextTopTuple(runIndex, tupleIndices, runFileReaders, tupleAccessors,
                                                 topTuples);
                                 } else {
-                                    closeRun(runIndex, runFileReaders, tupleAccessors);
                                     break;
                                 }
                             }
@@ -565,22 +564,20 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          * If all tuples in the targeting frame have been
                          * checked.
                          */
-                        int frameOffset = runIndex * runFrameLimit;
                         tupleIndices[runIndex] = 0;
-                        currentFrameIndexInRun[runIndex] = frameOffset;
+                        currentFrameIndexInRun[runIndex] = runStart;
                         /**
                          * read in batch
                          */
                         currentRunFrames[runIndex] = 0;
-                        for (int j = 0; j < runFrameLimit; j++, frameOffset++) {
-                            ByteBuffer buffer = tupleAccessors[frameOffset].getBuffer();
-                            if (runCursors[runIndex].nextFrame(buffer)) {
-                                tupleAccessors[frameOffset].reset(buffer);
-                                if (tupleAccessors[frameOffset].getTupleCount() > 0) {
-                                    existNext = true;
-                                } else {
-                                    throw new IllegalStateException("illegal: empty run file");
-                                }
+                        for (int j = 0; j < runFrameLimit; j++) {
+                            int frameIndex = currentFrameIndexInRun[runIndex]
+                                    + j;
+                            if (runCursors[runIndex].nextFrame(inFrames
+                                    .get(frameIndex))) {
+                                tupleAccessors[frameIndex].reset(inFrames
+                                        .get(frameIndex));
+                                existNext = true;
                                 currentRunFrames[runIndex]++;
                             } else {
                                 break;
@@ -611,7 +608,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     if (runCursors[index] != null) {
                         runCursors[index].close();
                         runCursors[index] = null;
-                        tupleAccessor[index] = null;
+                        int frameOffset = index * runFrameLimit;
+                        for (int j = 0; j < runFrameLimit; j++) {
+                            tupleAccessor[frameOffset + j] = null;
+                        }
                     }
                 }
 

@@ -1,276 +1,60 @@
 <wicket:extend xmlns:wicket>
-    <div id='system-load-chart' class="jqplot-target time-chart">
+    <div id="tabs">
+        <ul>
+            <li><a href="#tabs-1">Node Information</a></li>
+            <li><a href="#tabs-2">System Load</a></li>
+            <li><a href="#tabs-3">Garbage Collection</a></li>
+            <li><a href="#tabs-4">Memory Usage</a></li>
+            <li><a href="#tabs-5">Thread Statistics</a></li>
+            <li><a href="#tabs-6">Network Statistics</a></li>
+        </ul>
+        
+        <div id="tabs-1">
+            <table border="0">
+                <tr><td>Node Id</td><td><span id="node-id"></span></td></tr>
+                <tr><td>Architecture</td><td><span id="arch"></span></td></tr>
+                <tr><td>OS Name</td><td><span id="os-name"></span></td></tr>
+                <tr><td>OS Version</td><td><span id="os-version"></span></td></tr>
+                <tr><td># of processors</td><td><span id="num-processors"></span></td></tr>
+                <tr><td>Java VM Name</td><td><span id="vm-name"></span></td></tr>
+                <tr><td>Java VM Version</td><td><span id="vm-version"></span></td></tr>
+                <tr><td>Java VM Vendor</td><td><span id="vm-vendor"></span></td></tr>
+                <tr><td>Java Classpath</td><td><span id="classpath"></span></td></tr>
+                <tr><td>Java Library Path</td><td><span id="library-path"></span></td></tr>
+                <tr><td>Java Boot Classpath</td><td><span id="boot-classpath"></span></td></tr>
+                <tr><td>Java VM Arguments</td><td><div id="input-arguments"></div></td></tr>
+            </table>
+        </div>
+
+        <div id="tabs-2">
+            <div id='system-load-chart' class="time-chart">
+            </div>
+        </div>
+
+        <div id="tabs-3">
+            <div id='gc-charts'>
+            </div>
+        </div>
+
+        <div id="tabs-4">
+            <div id='heap-usage-chart' class="time-chart">
+            </div>
+            <div id='nonheap-usage-chart' class="time-chart">
+            </div>
+        </div>
+
+        <div id="tabs-5">
+            <div id='thread-chart' class="time-chart">
+            </div>
+        </div>
+
+        <div id="tabs-6">
+            <div id='net-payload-bandwidth' class="time-chart">
+            </div>
+            <div id='net-signaling-bandwidth' class="time-chart">
+            </div>
+        </div>
     </div>
-    <div id='gc-charts'>
-    </div>
-    <div id='heap-usage-chart' class="jqplot-target time-chart">
-    </div>
-    <div id='nonheap-usage-chart' class="jqplot-target time-chart">
-    </div>
-    <div id='thread-chart' class="jqplot-target time-chart">
-    </div>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $.timer(function() {
-                window.location.reload();
-            }, 10000, true);
-            $.get('/rest/nodes/' + $.getURLParam('node-id'), function(data) {
-                var result = data.result;
-                var sysLoad = result['system-load-averages'];
-                var heapUsageInitSizes = result['heap-init-sizes'];
-                var heapUsageUsedSizes = result['heap-used-sizes'];
-                var heapUsageCommittedSizes = result['heap-committed-sizes'];
-                var heapUsageMaxSizes = result['heap-max-sizes'];
-                var nonheapUsageInitSizes = result['nonheap-init-sizes'];
-                var nonheapUsageUsedSizes = result['nonheap-used-sizes'];
-                var nonheapUsageCommittedSizes = result['nonheap-committed-sizes'];
-                var nonheapUsageMaxSizes = result['nonheap-max-sizes'];
-                var threadCounts = result['thread-counts'];
-                var peakThreadCounts = result['peak-thread-counts'];
-                var gcCollectionCounts = result['gc-collection-counts'];
-                var gcCollectionTimes = result['gc-collection-times'];
-                var sysLoadArray = [];
-                var heapUsageInitSizesArray = [];
-                var heapUsageUsedSizesArray = [];
-                var heapUsageCommittedSizesArray = [];
-                var heapUsageMaxSizesArray = [];
-                var nonheapUsageInitSizesArray = [];
-                var nonheapUsageUsedSizesArray = [];
-                var nonheapUsageCommittedSizesArray = [];
-                var nonheapUsageMaxSizesArray = [];
-                var threadCountsArray = [];
-                var peakThreadCountsArray = [];
-                var gcCollectionCountsArray = [];
-                var gcCollectionTimesArray = [];
-                var gcChartsDiv = document.getElementById('gc-charts');
-                for(var i = 0; i < gcCollectionCounts.length; ++i) {
-                    gcCollectionCountsArray.push([]);
-                    gcCollectionTimesArray.push([]);
-                    var gcCollectionCountDiv = document.createElement('div');
-                    gcCollectionCountDiv.id = 'gc-collection-count-' + i;
-                    gcCollectionCountDiv.style = "jqplot-target time-chart";
-                    gcChartsDiv.appendChild(gcCollectionCountDiv);
-                    var gcCollectionTimeDiv = document.createElement('div');
-                    gcCollectionTimeDiv.id = 'gc-collection-time-' + i;
-                    gcChartsDiv.appendChild(gcCollectionTimeDiv);
-                }
-                var rrdPtr = result['rrd-ptr'];
-                for(var i = 0; i < sysLoad.length; ++i) {
-                    sysLoadArray.push([i, sysLoad[rrdPtr]]);
-                    heapUsageInitSizesArray.push([i, heapUsageInitSizes[rrdPtr] / (1024 * 1024)]);
-                    heapUsageUsedSizesArray.push([i, heapUsageUsedSizes[rrdPtr] / (1024 * 1024)]);
-                    heapUsageCommittedSizesArray.push([i, heapUsageCommittedSizes[rrdPtr] / (1024 * 1024)]);
-                    heapUsageMaxSizesArray.push([i, heapUsageMaxSizes[rrdPtr] / (1024 * 1024)]);
-                    nonheapUsageInitSizesArray.push([i, nonheapUsageInitSizes[rrdPtr] / (1024 * 1024)]);
-                    nonheapUsageUsedSizesArray.push([i, nonheapUsageUsedSizes[rrdPtr] / (1024 * 1024)]);
-                    nonheapUsageCommittedSizesArray.push([i, nonheapUsageCommittedSizes[rrdPtr] / (1024 * 1024)]);
-                    nonheapUsageMaxSizesArray.push([i, nonheapUsageMaxSizes[rrdPtr] / (1024 * 1024)]);
-                    threadCountsArray.push([i, threadCounts[rrdPtr]]);
-                    peakThreadCountsArray.push([i, peakThreadCounts[rrdPtr]]);
-                    for(var j = 0; j < gcCollectionCounts.length; ++j) {
-                        gcCollectionCountsArray[j].push([i, gcCollectionCounts[j][rrdPtr]]);
-                    }
-                    for(var j = 0; j < gcCollectionTimes.length; ++j) {
-                        gcCollectionTimesArray[j].push([i, gcCollectionTimes[j][rrdPtr]]);
-                    }
-                    rrdPtr = (rrdPtr + 1) % sysLoad.length;
-                }
-                $('#system-load-chart').empty();
-                $.jqplot('system-load-chart', [sysLoadArray], {
-                    title: 'System Load',
-                    axes: {
-                        xaxis: {
-                            label: 'Time',
-                            tickOptions: {
-                                formatString:'%d'
-                            }
-                        },
-                        yaxis: {
-                            label: 'System Load',
-                            tickOptions:{
-                                formatString:'%.2f'
-                            }
-                        }
-                    },
-                    highlighter: {
-                        show: true,
-                        sizeAdjust: 7.5
-                    },
-                    cursor: {
-                        show: false
-                    }
-                });
-                var gcNames = result['gc-names'];
-                for(var i = 0; i < gcCollectionCounts.length; ++i) {
-                    $('#gc-collection-count-' + i).addClass("jqplot-target time-chart");
-                    $.jqplot('gc-collection-count-' + i, [gcCollectionCountsArray[i]], {
-                        title: 'GC Collection Counts(' + gcNames[i] + ')',
-                        axes: {
-                            xaxis: {
-                                label: 'Time',
-                                tickOptions: {
-                                    formatString:'%d'
-                                }
-                            },
-                            yaxis: {
-                                label: 'Collection Counts',
-                                tickOptions:{
-                                    formatString:'%d'
-                                }
-                            }
-                        },
-                        highlighter: {
-                            show: true,
-                            sizeAdjust: 7.5
-                        },
-                        cursor: {
-                            show: false
-                        }
-                    });
-                    $('#gc-collection-time-' + i).addClass("jqplot-target time-chart");
-                    $.jqplot('gc-collection-time-' + i, [gcCollectionTimesArray[i]], {
-                        title: 'GC Collection Times(' + gcNames[i] + ')',
-                        axes: {
-                            xaxis: {
-                                label: 'Time',
-                                tickOptions: {
-                                    formatString:'%d'
-                                }
-                            },
-                            yaxis: {
-                                label: 'Collection Times',
-                                tickOptions:{
-                                    formatString:'%d'
-                                }
-                            }
-                        },
-                        highlighter: {
-                            show: true,
-                            sizeAdjust: 7.5
-                        },
-                        cursor: {
-                            show: false
-                        }
-                    });
-                }
-                $('#heap-usage-chart').empty();
-                $.jqplot('heap-usage-chart', [heapUsageInitSizesArray, heapUsageUsedSizesArray, heapUsageCommittedSizesArray, heapUsageMaxSizesArray], {
-                    title: 'Heap Usage',
-                    series: [ 
-                        {
-                            lineWidth: 2, 
-                            markerOptions: { style:'dimaond' }
-                        }, 
-                        {
-                            showLine:false, 
-                            markerOptions: { size: 7, style:"x" }
-                        },
-                        { 
-                            markerOptions: { style:"circle" }
-                        }, 
-                        {
-                            lineWidth:5, 
-                            markerOptions: { style:"filledSquare", size:10 }
-                        }
-                    ],
-                    axes: {
-                        xaxis: {
-                            label: 'Time',
-                            tickOptions: {
-                                formatString:'%d'
-                            }
-                        },
-                        yaxis: {
-                            label: 'Memory Size',
-                            tickOptions:{
-                                formatString:'%.2f'
-                            }
-                        }
-                    },
-                    highlighter: {
-                        show: true,
-                        sizeAdjust: 7.5
-                    },
-                    cursor: {
-                        show: false
-                    }
-                });
-                $('#nonheap-usage-chart').empty();
-                $.jqplot('nonheap-usage-chart', [nonheapUsageInitSizesArray, nonheapUsageUsedSizesArray, nonheapUsageCommittedSizesArray, nonheapUsageMaxSizesArray], {
-                    title: 'Non Heap Usage',
-                    series: [ 
-                        {
-                            lineWidth: 2, 
-                            markerOptions: { style:'dimaond' }
-                        }, 
-                        {
-                            showLine:false, 
-                            markerOptions: { size: 7, style:"x" }
-                        },
-                        { 
-                            markerOptions: { style:"circle" }
-                        }, 
-                        {
-                            lineWidth:5, 
-                            markerOptions: { style:"filledSquare", size:10 }
-                        }
-                    ],
-                    axes: {
-                        xaxis: {
-                            label: 'Time',
-                            tickOptions: {
-                                formatString:'%d'
-                            }
-                        },
-                        yaxis: {
-                            label: 'Memory Size',
-                            tickOptions:{
-                                formatString:'%.2f'
-                            }
-                        }
-                    },
-                    highlighter: {
-                        show: true,
-                        sizeAdjust: 7.5
-                    },
-                    cursor: {
-                        show: false
-                    }
-                });
-                $('#thread-chart').empty();
-                $.jqplot('thread-chart', [threadCountsArray, peakThreadCountsArray], {
-                    title: 'Thread Counts',
-                    series: [ 
-                        {
-                            markerOptions: { style:'dimaond' }
-                        }, 
-                        {
-                            markerOptions: { style:"x" }
-                        }
-                    ],
-                    axes: {
-                        xaxis: {
-                            label: 'Time',
-                            tickOptions: {
-                                formatString:'%d'
-                            }
-                        },
-                        yaxis: {
-                            label: 'Threads',
-                            tickOptions:{
-                                formatString:'%d'
-                            }
-                        }
-                    },
-                    highlighter: {
-                        show: true,
-                        sizeAdjust: 7.5
-                    },
-                    cursor: {
-                        show: false
-                    }
-                });
-            });
-        });
-    </script>
+
+    <script src="/static/javascript/adminconsole/NodeDetailsPage.js" type="text/javascript"></script>
 </wicket:extend>

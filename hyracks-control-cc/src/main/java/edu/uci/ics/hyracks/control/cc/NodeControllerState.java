@@ -15,8 +15,11 @@
 package edu.uci.ics.hyracks.control.cc;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,6 +50,22 @@ public class NodeControllerState {
     private final String osVersion;
 
     private final int nProcessors;
+
+    private final String vmName;
+
+    private final String vmVersion;
+
+    private final String vmVendor;
+
+    private final String classpath;
+
+    private final String libraryPath;
+
+    private final String bootClasspath;
+
+    private final List<String> inputArguments;
+
+    private final Map<String, String> systemProperties;
 
     private final HeartbeatSchema hbSchema;
 
@@ -102,6 +121,15 @@ public class NodeControllerState {
         arch = reg.getArch();
         osVersion = reg.getOSVersion();
         nProcessors = reg.getNProcessors();
+        vmName = reg.getVmName();
+        vmVersion = reg.getVmVersion();
+        vmVendor = reg.getVmVendor();
+        classpath = reg.getClasspath();
+        libraryPath = reg.getLibraryPath();
+        bootClasspath = reg.getBootClasspath();
+        inputArguments = reg.getInputArguments();
+        systemProperties = reg.getSystemProperties();
+
         hbSchema = reg.getHeartbeatSchema();
 
         hbTime = new long[RRD_SIZE];
@@ -199,6 +227,13 @@ public class NodeControllerState {
         o.put("arch", arch);
         o.put("os-version", osVersion);
         o.put("num-processors", nProcessors);
+        o.put("vm-name", vmName);
+        o.put("vm-version", vmVersion);
+        o.put("vm-vendor", vmVendor);
+        o.put("classpath", classpath);
+        o.put("library-path", libraryPath);
+        o.put("boot-classpath", bootClasspath);
+        o.put("input-arguments", new JSONArray(inputArguments));
         o.put("rrd-ptr", rrdPtr);
         o.put("heartbeat-times", hbTime);
         o.put("heap-init-sizes", heapInitSize);
