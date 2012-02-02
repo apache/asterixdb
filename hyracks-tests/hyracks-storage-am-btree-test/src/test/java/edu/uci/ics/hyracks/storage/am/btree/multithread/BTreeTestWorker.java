@@ -65,6 +65,8 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
             case UPDATE: 
                 try {
                     accessor.update(tuple);
+                } catch (BTreeNonExistentKeyException e) {
+                    // Ignore non-existant keys, since we get random tuples.
                 } catch (BTreeNotUpdateableException e) {
                     // Ignore not updateable exception due to numKeys == numFields.
                 }
@@ -100,7 +102,7 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
     private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
         try {
             while(cursor.hasNext()) {
-
+                cursor.next();
             }
         } finally {
             cursor.close();

@@ -64,13 +64,13 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 		while ((frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) && (currentPageId <= maxPageId)) {
 			currentPageId++;
 
+			page.releaseReadLatch();
+            bufferCache.unpin(page);
+			
 			ICachedPage nextPage = bufferCache.pin(
 					BufferedFileHandle.getDiskPageId(fileId, currentPageId),
 					false);
 			nextPage.acquireReadLatch();
-
-			page.releaseReadLatch();
-			bufferCache.unpin(page);
 
 			page = nextPage;
 			frame.setPage(page);

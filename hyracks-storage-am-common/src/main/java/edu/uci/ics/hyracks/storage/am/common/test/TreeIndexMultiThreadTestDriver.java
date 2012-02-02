@@ -46,8 +46,8 @@ public class TreeIndexMultiThreadTestDriver {
     	index.open(fileId);
     }
     
-    public long[] run(int numThreads, int numRepeats, int numTuples, int batchSize) throws InterruptedException, TreeIndexException {
-        int numBatches = numTuples / batchSize;
+    public long[] run(int numThreads, int numRepeats, int numOps, int batchSize) throws InterruptedException, TreeIndexException {
+        int numBatches = numOps / batchSize;
         int threadNumBatches = numBatches / numThreads;
         if (threadNumBatches <= 0) {
             throw new TreeIndexException("Inconsistent parameters given. Need at least one batch per thread.");

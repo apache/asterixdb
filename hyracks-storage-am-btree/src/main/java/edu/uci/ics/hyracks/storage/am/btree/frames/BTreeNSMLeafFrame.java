@@ -71,7 +71,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
-        if (tupleIndex == slotManager.getErrorIndicator()) {
+        if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
         }        
         return tupleIndex;
@@ -82,7 +82,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
-        if (tupleIndex == slotManager.getErrorIndicator()) {
+        if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }        
         return tupleIndex;

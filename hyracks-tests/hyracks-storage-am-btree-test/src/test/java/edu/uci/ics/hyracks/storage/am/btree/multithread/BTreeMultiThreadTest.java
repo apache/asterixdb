@@ -15,11 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.multithread;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -27,6 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.test.TreeIndexMultiThreadTestDriver;
 
 @SuppressWarnings("rawtypes")
@@ -41,70 +42,96 @@ public class BTreeMultiThreadTest {
     
     protected final Logger LOGGER = Logger.getLogger(BTreeMultiThreadTest.class.getName());
     
-    //private final int PAGE_SIZE = 8192;
-    //private final int PAGE_SIZE = 8192;
-    //private final int NUM_PAGES = 100;
-    //private final int MAX_OPEN_FILES = 10;
-    //private final int HYRACKS_FRAME_SIZE = 32768;
-    
     private final BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
-    //private final BTreeTestHarness harness = new BTreeTestHarness(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES, HYRACKS_FRAME_SIZE);
     private final BTreeTestHarness harness = new BTreeTestHarness();
 
     // Machine-specific number of threads to use for testing.
     private final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
     // Excessive number of threads for testing.
     private final int EXCESSIVE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 4;
-    private final int NUM_TUPLES = 1000000;
+    private final int NUM_OPERATIONS = 20000;
     
-    @Before
-    public void setUp() throws HyracksDataException {
-        harness.setUp();
-    }
+    private ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
 
-    @After
-    public void tearDown() throws HyracksDataException {
-        harness.tearDown();
+    private static ArrayList<TestWorkloadConf> getTestWorkloadConf() {
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        
+        // Insert only workload.
+        TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
+        
+        // Inserts mixed with point searches and scans.
+        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN, TestOperation.DISKORDER_SCAN };
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
+        
+        // Inserts, updates, and deletes.        
+        TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
+        
+        // All operations mixed.
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN, TestOperation.DISKORDER_SCAN };
+        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
+        
+        return workloadConfs;
     }
     
-    private void runOneIntKeyAndValueTest(int numThreads) throws HyracksDataException, InterruptedException, TreeIndexException {
+    private static float[] getUniformOpProbs(TestOperation[] ops) {
+        float[] opProbs = new float[ops.length];
+        for (int i = 0; i < ops.length; i++) {
+            opProbs[i] = 1.0f / (float) ops.length;
+        }
+        return opProbs;
+    }
+    
+    private void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksDataException, InterruptedException, TreeIndexException {
+        harness.setUp();
+        
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("BTree MultiThread Test With One Int Key And Value Using " + numThreads + " Threads.");
+            LOGGER.info("BTree MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads + "; Workload: " + conf.toString() + ".");
         }
         
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        int numKeyFields = 1;
-        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);     
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeys);     
         
-        int btreeFileId = harness.getBTreeFileId();
         BTree btree = BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
-        
-        TestOperation[] ops = new TestOperation[] { TestOperation.INSERT };
-        float[] opProbs = new float[] { 1.0f };
         
         // 4 batches per thread.
-        int batchSize = (NUM_TUPLES / numThreads) / 4;
+        int batchSize = (NUM_OPERATIONS / numThreads) / 4;
         
-        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(btree, workerFactory, fieldSerdes, ops, opProbs);
+        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(btree, workerFactory, fieldSerdes, conf.ops, conf.opProbs);
         driver.init(harness.getBTreeFileId());
-        long[] times = driver.run(REGULAR_NUM_THREADS, 1, NUM_TUPLES, batchSize);
+        long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         driver.deinit();
         
-        for (int i = 0; i < times.length; i++) {
-            System.out.println("TIME: " + times[i]);
-        }        
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree MultiThread Test Time: " + times[0] + "ms");
+        }
+        
+        harness.tearDown();
     }
     
     @Test
     public void oneIntKeyAndValueRegular() throws InterruptedException, HyracksDataException, TreeIndexException {        
-        runOneIntKeyAndValueTest(REGULAR_NUM_THREADS);
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        int numKeys = 1;
+        String dataMsg = "One Int Key And Value";
+        
+        for (TestWorkloadConf conf : workloadConfs) {
+            runTest(fieldSerdes, numKeys, REGULAR_NUM_THREADS, conf, dataMsg);
+            runTest(fieldSerdes, numKeys, EXCESSIVE_NUM_THREADS, conf, dataMsg);
+        }
     }
     
     @Test
-    public void oneIntKeyAndValueExcessive() throws InterruptedException, HyracksDataException, TreeIndexException {        
-        runOneIntKeyAndValueTest(EXCESSIVE_NUM_THREADS);
+    public void oneStringKeyAndValueRegular() throws InterruptedException, HyracksDataException, TreeIndexException {        
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+        int numKeys = 1;
+        String dataMsg = "One String Key And Value";
+        
+        for (TestWorkloadConf conf : workloadConfs) {
+            runTest(fieldSerdes, numKeys, REGULAR_NUM_THREADS, conf, dataMsg);
+            runTest(fieldSerdes, numKeys, EXCESSIVE_NUM_THREADS, conf, dataMsg);
+        }
     }
+    
 }
