@@ -15,11 +15,55 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.util;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.data.PointablePrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
+import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class RTreeUtils {
+    public static RTree createRTree(IBufferCache bufferCache, int rtreeFileId, ITypeTraits[] typeTraits,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, IBinaryComparatorFactory[] cmpFactories) {
+
+        RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
+        ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, rtreeFileId, 0, metaFrameFactory);
+        RTree rtree = new RTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
+        return rtree;
+    }
+
+    // Creates a new MultiComparator by constructing new IBinaryComparators.
+    public static MultiComparator getSearchMultiComparator(IBinaryComparatorFactory[] cmpFactories,
+            ITupleReference searchKey) {
+        if (searchKey == null || cmpFactories.length == searchKey.getFieldCount()) {
+            return MultiComparator.create(cmpFactories);
+        }
+        IBinaryComparator[] newCmps = new IBinaryComparator[searchKey.getFieldCount()];
+        for (int i = 0; i < searchKey.getFieldCount(); i++) {
+            newCmps[i] = cmpFactories[i].createBinaryComparator();
+        }
+        return new MultiComparator(newCmps);
+    }
+
     public static IPrimitiveValueProviderFactory[] createPrimitiveValueProviderFactories(int len, IPointableFactory pf) {
         IPrimitiveValueProviderFactory[] pvpfs = new IPrimitiveValueProviderFactory[len];
         for (int i = 0; i < len; ++i) {

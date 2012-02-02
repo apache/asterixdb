@@ -19,7 +19,6 @@ import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -41,6 +40,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private TreeIndexDataflowHelper treeIndexHelper;
@@ -86,12 +86,8 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             writer.open();
             try {
                 rtree = (RTree) treeIndexHelper.getIndex();
-                int keySearchFields = rtree.getComparatorFactories().length;
-                IBinaryComparator[] keySearchComparators = new IBinaryComparator[keySearchFields];
-                for (int i = 0; i < keySearchFields; i++) {
-                    keySearchComparators[i] = rtree.getComparatorFactories()[i].createBinaryComparator();
-                }
-                cmp = new MultiComparator(keySearchComparators);
+                cmp = RTreeUtils.getSearchMultiComparator(rtree.getComparatorFactories(), searchKey);
+
                 searchPred = new SearchPredicate(searchKey, cmp);
                 writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
                 tb = new ArrayTupleBuilder(rtree.getFieldCount());
@@ -140,7 +136,6 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             for (int i = 0; i < tupleCount; i++) {
                 searchKey.reset(accessor, i);
 
-                searchPred.setSearchKey(searchKey);
                 cursor.reset();
                 indexAccessor.search(cursor, searchPred);
                 writeSearchResults();

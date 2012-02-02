@@ -25,29 +25,32 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-@SuppressWarnings("rawtypes") 
-public class TupleUtils {    
+@SuppressWarnings("rawtypes")
+public class TupleUtils {
     @SuppressWarnings("unchecked")
-    public static void createTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple, ISerializerDeserializer[] fieldSerdes, final Object... fields) throws HyracksDataException {
+    public static void createTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple,
+            ISerializerDeserializer[] fieldSerdes, final Object... fields) throws HyracksDataException {
         DataOutput dos = tupleBuilder.getDataOutput();
         tupleBuilder.reset();
         int numFields = Math.min(tupleBuilder.getFieldEndOffsets().length, fields.length);
-        for (int i = 0; i < numFields; i++) {  
+        for (int i = 0; i < numFields; i++) {
             fieldSerdes[i].serialize(fields[i], dos);
             tupleBuilder.addFieldEndOffset();
         }
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
     }
 
-    public static ITupleReference createTuple(ISerializerDeserializer[] fieldSerdes, final Object... fields) throws HyracksDataException {
+    public static ITupleReference createTuple(ISerializerDeserializer[] fieldSerdes, final Object... fields)
+            throws HyracksDataException {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fields.length);
         ArrayTupleReference tuple = new ArrayTupleReference();
         createTuple(tupleBuilder, tuple, fieldSerdes, fields);
         return tuple;
     }
-    
+
     public static void createIntegerTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple,
             final int... fields) throws HyracksDataException {
         DataOutput dos = tupleBuilder.getDataOutput();
@@ -65,14 +68,31 @@ public class TupleUtils {
         createIntegerTuple(tupleBuilder, tuple, fields);
         return tuple;
     }
-    
-    public static String printTuple(ITupleReference tuple,
-            ISerializerDeserializer[] fields) throws HyracksDataException {
+
+    public static void createDoubleTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple,
+            final double... fields) throws HyracksDataException {
+        DataOutput dos = tupleBuilder.getDataOutput();
+        tupleBuilder.reset();
+        for (final double i : fields) {
+            DoubleSerializerDeserializer.INSTANCE.serialize(i, dos);
+            tupleBuilder.addFieldEndOffset();
+        }
+        tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+    }
+
+    public static ITupleReference createDoubleTuple(final double... fields) throws HyracksDataException {
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fields.length);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        createDoubleTuple(tupleBuilder, tuple, fields);
+        return tuple;
+    }
+
+    public static String printTuple(ITupleReference tuple, ISerializerDeserializer[] fields)
+            throws HyracksDataException {
         StringBuilder strBuilder = new StringBuilder();
         int numPrintFields = Math.min(tuple.getFieldCount(), fields.length);
         for (int i = 0; i < numPrintFields; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(
-                    tuple.getFieldData(i), tuple.getFieldStart(i),
+            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Object o = fields[i].deserialize(dataIn);
@@ -80,10 +100,10 @@ public class TupleUtils {
             if (i != fields.length - 1) {
                 strBuilder.append(" ");
             }
-        }        
+        }
         return strBuilder.toString();
     }
-    
+
     public static Object[] deserializeTuple(ITupleReference tuple, ISerializerDeserializer[] fields)
             throws HyracksDataException {
         int numFields = Math.min(tuple.getFieldCount(), fields.length);
@@ -96,7 +116,7 @@ public class TupleUtils {
         }
         return objs;
     }
-    
+
     public static ITupleReference copyTuple(ITupleReference tuple) throws HyracksDataException {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(tuple.getFieldCount());
         for (int i = 0; i < tuple.getFieldCount(); i++) {
