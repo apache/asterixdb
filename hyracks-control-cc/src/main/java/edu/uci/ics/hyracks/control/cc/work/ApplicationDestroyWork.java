@@ -39,7 +39,7 @@ public class ApplicationDestroyWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            final CCApplicationContext appCtx = ccs.getApplicationMap().remove(appName);
+            final CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
             if (appCtx == null) {
                 callback.setException(new HyracksException("No application with name: " + appName));
                 return;
