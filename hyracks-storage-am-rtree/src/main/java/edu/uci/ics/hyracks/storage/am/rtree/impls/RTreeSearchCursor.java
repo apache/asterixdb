@@ -39,7 +39,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     private SearchPredicate pred;
     private PathList pathList;
     private int rootPage;
-    ITupleReference searchKey;
+    private ITupleReference searchKey;
 
     private int tupleIndex = 0;
     private int tupleIndexInc = 0;
@@ -120,7 +120,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                             pathList.add(childPageId, pageLsn, -1);
                         }
                     }
-                        
+
                 } else {
                     page = node;
                     leafFrame.setPage(page);
@@ -201,11 +201,12 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                         searchKey.getFieldLength(i), searchKey.getFieldData(j), searchKey.getFieldStart(j),
                         searchKey.getFieldLength(j));
                 if (c > 0) {
-                    throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
+                    throw new IllegalArgumentException(
+                            "The low key point has larger coordinates than the high key point.");
                 }
             }
         }
-        
+
         pathList.add(this.rootPage, -1, -1);
         tupleIndex = 0;
         fetchNextLeafPage();
@@ -230,8 +231,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         this.fileId = fileId;
     }
 
-	@Override
-	public boolean exclusiveLatchNodes() {
-		return false;
-	}
+    @Override
+    public boolean exclusiveLatchNodes() {
+        return false;
+    }
 }

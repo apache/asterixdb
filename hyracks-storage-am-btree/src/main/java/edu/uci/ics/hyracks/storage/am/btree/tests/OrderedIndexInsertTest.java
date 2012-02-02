@@ -33,31 +33,34 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
  */
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexInsertTest extends OrderedIndexTestDriver {
-    
+
+    private final OrderedIndexTestUtils orderedIndexTestUtils;
+
     public OrderedIndexInsertTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
         super(leafFrameTypesToTest);
+        this.orderedIndexTestUtils = new OrderedIndexTestUtils();
     }
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
-        IOrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
+        OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            OrderedIndexTestUtils.insertIntTuples(ctx, numTuplesToInsert, getRandom());
+            orderedIndexTestUtils.insertIntTuples(ctx, numTuplesToInsert, getRandom());
         } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            OrderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, getRandom());
+            orderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, getRandom());
         }
 
-        OrderedIndexTestUtils.checkPointSearches(ctx);
-        OrderedIndexTestUtils.checkOrderedScan(ctx);
-        OrderedIndexTestUtils.checkDiskOrderScan(ctx);
+        orderedIndexTestUtils.checkPointSearches(ctx);
+        orderedIndexTestUtils.checkScan(ctx);
+        orderedIndexTestUtils.checkDiskOrderScan(ctx);
 
-        OrderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
+        orderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
         if (prefixLowKey != null && prefixHighKey != null) {
-            OrderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
+            orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
         }
         ctx.getIndex().close();
     }

@@ -20,52 +20,55 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.tests.IOrderedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestDriver;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
 
 @SuppressWarnings("rawtypes")
 public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
-    
+
+    private final OrderedIndexTestUtils orderedIndexTestUtils;
+
     public LSMBTreeMergeTestDriver(BTreeLeafFrameType[] leafFrameTypesToTest) {
         super(leafFrameTypesToTest);
+        this.orderedIndexTestUtils = new OrderedIndexTestUtils();
     }
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
-        IOrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
-        
+        OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
+
         // Start off with one tree bulk loaded.
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            OrderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+            orderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
         } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-            OrderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
+            orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
         }
-        
+
         int maxTreesToMerge = 10;
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {
                 if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                    OrderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+                    orderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
                 } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-                    OrderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
+                    orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
                 }
             }
 
             ILSMTreeIndexAccessor accessor = (ILSMTreeIndexAccessor) ctx.getIndexAccessor();
             accessor.merge();
-            
-            OrderedIndexTestUtils.checkPointSearches(ctx);
-            OrderedIndexTestUtils.checkOrderedScan(ctx);
-            OrderedIndexTestUtils.checkDiskOrderScan(ctx);
-            OrderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
+
+            orderedIndexTestUtils.checkPointSearches(ctx);
+            orderedIndexTestUtils.checkScan(ctx);
+            orderedIndexTestUtils.checkDiskOrderScan(ctx);
+            orderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
             if (prefixLowKey != null && prefixHighKey != null) {
-                OrderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
+                orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
     }

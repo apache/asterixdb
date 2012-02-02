@@ -146,7 +146,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             checkTuple.add(Math.min(p1y, p2y));
             checkTuple.add(Math.max(p1x, p2x));
             checkTuple.add(Math.max(p1y, p2y));
-            
+
             checkTuples.add(checkTuple);
         }
 
@@ -166,7 +166,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
         indexAccessor.search(searchCursor, searchPredicate);
 
-        rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount);
+        rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount, null);
 
         rtree.close();
     }

@@ -27,12 +27,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 public abstract class TreeIndexTestUtils {
     private static final Logger LOGGER = Logger.getLogger(TreeIndexTestUtils.class.getName());
 
-    protected abstract CheckTuple createCheckTuple(int numfields, int numKeyFields);
+    protected abstract CheckTuple createCheckTuple(int numFields, int numKeyFields);
 
     protected abstract ISearchPredicate createNullSearchPredicate();
 
     public abstract void checkExpectedResults(ITreeIndexCursor cursor, Collection checkTuples,
-            ISerializerDeserializer[] fieldSerdes, int keyFieldCount) throws Exception;
+            ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception;
 
     protected abstract CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields);
 
@@ -43,7 +43,7 @@ public abstract class TreeIndexTestUtils {
     protected abstract Collection createCheckTuplesCollection();
 
     @SuppressWarnings("unchecked")
-    private static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
+    public static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
             ArrayTupleReference tuple, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {
         int fieldCount = tupleBuilder.getFieldEndOffsets().length;
         DataOutput dos = tupleBuilder.getDataOutput();
@@ -70,6 +70,7 @@ public abstract class TreeIndexTestUtils {
         return checkTuple;
     }
 
+    @SuppressWarnings("unchecked")
     public void checkScan(ITreeIndexTestContext ctx) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Scan.");
@@ -77,7 +78,8 @@ public abstract class TreeIndexTestUtils {
         ITreeIndexCursor scanCursor = ctx.getIndexAccessor().createSearchCursor();
         ISearchPredicate nullPred = createNullSearchPredicate();
         ctx.getIndexAccessor().search(scanCursor, nullPred);
-        checkExpectedResults(scanCursor, ctx.getCheckTuples(), ctx.getFieldSerdes(), ctx.getKeyFieldCount());
+        Iterator<CheckTuple> checkIter = ctx.getCheckTuples().iterator();
+        checkExpectedResults(scanCursor, ctx.getCheckTuples(), ctx.getFieldSerdes(), ctx.getKeyFieldCount(), checkIter);
     }
 
     public void checkDiskOrderScan(ITreeIndexTestContext ctx) throws Exception {

@@ -48,8 +48,8 @@ public abstract class AbstractRTreeBulkLoadTest extends RTreeTestDriver {
             rTreeTestUtils.checkScan(ctx);
             rTreeTestUtils.checkDiskOrderScan(ctx);
             rTreeTestUtils.checkRangeSearch(ctx, key);
-            ctx.getIndex().close();
         }
+        ctx.getIndex().close();
     }
 
     @Override

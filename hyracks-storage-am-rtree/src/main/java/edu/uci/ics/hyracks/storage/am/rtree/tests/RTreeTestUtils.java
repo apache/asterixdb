@@ -59,7 +59,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         ArrayList<RTreeCheckTuple> expectedResult = null;
 
         expectedResult = getRangeSearchExpectedResults((ArrayList<RTreeCheckTuple>) ctx.getCheckTuples(), keyCheck);
-        checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount());
+        checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount(), null);
     }
 
     @SuppressWarnings("unchecked")
@@ -142,7 +142,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
 
     @Override
     public void checkExpectedResults(ITreeIndexCursor cursor, Collection checkTuples,
-            ISerializerDeserializer[] fieldSerdes, int keyFieldCount) throws Exception {
+            ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
         try {
             while (cursor.hasNext()) {

@@ -31,11 +31,6 @@ public abstract class AbstractRTreeTestContext extends TreeIndexTestContext<RTre
     }
 
     @Override
-    public void insertCheckTuple(RTreeCheckTuple checkTuple, Collection<RTreeCheckTuple> checkTuples) {
-        checkTuples.add(checkTuple);
-    }
-
-    @Override
     public Collection<RTreeCheckTuple> getCheckTuples() {
         return checkTuples;
     }

@@ -18,73 +18,17 @@ package edu.uci.ics.hyracks.storage.am.btree.tests;
 import java.util.TreeSet;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.test.CheckTuple;
+import edu.uci.ics.hyracks.storage.am.common.test.TreeIndexTestContext;
 
 @SuppressWarnings("rawtypes")
-public abstract class OrderedIndexTestContext implements IOrderedIndexTestContext {
-    protected final ISerializerDeserializer[] fieldSerdes;
-    protected final ITreeIndex treeIndex;
-    protected final ArrayTupleBuilder tupleBuilder;
-    protected final ArrayTupleReference tuple = new ArrayTupleReference();
+public abstract class OrderedIndexTestContext extends TreeIndexTestContext<CheckTuple> {
+
     protected final TreeSet<CheckTuple> checkTuples = new TreeSet<CheckTuple>();
-    protected final ITreeIndexAccessor indexAccessor;
 
     public OrderedIndexTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
-        this.fieldSerdes = fieldSerdes;
-        this.treeIndex = treeIndex;
-        this.indexAccessor = treeIndex.createAccessor();
-        this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
-    }
-
-    @Override
-    public int getFieldCount() {
-        return fieldSerdes.length;
-    }
-
-    @Override
-    public ITreeIndexAccessor getIndexAccessor() {
-        return indexAccessor;
-    }
-
-    @Override
-    public ArrayTupleReference getTuple() {
-        return tuple;
-    }
-
-    @Override
-    public ArrayTupleBuilder getTupleBuilder() {
-        return tupleBuilder;
-    }
-
-    @Override
-    public CheckTuple createIntCheckTuple(int[] fieldValues) {        
-        CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(getFieldCount(), getKeyFieldCount());
-        for(int v : fieldValues) {
-            checkTuple.add(v);
-        }
-        return checkTuple;
-    }
-
-    @Override
-    public CheckTuple createStringCheckTuple(String[] fieldValues) {
-        CheckTuple<String> checkTuple = new CheckTuple<String>(getFieldCount(), getKeyFieldCount());
-        for(String s : fieldValues) {
-            checkTuple.add((String)s);
-        }
-        return checkTuple;
-    }
-    
-    @Override
-    public void insertCheckTuple(CheckTuple checkTuple, TreeSet<CheckTuple> checkTuples) {        
-        checkTuples.add(checkTuple);
-    }
-
-    @Override
-    public ISerializerDeserializer[] getFieldSerdes() {
-        return fieldSerdes;
+        super(fieldSerdes, treeIndex);
     }
 
     @Override
@@ -92,8 +36,4 @@ public abstract class OrderedIndexTestContext implements IOrderedIndexTestContex
         return checkTuples;
     }
 
-    @Override
-    public ITreeIndex getIndex() {
-        return treeIndex;
-    }
 }

@@ -15,15 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
-import java.util.TreeSet;
+import java.util.Collection;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
-import edu.uci.ics.hyracks.storage.am.btree.tests.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.test.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -31,8 +31,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 @SuppressWarnings("rawtypes")
-public final class LSMBTreeTestContext extends OrderedIndexTestContext {    
-    
+public final class LSMBTreeTestContext extends OrderedIndexTestContext {
+
     public LSMBTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
         super(fieldSerdes, treeIndex);
     }
@@ -53,13 +53,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
      * Override to provide upsert semantics for the check tuples.
      */
     @Override
-    public void insertCheckTuple(CheckTuple checkTuple, TreeSet<CheckTuple> checkTuples) {        
+    public void insertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
         if (checkTuples.contains(checkTuple)) {
             checkTuples.remove(checkTuple);
         }
         checkTuples.add(checkTuple);
     }
-    
+
     public static LSMBTreeTestContext create(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, String onDiskDir, IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes, int numKeyFields, int fileId)

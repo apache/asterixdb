@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.common.test;
 
+import java.util.Collection;
+
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -64,5 +66,10 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     @Override
     public ITreeIndex getIndex() {
         return treeIndex;
+    }
+
+    @Override
+    public void insertCheckTuple(T checkTuple, Collection<T> checkTuples) {
+        checkTuples.add(checkTuple);
     }
 }
