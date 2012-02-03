@@ -10,8 +10,8 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
 
 public abstract class LSMTreeIndexAccessor implements ILSMTreeIndexAccessor {
-	private LSMHarness lsmHarness;
-	private IIndexOpContext ctx;
+	protected LSMHarness lsmHarness;
+	protected IIndexOpContext ctx;
 
 	public LSMTreeIndexAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
 		this.lsmHarness = lsmHarness;

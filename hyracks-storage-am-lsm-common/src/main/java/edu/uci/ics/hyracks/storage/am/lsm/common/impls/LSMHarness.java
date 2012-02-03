@@ -157,11 +157,12 @@ public class LSMHarness {
     }
 
     public void merge() throws HyracksDataException, TreeIndexException  {
+        if (!isMerging.compareAndSet(false, true)) {
+            throw new LSMMergeInProgressException("Merge already in progress in LSMTree. Only one concurrent merge allowed.");
+        }
+        
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Merging LSM-Tree.");
-        }
-        if (!isMerging.compareAndSet(false, true)) {
-            throw new TreeIndexException("Merge already in progress in LSMTree. Only one concurrent merge allowed.");
         }
         
         // Point to the current searcher ref count, so we can wait for it later

@@ -32,11 +32,11 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
 	
 	@Override
 	protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
-			IBinaryComparatorFactory[] cmpFactory) throws TreeIndexException {
+			IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
 		return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
 				harness.getMemFreePageManager(), harness.getOnDiskDir(),
 				harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-				typeTraits, cmpFactory);
+				typeTraits, cmpFactories);
 	}
 
 	@Override

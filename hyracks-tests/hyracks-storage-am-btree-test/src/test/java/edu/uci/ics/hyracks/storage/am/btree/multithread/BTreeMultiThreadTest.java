@@ -16,44 +16,48 @@
 package edu.uci.ics.hyracks.storage.am.btree.multithread;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.common.test.TreeIndexMultiThreadTestDriver;
 
-@SuppressWarnings("rawtypes")
-public class BTreeMultiThreadTest {    
-    
-    protected final Logger LOGGER = Logger.getLogger(BTreeMultiThreadTest.class.getName());
-    
-    private final BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
-    private final BTreeTestHarness harness = new BTreeTestHarness();
+public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
-    // Machine-specific number of threads to use for testing.
-    private final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
-    // Excessive number of threads for testing.
-    private final int EXCESSIVE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 4;
-    private final int NUM_OPERATIONS = 20000;
+    private BTreeTestHarness harness = new BTreeTestHarness();
     
-    private ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
+    private BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
+    
+    @Override
+    protected void setUp() throws HyracksDataException {
+        harness.setUp();
+    }
 
-    private static ArrayList<TestWorkloadConf> getTestWorkloadConf() {
+    @Override
+    protected void tearDown() throws HyracksDataException {
+        harness.tearDown();
+    }
+
+    @Override
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
+        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+    }
+
+    @Override
+    protected ITreeIndexTestWorkerFactory getWorkerFactory() {
+        return workerFactory;
+    }
+
+    @Override
+    protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
         ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
         
         // Insert only workload.
@@ -74,64 +78,14 @@ public class BTreeMultiThreadTest {
         
         return workloadConfs;
     }
-    
-    private static float[] getUniformOpProbs(TestOperation[] ops) {
-        float[] opProbs = new float[ops.length];
-        for (int i = 0; i < ops.length; i++) {
-            opProbs[i] = 1.0f / (float) ops.length;
-        }
-        return opProbs;
+
+    @Override
+    protected int getFileId() {
+        return harness.getBTreeFileId();
     }
-    
-    private void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksDataException, InterruptedException, TreeIndexException {
-        harness.setUp();
-        
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("BTree MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads + "; Workload: " + conf.toString() + ".");
-        }
-        
-        ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeys);     
-        
-        BTree btree = BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
-        
-        // 4 batches per thread.
-        int batchSize = (NUM_OPERATIONS / numThreads) / 4;
-        
-        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(btree, workerFactory, fieldSerdes, conf.ops, conf.opProbs);
-        driver.init(harness.getBTreeFileId());
-        long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
-        driver.deinit();
-        
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("BTree MultiThread Test Time: " + times[0] + "ms");
-        }
-        
-        harness.tearDown();
+
+    @Override
+    protected String getIndexTypeName() {
+        return "BTree";
     }
-    
-    @Test
-    public void oneIntKeyAndValueRegular() throws InterruptedException, HyracksDataException, TreeIndexException {        
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-        int numKeys = 1;
-        String dataMsg = "One Int Key And Value";
-        
-        for (TestWorkloadConf conf : workloadConfs) {
-            runTest(fieldSerdes, numKeys, REGULAR_NUM_THREADS, conf, dataMsg);
-            runTest(fieldSerdes, numKeys, EXCESSIVE_NUM_THREADS, conf, dataMsg);
-        }
-    }
-    
-    @Test
-    public void oneStringKeyAndValueRegular() throws InterruptedException, HyracksDataException, TreeIndexException {        
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
-        int numKeys = 1;
-        String dataMsg = "One String Key And Value";
-        
-        for (TestWorkloadConf conf : workloadConfs) {
-            runTest(fieldSerdes, numKeys, REGULAR_NUM_THREADS, conf, dataMsg);
-            runTest(fieldSerdes, numKeys, EXCESSIVE_NUM_THREADS, conf, dataMsg);
-        }
-    }
-    
 }

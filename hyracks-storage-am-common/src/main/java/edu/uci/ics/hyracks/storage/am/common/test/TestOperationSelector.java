@@ -27,7 +27,6 @@ public class TestOperationSelector {
         RANGE_SEARCH,
         ORDERED_SCAN,
         DISKORDER_SCAN,
-        FLUSH,
         MERGE        
     }
     

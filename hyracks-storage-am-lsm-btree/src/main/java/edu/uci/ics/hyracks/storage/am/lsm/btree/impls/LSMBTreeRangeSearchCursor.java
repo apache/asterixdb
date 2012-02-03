@@ -48,8 +48,9 @@ public class LSMBTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     public void initPriorityQueue()
-            throws HyracksDataException {                
-        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(rangeCursors.length, pqCmp);
+            throws HyracksDataException {
+        int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
+        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
         for (int i = 0; i < rangeCursors.length; i++) {
             PriorityQueueElement element;
             if (rangeCursors[i].hasNext()) {

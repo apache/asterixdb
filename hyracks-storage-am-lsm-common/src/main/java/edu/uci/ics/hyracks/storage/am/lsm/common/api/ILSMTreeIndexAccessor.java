@@ -35,11 +35,11 @@ public interface ILSMTreeIndexAccessor extends ITreeIndexAccessor {
 	 */
 	public void flush() throws HyracksDataException, TreeIndexException;
 
-	/**
-	 * Merge all on-disk components.
-	 * 
-	 * @throws HyracksDataException
-	 * @throws TreeIndexException
-	 */
-	public void merge() throws HyracksDataException, TreeIndexException;
+    /**
+     * Merge all on-disk components.
+     * 
+     * @throws HyracksDataException
+     * @throws TreeIndexException
+     */
+    public void merge() throws HyracksDataException, TreeIndexException;
 }

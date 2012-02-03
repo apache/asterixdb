@@ -44,6 +44,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -497,7 +498,7 @@ public class LSMBTree implements ILSMTree {
         return new LSMBTreeIndexAccessor(lsmHarness, createOpContext());
     }
     
-    private class LSMBTreeIndexAccessor extends LSMTreeIndexAccessor {
+    public class LSMBTreeIndexAccessor extends LSMTreeIndexAccessor {
         public LSMBTreeIndexAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
             super(lsmHarness, ctx);
         }
@@ -505,6 +506,11 @@ public class LSMBTree implements ILSMTree {
         @Override
         public ITreeIndexCursor createSearchCursor() {
             return new LSMBTreeRangeSearchCursor();
+        }
+        
+        public MultiComparator getMultiComparator() {
+            LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) ctx;
+            return concreteCtx.cmp;
         }
     }
 }

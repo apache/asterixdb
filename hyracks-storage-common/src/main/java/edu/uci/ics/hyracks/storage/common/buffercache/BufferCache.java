@@ -135,8 +135,8 @@ public class BufferCache implements IBufferCacheInternal {
 
         CachedPage cPage = findPage(dpid, newPage);
         if (cPage == null) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info(dumpState());
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine(dumpState());
             }
             throw new HyracksDataException("Failed to pin page " + BufferedFileHandle.getFileId(dpid) + ":"
                     + BufferedFileHandle.getPageId(dpid) + " because all pages are pinned.");
@@ -703,8 +703,11 @@ public class BufferCache implements IBufferCacheInternal {
     public void closeFile(int fileId) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Closing file: " + fileId + " in cache: " + this);
-            LOGGER.info(dumpState());
         }
+        if (LOGGER.isLoggable(Level.FINE)) {            
+            LOGGER.fine(dumpState());
+        }
+        
         synchronized (fileInfoMap) {
             BufferedFileHandle fInfo = fileInfoMap.get(fileId);
             if (fInfo == null) {

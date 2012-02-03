@@ -141,7 +141,7 @@ public class BTree implements ITreeIndex {
         // due to ongoing structure modifications during the descent
         boolean repeatOp = true;
         while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
-            performOp(rootPage, null, ctx);
+            performOp(rootPage, null, true, ctx);
             // if we reach this stage then we need to restart from the (possibly
             // new) root
             if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {
@@ -232,7 +232,7 @@ public class BTree implements ITreeIndex {
         // due to ongoing structure modifications during the descent.
         boolean repeatOp = true;
         while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
-            performOp(rootPage, null, ctx);
+            performOp(rootPage, null, true, ctx);
             // Do we need to restart from the (possibly new) root?
             if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {
                 ctx.pageLsns.removeLast(); // pop the restart op indicator
@@ -469,19 +469,13 @@ public class BTree implements ITreeIndex {
         return false;
     }
 
-    private final void acquireLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
+    private final boolean acquireLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
         if (!isLeaf || (ctx.op == IndexOp.SEARCH && !ctx.cursor.exclusiveLatchNodes())) {
             node.acquireReadLatch();
+            return true;
         } else {
             node.acquireWriteLatch();
-        }
-    }
-
-    private final void releaseLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
-        if (!isLeaf || (ctx.op == IndexOp.SEARCH && !ctx.cursor.exclusiveLatchNodes())) {
-            node.releaseReadLatch();
-        } else {
-            node.releaseWriteLatch();
+            return false;
         }
     }
 
@@ -499,14 +493,14 @@ public class BTree implements ITreeIndex {
         return isConsistent;
     }
 
-    private void performOp(int pageId, ICachedPage parent, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void performOp(int pageId, ICachedPage parent, boolean parentIsReadLatched, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         ctx.interiorFrame.setPage(node);
         
         // this check performs an unprotected read in the page
         // the following could happen: TODO fill out
         boolean unsafeIsLeaf = ctx.interiorFrame.isLeaf();
-        acquireLatch(node, ctx, unsafeIsLeaf);
+        boolean isReadLatched = acquireLatch(node, ctx, unsafeIsLeaf);
         boolean smFlag = ctx.interiorFrame.getSmFlag();
         // re-check leafness after latching
         boolean isLeaf = ctx.interiorFrame.isLeaf();
@@ -515,10 +509,13 @@ public class BTree implements ITreeIndex {
         // structure modification
         ctx.pageLsns.add(ctx.interiorFrame.getPageLsn());
         try {
-            // latch coupling, note: parent should never be write latched,
-            // otherwise something is wrong.
+            // Latch coupling: unlatch parent.
             if (parent != null) {
-                parent.releaseReadLatch();
+                if (parentIsReadLatched) {
+                	parent.releaseReadLatch();
+                } else {
+                	parent.releaseWriteLatch();
+                }
                 bufferCache.unpin(parent);
             }
             if (!isLeaf || smFlag) {
@@ -529,7 +526,7 @@ public class BTree implements ITreeIndex {
                     boolean repeatOp = true;
                     while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
                         int childPageId = ctx.interiorFrame.getChildPageId(ctx.pred);
-                        performOp(childPageId, node, ctx);
+                        performOp(childPageId, node, isReadLatched, ctx);
 
                         if (!ctx.pageLsns.isEmpty() && ctx.pageLsns.getLast() == RESTART_OP) {
                             // Pop the restart op indicator.
@@ -539,6 +536,7 @@ public class BTree implements ITreeIndex {
                                 node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                 node.acquireReadLatch();
                                 ctx.interiorFrame.setPage(node);
+                                isReadLatched = true;
                                 // Descend the tree again.                                
                                 continue;
                             } else {
@@ -587,7 +585,11 @@ public class BTree implements ITreeIndex {
                     } // end while
                 } else { // smFlag
                     ctx.opRestarts++;
-                    releaseLatch(node, ctx, unsafeIsLeaf);
+                    if (isReadLatched) {
+                    	node.releaseReadLatch();
+                    } else {
+                    	node.releaseWriteLatch();
+                    }
                     bufferCache.unpin(node);
 
                     // TODO: this should be an instant duration lock, how to do
@@ -635,7 +637,11 @@ public class BTree implements ITreeIndex {
         } catch (TreeIndexException e) {
         	if (!ctx.exceptionHandled) {
         		if (node != null) {
-        			releaseLatch(node, ctx, unsafeIsLeaf);
+        			if (isReadLatched) {
+        				node.releaseReadLatch();
+        			} else {
+        				node.releaseWriteLatch();
+        			}
         			bufferCache.unpin(node);
         			ctx.exceptionHandled = true;
         		}
@@ -644,7 +650,11 @@ public class BTree implements ITreeIndex {
         } catch (Exception e) {
         	e.printStackTrace();
         	if (node != null) {
-        		releaseLatch(node, ctx, unsafeIsLeaf);
+        		if (isReadLatched) {
+    				node.releaseReadLatch();
+    			} else {
+    				node.releaseWriteLatch();
+    			}
         		bufferCache.unpin(node);
         	}
             BTreeException wrappedException = new BTreeException(e);

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.multithread;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.multithread;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -32,27 +31,29 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.test.AbstractTreeIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 
-public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
+public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
     
-    private final BTree btree;
+    private final LSMBTree lsmBTree;
     private final int numKeyFields;
     private final ArrayTupleBuilder deleteTb;
     private final ArrayTupleReference deleteTuple = new ArrayTupleReference();
     
-    public BTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
+    public LSMBTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
         super(dataGen, opSelector, index, numBatches);
-        btree = (BTree) index;
-        numKeyFields = btree.getComparatorFactories().length;
+        lsmBTree = (LSMBTree) index;
+        numKeyFields = lsmBTree.getComparatorFactories().length;
         deleteTb = new ArrayTupleBuilder(numKeyFields);
     }
     
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, TreeIndexException {        
-        BTree.BTreeAccessor accessor = (BTree.BTreeAccessor) indexAccessor;
+        LSMBTreeIndexAccessor accessor = (LSMBTreeIndexAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor();
-        ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
-        MultiComparator cmp = accessor.getOpContext().cmp;
+        MultiComparator cmp = accessor.getMultiComparator();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
         
         switch (op) {
@@ -104,12 +105,19 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
                 consumeCursorTuples(searchCursor);
                 break;
                 
-            case DISKORDER_SCAN:
-                diskOrderScanCursor.reset();
-                accessor.diskOrderScan(diskOrderScanCursor);
-                consumeCursorTuples(diskOrderScanCursor);
-                break;                            
-            
+            case MERGE:
+                try {
+                    accessor.merge();
+                } catch (LSMMergeInProgressException e) {
+                    // Ignore ongoing merges. Do an insert instead.
+                    try {
+                        accessor.insert(tuple);
+                    } catch (BTreeDuplicateKeyException e1) {
+                        // Ignore duplicate keys, since we get random tuples.
+                    }
+                }
+                break;
+                
             default:
                 throw new HyracksDataException("Op " + op.toString() + " not supported.");
         }
