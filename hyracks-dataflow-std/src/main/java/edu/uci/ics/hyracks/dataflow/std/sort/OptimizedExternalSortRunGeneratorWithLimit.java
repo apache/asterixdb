@@ -224,6 +224,7 @@ public class OptimizedExternalSortRunGeneratorWithLimit implements IRunGenerator
 
         writer.close();
         runs.add(writer.createReader());
+        memMgr.close();
     }
 
     public List<IFrameReader> getRuns() {

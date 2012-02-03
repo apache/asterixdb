@@ -8,14 +8,13 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
- * @author pouria
- *         Implements Memory Manager based on creating Binary Search Tree (BST)
- *         while Free slot size is the key for the BST nodes. Each node in BST
- *         shows a class of free slots, while all the free slots within a class
- *         have same lengths. Slots in a class are stored as a LinkedList, whose
- *         head is the BST node, corresponding to that class. BST is not stored
- *         as a separate data structure, but the free slots in the memory are
- *         used to hold BST nodes. Each BST node has the logical structure,
+ * @author pouria Implements Memory Manager based on creating Binary Search Tree
+ *         (BST) while Free slot size is the key for the BST nodes. Each node in
+ *         BST shows a class of free slots, while all the free slots within a
+ *         class have same lengths. Slots in a class are stored as a LinkedList,
+ *         whose head is the BST node, corresponding to that class. BST is not
+ *         stored as a separate data structure, but the free slots in the memory
+ *         are used to hold BST nodes. Each BST node has the logical structure,
  *         defined in the BSTNodeUtil class.
  */
 public class BSTMemMgr implements IMemoryManager {
@@ -26,11 +25,13 @@ public class BSTMemMgr implements IMemoryManager {
     private ByteBuffer[] frames;
     private ByteBuffer convertBuffer;
     private Slot root;
-    private Slot result; // A reusable object to hold one node returned as method result
-    private Slot insertSlot; // A reusable object to hold one node within insert process
-    private Slot lastLeftParent; //A reusable object for the search process
-    private Slot lastLeft; //A reusable object for the search process
-    private Slot parent; //A reusable object for the search process 
+    private Slot result; // A reusable object to hold one node returned as
+                         // method result
+    private Slot insertSlot; // A reusable object to hold one node within insert
+                             // process
+    private Slot lastLeftParent; // A reusable object for the search process
+    private Slot lastLeft; // A reusable object for the search process
+    private Slot parent; // A reusable object for the search process
 
     private Slot[] parentRes;
     private int lastFrame;
@@ -68,7 +69,8 @@ public class BSTMemMgr implements IMemoryManager {
         if (shouldSplit(sl, acLen)) {
             int[] s = split(parentRes[1], parentRes[0], acLen);
             int insertLen = BSTNodeUtil.getLength(s[2], s[3], frames, convertBuffer);
-            insert(s[2], s[3], insertLen); // inserting second half of the split slot
+            insert(s[2], s[3], insertLen); // inserting second half of the split
+                                           // slot
             BSTNodeUtil.setHeaderFooter(s[0], s[1], length, false, frames);
             result.set(s[0], s[1]);
             return;
@@ -87,7 +89,8 @@ public class BSTMemMgr implements IMemoryManager {
                 : BSTNodeUtil.INVALID_INDEX);
         int t = off + 2 * BSTNodeUtil.HEADER_SIZE + actualLen;
         int nextMemSlotHeaderOffset = (t < frameSize ? t : BSTNodeUtil.INVALID_INDEX);
-        // Remember: next and prev memory slots have the same frame index as the unallocated slot
+        // Remember: next and prev memory slots have the same frame index as the
+        // unallocated slot
         if (!isNodeNull(fix, prevMemSlotFooterOffset) && BSTNodeUtil.isFree(fix, prevMemSlotFooterOffset, frames)) {
             int leftLength = BSTNodeUtil.getLength(fix, prevMemSlotFooterOffset, frames, convertBuffer);
             removeFromList(fix, prevMemSlotFooterOffset - leftLength - BSTNodeUtil.HEADER_SIZE);
@@ -143,6 +146,14 @@ public class BSTMemMgr implements IMemoryManager {
     @Override
     public ByteBuffer getFrame(int frameIndex) {
         return frames[frameIndex];
+    }
+
+    @Override
+    public void close() {
+        //clean up all frames
+        for (int i = 0; i < frames.length; i++)
+            frames[i] = null;
+        System.gc();
     }
 
     /**

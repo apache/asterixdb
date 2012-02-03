@@ -157,6 +157,7 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
         outputAppender.reset(outputBuffer, true);
         writer.close();
         runs.add(writer.createReader());
+        memMgr.close();
     }
 
     public List<IFrameReader> getRuns() {

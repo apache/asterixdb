@@ -7,9 +7,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 /**
- * @author pouria
- *         Defines the required operations, needed for any memory manager, used
- *         in sorting with replacement selection, to manage the free spaces
+ * @author pouria Defines the required operations, needed for any memory
+ *         manager, used in sorting with replacement selection, to manage the
+ *         free spaces
  */
 
 public interface IMemoryManager {
@@ -65,5 +65,10 @@ public interface IMemoryManager {
      * @return
      */
     boolean readTuple(int frameIx, int offset, FrameTupleAppender dest);
+
+    /**
+     * close and cleanup the memory manager
+     */
+    void close();
 
 }
