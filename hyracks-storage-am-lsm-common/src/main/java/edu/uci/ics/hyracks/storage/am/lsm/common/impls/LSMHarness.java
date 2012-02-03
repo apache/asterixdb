@@ -41,7 +41,7 @@ public class LSMHarness {
 	protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
 	protected static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
 	
-	private ILSMTree lsmTree;	        
+	private ILSMTree lsmTree;    
     
 	// All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
 	private Object diskComponentsSync = new Object();
@@ -90,7 +90,7 @@ public class LSMHarness {
 		do {
 		    // Wait for ongoing flush to complete.
 			synchronized (this) {
-				if (!flushFlag) {
+			    if (!flushFlag) {
 					// Increments threadRefCount, to force a flush to wait for this operation to finish.
 				    // (a flush can only begin once threadRefCount == 0).
 				    threadEnter();
@@ -99,8 +99,12 @@ public class LSMHarness {
 				}
 			}
 		} while (waitForFlush);
+		
+		boolean operationComplete = true;
 		try {
-			lsmTree.insertUpdateOrDelete(tuple, ctx);
+			do {
+			    operationComplete = lsmTree.insertUpdateOrDelete(tuple, ctx);
+			} while (!operationComplete);
 		} finally {
 			threadExit();
 		}
@@ -144,15 +148,12 @@ public class LSMHarness {
         List<Object> diskComponentSnapshot = new ArrayList<Object>();
         AtomicInteger localSearcherRefCount = null;
         synchronized (diskComponentsSync) {
-        	diskComponentSnapshot.addAll(lsmTree.getDiskComponents());
-            // Only remember the search ref count when performing a merge (i.e., includeMemComponent is false).
-            if (!includeMemComponent) {
-                localSearcherRefCount = searcherRefCount;
-                localSearcherRefCount.incrementAndGet();
-            }
+            diskComponentSnapshot.addAll(lsmTree.getDiskComponents());
+            localSearcherRefCount = searcherRefCount;
+            localSearcherRefCount.incrementAndGet();         
         }
         
-        lsmTree.search(cursor, diskComponentSnapshot, pred, ctx, includeMemComponent);
+        lsmTree.search(cursor, diskComponentSnapshot, pred, ctx, includeMemComponent, localSearcherRefCount);
         return diskComponentSnapshot;
     }
 
@@ -176,8 +177,8 @@ public class LSMHarness {
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
         	lsmTree.addMergedComponent(newComponent, mergedComponents);
-            // Swap the searcher ref count reference, and reset it to zero.
-            if (searcherRefCount == searcherRefCountA) {
+            // Swap the searcher ref count reference, and reset it to zero.    
+        	if (searcherRefCount == searcherRefCountA) {
                 searcherRefCount = searcherRefCountB;
             } else {
                 searcherRefCount = searcherRefCountA;
@@ -187,7 +188,7 @@ public class LSMHarness {
         
         // Wait for all searchers that are still accessing the old on-disk
         // Trees, then perform the final cleanup of the old Trees.
-        while (localSearcherRefCount.get() != 0) {
+        while (localSearcherRefCount.get() > 0) {
             try {
                 Thread.sleep(AFTER_MERGE_CLEANUP_SLEEP);
             } catch (InterruptedException e) {
@@ -203,11 +204,7 @@ public class LSMHarness {
         isMerging.set(false);
     }
     
-    public AtomicInteger getSearcherRefCount() {
-    	return searcherRefCount;
-    }
-    
-    public void closeSearchCursor(boolean includeMemComponent) throws HyracksDataException {
+    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent) throws HyracksDataException {
         // If the in-memory Tree was not included in the search, then we don't
         // need to synchronize with a flush.
         if (includeMemComponent) {
@@ -216,10 +213,9 @@ public class LSMHarness {
             } catch (TreeIndexException e) {
                 throw new HyracksDataException(e);
             }
-        } else {
-            // Synchronize with ongoing merges.
-            searcherRefCount.decrementAndGet();
         }
+        // Synchronize with ongoing merges.
+        searcherRefCount.decrementAndGet();
     }
     
     public void addBulkLoadedComponent(Object index) {

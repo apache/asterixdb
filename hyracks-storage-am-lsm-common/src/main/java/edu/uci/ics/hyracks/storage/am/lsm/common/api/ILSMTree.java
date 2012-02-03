@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -36,11 +37,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
  * 
  */
 public interface ILSMTree extends ITreeIndex {
-    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             TreeIndexException;
 
     public void search(ITreeIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
-            IIndexOpContext ictx, boolean includeMemComponent) throws HyracksDataException, TreeIndexException;
+            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, TreeIndexException;
 
     public Object merge(List<Object> mergedComponents) throws HyracksDataException, TreeIndexException;
 

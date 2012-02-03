@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -30,12 +32,13 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     private ITreeIndexFrameFactory btreeLeafFrameFactory;
     private MultiComparator btreeCmp;
     private ITreeIndexAccessor[] bTreeAccessors;
+    private AtomicInteger searcherRefCount;
     private final boolean includeMemRTree;
     private final LSMHarness lsmHarness;
 
     public LSMRTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            MultiComparator btreeCmp, ITreeIndexAccessor[] bTreeAccessors, boolean includeMemRTree,
+            MultiComparator btreeCmp, ITreeIndexAccessor[] bTreeAccessors, AtomicInteger searcherRefCount, boolean includeMemRTree,
             LSMHarness lsmHarness) {
         this.numberOfTrees = numberOfTrees;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
@@ -43,6 +46,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
         this.btreeCmp = btreeCmp;
         this.bTreeAccessors = bTreeAccessors;
+        this.searcherRefCount = searcherRefCount;
         this.includeMemRTree = includeMemRTree;
         this.lsmHarness = lsmHarness;
     }
@@ -82,6 +86,10 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
 
     public boolean getIncludeMemRTree() {
         return includeMemRTree;
+    }
+    
+    public AtomicInteger getSearcherRefCount() {
+    	return searcherRefCount;
     }
 
     public LSMHarness getLSMHarness() {

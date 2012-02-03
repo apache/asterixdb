@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -141,7 +142,7 @@ public class LSMBTree implements ILSMTree {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void close() throws HyracksDataException {        
         for (Object o : diskBTrees) {
             BTree btree = (BTree) o;
             diskBufferCache.closeFile(btree.getFileId());
@@ -152,7 +153,7 @@ public class LSMBTree implements ILSMTree {
     }
 
     @Override
-    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {        
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
         // TODO: This will become much simpler once the BTree supports a true upsert operation.
         try {
@@ -163,14 +164,15 @@ public class LSMBTree implements ILSMTree {
             // TODO: The methods below are very inefficient, we'd rather like
             // to flip the antimatter bit one single BTree traversal.
             if (ctx.getIndexOp() == IndexOp.DELETE) {
-                deleteExistingKey(tuple, ctx);
+                return deleteExistingKey(tuple, ctx);
             } else {
-                insertOrUpdateExistingKey(tuple, ctx);
+                return insertOrUpdateExistingKey(tuple, ctx);
             }
         }
+        return true;
     }
     
-	private void deleteExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+	private boolean deleteExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         // We assume that tuple given by the user for deletion only contains the
         // key fields, but not any non-key fields.
         // Therefore, to set the delete bit in the tuple that already exist in
@@ -195,30 +197,29 @@ public class LSMBTree implements ILSMTree {
             // There is a remote chance of livelocks due to this behavior.
             if (tupleCopy == null) {
                 ctx.reset(IndexOp.DELETE);
-                lsmHarness.insertUpdateOrDelete(tuple, ctx);
-                return;
+                return false;
             }
-            memBTreeUpdate(tupleCopy, ctx);
+            return memBTreeUpdate(tupleCopy, ctx);
         } else {
             // Since the existing tuple could be a matter tuple, we must delete it and re-insert.
-            memBTreeDeleteAndReinsert(tuple, ctx);
+            return memBTreeDeleteAndReinsert(tuple, ctx);
         }            
 	}
 	
-    private void insertOrUpdateExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
+    private boolean insertOrUpdateExistingKey(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {        
         // If all fields are keys, and the key we are trying to insert/update
         // already exists, then we are already done.
         // Otherwise, we must update the non-key fields.        
         if (cmpFactories.length != memBTree.getFieldCount()) {
-            memBTreeUpdate(tuple, ctx);
+            return memBTreeUpdate(tuple, ctx);
         } else {
             // Since the existing tuple could be an antimatter tuple, we must delete it and re-insert.
-            memBTreeDeleteAndReinsert(tuple, ctx);
+            return memBTreeDeleteAndReinsert(tuple, ctx);
         }
     }
     
-    private void memBTreeDeleteAndReinsert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
+    private boolean memBTreeDeleteAndReinsert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {
         // All fields are key fields, therefore a true BTree update is not
         // allowed.
@@ -236,10 +237,10 @@ public class LSMBTree implements ILSMTree {
         }
         // Restart performOp to insert the tuple.
         ctx.reset(originalOp);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        return false;
     }
     
-    private void memBTreeUpdate(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
+    private boolean memBTreeUpdate(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException,
             TreeIndexException {
         IndexOp originalOp = ctx.getIndexOp();
         try {
@@ -250,8 +251,9 @@ public class LSMBTree implements ILSMTree {
             // Simply restart the operation. There is a remote chance of
             // livelocks due to this behavior.
             ctx.reset(originalOp);
-            lsmHarness.insertUpdateOrDelete(tuple, ctx);
+            return false;
         }
+        return true;
     }
 
     @Override
@@ -322,13 +324,13 @@ public class LSMBTree implements ILSMTree {
         return diskBTree;
     }
     
-    public void search(ITreeIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx, boolean includeMemComponent) throws HyracksDataException, TreeIndexException {
+    public void search(ITreeIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, TreeIndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
         LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
         int numDiskBTrees = diskComponents.size();
         int numBTrees = (includeMemComponent) ? numDiskBTrees + 1 : numDiskBTrees;                
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees,
-                insertLeafFrameFactory, ctx.cmp, includeMemComponent, lsmHarness);
+                insertLeafFrameFactory, ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness);
         lsmTreeCursor.open(initialState, pred);
         
         int cursorIx;

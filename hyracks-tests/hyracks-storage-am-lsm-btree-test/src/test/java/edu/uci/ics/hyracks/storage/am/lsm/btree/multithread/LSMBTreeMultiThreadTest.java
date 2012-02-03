@@ -64,34 +64,31 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        //workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
         
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
-        //workloadConfs.add(new TestWorkloadConf(insertMergeOps, getUniformOpProbs(insertMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(insertMergeOps, getUniformOpProbs(insertMergeOps)));
         
         // Inserts mixed with point searches and scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN };
-        //workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
         
         // Inserts, updates, and deletes.
         TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE };
-        //workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
         
         // Inserts, updates, deletes and merges.
         TestOperation[] insertDeleteUpdateMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.MERGE };
-        //workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps, getUniformOpProbs(insertDeleteUpdateMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps, getUniformOpProbs(insertDeleteUpdateMergeOps)));
         
         // All operations except merge.
         TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN };
-        //workloadConfs.add(new TestWorkloadConf(allNoMergeOps, getUniformOpProbs(allNoMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(allNoMergeOps, getUniformOpProbs(allNoMergeOps)));
         
-        // All operations merge.
+        // All operations.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN, TestOperation.MERGE };
-        //workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
-        
-        TestOperation[] debugOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.ORDERED_SCAN, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(debugOps, getUniformOpProbs(debugOps)));
+        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
         
         return workloadConfs;
     }

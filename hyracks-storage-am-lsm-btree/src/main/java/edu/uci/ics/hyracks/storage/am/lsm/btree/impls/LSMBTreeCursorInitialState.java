@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -26,15 +28,17 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
 	private final int numBTrees;
 	private final ITreeIndexFrameFactory leafFrameFactory;
 	private final MultiComparator cmp;
-	private final boolean includeMemBTree;
+	private final boolean includeMemComponent;
+	private final AtomicInteger searcherfRefCount;
 	private final LSMHarness lsmHarness;
 	
     public LSMBTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
-            boolean includeMemBTree, LSMHarness lsmHarness) {
+            boolean includeMemComponent, AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
         this.numBTrees = numBTrees;
         this.leafFrameFactory = leafFrameFactory;
         this.cmp = cmp;
-        this.includeMemBTree = includeMemBTree;
+        this.includeMemComponent = includeMemComponent;
+        this.searcherfRefCount = searcherfRefCount;
         this.lsmHarness = lsmHarness;
     }
 	
@@ -59,8 +63,12 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
 	public void setPage(ICachedPage page) {
 	}
 
-	public boolean getIncludeMemBTree() {
-	    return includeMemBTree;
+	public AtomicInteger getSearcherRefCount() {
+	    return searcherfRefCount;
+	}
+	
+	public boolean getIncludeMemComponent() {
+	    return includeMemComponent;
 	}
 	
 	public LSMHarness getLSMHarness() {

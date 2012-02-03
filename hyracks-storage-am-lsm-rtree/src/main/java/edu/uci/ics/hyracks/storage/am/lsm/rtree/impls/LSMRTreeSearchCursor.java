@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -43,6 +45,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     private int numberOfTrees;
     private RangePredicate btreeRangePredicate;
     private ITupleReference frameTuple;
+    private AtomicInteger searcherRefCount;
     private boolean includeMemRTree;
     private LSMHarness lsmHarness;
     private boolean foundNext = false;
@@ -107,6 +110,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
         btreeCmp = lsmInitialState.getBTreeCmp();
+        searcherRefCount = lsmInitialState.getSearcherRefCount();
         includeMemRTree = lsmInitialState.getIncludeMemRTree();
         lsmHarness = lsmInitialState.getLSMHarness();
         numberOfTrees = lsmInitialState.getNumberOfTrees();
@@ -142,7 +146,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(includeMemRTree);
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
         }
     }
 

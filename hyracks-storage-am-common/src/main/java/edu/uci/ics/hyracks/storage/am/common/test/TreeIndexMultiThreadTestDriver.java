@@ -69,7 +69,7 @@ public class TreeIndexMultiThreadTestDriver {
                 workers[j].start();
             }
             // Join worker threads.
-            for (int j = 0; j < numThreads; j++) {
+            for (int j = 0; j < numThreads; j++) {                
                 workers[j].join();
             }
             long end = System.currentTimeMillis();
