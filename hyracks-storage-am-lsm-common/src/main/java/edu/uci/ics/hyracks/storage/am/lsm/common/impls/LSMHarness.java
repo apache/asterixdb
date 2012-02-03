@@ -36,6 +36,14 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
  * synchronizing LSM operations, and delegates the concrete implementations of
  * actual operations to ILSMTree (passed in the c'tor).
  * 
+ * Concurrency behavior:
+ * 
+ * All operations except merge (insert/update/delete/search) are blocked during a flush.
+ * 
+ * During a merge, all operations (except another merge) can proceed concurrently.
+ * 
+ * A merge and a flush can proceed concurrently.
+ * 
  */
 public class LSMHarness {
 	protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());

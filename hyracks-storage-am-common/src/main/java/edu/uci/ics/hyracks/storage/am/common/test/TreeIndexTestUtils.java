@@ -41,6 +41,9 @@ public abstract class TreeIndexTestUtils {
     protected abstract Collection createCheckTuplesCollection();
 
     protected abstract ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx);
+    
+    // See if tuple with corresponding checkTuple exists in ctx.checkTuples.
+    protected abstract boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx) throws HyracksDataException;
 
     @SuppressWarnings("unchecked")
     public static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
@@ -96,7 +99,7 @@ public abstract class TreeIndexTestUtils {
                     ITupleReference tuple = diskOrderCursor.getTuple();
                     CheckTuple checkTuple = createCheckTupleFromTuple(tuple, ctx.getFieldSerdes(),
                             ctx.getKeyFieldCount());
-                    if (!ctx.getCheckTuples().contains(checkTuple)) {
+                    if (!checkDiskOrderScanResult(tuple, checkTuple, ctx)) {
                         fail("Disk-order scan returned unexpected answer: " + checkTuple.toString());
                     }
                     actualCount++;

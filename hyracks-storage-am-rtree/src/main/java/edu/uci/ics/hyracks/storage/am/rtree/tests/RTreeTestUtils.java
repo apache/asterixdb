@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
@@ -251,5 +252,9 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getFieldCount());
     }
-
+    
+    @Override
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx) throws HyracksDataException {
+    	return ctx.getCheckTuples().contains(checkTuple);
+    }
 }
