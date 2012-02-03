@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -291,10 +293,38 @@ public class LSMRTree implements ILSMTree {
             TreeIndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         if (ctx.getIndexOp() == IndexOp.INSERT) {
-            ctx.memRTreeAccessor.insert(tuple);
+            // Before each insert, we must check whether there exist a killer
+            // tuple in the memBTree. If we find a killer tuple, we must truly
+            // delete the existing tuple from the BTree, and then insert it to
+            // memRTree. Otherwise, the old killer tuple will kill the newly
+            // added RTree tuple.
+            RangePredicate btreeRangePredicate = new RangePredicate(tuple, tuple, true, true,
+                    ctx.getBTreeMultiComparator(), ctx.getBTreeMultiComparator());
+            ITreeIndexCursor cursor = ctx.memBTreeAccessor.createSearchCursor();
+            ctx.memBTreeAccessor.search(cursor, btreeRangePredicate);
+            ITupleReference tupleCopy = null;
+            try {
+                if (cursor.hasNext()) {
+                    cursor.next();
+                    tupleCopy = TupleUtils.copyTuple(cursor.getTuple());
+                }
+            } finally {
+                cursor.close();
+            }
+            if (tupleCopy != null) {
+                ctx.memRTreeAccessor.insert(tupleCopy);
+            } else {
+                ctx.memRTreeAccessor.insert(tuple);
+            }
+
         } else {
-            // Assert ctx.getIndexOp() == IndexOp.DELETE
-            ctx.memBTreeAccessor.insert(tuple);
+
+            try {
+                ctx.memBTreeAccessor.insert(tuple);
+            } catch (BTreeDuplicateKeyException e) {
+                // Do nothing, because one delete tuple is enough to indicate
+                // that all the corresponding insert tuples are deleted
+            }
         }
     }
 
@@ -491,5 +521,9 @@ public class LSMRTree implements ILSMTree {
         public ITreeIndexCursor createSearchCursor() {
             return new LSMRTreeSearchCursor();
         }
+    }
+
+    public IBinaryComparatorFactory[] getComparatorFactories() {
+        return rtreeCmpFactories;
     }
 }
