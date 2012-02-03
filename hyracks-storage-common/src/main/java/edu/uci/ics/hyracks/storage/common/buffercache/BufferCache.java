@@ -95,8 +95,11 @@ public class BufferCache implements IBufferCacheInternal {
         }
 
         // check whether file has been created and opened
-        int fileId = BufferedFileHandle.getFileId(dpid);
-        BufferedFileHandle fInfo = fileInfoMap.get(fileId);
+        int fileId = BufferedFileHandle.getFileId(dpid);        
+        BufferedFileHandle fInfo = null;
+        synchronized(fileInfoMap) {
+        	fInfo = fileInfoMap.get(fileId);
+        }
         if (fInfo == null) {
             throw new HyracksDataException("pin called on a fileId " + fileId + " that has not been created.");
         } else if (fInfo.getReferenceCount() <= 0) {
@@ -560,7 +563,7 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public void close() {
-        closed = true;
+    	closed = true;
         synchronized (cleanerThread) {
             cleanerThread.shutdownStart = true;
             cleanerThread.notifyAll();
@@ -716,6 +719,9 @@ public class BufferCache implements IBufferCacheInternal {
             if (fInfo.decReferenceCount() < 0) {
                 throw new HyracksDataException("Closed fileId: " + fileId + " more times than it was opened.");
             }
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Closed file: " + fileId + " in cache: " + this);
         }
     }
 
