@@ -100,7 +100,7 @@ public class BTree implements ITreeIndex {
 
     @Override
     public void close() {
-        fileId = -666;
+        fileId = -1;
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, BTreeOpContext ctx) throws HyracksDataException {
@@ -494,14 +494,7 @@ public class BTree implements ITreeIndex {
     }
 
     private void performOp(int pageId, ICachedPage parent, boolean parentIsReadLatched, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ICachedPage node = null;
-        try {
-        node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("OH NO!");
-            System.out.println("OH NO!");
-        }
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         ctx.interiorFrame.setPage(node);
         
         // this check performs an unprotected read in the page
