@@ -289,15 +289,12 @@ public class IPCConnectionManager {
         }
 
         private void copyUnsentMessages(BitSet unsentMessagesBitmap, List<Message> tempUnsentMessages) {
-            tempUnsentMessages.clear();
+            assert tempUnsentMessages.isEmpty();
             for (int i = unsentMessagesBitmap.nextSetBit(0); i >= 0; i = unsentMessagesBitmap.nextSetBit(i + 1)) {
                 tempUnsentMessages.add(workingSendList.get(i));
             }
             workingSendList.clear();
-            int tempLen = tempUnsentMessages.size();
-            for (int i = 0; i < tempLen; ++i) {
-                workingSendList.add(tempUnsentMessages.get(i));
-            }
+            moveAll(tempUnsentMessages, workingSendList);
         }
     }
 
