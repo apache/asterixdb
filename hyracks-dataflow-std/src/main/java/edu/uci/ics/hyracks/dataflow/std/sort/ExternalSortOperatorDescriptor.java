@@ -172,8 +172,9 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     for (int i = 0; i < comparatorFactories.length; ++i) {
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
+                    int necessaryFrames = Math.min(runs.size() + 2, framesLimit);
                     ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, frameSorter, runs, sortFields,
-                            comparators, recordDescriptors[0], framesLimit, writer);
+                            comparators, recordDescriptors[0], necessaryFrames, writer);
                     merger.process();
                 }
             };

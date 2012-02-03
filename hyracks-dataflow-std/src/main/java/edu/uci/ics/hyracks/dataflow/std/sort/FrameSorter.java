@@ -238,4 +238,8 @@ public class FrameSorter {
         }
         return 0;
     }
+
+    public void close() {
+        this.buffers.clear();
+    }
 }

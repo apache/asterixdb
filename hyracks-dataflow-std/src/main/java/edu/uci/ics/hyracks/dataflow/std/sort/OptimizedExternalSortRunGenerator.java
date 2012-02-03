@@ -19,32 +19,27 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 /**
- * @author pouria
- *         This class implements the run generator for sorting with replacement
- *         selection, where there is no limit on the output, i.e. the whole data
- *         should be sorted. A SortMinHeap is used as the selectionTree to
- *         decide the order of writing tuples into the runs, while memory
- *         manager is based on a binary search tree to allocate tuples in the
- *         memory.
- *         The overall process is as follows: - Read the input data frame by
- *         frame. For each tuple T in the current frame:
- *         - Try to allocate a memory slot for writing T along with the attached
- *         header/footer (for memory management purpose)
- *         - If T can not be allocated, try to output as many tuples, currently
- *         resident in memory, as needed so that a free slot, large enough to
- *         hold T, gets created. MinHeap decides about which tuple should be
- *         sent to the output at each step.
- *         - Write T into the memory
- *         - Calculate the runID of T (based on the last output tuple for the
- *         current run). It is either the current run or the next run. Also
- *         calculate Poorman's Normalized Key (PNK) for T, to make comparisons
- *         faster later.
- *         - Create a heap element for T, containing: its runID, the slot
- *         pointer to its memory location, and its PNK.
- *         - Insert the created heap element into the heap
- *         - Upon closing, write all the tuples, currently resident in memory,
- *         into their corresponding run(s). Again min heap decides about which
- *         tuple is the next for output.
+ * @author pouria This class implements the run generator for sorting with
+ *         replacement selection, where there is no limit on the output, i.e.
+ *         the whole data should be sorted. A SortMinHeap is used as the
+ *         selectionTree to decide the order of writing tuples into the runs,
+ *         while memory manager is based on a binary search tree to allocate
+ *         tuples in the memory. The overall process is as follows: - Read the
+ *         input data frame by frame. For each tuple T in the current frame: -
+ *         Try to allocate a memory slot for writing T along with the attached
+ *         header/footer (for memory management purpose) - If T can not be
+ *         allocated, try to output as many tuples, currently resident in
+ *         memory, as needed so that a free slot, large enough to hold T, gets
+ *         created. MinHeap decides about which tuple should be sent to the
+ *         output at each step. - Write T into the memory - Calculate the runID
+ *         of T (based on the last output tuple for the current run). It is
+ *         either the current run or the next run. Also calculate Poorman's
+ *         Normalized Key (PNK) for T, to make comparisons faster later. -
+ *         Create a heap element for T, containing: its runID, the slot pointer
+ *         to its memory location, and its PNK. - Insert the created heap
+ *         element into the heap - Upon closing, write all the tuples, currently
+ *         resident in memory, into their corresponding run(s). Again min heap
+ *         decides about which tuple is the next for output.
  *         OptimizedSortOperatorDescriptor will merge the generated runs, to
  *         generate the final sorted output of the data.
  */
@@ -70,7 +65,6 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
     private FrameTupleAccessor lastRecordAccessor; // Used to read last output
                                                    // record from the output
                                                    // buffer
-    private int curRunSize;
     private int lastTupleIx; // Holds index of last output tuple in the
                              // dedicated output buffer
     private Slot allocationPtr; // Contains the ptr to the allocated memory slot
@@ -198,7 +192,6 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
         }
         outputedTuple.set(tFrameIx, tOffset);
         newRun = false;
-        curRunSize++;
         return memMgr.unallocate(outputedTuple);
 
     }
@@ -284,7 +277,6 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
         writer.open();
         curRunId++;
         newRun = true;
-        curRunSize = 0;
         lastTupleIx = -1;
     }
 

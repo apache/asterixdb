@@ -19,25 +19,24 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 /**
- * @author pouria
- *         This class defines the logic for merging the run, generated during
- *         the first phase of external sort (for both sorting without replacement
- *         selection and with it). For the case with replacement selection, this
- *         code also takes the limit on the output into account (if specified).
- *         If number of input runs is less than the available memory frames,
- *         then merging can be done in one pass, by allocating one buffer per
- *         run, and one buffer as the output buffer. A priorityQueue is used to
- *         find the top tuple at each iteration, among all the runs' heads in
- *         memory (check RunMergingFrameReader for more details). Otherwise,
- *         assuming that we have R runs and M memory buffers, where (R > M), we
- *         first merge first (M-1) runs and create a new sorted run, out of
- *         them. Discarding the first (M-1) runs, now merging procedure gets
- *         applied recursively on the (R-M+2) remaining runs using the M memory
- *         buffers.
- *         For the case of replacement selection, if outputLimit is specified,
- *         once the final pass is done on the runs (which is the pass
- *         that generates the final sorted output), as soon as the output size
- *         hits the output limit, the process stops, closes, and returns.
+ * @author pouria This class defines the logic for merging the run, generated
+ *         during the first phase of external sort (for both sorting without
+ *         replacement selection and with it). For the case with replacement
+ *         selection, this code also takes the limit on the output into account
+ *         (if specified). If number of input runs is less than the available
+ *         memory frames, then merging can be done in one pass, by allocating
+ *         one buffer per run, and one buffer as the output buffer. A
+ *         priorityQueue is used to find the top tuple at each iteration, among
+ *         all the runs' heads in memory (check RunMergingFrameReader for more
+ *         details). Otherwise, assuming that we have R runs and M memory
+ *         buffers, where (R > M), we first merge first (M-1) runs and create a
+ *         new sorted run, out of them. Discarding the first (M-1) runs, now
+ *         merging procedure gets applied recursively on the (R-M+2) remaining
+ *         runs using the M memory buffers. For the case of replacement
+ *         selection, if outputLimit is specified, once the final pass is done
+ *         on the runs (which is the pass that generates the final sorted
+ *         output), as soon as the output size hits the output limit, the
+ *         process stops, closes, and returns.
  */
 
 public class ExternalSortRunMerger {
@@ -53,12 +52,16 @@ public class ExternalSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    private FrameSorter frameSorter; //Used in External sort, no replacement selection
-    private FrameTupleAccessor outFrameAccessor; //Used in External sort, with replacement selection
-    private final int outputLimit; //Used in External sort, with replacement selection and limit on output size
-    private int currentSize; //Used in External sort, with replacement selection and limit on output size
+    private FrameSorter frameSorter; // Used in External sort, no replacement
+                                     // selection
+    private FrameTupleAccessor outFrameAccessor; // Used in External sort, with
+                                                 // replacement selection
+    private final int outputLimit; // Used in External sort, with replacement
+                                   // selection and limit on output size
+    private int currentSize; // Used in External sort, with replacement
+                             // selection and limit on output size
 
-    //Constructor for external sort, no replacement selection
+    // Constructor for external sort, no replacement selection
     public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<IFrameReader> runs,
             int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc, int framesLimit,
             IFrameWriter writer) {
@@ -73,7 +76,7 @@ public class ExternalSortRunMerger {
         this.outputLimit = -1;
     }
 
-    //Constructor for external sort with replacement selection
+    // Constructor for external sort with replacement selection
     public ExternalSortRunMerger(IHyracksTaskContext ctx, int outputLimit, List<IFrameReader> runs, int[] sortFields,
             IBinaryComparator[] comparators, RecordDescriptor recordDesc, int framesLimit, IFrameWriter writer) {
         this.ctx = ctx;
@@ -96,12 +99,12 @@ public class ExternalSortRunMerger {
                     frameSorter.flushFrames(writer);
                 }
                 /** recycle sort buffer */
-                frameSorter = null;
+                frameSorter.close();
                 System.gc();
 
             } else {
-            	/** recycle sort buffer */
-                frameSorter = null;
+                /** recycle sort buffer */
+                frameSorter.close();
                 System.gc();
 
                 inFrames = new ArrayList<ByteBuffer>();
@@ -186,7 +189,7 @@ public class ExternalSortRunMerger {
                     System.gc();
                     return;
                 }
-                //Limit on the output size
+                // Limit on the output size
                 int totalCount = 0;
                 runs.get(0).open();
                 FrameTupleAccessor fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
