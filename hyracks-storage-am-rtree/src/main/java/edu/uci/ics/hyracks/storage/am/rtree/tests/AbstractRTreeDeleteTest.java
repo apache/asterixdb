@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 
 @SuppressWarnings("rawtypes")
-public abstract class AbstractRTreeDeleteTest extends RTreeTestDriver {
+public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
 

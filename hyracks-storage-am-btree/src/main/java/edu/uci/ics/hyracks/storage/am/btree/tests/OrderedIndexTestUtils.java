@@ -357,19 +357,12 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected boolean insertTuple(ITreeIndexTestContext ctx) throws Exception {
-        try {
-            ctx.getIndexAccessor().insert(ctx.getTuple());
-        } catch (BTreeDuplicateKeyException e) {
-            // We set expected values only after insertion succeeds because we
-            // ignore duplicate keys.
-            return false;
-        }
-        return true;
+    protected Collection createCheckTuplesCollection() {
+        return new TreeSet<CheckTuple>();
     }
 
     @Override
-    protected Collection createCheckTuplesCollection() {
-        return new TreeSet<CheckTuple>();
+    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+        return new ArrayTupleBuilder(ctx.getKeyFieldCount());
     }
 }

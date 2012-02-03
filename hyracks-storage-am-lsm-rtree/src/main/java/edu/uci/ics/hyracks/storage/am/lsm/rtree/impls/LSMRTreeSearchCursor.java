@@ -57,7 +57,8 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void reset() {
-        // do nothing
+        currentCursror = 0;
+        foundNext = false;
     }
 
     @Override

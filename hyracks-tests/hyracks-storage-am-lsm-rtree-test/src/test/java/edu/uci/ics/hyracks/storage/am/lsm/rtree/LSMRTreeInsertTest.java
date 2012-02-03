@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import java.util.Random;
 
@@ -23,19 +23,15 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeBulkLoadTest;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeInsertTest;
 import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
 @SuppressWarnings("rawtypes")
-public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
+public class LSMRTreeInsertTest extends AbstractRTreeInsertTest {
 
-    public RTreeBulkLoadTest() {
-        super(1);
-    }
-
-    private final RTreeTestHarness harness = new RTreeTestHarness();
+    private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -50,8 +46,10 @@ public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
     @Override
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys) throws Exception {
-        return RTreeTestContext.create(harness.getBufferCache(), harness.getTreeFileId(), fieldSerdes,
-                valueProviderFactories, numKeys);
+        return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
+                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                valueProviderFactories, numKeys, harness.getFileId());
+
     }
 
     @Override

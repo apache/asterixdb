@@ -38,9 +38,9 @@ public abstract class TreeIndexTestUtils {
 
     protected abstract void setIntKeyFields(int[] fieldValues, int numKeyFields, int maxValue, Random rnd);
 
-    protected abstract boolean insertTuple(ITreeIndexTestContext ctx) throws Exception;
-
     protected abstract Collection createCheckTuplesCollection();
+
+    protected abstract ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx);
 
     @SuppressWarnings("unchecked")
     public static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
@@ -143,9 +143,12 @@ public abstract class TreeIndexTestUtils {
                     LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
                 }
             }
-            boolean succeeded = insertTuple(ctx);
-            if (succeeded) {
+            try {
+                ctx.getIndexAccessor().insert(ctx.getTuple());
                 ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+            } catch (TreeIndexException e) {
+                // We set expected values only after insertion succeeds because
+                // we ignore duplicate keys.
             }
         }
     }
@@ -201,7 +204,7 @@ public abstract class TreeIndexTestUtils {
 
     @SuppressWarnings("unchecked")
     public void deleteTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
-        ArrayTupleBuilder deleteTupleBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
+        ArrayTupleBuilder deleteTupleBuilder = createDeleteTupleBuilder(ctx);
         ArrayTupleReference deleteTuple = new ArrayTupleReference();
         int numCheckTuples = ctx.getCheckTuples().size();
         // Copy CheckTuple references into array, so we can randomly pick from
@@ -226,7 +229,7 @@ public abstract class TreeIndexTestUtils {
             ctx.getIndexAccessor().delete(deleteTuple);
 
             // Remove check tuple from expected results.
-            ctx.getCheckTuples().remove(checkTuple);
+            ctx.deleteCheckTuple(checkTuple, ctx.getCheckTuples());
 
             // Swap with last "valid" CheckTuple.
             CheckTuple tmp = checkTuples[numCheckTuples - 1];

@@ -10,10 +10,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.test.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestContext;
@@ -63,6 +65,39 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
+    public void insertIntDeleteTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+        int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] fieldValues = new int[ctx.getFieldCount()];
+        // Scale range of values according to number of keys.
+        // For example, for 2 keys we want the square root of numTuples, for 3
+        // keys the cube root of numTuples, etc.
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            // Set values.
+            for (int j = numKeyFields; j < fieldCount; j++) {
+                fieldValues[j] = j;
+            }
+            TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
+            }
+            try {
+                ctx.getIndexAccessor().insert(ctx.getTuple());
+                ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+            } catch (TreeIndexException e) {
+                // We set expected values only after insertion succeeds because
+                // we
+                // ignore duplicate keys.
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public void insertDoubleTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
@@ -84,9 +119,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
                     LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
                 }
             }
-            boolean succeeded = insertTuple(ctx);
-            if (succeeded) {
+            try {
+                ctx.getIndexAccessor().insert(ctx.getTuple());
                 ctx.insertCheckTuple(createDoubleCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+            } catch (TreeIndexException e) {
+                // We set expected values only after insertion succeeds because
+                // we
+                // ignore duplicate keys.
             }
         }
     }
@@ -204,14 +243,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected boolean insertTuple(ITreeIndexTestContext ctx) throws Exception {
-        ctx.getIndexAccessor().insert(ctx.getTuple());
-        return true;
+    protected Collection createCheckTuplesCollection() {
+        return new ArrayList<RTreeCheckTuple>();
     }
 
     @Override
-    protected Collection createCheckTuplesCollection() {
-        return new ArrayList<RTreeCheckTuple>();
+    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+        return new ArrayTupleBuilder(ctx.getFieldCount());
     }
 
 }

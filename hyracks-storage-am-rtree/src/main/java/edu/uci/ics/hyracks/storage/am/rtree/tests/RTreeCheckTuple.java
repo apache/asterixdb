@@ -27,7 +27,7 @@ public class RTreeCheckTuple<T> extends CheckTuple {
     @Override
     public boolean equals(Object o) {
         RTreeCheckTuple<T> other = (RTreeCheckTuple<T>) o;
-        for (int i = 0; i < numKeys; i++) {
+        for (int i = 0; i < tuple.length; i++) {
             int cmp = tuple[i].compareTo(other.get(i));
             if (cmp != 0) {
                 return false;

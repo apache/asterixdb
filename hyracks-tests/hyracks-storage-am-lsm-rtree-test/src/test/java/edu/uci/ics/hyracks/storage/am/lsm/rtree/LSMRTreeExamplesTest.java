@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,12 +24,26 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeExamplesTest;
-import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
-public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
-    private final RTreeTestHarness harness = new RTreeTestHarness();
+public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
+    private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+
+    @Override
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
+            throws TreeIndexException {
+        return LSMRTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
+                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
+                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories);
+    }
+
+    @Override
+    protected int getIndexFileId() {
+        return harness.getFileId();
+    }
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -39,18 +53,5 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
     @After
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
-    }
-
-    @Override
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
-            throws TreeIndexException {
-        return RTreeUtils.createRTree(harness.getBufferCache(), harness.getTreeFileId(), typeTraits,
-                valueProviderFactories, rtreeCmpFactories);
-    }
-
-    @Override
-    protected int getIndexFileId() {
-        return harness.getTreeFileId();
     }
 }

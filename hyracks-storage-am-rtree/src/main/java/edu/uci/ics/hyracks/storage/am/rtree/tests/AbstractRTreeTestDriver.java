@@ -32,8 +32,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 @SuppressWarnings("rawtypes")
-public abstract class RTreeTestDriver {
-    protected final Logger LOGGER = Logger.getLogger(RTreeTestDriver.class.getName());
+public abstract class AbstractRTreeTestDriver {
+    protected final Logger LOGGER = Logger.getLogger(AbstractRTreeTestDriver.class.getName());
 
     protected static final int numTuplesToInsert = 10000;
 
@@ -55,7 +55,7 @@ public abstract class RTreeTestDriver {
 
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
@@ -76,7 +76,7 @@ public abstract class RTreeTestDriver {
 
         ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE };
+                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
@@ -99,7 +99,7 @@ public abstract class RTreeTestDriver {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE };
+                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 8;
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(

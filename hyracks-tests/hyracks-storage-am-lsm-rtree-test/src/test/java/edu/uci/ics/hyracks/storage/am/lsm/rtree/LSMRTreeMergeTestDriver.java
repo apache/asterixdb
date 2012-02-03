@@ -13,37 +13,55 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.tests;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestDriver;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.RTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
-public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver {
+public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
-    private final int bulkLoadRounds;
 
-    public AbstractRTreeBulkLoadTest(int bulkLoadRounds) {
-        this.bulkLoadRounds = bulkLoadRounds;
+    public LSMRTreeMergeTestDriver() {
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, ITupleReference key) throws Exception {
+
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys);
-        for (int i = 0; i < bulkLoadRounds; i++) {
-            // We assume all fieldSerdes are of the same type. Check the first
-            // one to determine which field types to generate.
-            if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
-            } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
-                rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
+
+        // Start off with one tree bulk loaded.
+        // We assume all fieldSerdes are of the same type. Check the first one
+        // to determine which field types to generate.
+        if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+            rTreeTestUtils.insertIntTuples(ctx, numTuplesToInsert, getRandom());
+        } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
+            rTreeTestUtils.insertDoubleTuples(ctx, numTuplesToInsert, getRandom());
+        }
+
+        int maxTreesToMerge = 3;
+        for (int i = 0; i < maxTreesToMerge; i++) {
+            for (int j = 0; j < i; j++) {
+                if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+                    rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+                } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
+                    rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
+                }
             }
+
+            ILSMTreeIndexAccessor accessor = (ILSMTreeIndexAccessor) ctx.getIndexAccessor();
+            accessor.merge();
 
             rTreeTestUtils.checkScan(ctx);
             rTreeTestUtils.checkDiskOrderScan(ctx);
@@ -54,6 +72,6 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
 
     @Override
     protected String getTestOpName() {
-        return "BulkLoad";
+        return "LSM Merge";
     }
 }

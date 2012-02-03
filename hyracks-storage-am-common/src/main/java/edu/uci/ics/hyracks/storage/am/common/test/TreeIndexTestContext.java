@@ -72,4 +72,9 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     public void insertCheckTuple(T checkTuple, Collection<T> checkTuples) {
         checkTuples.add(checkTuple);
     }
+
+    @Override
+    public void deleteCheckTuple(T checkTuple, Collection<T> checkTuples) {
+        checkTuples.remove(checkTuple);
+    }
 }

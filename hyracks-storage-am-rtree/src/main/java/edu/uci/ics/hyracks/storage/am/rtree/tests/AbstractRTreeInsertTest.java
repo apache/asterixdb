@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
  * 
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractRTreeInsertTest extends RTreeTestDriver {
+public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
 

@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 
 @SuppressWarnings("rawtypes")
-public interface ITreeIndexTestContext <T extends CheckTuple>{
+public interface ITreeIndexTestContext<T extends CheckTuple> {
     public int getFieldCount();
 
     public int getKeyFieldCount();
@@ -43,6 +43,8 @@ public interface ITreeIndexTestContext <T extends CheckTuple>{
     public ArrayTupleBuilder getTupleBuilder();
 
     public void insertCheckTuple(T checkTuple, Collection<T> checkTuples);
+
+    public void deleteCheckTuple(T checkTuple, Collection<T> checkTuples);
 
     public Collection<T> getCheckTuples();
 

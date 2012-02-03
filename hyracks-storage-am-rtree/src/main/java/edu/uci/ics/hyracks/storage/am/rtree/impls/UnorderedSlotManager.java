@@ -28,45 +28,46 @@ public class UnorderedSlotManager extends AbstractSlotManager {
     @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
+        if (searchKey.getFieldCount() == frameTuple.getFieldCount()) {
+            int maxFieldPos = multiCmp.getKeyFieldCount() / 2;
+            for (int i = 0; i < frame.getTupleCount(); i++) {
+                frameTuple.resetByTupleIndex(frame, i);
 
-        int maxFieldPos = multiCmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < frame.getTupleCount(); i++) {
-            frameTuple.resetByTupleIndex(frame, i);
+                boolean foundTuple = true;
+                for (int j = 0; j < maxFieldPos; j++) {
+                    int k = maxFieldPos + j;
+                    int c1 = multiCmp.getComparators()[j].compare(frameTuple.getFieldData(j),
+                            frameTuple.getFieldStart(j), frameTuple.getFieldLength(j), searchKey.getFieldData(j),
+                            searchKey.getFieldStart(j), searchKey.getFieldLength(j));
 
-            boolean foundTuple = true;
-            for (int j = 0; j < maxFieldPos; j++) {
-                int k = maxFieldPos + j;
-                int c1 = multiCmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
-                        frameTuple.getFieldLength(j), searchKey.getFieldData(j), searchKey.getFieldStart(j),
-                        searchKey.getFieldLength(j));
-
-                if (c1 != 0) {
-                    foundTuple = false;
-                    break;
+                    if (c1 != 0) {
+                        foundTuple = false;
+                        break;
+                    }
+                    int c2 = multiCmp.getComparators()[k].compare(frameTuple.getFieldData(k),
+                            frameTuple.getFieldStart(k), frameTuple.getFieldLength(k), searchKey.getFieldData(k),
+                            searchKey.getFieldStart(k), searchKey.getFieldLength(k));
+                    if (c2 != 0) {
+                        foundTuple = false;
+                        break;
+                    }
                 }
-                int c2 = multiCmp.getComparators()[k].compare(frameTuple.getFieldData(k), frameTuple.getFieldStart(k),
-                        frameTuple.getFieldLength(k), searchKey.getFieldData(k), searchKey.getFieldStart(k),
-                        searchKey.getFieldLength(k));
-                if (c2 != 0) {
-                    foundTuple = false;
-                    break;
+                int remainingFieldCount = frameTuple.getFieldCount() - multiCmp.getKeyFieldCount();
+                for (int j = multiCmp.getKeyFieldCount(); j < multiCmp.getKeyFieldCount() + remainingFieldCount; j++) {
+                    if (!compareField(searchKey, frameTuple, j)) {
+                        foundTuple = false;
+                        break;
+                    }
                 }
-            }
-            int remainingFieldCount = frameTuple.getFieldCount() - multiCmp.getKeyFieldCount();
-            for (int j = multiCmp.getKeyFieldCount(); j < multiCmp.getKeyFieldCount() + remainingFieldCount; j++) {
-                if (!compareField(searchKey, frameTuple, j)) {
-                    foundTuple = false;
-                    break;
+                if (foundTuple) {
+                    return i;
                 }
-            }
-            if (foundTuple) {
-                return i;
             }
         }
         return -1;
     }
 
-    public boolean compareField(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, int fIdx) {
+    private boolean compareField(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, int fIdx) {
         int searchKeyFieldLength = searchKey.getFieldLength(fIdx);
         int frameTupleFieldLength = frameTuple.getFieldLength(fIdx);
 
