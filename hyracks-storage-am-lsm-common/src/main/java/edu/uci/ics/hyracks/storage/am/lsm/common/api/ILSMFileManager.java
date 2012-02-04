@@ -16,9 +16,12 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.Comparator;
+import java.util.List;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Provides file names for LSM on-disk components.
+ * Provides file names for LSM on-disk components. Also cleans up invalid files.
  * 
  * There are separate methods to get file names for merge and flush, because we
  * need to guarantee the correct order of on-disk components (i.e., the
@@ -27,12 +30,16 @@ import java.util.Comparator;
  * 
  * 
  */
-public interface ILSMFileNameManager {
+public interface ILSMFileManager {
 	public String getFlushFileName();
 	
-	public String getMergeFileName();
+	public String getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
 	
 	public String getBaseDir();
+	
+	// Deletes invalid files, and returns list of valid files from baseDir.
+	// The returned valid files are correctly sorted (based on the recency of data). 
+	public List<String> cleanupAndGetValidFiles() throws HyracksDataException;
 	
 	public Comparator<String> getFileNameComparator();
 }

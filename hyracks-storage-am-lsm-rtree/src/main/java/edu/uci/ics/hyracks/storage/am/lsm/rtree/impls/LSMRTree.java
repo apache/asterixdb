@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileNameManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -86,7 +86,7 @@ public class LSMRTree implements ILSMTree {
     private final static int MEM_BTREE_FILE_ID = 1;
 
     // On-disk components.
-    private final ILSMFileNameManager fileNameManager;
+    private final ILSMFileManager fileNameManager;
     protected final IBufferCache diskBufferCache;
     protected final IFileMapProvider diskFileMapProvider;
     // For creating RTree's used in flush and merge.
@@ -109,7 +109,7 @@ public class LSMRTree implements ILSMTree {
     public LSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMFileNameManager fileNameManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
+            ILSMFileManager fileNameManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories) {
         RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
@@ -156,7 +156,8 @@ public class LSMRTree implements ILSMTree {
      */
     @Override
     public void open(int indexFileId) throws HyracksDataException {
-        memComponent.getRTree().open(MEM_RTREE_FILE_ID);
+        // TODO: Port to new naming scheme.
+    	memComponent.getRTree().open(MEM_RTREE_FILE_ID);
         memComponent.getBTree().open(MEM_BTREE_FILE_ID);
         File dir = new File(fileNameManager.getBaseDir());
         FilenameFilter rtreeFilter = new FilenameFilter() {
@@ -437,7 +438,8 @@ public class LSMRTree implements ILSMTree {
         mergedComponents.addAll(mergingComponents);
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
-        String fileName = fileNameManager.getMergeFileName();
+        // TODO: Passing dummy values for now. Switch to naming scheme.
+        String fileName = fileNameManager.getMergeFileName("dummy", "dummy");
         RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, fileName + "-rtree", true);
         BTree mergedBTree = (BTree) createDiskTree(diskBTreeFactory, fileName + "-btree", true);
 

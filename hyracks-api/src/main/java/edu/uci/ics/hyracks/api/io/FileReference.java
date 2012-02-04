@@ -31,7 +31,7 @@ public final class FileReference implements Serializable {
     }
 
     public File getFile() {
-        return file;
+    	return file;
     }
 
     @Override
