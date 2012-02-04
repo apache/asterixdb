@@ -180,6 +180,10 @@ public class LSMHarness {
         
         List<Object> mergedComponents = new ArrayList<Object>();
         Object newComponent = lsmTree.merge(mergedComponents);
+        // No merge happened.
+        if (newComponent == null) {
+            return;
+        }
         
         // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.

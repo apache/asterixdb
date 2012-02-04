@@ -357,6 +357,11 @@ public class LSMBTree implements ILSMTree {
         List<Object> mergingDiskBTrees = lsmHarness.search(cursor, (RangePredicate) rangePred, ctx, false);
         mergedComponents.addAll(mergingDiskBTrees);
         
+        // Nothing to merge.
+        if (mergedComponents.isEmpty()) {
+            return null;
+        }
+        
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
         BTree mergedBTree = createMergeTargetBTree(mergedComponents);
         IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
