@@ -19,6 +19,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 
 /**
  * Provides file names for LSM on-disk components. Also cleans up invalid files.
@@ -31,15 +33,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  * 
  */
 public interface ILSMFileManager {
-	public String getFlushFileName();
+	public void createDirs();
+    
+    public String getFlushFileName();
 	
 	public String getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
 	
 	public String getBaseDir();
+	
+	public FileReference createTempFile() throws HyracksDataException;
+	
+	// Atomically renames src file ref to dest on same IODevice as src, and returns file ref of dest.
+	public FileReference rename(FileReference src, String dest) throws HyracksDataException;
 	
 	// Deletes invalid files, and returns list of valid files from baseDir.
 	// The returned valid files are correctly sorted (based on the recency of data). 
 	public List<String> cleanupAndGetValidFiles() throws HyracksDataException;
 	
 	public Comparator<String> getFileNameComparator();
+	
+	public IOManager getIOManager();
 }

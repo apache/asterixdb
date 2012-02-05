@@ -726,9 +726,14 @@ public class BufferCache implements IBufferCacheInternal {
     }
 
     @Override
-    public synchronized void deleteFile(int fileId) throws HyracksDataException {
+    public synchronized void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
+        }
+        if (flushDirtyPages) {
+        	synchronized (fileInfoMap) {
+        		sweepAndFlush(fileId, flushDirtyPages);
+        	}
         }
         synchronized (fileInfoMap) {
             BufferedFileHandle fInfo = null;

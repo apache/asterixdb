@@ -65,8 +65,8 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void deleteFile(int fileId) throws HyracksDataException {
-        bufferCache.deleteFile(fileId);
+    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
+        bufferCache.deleteFile(fileId, flushDirtyPages);
         deleteFileCount.addAndGet(1);
     }
 

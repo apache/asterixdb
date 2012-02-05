@@ -107,7 +107,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
     }
 
     @Override
-    public void deleteFile(int fileId) throws HyracksDataException {
+    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
         // Do nothing.
     }
 	
@@ -120,7 +120,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 	public void close() {
 		// Do nothing.
 	}
-
+	
     public class CachedPage implements ICachedPageInternal {
         private final int cpid;
         private final ByteBuffer buffer;

@@ -60,14 +60,14 @@ public class LSMBTree implements ILSMTree {
     private final BTree memBTree;
     private final InMemoryFreePageManager memFreePageManager;
 
-    // On-disk components.
+    // On-disk components.    
     private final ILSMFileManager fileManager;
     // For creating BTree's used in flush and merge.
     private final BTreeFactory diskBTreeFactory;
     // For creating BTree's used in bulk load. Different from diskBTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
     private final BTreeFactory bulkLoadBTreeFactory;
-    private final IBufferCache diskBufferCache;
+    private final IBufferCache diskBufferCache;    
     private final IFileMapProvider diskFileMapProvider;
     // List of BTree instances. Using Object for better sharing via ILSMTree + LSMHarness.
     private LinkedList<Object> diskBTrees = new LinkedList<Object>();
@@ -99,19 +99,12 @@ public class LSMBTree implements ILSMTree {
     @Override
     public void create(int indexFileId) throws HyracksDataException {
         memBTree.create(indexFileId);
+        fileManager.createDirs();
     }
     
     /**
-     * Opens LSMBTree, assuming a consistent state of the disk-resident
-     * components. In particular, registers all files in in base dir of
-     * fileNameManager as on-disk BTrees.
-     * 
-     * Example pathological scenario to explain "consistent state assumption":
-     * Suppose a merge finished, but before the original files were deleted the
-     * system crashes. We are left in a state where we have the original BTrees
-     * in addition to the merged one. We assume that prior to calling this
-     * method a separate recovery process has ensured the consistent of the
-     * disk-resident components.
+     * Opens LSMBTree, cleaning up invalid files from base dir, and registering
+     * all valid files as on-disk BTrees.
      * 
      * @param indexFileId
      *            Dummy file id used for in-memory BTree.
@@ -121,7 +114,7 @@ public class LSMBTree implements ILSMTree {
     public void open(int indexFileId) throws HyracksDataException {
         memBTree.open(indexFileId);
         List<String> validFileNames = fileManager.cleanupAndGetValidFiles();        
-        for (String fileName : validFileNames) {
+        for (String fileName : validFileNames) {            
             BTree btree = createDiskBTree(diskBTreeFactory, fileName, false);
             diskBTrees.add(btree);
         }
@@ -249,7 +242,7 @@ public class LSMBTree implements ILSMTree {
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
         ITreeIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
         memBTreeAccessor.search(scanCursor, nullPred);
-        BTree diskBTree = createFlushTargetBTree();
+        BTree diskBTree = createTempBTree(diskBTreeFactory);
         // Bulk load the tuples from the in-memory BTree into the new disk BTree.
         IIndexBulkLoadContext bulkLoadCtx = diskBTree.beginBulkLoad(1.0f);
         try {
@@ -261,6 +254,9 @@ public class LSMBTree implements ILSMTree {
             scanCursor.close();
         }
         diskBTree.endBulkLoad(bulkLoadCtx);
+        
+        String finalFileName = fileManager.getFlushFileName();
+        rename(diskBTree, finalFileName);
         return diskBTree;
     }
 
@@ -275,33 +271,48 @@ public class LSMBTree implements ILSMTree {
         memBTree.create(memBTree.getFileId());
     }
     
-    private BTree bulkLoadTargetBTree() throws HyracksDataException {
-        // Note that by using a flush target file name, we state that the new
-        // bulk loaded tree is "newer" than any other merged tree.
-        String fileName = fileManager.getFlushFileName();
-        return createDiskBTree(bulkLoadBTreeFactory, fileName, true);
-    }
-    
-    private BTree createFlushTargetBTree() throws HyracksDataException {
-        String fileName = fileManager.getFlushFileName();
-        return createDiskBTree(diskBTreeFactory, fileName, true);
-    }
-    
-    private BTree createMergeTargetBTree(List<Object> mergingDiskBTrees) throws HyracksDataException {
+    private String getMergeTargetFileName(List<Object> mergingDiskBTrees) throws HyracksDataException {
         BTree firstBTree = (BTree) mergingDiskBTrees.get(0);
         BTree lastBTree = (BTree) mergingDiskBTrees.get(mergingDiskBTrees.size() - 1);
         FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
         FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
         String fileName = fileManager.getMergeFileName(firstFile.getFile().getName(), lastFile.getFile().getName());
-        return createDiskBTree(diskBTreeFactory, fileName, true);
+        return fileName;
+    }
+    
+    private void rename(BTree srcTmpBTree, String dest) throws HyracksDataException {
+        int tmpFileId = srcTmpBTree.getFileId();
+        FileReference srcFileRef = diskFileMapProvider.lookupFileName(tmpFileId);
+        diskBufferCache.closeFile(tmpFileId);
+        diskBufferCache.deleteFile(tmpFileId, true);
+        FileReference destFileRef = fileManager.rename(srcFileRef, dest);
+        // File will be deleted during cleanup of merge().
+        diskBufferCache.createFile(destFileRef);        
+        int newFileId = diskFileMapProvider.lookupFileId(destFileRef);
+        diskBufferCache.openFile(newFileId);
+        srcTmpBTree.open(newFileId);
+    }
+    
+    private BTree createTempBTree(BTreeFactory factory) throws HyracksDataException {
+        FileReference file = fileManager.createTempFile();
+        // File will be deleted during rename().
+        diskBufferCache.createFile(file);
+        int diskBTreeFileId = diskFileMapProvider.lookupFileId(file);
+        // File will be closed during rename().
+        diskBufferCache.openFile(diskBTreeFileId);
+        // Create new BTree instance.
+        BTree diskBTree = factory.createBTreeInstance(diskBTreeFileId);
+        diskBTree.create(diskBTreeFileId);
+        // BTree will be closed during cleanup of merge().
+        diskBTree.open(diskBTreeFileId);
+        return diskBTree;
     }
     
     private BTree createDiskBTree(BTreeFactory factory, String fileName, boolean createBTree) throws HyracksDataException {
-        // Register the new BTree file.        
-        FileReference file = new FileReference(new File(fileName));
+        FileReference fileRef = new FileReference(new File(fileName));
         // File will be deleted during cleanup of merge().
-        diskBufferCache.createFile(file);
-        int diskBTreeFileId = diskFileMapProvider.lookupFileId(file);
+        diskBufferCache.createFile(fileRef);
+        int diskBTreeFileId = diskFileMapProvider.lookupFileId(fileRef);
         // File will be closed during cleanup of merge().
         diskBufferCache.openFile(diskBTreeFileId);
         // Create new BTree instance.
@@ -363,7 +374,8 @@ public class LSMBTree implements ILSMTree {
         }
         
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
-        BTree mergedBTree = createMergeTargetBTree(mergedComponents);
+        //BTree mergedBTree = createMergeTargetBTree(mergedComponents);
+        BTree mergedBTree = createTempBTree(diskBTreeFactory);
         IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
         try {
             while (cursor.hasNext()) {
@@ -375,6 +387,9 @@ public class LSMBTree implements ILSMTree {
             cursor.close();
         }
         mergedBTree.endBulkLoad(bulkLoadCtx);
+        
+        String finalFileName = getMergeTargetFileName(mergingDiskBTrees);
+        rename(mergedBTree, finalFileName);
         return mergedBTree;
     }
     
@@ -428,7 +443,7 @@ public class LSMBTree implements ILSMTree {
     
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        BTree diskBTree = bulkLoadTargetBTree();
+        BTree diskBTree = createTempBTree(bulkLoadBTreeFactory);
         LSMTreeBulkLoadContext bulkLoadCtx = new LSMTreeBulkLoadContext(diskBTree);        
         bulkLoadCtx.beginBulkLoad(fillFactor);
         return bulkLoadCtx;
@@ -443,7 +458,9 @@ public class LSMBTree implements ILSMTree {
     @Override
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
-        bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());        
+        bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());
+        String finalFileName = fileManager.getFlushFileName();
+        rename(bulkLoadCtx.getBTree(), finalFileName);
         lsmHarness.addBulkLoadedComponent(bulkLoadCtx.getBTree());
     }
 

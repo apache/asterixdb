@@ -22,6 +22,7 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
@@ -37,7 +38,7 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 
@@ -50,7 +51,7 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
         return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
                 numKeys, harness.getFileId());
     }
 

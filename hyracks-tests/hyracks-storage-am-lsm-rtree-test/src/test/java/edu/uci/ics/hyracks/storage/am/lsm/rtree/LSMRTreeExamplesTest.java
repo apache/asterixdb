@@ -21,6 +21,7 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -36,7 +37,7 @@ public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
             throws TreeIndexException {
         return LSMRTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories);
     }
 
@@ -46,7 +47,7 @@ public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
     }
 
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 

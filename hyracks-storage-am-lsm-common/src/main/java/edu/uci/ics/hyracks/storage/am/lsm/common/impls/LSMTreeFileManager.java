@@ -17,6 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,22 +29,57 @@ import java.util.Date;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 
 public class LSMTreeFileManager implements ILSMFileManager {
 
     private static final String SPLIT_STRING = "_";
+    private static final String TEMP_FILE_PREFIX = "lsm_tree";
     
+    // Currently uses all IODevices registered in ioManager in a round-robin fashion.
+    private final IOManager ioManager;
+    // baseDir should reflect dataset name, and partition name.
     private final String baseDir;
-    private final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+    private final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");    
     private final Comparator<String> cmp = new FileNameComparator();
-    private final Comparator<String[]> intervalCmp = new IntervalComparator();
+    private final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
     
-    public LSMTreeFileManager(String baseDir) {
+    public LSMTreeFileManager(IOManager ioManager, String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
+        this.ioManager = ioManager;
         this.baseDir = baseDir;
+        createDirs();
+    }
+    
+    @Override
+    public void createDirs() {
+        for(IODeviceHandle dev : ioManager.getIODevices()) {
+            File f = new File(dev.getPath(), baseDir);
+            f.mkdirs();
+        }
+    }
+    
+    @Override
+    public FileReference createTempFile() throws HyracksDataException {
+        // Cycles through the IODevices in round-robin fashion.
+        return ioManager.createWorkspaceFile(TEMP_FILE_PREFIX);
+    }
+    
+    // Atomically renames src fileref to dest on same IODevice as src, and returns file ref of dest.
+    @Override
+    public FileReference rename(FileReference src, String dest) throws HyracksDataException {
+        FileReference destFile = new FileReference(src.getDevideHandle(), dest);
+        try {
+            Files.move(src.getFile().toPath(), destFile.getFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return destFile;
     }
     
     @Override
@@ -83,17 +121,6 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     }
 
-    private class IntervalComparator implements Comparator<String[]> {
-        @Override
-        public int compare(String[] a, String[] b) {
-            int startCmp = a[0].compareTo(b[0]);
-            if (startCmp != 0) {
-                return startCmp;
-            }
-            return b[1].compareTo(a[1]);
-        }
-    }
-    
     @Override
     public String getBaseDir() {
         return baseDir;
@@ -101,42 +128,46 @@ public class LSMTreeFileManager implements ILSMFileManager {
 
     @Override
     public List<String> cleanupAndGetValidFiles() throws HyracksDataException {
-        List<String> validFiles = new ArrayList<String>();        
-        File dir = new File(baseDir);
-        FilenameFilter filter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return !name.startsWith(".");
+        List<String> validFiles = new ArrayList<String>();
+        ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
+        // Gather files from all IODeviceHandles.
+        for(IODeviceHandle dev : ioManager.getIODevices()) {
+            File dir = new File(dev.getPath(), baseDir);
+            FilenameFilter filter = new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return !name.startsWith(".");
+                }
+            };
+            String[] files = dir.list(filter);
+            for (String file : files) {
+                allFiles.add(new ComparableFileName(dir.getPath() + File.separator + file));
             }
-        };
-        String[] files = dir.list(filter);
+        }
         // Trivial cases.
-        if (files == null) {
+        if (allFiles.isEmpty()) {
             return validFiles;
         }
-        if (files.length == 1) {
-            validFiles.add(files[0]);
+        if (allFiles.size() == 1) {
+            validFiles.add(allFiles.get(0).fullPath);
             return validFiles;
         }
         
-        List<String[]> intervals = new ArrayList<String[]>(); 
-        for (String fileName : files) {
-            intervals.add(fileName.split(SPLIT_STRING));
-        }
-        // Sorts files from earliest to latest timestamp.
-        Collections.sort(intervals, intervalCmp);
+        // Sorts files names from earliest to latest timestamp.
+        Collections.sort(allFiles);
         
-        String[] lastInterval = intervals.get(0);
-        validFiles.add(getFileNameFromInterval(intervals.get(0)));
-        for (int i = 1; i < intervals.size(); i++) {
-            String[] currentInterval = intervals.get(i);
+        List<ComparableFileName> validComparableFiles = new ArrayList<ComparableFileName>();
+        ComparableFileName last = allFiles.get(0);
+        validComparableFiles.add(last);
+        for (int i = 1; i < allFiles.size(); i++) {
+            ComparableFileName current = allFiles.get(i);
             // Current start timestamp is greater than last stop timestamp.
-            if (currentInterval[0].compareTo(lastInterval[1]) > 0) {
-                validFiles.add(getFileNameFromInterval(currentInterval));
-                lastInterval = currentInterval;                
-            } else if (currentInterval[0].compareTo(lastInterval[0]) >= 0 
-                    && currentInterval[1].compareTo(lastInterval[1]) <= 0) {
+            if (current.interval[0].compareTo(last.interval[1]) > 0) {
+                validComparableFiles.add(current);
+                last = current;                
+            } else if (current.interval[0].compareTo(last.interval[0]) >= 0 
+                    && current.interval[1].compareTo(last.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                File invalidFile = new File(getFileNameFromInterval(currentInterval));
+                File invalidFile = new File(current.fullPath);
                 invalidFile.delete();
             } else {
                 // This scenario should not be possible.
@@ -144,11 +175,47 @@ public class LSMTreeFileManager implements ILSMFileManager {
             }
         }
         // Sort valid files in reverse lexicographical order, such that newer files come first.
-        Collections.sort(validFiles, cmp);
+        Collections.sort(validComparableFiles, recencyCmp);
+        for (ComparableFileName cmpFileName : validComparableFiles) {
+            validFiles.add(cmpFileName.fullPath);
+        }
         return validFiles;
     }
     
-    private String getFileNameFromInterval(String[] interval) {
-        return baseDir + interval[0] + SPLIT_STRING + interval[1];
+    private class ComparableFileName implements Comparable<ComparableFileName> {
+        public final String fullPath;
+        // Timestamp interval.
+        public final String[] interval;
+        
+        public ComparableFileName(String fullPath) {
+            this.fullPath = fullPath;
+            File f = new File(fullPath);
+            interval = f.getName().split(SPLIT_STRING);
+        }
+
+        @Override
+        public int compareTo(ComparableFileName b) {
+            int startCmp = interval[0].compareTo(b.interval[0]);
+            if (startCmp != 0) {
+                return startCmp;
+            }
+            return b.interval[1].compareTo(interval[1]);
+        }
+    }
+    
+    private class RecencyComparator implements Comparator<ComparableFileName> {
+        @Override
+        public int compare(ComparableFileName a, ComparableFileName b) {
+            int cmp = -a.interval[0].compareTo(b.interval[0]);
+            if (cmp != 0) {
+                return cmp;
+            }
+            return -a.interval[1].compareTo(b.interval[1]);
+        }
+    }
+    
+    @Override
+    public IOManager getIOManager() {
+        return ioManager;
     }
 }

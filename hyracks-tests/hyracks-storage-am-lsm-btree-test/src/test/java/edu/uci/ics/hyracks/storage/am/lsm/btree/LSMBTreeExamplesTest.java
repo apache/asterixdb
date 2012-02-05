@@ -21,6 +21,7 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexExamplesTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -34,7 +35,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
 	protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
 			IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
 		return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
-				harness.getMemFreePageManager(), harness.getOnDiskDir(),
+				harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
 				harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
 				typeTraits, cmpFactories);
 	}
@@ -45,7 +46,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
 	}
 
 	@Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 

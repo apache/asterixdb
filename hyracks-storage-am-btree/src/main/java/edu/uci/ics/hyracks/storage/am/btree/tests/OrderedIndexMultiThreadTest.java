@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
@@ -48,7 +49,7 @@ public abstract class OrderedIndexMultiThreadTest {
     
     protected ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();    
     
-    protected abstract void setUp() throws HyracksDataException;
+    protected abstract void setUp() throws HyracksException;
     
     protected abstract void tearDown() throws HyracksDataException;        
 
@@ -70,7 +71,7 @@ public abstract class OrderedIndexMultiThreadTest {
         return opProbs;
     }
     
-    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksDataException, InterruptedException, TreeIndexException {
+    protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf, String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
         setUp();
         
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -100,7 +101,7 @@ public abstract class OrderedIndexMultiThreadTest {
     }
     
     @Test
-    public void oneIntKeyAndValue() throws InterruptedException, HyracksDataException, TreeIndexException {        
+    public void oneIntKeyAndValue() throws InterruptedException, TreeIndexException, HyracksException {        
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         int numKeys = 1;
         String dataMsg = "One Int Key And Value";
@@ -112,7 +113,7 @@ public abstract class OrderedIndexMultiThreadTest {
     }
     
     @Test
-    public void oneStringKeyAndValue() throws InterruptedException, HyracksDataException, TreeIndexException {        
+    public void oneStringKeyAndValue() throws InterruptedException, TreeIndexException, HyracksException {        
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
         int numKeys = 1;
         String dataMsg = "One String Key And Value";

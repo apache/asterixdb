@@ -20,6 +20,7 @@ import java.util.Collection;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -61,7 +62,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
     }
 
     public static LSMRTreeTestContext create(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, String onDiskDir, IBufferCache diskBufferCache,
+            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, int fileId) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
@@ -69,7 +70,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
                 .serdesToComparatorFactories(fieldSerdes, numKeyFields);
         IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
-        LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, onDiskDir, diskBufferCache,
+        LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir, diskBufferCache,
                 diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories);
         lsmTree.create(fileId);
         lsmTree.open(fileId);

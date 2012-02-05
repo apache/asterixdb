@@ -22,6 +22,7 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
@@ -38,7 +39,7 @@ public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 
@@ -51,7 +52,7 @@ public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys) throws Exception {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
                 valueProviderFactories, numKeys, harness.getFileId());
 
     }

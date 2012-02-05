@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -36,7 +37,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     private LSMBTreeTestWorkerFactory workerFactory = new LSMBTreeTestWorkerFactory();
     
     @Override
-    protected void setUp() throws HyracksDataException {
+    protected void setUp() throws HyracksException {
         harness.setUp();
     }
 
@@ -48,7 +49,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getOnDiskDir(),
+                harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 typeTraits, cmpFactories);
     }

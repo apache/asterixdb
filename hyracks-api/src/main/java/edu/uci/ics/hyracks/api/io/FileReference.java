@@ -21,19 +21,26 @@ public final class FileReference implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final File file;
+    private final IODeviceHandle dev;
 
     public FileReference(IODeviceHandle dev, String devRelPath) {
         file = new File(dev.getPath(), devRelPath);
+        this.dev = dev;
     }
 
     public FileReference(File file) {
         this.file = file;
+        this.dev = null;
     }
 
     public File getFile() {
     	return file;
     }
 
+    public IODeviceHandle getDevideHandle() {
+    	return dev;
+    }
+    
     @Override
     public String toString() {
         return file.getAbsolutePath();

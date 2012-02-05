@@ -121,7 +121,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(onDiskDir);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
@@ -267,7 +267,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(onDiskDir);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
@@ -464,7 +464,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(onDiskDir);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);
@@ -615,7 +615,7 @@ public class LSMRTreeTest extends AbstractLSMRTreeTest {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories, fieldCount,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(onDiskDir);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
         LSMRTree lsmRTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories);

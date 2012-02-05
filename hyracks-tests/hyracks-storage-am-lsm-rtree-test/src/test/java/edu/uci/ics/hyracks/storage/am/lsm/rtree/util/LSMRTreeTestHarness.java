@@ -23,6 +23,8 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -54,6 +56,7 @@ public class LSMRTreeTestHarness {
     protected final int memNumPages;
     protected final int hyracksFrameSize;
 
+    protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected LSMRTreeInMemoryBufferCache memBufferCache;
@@ -62,7 +65,6 @@ public class LSMRTreeTestHarness {
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected final static String tmpDir = System.getProperty("java.io.tmpdir");
     protected final static String sep = System.getProperty("file.separator");
     protected String onDiskDir;
 
@@ -85,14 +87,15 @@ public class LSMRTreeTestHarness {
         this.hyracksFrameSize = hyracksFrameSize;
     }
 
-    public void setUp() throws HyracksDataException {
-        onDiskDir = tmpDir + sep + "lsm_rtree_" + simpleDateFormat.format(new Date()) + sep;
+    public void setUp() throws HyracksException {
+        onDiskDir = "lsm_rtree_" + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         memBufferCache = new LSMRTreeInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
         memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
+        ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -132,6 +135,10 @@ public class LSMRTreeTestHarness {
         return DUMMY_FILE_ID;
     }
 
+    public IOManager getIOManager() {
+    	return ioManager;
+    }
+    
     public IBufferCache getDiskBufferCache() {
         return diskBufferCache;
     }

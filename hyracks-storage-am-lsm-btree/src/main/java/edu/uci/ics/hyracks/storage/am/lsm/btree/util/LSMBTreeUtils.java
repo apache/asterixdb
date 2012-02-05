@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -36,7 +37,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeUtils {
     public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, String onDiskDir, IBufferCache diskBufferCache,
+            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);
@@ -55,7 +56,7 @@ public class LSMBTreeUtils {
                 typeTraits.length, interiorFrameFactory, copyTupleLeafFrameFactory);
         BTreeFactory bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, cmpFactories,
                 typeTraits.length, interiorFrameFactory, insertLeafFrameFactory);
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(onDiskDir);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
         LSMBTree lsmTree = new LSMBTree(memBufferCache, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, fileNameManager, diskBTreeFactory,
                 bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories);

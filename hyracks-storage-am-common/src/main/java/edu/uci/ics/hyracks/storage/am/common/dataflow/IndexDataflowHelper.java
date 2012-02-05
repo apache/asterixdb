@@ -56,7 +56,7 @@ public abstract class IndexDataflowHelper {
             } catch (HyracksDataException e) {
                 // Revert state of buffer cache since file failed to open.
                 if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId);
+                    bufferCache.deleteFile(fileId, false);
                 }
                 throw e;
             }

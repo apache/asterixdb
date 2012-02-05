@@ -85,7 +85,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
             }
 
             // remove name to id mapping
-            bufferCache.deleteFile(indexFileId);
+            bufferCache.deleteFile(indexFileId, false);
         }
         // TODO: for the time being we don't throw,
         // with proper exception handling (no hanging job problem) we should

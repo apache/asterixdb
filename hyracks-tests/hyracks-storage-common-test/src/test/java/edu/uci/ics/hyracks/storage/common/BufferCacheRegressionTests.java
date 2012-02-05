@@ -76,7 +76,7 @@ public class BufferCacheRegressionTests {
 		}
 		bufferCache.closeFile(firstFileId);
 		if (deleteFile) {
-			bufferCache.deleteFile(firstFileId);
+			bufferCache.deleteFile(firstFileId, false);
 		}
 
 		// Create a file with the same name.
@@ -121,7 +121,7 @@ public class BufferCacheRegressionTests {
 		testFileHandle.close();
 		bufferCache.closeFile(secondFileId);
 		if (deleteFile) {
-			bufferCache.deleteFile(secondFileId);
+			bufferCache.deleteFile(secondFileId, false);
 		}
 		bufferCache.close();
 	}
