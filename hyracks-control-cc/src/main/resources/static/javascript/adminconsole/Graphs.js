@@ -126,7 +126,20 @@ Graphs.DirectedEdge = function(dag, key, attachment, sNode, sIndex, tNode, tInde
 Graphs.JsPlumbRenderer = function(dag, element, options) {
     this.dag = dag;
     this.element = element;
-    this.options = options;
+    this.options = options || {
+        levelStep : 100
+    };
+}
+
+Graphs.JsPlumbRenderer.prototype.configureDiv = function(div, node, stratum, inStratumIndex, stratumWidth) {
+    div.id = node.key;
+    div.dagNode = node;
+    /*
+     * div.style.position = 'absolute'; div.style.left = (stratum *
+     * this.options.levelStep) + 'px'; div.style.top = (inStratumIndex * 100) +
+     * 'px'; div.style.width = '50px'; div.style.height = '50px';
+     * div.style.border = 'thick solid #000000';
+     */
 }
 
 Graphs.JsPlumbRenderer.prototype.refresh = function() {
@@ -140,8 +153,7 @@ Graphs.JsPlumbRenderer.prototype.refresh = function() {
         for ( var j = 0; j < stratumList.length; ++j) {
             var node = stratumList[j];
             var div = document.createElement('div');
-            div.id = node.key;
-            div.dagNode = node;
+            this.configureDiv(div, node, i, j, stratumList.length);
             this.element.appendChild(div);
         }
     }
