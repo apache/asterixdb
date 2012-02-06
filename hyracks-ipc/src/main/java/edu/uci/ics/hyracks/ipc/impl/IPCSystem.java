@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
+import edu.uci.ics.hyracks.ipc.api.IPCPerformanceCounters;
 import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
 
@@ -32,12 +33,15 @@ public class IPCSystem {
 
     private final AtomicLong midFactory;
 
+    private final IPCPerformanceCounters perfCounters;
+
     public IPCSystem(InetSocketAddress socketAddress, IIPCI ipci, IPayloadSerializerDeserializer serde)
             throws IOException {
         cMgr = new IPCConnectionManager(this, socketAddress);
         this.ipci = ipci;
         this.serde = serde;
         midFactory = new AtomicLong();
+        perfCounters = new IPCPerformanceCounters();
     }
 
     public InetSocketAddress getSocketAddress() {
@@ -81,5 +85,9 @@ public class IPCSystem {
 
     IPCConnectionManager getConnectionManager() {
         return cMgr;
+    }
+
+    public IPCPerformanceCounters getPerformanceCounters() {
+        return perfCounters;
     }
 }

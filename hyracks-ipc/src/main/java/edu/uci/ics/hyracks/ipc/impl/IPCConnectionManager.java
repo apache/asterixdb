@@ -206,6 +206,7 @@ public class IPCConnectionManager {
                                         boolean success = msg.write(buffer);
                                         buffer.flip();
                                         if (success) {
+                                            system.getPerformanceCounters().addMessageSentCount(1);
                                             SelectionKey key = handle.getKey();
                                             key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
                                         } else {
@@ -235,6 +236,7 @@ public class IPCConnectionManager {
                                 IPCHandle handle = (IPCHandle) key.attachment();
                                 ByteBuffer readBuffer = handle.getInBuffer();
                                 int len = channel.read(readBuffer);
+                                system.getPerformanceCounters().addMessageBytesReceived(len);
                                 if (len < 0) {
                                     key.cancel();
                                     channel.close();
@@ -250,6 +252,7 @@ public class IPCConnectionManager {
                                 IPCHandle handle = (IPCHandle) key.attachment();
                                 ByteBuffer writeBuffer = handle.getOutBuffer();
                                 int len = channel.write(writeBuffer);
+                                system.getPerformanceCounters().addMessageBytesSent(len);
                                 if (len < 0) {
                                     key.cancel();
                                     channel.close();

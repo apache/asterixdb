@@ -69,8 +69,9 @@ import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
+import edu.uci.ics.hyracks.ipc.api.IPCPerformanceCounters;
 import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.PerformanceCounters;
+import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 
 public class NodeControllerService extends AbstractRemoteService {
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
@@ -311,11 +312,19 @@ public class NodeControllerService extends AbstractRemoteService {
                 hbData.gcCollectionCounts[i] = gcMXBean.getCollectionCount();
                 hbData.gcCollectionTimes[i] = gcMXBean.getCollectionTime();
             }
-            PerformanceCounters netPC = netManager.getPerformanceCounters();
+
+            MuxDemuxPerformanceCounters netPC = netManager.getPerformanceCounters();
             hbData.netPayloadBytesRead = netPC.getPayloadBytesRead();
             hbData.netPayloadBytesWritten = netPC.getPayloadBytesWritten();
             hbData.netSignalingBytesRead = netPC.getSignalingBytesRead();
             hbData.netSignalingBytesWritten = netPC.getSignalingBytesWritten();
+
+            IPCPerformanceCounters ipcPC = ipc.getPerformanceCounters();
+            hbData.ipcMessagesSent = ipcPC.getMessageSentCount();
+            hbData.ipcMessageBytesSent = ipcPC.getMessageBytesSent();
+            hbData.ipcMessagesReceived = ipcPC.getMessageReceivedCount();
+            hbData.ipcMessageBytesReceived = ipcPC.getMessageBytesReceived();
+
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
