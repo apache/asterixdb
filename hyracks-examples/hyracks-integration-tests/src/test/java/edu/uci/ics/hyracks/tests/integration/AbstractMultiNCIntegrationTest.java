@@ -38,27 +38,28 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
-public class AbstractMultiNCIntegrationTest {
+public abstract class AbstractMultiNCIntegrationTest {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractMultiNCIntegrationTest.class.getName());
 
-    public static final String[] ASTERIX_IDS = {"asterix-001","asterix-002","asterix-003","asterix-004","asterix-005","asterix-006","asterix-007"};
+    public static final String[] ASTERIX_IDS = { "asterix-001", "asterix-002", "asterix-003", "asterix-004",
+            "asterix-005", "asterix-006", "asterix-007" };
 
     private static ClusterControllerService cc;
-    
+
     private static NodeControllerService[] asterixNCs;
-    
+
     private static IHyracksClientConnection hcc;
-    
+
     private final List<File> outputFiles;
 
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();
-    
-    public AbstractMultiNCIntegrationTest(){
+
+    public AbstractMultiNCIntegrationTest() {
         outputFiles = new ArrayList<File>();;
     }
-    
+
     @BeforeClass
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
@@ -75,9 +76,9 @@ public class AbstractMultiNCIntegrationTest {
         ccConfig.ccRoot = ccRoot.getAbsolutePath();
         cc = new ClusterControllerService(ccConfig);
         cc.start();
-        
+
         asterixNCs = new NodeControllerService[ASTERIX_IDS.length];
-        for(int i = 0; i < ASTERIX_IDS.length; i++){
+        for (int i = 0; i < ASTERIX_IDS.length; i++) {
             NCConfig ncConfig = new NCConfig();
             ncConfig.ccHost = "localhost";
             ncConfig.ccPort = 39001;
@@ -87,22 +88,22 @@ public class AbstractMultiNCIntegrationTest {
             asterixNCs[i] = new NodeControllerService(ncConfig);
             asterixNCs[i].start();
         }
-        
+
         hcc = new HyracksConnection(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
         hcc.createApplication("test", null);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting CC in " + ccRoot.getAbsolutePath());
         }
     }
-    
+
     @AfterClass
     public static void deinit() throws Exception {
-        for(NodeControllerService nc : asterixNCs){
+        for (NodeControllerService nc : asterixNCs) {
             nc.stop();
         }
         cc.stop();
     }
-    
+
     protected void runTest(JobSpecification spec) throws Exception {
         JobId jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -115,7 +116,7 @@ public class AbstractMultiNCIntegrationTest {
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
-    
+
     private void dumpOutputFiles() {
         if (LOGGER.isLoggable(Level.INFO)) {
             for (File f : outputFiles) {
@@ -132,7 +133,7 @@ public class AbstractMultiNCIntegrationTest {
             }
         }
     }
-    
+
     protected File createTempFile() throws IOException {
         File tempFile = File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -141,5 +142,5 @@ public class AbstractMultiNCIntegrationTest {
         outputFiles.add(tempFile);
         return tempFile;
     }
-    
+
 }
