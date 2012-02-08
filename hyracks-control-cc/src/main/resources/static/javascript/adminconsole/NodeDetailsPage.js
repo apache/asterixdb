@@ -15,8 +15,8 @@ $(function() {
         }
     };
 
-    function computeBandwidth(bytes, rrdPtr) {
-        return (bytes[(rrdPtr + 1) % bytes.length] - bytes[rrdPtr]) / 10;
+    function computeRate(array, rrdPtr) {
+        return (array[(rrdPtr + 1) % array.length] - array[rrdPtr]) / 10;
     }
 
     function onDataReceived(data) {
@@ -58,6 +58,11 @@ $(function() {
         var netPayloadBytesWritten = result['net-payload-bytes-written'];
         var netSignalingBytesRead = result['net-signaling-bytes-read'];
         var netSignalingBytesWritten = result['net-signaling-bytes-written'];
+        var ipcMessagesSent = result['ipc-messages-sent'];
+        var ipcMessageBytesSent = result['ipc-message-bytes-sent'];
+        var ipcMessagesReceived = result['ipc-messages-received'];
+        var ipcMessageBytesReceived = result['ipc-message-bytes-received'];
+
         var sysLoadArray = [];
         var heapUsageInitSizesArray = [];
         var heapUsageUsedSizesArray = [];
@@ -75,6 +80,10 @@ $(function() {
         var netPayloadWriteBWArray = [];
         var netSignalingReadBWArray = [];
         var netSignalingWriteBWArray = [];
+        var ipcMessageSendRateArray = [];
+        var ipcMessageBytesSendRateArray = [];
+        var ipcMessageReceiveRateArray = [];
+        var ipcMessageBytesReceiveRateArray = [];
         var gcChartsDiv = document.getElementById('gc-charts');
         for ( var i = 0; i < gcCollectionCounts.length; ++i) {
             gcCollectionCountsArray.push([]);
@@ -107,10 +116,14 @@ $(function() {
                 gcCollectionTimesArray[j].push([ i, gcCollectionTimes[j][rrdPtr] ]);
             }
             if (i < sysLoad.length - 1) {
-                netPayloadReadBWArray.push([ i, computeBandwidth(netPayloadBytesRead, rrdPtr) ]);
-                netPayloadWriteBWArray.push([ i, computeBandwidth(netPayloadBytesWritten, rrdPtr) ]);
-                netSignalingReadBWArray.push([ i, computeBandwidth(netSignalingBytesRead, rrdPtr) ]);
-                netSignalingWriteBWArray.push([ i, computeBandwidth(netSignalingBytesWritten, rrdPtr) ]);
+                netPayloadReadBWArray.push([ i, computeRate(netPayloadBytesRead, rrdPtr) ]);
+                netPayloadWriteBWArray.push([ i, computeRate(netPayloadBytesWritten, rrdPtr) ]);
+                netSignalingReadBWArray.push([ i, computeRate(netSignalingBytesRead, rrdPtr) ]);
+                netSignalingWriteBWArray.push([ i, computeRate(netSignalingBytesWritten, rrdPtr) ]);
+                ipcMessageSendRateArray.push([ i, computeRate(ipcMessagesSent, rrdPtr) ]);
+                ipcMessageBytesSendRateArray.push([ i, computeRate(ipcMessageBytesSent, rrdPtr) ]);
+                ipcMessageReceiveRateArray.push([ i, computeRate(ipcMessagesReceived, rrdPtr) ]);
+                ipcMessageBytesReceiveRateArray.push([ i, computeRate(ipcMessageBytesReceived, rrdPtr) ]);
             }
             rrdPtr = (rrdPtr + 1) % sysLoad.length;
         }
@@ -185,6 +198,22 @@ $(function() {
         }, {
             label : 'Signaling Write Bandwidth (bytes/sec)',
             data : netSignalingWriteBWArray
+        } ], options);
+
+        $.plot($('#ipc-messages'), [ {
+            label : 'IPC Messages Send Rate (messages/sec)',
+            data : ipcMessageSendRateArray
+        }, {
+            label : 'IPC Messages Receive Rate (messages/sec)',
+            data : ipcMessageReceiveRateArray
+        } ], options);
+
+        $.plot($('#ipc-message-bytes'), [ {
+            label : 'IPC Message Send Bandwidth (bytes/sec)',
+            data : ipcMessageBytesSendRateArray
+        }, {
+            label : 'IPC Message Receive Bandwidth (bytes/sec)',
+            data : ipcMessageBytesReceiveRateArray
         } ], options);
     }
 

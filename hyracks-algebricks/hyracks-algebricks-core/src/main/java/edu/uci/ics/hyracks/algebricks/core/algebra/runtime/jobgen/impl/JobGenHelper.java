@@ -36,32 +36,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
 public final class JobGenHelper {
 
     private static final Logger LOGGER = Logger.getLogger(JobGenHelper.class.getName());
-
-    public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
-        return new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
-    }
-
-    public static ITreeIndexFrameFactory createBTreeNSMLeafFrameFactory(ITypeTraits[] typeTraits) {
-        return new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
-    }
-
-    //    TODO: VRB: Commented out for now. Need to be uncommented once this 
-    // is made compatible with the RTree interfaces.
-    //    public static ITreeIndexFrameFactory createRTreeNSMInteriorFrameFactory(ITypeTrait[] typeTraits, int keyFields) {
-    //        return new RTreeNSMInteriorFrameFactory(new RTreeTypeAwareTupleWriterFactory(typeTraits), keyFields);
-    //    }
-    //
-    //    public static ITreeIndexFrameFactory createRTreeNSMLeafFrameFactory(ITypeTrait[] typeTraits, int keyFields) {
-    //        return new RTreeNSMLeafFrameFactory(new RTreeTypeAwareTupleWriterFactory(typeTraits), keyFields);
-    //    }
 
     @SuppressWarnings("unchecked")
     public static RecordDescriptor mkRecordDescriptor(ILogicalOperator op, IOperatorSchema opSchema,

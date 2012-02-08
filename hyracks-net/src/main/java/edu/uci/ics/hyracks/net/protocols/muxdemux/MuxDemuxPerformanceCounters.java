@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.net.protocols.muxdemux;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PerformanceCounters {
+public class MuxDemuxPerformanceCounters {
     private final AtomicLong payloadBytesRead;
 
     private final AtomicLong payloadBytesWritten;
@@ -25,7 +25,7 @@ public class PerformanceCounters {
 
     private final AtomicLong signalingBytesWritten;
 
-    public PerformanceCounters() {
+    public MuxDemuxPerformanceCounters() {
         payloadBytesRead = new AtomicLong();
         payloadBytesWritten = new AtomicLong();
         signalingBytesRead = new AtomicLong();

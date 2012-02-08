@@ -107,6 +107,14 @@ public class NodeControllerState {
 
     private final long[] netSignalingBytesWritten;
 
+    private final long[] ipcMessagesSent;
+
+    private final long[] ipcMessageBytesSent;
+
+    private final long[] ipcMessagesReceived;
+
+    private final long[] ipcMessageBytesReceived;
+
     private int rrdPtr;
 
     private int lastHeartbeatDuration;
@@ -156,6 +164,11 @@ public class NodeControllerState {
         netPayloadBytesWritten = new long[RRD_SIZE];
         netSignalingBytesRead = new long[RRD_SIZE];
         netSignalingBytesWritten = new long[RRD_SIZE];
+        ipcMessagesSent = new long[RRD_SIZE];
+        ipcMessageBytesSent = new long[RRD_SIZE];
+        ipcMessagesReceived = new long[RRD_SIZE];
+        ipcMessageBytesReceived = new long[RRD_SIZE];
+
         rrdPtr = 0;
     }
 
@@ -183,6 +196,10 @@ public class NodeControllerState {
         netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
         netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
         netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
+        ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
+        ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
+        ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
+        ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
         rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
@@ -254,6 +271,10 @@ public class NodeControllerState {
         o.put("net-payload-bytes-written", netPayloadBytesWritten);
         o.put("net-signaling-bytes-read", netSignalingBytesRead);
         o.put("net-signaling-bytes-written", netSignalingBytesWritten);
+        o.put("ipc-messages-sent", ipcMessagesSent);
+        o.put("ipc-message-bytes-sent", ipcMessageBytesSent);
+        o.put("ipc-messages-received", ipcMessagesReceived);
+        o.put("ipc-message-bytes-received", ipcMessageBytesReceived);
 
         return o;
     }

@@ -32,7 +32,7 @@ public class MuxDemux {
 
     private final TCPEndpoint tcpEndpoint;
 
-    private final PerformanceCounters perfCounters;
+    private final MuxDemuxPerformanceCounters perfCounters;
 
     public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads) {
         this.localAddress = localAddress;
@@ -59,7 +59,7 @@ public class MuxDemux {
                 connection.setAttachment(mConn);
             }
         }, nThreads);
-        perfCounters = new PerformanceCounters();
+        perfCounters = new MuxDemuxPerformanceCounters();
     }
 
     public void start() throws IOException {
@@ -88,7 +88,7 @@ public class MuxDemux {
         return tcpEndpoint.getLocalAddress();
     }
 
-    public PerformanceCounters getPerformanceCounters() {
+    public MuxDemuxPerformanceCounters getPerformanceCounters() {
         return perfCounters;
     }
 }

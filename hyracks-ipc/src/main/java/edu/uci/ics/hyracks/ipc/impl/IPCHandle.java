@@ -141,6 +141,7 @@ final class IPCHandle implements IIPCHandle {
                 message.setFlag(Message.ERROR);
                 message.setPayload(e);
             }
+            system.getPerformanceCounters().addMessageReceivedCount(1);
 
             if (state == HandleState.CONNECT_RECEIVED) {
                 remoteAddress = (InetSocketAddress) message.getPayload();

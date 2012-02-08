@@ -284,6 +284,9 @@ public class JobDetailsPage extends AbstractPage {
                             + "\" height=\"" + ((y + 2) * (HEIGHT + 1)) + "\">\n" + buffer.toString());
             markup.setEscapeModelStrings(false);
             add(markup);
+        } else {
+            Label markup = new Label("job-timeline", "No information available yet");
+            add(markup);
         }
     }
 
