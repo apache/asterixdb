@@ -15,7 +15,7 @@ public class DataGenThread extends Thread {
     public final BlockingQueue<TupleBatch> tupleBatchQueue;
     private final int maxNumBatches;
     private final int maxOutstandingBatches;        
-    private int numBatches;
+    private int numBatches = 0;
     private final Random rnd;
     
     // maxOutstandingBatches pre-created tuple-batches for populating the queue.
@@ -31,29 +31,40 @@ public class DataGenThread extends Thread {
         for (int i = 0; i < maxOutstandingBatches; i++) {
             tupleBatches[i] = new TupleBatch(batchSize, fieldGens, fieldSerdes, payloadSize);
         }
-        // make sure we don't overwrite tuples that are in use by consumers. 
-        // -1 because we first generate a new tuple, and then try to put it into the queue.
-        int capacity = Math.max(maxOutstandingBatches - numConsumers - 1, 1);
-        tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(capacity);
+        tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
         ringPos = 0;
     }
     
     @Override
     public void run() {
         while(numBatches < maxNumBatches) {
+            boolean added = false;
             try {
-                tupleBatches[ringPos].generate();
-                tupleBatchQueue.put(tupleBatches[ringPos]);
+                if (tupleBatches[ringPos].inUse.compareAndSet(false, true)) {                    
+                    tupleBatches[ringPos].generate();
+                    tupleBatchQueue.put(tupleBatches[ringPos]);
+                    added = true;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            numBatches++;
-            ringPos++;
-            if (ringPos >= maxOutstandingBatches) {
-                ringPos = 0;
+            if (added) {
+                numBatches++;
+                ringPos++;
+                if (ringPos >= maxOutstandingBatches) {
+                    ringPos = 0;
+                }
             }
         }
+    }
+    
+    public TupleBatch getBatch() throws InterruptedException {
+        return tupleBatchQueue.take();
+    }
+    
+    public void releaseBatch(TupleBatch batch) {
+        batch.inUse.set(false);
     }
 }

@@ -43,12 +43,13 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
     public void run() {
         try {
             for (int i = 0; i < numBatches; i++) {
-                TupleBatch batch = dataGen.tupleBatchQueue.take();
+                TupleBatch batch = dataGen.getBatch();     
                 for (int j = 0; j < batch.size(); j++) {
                     TestOperation op = opSelector.getOp(rnd.nextInt());
                     ITupleReference tuple = batch.get(j);
                     performOp(tuple, op);
                 }
+                dataGen.releaseBatch(batch);
             }
         } catch (Exception e) {
             e.printStackTrace();

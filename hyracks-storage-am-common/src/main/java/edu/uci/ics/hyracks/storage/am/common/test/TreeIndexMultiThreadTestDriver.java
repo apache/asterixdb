@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOper
 @SuppressWarnings("rawtypes")
 public class TreeIndexMultiThreadTestDriver {
     private static final int RANDOM_SEED = 50;
-    private static final int MAX_OUTSTANDING_BATCHES = 10;
     // Means no additional payload. Only the specified fields.
     private static final int PAYLOAD_SIZE = 0;
     private final TestOperationSelector opSelector;    
@@ -84,6 +83,6 @@ public class TreeIndexMultiThreadTestDriver {
     
     // To allow subclasses to override the data gen params.
     public DataGenThread createDatagenThread(int numThreads, int numBatches, int batchSize) {
-        return new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, PAYLOAD_SIZE, RANDOM_SEED, MAX_OUTSTANDING_BATCHES, false);
+        return new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, PAYLOAD_SIZE, RANDOM_SEED, 2*numThreads, false);
     }
 }
