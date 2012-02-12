@@ -43,6 +43,7 @@ public class LSMBTreeTestHarness {
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_DISK_PAGE_SIZE = 256;
     private static final int DEFAULT_DISK_NUM_PAGES = 1000;
+    //private static final int DEFAULT_DISK_NUM_PAGES = 100;
     private static final int DEFAULT_DISK_MAX_OPEN_FILES = 200;
     private static final int DEFAULT_MEM_PAGE_SIZE = 256;
     private static final int DEFAULT_MEM_NUM_PAGES = 100;
@@ -101,7 +102,7 @@ public class LSMBTreeTestHarness {
     }
     
     public void tearDown() throws HyracksDataException {
-        diskBufferCache.close();        
+        diskBufferCache.close();
         File f = new File(onDiskDir);
         // TODO: For some reason the dir fails to be deleted. Ask Vinayak about this.
         f.deleteOnExit();

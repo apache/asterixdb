@@ -58,4 +58,6 @@ public interface ILSMTree extends ITreeIndex {
     public void resetInMemoryComponent() throws HyracksDataException;
 
     public List<Object> getDiskComponents();
+    
+    public ILSMComponentFinalizer getComponentFinalizer();
 }

@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 /**
  * Interface describing the operations of tree-based index structures. Indexes
@@ -110,4 +111,9 @@ public interface ITreeIndex extends IIndex {
      * @return The file id of this index.
      */
     public int getFileId();
+    
+    /**
+     * @return BufferCache underlying this tree index.
+     */
+    public IBufferCache getBufferCache();
 }

@@ -122,10 +122,17 @@ public class LSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Tree.");
         }
-        Object newDiskComponent = lsmTree.flush();
+        Object newComponent = lsmTree.flush();
+        
+        // The implementation of this call must take any necessary steps to make
+        // the new component permanent, and mark it as valid (usually this means
+        // forcing all pages of the tree to disk, possibly with some extra
+        // information to mark the tree as valid).
+        lsmTree.getComponentFinalizer().finalize(newComponent);
+        
         lsmTree.resetInMemoryComponent();
         synchronized (diskComponentsSync) {
-            lsmTree.addFlushedComponent(newDiskComponent);
+            lsmTree.addFlushedComponent(newComponent);
         }
     }
     
@@ -182,6 +189,7 @@ public class LSMHarness {
         Object newComponent = lsmTree.merge(mergedComponents);
         // No merge happened.
         if (newComponent == null) {
+            isMerging.set(false);
             return;
         }
         
@@ -210,6 +218,12 @@ public class LSMHarness {
             }
         }
         
+        // The implementation of this call must take any necessary steps to make
+        // the new component permanent, and mark it as valid (usually this means
+        // forcing all pages of the tree to disk, possibly with some extra
+        // information to mark the tree as valid).
+        lsmTree.getComponentFinalizer().finalize(newComponent);
+        
         // Cleanup. At this point we have guaranteed that no searchers are
         // touching the old on-disk Trees (localSearcherRefCount == 0).
         lsmTree.cleanUpAfterMerge(mergedComponents);
@@ -230,8 +244,13 @@ public class LSMHarness {
         searcherRefCount.decrementAndGet();
     }
     
-    public void addBulkLoadedComponent(Object index) {
-    	synchronized (diskComponentsSync) {
+    public void addBulkLoadedComponent(Object index) throws HyracksDataException {
+        // The implementation of this call must take any necessary steps to make
+        // the new component permanent, and mark it as valid (usually this means
+        // forcing all pages of the tree to disk, possibly with some extra
+        // information to mark the tree as valid).
+        lsmTree.getComponentFinalizer().finalize(index);
+        synchronized (diskComponentsSync) {
     		lsmTree.addFlushedComponent(index);
     	}
     }

@@ -41,4 +41,10 @@ public interface ITreeIndexMetaDataFrame {
 	public boolean hasSpace();
 
 	public void addFreePage(int freePage);
+	
+	// Special flag for LSM-Components to mark whether they are valid or not. 
+	public boolean isValid();
+	
+	// Set special validity flag.
+	public void setValid(boolean isValid);
 }

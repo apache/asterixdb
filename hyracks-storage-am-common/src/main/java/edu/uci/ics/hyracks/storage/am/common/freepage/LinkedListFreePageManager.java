@@ -199,4 +199,9 @@ public class LinkedListFreePageManager implements IFreePageManager {
 	public boolean isMetaPage(ITreeIndexMetaDataFrame metaFrame) {
 		return metaFrame.getLevel() == META_PAGE_LEVEL_INDICATOR;
 	}
+
+    @Override
+    public int getFirstMetadataPage() {
+        return headPage;
+    }
 }

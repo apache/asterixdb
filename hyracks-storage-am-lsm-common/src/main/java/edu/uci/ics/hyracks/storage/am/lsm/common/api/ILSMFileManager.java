@@ -35,16 +35,15 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 public interface ILSMFileManager {
 	public void createDirs();
     
-    public Object getFlushFileName();
+	public FileReference createFlushFile(String relFlushFileName);
+
+	public FileReference createMergeFile(String relMergeFileName);
+
+    public Object getRelFlushFileName();
 	
-	public Object getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
+	public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
 	
 	public String getBaseDir();
-	
-	public FileReference createTempFile() throws HyracksDataException;
-	
-	// Atomically renames src file ref to dest on same IODevice as src, and returns file ref of dest.
-	public FileReference rename(FileReference src, String dest) throws HyracksDataException;
 	
 	// Deletes invalid files, and returns list of valid files from baseDir.
 	// The returned valid files are correctly sorted (based on the recency of data). 

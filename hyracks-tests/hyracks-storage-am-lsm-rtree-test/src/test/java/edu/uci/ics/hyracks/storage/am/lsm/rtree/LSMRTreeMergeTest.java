@@ -49,7 +49,6 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
                 valueProviderFactories, numKeys, harness.getFileId());
-
     }
 
     @Override

@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 public class LSMTreeFileManager implements ILSMFileManager {
 
     protected static final String SPLIT_STRING = "_";
-    protected static final String TEMP_FILE_PREFIX = "lsm_tree";
     
     // Currently uses all IODevices registered in ioManager in a round-robin fashion.
     protected final IOManager ioManager;
@@ -44,6 +42,8 @@ public class LSMTreeFileManager implements ILSMFileManager {
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");    
     protected final Comparator<String> cmp = new FileNameComparator();
     protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
+    // To implement round-robin assignment of files onto I/O devices.
+    private int ioDeviceIndex = 0;
     
     public LSMTreeFileManager(IOManager ioManager, String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -62,27 +62,19 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     }
     
-    @Override
-    public FileReference createTempFile() throws HyracksDataException {
-        // Cycles through the IODevices in round-robin fashion.
-        return ioManager.createWorkspaceFile(TEMP_FILE_PREFIX);
+    public FileReference createFlushFile(String relFlushFileName) {        
+        // Assigns new files to I/O devices in round-robin fashion.
+        IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceIndex);
+        ioDeviceIndex = (ioDeviceIndex + 1) % ioManager.getIODevices().size();
+        return dev.createFileReference(relFlushFileName);
     }
     
-    // Atomically renames src fileref to dest on same IODevice as src, and returns file ref of dest.
-    @Override
-    public FileReference rename(FileReference src, String dest) throws HyracksDataException {
-        FileReference destFile = new FileReference(src.getDevideHandle(), dest);
-        //try {
-            //Files.move(src.getFile().toPath(), destFile.getFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
-            src.getFile().renameTo(destFile.getFile());
-        //} catch (IOException e) {
-        //    throw new HyracksDataException(e);
-        //}
-        return destFile;
+    public FileReference createMergeFile(String relMergeFileName) {
+        return createFlushFile(relMergeFileName);
     }
     
     @Override
-    public Object getFlushFileName() {
+    public Object getRelFlushFileName() {
         Date date = new Date();
         String ts = formatter.format(date);
         // Begin timestamp and end timestamp are identical.
@@ -90,7 +82,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     @Override
-    public Object getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {        
+    public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
         String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
         String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
         // Enclosing timestamp range.

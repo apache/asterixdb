@@ -32,6 +32,10 @@ public interface IBufferCache {
 
     public void unpin(ICachedPage page) throws HyracksDataException;
 
+    public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
+    
+    public void force(int fileId, boolean metadata) throws HyracksDataException;
+    
     public int getPageSize();
 
     public int getNumPages();

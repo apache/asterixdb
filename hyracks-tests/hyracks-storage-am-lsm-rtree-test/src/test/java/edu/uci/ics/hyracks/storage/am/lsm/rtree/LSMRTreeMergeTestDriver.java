@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
@@ -45,18 +44,18 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            rTreeTestUtils.insertIntTuples(ctx, numTuplesToInsert, getRandom());
+            rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
         } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
-            rTreeTestUtils.insertDoubleTuples(ctx, numTuplesToInsert, getRandom());
+            rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
         }
 
         int maxTreesToMerge = 3;
         for (int i = 0; i < maxTreesToMerge; i++) {
-            for (int j = 0; j < i; j++) {
-                if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                    rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
-                } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-                    rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
+        	for (int j = 0; j < i; j++) {
+        		if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+        			rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+                } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
+                	rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
                 }
             }
 

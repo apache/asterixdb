@@ -174,4 +174,12 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
             latch.writeLock().unlock();
         }
     }
+
+    @Override
+    public void force(int fileId, boolean metadata) throws HyracksDataException {
+    }
+
+    @Override
+    public void flushDirtyPage(ICachedPage page) throws HyracksDataException {
+    }
 }

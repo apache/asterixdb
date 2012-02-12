@@ -93,4 +93,10 @@ public class InMemoryFreePageManager implements IFreePageManager {
     public boolean isFreePage(ITreeIndexMetaDataFrame metaFrame) {
         return false;
     }
+
+    @Override
+    public int getFirstMetadataPage() {
+        // Method doesn't make sense for this free page manager.
+        return -1;
+    }
 }

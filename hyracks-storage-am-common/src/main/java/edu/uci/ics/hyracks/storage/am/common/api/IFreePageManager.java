@@ -26,4 +26,6 @@ public interface IFreePageManager {
 	public boolean isMetaPage(ITreeIndexMetaDataFrame metaFrame);
 
 	public boolean isFreePage(ITreeIndexMetaDataFrame metaFrame);
+	
+	public int getFirstMetadataPage();
 }

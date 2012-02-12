@@ -37,16 +37,16 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
     }
 
     @Override
-    public Object getFlushFileName() {
-        String baseName = (String) super.getFlushFileName();
+    public Object getRelFlushFileName() {
+        String baseName = (String) super.getRelFlushFileName();
         return new LSMRTreeFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
                 + BTREE_STRING);
 
     }
 
     @Override
-    public Object getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
-        String baseName = (String) super.getMergeFileName(firstFileName, lastFileName);
+    public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
+        String baseName = (String) super.getRelMergeFileName(firstFileName, lastFileName);
         return new LSMRTreeFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
                 + BTREE_STRING);
     }
