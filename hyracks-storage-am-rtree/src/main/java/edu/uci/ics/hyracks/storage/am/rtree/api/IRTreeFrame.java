@@ -15,25 +15,21 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.api;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 
-	public void computeMBR(ISplitKey splitKey);
+    public void delete(int tupleIndex, MultiComparator cmp);
 
-	public void delete(int tupleIndex, MultiComparator cmp);
+    public long getPageNsn();
 
-	public long getPageNsn();
+    public void setPageNsn(long pageNsn);
 
-	public void setPageNsn(long pageNsn);
+    public int getRightPage();
 
-	public int getRightPage();
+    public void setRightPage(int rightPage);
 
-	public void setRightPage(int rightPage);
-
-	public void adjustMBR(ITreeIndexTupleReference[] tuples);
+    public void adjustMBR();
 
 }

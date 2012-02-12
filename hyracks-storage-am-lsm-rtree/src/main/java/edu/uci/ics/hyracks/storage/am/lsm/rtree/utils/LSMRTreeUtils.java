@@ -29,8 +29,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.RTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.tuples.LSMTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
@@ -40,8 +40,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeUtils {
     public static LSMRTree createLSMTree(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
-            IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
+            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
+            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories) {
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
@@ -64,7 +64,7 @@ public class LSMRTreeUtils {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories,
                 typeTraits.length, btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, onDiskDir);
+        ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, onDiskDir);
         LSMRTree lsmTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,

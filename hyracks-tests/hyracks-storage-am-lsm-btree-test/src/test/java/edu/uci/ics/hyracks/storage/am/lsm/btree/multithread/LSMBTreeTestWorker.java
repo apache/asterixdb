@@ -97,7 +97,7 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                 consumeCursorTuples(searchCursor);
                 break;
                 
-            case ORDERED_SCAN:
+            case SCAN:
                 searchCursor.reset();
                 rangePred.setLowKey(null, true);
                 rangePred.setHighKey(null, true);

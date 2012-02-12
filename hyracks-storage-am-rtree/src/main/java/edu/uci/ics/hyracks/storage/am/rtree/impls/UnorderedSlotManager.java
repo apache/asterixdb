@@ -95,25 +95,29 @@ public class UnorderedSlotManager extends AbstractSlotManager {
         setSlot(slotOff, tupleOff);
     }
 
+    public void deleteSlot(int slotOff) {
+        System.arraycopy(frame.getBuffer().array(), getSlotEndOff(), frame.getBuffer().array(), slotOff + slotSize,
+                slotSize);
+    }
+
     public void deleteEmptySlots() {
         int slotOff = getSlotStartOff();
-        while (slotOff >= getSlotEndOff()) {
-            if (frame.getBuffer().getInt(slotOff) == -1) {
-                while (frame.getBuffer().getInt(getSlotEndOff()) == -1) {
-                    ((RTreeNSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
-                    if (getSlotEndOff() > getSlotStartOff()) {
-                        break;
-                    }
-                }
-                if (slotOff > getSlotEndOff()) {
-                    System.arraycopy(frame.getBuffer().array(), getSlotEndOff(), frame.getBuffer().array(), slotOff,
-                            slotSize);
-                    ((RTreeNSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
-                } else {
+        while (frame.getTupleCount() > 0) {
+            while (frame.getBuffer().getInt(getSlotEndOff()) == -1) {
+                ((RTreeNSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+                if (frame.getTupleCount() == 0) {
                     break;
                 }
             }
+            if (frame.getTupleCount() == 0 || slotOff <= getSlotEndOff()) {
+                break;
+            }
+            if (frame.getBuffer().getInt(slotOff) == -1) {
+                modifySlot(slotOff, frame.getBuffer().getInt(getSlotEndOff()));
+                ((RTreeNSMFrame) frame).setTupleCount(frame.getTupleCount() - 1);
+            }
             slotOff -= slotSize;
+
         }
     }
 }

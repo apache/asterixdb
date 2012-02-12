@@ -19,93 +19,99 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 
 public class PathList {
-	private IntArrayList pageIds;
-	private LongArrayList pageLsns;
-	private IntArrayList pageIndexes;
+    private IntArrayList pageIds;
+    private LongArrayList pageLsns;
+    private IntArrayList pageIndexes;
 
-	public PathList(int initialCapacity, int growth) {
-		pageIds = new IntArrayList(initialCapacity, growth);
-		pageLsns = new LongArrayList(initialCapacity, growth);
-		pageIndexes = new IntArrayList(initialCapacity, growth);
-	}
+    public PathList(int initialCapacity, int growth) {
+        pageIds = new IntArrayList(initialCapacity, growth);
+        pageLsns = new LongArrayList(initialCapacity, growth);
+        pageIndexes = new IntArrayList(initialCapacity, growth);
+    }
 
-	public int size() {
-		return pageIds.size();
-	}
+    public int size() {
+        return pageIds.size();
+    }
 
-	public int first() {
-		return pageIds.first();
-	}
+    public int first() {
+        return pageIds.first();
+    }
 
-	public void add(int pageId, long pageLsn, int pageIndex) {
-		pageIds.add(pageId);
-		pageLsns.add(pageLsn);
-		pageIndexes.add(pageIndex);
-	}
+    public void add(int pageId, long pageLsn, int pageIndex) {
+        pageIds.add(pageId);
+        pageLsns.add(pageLsn);
+        pageIndexes.add(pageIndex);
+    }
 
-	public int getFirstPageId() {
-		return pageIds.getFirst();
-	}
+    public void addFirst(int pageId, long pageLsn, int pageIndex) {
+        pageIds.addFirst(pageId);
+        pageLsns.addFirst(pageLsn);
+        pageIndexes.addFirst(pageIndex);
+    }
 
-	public long getFirstPageLsn() {
-		return pageLsns.getFirst();
-	}
+    public int getFirstPageId() {
+        return pageIds.getFirst();
+    }
 
-	public int getFirstPageIndex() {
-		return pageIndexes.getFirst();
-	}
+    public long getFirstPageLsn() {
+        return pageLsns.getFirst();
+    }
 
-	public int getLastPageId() {
-		return pageIds.getLast();
-	}
+    public int getFirstPageIndex() {
+        return pageIndexes.getFirst();
+    }
 
-	public long getLastPageLsn() {
-		return pageLsns.getLast();
-	}
+    public int getLastPageId() {
+        return pageIds.getLast();
+    }
 
-	public int getLastPageIndex() {
-		return pageIndexes.getLast();
-	}
+    public long getLastPageLsn() {
+        return pageLsns.getLast();
+    }
 
-	public int getPageId(int i) {
-		return pageIds.get(i);
-	}
+    public int getLastPageIndex() {
+        return pageIndexes.getLast();
+    }
 
-	public long getPageLsn(int i) {
-		return pageLsns.get(i);
-	}
+    public int getPageId(int i) {
+        return pageIds.get(i);
+    }
 
-	public int getPageIndex(int i) {
-		return pageIndexes.get(i);
-	}
+    public long getPageLsn(int i) {
+        return pageLsns.get(i);
+    }
 
-	public void setPageLsn(int i, long pageLsn) {
-		pageLsns.set(i, pageLsn);
-	}
+    public int getPageIndex(int i) {
+        return pageIndexes.get(i);
+    }
 
-	public void moveFirst() {
-		pageIds.moveFirst();
-		pageLsns.moveFirst();
-		pageIndexes.moveFirst();
-	}
+    public void setPageLsn(int i, long pageLsn) {
+        pageLsns.set(i, pageLsn);
+    }
 
-	public void moveLast() {
-		pageIds.removeLast();
-		pageLsns.removeLast();
-		pageIndexes.removeLast();
-	}
+    public void moveFirst() {
+        pageIds.moveFirst();
+        pageLsns.moveFirst();
+        pageIndexes.moveFirst();
+    }
 
-	public boolean isLast() {
-		return pageIds.isLast();
-	}
+    public void moveLast() {
+        pageIds.removeLast();
+        pageLsns.removeLast();
+        pageIndexes.removeLast();
+    }
 
-	public void clear() {
-		pageIds.clear();
-		pageLsns.clear();
-		pageIndexes.clear();
-	}
+    public boolean isLast() {
+        return pageIds.isLast();
+    }
 
-	public boolean isEmpty() {
-		return pageIds.isEmpty();
-	}
+    public void clear() {
+        pageIds.clear();
+        pageLsns.clear();
+        pageIndexes.clear();
+    }
+
+    public boolean isEmpty() {
+        return pageIds.isEmpty();
+    }
 }

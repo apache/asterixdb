@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.multithread;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.multithread;
 
 import java.util.ArrayList;
 
@@ -21,20 +21,21 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexMultiThreadTest;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeMultiThreadTest;
 
-public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
+public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-    private LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+    private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
-    private LSMBTreeTestWorkerFactory workerFactory = new LSMBTreeTestWorkerFactory();
+    private LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
 
     @Override
     protected void setUp() throws HyracksException {
@@ -47,11 +48,14 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     }
 
     @Override
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-                typeTraits, cmpFactories);
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
+            throws TreeIndexException {
+        return LSMRTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                valueProviderFactories);
+
     }
 
     @Override
@@ -71,30 +75,27 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(insertMergeOps, getUniformOpProbs(insertMergeOps)));
 
-        // Inserts mixed with point searches and scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
-                TestOperation.SCAN };
+        // Inserts mixed with scans.
+        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN };
         workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
 
-        // Inserts, updates, and deletes.
-        TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
+        // Inserts and deletes.
+        TestOperation[] insertDeleteOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, getUniformOpProbs(insertDeleteOps)));
 
-        // Inserts, updates, deletes and merges.
-        TestOperation[] insertDeleteUpdateMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps,
-                getUniformOpProbs(insertDeleteUpdateMergeOps)));
+        // Inserts, deletes and merges.
+        TestOperation[] insertDeleteMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
+                TestOperation.MERGE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteMergeOps, getUniformOpProbs(insertDeleteMergeOps)));
 
         // All operations except merge.
         TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN };
+                TestOperation.SCAN };
         workloadConfs.add(new TestWorkloadConf(allNoMergeOps, getUniformOpProbs(allNoMergeOps)));
 
         // All operations.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.MERGE };
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN,
+                TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
 
         return workloadConfs;
@@ -107,6 +108,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected String getIndexTypeName() {
-        return "LSMBTree";
+        return "LSMRTree";
     }
+
 }

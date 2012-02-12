@@ -25,7 +25,7 @@ public class TestOperationSelector {
         UPDATE,
         POINT_SEARCH,
         RANGE_SEARCH,
-        ORDERED_SCAN,
+        SCAN,
         DISKORDER_SCAN,
         MERGE        
     }

@@ -70,33 +70,45 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
             return true;
         }
         while (currentCursror < numberOfTrees) {
-            while (rtreeCursors[currentCursror].hasNext()) {
-                rtreeCursors[currentCursror].next();
-                ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
+            try {
+                while (rtreeCursors[currentCursror].hasNext()) {
+                    rtreeCursors[currentCursror].next();
+                    ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
 
-                boolean killerTupleFound = false;
-                for (int i = 0; i <= currentCursror; i++) {
-                    btreeRangePredicate.setHighKey(currentTuple, true);
-                    btreeRangePredicate.setLowKey(currentTuple, true);
+                    boolean killerTupleFound = false;
+                    for (int i = 0; i <= currentCursror; i++) {
 
-                    try {
-                        diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
-                    } catch (TreeIndexException e) {
-                        throw new HyracksDataException(e);
+                        try {
+                            btreeCursors[i].reset();
+                            btreeRangePredicate.setHighKey(currentTuple, true);
+                            btreeRangePredicate.setLowKey(currentTuple, true);
+                            diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
+                        } catch (TreeIndexException e) {
+                            throw new HyracksDataException(e);
+                        }
+                        try {
+                            if (btreeCursors[i].hasNext()) {
+                                killerTupleFound = true;
+                                break;
+                            }
+                        } finally {
+                            btreeCursors[i].close();
+                        }
+
                     }
-
-                    if (btreeCursors[i].hasNext()) {
-                        killerTupleFound = true;
-                        break;
+                    if (!killerTupleFound) {
+                        frameTuple = currentTuple;
+                        foundNext = true;
+                        return true;
                     }
                 }
-                if (!killerTupleFound) {
-                    frameTuple = currentTuple;
-                    foundNext = true;
-                    return true;
+            } finally {
+                if (!foundNext) {
+                    rtreeCursors[currentCursror].close();
                 }
             }
             currentCursror++;
+
         }
         return false;
     }

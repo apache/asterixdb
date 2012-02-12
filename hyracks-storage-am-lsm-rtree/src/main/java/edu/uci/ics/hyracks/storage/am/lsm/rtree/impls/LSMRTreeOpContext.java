@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 
 public final class LSMRTreeOpContext implements IIndexOpContext {
 
-    private RTreeOpContext rtreeOpContext;
-    private BTreeOpContext btreeOpContext;
+    public RTreeOpContext rtreeOpContext;
+    public BTreeOpContext btreeOpContext;
     public final RTree.RTreeAccessor memRTreeAccessor;
     public final BTree.BTreeAccessor memBTreeAccessor;
     private IndexOp op;
@@ -43,7 +43,6 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories) {
         this.memRTreeAccessor = memRtreeAccessor;
         this.memBTreeAccessor = memBtreeAccessor;
-        // TODO: Alex. is there a reason we need to create new OpContexts?
         this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories, rTreeHeightHint);
         this.btreeOpContext = new BTreeOpContext(btreeLeafFrameFactory, btreeInteriorFrameFactory, btreeMetaFrame,
         		btreeCmpFactories);

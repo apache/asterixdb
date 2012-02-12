@@ -13,29 +13,29 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.multithread;
+package edu.uci.ics.hyracks.storage.am.rtree.multithread;
 
 import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexMultiThreadTest;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
+import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeMultiThreadTest;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
+import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
-public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
+public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-    private BTreeTestHarness harness = new BTreeTestHarness();
-    
-    private BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
-    
+    private RTreeTestHarness harness = new RTreeTestHarness();
+
+    private RTreeTestWorkerFactory workerFactory = new RTreeTestWorkerFactory();
+
     @Override
     protected void setUp() throws HyracksDataException {
         harness.setUp();
@@ -47,8 +47,12 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     }
 
     @Override
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getBTreeFileId(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
+            throws TreeIndexException {
+        return RTreeUtils.createRTree(harness.getBufferCache(), harness.getTreeFileId(), typeTraits,
+                valueProviderFactories, rtreeCmpFactories);
+
     }
 
     @Override
@@ -59,33 +63,35 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
         ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
-        
+
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
         workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
-        
-        // Inserts mixed with point searches and scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
+
+        // Inserts mixed with scans.
+        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN,
+                TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
-        
-        // Inserts, updates, and deletes.        
-        TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
-        
+
+        // Inserts and deletes.
+        TestOperation[] insertDeleteOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, getUniformOpProbs(insertDeleteOps)));
+
         // All operations mixed.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN,
+                TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
-        
+
         return workloadConfs;
     }
 
     @Override
     protected int getFileId() {
-        return harness.getBTreeFileId();
+        return harness.getTreeFileId();
     }
 
     @Override
     protected String getIndexTypeName() {
-        return "BTree";
+        return "RTree";
     }
 }

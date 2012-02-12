@@ -113,8 +113,9 @@ public class LSMBTree implements ILSMTree {
     @Override
     public void open(int indexFileId) throws HyracksDataException {
         memBTree.open(indexFileId);
-        List<String> validFileNames = fileManager.cleanupAndGetValidFiles();        
-        for (String fileName : validFileNames) {            
+        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles();        
+        for (Object o : validFileNames) {     
+            String fileName = (String) o;
             BTree btree = createDiskBTree(diskBTreeFactory, fileName, false);
             diskBTrees.add(btree);
         }
@@ -255,7 +256,7 @@ public class LSMBTree implements ILSMTree {
         }
         diskBTree.endBulkLoad(bulkLoadCtx);
         
-        String finalFileName = fileManager.getFlushFileName();
+        String finalFileName = (String) fileManager.getFlushFileName();
         rename(diskBTree, finalFileName);
         return diskBTree;
     }
@@ -276,7 +277,8 @@ public class LSMBTree implements ILSMTree {
         BTree lastBTree = (BTree) mergingDiskBTrees.get(mergingDiskBTrees.size() - 1);
         FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
         FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
-        String fileName = fileManager.getMergeFileName(firstFile.getFile().getName(), lastFile.getFile().getName());
+        String fileName = (String) fileManager.getMergeFileName(firstFile.getFile().getName(), lastFile.getFile()
+                .getName());
         return fileName;
     }
     
@@ -459,7 +461,7 @@ public class LSMBTree implements ILSMTree {
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         LSMTreeBulkLoadContext bulkLoadCtx = (LSMTreeBulkLoadContext) ictx;
         bulkLoadCtx.getBTree().endBulkLoad(bulkLoadCtx.getBulkLoadCtx());
-        String finalFileName = fileManager.getFlushFileName();
+        String finalFileName = (String) fileManager.getFlushFileName();
         rename(bulkLoadCtx.getBTree(), finalFileName);
         lsmHarness.addBulkLoadedComponent(bulkLoadCtx.getBTree());
     }

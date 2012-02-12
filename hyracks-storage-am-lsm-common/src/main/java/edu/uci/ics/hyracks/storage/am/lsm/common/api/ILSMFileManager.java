@@ -35,9 +35,9 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 public interface ILSMFileManager {
 	public void createDirs();
     
-    public String getFlushFileName();
+    public Object getFlushFileName();
 	
-	public String getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
+	public Object getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
 	
 	public String getBaseDir();
 	
@@ -48,7 +48,7 @@ public interface ILSMFileManager {
 	
 	// Deletes invalid files, and returns list of valid files from baseDir.
 	// The returned valid files are correctly sorted (based on the recency of data). 
-	public List<String> cleanupAndGetValidFiles() throws HyracksDataException;
+	public List<Object> cleanupAndGetValidFiles() throws HyracksDataException;
 	
 	public Comparator<String> getFileNameComparator();
 	

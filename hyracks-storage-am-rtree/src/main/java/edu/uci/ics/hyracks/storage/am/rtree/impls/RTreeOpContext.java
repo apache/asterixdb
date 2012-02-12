@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
+import java.util.ArrayList;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -24,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class RTreeOpContext implements IIndexOpContext {
     private static final int INITIAL_TRAVERSE_LIST_SIZE = 100;
@@ -41,6 +44,9 @@ public class RTreeOpContext implements IIndexOpContext {
     // Used for traversing the tree.
     public PathList traverseList;
 
+    public ArrayList<ICachedPage> NSNUpdates;
+    public ArrayList<ICachedPage> LSNUpdates;
+
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories, int treeHeightHint) {
         this.cmp = MultiComparator.create(cmpFactories);
@@ -48,6 +54,8 @@ public class RTreeOpContext implements IIndexOpContext {
         this.leafFrame = leafFrame;
         this.metaFrame = metaFrame;
         pathList = new PathList(treeHeightHint, treeHeightHint);
+        NSNUpdates = new ArrayList<ICachedPage>();
+        LSNUpdates = new ArrayList<ICachedPage>();
     }
 
     public ITupleReference getTuple() {
@@ -65,6 +73,8 @@ public class RTreeOpContext implements IIndexOpContext {
         if (traverseList != null) {
             traverseList.clear();
         }
+        NSNUpdates.clear();
+        LSNUpdates.clear();
     }
 
     @Override

@@ -18,8 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,16 +34,16 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 
 public class LSMTreeFileManager implements ILSMFileManager {
 
-    private static final String SPLIT_STRING = "_";
-    private static final String TEMP_FILE_PREFIX = "lsm_tree";
+    protected static final String SPLIT_STRING = "_";
+    protected static final String TEMP_FILE_PREFIX = "lsm_tree";
     
     // Currently uses all IODevices registered in ioManager in a round-robin fashion.
-    private final IOManager ioManager;
+    protected final IOManager ioManager;
     // baseDir should reflect dataset name, and partition name.
-    private final String baseDir;
-    private final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");    
-    private final Comparator<String> cmp = new FileNameComparator();
-    private final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
+    protected final String baseDir;
+    protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");    
+    protected final Comparator<String> cmp = new FileNameComparator();
+    protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
     
     public LSMTreeFileManager(IOManager ioManager, String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -74,16 +72,17 @@ public class LSMTreeFileManager implements ILSMFileManager {
     @Override
     public FileReference rename(FileReference src, String dest) throws HyracksDataException {
         FileReference destFile = new FileReference(src.getDevideHandle(), dest);
-        try {
-            Files.move(src.getFile().toPath(), destFile.getFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        //try {
+            //Files.move(src.getFile().toPath(), destFile.getFile().toPath(), StandardCopyOption.ATOMIC_MOVE);
+            src.getFile().renameTo(destFile.getFile());
+        //} catch (IOException e) {
+        //    throw new HyracksDataException(e);
+        //}
         return destFile;
     }
     
     @Override
-    public String getFlushFileName() {
+    public Object getFlushFileName() {
         Date date = new Date();
         String ts = formatter.format(date);
         // Begin timestamp and end timestamp are identical.
@@ -91,7 +90,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     @Override
-    public String getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {        
+    public Object getMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {        
         String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
         String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
         // Enclosing timestamp range.
@@ -127,8 +126,8 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     @Override
-    public List<String> cleanupAndGetValidFiles() throws HyracksDataException {
-        List<String> validFiles = new ArrayList<String>();
+    public List<Object> cleanupAndGetValidFiles() throws HyracksDataException {
+        List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
         // Gather files from all IODeviceHandles.
         for(IODeviceHandle dev : ioManager.getIODevices()) {
@@ -182,7 +181,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
         return validFiles;
     }
     
-    private class ComparableFileName implements Comparable<ComparableFileName> {
+    protected class ComparableFileName implements Comparable<ComparableFileName> {
         public final String fullPath;
         // Timestamp interval.
         public final String[] interval;
