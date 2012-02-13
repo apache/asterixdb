@@ -47,7 +47,7 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        // Flush all dirty pages of the BTree. 
+        // Flush all dirty pages of the tree. 
         // By default, metadata and data are flushed async in the buffercache.
         // This means that the flush issues writes to the OS, but the data may still lie in filesystem buffers.
         ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();        

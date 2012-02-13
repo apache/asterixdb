@@ -199,6 +199,11 @@ public class RTree implements ITreeIndex {
         return fileId;
     }
 
+    @Override
+    public IBufferCache getBufferCache() {
+        return bufferCache;
+    }
+
     private RTreeOpContext createOpContext() {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
