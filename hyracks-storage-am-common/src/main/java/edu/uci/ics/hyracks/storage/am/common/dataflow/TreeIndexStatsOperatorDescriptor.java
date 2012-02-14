@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
@@ -35,11 +34,10 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
 
     public TreeIndexStatsOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<IIndex> indexRegistryProvider, IFileSplitProvider fileSplitProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
             IIndexDataflowHelperFactory dataflowHelperFactory) {
-        super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, dataflowHelperFactory);
+        super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, dataflowHelperFactory);
     }
 
     @Override

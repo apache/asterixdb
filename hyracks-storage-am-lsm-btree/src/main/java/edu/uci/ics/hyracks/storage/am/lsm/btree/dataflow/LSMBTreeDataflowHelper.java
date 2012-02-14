@@ -13,31 +13,38 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 
-public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
-    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
+    private static int DEFAULT_MEM_NUM_PAGES = 1000;
+    private static int DEFAULT_MEM_PAGE_SIZE = 32768;
+    
+    private final int memNumPages;
+    private final int memPageSize;
+    
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             boolean createIfNotExists) {
         super(opDesc, ctx, partition, createIfNotExists);
+        memNumPages = DEFAULT_MEM_NUM_PAGES;
+        memPageSize = DEFAULT_MEM_PAGE_SIZE;
     }
-
+    
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            boolean createIfNotExists, int memNumPages, int memPageSize) {
+        super(opDesc, ctx, partition, createIfNotExists);
+        this.memNumPages = memNumPages;
+        this.memPageSize = memPageSize;
+    }
+    
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
-        try {
-            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx),
-                    treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
-                    BTreeLeafFrameType.REGULAR_NSM);
-        } catch (BTreeException e) {
-            throw new HyracksDataException(e);
-        }
+        // TODO: Implement this next.
+        return null;
     }
 }

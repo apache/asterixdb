@@ -83,17 +83,13 @@ public class BTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
-                .getOperatorDescriptor();
         accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
-
-        cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        setCursor();
         writer.open();
-
         try {
             treeIndexHelper.init();
             btree = (BTree) treeIndexHelper.getIndex();
+            cursorFrame = btree.getLeafFrameFactory().createFrame();
+            setCursor();
 
             // Construct range predicate.
             lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getComparatorFactories(), lowKey);

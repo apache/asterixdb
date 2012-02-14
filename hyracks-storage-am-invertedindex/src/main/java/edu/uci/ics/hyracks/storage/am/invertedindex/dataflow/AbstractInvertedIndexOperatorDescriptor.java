@@ -108,16 +108,6 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
-    public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
-        return btreeInteriorFrameFactory;
-    }
-
-    @Override
-    public ITreeIndexFrameFactory getTreeIndexLeafFactory() {
-        return btreeLeafFrameFactory;
-    }
-
-    @Override
     public IStorageManagerInterface getStorageManager() {
         return storageManager;
     }

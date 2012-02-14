@@ -75,17 +75,15 @@ public class RTreeSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutp
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
-                .getOperatorDescriptor();
-        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
-        interiorFrame = opDesc.getTreeIndexInteriorFactory().createFrame();
-        leafFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        cursor = new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrame, (IRTreeLeafFrame) leafFrame);
+        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);        
         try {
             treeIndexHelper.init();
             writer.open();
             try {
                 rtree = (RTree) treeIndexHelper.getIndex();
+                interiorFrame = rtree.getInteriorFrameFactory().createFrame();
+                leafFrame = rtree.getLeafFrameFactory().createFrame();
+                cursor = new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrame, (IRTreeLeafFrame) leafFrame);
                 cmp = RTreeUtils.getSearchMultiComparator(rtree.getComparatorFactories(), searchKey);
 
                 searchPred = new SearchPredicate(searchKey, cmp);

@@ -22,31 +22,23 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexDiskOrderScanOperatorDescriptor extends
-		AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexDiskOrderScanOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public TreeIndexDiskOrderScanOperatorDescriptor(JobSpecification spec,
-			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<IIndex> indexRegistryProvider,
-			IFileSplitProvider fileSplitProvider,
-			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
-			IIndexDataflowHelperFactory dataflowHelperFactory) {
-		super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider,
-				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, null, dataflowHelperFactory);
-	}
+    public TreeIndexDiskOrderScanOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IIndexDataflowHelperFactory dataflowHelperFactory) {
+        super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits, null,
+                dataflowHelperFactory);
+    }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider,
-			int partition, int nPartitions) {
-		return new TreeIndexDiskOrderScanOperatorNodePushable(this, ctx,
-				partition);
-	}
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new TreeIndexDiskOrderScanOperatorNodePushable(this, ctx, partition);
+    }
 }

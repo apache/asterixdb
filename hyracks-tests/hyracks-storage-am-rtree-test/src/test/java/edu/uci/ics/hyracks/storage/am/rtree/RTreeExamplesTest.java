@@ -45,7 +45,7 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories)
             throws TreeIndexException {
-        return RTreeUtils.createRTree(harness.getBufferCache(), harness.getTreeFileId(), typeTraits,
+        return RTreeUtils.createRTree(harness.getBufferCache(), typeTraits,
                 valueProviderFactories, rtreeCmpFactories);
     }
 

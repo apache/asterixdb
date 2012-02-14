@@ -48,6 +48,6 @@ public class BTreeRunner extends InMemoryBTreeRunner {
         btreeFileId = fmp.lookupFileId(file);
         bufferCache.openFile(btreeFileId);
         btree = BTreeUtils
-                .createBTree(bufferCache, btreeFileId, typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+                .createBTree(bufferCache, typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
     }
 }

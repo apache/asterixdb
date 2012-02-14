@@ -51,7 +51,7 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         RTree rtree = RTreeUtils
-                .createRTree(bufferCache, rtreeFileId, typeTraits, valueProviderFactories, cmpFactories);
+                .createRTree(bufferCache, typeTraits, valueProviderFactories, cmpFactories);
         rtree.create(rtreeFileId);
         rtree.open(rtreeFileId);
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);

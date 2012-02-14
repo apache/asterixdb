@@ -31,23 +31,21 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final TreeIndexDataflowHelper treeIndexHelper;
-    private final ITreeIndexOperatorDescriptor opDesc;
     private ITreeIndex treeIndex;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition, false);
-        this.opDesc = opDesc;
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-        ITreeIndexFrame cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
-        ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
         try {
             treeIndexHelper.init();
             treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
+            ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
+            ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
             ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
             writer.open();
             try {
