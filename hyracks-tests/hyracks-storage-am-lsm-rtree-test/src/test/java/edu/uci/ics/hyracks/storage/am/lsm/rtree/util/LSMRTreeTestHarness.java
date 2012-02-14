@@ -111,9 +111,11 @@ public class LSMRTreeTestHarness {
                 }
             };
             String[] files = dir.list(filter);
-            for (String fileName : files) {
-                File file = new File(dir.getPath() + File.separator + fileName);
-                file.delete();
+            if (files != null) {
+            	for (String fileName : files) {
+            		File file = new File(dir.getPath() + File.separator + fileName);
+            		file.delete();
+            	}
             }
             dir.delete();
         }
