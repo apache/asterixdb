@@ -23,14 +23,7 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>  	
-    <dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
+  <dependencies>    
     <dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
@@ -44,13 +37,6 @@
   		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
-  	</dependency> 	  		
-  	<dependency>
-  		<groupId>junit</groupId>
-  		<artifactId>junit</artifactId>
-  		<version>4.8.1</version>
-  		<type>jar</type>
-  		<scope>test</scope>
-  	</dependency>
+  	</dependency>  	
   </dependencies>
 </project>

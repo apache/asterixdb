@@ -26,8 +26,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeBulkLoadTest;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeBulkLoadTest;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
 
 @SuppressWarnings("rawtypes")
 public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {

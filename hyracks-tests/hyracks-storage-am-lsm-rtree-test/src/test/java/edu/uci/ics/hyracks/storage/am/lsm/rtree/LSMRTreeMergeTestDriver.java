@@ -21,9 +21,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDese
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestDriver;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.RTreeTestUtils;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
+import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
 
 @SuppressWarnings("rawtypes")
 public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {

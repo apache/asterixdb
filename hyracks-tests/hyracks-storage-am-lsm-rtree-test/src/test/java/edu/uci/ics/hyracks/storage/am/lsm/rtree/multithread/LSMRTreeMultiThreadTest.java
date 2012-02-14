@@ -21,15 +21,15 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
+import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeMultiThreadTest;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
 
 public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 

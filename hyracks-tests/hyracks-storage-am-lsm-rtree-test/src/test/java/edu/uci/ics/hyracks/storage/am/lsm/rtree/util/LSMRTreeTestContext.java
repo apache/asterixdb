@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.AbstractRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.tests.RTreeCheckTuple;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.RTreeCheckTuple;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 

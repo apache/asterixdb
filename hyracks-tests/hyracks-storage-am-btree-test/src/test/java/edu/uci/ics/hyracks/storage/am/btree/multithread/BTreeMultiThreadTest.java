@@ -20,15 +20,15 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.tests.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
+import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.test.ITreeIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.test.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.test.TestWorkloadConf;
 
 public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
