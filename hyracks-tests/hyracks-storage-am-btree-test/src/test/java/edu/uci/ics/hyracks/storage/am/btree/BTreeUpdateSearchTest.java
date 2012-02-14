@@ -63,7 +63,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
         BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);

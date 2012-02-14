@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public abstract class TreeFactory {
+public abstract class TreeFactory <T extends ITreeIndex> {
 
     protected IBufferCache bufferCache;
     protected int fieldCount;
@@ -40,7 +40,7 @@ public abstract class TreeFactory {
         this.freePageManagerFactory = freePageManagerFactory;
     }
 
-    public abstract ITreeIndex createIndexInstance(int fileId);
+    public abstract T createIndexInstance();
 
     public IBufferCache getBufferCache() {
         return bufferCache;

@@ -29,8 +29,7 @@ public class LinkedListFreePageManagerFactory {
 		this.bufferCache = bufferCache;
 	}
 	
-    public IFreePageManager createFreePageManager(int fileId) {
-        return new LinkedListFreePageManager(bufferCache, fileId, 0, metaDataFrameFactory);
+    public IFreePageManager createFreePageManager() {
+        return new LinkedListFreePageManager(bufferCache, 0, metaDataFrameFactory);
     }
-
 }

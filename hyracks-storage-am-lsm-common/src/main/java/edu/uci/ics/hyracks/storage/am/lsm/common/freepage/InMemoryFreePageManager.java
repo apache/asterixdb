@@ -99,4 +99,14 @@ public class InMemoryFreePageManager implements IFreePageManager {
         // Method doesn't make sense for this free page manager.
         return -1;
     }
+
+    @Override
+    public void open(int fileId) {
+        // Method doesn't make sense for this free page manager.
+    }
+
+    @Override
+    public void close() {
+        // Method doesn't make sense for this free page manager.
+    }
 }

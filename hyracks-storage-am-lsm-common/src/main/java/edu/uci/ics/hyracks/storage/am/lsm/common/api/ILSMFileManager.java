@@ -47,7 +47,7 @@ public interface ILSMFileManager {
 	
 	// Deletes invalid files, and returns list of valid files from baseDir.
 	// The returned valid files are correctly sorted (based on the recency of data). 
-	public List<Object> cleanupAndGetValidFiles() throws HyracksDataException;
+	public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer) throws HyracksDataException;
 	
 	public Comparator<String> getFileNameComparator();
 	

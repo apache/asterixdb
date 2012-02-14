@@ -38,8 +38,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 
 public class LSMTreeFileManagerTest {
@@ -49,12 +51,16 @@ public class LSMTreeFileManagerTest {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected IOManager ioManager;
+    protected IFileMapProvider fileMapProvider;
     protected String baseDir;
+    // Dummy finalizer that always considers components valid. Just for testing.
+    protected ILSMComponentFinalizer componentFinalizer = new DummyLSMComponentFinalizer();
     
     @Before
     public void setUp() throws HyracksException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(null);
         baseDir = "lsm_tree" + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
         f.mkdirs();
@@ -67,7 +73,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, baseDir);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, baseDir);
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -105,7 +111,7 @@ public class LSMTreeFileManagerTest {
     }
     
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, baseDir);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, baseDir);
         fileManager.createDirs();
         
         List<FileReference> flushFiles = new ArrayList<FileReference>();
@@ -168,7 +174,8 @@ public class LSMTreeFileManagerTest {
         // Sort expected files.
         Collections.sort(expectedValidFiles, fileManager.getFileNameComparator());
         
-        List<Object> validFiles = fileManager.cleanupAndGetValidFiles();
+        // Pass null and a dummy component finalizer. We don't test for physical consistency in this test.
+        List<Object> validFiles = fileManager.cleanupAndGetValidFiles(null, componentFinalizer);
         
         // Check actual files against expected files.
         assertEquals(expectedValidFiles.size(), validFiles.size());

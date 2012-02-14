@@ -13,14 +13,13 @@ public class LinkedListFreePageManager implements IFreePageManager {
 	private static final byte META_PAGE_LEVEL_INDICATOR = -1;
 	private static final byte FREE_PAGE_LEVEL_INDICATOR = -2;
 	private final IBufferCache bufferCache;
-	private final int fileId;
-	private final int headPage;
+	private final int headPage;	
+	private int fileId = -1;
 	private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
 
-	public LinkedListFreePageManager(IBufferCache bufferCache, int fileId,
+	public LinkedListFreePageManager(IBufferCache bufferCache,
 			int headPage, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
 		this.bufferCache = bufferCache;
-		this.fileId = fileId;
 		this.headPage = headPage;
 		this.metaDataFrameFactory = metaDataFrameFactory;
 	}
@@ -204,4 +203,14 @@ public class LinkedListFreePageManager implements IFreePageManager {
     public int getFirstMetadataPage() {
         return headPage;
     }
+
+	@Override
+	public void open(int fileId) {
+		this.fileId = fileId;
+	}
+
+	@Override
+	public void close() {
+		fileId = -1;
+	}
 }

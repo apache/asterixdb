@@ -86,6 +86,7 @@ public class BTree implements ITreeIndex {
             ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
             ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
             this.fileId = fileId;
+            freePageManager.open(fileId);
             freePageManager.init(metaFrame, rootPage);
             initRoot(leafFrame, true);
         } finally {
@@ -94,13 +95,15 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public void open(int fileId) {
+    public void open(int fileId) {    	
     	this.fileId = fileId;
+    	freePageManager.open(fileId);
     }
 
     @Override
     public void close() {
         fileId = -1;
+        freePageManager.close();
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, BTreeOpContext ctx) throws HyracksDataException {

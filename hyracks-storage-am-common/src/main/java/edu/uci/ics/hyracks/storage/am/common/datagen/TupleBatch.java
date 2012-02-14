@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
+@SuppressWarnings("rawtypes")
 public class TupleBatch {
     private final int size;
     private final TupleGenerator[] tupleGens;

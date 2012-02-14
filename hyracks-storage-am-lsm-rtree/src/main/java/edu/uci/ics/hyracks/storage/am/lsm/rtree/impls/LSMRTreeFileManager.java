@@ -26,14 +26,29 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree.LSMRTreeComponent;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeFileManager extends LSMTreeFileManager {
     private static final String RTREE_STRING = "r";
     private static final String BTREE_STRING = "b";
 
-    public LSMRTreeFileManager(IOManager ioManager, String baseDir) {
-        super(ioManager, baseDir);
+    private static FilenameFilter btreeFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return !name.startsWith(".") && name.endsWith(BTREE_STRING);
+        }
+    };
+    
+    private static FilenameFilter rtreeFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return !name.startsWith(".") && name.endsWith(RTREE_STRING);
+        }
+    };
+    
+    public LSMRTreeFileManager(IOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
+        super(ioManager, fileMapProvider, baseDir);
     }
 
     @Override
@@ -51,56 +66,44 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
                 + BTREE_STRING);
     }
 
-    private boolean searchForFileName(HashSet<String> stringSet, String file) {
-        if (stringSet.contains(file)) {
-            return true;
-        }
-        return false;
-
-    }
-
-    public List<Object> cleanupAndGetValidFiles() throws HyracksDataException {
+    @Override
+    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
-
+        LSMRTreeComponent component = (LSMRTreeComponent) lsmComponent;
+        
         // Gather files from all IODeviceHandles.
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), baseDir);
-            FilenameFilter btreeFilter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".") && name.endsWith(BTREE_STRING);
-                }
-            };
-            String[] btreeFiles = dir.list(btreeFilter);
-            for (String file : btreeFiles) {
-                allBTreeFiles.add(new ComparableFileName(dir.getPath() + File.separator + file));
-            }
+        for (IODeviceHandle dev : ioManager.getIODevices()) {            
+            getValidFiles(dev, btreeFilter, component.getBTree(), componentFinalizer, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
-            for (String file : btreeFiles) {
-                int index = file.lastIndexOf(SPLIT_STRING);
-                btreeFilesSet.add(file.substring(0, index));
+            for (ComparableFileName cmpFileName : allBTreeFiles) {
+                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+                btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
-
-            FilenameFilter rtreeFilter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".") && name.endsWith(RTREE_STRING);
-                }
-            };
-            String[] rtreeFiles = dir.list(rtreeFilter);
-            for (String file : rtreeFiles) {
-                int index = file.lastIndexOf(SPLIT_STRING);
-                file = file.substring(0, index);
-                if (searchForFileName(btreeFilesSet, file)) {
-                    allRTreeFiles.add(new ComparableFileName(dir.getPath() + File.separator + file));
+            // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
+            ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
+            getValidFiles(dev, rtreeFilter, component.getRTree(), componentFinalizer, tmpAllRTreeFiles);
+            // Look for buddy BTrees for all valid RTrees. 
+            // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
+            for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {
+                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+                String file = cmpFileName.fileName.substring(0, index);
+                if (btreeFilesSet.contains(file)) {
+                    allRTreeFiles.add(cmpFileName);
                 } else {
                     // Couldn't find the corresponding BTree file; thus, delete
                     // the RTree file.
-                    File invalidRTreeFile = new File(dir.getPath() + File.separator + file);
+                    File invalidRTreeFile = new File(cmpFileName.fullPath);
                     invalidRTreeFile.delete();
                 }
             }
         }
+        // Sanity check.
+        if (allRTreeFiles.size() != allBTreeFiles.size()) {
+            throw new HyracksDataException("Unequal number of valid RTree and BTree files found. Aborting cleanup.");
+        }
+        
         // Trivial cases.
         if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty()) {
             return validFiles;

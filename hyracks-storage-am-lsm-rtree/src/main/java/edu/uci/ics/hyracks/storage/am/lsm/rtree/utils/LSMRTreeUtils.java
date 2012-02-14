@@ -64,7 +64,7 @@ public class LSMRTreeUtils {
         BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories,
                 typeTraits.length, btreeInteriorFrameFactory, btreeLeafFrameFactory);
 
-        ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, onDiskDir);
+        ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, onDiskDir);
         LSMRTree lsmTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,

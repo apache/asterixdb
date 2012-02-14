@@ -29,7 +29,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMTreeFileManager implements ILSMFileManager {
 
@@ -37,6 +39,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     
     // Currently uses all IODevices registered in ioManager in a round-robin fashion.
     protected final IOManager ioManager;
+    protected final IFileMapProvider fileMapProvider;    
     // baseDir should reflect dataset name, and partition name.
     protected final String baseDir;
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");    
@@ -45,10 +48,17 @@ public class LSMTreeFileManager implements ILSMFileManager {
     // To implement round-robin assignment of files onto I/O devices.
     private int ioDeviceIndex = 0;
     
-    public LSMTreeFileManager(IOManager ioManager, String baseDir) {
+    private static FilenameFilter fileNameFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return !name.startsWith(".");
+        }
+    };
+    
+    public LSMTreeFileManager(IOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
+        this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
         this.baseDir = baseDir;
         createDirs();
@@ -117,22 +127,28 @@ public class LSMTreeFileManager implements ILSMFileManager {
         return baseDir;
     }
 
+    protected void getValidFiles(IODeviceHandle dev, FilenameFilter filter, Object lsmComponent,
+            ILSMComponentFinalizer componentFinalizer, ArrayList<ComparableFileName> allFiles)
+            throws HyracksDataException {
+        File dir = new File(dev.getPath(), baseDir);
+        String[] files = dir.list(filter);
+        for (String fileName : files) {
+            File file = new File(dir.getPath() + File.separator + fileName);
+            if (componentFinalizer.isValid(file, lsmComponent)) {
+                allFiles.add(new ComparableFileName(file.getAbsolutePath()));
+            } else {
+                file.delete();
+            }
+        }
+    }
+    
     @Override
-    public List<Object> cleanupAndGetValidFiles() throws HyracksDataException {
+    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
         // Gather files from all IODeviceHandles.
-        for(IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), baseDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            for (String file : files) {
-                allFiles.add(new ComparableFileName(dir.getPath() + File.separator + file));
-            }
+        for(IODeviceHandle dev : ioManager.getIODevices()) {            
+            getValidFiles(dev, fileNameFilter, lsmComponent, componentFinalizer, allFiles);
         }
         // Trivial cases.
         if (allFiles.isEmpty()) {
@@ -174,14 +190,16 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
     
     protected class ComparableFileName implements Comparable<ComparableFileName> {
-        public final String fullPath;
+        public final String fullPath;      
+        public final String fileName;
         // Timestamp interval.
         public final String[] interval;
         
         public ComparableFileName(String fullPath) {
-            this.fullPath = fullPath;
+            this.fullPath = fullPath;            
             File f = new File(fullPath);
-            interval = f.getName().split(SPLIT_STRING);
+            this.fileName = f.getName();
+            interval = fileName.split(SPLIT_STRING);
         }
 
         @Override

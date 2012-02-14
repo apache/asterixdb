@@ -16,14 +16,13 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class RTreeFactory extends TreeFactory {
+public class RTreeFactory extends TreeFactory<RTree> {
 
     public RTreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory, IBinaryComparatorFactory[] cmpFactories,
             int fieldCount, ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
@@ -31,8 +30,8 @@ public class RTreeFactory extends TreeFactory {
     }
 
     @Override
-    public ITreeIndex createIndexInstance(int fileId) {
-        return new RTree(bufferCache, fieldCount, cmpFactories, freePageManagerFactory.createFreePageManager(fileId),
+    public RTree createIndexInstance() {
+        return new RTree(bufferCache, fieldCount, cmpFactories, freePageManagerFactory.createFreePageManager(),
                 interiorFrameFactory, leafFrameFactory);
     }
 

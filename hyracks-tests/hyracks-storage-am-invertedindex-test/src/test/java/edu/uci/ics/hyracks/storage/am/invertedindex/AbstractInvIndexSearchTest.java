@@ -168,7 +168,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
+        freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmpFactories, freePageManager, interiorFrameFactory,
                 leafFrameFactory);

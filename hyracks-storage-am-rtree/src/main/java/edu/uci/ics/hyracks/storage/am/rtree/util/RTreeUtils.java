@@ -45,7 +45,7 @@ public class RTreeUtils {
                 valueProviderFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, rtreeFileId, 0, metaFrameFactory);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
         RTree rtree = new RTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
                 leafFrameFactory);
         return rtree;

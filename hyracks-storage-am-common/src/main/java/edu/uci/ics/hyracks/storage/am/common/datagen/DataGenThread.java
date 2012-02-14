@@ -8,9 +8,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 
 /**
- * Quick & dirty data generator for performance testing. 
+ * Quick & dirty data generator for multi-thread testing. 
  *
  */
+@SuppressWarnings("rawtypes")
 public class DataGenThread extends Thread {
     public final BlockingQueue<TupleBatch> tupleBatchQueue;
     private final int maxNumBatches;

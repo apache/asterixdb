@@ -15,30 +15,51 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.io.File;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
    
+    protected final IFileMapProvider fileMapProvider;
+    
+    public TreeIndexComponentFinalizer(IFileMapProvider fileMapProvider) {
+        this.fileMapProvider = fileMapProvider;
+    }
+    
     @Override
-    public boolean isValid(Object lsmComponent) throws HyracksDataException {
+    public boolean isValid(File file, Object lsmComponent) throws HyracksDataException {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
-        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage), false);
-        page.acquireReadLatch();
+        FileReference fileRef = new FileReference(file);
+        bufferCache.createFile(fileRef);
+        int fileId = fileMapProvider.lookupFileId(fileRef);
+        bufferCache.openFile(fileId);
+        treeIndex.open(fileId);
         try {
-            metadataFrame.setPage(page);
-            return metadataFrame.isValid();
+            int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
+            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
+            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage), false);
+            page.acquireReadLatch();
+            try {
+                metadataFrame.setPage(page);
+                return metadataFrame.isValid();
+            } finally {
+                page.releaseReadLatch();
+                bufferCache.unpin(page);
+            }
         } finally {
-            page.releaseReadLatch();
-            bufferCache.unpin(page);
+            treeIndex.close();
+            bufferCache.closeFile(fileId);
+            bufferCache.deleteFile(fileId, false);
         }
     }
 

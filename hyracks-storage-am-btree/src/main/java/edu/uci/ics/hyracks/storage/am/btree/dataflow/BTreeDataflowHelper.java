@@ -37,9 +37,9 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0,
-                metaDataFrameFactory);
-        return new BTree(bufferCache, treeOpDesc.getTreeIndexTypeTraits().length, treeOpDesc.getTreeIndexComparatorFactories(), freePageManager,
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaDataFrameFactory);
+        return new BTree(bufferCache, treeOpDesc.getTreeIndexTypeTraits().length,
+                treeOpDesc.getTreeIndexComparatorFactories(), freePageManager,
                 treeOpDesc.getTreeIndexInteriorFactory(), treeOpDesc.getTreeIndexLeafFactory());
     }
 }

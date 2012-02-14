@@ -119,7 +119,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, btreeTypeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
                 leafFrameFactory);

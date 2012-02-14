@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
@@ -81,6 +82,8 @@ public class LSMBTree implements ILSMTree {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
     
+    private boolean isOpen = false;
+    
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileManager fileNameManager, BTreeFactory diskBTreeFactory,
@@ -98,7 +101,7 @@ public class LSMBTree implements ILSMTree {
         this.diskBTrees = new LinkedList<Object>();
         this.fileManager = fileNameManager;
         lsmHarness = new LSMHarness(this);
-        componentFinalizer = new TreeIndexComponentFinalizer();
+        componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
     }
 
     @Override
@@ -117,26 +120,39 @@ public class LSMBTree implements ILSMTree {
      */
     @Override
     public void open(int indexFileId) throws HyracksDataException {
-        memBTree.open(indexFileId);
-        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles();        
-        for (Object o : validFileNames) {     
-            String fileName = (String) o;
-            FileReference fileRef = new FileReference(new File(fileName));
-            BTree btree = createDiskBTree(diskBTreeFactory, fileRef, false);
-            diskBTrees.add(btree);
+        synchronized(this) {
+            if (isOpen) {
+                return;
+            }
+            memBTree.open(indexFileId);
+            BTree dummyBTree = diskBTreeFactory.createIndexInstance();
+            List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyBTree, componentFinalizer);
+            for (Object o : validFileNames) {     
+                String fileName = (String) o;
+                FileReference fileRef = new FileReference(new File(fileName));
+                BTree btree = createDiskBTree(diskBTreeFactory, fileRef, false);
+                diskBTrees.add(btree);
+            }
+            isOpen = true;
         }
     }
 
     @Override
-    public void close() throws HyracksDataException {        
-        for (Object o : diskBTrees) {
-            BTree btree = (BTree) o;            
-            diskBufferCache.closeFile(btree.getFileId());
-            diskBufferCache.deleteFile(btree.getFileId(), false);
-            btree.close();
+    public void close() throws HyracksDataException {
+        synchronized(this) {
+            if (!isOpen) {
+                return;
+            }
+            for (Object o : diskBTrees) {
+                BTree btree = (BTree) o;            
+                diskBufferCache.closeFile(btree.getFileId());
+                diskBufferCache.deleteFile(btree.getFileId(), false);
+                btree.close();
+            }
+            diskBTrees.clear();
+            memBTree.close();
+            isOpen = false;
         }
-        diskBTrees.clear();
-        memBTree.close();
     }
 
     @Override
@@ -305,7 +321,7 @@ public class LSMBTree implements ILSMTree {
         // File will be closed during cleanup of merge().
         diskBufferCache.openFile(diskBTreeFileId);
         // Create new BTree instance.
-        BTree diskBTree = factory.createBTreeInstance(diskBTreeFileId);
+        BTree diskBTree = factory.createIndexInstance();
         if (createBTree) {
             diskBTree.create(diskBTreeFileId);
         }

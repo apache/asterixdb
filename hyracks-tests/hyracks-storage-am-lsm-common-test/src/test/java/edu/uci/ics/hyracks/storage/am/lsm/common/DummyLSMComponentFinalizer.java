@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common;
+
+import java.io.File;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree.LSMRTreeComponent;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 
-public class LSMRTreeComponentFinalizer extends TreeIndexComponentFinalizer {
+public class DummyLSMComponentFinalizer implements ILSMComponentFinalizer {
 
-	public LSMRTreeComponentFinalizer(IFileMapProvider fileMapProvider) {
-        super(fileMapProvider);
-    }
+	@Override
+	public boolean isValid(File file, Object lsmComponent)
+			throws HyracksDataException {
+		return true;
+	}
 
-    @Override
+	@Override
 	public void finalize(Object lsmComponent) throws HyracksDataException {
-		LSMRTreeComponent component = (LSMRTreeComponent) lsmComponent;
-		super.finalize(component.getRTree());
-		super.finalize(component.getBTree());
 	}
 }

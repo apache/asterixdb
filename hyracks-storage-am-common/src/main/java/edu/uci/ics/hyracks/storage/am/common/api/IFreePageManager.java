@@ -3,6 +3,10 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFreePageManager {
+	public void open(int fileId);
+	
+	public void close();
+	
 	public int getFreePage(ITreeIndexMetaDataFrame metaFrame)
 			throws HyracksDataException;
 
@@ -27,5 +31,5 @@ public interface IFreePageManager {
 
 	public boolean isFreePage(ITreeIndexMetaDataFrame metaFrame);
 	
-	public int getFirstMetadataPage();
+	public int getFirstMetadataPage();		
 }

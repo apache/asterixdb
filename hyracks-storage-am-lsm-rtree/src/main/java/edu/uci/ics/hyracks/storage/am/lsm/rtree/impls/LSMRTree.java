@@ -132,7 +132,7 @@ public class LSMRTree implements ILSMTree {
         this.btreeCmpFactories = btreeCmpFactories;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.lsmHarness = new LSMHarness(this);
-        componentFinalizer = new LSMRTreeComponentFinalizer();
+        componentFinalizer = new LSMRTreeComponentFinalizer(diskFileMapProvider);
     }
 
     @Override
@@ -154,7 +154,10 @@ public class LSMRTree implements ILSMTree {
     public void open(int indexFileId) throws HyracksDataException {
         memComponent.getRTree().open(MEM_RTREE_FILE_ID);
         memComponent.getBTree().open(MEM_BTREE_FILE_ID);
-        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles();
+        RTree dummyRTree = diskRTreeFactory.createIndexInstance();
+        BTree dummyBTree = diskBTreeFactory.createIndexInstance();
+        LSMRTreeComponent dummyComponent = new LSMRTreeComponent(dummyRTree, dummyBTree);
+        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyComponent, componentFinalizer);
         for (Object o : validFileNames) {
             LSMRTreeFileNameComponent component = (LSMRTreeFileNameComponent) o;            
             FileReference rtreeFile = new FileReference(new File(component.getRTreeFileName()));
@@ -194,6 +197,7 @@ public class LSMRTree implements ILSMTree {
         return component;
     }
 
+    @SuppressWarnings("rawtypes") 
     protected ITreeIndex createDiskTree(TreeFactory diskTreeFactory, FileReference fileRef, boolean createTree)
             throws HyracksDataException {
         // File will be deleted during cleanup of merge().
@@ -202,7 +206,7 @@ public class LSMRTree implements ILSMTree {
         // File will be closed during cleanup of merge().
         diskBufferCache.openFile(diskTreeFileId);
         // Create new tree instance.
-        ITreeIndex diskTree = diskTreeFactory.createIndexInstance(diskTreeFileId);
+        ITreeIndex diskTree = diskTreeFactory.createIndexInstance();
         if (createTree) {
             diskTree.create(diskTreeFileId);
         }

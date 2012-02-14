@@ -166,6 +166,7 @@ public class RTree implements ITreeIndex {
         try {
             ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
             ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+            freePageManager.open(fileId);
             freePageManager.init(metaFrame, rootPage);
 
             // initialize root page
@@ -187,11 +188,13 @@ public class RTree implements ITreeIndex {
     @Override
     public void open(int fileId) {
         this.fileId = fileId;
+        freePageManager.open(fileId);
     }
 
     @Override
     public void close() {
         fileId = -1;
+        freePageManager.close();
     }
 
     @Override

@@ -15,20 +15,21 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import java.io.File;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILSMComponentFinalizer {
     
     /**
-     * @return Whether the given LSM component is considered valid. Used for guaranteeing
+     * @return Checks whether the given file is valid with respect to the given LSM component. Used for guaranteeing
      *         atomicity of LSM component writes.
      */
-    public boolean isValid(Object lsmComponent) throws HyracksDataException;
+    public boolean isValid(File file, Object lsmComponent) throws HyracksDataException;
     
     /**
      * Marks the given LSM component as physically valid, synchronously forcing
-     * the necessary information to disk. This call only return once the
-     * physical consistency of the given component is guaranteed.
+     * the necessary information to disk. 
      * 
      */
     public void finalize(Object lsmComponent) throws HyracksDataException;
