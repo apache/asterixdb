@@ -21,7 +21,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -152,14 +151,14 @@ public class ChannelControlBlock {
     private final class WriteInterface implements IChannelWriteInterface {
         private final Queue<ByteBuffer> wiFullQueue;
 
-        private int channelWriteEventCount;
+        private boolean channelWritabilityState;
 
         private final ICloseableBufferAcceptor fba = new ICloseableBufferAcceptor() {
             @Override
             public void accept(ByteBuffer buffer) {
                 synchronized (ChannelControlBlock.this) {
                     wiFullQueue.add(buffer);
-                    incrementLocalWriteEventCount();
+                    adjustChannelWritability();
                 }
             }
 
@@ -173,7 +172,7 @@ public class ChannelControlBlock {
                         return;
                     }
                     eos = true;
-                    incrementLocalWriteEventCount();
+                    adjustChannelWritability();
                 }
             }
 
@@ -181,14 +180,14 @@ public class ChannelControlBlock {
             public void error(int ecode) {
                 synchronized (ChannelControlBlock.this) {
                     WriteInterface.this.ecode = ecode;
-                    incrementLocalWriteEventCount();
+                    adjustChannelWritability();
                 }
             }
         };
 
         private IBufferAcceptor eba;
 
-        private final AtomicInteger credits;
+        private int credits;
 
         private boolean eos;
 
@@ -202,7 +201,7 @@ public class ChannelControlBlock {
 
         WriteInterface() {
             wiFullQueue = new ArrayDeque<ByteBuffer>();
-            credits = new AtomicInteger();
+            credits = 0;
             eos = false;
             eosSent = false;
             ecode = -1;
@@ -224,30 +223,32 @@ public class ChannelControlBlock {
                 currentWriteBuffer = wiFullQueue.poll();
             }
             if (currentWriteBuffer != null) {
-                int size = Math.min(currentWriteBuffer.remaining(), credits.get());
+                int size = Math.min(currentWriteBuffer.remaining(), credits);
                 if (size > 0) {
-                    credits.addAndGet(-size);
+                    credits -= size;
                     writerState.command.setChannelId(channelId);
                     writerState.command.setCommandType(MuxDemuxCommand.CommandType.DATA);
                     writerState.command.setData(size);
                     writerState.reset(currentWriteBuffer, size, ChannelControlBlock.this);
+                } else {
+                    adjustChannelWritability();
                 }
             } else if (ecode >= 0 && !ecodeSent) {
-                decrementLocalWriteEventCount();
                 writerState.command.setChannelId(channelId);
                 writerState.command.setCommandType(MuxDemuxCommand.CommandType.ERROR);
                 writerState.command.setData(ecode);
                 writerState.reset(null, 0, null);
                 ecodeSent = true;
                 localClose.set(true);
+                adjustChannelWritability();
             } else if (wi.eos && !wi.eosSent) {
-                decrementLocalWriteEventCount();
                 writerState.command.setChannelId(channelId);
                 writerState.command.setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL);
                 writerState.command.setData(0);
                 writerState.reset(null, 0, null);
                 eosSent = true;
                 localClose.set(true);
+                adjustChannelWritability();
             }
         }
 
@@ -255,23 +256,37 @@ public class ChannelControlBlock {
             if (currentWriteBuffer.remaining() <= 0) {
                 currentWriteBuffer.clear();
                 eba.accept(currentWriteBuffer);
-                decrementLocalWriteEventCount();
                 currentWriteBuffer = null;
+                adjustChannelWritability();
             }
         }
 
-        void incrementLocalWriteEventCount() {
-            ++channelWriteEventCount;
-            if (channelWriteEventCount == 1) {
-                cSet.markPendingWrite(channelId);
+        private boolean computeWritability() {
+            boolean writableDataPresent = currentWriteBuffer != null || !wiFullQueue.isEmpty();
+            if (writableDataPresent) {
+                return credits > 0;
             }
+            if (eos && !eosSent) {
+                return true;
+            }
+            if (ecode >= 0 && !ecodeSent) {
+                return true;
+            }
+            return false;
         }
 
-        void decrementLocalWriteEventCount() {
-            --channelWriteEventCount;
-            if (channelWriteEventCount == 0) {
-                cSet.unmarkPendingWrite(channelId);
+        void adjustChannelWritability() {
+            boolean writable = computeWritability();
+            if (writable) {
+                if (!channelWritabilityState) {
+                    cSet.markPendingWrite(channelId);
+                }
+            } else {
+                if (channelWritabilityState) {
+                    cSet.unmarkPendingWrite(channelId);
+                }
             }
+            channelWritabilityState = writable;
         }
     }
 
@@ -295,8 +310,9 @@ public class ChannelControlBlock {
         this.ri.credits = credits;
     }
 
-    void addWriteCredits(int delta) {
-        wi.credits.addAndGet(delta);
+    synchronized void addWriteCredits(int delta) {
+        wi.credits += delta;
+        wi.adjustChannelWritability();
     }
 
     synchronized void reportRemoteEOS() {

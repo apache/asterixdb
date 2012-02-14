@@ -80,7 +80,7 @@ public class WriteValueTest {
         dout.writeUTF(str);
         baaos.reset();
         WriteValueTools.writeUTF8String(interm.getByteArray(), 0, interm.size(), baaos);
-        byte[] b = str.getBytes();
+        byte[] b = str.getBytes("UTF-8");
         if (baaos.size() != b.length + 2) {
             throw new Exception("Expecting to write " + b + " in " + b.length + " bytes, but found " + baaos.size()
                     + " bytes.");

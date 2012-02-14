@@ -32,7 +32,7 @@ public class CCConfig {
     public int clusterNetPort = 1099;
 
     @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 19001)")
-    public int httpPort = 19001;
+    public int httpPort = 16001;
 
     @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")
     public int heartbeatPeriod = 10000;
