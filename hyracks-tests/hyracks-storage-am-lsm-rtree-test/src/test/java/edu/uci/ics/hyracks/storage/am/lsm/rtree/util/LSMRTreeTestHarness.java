@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
@@ -101,10 +103,20 @@ public class LSMRTreeTestHarness {
 
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
-        File f = new File(onDiskDir);
-        // TODO: For some reason the dir fails to be deleted. Ask Vinayak about
-        // this.
-        f.deleteOnExit();
+        for(IODeviceHandle dev : ioManager.getIODevices()) {            
+            File dir = new File(dev.getPath(), onDiskDir);
+            FilenameFilter filter = new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return !name.startsWith(".");
+                }
+            };
+            String[] files = dir.list(filter);
+            for (String fileName : files) {
+                File file = new File(dir.getPath() + File.separator + fileName);
+                file.delete();
+            }
+            dir.delete();
+        }
     }
 
     public int getDiskPageSize() {
