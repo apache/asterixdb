@@ -17,34 +17,51 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 
 public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
-    private static int DEFAULT_MEM_NUM_PAGES = 1000;
     private static int DEFAULT_MEM_PAGE_SIZE = 32768;
+    private static int DEFAULT_MEM_NUM_PAGES = 1000;    
     
-    private final int memNumPages;
     private final int memPageSize;
+    private final int memNumPages;    
     
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             boolean createIfNotExists) {
         super(opDesc, ctx, partition, createIfNotExists);
-        memNumPages = DEFAULT_MEM_NUM_PAGES;
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
+        memNumPages = DEFAULT_MEM_NUM_PAGES;        
     }
     
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean createIfNotExists, int memNumPages, int memPageSize) {
+            boolean createIfNotExists, int memPageSize, int memNumPages) {
         super(opDesc, ctx, partition, createIfNotExists);
-        this.memNumPages = memNumPages;
         this.memPageSize = memPageSize;
+        this.memNumPages = memNumPages;
     }
     
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
-        // TODO: Implement this next.
-        return null;
+        ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
+        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
+                memNumPages);
+        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
+        FileReference file = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
+        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, (IOManager) ctx.getIOManager(), file
+                .getFile().getAbsolutePath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc
+                .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+                .getTreeIndexComparatorFactories());
     }
 }
