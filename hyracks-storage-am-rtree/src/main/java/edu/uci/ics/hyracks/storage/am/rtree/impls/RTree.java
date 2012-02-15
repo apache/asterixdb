@@ -335,7 +335,6 @@ public class RTree implements ITreeIndex {
                         if (!writeLatched) {
                             node.releaseReadLatch();
                             readLatched = false;
-                            // TODO: do we need to un-pin and pin again?
                             bufferCache.unpin(node);
 
                             node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
@@ -345,8 +344,7 @@ public class RTree implements ITreeIndex {
 
                             if (ctx.interiorFrame.getPageLsn() != pageLsn) {
                                 // The page was changed while we unlocked it;
-                                // thus,
-                                // retry (re-choose best child)
+                                // thus, retry (re-choose best child)
 
                                 ctx.pathList.moveLast();
                                 continue;

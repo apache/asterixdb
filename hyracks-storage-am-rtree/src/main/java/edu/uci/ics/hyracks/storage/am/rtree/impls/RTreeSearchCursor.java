@@ -78,7 +78,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     private boolean fetchNextLeafPage() throws HyracksDataException {
-        boolean succeed = false;
+        boolean succeeded = false;
         if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
@@ -125,11 +125,11 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                     page = node;
                     leafFrame.setPage(page);
                     tupleIndex = 0;
-                    succeed = true;
+                    succeeded = true;
                     return true;
                 }
             } finally {
-                if (!succeed) {
+                if (!succeeded) {
                     if (readLatched) {
                         node.releaseReadLatch();
                         readLatched = false;

@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -39,10 +40,12 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
 
     private RTreeSearchCursor[] rtreeCursors;
     private BTreeRangeSearchCursor[] btreeCursors;
+    private ITreeIndexAccessor[] diskRTreeAccessors;
     private ITreeIndexAccessor[] diskBTreeAccessors;
     private int currentCursror;
     private MultiComparator btreeCmp;
     private int numberOfTrees;
+    private SearchPredicate rtreeSearchPredicate;
     private RangePredicate btreeRangePredicate;
     private ITupleReference frameTuple;
     private AtomicInteger searcherRefCount;
@@ -64,51 +67,55 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         foundNext = false;
     }
 
+    private void searchNextCursor() throws HyracksDataException {
+        if (currentCursror < numberOfTrees) {
+            rtreeCursors[currentCursror].reset();
+            try {
+                diskRTreeAccessors[currentCursror].search(rtreeCursors[currentCursror], rtreeSearchPredicate);
+            } catch (TreeIndexException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+    }
+
     @Override
     public boolean hasNext() throws HyracksDataException {
         if (foundNext) {
             return true;
         }
         while (currentCursror < numberOfTrees) {
-            try {
-                while (rtreeCursors[currentCursror].hasNext()) {
-                    rtreeCursors[currentCursror].next();
-                    ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
+            while (rtreeCursors[currentCursror].hasNext()) {
+                rtreeCursors[currentCursror].next();
+                ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
 
-                    boolean killerTupleFound = false;
-                    for (int i = 0; i <= currentCursror; i++) {
-
-                        try {
-                            btreeCursors[i].reset();
-                            btreeRangePredicate.setHighKey(currentTuple, true);
-                            btreeRangePredicate.setLowKey(currentTuple, true);
-                            diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
-                        } catch (TreeIndexException e) {
-                            throw new HyracksDataException(e);
-                        }
-                        try {
-                            if (btreeCursors[i].hasNext()) {
-                                killerTupleFound = true;
-                                break;
-                            }
-                        } finally {
-                            btreeCursors[i].close();
-                        }
-
+                boolean killerTupleFound = false;
+                for (int i = 0; i <= currentCursror; i++) {
+                    try {
+                        btreeCursors[i].reset();
+                        btreeRangePredicate.setHighKey(currentTuple, true);
+                        btreeRangePredicate.setLowKey(currentTuple, true);
+                        diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
+                    } catch (TreeIndexException e) {
+                        throw new HyracksDataException(e);
                     }
-                    if (!killerTupleFound) {
-                        frameTuple = currentTuple;
-                        foundNext = true;
-                        return true;
+                    try {
+                        if (btreeCursors[i].hasNext()) {
+                            killerTupleFound = true;
+                            break;
+                        }
+                    } finally {
+                        btreeCursors[i].close();
                     }
                 }
-            } finally {
-                if (!foundNext) {
-                    rtreeCursors[currentCursror].close();
+                if (!killerTupleFound) {
+                    frameTuple = currentTuple;
+                    foundNext = true;
+                    return true;
                 }
             }
+            rtreeCursors[currentCursror].close();
             currentCursror++;
-
+            searchNextCursor();
         }
         return false;
     }
@@ -126,6 +133,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
         includeMemRTree = lsmInitialState.getIncludeMemRTree();
         lsmHarness = lsmInitialState.getLSMHarness();
         numberOfTrees = lsmInitialState.getNumberOfTrees();
+        diskRTreeAccessors = lsmInitialState.getRTreeAccessors();
         diskBTreeAccessors = lsmInitialState.getBTreeAccessors();
 
         rtreeCursors = new RTreeSearchCursor[numberOfTrees];
@@ -139,7 +147,9 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
             btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory()
                     .createFrame(), false);
         }
+        rtreeSearchPredicate = (SearchPredicate) searchPred;
         btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
+        searchNextCursor();
     }
 
     @Override

@@ -31,6 +31,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     private ITreeIndexFrameFactory rtreeLeafFrameFactory;
     private ITreeIndexFrameFactory btreeLeafFrameFactory;
     private MultiComparator btreeCmp;
+    private ITreeIndexAccessor[] rTreeAccessors;
     private ITreeIndexAccessor[] bTreeAccessors;
     private AtomicInteger searcherRefCount;
     private final boolean includeMemRTree;
@@ -38,13 +39,14 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
 
     public LSMRTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            MultiComparator btreeCmp, ITreeIndexAccessor[] bTreeAccessors, AtomicInteger searcherRefCount, boolean includeMemRTree,
-            LSMHarness lsmHarness) {
+            MultiComparator btreeCmp, ITreeIndexAccessor[] rTreeAccessors, ITreeIndexAccessor[] bTreeAccessors,
+            AtomicInteger searcherRefCount, boolean includeMemRTree, LSMHarness lsmHarness) {
         this.numberOfTrees = numberOfTrees;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
         this.btreeCmp = btreeCmp;
+        this.rTreeAccessors = rTreeAccessors;
         this.bTreeAccessors = bTreeAccessors;
         this.searcherRefCount = searcherRefCount;
         this.includeMemRTree = includeMemRTree;
@@ -80,6 +82,10 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     public void setPage(ICachedPage page) {
     }
 
+    public ITreeIndexAccessor[] getRTreeAccessors() {
+        return rTreeAccessors;
+    }
+
     public ITreeIndexAccessor[] getBTreeAccessors() {
         return bTreeAccessors;
     }
@@ -87,9 +93,9 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     public boolean getIncludeMemRTree() {
         return includeMemRTree;
     }
-    
+
     public AtomicInteger getSearcherRefCount() {
-    	return searcherRefCount;
+        return searcherRefCount;
     }
 
     public LSMHarness getLSMHarness() {

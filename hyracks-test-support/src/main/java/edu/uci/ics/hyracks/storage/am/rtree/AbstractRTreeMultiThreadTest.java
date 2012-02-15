@@ -130,7 +130,7 @@ public abstract class AbstractRTreeMultiThreadTest {
         }
     }
 
-    //@Test
+    @Test
     public void fourDimensionsDouble() throws InterruptedException, HyracksException, TreeIndexException {
         ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
