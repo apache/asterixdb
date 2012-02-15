@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 @SuppressWarnings("rawtypes")
 public class RTreeTestUtils extends TreeIndexTestUtils {
     private static final Logger LOGGER = Logger.getLogger(RTreeTestUtils.class.getName());
+    private int intPayloadValue = 0;
+    private double doublePayloadValue = 0.0;
 
     @SuppressWarnings("unchecked")
     // Create a new ArrayList containing the elements satisfying the search key
@@ -78,9 +80,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             // Set keys.
             setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd);
             // Set values.
-            for (int j = numKeyFields; j < fieldCount; j++) {
-                fieldValues[j] = j;
-            }
+            setDoublePayloadFields(fieldValues, numKeyFields, fieldCount);
             TupleUtils.createDoubleTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
             if (LOGGER.isLoggable(Level.INFO)) {
                 if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
@@ -98,7 +98,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    protected void setDoubleKeyFields(double[] fieldValues, int numKeyFields, double maxValue, Random rnd) {
+    private void setDoubleKeyFields(double[] fieldValues, int numKeyFields, double maxValue, Random rnd) {
         int maxFieldPos = numKeyFields / 2;
         for (int j = 0; j < maxFieldPos; j++) {
             int k = maxFieldPos + j;
@@ -109,6 +109,12 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             } while (secondValue < firstValue);
             fieldValues[j] = firstValue;
             fieldValues[k] = secondValue;
+        }
+    }
+    
+    private void setDoublePayloadFields(double[] fieldValues, int numKeyFields, int numFields) {
+        for (int j = numKeyFields; j < numFields; j++) {
+            fieldValues[j] = doublePayloadValue++;
         }
     }
 
@@ -132,9 +138,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             // Set keys.
             setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd);
             // Set values.
-            for (int j = numKeyFields; j < fieldCount; j++) {
-                fieldValues[j] = j;
-            }
+            setDoublePayloadFields(fieldValues, numKeyFields, fieldCount);
 
             // Set expected values.
             ctx.insertCheckTuple(createDoubleCheckTuple(fieldValues, ctx.getKeyFieldCount()), tmpCheckTuples);
@@ -209,6 +213,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             fieldValues[k] = secondValue;
         }
     }
+    
+    @Override
+    protected void setIntPayloadFields(int[] fieldValues, int numKeyFields, int numFields) {
+        for (int j = numKeyFields; j < numFields; j++) {
+            fieldValues[j] = intPayloadValue++;
+        }
+    }
 
     @Override
     protected Collection createCheckTuplesCollection() {
@@ -219,9 +230,10 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getFieldCount());
     }
-    
+
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx) throws HyracksDataException {
-    	return ctx.getCheckTuples().contains(checkTuple);
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+            throws HyracksDataException {
+        return ctx.getCheckTuples().contains(checkTuple);
     }
 }

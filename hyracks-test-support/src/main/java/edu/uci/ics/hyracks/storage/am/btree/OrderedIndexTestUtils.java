@@ -357,6 +357,13 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
+    protected void setIntPayloadFields(int[] fieldValues, int numKeyFields, int numFields) {
+        for (int j = numKeyFields; j < numFields; j++) {
+            fieldValues[j] = j;
+        }
+    }
+
+    @Override
     protected Collection createCheckTuplesCollection() {
         return new TreeSet<CheckTuple>();
     }
@@ -365,16 +372,17 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getKeyFieldCount());
     }
-    
+
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx) throws HyracksDataException {    	
-    	@SuppressWarnings("unchecked")
-		TreeSet<CheckTuple> checkTuples = (TreeSet<CheckTuple>) ctx.getCheckTuples();
-    	CheckTuple matchingCheckTuple = checkTuples.floor(checkTuple);
-    	if (matchingCheckTuple == null) {
-    		return false;
-    	}
-    	compareActualAndExpected(tuple, matchingCheckTuple, ctx.getFieldSerdes());
-    	return true;
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+            throws HyracksDataException {
+        @SuppressWarnings("unchecked")
+        TreeSet<CheckTuple> checkTuples = (TreeSet<CheckTuple>) ctx.getCheckTuples();
+        CheckTuple matchingCheckTuple = checkTuples.floor(checkTuple);
+        if (matchingCheckTuple == null) {
+            return false;
+        }
+        compareActualAndExpected(tuple, matchingCheckTuple, ctx.getFieldSerdes());
+        return true;
     }
 }

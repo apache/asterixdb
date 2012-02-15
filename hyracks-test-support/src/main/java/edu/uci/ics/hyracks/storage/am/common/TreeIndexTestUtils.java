@@ -38,12 +38,15 @@ public abstract class TreeIndexTestUtils {
 
     protected abstract void setIntKeyFields(int[] fieldValues, int numKeyFields, int maxValue, Random rnd);
 
+    protected abstract void setIntPayloadFields(int[] fieldValues, int numKeyFields, int numFields);
+
     protected abstract Collection createCheckTuplesCollection();
 
     protected abstract ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx);
-    
+
     // See if tuple with corresponding checkTuple exists in ctx.checkTuples.
-    protected abstract boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx) throws HyracksDataException;
+    protected abstract boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple,
+            ITreeIndexTestContext ctx) throws HyracksDataException;
 
     @SuppressWarnings("unchecked")
     public static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
@@ -137,9 +140,7 @@ public abstract class TreeIndexTestUtils {
             // Set keys.
             setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
             // Set values.
-            for (int j = numKeyFields; j < fieldCount; j++) {
-                fieldValues[j] = j;
-            }
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
             TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
             if (LOGGER.isLoggable(Level.INFO)) {
                 if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
@@ -167,9 +168,7 @@ public abstract class TreeIndexTestUtils {
             // Set keys.
             setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
             // Set values.
-            for (int j = numKeyFields; j < fieldCount; j++) {
-                fieldValues[j] = j;
-            }
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
 
             // Set expected values. (We also use these as the pre-sorted stream
             // for ordered indexes bulk loading).
@@ -240,6 +239,7 @@ public abstract class TreeIndexTestUtils {
             checkTuples[checkTupleIdx] = tmp;
             numCheckTuples--;
         }
+        System.out.println();
     }
 
 }

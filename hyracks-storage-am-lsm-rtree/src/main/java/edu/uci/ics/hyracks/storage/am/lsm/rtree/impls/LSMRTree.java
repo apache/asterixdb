@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -293,23 +292,32 @@ public class LSMRTree implements ILSMTree {
                     ctx.getBTreeMultiComparator(), ctx.getBTreeMultiComparator());
             ITreeIndexCursor cursor = ctx.memBTreeAccessor.createSearchCursor();
             ctx.memBTreeAccessor.search(cursor, btreeRangePredicate);
-            ITupleReference tupleCopy = null;
+            boolean foundTupleInMemoryBTree = false;
             try {
                 if (cursor.hasNext()) {
-                    cursor.next();
-                    tupleCopy = TupleUtils.copyTuple(cursor.getTuple());
+                    foundTupleInMemoryBTree = true;
                 }
             } finally {
                 cursor.close();
             }
-            if (tupleCopy != null) {
-                ctx.memRTreeAccessor.insert(tupleCopy);
-            } else {
-                ctx.memRTreeAccessor.insert(tuple);
+            if (foundTupleInMemoryBTree) {
+                ctx.memBTreeAccessor.delete(tuple);
             }
+            ctx.memRTreeAccessor.insert(tuple);
 
         } else {
-
+            // For each delete operation, we make sure that we run a true
+            // in-memory RTree delete operation besides from inserting a delete
+            // tuple in the in-memory BTree. The reason for running the RTree
+            // delete operation is that to avoid the following scenario:
+            // 1) Inserter inserts tupleA to the in-memory RTree.
+            // 2) Deleter inserts tupleA to the in-memory BTree.
+            // 3) Inserter inserts tupleA to the in-memory RTree.
+            // Note that all the above operations happened before flushing the
+            // in-memory trees Now, when we search using the LSMRTree search
+            // cursor, it will return tupleA twice! which is not correct! Thus
+            // we run a true RTree delete operation.
+            ctx.memRTreeAccessor.delete(tuple);
             try {
                 ctx.memBTreeAccessor.insert(tuple);
             } catch (BTreeDuplicateKeyException e) {
