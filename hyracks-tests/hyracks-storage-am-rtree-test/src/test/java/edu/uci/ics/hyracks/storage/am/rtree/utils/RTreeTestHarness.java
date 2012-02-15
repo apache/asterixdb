@@ -32,7 +32,7 @@ public class RTreeTestHarness {
 
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_PAGE_SIZE = 256;
-    private static final int DEFAULT_NUM_PAGES = 100;
+    private static final int DEFAULT_NUM_PAGES = 1000;
     private static final int DEFAULT_MAX_OPEN_FILES = 10;
     private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
 

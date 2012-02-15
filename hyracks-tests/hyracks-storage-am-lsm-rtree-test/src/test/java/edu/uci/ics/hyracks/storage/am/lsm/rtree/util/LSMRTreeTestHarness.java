@@ -46,8 +46,7 @@ public class LSMRTreeTestHarness {
     private static final int DEFAULT_DISK_NUM_PAGES = 1000;
     private static final int DEFAULT_DISK_MAX_OPEN_FILES = 2000;
     private static final int DEFAULT_MEM_PAGE_SIZE = 256;
-    private static final int DEFAULT_MEM_NUM_PAGES = 100;
-    // private static final int DEFAULT_MEM_NUM_PAGES = 10;
+    private static final int DEFAULT_MEM_NUM_PAGES = 1000;
     private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
     private static final int DUMMY_FILE_ID = -1;
 
@@ -103,7 +102,7 @@ public class LSMRTreeTestHarness {
 
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
-        for(IODeviceHandle dev : ioManager.getIODevices()) {            
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), onDiskDir);
             FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File dir, String name) {
@@ -112,10 +111,10 @@ public class LSMRTreeTestHarness {
             };
             String[] files = dir.list(filter);
             if (files != null) {
-            	for (String fileName : files) {
-            		File file = new File(dir.getPath() + File.separator + fileName);
-            		file.delete();
-            	}
+                for (String fileName : files) {
+                    File file = new File(dir.getPath() + File.separator + fileName);
+                    file.delete();
+                }
             }
             dir.delete();
         }
@@ -150,9 +149,9 @@ public class LSMRTreeTestHarness {
     }
 
     public IOManager getIOManager() {
-    	return ioManager;
+        return ioManager;
     }
-    
+
     public IBufferCache getDiskBufferCache() {
         return diskBufferCache;
     }

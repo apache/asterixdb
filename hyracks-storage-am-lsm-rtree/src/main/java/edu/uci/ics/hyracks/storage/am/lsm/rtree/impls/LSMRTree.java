@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -301,7 +302,15 @@ public class LSMRTree implements ILSMTree {
                 cursor.close();
             }
             if (foundTupleInMemoryBTree) {
-                ctx.memBTreeAccessor.delete(tuple);
+                try {
+                    ctx.memBTreeAccessor.delete(tuple);
+                } catch (BTreeNonExistentKeyException e) {
+                    // Tuple has been deleted in the meantime. Do nothing.
+                    // This normally shouldn't happen if we are dealing with
+                    // good citizens since LSMRTree is used as a secondary
+                    // index and a tuple shouldn't be deleted twice without
+                    // insert between them.
+                }
             }
             ctx.memRTreeAccessor.insert(tuple);
 
