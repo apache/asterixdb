@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
@@ -116,4 +117,9 @@ public interface ITreeIndex extends IIndex {
      * @return BufferCache underlying this tree index.
      */
     public IBufferCache getBufferCache();
+    
+    /**
+     * @return Comparator factories.
+     */
+    public IBinaryComparatorFactory[] getComparatorFactories(); 
 }

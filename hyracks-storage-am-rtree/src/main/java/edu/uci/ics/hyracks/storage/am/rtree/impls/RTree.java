@@ -875,7 +875,7 @@ public class RTree implements ITreeIndex {
         try {
             ((BulkLoadContext) ictx).indexAccessor.insert(tuple);
         } catch (Exception e) {
-            throw new HyracksDataException("BulkLoad Error");
+            throw new HyracksDataException("BulkLoad Error", e);
         }
     }
 

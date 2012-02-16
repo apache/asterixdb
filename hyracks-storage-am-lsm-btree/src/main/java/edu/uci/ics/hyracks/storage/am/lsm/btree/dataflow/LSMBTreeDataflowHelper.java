@@ -60,7 +60,7 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
         FileReference file = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
         return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, (IOManager) ctx.getIOManager(), file
-                .getFile().getAbsolutePath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc
+                .getFile().getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc
                 .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
                 .getTreeIndexComparatorFactories());
     }

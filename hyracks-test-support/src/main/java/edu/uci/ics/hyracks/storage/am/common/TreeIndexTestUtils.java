@@ -239,7 +239,6 @@ public abstract class TreeIndexTestUtils {
             checkTuples[checkTupleIdx] = tmp;
             numCheckTuples--;
         }
-        System.out.println();
     }
 
 }
