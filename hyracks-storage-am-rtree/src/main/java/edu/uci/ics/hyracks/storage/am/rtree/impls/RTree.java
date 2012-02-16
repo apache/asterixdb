@@ -818,6 +818,7 @@ public class RTree implements ITreeIndex {
         return leafFrameFactory;
     }
 
+    @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
         return cmpFactories;
     }

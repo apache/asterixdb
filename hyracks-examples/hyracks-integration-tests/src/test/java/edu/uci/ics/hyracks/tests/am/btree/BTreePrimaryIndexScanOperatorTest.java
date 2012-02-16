@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.btree;
+package edu.uci.ics.hyracks.tests.am.btree;
 
 import java.io.DataOutput;
 
@@ -34,32 +34,26 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 
-public class BTreeSecondaryIndexInsertOperatorTest extends AbstractBTreeOperatorTest {
-
+public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest {
+    
     @Before
     public void setup() throws Exception {
         super.setup();
         loadPrimaryIndex();
-        loadSecondaryIndex();
-        insertPipeline();
     }
 
     @Test
-    public void searchUpdatedSecondaryIndexTest() throws Exception {
+    public void scanPrimaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        // build tuple containing search keys (only use the first key as search
-        // key)
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
+        // build dummy tuple containing nothing
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
-        // low key
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("1998-07-21", dos);
-        tb.addFieldEndOffset();
-        // high key
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("2000-10-18", dos);
+        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos);
         tb.addFieldEndOffset();
 
         ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
@@ -70,26 +64,13 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractBTreeOperator
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
 
-        int[] secondaryLowKeyFields = { 0 };
-        int[] secondaryHighKeyFields = { 1 };
+        int[] lowKeyFields = null; // - infinity
+        int[] highKeyFields = null; // + infinity
 
-        // search secondary index
-        BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                secondaryRecDesc, storageManager, indexRegistryProvider, secondarySplitProvider,
-                secondaryTypeTraits, secondaryComparatorFactories, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                dataflowHelperFactory);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
-
-        // second field from the tuples coming from secondary index
-        int[] primaryLowKeyFields = { 1 };
-        // second field from the tuples coming from secondary index
-        int[] primaryHighKeyFields = { 1 };
-
-        // search primary index
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, indexRegistryProvider, primarySplitProvider, 
-                primaryTypeTraits, primaryComparatorFactories, primaryLowKeyFields,
-                primaryHighKeyFields, true, true, dataflowHelperFactory);
+                storageManager, indexRegistryProvider, primarySplitProvider,
+                primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
+                highKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
@@ -97,11 +78,15 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractBTreeOperator
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
-        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondaryBtreeSearchOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBtreeSearchOp, 0, primaryBtreeSearchOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryBtreeSearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryBtreeSearchOp, 0, printer, 0);
 
         spec.addRoot(printer);
         runTest(spec);
+    }
+    
+    @Override
+    protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
+        return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 }

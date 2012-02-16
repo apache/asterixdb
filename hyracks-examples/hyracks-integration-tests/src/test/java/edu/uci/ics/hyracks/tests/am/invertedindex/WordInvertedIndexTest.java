@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.invertedindex;
+package edu.uci.ics.hyracks.tests.am.invertedindex;
 
 import java.io.DataOutput;
 import java.io.File;

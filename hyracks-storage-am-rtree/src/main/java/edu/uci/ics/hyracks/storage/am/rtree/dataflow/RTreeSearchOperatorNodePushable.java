@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorD
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexSearchOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -39,15 +38,16 @@ public class RTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
         }
     }
 
-	@Override
-	protected ISearchPredicate createSearchPredicate() {
-	    RTree rtree = (RTree) treeIndex;
-	    cmp = RTreeUtils.getSearchMultiComparator(rtree.getComparatorFactories(), searchKey);
-	    return new SearchPredicate(searchKey, cmp);
-	}
+    @Override
+    protected ISearchPredicate createSearchPredicate() {
+        cmp = RTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), searchKey);
+        return new SearchPredicate(searchKey, cmp);
+    }
 
-	@Override
-	protected void resetSearchPredicate(int tupleIndex) {
-	    searchKey.reset(accessor, tupleIndex);
-	}
+    @Override
+    protected void resetSearchPredicate(int tupleIndex) {
+        if (searchKey != null) {
+            searchKey.reset(accessor, tupleIndex);
+        }
+    }
 }

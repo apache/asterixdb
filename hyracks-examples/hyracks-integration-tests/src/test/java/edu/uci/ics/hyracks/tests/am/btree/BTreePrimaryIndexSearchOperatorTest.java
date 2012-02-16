@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.btree;
+package edu.uci.ics.hyracks.tests.am.btree;
 
 import java.io.DataOutput;
 
@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 
 public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTest {
     
@@ -87,5 +88,10 @@ public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTe
 
         spec.addRoot(printer);
         runTest(spec);
+    }
+    
+    @Override
+    protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
+        return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 }

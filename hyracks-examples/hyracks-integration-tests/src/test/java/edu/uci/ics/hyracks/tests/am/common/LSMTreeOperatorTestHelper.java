@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.lsm.btree;
+package edu.uci.ics.hyracks.tests.am.common;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,40 +21,33 @@ import java.util.Date;
 
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.tests.btree.BTreeOperatorTestHelper;
 
-public class LSMBTreeOperatorTestHelper extends BTreeOperatorTestHelper {
+public class LSMTreeOperatorTestHelper extends TreeOperatorTestHelper {
 
     protected final IOManager ioManager;
-    
-    public LSMBTreeOperatorTestHelper(IOManager ioManager) {
+
+    public LSMTreeOperatorTestHelper(IOManager ioManager) {
         this.ioManager = ioManager;
     }
-    
+
     public String getPrimaryIndexName() {
         return "primary" + simpleDateFormat.format(new Date());
     }
-    
+
     public String getSecondaryIndexName() {
         return "secondary" + simpleDateFormat.format(new Date());
-    }
-    
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return new LSMBTreeDataflowHelperFactory();
     }
 
     @Override
     public void cleanup(String primaryFileName, String secondaryFileName) {
-        for(IODeviceHandle dev : ioManager.getIODevices()) {            
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             File primaryDir = new File(dev.getPath(), primaryFileName);
             cleanupDir(primaryDir);
             File secondaryDir = new File(dev.getPath(), secondaryFileName);
             cleanupDir(secondaryDir);
         }
     }
-    
+
     private void cleanupDir(File dir) {
         if (!dir.exists()) {
             return;

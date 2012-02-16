@@ -544,6 +544,7 @@ public class LSMRTree implements ILSMTree {
         }
     }
 
+    @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
         return rtreeCmpFactories;
     }

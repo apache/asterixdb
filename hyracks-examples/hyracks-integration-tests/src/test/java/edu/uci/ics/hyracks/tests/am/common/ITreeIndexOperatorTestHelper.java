@@ -13,16 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.btree;
+package edu.uci.ics.hyracks.tests.am.common;
 
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-
-public interface IOrderedTreeIndexOperatorTestHelper {
+public interface ITreeIndexOperatorTestHelper {
     public String getPrimaryIndexName();
-    
+
     public String getSecondaryIndexName();
-    
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory();
-    
+
     public void cleanup(String primaryFileName, String secondaryFileName);
 }

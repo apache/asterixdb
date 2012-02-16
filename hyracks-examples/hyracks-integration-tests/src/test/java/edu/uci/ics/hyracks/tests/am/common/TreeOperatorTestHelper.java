@@ -13,30 +13,23 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.btree;
+package edu.uci.ics.hyracks.tests.am.common;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-
-public class BTreeOperatorTestHelper implements IOrderedTreeIndexOperatorTestHelper {
+public class TreeOperatorTestHelper implements ITreeIndexOperatorTestHelper {
 
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final String sep = System.getProperty("file.separator");
-    
+
     public String getPrimaryIndexName() {
         return System.getProperty("java.io.tmpdir") + sep + "primary" + simpleDateFormat.format(new Date());
     }
-    
+
     public String getSecondaryIndexName() {
         return System.getProperty("java.io.tmpdir") + sep + "secondary" + simpleDateFormat.format(new Date());
-    }
-    
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return new BTreeDataflowHelperFactory();
     }
 
     @Override

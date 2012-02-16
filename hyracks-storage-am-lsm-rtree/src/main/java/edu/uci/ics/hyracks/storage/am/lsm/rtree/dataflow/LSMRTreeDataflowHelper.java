@@ -74,8 +74,8 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
         InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
         return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, (IOManager) ctx.getIOManager(), file
-                .getFile().getAbsolutePath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc
-                .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+                .getFile().getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+                .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
                 .getTreeIndexComparatorFactories(), btreeComparatorFactories, valueProviderFactories);
     }
 }
