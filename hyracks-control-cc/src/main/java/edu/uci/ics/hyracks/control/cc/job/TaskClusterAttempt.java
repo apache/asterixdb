@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.Map;
+
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+
 public class TaskClusterAttempt {
     public enum TaskClusterStatus {
         RUNNING,
@@ -26,7 +30,7 @@ public class TaskClusterAttempt {
 
     private final int attempt;
 
-    private TaskAttempt[] taskAttempts;
+    private Map<TaskId, TaskAttempt> taskAttempts;
 
     private TaskClusterStatus status;
 
@@ -47,11 +51,11 @@ public class TaskClusterAttempt {
         return taskCluster;
     }
 
-    public void setTaskAttempts(TaskAttempt[] taskAttempts) {
+    public void setTaskAttempts(Map<TaskId, TaskAttempt> taskAttempts) {
         this.taskAttempts = taskAttempts;
     }
 
-    public TaskAttempt[] getTaskAttempts() {
+    public Map<TaskId, TaskAttempt> getTaskAttempts() {
         return taskAttempts;
     }
 
@@ -84,7 +88,7 @@ public class TaskClusterAttempt {
     }
 
     public void initializePendingTaskCounter() {
-        pendingTaskCounter = taskAttempts.length;
+        pendingTaskCounter = taskAttempts.size();
     }
 
     public int getPendingTaskCounter() {
