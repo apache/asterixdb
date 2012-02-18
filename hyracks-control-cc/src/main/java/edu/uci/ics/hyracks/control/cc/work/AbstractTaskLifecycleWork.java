@@ -60,11 +60,9 @@ public abstract class AbstractTaskLifecycleWork extends AbstractWork {
                     List<TaskClusterAttempt> taskClusterAttempts = tc.getAttempts();
                     if (taskClusterAttempts != null && taskClusterAttempts.size() > taId.getAttempt()) {
                         TaskClusterAttempt tca = taskClusterAttempts.get(taId.getAttempt());
-                        for (TaskAttempt ta : tca.getTaskAttempts()) {
-                            if (ta.getTaskAttemptId().equals(taId)) {
-                                performEvent(ta);
-                                break;
-                            }
+                        TaskAttempt ta = tca.getTaskAttempts().get(tid);
+                        if (ta != null) {
+                            performEvent(ta);
                         }
                     }
                 }
