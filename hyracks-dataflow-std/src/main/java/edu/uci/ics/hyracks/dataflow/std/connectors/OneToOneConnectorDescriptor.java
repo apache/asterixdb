@@ -72,4 +72,11 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
         targetBitmap.clear();
         targetBitmap.set(producerIndex);
     }
+
+    @Override
+    public void indicateSourcePartitions(int nProducerPartitions, int nConsumerPartitions, int consumerIndex,
+            BitSet sourceBitmap) {
+        sourceBitmap.clear();
+        sourceBitmap.set(consumerIndex);
+    }
 }
