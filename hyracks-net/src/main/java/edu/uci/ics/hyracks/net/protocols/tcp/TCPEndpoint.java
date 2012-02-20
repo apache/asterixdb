@@ -110,11 +110,22 @@ public class TCPEndpoint {
                         for (InetSocketAddress address : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
                             channel.configureBlocking(false);
-                            if (!channel.connect(address)) {
-                                channel.register(selector, SelectionKey.OP_CONNECT);
-                            } else {
-                                SelectionKey key = channel.register(selector, 0);
-                                createConnection(key, channel);
+                            boolean connect = false;
+                            boolean failure = false;
+                            try {
+                                connect = channel.connect(address);
+                            } catch (IOException e) {
+                                failure = true;
+                                connectionListener.connectionFailure(address);
+                            }
+                            if (!failure) {
+                                if (!connect) {
+                                    SelectionKey key = channel.register(selector, SelectionKey.OP_CONNECT);
+                                    key.attach(address);
+                                } else {
+                                    SelectionKey key = channel.register(selector, 0);
+                                    createConnection(key, channel);
+                                }
                             }
                         }
                         workingPendingConnections.clear();
@@ -150,7 +161,15 @@ public class TCPEndpoint {
                                 distributeIncomingConnection(channel);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
-                                if (channel.finishConnect()) {
+                                boolean finishConnect = false;
+                                try {
+                                    finishConnect = channel.finishConnect();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    key.cancel();
+                                    connectionListener.connectionFailure((InetSocketAddress) key.attachment());
+                                }
+                                if (finishConnect) {
                                     createConnection(key, channel);
                                 }
                             }

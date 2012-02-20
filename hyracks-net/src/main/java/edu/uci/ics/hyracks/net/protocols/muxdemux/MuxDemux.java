@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.net.exceptions.NetException;
 import edu.uci.ics.hyracks.net.protocols.tcp.ITCPConnectionListener;
 import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
 import edu.uci.ics.hyracks.net.protocols.tcp.TCPEndpoint;
@@ -58,6 +59,23 @@ public class MuxDemux {
                 connection.setEventListener(mConn);
                 connection.setAttachment(mConn);
             }
+
+            @Override
+            public void connectionFailure(InetSocketAddress remoteAddress) {
+                MultiplexedConnection mConn;
+                synchronized (MuxDemux.this) {
+                    mConn = connectionMap.get(remoteAddress);
+                    assert mConn != null;
+                    int nConnectionAttempts = mConn.getConnectionAttempts();
+                    if (nConnectionAttempts > 5) {
+                        connectionMap.remove(remoteAddress);
+                        mConn.setConnectionFailure();
+                    } else {
+                        mConn.setConnectionAttempts(nConnectionAttempts + 1);
+                        tcpEndpoint.initiateConnection(remoteAddress);
+                    }
+                }
+            }
         }, nThreads);
         perfCounters = new MuxDemuxPerformanceCounters();
     }
@@ -66,7 +84,7 @@ public class MuxDemux {
         tcpEndpoint.start(localAddress);
     }
 
-    public MultiplexedConnection connect(InetSocketAddress remoteAddress) throws InterruptedException {
+    public MultiplexedConnection connect(InetSocketAddress remoteAddress) throws InterruptedException, NetException {
         MultiplexedConnection mConn = null;
         synchronized (this) {
             mConn = connectionMap.get(remoteAddress);
