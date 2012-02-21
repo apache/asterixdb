@@ -261,6 +261,10 @@ public class NodeControllerService extends AbstractRemoteService {
         return ncConfig;
     }
 
+    public WorkQueue getWorkQueue() {
+        return queue;
+    }
+
     private static InetAddress getIpAddress(NCConfig ncConfig) throws Exception {
         String ipaddrStr = ncConfig.dataIPAddress;
         ipaddrStr = ipaddrStr.trim();

@@ -113,6 +113,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         taskMap.put(task.getTaskAttemptId(), task);
     }
 
+    public void removeTask(Task task) {
+        taskMap.remove(task.getTaskAttemptId());
+        if (cleanupPending && taskMap.isEmpty()) {
+            performCleanup();
+        }
+    }
+
     public Map<TaskAttemptId, Task> getTaskMap() {
         return taskMap;
     }
@@ -139,37 +146,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
     }
 
-    public synchronized void notifyTaskComplete(Task task) throws Exception {
-        taskMap.remove(task.getTaskAttemptId());
-        try {
-            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile());
-            task.dumpProfile(taskProfile);
-            nodeController.getClusterController().notifyTaskComplete(jobId, task.getTaskAttemptId(),
-                    nodeController.getId(), taskProfile);
-        } finally {
-            if (cleanupPending && taskMap.isEmpty()) {
-                performCleanup();
-            }
-        }
-    }
-
-    public synchronized void notifyTaskFailed(Task task, String details) throws Exception {
-        taskMap.remove(task.getTaskAttemptId());
-        try {
-            nodeController.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(),
-                    nodeController.getId(), details);
-        } finally {
-            if (cleanupPending && taskMap.isEmpty()) {
-                performCleanup();
-            }
-        }
-    }
-
     public NodeControllerService getNodeController() {
         return nodeController;
     }
 
-    public synchronized void dumpProfile(JobletProfile jProfile) {
+    public void dumpProfile(JobletProfile jProfile) {
         Map<String, Long> counters = jProfile.getCounters();
         for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
             counters.put(e.getKey(), e.getValue().get());
@@ -260,7 +241,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jobletEventListener = jobletEventListener;
     }
 
-    public synchronized void cleanup(JobStatus status) {
+    public void cleanup(JobStatus status) {
         cleanupStatus = status;
         cleanupPending = true;
         if (taskMap.isEmpty()) {

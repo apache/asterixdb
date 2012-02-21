@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.nc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -51,6 +52,8 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+import edu.uci.ics.hyracks.control.nc.work.NotifyTaskCompleteWork;
+import edu.uci.ics.hyracks.control.nc.work.NotifyTaskFailureWork;
 
 public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     private final Joblet joblet;
@@ -165,6 +168,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return this;
     }
 
+    public Joblet getJoblet() {
+        return joblet;
+    }
+
     public Map<PartitionId, PartitionProfile> getPartitionSendProfile() {
         return partitionSendProfile;
     }
@@ -263,7 +270,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             } finally {
                 operator.deinitialize();
             }
-            joblet.notifyTaskComplete(this);
+            NodeControllerService ncs = joblet.getNodeController();
+            ncs.getWorkQueue().schedule(new NotifyTaskCompleteWork(ncs, this));
         } catch (Exception e) {
             failed = true;
             errorWriter.println("Exception caught by thread: " + ct.getName());
@@ -276,10 +284,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
         if (failed) {
             errorWriter.close();
+            NodeControllerService ncs = joblet.getNodeController();
             try {
-                joblet.notifyTaskFailed(this, errorBaos.toString("UTF-8"));
-            } catch (Exception e1) {
-                e1.printStackTrace();
+                ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, errorBaos.toString("UTF-8")));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
         }
     }
