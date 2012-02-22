@@ -179,7 +179,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public void close() {
-        deallocatableRegistry.close();
+        nodeController.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                deallocatableRegistry.close();
+            }
+        });
     }
 
     @Override
@@ -257,5 +262,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
         close();
         cleanupPending = false;
+        try {
+            nodeController.getClusterController().notifyJobletCleanup(jobId, nodeController.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

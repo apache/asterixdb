@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.nc.partitions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -79,13 +80,13 @@ public class PartitionManager implements IPartitionRequestListener {
         return partitionMap.get(pid).get(0);
     }
 
-    public synchronized void unregisterPartitions(JobId jobId) {
+    public synchronized void unregisterPartitions(JobId jobId, Collection<IPartition> unregisteredPartitions) {
         for (Iterator<Map.Entry<PartitionId, List<IPartition>>> i = partitionMap.entrySet().iterator(); i.hasNext();) {
             Map.Entry<PartitionId, List<IPartition>> e = i.next();
             PartitionId pid = e.getKey();
             if (jobId.equals(pid.getJobId())) {
                 for (IPartition p : e.getValue()) {
-                    p.deallocate();
+                    unregisteredPartitions.add(p);
                 }
                 i.remove();
             }

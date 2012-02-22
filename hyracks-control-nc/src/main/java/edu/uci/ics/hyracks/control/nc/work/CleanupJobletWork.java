@@ -14,12 +14,15 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
@@ -44,12 +47,20 @@ public class CleanupJobletWork extends SynchronizableWork {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
-        ncs.getPartitionManager().unregisterPartitions(jobId);
+        final List<IPartition> unregisteredPartitions = new ArrayList<IPartition>();
+        ncs.getPartitionManager().unregisterPartitions(jobId, unregisteredPartitions);
+        ncs.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                for (IPartition p : unregisteredPartitions) {
+                    p.deallocate();
+                }
+            }
+        });
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
             joblet.cleanup(status);
         }
-        ncs.getClusterController().notifyJobletCleanup(jobId, ncs.getId());
     }
 }
