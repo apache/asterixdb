@@ -642,7 +642,7 @@ public class JobScheduler {
                 lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
                 lastAttempt.setEndTime(System.currentTimeMillis());
                 abortDoomedTaskClusters();
-                if (lastAttempt.getAttempt() >= ac.getMaxTaskClusterAttempts()) {
+                if (lastAttempt.getAttempt() >= ac.getMaxTaskClusterReattempts()) {
                     abortJob(new HyracksException(details));
                     return;
                 }

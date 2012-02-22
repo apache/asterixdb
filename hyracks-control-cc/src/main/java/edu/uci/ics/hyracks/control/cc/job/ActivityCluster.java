@@ -71,8 +71,8 @@ public class ActivityCluster {
         this.id = id;
     }
 
-    public int getMaxTaskClusterAttempts() {
-        return jobRun.getJobActivityGraph().getJobSpecification().getMaxAttempts();
+    public int getMaxTaskClusterReattempts() {
+        return jobRun.getJobActivityGraph().getJobSpecification().getMaxReattempts();
     }
 
     public ActivityClusterPlan getPlan() {
