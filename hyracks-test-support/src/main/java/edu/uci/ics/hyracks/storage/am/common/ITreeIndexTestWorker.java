@@ -18,8 +18,8 @@ package edu.uci.ics.hyracks.storage.am.common;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ITreeIndexTestWorker {
-    void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, TreeIndexException;
+    void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException;
 }

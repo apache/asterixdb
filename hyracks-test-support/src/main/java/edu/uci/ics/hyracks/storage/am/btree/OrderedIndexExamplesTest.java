@@ -91,7 +91,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int f0 = rnd.nextInt() % numInserts;
@@ -170,7 +170,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < 10000; i++) {
             int f0 = rnd.nextInt() % 2000;
@@ -247,7 +247,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         // Max string length to be generated.
         int maxLength = 10;
         int numInserts = 10000;
@@ -322,7 +322,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         // Max string length to be generated.
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -424,7 +424,7 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
         }
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         int maxLength = 10;
@@ -527,7 +527,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info(ins + " tuples loaded in " + (end - start) + "ms");
         }
 
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -550,7 +550,7 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
-        ITreeIndexCursor scanCursor = indexAccessor.createSearchCursor();        
+        ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();        
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -604,7 +604,7 @@ public abstract class OrderedIndexExamplesTest {
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
             LOGGER.info("Range-Search in: [ " + lowKeyString + ", " + highKeyString + "]");
         }
-        ITreeIndexCursor rangeCursor = indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp,

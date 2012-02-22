@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifierFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -37,7 +36,6 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
     private static final long serialVersionUID = 1L;
 
     private final int queryField;
-    private final IBinaryTokenizerFactory queryTokenizerFactory;
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
 
     public InvertedIndexSearchOperatorDescriptor(JobSpecification spec,
@@ -49,18 +47,16 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc) {
         super(spec, 1, 1, recDesc, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, btreeDataflowHelperFactory);
+                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory);
         this.queryField = queryField;
-        this.queryTokenizerFactory = queryTokenizerFactory;
         this.searchModifierFactory = searchModifierFactory;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        IBinaryTokenizer tokenizer = queryTokenizerFactory.createTokenizer();
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
-        return new InvertedIndexSearchOperatorNodePushable(this, ctx, partition, queryField, searchModifier, tokenizer,
+        return new InvertedIndexSearchOperatorNodePushable(this, ctx, partition, queryField, searchModifier,
                 recordDescProvider);
     }
 }

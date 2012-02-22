@@ -19,30 +19,47 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 
-public class SearchResultCursor implements IInvertedIndexResultCursor {
+public class InvertedIndexSearchCursor implements IIndexCursor {
 
     private List<ByteBuffer> resultBuffers;
-    private IFrameTupleAccessor fta;
-    private FixedSizeTupleReference resultTuple;
     private int numResultBuffers;
     private int currentBufferIndex = 0;
     private int tupleIndex = 0;
-
-    public SearchResultCursor(IFrameTupleAccessor fta, ITupleReference resultTuple) {
-        this.fta = fta;
-        this.resultTuple = (FixedSizeTupleReference) resultTuple;
+    private final IInvertedIndexSearcher invIndexSearcher;
+    private final IFrameTupleAccessor fta;
+    private final FixedSizeTupleReference resultTuple;
+    
+    public InvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher) {
+        this.invIndexSearcher = invIndexSearcher;
+        this.fta = invIndexSearcher.createResultFrameTupleAccessor();
+        this.resultTuple = (FixedSizeTupleReference) invIndexSearcher.createResultTupleReference();
     }
 
     @Override
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        currentBufferIndex = 0;
+        tupleIndex = 0;
+        resultBuffers = invIndexSearcher.getResultBuffers();
+        numResultBuffers = invIndexSearcher.getNumValidResultBuffers();
+        if (numResultBuffers > 0) {
+            fta.reset(resultBuffers.get(0));
+        }
+    }
+    
+    @Override
     public boolean hasNext() {
-        if (currentBufferIndex < numResultBuffers && tupleIndex < fta.getTupleCount())
+        if (currentBufferIndex < numResultBuffers && tupleIndex < fta.getTupleCount()) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     @Override
@@ -64,13 +81,19 @@ public class SearchResultCursor implements IInvertedIndexResultCursor {
     }
 
     @Override
-    public void reset(IInvertedIndexSearcher invIndexSearcher) {
+    public void reset() {
         currentBufferIndex = 0;
         tupleIndex = 0;
+        invIndexSearcher.reset();
         resultBuffers = invIndexSearcher.getResultBuffers();
         numResultBuffers = invIndexSearcher.getNumValidResultBuffers();
-        if (numResultBuffers > 0) {
-            fta.reset(resultBuffers.get(0));
-        }
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        currentBufferIndex = 0;
+        tupleIndex = 0;
+        resultBuffers = null;
+        numResultBuffers = 0;
     }
 }

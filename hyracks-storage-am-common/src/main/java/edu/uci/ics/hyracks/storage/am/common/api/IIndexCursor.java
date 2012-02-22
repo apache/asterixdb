@@ -15,17 +15,20 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public interface ITreeIndexCursor extends IIndexCursor {
+public interface IIndexCursor {
+    public void open(ICursorInitialState initialState,
+            ISearchPredicate searchPred) throws HyracksDataException;      
 
-	public ICachedPage getPage();
+    public boolean hasNext() throws HyracksDataException;
 
-	public void setBufferCache(IBufferCache bufferCache);
+    public void next() throws HyracksDataException;
 
-	public void setFileId(int fileId);
+    public void close() throws HyracksDataException;
 
-	// For allowing updates.
-	public boolean exclusiveLatchNodes();
+    public void reset();
+
+    public ITupleReference getTuple();
 }

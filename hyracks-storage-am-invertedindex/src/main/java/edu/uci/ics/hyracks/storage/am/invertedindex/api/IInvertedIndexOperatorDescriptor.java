@@ -19,10 +19,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public interface IInvertedIndexOperatorDescriptor extends ITreeIndexOperatorDescriptor {
     public IBinaryComparatorFactory[] getInvListsComparatorFactories();
 
+    public IBinaryTokenizerFactory getTokenizerFactory();
+    
     public ITypeTraits[] getInvListsTypeTraits();
     
     public IFileSplitProvider getInvListsFileSplitProvider();

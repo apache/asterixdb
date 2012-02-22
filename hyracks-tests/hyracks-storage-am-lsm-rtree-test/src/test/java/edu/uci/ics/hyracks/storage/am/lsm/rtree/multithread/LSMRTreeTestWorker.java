@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
@@ -47,7 +47,7 @@ public class LSMRTreeTestWorker extends AbstractTreeIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, TreeIndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         LSMRTreeAccessor accessor = (LSMRTreeAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor();
         MultiComparator cmp = accessor.getMultiComparator();

@@ -20,11 +20,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 
 /**
@@ -36,20 +36,20 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
  * concurrent searches/updates/merges may be ongoing.
  * 
  */
-public interface ILSMTree extends ITreeIndex {
+public interface ILSMIndex extends IIndex {
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
-            TreeIndexException;
+            IndexException;
 
-    public void search(ITreeIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
-            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, TreeIndexException;
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
+            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException;
 
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, TreeIndexException;
+    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException;
 
     public void addMergedComponent(Object newComponent, List<Object> mergedComponents);
 
     public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException;
 
-    public Object flush() throws HyracksDataException, TreeIndexException;
+    public Object flush() throws HyracksDataException, IndexException;
 
     public void addFlushedComponent(Object index);
 

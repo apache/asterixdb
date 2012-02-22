@@ -17,10 +17,12 @@ package edu.uci.ics.hyracks.storage.am.common;
 
 import java.util.Random;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 
@@ -30,7 +32,7 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
     private final TestOperationSelector opSelector;
     private final int numBatches;
     
-    protected final ITreeIndexAccessor indexAccessor;
+    protected final IIndexAccessor indexAccessor;
     
     public AbstractTreeIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
         this.dataGen = dataGen;
@@ -53,6 +55,16 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    
+    protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException {
+        try {
+            while (cursor.hasNext()) {
+                cursor.next();
+            }
+        } finally {
+            cursor.close();
         }
     }
 }

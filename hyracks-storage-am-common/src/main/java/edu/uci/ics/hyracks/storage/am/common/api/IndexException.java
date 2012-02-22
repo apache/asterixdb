@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.invertedindex.api;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+public class IndexException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-public interface IInvertedIndexResultCursor {
-    public boolean hasNext();
+    public IndexException(Exception e) {        
+        super(e);
+    }
 
-    public void next();
-
-    public ITupleReference getTuple();
-
-    public void reset(IInvertedIndexSearcher invIndexSearcher);
+    public IndexException(String message) {
+        super(message);
+    }
 }

@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -53,6 +54,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     // Inverted index.
     protected final ITypeTraits[] invListsTypeTraits;
     protected final IBinaryComparatorFactory[] invListComparatorFactories;
+    protected final IBinaryTokenizerFactory tokenizerFactory;
     protected final IFileSplitProvider invListsFileSplitProvider;
 
     public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
@@ -60,7 +62,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
-            IBinaryComparatorFactory[] invListComparatorFactories,
+            IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory) {
         super(spec, inputArity, outputArity);
 
@@ -80,6 +82,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         // Inverted index.
         this.invListsTypeTraits = invListsTypeTraits;
         this.invListComparatorFactories = invListComparatorFactories;
+        this.tokenizerFactory = tokenizerFactory;
         this.invListsFileSplitProvider = invListsFileSplitProvider;
 
         if (outputArity > 0) {
@@ -122,6 +125,11 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         return invListComparatorFactories;
     }
 
+    @Override
+    public IBinaryTokenizerFactory getTokenizerFactory() {
+        return tokenizerFactory;
+    }
+    
     @Override
     public ITypeTraits[] getInvListsTypeTraits() {
         return invListsTypeTraits;

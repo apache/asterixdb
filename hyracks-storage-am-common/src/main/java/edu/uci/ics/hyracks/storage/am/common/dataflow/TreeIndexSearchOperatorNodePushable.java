@@ -27,10 +27,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -44,9 +44,9 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
 
 	protected ITreeIndex treeIndex;
 	protected ISearchPredicate searchPred;
-	protected ITreeIndexCursor cursor;
+	protected IIndexCursor cursor;
 	protected ITreeIndexFrame cursorFrame;
-	protected ITreeIndexAccessor indexAccessor;
+	protected IIndexAccessor indexAccessor;
 
 	protected RecordDescriptor recDesc;
 
@@ -61,7 +61,7 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
     
     protected abstract void resetSearchPredicate(int tupleIndex);
     
-    protected ITreeIndexCursor createCursor() {
+    protected IIndexCursor createCursor() {
         return indexAccessor.createSearchCursor();
     }
     

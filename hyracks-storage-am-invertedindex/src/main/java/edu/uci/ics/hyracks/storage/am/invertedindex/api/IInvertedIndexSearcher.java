@@ -19,11 +19,15 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchCursor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
 
 public interface IInvertedIndexSearcher {
-    public void search(IInvertedIndexResultCursor resultCursor, ITupleReference queryTuple, int queryFieldIndex,
-            IInvertedIndexSearchModifier searchModifier) throws Exception;
+    public void search(InvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred)
+            throws HyracksDataException, IndexException;
 
     public IFrameTupleAccessor createResultFrameTupleAccessor();
 
@@ -32,4 +36,6 @@ public interface IInvertedIndexSearcher {
     public List<ByteBuffer> getResultBuffers();
 
     public int getNumValidResultBuffers();
+    
+    public void reset();
 }

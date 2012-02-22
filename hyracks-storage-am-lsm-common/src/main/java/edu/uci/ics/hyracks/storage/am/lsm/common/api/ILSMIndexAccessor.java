@@ -16,7 +16,8 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
@@ -26,14 +27,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
  * can concurrently operate on the same ILSMTree (i.e., the ILSMTree must allow
  * concurrent operations).
  */
-public interface ILSMTreeIndexAccessor extends ITreeIndexAccessor {
+public interface ILSMIndexAccessor extends IIndexAccessor {
 	/**
 	 * Force a flush of the in-memory component.
 	 * 
 	 * @throws HyracksDataException
 	 * @throws TreeIndexException
 	 */
-	public void flush() throws HyracksDataException, TreeIndexException;
+	public void flush() throws HyracksDataException, IndexException;
 
     /**
      * Merge all on-disk components.
@@ -41,5 +42,5 @@ public interface ILSMTreeIndexAccessor extends ITreeIndexAccessor {
      * @throws HyracksDataException
      * @throws TreeIndexException
      */
-    public void merge() throws HyracksDataException, TreeIndexException;
+    public void merge() throws HyracksDataException, IndexException;
 }

@@ -15,16 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex;
 
-import java.io.DataOutput;
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -36,15 +33,14 @@ import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -52,9 +48,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexResultCursor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
@@ -116,41 +112,32 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
     protected Random rnd = new Random();
 
-    protected ByteBuffer frame = taskCtx.allocateFrame();
-    protected FrameTupleAppender appender = new FrameTupleAppender(taskCtx.getFrameSize());
     protected ArrayTupleBuilder tb = new ArrayTupleBuilder(2);
-    protected DataOutput dos = tb.getDataOutput();
+    protected ArrayTupleReference tuple = new ArrayTupleReference();
 
     protected ISerializerDeserializer[] insertSerde = { UTF8StringSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE };
     protected RecordDescriptor insertRecDesc = new RecordDescriptor(insertSerde);
-    protected IFrameTupleAccessor accessor = new FrameTupleAccessor(taskCtx.getFrameSize(), insertRecDesc);
-
-    protected FrameTupleReference tuple = new FrameTupleReference();
 
     protected ArrayList<ArrayList<Integer>> checkInvLists = new ArrayList<ArrayList<Integer>>();
 
     protected int maxId = 1000000;
-    // protected int maxId = 1000;
     protected int[] scanCountArray = new int[maxId];
     protected ArrayList<Integer> expectedResults = new ArrayList<Integer>();
 
     protected ISerializerDeserializer[] querySerde = { UTF8StringSerializerDeserializer.INSTANCE };
     protected RecordDescriptor queryRecDesc = new RecordDescriptor(querySerde);
 
-    protected FrameTupleAppender queryAppender = new FrameTupleAppender(taskCtx.getFrameSize());
     protected ArrayTupleBuilder queryTb = new ArrayTupleBuilder(querySerde.length);
-    protected DataOutput queryDos = queryTb.getDataOutput();
-
-    protected IFrameTupleAccessor queryAccessor = new FrameTupleAccessor(taskCtx.getFrameSize(), queryRecDesc);
-    protected FrameTupleReference queryTuple = new FrameTupleReference();
+    protected ArrayTupleReference queryTuple = new ArrayTupleReference();
 
     protected ITokenFactory tokenFactory;
     protected IBinaryTokenizer tokenizer;
 
-    protected TOccurrenceSearcher searcher;
-    protected IInvertedIndexResultCursor resultCursor;
+    protected IIndexCursor resultCursor;
 
+    protected abstract void setTokenizer();
+    
     /**
      * Initialize members, generate data, and bulk load the inverted index.
      */
@@ -177,6 +164,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         // --- INVERTED INDEX ---
 
+        setTokenizer();
+        
         bufferCache.createFile(invListsFile);
         invListsFileId = fmp.lookupFileId(invListsFile);
         bufferCache.openFile(invListsFileId);
@@ -184,13 +173,11 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories);
+        IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
+        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, tokenizer);
         invIndex.open(invListsFileId);
 
         rnd.setSeed(50);
-
-        accessor.reset(frame);
-        queryAccessor.reset(frame);
     }
 
     @After

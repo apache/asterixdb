@@ -24,6 +24,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 
 public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
@@ -46,7 +48,10 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
         // Assumes btreeDataflowHelper.init() has already been called.
         BTree btree = (BTree) btreeDataflowHelper.getIndex();
+        IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
+                invIndexOpDesc.getInvListsTypeTraits());
         return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), btree,
-                invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc.getInvListsComparatorFactories());
+                invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc.getInvListsComparatorFactories(),
+                invListBuilder, invIndexOpDesc.getTokenizerFactory().createTokenizer());
     }
 }

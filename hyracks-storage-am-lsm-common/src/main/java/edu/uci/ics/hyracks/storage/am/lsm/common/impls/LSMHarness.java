@@ -24,11 +24,11 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
  * Common code for synchronizing LSM operations like
@@ -49,8 +49,8 @@ public class LSMHarness {
 	protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
 	protected static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
 	
-	private ILSMTree lsmTree;    
-    
+	private ILSMIndex lsmIndex;
+	
 	// All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
 	private Object diskComponentsSync = new Object();
 	
@@ -68,8 +68,8 @@ public class LSMHarness {
     // We alternate between searcherRefCountA and searcherRefCountB.
     private AtomicInteger searcherRefCount = searcherRefCountA;
     
-    public LSMHarness(ILSMTree lsmTree) {
-    	this.lsmTree = lsmTree;
+    public LSMHarness(ILSMIndex lsmIndex) {
+    	this.lsmIndex = lsmIndex;
         this.threadRefCount = 0;
         this.flushFlag = false;
     }
@@ -78,11 +78,11 @@ public class LSMHarness {
         threadRefCount++;
     }
     
-    public void threadExit() throws HyracksDataException, TreeIndexException {
+    public void threadExit() throws HyracksDataException, IndexException {
         synchronized (this) {
             threadRefCount--;
             // Check if we've reached or exceeded the maximum number of pages.
-            if (!flushFlag && lsmTree.getInMemoryFreePageManager().isFull()) {
+            if (!flushFlag && lsmIndex.getInMemoryFreePageManager().isFull()) {
                 flushFlag = true;
             }
             // Flush will only be handled by last exiting thread.
@@ -93,7 +93,7 @@ public class LSMHarness {
         }
     }
     
-	public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ctx) throws HyracksDataException, TreeIndexException {
+	public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ctx) throws HyracksDataException, IndexException {
 		boolean waitForFlush = true;
 		do {
 		    // Wait for ongoing flush to complete.
@@ -111,32 +111,32 @@ public class LSMHarness {
 		boolean operationComplete = true;
 		try {
 			do {
-			    operationComplete = lsmTree.insertUpdateOrDelete(tuple, ctx);
+			    operationComplete = lsmIndex.insertUpdateOrDelete(tuple, ctx);
 			} while (!operationComplete);
 		} finally {
 			threadExit();
 		}
 	}
 
-    public void flush() throws HyracksDataException, TreeIndexException {
+    public void flush() throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Tree.");
         }
-        Object newComponent = lsmTree.flush();
+        Object newComponent = lsmIndex.flush();
         
         // The implementation of this call must take any necessary steps to make
         // the new component permanent, and mark it as valid (usually this means
         // forcing all pages of the tree to disk, possibly with some extra
         // information to mark the tree as valid).
-        lsmTree.getComponentFinalizer().finalize(newComponent);
+        lsmIndex.getComponentFinalizer().finalize(newComponent);
         
-        lsmTree.resetInMemoryComponent();
+        lsmIndex.resetInMemoryComponent();
         synchronized (diskComponentsSync) {
-            lsmTree.addFlushedComponent(newComponent);
+            lsmIndex.addFlushedComponent(newComponent);
         }
     }
     
-    public List<Object> search(ITreeIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx, boolean includeMemComponent) throws HyracksDataException, TreeIndexException {                
+    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx, boolean includeMemComponent) throws HyracksDataException, IndexException {                
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
@@ -163,16 +163,16 @@ public class LSMHarness {
         List<Object> diskComponentSnapshot = new ArrayList<Object>();
         AtomicInteger localSearcherRefCount = null;
         synchronized (diskComponentsSync) {
-            diskComponentSnapshot.addAll(lsmTree.getDiskComponents());
+            diskComponentSnapshot.addAll(lsmIndex.getDiskComponents());
             localSearcherRefCount = searcherRefCount;
             localSearcherRefCount.incrementAndGet();         
         }
         
-        lsmTree.search(cursor, diskComponentSnapshot, pred, ctx, includeMemComponent, localSearcherRefCount);
+        lsmIndex.search(cursor, diskComponentSnapshot, pred, ctx, includeMemComponent, localSearcherRefCount);
         return diskComponentSnapshot;
     }
 
-    public void merge() throws HyracksDataException, TreeIndexException  {
+    public void merge() throws HyracksDataException, IndexException  {
         if (!isMerging.compareAndSet(false, true)) {
             throw new LSMMergeInProgressException("Merge already in progress in LSMTree. Only one concurrent merge allowed.");
         }
@@ -186,7 +186,7 @@ public class LSMHarness {
         AtomicInteger localSearcherRefCount = searcherRefCount;
         
         List<Object> mergedComponents = new ArrayList<Object>();
-        Object newComponent = lsmTree.merge(mergedComponents);
+        Object newComponent = lsmIndex.merge(mergedComponents);
         // No merge happened.
         if (newComponent == null) {
             isMerging.set(false);
@@ -196,7 +196,7 @@ public class LSMHarness {
         // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
-        	lsmTree.addMergedComponent(newComponent, mergedComponents);
+        	lsmIndex.addMergedComponent(newComponent, mergedComponents);
             // Swap the searcher ref count reference, and reset it to zero.    
         	if (searcherRefCount == searcherRefCountA) {
                 searcherRefCount = searcherRefCountB;
@@ -222,11 +222,11 @@ public class LSMHarness {
         // the new component permanent, and mark it as valid (usually this means
         // forcing all pages of the tree to disk, possibly with some extra
         // information to mark the tree as valid).
-        lsmTree.getComponentFinalizer().finalize(newComponent);
+        lsmIndex.getComponentFinalizer().finalize(newComponent);
         
         // Cleanup. At this point we have guaranteed that no searchers are
         // touching the old on-disk Trees (localSearcherRefCount == 0).
-        lsmTree.cleanUpAfterMerge(mergedComponents);
+        lsmIndex.cleanUpAfterMerge(mergedComponents);
         isMerging.set(false);
     }
     
@@ -236,7 +236,7 @@ public class LSMHarness {
         if (includeMemComponent) {
             try {
                 threadExit();
-            } catch (TreeIndexException e) {
+            } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }
         }
@@ -249,9 +249,9 @@ public class LSMHarness {
         // the new component permanent, and mark it as valid (usually this means
         // forcing all pages of the tree to disk, possibly with some extra
         // information to mark the tree as valid).
-        lsmTree.getComponentFinalizer().finalize(index);
+        lsmIndex.getComponentFinalizer().finalize(index);
         synchronized (diskComponentsSync) {
-    		lsmTree.addFlushedComponent(index);
+    		lsmIndex.addFlushedComponent(index);
     	}
     }
 }

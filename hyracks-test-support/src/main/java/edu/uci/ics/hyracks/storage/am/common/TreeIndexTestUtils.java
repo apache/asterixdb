@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 @SuppressWarnings("rawtypes")
@@ -81,7 +82,7 @@ public abstract class TreeIndexTestUtils {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Scan.");
         }
-        ITreeIndexCursor scanCursor = ctx.getIndexAccessor().createSearchCursor();
+        ITreeIndexCursor scanCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor();
         ISearchPredicate nullPred = createNullSearchPredicate();
         ctx.getIndexAccessor().search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = ctx.getCheckTuples().iterator();
@@ -183,7 +184,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     public static void bulkLoadCheckTuples(ITreeIndexTestContext ctx, Collection<CheckTuple> checkTuples)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException, IndexException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);

@@ -30,20 +30,23 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyExcept
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -57,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMRTree implements ILSMTree {
+public class LSMRTree implements ILSMIndex, ITreeIndex {
 
     public class LSMRTreeComponent {
         private final RTree rtree;
@@ -337,9 +340,9 @@ public class LSMRTree implements ILSMTree {
         return true;
     }
 
-    public void search(ITreeIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
             IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         int numDiskTrees = diskComponents.size();
         int numTrees = (includeMemComponent) ? numDiskTrees + 1 : numDiskTrees;
@@ -371,14 +374,14 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public Object flush() throws HyracksDataException, TreeIndexException {
+    public Object flush() throws HyracksDataException, IndexException {
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
 
         // scan the memory RTree
         ITreeIndexAccessor memRTreeAccessor = memComponent.getRTree().createAccessor();
-        ITreeIndexCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor();
+        IIndexCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
         LSMRTreeFileNameComponent fileNames = (LSMRTreeFileNameComponent) fileManager.getRelFlushFileName();
@@ -401,7 +404,7 @@ public class LSMRTree implements ILSMTree {
 
         // scan the memory BTree
         ITreeIndexAccessor memBTreeAccessor = memComponent.getBTree().createAccessor();
-        ITreeIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
+        IIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
         RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
         memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
         FileReference btreeFile = fileManager.createFlushFile(fileNames.getBTreeFileName());
@@ -423,7 +426,7 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, TreeIndexException {
+    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
@@ -524,7 +527,7 @@ public class LSMRTree implements ILSMTree {
     }
 
     @Override
-    public ITreeIndexAccessor createAccessor() {
+    public IIndexAccessor createAccessor() {
         return new LSMRTreeAccessor(lsmHarness, createOpContext());
     }
 

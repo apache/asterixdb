@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -72,7 +72,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
             rtreeCursors[currentCursror].reset();
             try {
                 diskRTreeAccessors[currentCursror].search(rtreeCursors[currentCursror], rtreeSearchPredicate);
-            } catch (TreeIndexException e) {
+            } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }
         }
@@ -95,7 +95,7 @@ public class LSMRTreeSearchCursor implements ITreeIndexCursor {
                         btreeRangePredicate.setHighKey(currentTuple, true);
                         btreeRangePredicate.setLowKey(currentTuple, true);
                         diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
-                    } catch (TreeIndexException e) {
+                    } catch (IndexException e) {
                         throw new HyracksDataException(e);
                     }
                     try {

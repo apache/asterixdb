@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableExcepti
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -1023,10 +1024,10 @@ public class BTree implements ITreeIndex {
 		}
         
         @Override
-        public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
+        public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
             ctx.reset(IndexOp.SEARCH);
-            btree.search(cursor, searchPred, ctx);
+            btree.search((ITreeIndexCursor) cursor, searchPred, ctx);
         }
 
         @Override

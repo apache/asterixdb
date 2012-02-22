@@ -116,7 +116,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int p1x = rnd.nextInt();
@@ -223,7 +223,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             double p1x = rnd.nextDouble();
@@ -318,7 +318,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -477,7 +477,7 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info(numInserts + " tuples loaded in " + (end - start) + "ms");
         }
 
-        ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
 
         // Build key.
         ArrayTupleBuilder keyTb = new ArrayTupleBuilder(rtreeKeyFieldCount);
@@ -493,7 +493,7 @@ public abstract class AbstractRTreeExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Scan:");
         }
-        ITreeIndexCursor scanCursor = indexAccessor.createSearchCursor();
+        ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
         SearchPredicate nullPred = new SearchPredicate(null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -546,7 +546,7 @@ public abstract class AbstractRTreeExamplesTest {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
-        ITreeIndexCursor rangeCursor = indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(cmpFactories, key);
         SearchPredicate rangePred = new SearchPredicate(key, cmp);
         indexAccessor.search(rangeCursor, rangePred);

@@ -34,7 +34,7 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     public TreeIndexTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
         this.fieldSerdes = fieldSerdes;
         this.treeIndex = treeIndex;
-        this.indexAccessor = treeIndex.createAccessor();
+        this.indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
         this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
     }
 

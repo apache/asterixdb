@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
 import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
@@ -59,7 +59,7 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
                 }
             }
 
-            ILSMTreeIndexAccessor accessor = (ILSMTreeIndexAccessor) ctx.getIndexAccessor();
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
             accessor.merge();
 
             rTreeTestUtils.checkScan(ctx);
