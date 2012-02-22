@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.api.client;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+
 public class NodeControllerInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -23,9 +25,12 @@ public class NodeControllerInfo implements Serializable {
 
     private final NodeStatus status;
 
-    public NodeControllerInfo(String nodeId, NodeStatus status) {
+    private final NetworkAddress netAddress;
+
+    public NodeControllerInfo(String nodeId, NodeStatus status, NetworkAddress netAddress) {
         this.nodeId = nodeId;
         this.status = status;
+        this.netAddress = netAddress;
     }
 
     public String getNodeId() {
@@ -34,5 +39,9 @@ public class NodeControllerInfo implements Serializable {
 
     public NodeStatus getStatus() {
         return status;
+    }
+
+    public NetworkAddress getNetworkAddress() {
+        return netAddress;
     }
 }
