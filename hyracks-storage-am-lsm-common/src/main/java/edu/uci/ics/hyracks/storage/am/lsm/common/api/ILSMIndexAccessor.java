@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -22,19 +22,19 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
- * (insert/delete/update/search/diskorderscan/merge/flush) on an ILSMTree. An
- * ILSMTreeIndexAccessor is not thread safe, but different ILSMTreeIndexAccessor
- * can concurrently operate on the same ILSMTree (i.e., the ILSMTree must allow
+ * (insert/delete/update/search/diskorderscan/merge/flush) on an {@link ILSMIndex}.
+ * An {@link ILSMIndexAccessor} is not thread safe, but different {@link ILSMIndexAccessor}s
+ * can concurrently operate on the same {@link ILSMIndex} (i.e., the {@link ILSMIndex} must allow
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
-	/**
-	 * Force a flush of the in-memory component.
-	 * 
-	 * @throws HyracksDataException
-	 * @throws TreeIndexException
-	 */
-	public void flush() throws HyracksDataException, IndexException;
+    /**
+     * Force a flush of the in-memory component.
+     * 
+     * @throws HyracksDataException
+     * @throws TreeIndexException
+     */
+    public void flush() throws HyracksDataException, IndexException;
 
     /**
      * Merge all on-disk components.

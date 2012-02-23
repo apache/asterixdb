@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,17 +20,16 @@ import java.io.File;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILSMComponentFinalizer {
-    
+
     /**
-     * @return Checks whether the given file is valid with respect to the given LSM component. Used for guaranteeing
-     *         atomicity of LSM component writes.
+     * Checks whether the given file is valid with respect to the given LSM component.
+     * Used for guaranteeing the atomicity of LSM component writes.
      */
     public boolean isValid(File file, Object lsmComponent) throws HyracksDataException;
-    
+
     /**
      * Marks the given LSM component as physically valid, synchronously forcing
-     * the necessary information to disk. 
-     * 
+     * the necessary information to disk.
      */
     public void finalize(Object lsmComponent) throws HyracksDataException;
 }

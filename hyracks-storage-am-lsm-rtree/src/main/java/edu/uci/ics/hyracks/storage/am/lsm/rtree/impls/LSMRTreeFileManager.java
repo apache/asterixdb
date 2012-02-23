@@ -75,7 +75,7 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
         
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {            
-            getValidFiles(dev, btreeFilter, component.getBTree(), componentFinalizer, allBTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, component.getBTree(), componentFinalizer, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
@@ -83,7 +83,7 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
             }
             // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            getValidFiles(dev, rtreeFilter, component.getRTree(), componentFinalizer, tmpAllRTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, rtreeFilter, component.getRTree(), componentFinalizer, tmpAllRTreeFiles);
             // Look for buddy BTrees for all valid RTrees. 
             // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
             for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {

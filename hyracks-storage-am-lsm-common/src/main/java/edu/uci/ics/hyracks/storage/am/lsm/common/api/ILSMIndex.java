@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -26,22 +26,22 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
- * Methods to be implemented by an LSM index, which are called from LSMHarness.
+ * Methods to be implemented by an LSM index, which are called from {@link LSMHarness}.
  * The implementations of the methods below should be thread agnostic.
  * Synchronization of LSM operations like updates/searches/flushes/merges are
- * done by the LSMHarness. For example, a flush() implementation should only
+ * done by the {@link LSMHarness}. For example, a flush() implementation should only
  * create and return the new on-disk component, ignoring the fact that
  * concurrent searches/updates/merges may be ongoing.
- * 
  */
 public interface ILSMIndex extends IIndex {
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             IndexException;
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
-            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException;
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+            boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException;
 
     public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException;
 
@@ -58,6 +58,6 @@ public interface ILSMIndex extends IIndex {
     public void resetInMemoryComponent() throws HyracksDataException;
 
     public List<Object> getDiskComponents();
-    
+
     public ILSMComponentFinalizer getComponentFinalizer();
 }

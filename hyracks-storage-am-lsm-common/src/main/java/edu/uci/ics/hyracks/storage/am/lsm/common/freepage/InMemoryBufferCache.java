@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -34,45 +34,45 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
     protected final int pageSize;
     protected final CachedPage[] pages;
     protected final List<CachedPage> overflowPages = new ArrayList<CachedPage>();
-    
-	public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages){
+
+    public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
         this.allocator = allocator;
-	    this.pageSize = pageSize;
-		ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
-		pages = new CachedPage[buffers.length];
+        this.pageSize = pageSize;
+        ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
+        pages = new CachedPage[buffers.length];
         for (int i = 0; i < buffers.length; ++i) {
             pages[i] = new CachedPage(i, buffers[i]);
         }
-	}
+    }
 
-	@Override
-	public ICachedPage pin(long dpid, boolean newPage) {
-	    int pageId = BufferedFileHandle.getPageId(dpid);
-	    if (pageId < pages.length) {
-	        // Common case: Return regular page.
-	        return pages[pageId];
-	    } else {
-	        // Rare case: Return overflow page, possibly expanding overflow array.
-	        synchronized(overflowPages) {
-	            int numNewPages = pageId - pages.length - overflowPages.size() + 1;          
-	            if (numNewPages > 0) {
-	                ByteBuffer[] buffers = allocator.allocate(pageSize, numNewPages);
-	                for (int i = 0; i < numNewPages; i++) {
-	                    CachedPage overflowPage = new CachedPage(pages.length + overflowPages.size(), buffers[i]);
-	                    overflowPages.add(overflowPage);
-	                }
-	            }
-	            return overflowPages.get(pageId - pages.length);
-	        }
-	    }
-	}
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage) {
+        int pageId = BufferedFileHandle.getPageId(dpid);
+        if (pageId < pages.length) {
+            // Common case: Return regular page.
+            return pages[pageId];
+        } else {
+            // Rare case: Return overflow page, possibly expanding overflow array.
+            synchronized (overflowPages) {
+                int numNewPages = pageId - pages.length - overflowPages.size() + 1;
+                if (numNewPages > 0) {
+                    ByteBuffer[] buffers = allocator.allocate(pageSize, numNewPages);
+                    for (int i = 0; i < numNewPages; i++) {
+                        CachedPage overflowPage = new CachedPage(pages.length + overflowPages.size(), buffers[i]);
+                        overflowPages.add(overflowPage);
+                    }
+                }
+                return overflowPages.get(pageId - pages.length);
+            }
+        }
+    }
 
-	@Override
+    @Override
     public ICachedPage tryPin(long dpid) throws HyracksDataException {
         return pin(dpid, false);
     }
-	
-	@Override
+
+    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -86,12 +86,12 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
     public ICachedPageInternal getPage(int cpid) {
         return pages[cpid];
     }
-    
+
     public int getNumOverflowPages() {
         return overflowPages.size();
     }
-	
-	@Override
+
+    @Override
     public void createFile(FileReference fileRef) throws HyracksDataException {
         // Do nothing.
     }
@@ -110,17 +110,17 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
         // Do nothing.
     }
-	
-	@Override
-	public void unpin(ICachedPage page) throws HyracksDataException {
-		// Do Nothing.
-	}
 
-	@Override
-	public void close() {
-		// Do nothing.
-	}
-	
+    @Override
+    public void unpin(ICachedPage page) throws HyracksDataException {
+        // Do Nothing.
+    }
+
+    @Override
+    public void close() {
+        // Do nothing.
+    }
+
     public class CachedPage implements ICachedPageInternal {
         private final int cpid;
         private final ByteBuffer buffer;
@@ -139,14 +139,14 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
         @Override
         public Object getReplacementStrategyObject() {
-        	// Do nothing.
+            // Do nothing.
             return null;
         }
 
         @Override
         public boolean pinIfGoodVictim() {
-        	// Do nothing.
-        	return false;
+            // Do nothing.
+            return false;
         }
 
         @Override

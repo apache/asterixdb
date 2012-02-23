@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,8 +20,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 public class LSMMergeInProgressException extends TreeIndexException {
 
     private static final long serialVersionUID = 1L;
-    
-    public LSMMergeInProgressException(Exception e) {        
+
+    public LSMMergeInProgressException(Exception e) {
         super(e);
     }
 

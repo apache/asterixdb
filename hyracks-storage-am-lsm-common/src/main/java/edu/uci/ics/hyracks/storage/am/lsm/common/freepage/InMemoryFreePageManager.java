@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -38,7 +38,7 @@ public class InMemoryFreePageManager implements IFreePageManager {
 
     @Override
     public int getFreePage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        // The very call returns page id 2 because the BTree uses
+        // The very first call returns page id 2 because the BTree uses
         // the first page as metadata page, and the second page as root page.
         return currentPageId.incrementAndGet();
     }
@@ -61,7 +61,7 @@ public class InMemoryFreePageManager implements IFreePageManager {
     public int getCapacity() {
         return capacity - 2;
     }
-    
+
     public void reset() {
         currentPageId.set(1);
     }
@@ -76,7 +76,7 @@ public class InMemoryFreePageManager implements IFreePageManager {
 
     @Override
     public byte getMetaPageLevelIndicator() {
-    	return 0;
+        return 0;
     }
 
     @Override

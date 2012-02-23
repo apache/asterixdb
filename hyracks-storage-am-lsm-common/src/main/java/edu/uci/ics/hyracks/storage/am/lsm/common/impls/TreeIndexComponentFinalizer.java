@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -28,13 +28,13 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
-   
+
     protected final IFileMapProvider fileMapProvider;
-    
+
     public TreeIndexComponentFinalizer(IFileMapProvider fileMapProvider) {
         this.fileMapProvider = fileMapProvider;
     }
-    
+
     @Override
     public boolean isValid(File file, Object lsmComponent) throws HyracksDataException {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
@@ -46,8 +46,10 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
         treeIndex.open(fileId);
         try {
             int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
-            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage), false);
+            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
+                    .createFrame();
+            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage),
+                    false);
             page.acquireReadLatch();
             try {
                 metadataFrame.setPage(page);
@@ -68,34 +70,42 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
+
         // Flush all dirty pages of the tree. 
-        // By default, metadata and data are flushed async in the buffercache.
+        // By default, metadata and data are flushed asynchronously in the buffercache.
         // This means that the flush issues writes to the OS, but the data may still lie in filesystem buffers.
-        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();        
+        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
         int startPage = 0;
         int maxPage = treeIndex.getFreePageManager().getMaxPage(metadataFrame);
         for (int i = startPage; i <= maxPage; i++) {
             ICachedPage page = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, i));
+
             // If tryPin returns null, it means the page is not cached, and therefore cannot be dirty.
             if (page == null) {
                 continue;
             }
+
             try {
                 bufferCache.flushDirtyPage(page);
             } finally {
                 bufferCache.unpin(page);
             }
         }
+
         // Forces all pages of given file to disk. This guarantees the data makes it to disk.
         bufferCache.force(fileId, true);
+
+        // Mark the component as a valid component by flushing the metadata page to disk
         int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
         ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
         metadataPage.acquireWriteLatch();
         try {
             metadataFrame.setPage(metadataPage);
             metadataFrame.setValid(true);
+
             // Flush the single modified page to disk.
             bufferCache.flushDirtyPage(metadataPage);
+
             // Force modified metadata page to disk.
             bufferCache.force(fileId, true);
         } finally {

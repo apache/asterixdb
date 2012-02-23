@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public abstract class TreeFactory <T extends ITreeIndex> {
+public abstract class TreeFactory<T extends ITreeIndex> {
 
     protected IBufferCache bufferCache;
     protected int fieldCount;
@@ -30,8 +30,9 @@ public abstract class TreeFactory <T extends ITreeIndex> {
     protected ITreeIndexFrameFactory leafFrameFactory;
     protected LinkedListFreePageManagerFactory freePageManagerFactory;
 
-    public TreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory, IBinaryComparatorFactory[] cmpFactories,
-            int fieldCount, ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
+    public TreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory,
+            IBinaryComparatorFactory[] cmpFactories, int fieldCount, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
         this.fieldCount = fieldCount;
         this.cmpFactories = cmpFactories;
