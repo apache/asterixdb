@@ -39,7 +39,8 @@ public class BufferCache implements IBufferCacheInternal {
     private static final int MAP_FACTOR = 2;
 
     private static final int MAX_VICTIMIZATION_TRY_COUNT = 5;
-    private static final int MAX_WAIT_FOR_CLEANER_TRY_COUNT = 5;
+    private static final int MAX_WAIT_FOR_CLEANER_THREAD_TIME = 1000;
+    private static final int MIN_CLEANED_COUNT_DIFF = 4;
 
     private final int maxOpenFiles;
     
@@ -168,27 +169,11 @@ public class BufferCache implements IBufferCacheInternal {
         return cPage;
     }
 
-    private int incrementPinCount(CachedPage page) {
-    	int pinCount = page.pinCount.incrementAndGet();
-    	// If this was the first pin, we decrement the freepages count.    	
-    	if (pinCount == 1) {
-    		cleanerThread.freePages.decrementAndGet();
-    	}
-    	return pinCount;
-    }
-    
-    private int decrementPinCount(CachedPage page) {
-    	int pinCount = ((CachedPage) page).pinCount.decrementAndGet();
-        // If this was the last unpin, we increment the freepages count.
-        if (pinCount == 0) {        	
-        	cleanerThread.freePages.incrementAndGet();
-        }
-        return pinCount;
-    }
-    
     private CachedPage findPage(long dpid, boolean newPage) {
         int victimizationTryCount = 0;        
         while (true) {
+        	int startCleanedCount = cleanerThread.cleanedCount;
+        	
             CachedPage cPage = null;
             /*
              * Hash dpid to get a bucket and then check if the page exists in the bucket.
@@ -336,17 +321,19 @@ public class BufferCache implements IBufferCacheInternal {
             synchronized (cleanerThread) {
                 cleanerThread.notifyAll();
             }
-            int waitTryCount = 0;
+			// Heuristic optimization. Check whether the cleaner thread has
+			// cleaned pages since we did our last pin attempt.
+			if (cleanerThread.cleanedCount - startCleanedCount > MIN_CLEANED_COUNT_DIFF) {
+				// Don't go to sleep and wait for notification from the cleaner,
+				// just try to pin again immediately.
+				continue;
+			}
             synchronized (cleanerThread.cleanNotification) {
-            	// Sleep until a page becomes available.
-            	do {            		
-            		try {
-            			cleanerThread.cleanNotification.wait(100);
-            		} catch (InterruptedException e) {
-            			// Do nothing
-            		}
-            		waitTryCount++;
-            	} while (cleanerThread.freePages.get() == 0 && waitTryCount < MAX_WAIT_FOR_CLEANER_TRY_COUNT);
+            	try {
+            		cleanerThread.cleanNotification.wait(MAX_WAIT_FOR_CLEANER_THREAD_TIME);
+            	} catch (InterruptedException e) {
+            		// Do nothing
+            	}
             }
         }
     }
@@ -417,7 +404,7 @@ public class BufferCache implements IBufferCacheInternal {
         if (closed) {
             throw new HyracksDataException("unpin called on a closed cache");
         }
-        decrementPinCount((CachedPage) page);
+        ((CachedPage) page).pinCount.decrementAndGet();
     }
 
     private int hash(long dpid) {
@@ -478,11 +465,7 @@ public class BufferCache implements IBufferCacheInternal {
 
         @Override
         public boolean pinIfGoodVictim() {
-            if (pinCount.compareAndSet(0, 1)) {
-            	cleanerThread.freePages.decrementAndGet();
-            	return true;
-            }
-            return false;
+            return pinCount.compareAndSet(0, 1);
         }
 
         @Override
@@ -529,11 +512,15 @@ public class BufferCache implements IBufferCacheInternal {
         private boolean shutdownStart = false;
         private boolean shutdownComplete = false;
         private final Object cleanNotification = new Object();
-        private AtomicInteger freePages = new AtomicInteger();
+		// Simply keeps incrementing this counter when a page is cleaned.
+		// Used to implement wait-for-cleanerthread heuristic optimizations.
+		// A waiter can detect whether pages have been cleaned.
+		// No need to make this var volatile or synchronize it's access in any
+		// way because it is used for heuristics.
+        private int cleanedCount = 0;
 
         public CleanerThread() {
             setPriority(MAX_PRIORITY);
-            freePages.set(numPages);
         }
 
         public void cleanPage(CachedPage cPage, boolean force) {
@@ -559,8 +546,9 @@ public class BufferCache implements IBufferCacheInternal {
                         }
                         if (cleaned) {                           	                        	
                         	cPage.dirty.set(false);
-                        	decrementPinCount(cPage);
-                        	synchronized (cleanNotification) {
+                        	cPage.pinCount.decrementAndGet();
+                        	cleanedCount++;
+                        	synchronized (cleanNotification) {                        		
                         		cleanNotification.notifyAll();
                         	}
                         }
@@ -730,7 +718,7 @@ public class BufferCache implements IBufferCacheInternal {
                     write(cPage);
                 }
                 cPage.dirty.set(false);                
-                pinCount = decrementPinCount(cPage);
+                pinCount = cPage.pinCount.decrementAndGet();
             } else {
                 pinCount = cPage.pinCount.get();
             }

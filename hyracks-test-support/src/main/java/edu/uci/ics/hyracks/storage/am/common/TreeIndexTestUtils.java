@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -94,8 +95,9 @@ public abstract class TreeIndexTestUtils {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Testing Disk-Order Scan.");
             }
-            ITreeIndexCursor diskOrderCursor = ctx.getIndexAccessor().createDiskOrderScanCursor();
-            ctx.getIndexAccessor().diskOrderScan(diskOrderCursor);
+            ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) ctx.getIndexAccessor();
+            ITreeIndexCursor diskOrderCursor = treeIndexAccessor.createDiskOrderScanCursor();
+            treeIndexAccessor.diskOrderScan(diskOrderCursor);
             int actualCount = 0;
             try {
                 while (diskOrderCursor.hasNext()) {
@@ -125,7 +127,13 @@ public abstract class TreeIndexTestUtils {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
-        }
+        } catch (ClassCastException e) {
+			// Ignore exception because IIndexAccessor sometimes isn't
+			// an ITreeIndexAccessor, e.g., for the LSMBTree.
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Ignoring disk-order scan since it's not supported.");
+			}
+		}
     }
 
     @SuppressWarnings("unchecked")

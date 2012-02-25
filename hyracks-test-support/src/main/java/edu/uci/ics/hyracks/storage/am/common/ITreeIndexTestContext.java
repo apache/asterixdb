@@ -21,8 +21,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 
 @SuppressWarnings("rawtypes")
 public interface ITreeIndexTestContext<T extends CheckTuple> {
@@ -34,7 +34,7 @@ public interface ITreeIndexTestContext<T extends CheckTuple> {
 
     public IBinaryComparatorFactory[] getComparatorFactories();
 
-    public ITreeIndexAccessor getIndexAccessor();
+    public IIndexAccessor getIndexAccessor();
 
     public ITreeIndex getIndex();
 

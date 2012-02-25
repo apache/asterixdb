@@ -20,8 +20,8 @@ import java.util.Collection;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 
 @SuppressWarnings("rawtypes")
 public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITreeIndexTestContext<T> {
@@ -29,12 +29,12 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     protected final ITreeIndex treeIndex;
     protected final ArrayTupleBuilder tupleBuilder;
     protected final ArrayTupleReference tuple = new ArrayTupleReference();
-    protected final ITreeIndexAccessor indexAccessor;
+    protected final IIndexAccessor indexAccessor;
 
     public TreeIndexTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
         this.fieldSerdes = fieldSerdes;
         this.treeIndex = treeIndex;
-        this.indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+        this.indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
         this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
     }
 
@@ -44,7 +44,7 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     }
 
     @Override
-    public ITreeIndexAccessor getIndexAccessor() {
+    public IIndexAccessor getIndexAccessor() {
         return indexAccessor;
     }
 

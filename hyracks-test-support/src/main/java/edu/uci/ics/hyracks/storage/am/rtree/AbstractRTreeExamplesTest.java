@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -116,7 +117,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int p1x = rnd.nextInt();
@@ -223,7 +224,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             double p1x = rnd.nextDouble();
@@ -318,7 +319,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -477,7 +478,7 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info(numInserts + " tuples loaded in " + (end - start) + "ms");
         }
 
-        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
 
         // Build key.
         ArrayTupleBuilder keyTb = new ArrayTupleBuilder(rtreeKeyFieldCount);
@@ -489,7 +490,7 @@ public abstract class AbstractRTreeExamplesTest {
         treeIndex.close();
     }
 
-    private void scan(ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+    private void scan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Scan:");
         }
@@ -510,15 +511,16 @@ public abstract class AbstractRTreeExamplesTest {
         }
     }
 
-    private void diskOrderScan(ITreeIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
+    private void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
             throws Exception {
         try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Disk-Order Scan:");
             }
-            TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) indexAccessor
+            ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
+            TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) treeIndexAccessor
                     .createDiskOrderScanCursor();
-            indexAccessor.diskOrderScan(diskOrderCursor);
+            treeIndexAccessor.diskOrderScan(diskOrderCursor);
             try {
                 while (diskOrderCursor.hasNext()) {
                     diskOrderCursor.next();
@@ -537,10 +539,16 @@ public abstract class AbstractRTreeExamplesTest {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
-        }
+        } catch (ClassCastException e) {
+			// Ignore exception because IIndexAccessor sometimes isn't
+			// an ITreeIndexAccessor, e.g., for the LSMRTree.
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info("Ignoring disk-order scan since it's not supported.");
+			}
+		}
     }
 
-    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, ITreeIndexAccessor indexAccessor,
+    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
             ISerializerDeserializer[] fieldSerdes, ITupleReference key) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
