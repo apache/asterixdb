@@ -71,6 +71,9 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
                 memNumPages);
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
         FileReference file = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+        if (file.getFile().exists() && !file.getFile().isDirectory()) {
+            file.delete();
+        }
         InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
         return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, (IOManager) ctx.getIOManager(), file
