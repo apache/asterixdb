@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
@@ -55,7 +54,7 @@ public class MaterializedPartitionInputChannel implements IInputChannel {
     }
 
     @Override
-    public void registerMonitor(IInputChannelMonitor monitor) throws HyracksException {
+    public void registerMonitor(IInputChannelMonitor monitor) {
         this.monitor = monitor;
     }
 

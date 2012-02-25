@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.connectors;
+package edu.uci.ics.hyracks.dataflow.hadoop.mapreduce;
 
 import java.util.BitSet;
 
+import org.apache.hadoop.conf.Configuration;
+
+import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
@@ -26,62 +29,37 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
-import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
 import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
+import edu.uci.ics.hyracks.dataflow.std.connectors.PartitionDataWriter;
 
-public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMToNConnectorDescriptor {
-
+public class HashPartitioningShuffleConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private ILocalityMap localityMap;
+    private final MarshalledWritable<Configuration> mConfig;
 
-    private ITuplePartitionComputerFactory tpcf;
-
-    public LocalityAwareMToNPartitioningConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
-            ILocalityMap localityMap) {
+    public HashPartitioningShuffleConnectorDescriptor(JobSpecification spec, MarshalledWritable<Configuration> mConfig) {
         super(spec);
-        this.localityMap = localityMap;
-        this.tpcf = tpcf;
+        this.mConfig = mConfig;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor#createPartitioner
-     * (edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
-     * edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory, int, int, int)
-     */
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
-        return new LocalityAwarePartitionDataWriter(ctx, edwFactory, recordDesc, tpcf.createPartitioner(),
-                nConsumerPartitions, localityMap, index);
+        HadoopHelper helper = new HadoopHelper(mConfig);
+        ITuplePartitionComputerFactory tpcf = helper.getTuplePartitionComputer();
+        return new PartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc, tpcf.createPartitioner());
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor#
-     * createPartitionCollector
-     * (edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int, int, int)
-     */
     @Override
     public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             int receiverIndex, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
-        BitSet expectedPartitions = new BitSet(nProducerPartitions);
-        for (int i = 0; i < nProducerPartitions; i++) {
-            if (localityMap.isConnected(i, receiverIndex, nConsumerPartitions))
-                expectedPartitions.set(i);
-        }
+        BitSet expectedPartitions = new BitSet();
+        expectedPartitions.set(0, nProducerPartitions);
         NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
                 expectedPartitions);
-        NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
+        IFrameReader frameReader = new ShuffleFrameReader(ctx, channelReader, mConfig);
         return new PartitionCollector(ctx, getConnectorId(), receiverIndex, expectedPartitions, frameReader,
                 channelReader);
     }
-
 }

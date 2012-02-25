@@ -12,24 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.channels;
+package edu.uci.ics.hyracks.dataflow.hadoop.mapreduce;
 
-import java.nio.ByteBuffer;
+import org.apache.hadoop.mapreduce.InputSplit;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface IInputChannel {
-    public void registerMonitor(IInputChannelMonitor monitor);
-
-    public void setAttachment(Object attachment);
-
-    public Object getAttachment();
-
-    public ByteBuffer getNextBuffer();
-
-    public void recycleBuffer(ByteBuffer buffer);
-
-    public void open() throws HyracksDataException;
-
-    public void close() throws HyracksDataException;
+public interface IInputSplitProvider {
+    public InputSplit next() throws HyracksDataException;
 }

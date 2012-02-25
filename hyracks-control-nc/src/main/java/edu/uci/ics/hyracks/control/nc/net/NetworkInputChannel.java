@@ -63,7 +63,7 @@ public class NetworkInputChannel implements IInputChannel {
     }
 
     @Override
-    public void registerMonitor(IInputChannelMonitor monitor) throws HyracksException {
+    public void registerMonitor(IInputChannelMonitor monitor) {
         this.monitor = monitor;
     }
 
