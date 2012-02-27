@@ -15,8 +15,11 @@
 package edu.uci.ics.hyracks.control.cc;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,6 +29,8 @@ import edu.uci.ics.hyracks.control.common.base.INodeController;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
+import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
 
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
@@ -45,6 +50,24 @@ public class NodeControllerState {
     private final String osVersion;
 
     private final int nProcessors;
+
+    private final String vmName;
+
+    private final String vmVersion;
+
+    private final String vmVendor;
+
+    private final String classpath;
+
+    private final String libraryPath;
+
+    private final String bootClasspath;
+
+    private final List<String> inputArguments;
+
+    private final Map<String, String> systemProperties;
+
+    private final HeartbeatSchema hbSchema;
 
     private final long[] hbTime;
 
@@ -70,6 +93,28 @@ public class NodeControllerState {
 
     private final double[] systemLoadAverage;
 
+    private final String[] gcNames;
+
+    private final long[][] gcCollectionCounts;
+
+    private final long[][] gcCollectionTimes;
+
+    private final long[] netPayloadBytesRead;
+
+    private final long[] netPayloadBytesWritten;
+
+    private final long[] netSignalingBytesRead;
+
+    private final long[] netSignalingBytesWritten;
+
+    private final long[] ipcMessagesSent;
+
+    private final long[] ipcMessageBytesSent;
+
+    private final long[] ipcMessagesReceived;
+
+    private final long[] ipcMessageBytesReceived;
+
     private int rrdPtr;
 
     private int lastHeartbeatDuration;
@@ -84,6 +129,16 @@ public class NodeControllerState {
         arch = reg.getArch();
         osVersion = reg.getOSVersion();
         nProcessors = reg.getNProcessors();
+        vmName = reg.getVmName();
+        vmVersion = reg.getVmVersion();
+        vmVendor = reg.getVmVendor();
+        classpath = reg.getClasspath();
+        libraryPath = reg.getLibraryPath();
+        bootClasspath = reg.getBootClasspath();
+        inputArguments = reg.getInputArguments();
+        systemProperties = reg.getSystemProperties();
+
+        hbSchema = reg.getHeartbeatSchema();
 
         hbTime = new long[RRD_SIZE];
         heapInitSize = new long[RRD_SIZE];
@@ -97,6 +152,23 @@ public class NodeControllerState {
         threadCount = new int[RRD_SIZE];
         peakThreadCount = new int[RRD_SIZE];
         systemLoadAverage = new double[RRD_SIZE];
+        GarbageCollectorInfo[] gcInfos = hbSchema.getGarbageCollectorInfos();
+        int gcN = gcInfos.length;
+        gcNames = new String[gcN];
+        for (int i = 0; i < gcN; ++i) {
+            gcNames[i] = gcInfos[i].getName();
+        }
+        gcCollectionCounts = new long[gcN][RRD_SIZE];
+        gcCollectionTimes = new long[gcN][RRD_SIZE];
+        netPayloadBytesRead = new long[RRD_SIZE];
+        netPayloadBytesWritten = new long[RRD_SIZE];
+        netSignalingBytesRead = new long[RRD_SIZE];
+        netSignalingBytesWritten = new long[RRD_SIZE];
+        ipcMessagesSent = new long[RRD_SIZE];
+        ipcMessageBytesSent = new long[RRD_SIZE];
+        ipcMessagesReceived = new long[RRD_SIZE];
+        ipcMessageBytesReceived = new long[RRD_SIZE];
+
         rrdPtr = 0;
     }
 
@@ -115,6 +187,19 @@ public class NodeControllerState {
         threadCount[rrdPtr] = hbData.threadCount;
         peakThreadCount[rrdPtr] = hbData.peakThreadCount;
         systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
+        int gcN = hbSchema.getGarbageCollectorInfos().length;
+        for (int i = 0; i < gcN; ++i) {
+            gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
+            gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
+        }
+        netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
+        netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
+        netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
+        netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
+        ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
+        ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
+        ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
+        ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
         rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
@@ -159,6 +244,13 @@ public class NodeControllerState {
         o.put("arch", arch);
         o.put("os-version", osVersion);
         o.put("num-processors", nProcessors);
+        o.put("vm-name", vmName);
+        o.put("vm-version", vmVersion);
+        o.put("vm-vendor", vmVendor);
+        o.put("classpath", classpath);
+        o.put("library-path", libraryPath);
+        o.put("boot-classpath", bootClasspath);
+        o.put("input-arguments", new JSONArray(inputArguments));
         o.put("rrd-ptr", rrdPtr);
         o.put("heartbeat-times", hbTime);
         o.put("heap-init-sizes", heapInitSize);
@@ -172,6 +264,17 @@ public class NodeControllerState {
         o.put("thread-counts", threadCount);
         o.put("peak-thread-counts", peakThreadCount);
         o.put("system-load-averages", systemLoadAverage);
+        o.put("gc-names", gcNames);
+        o.put("gc-collection-counts", gcCollectionCounts);
+        o.put("gc-collection-times", gcCollectionTimes);
+        o.put("net-payload-bytes-read", netPayloadBytesRead);
+        o.put("net-payload-bytes-written", netPayloadBytesWritten);
+        o.put("net-signaling-bytes-read", netSignalingBytesRead);
+        o.put("net-signaling-bytes-written", netSignalingBytesWritten);
+        o.put("ipc-messages-sent", ipcMessagesSent);
+        o.put("ipc-message-bytes-sent", ipcMessageBytesSent);
+        o.put("ipc-messages-received", ipcMessagesReceived);
+        o.put("ipc-message-bytes-received", ipcMessageBytesReceived);
 
         return o;
     }

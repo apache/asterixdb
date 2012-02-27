@@ -14,10 +14,15 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
@@ -26,25 +31,29 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.naming.MultipartName;
+import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
-import edu.uci.ics.hyracks.api.workflow.variables.WorkflowVariableDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+import edu.uci.ics.hyracks.control.nc.work.NotifyTaskCompleteWork;
+import edu.uci.ics.hyracks.control.nc.work.NotifyTaskFailureWork;
 
 public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     private final Joblet joblet;
@@ -61,15 +70,21 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Map<String, Counter> counterMap;
 
-    private final Map<MultipartName, Object> inputGlobalVariables;
+    private final IOperatorEnvironment opEnv;
 
-    private final Map<MultipartName, Object> outputVariables;
+    private final Map<PartitionId, PartitionProfile> partitionSendProfile;
 
-    private final Map<MultipartName, WorkflowVariableDescriptor> outputVariableDescriptorMap;
+    private final Set<Thread> pendingThreads;
 
     private IPartitionCollector[] collectors;
 
     private IOperatorNodePushable operator;
+
+    private volatile boolean failed;
+
+    private ByteArrayOutputStream errorBaos;
+
+    private PrintWriter errorWriter;
 
     private volatile boolean aborted;
 
@@ -81,13 +96,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         fileFactory = new WorkspaceFileFactory(this, (IOManager) joblet.getIOManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<String, Counter>();
-        //        this.inputGlobalVariables = inputGlobalVariables;
-        inputGlobalVariables = Collections.emptyMap();
-        outputVariables = new HashMap<MultipartName, Object>();
-        outputVariableDescriptorMap = new HashMap<MultipartName, WorkflowVariableDescriptor>();
-        //        for (WorkflowVariableDescriptor wvd : outputVariableDescriptors) {
-        //            outputVariableDescriptorMap.put(wvd.getName(), wvd);
-        //        }
+        opEnv = joblet.getEnvironment();
+        partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
+        pendingThreads = new LinkedHashSet<Thread>();
+        failed = false;
+        errorBaos = new ByteArrayOutputStream();
+        errorWriter = new PrintWriter(errorBaos, true);
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -125,28 +139,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         deallocatableRegistry.registerDeallocatable(deallocatable);
     }
 
-    @Override
-    public Object lookupGlobalVariable(ActivityId producerActivity, int partition, String varName)
-            throws HyracksDataException {
-        MultipartName var = new MultipartName(producerActivity, partition, varName);
-        if (!inputGlobalVariables.containsKey(var)) {
-            throw new HyracksDataException("Unknown Variable: " + var);
-        }
-        return inputGlobalVariables.get(var);
-    }
-
-    @Override
-    public Object lookupLocalVariable(ActivityId producerActivity, int partition, String varName)
-            throws HyracksDataException {
-        return joblet.lookupLocalVariable(new MultipartName(producerActivity, partition, varName));
-    }
-
-    @Override
-    public void setVariable(String name, Object value) {
-        outputVariables.put(new MultipartName(taskAttemptId.getTaskId().getActivityId(), taskAttemptId.getTaskId()
-                .getPartition(), name), value);
-    }
-
     public void close() {
         deallocatableRegistry.close();
     }
@@ -176,6 +168,14 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return this;
     }
 
+    public Joblet getJoblet() {
+        return joblet;
+    }
+
+    public Map<PartitionId, PartitionProfile> getPartitionSendProfile() {
+        return partitionSendProfile;
+    }
+
     public synchronized void dumpProfile(TaskProfile tProfile) {
         Map<String, Long> dumpMap = tProfile.getCounters();
         for (Counter c : counterMap.values()) {
@@ -183,15 +183,39 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
     }
 
-    public void start() throws HyracksException {
-        aborted = false;
-        joblet.getExecutor().execute(this);
+    public void setPartitionSendProfile(PartitionProfile profile) {
+        partitionSendProfile.put(profile.getPartitionId(), profile);
     }
 
-    public void abort() {
+    public void start() throws HyracksException {
+        aborted = false;
+        executor.execute(this);
+    }
+
+    public synchronized void abort() {
         aborted = true;
         for (IPartitionCollector c : collectors) {
             c.abort();
+        }
+        for (Thread t : pendingThreads) {
+            t.interrupt();
+        }
+    }
+
+    private synchronized void addPendingThread(Thread t) {
+        pendingThreads.add(t);
+    }
+
+    private synchronized void removePendingThread(Thread t) {
+        pendingThreads.remove(t);
+        if (pendingThreads.isEmpty()) {
+            notifyAll();
+        }
+    }
+
+    public synchronized void waitForCompletion() throws InterruptedException {
+        while (!pendingThreads.isEmpty()) {
+            wait();
         }
     }
 
@@ -199,8 +223,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public void run() {
         Thread ct = Thread.currentThread();
         String threadName = ct.getName();
+        addPendingThread(ct);
         try {
-            ct.setName(displayName + ": " + taskAttemptId);
+            ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
             operator.initialize();
             try {
                 if (collectors.length > 0) {
@@ -209,13 +234,29 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         final IPartitionCollector collector = collectors[i];
                         final IFrameWriter writer = operator.getInputFrameWriter(i);
                         sem.acquire();
+                        final int cIdx = i;
                         executor.execute(new Runnable() {
                             public void run() {
+                                if (aborted) {
+                                    return;
+                                }
+                                Thread thread = Thread.currentThread();
+                                addPendingThread(thread);
+                                String oldName = thread.getName();
+                                thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                                 try {
                                     pushFrames(collector, writer);
                                 } catch (HyracksDataException e) {
+                                    synchronized (Task.this) {
+                                        failed = true;
+                                        errorWriter.println("Exception caught by thread: " + thread.getName());
+                                        e.printStackTrace(errorWriter);
+                                        errorWriter.println();
+                                    }
                                 } finally {
+                                    thread.setName(oldName);
                                     sem.release();
+                                    removePendingThread(thread);
                                 }
                             }
                         });
@@ -229,30 +270,26 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             } finally {
                 operator.deinitialize();
             }
-            Map<MultipartName, Object> outputGlobalVariables = new HashMap<MultipartName, Object>();
-            for (Map.Entry<MultipartName, Object> e : outputVariables.entrySet()) {
-                MultipartName varName = e.getKey();
-                WorkflowVariableDescriptor wvd = outputVariableDescriptorMap.get(varName);
-                if (wvd == null) {
-                    throw new HyracksDataException("Unknown variable found: " + varName);
-                }
-                switch (wvd.getScope()) {
-                    case LOCAL:
-                        joblet.setLocalVariable(varName, e.getValue());
-                        break;
-
-                    case GLOBAL:
-                        outputGlobalVariables.put(varName, e.getValue());
-                        break;
-                }
-            }
-            joblet.notifyTaskComplete(this);
+            NodeControllerService ncs = joblet.getNodeController();
+            ncs.getWorkQueue().schedule(new NotifyTaskCompleteWork(ncs, this));
         } catch (Exception e) {
-            e.printStackTrace();
-            joblet.notifyTaskFailed(this, e);
+            failed = true;
+            errorWriter.println("Exception caught by thread: " + ct.getName());
+            e.printStackTrace(errorWriter);
+            errorWriter.println();
         } finally {
             ct.setName(threadName);
             close();
+            removePendingThread(ct);
+        }
+        if (failed) {
+            errorWriter.close();
+            NodeControllerService ncs = joblet.getNodeController();
+            try {
+                ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, errorBaos.toString("UTF-8")));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -293,5 +330,15 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void setTaskState(ITaskState taskState) {
+        opEnv.setTaskState(taskState);
+    }
+
+    @Override
+    public ITaskState getTaskState(TaskId taskId) {
+        return opEnv.getTaskState(taskId);
     }
 }

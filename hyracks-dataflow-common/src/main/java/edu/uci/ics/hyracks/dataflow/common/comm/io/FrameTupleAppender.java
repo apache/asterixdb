@@ -59,23 +59,38 @@ public class FrameTupleAppender {
         }
         return false;
     }
-    
-    /*
-     * ADDED BY POURIA (for his sort operator)
-     * bytes already has the header (the fields offset)
-     */
-    public boolean append(byte[] bytes, int offset, int length){
-    	 if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
-             System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, length);
-             tupleDataEndOffset += length;
-             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
-             ++tupleCount;
-             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
-             return true;
-         }
-         return false;
+
+    public boolean append(byte[] bytes, int offset, int length) {
+        if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, length);
+            tupleDataEndOffset += length;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            ++tupleCount;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            return true;
+        }
+        return false;
     }
-    
+
+    public boolean appendSkipEmptyField(int[] fieldSlots, byte[] bytes, int offset, int length) {
+        if (tupleDataEndOffset + fieldSlots.length * 4 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+            int effectiveSlots = 0;
+            for (int i = 0; i < fieldSlots.length; ++i) {
+                if (fieldSlots[i] > 0) {
+                    buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots[i]);
+                    effectiveSlots++;
+                }
+            }
+            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + effectiveSlots * 4, length);
+            tupleDataEndOffset += effectiveSlots * 4 + length;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            ++tupleCount;
+            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            return true;
+        }
+        return false;
+    }
+
     public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
         int length = tEndOffset - tStartOffset;
         if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
@@ -116,8 +131,7 @@ public class FrameTupleAppender {
             System.arraycopy(src0.array(), startOffset0, buffer.array(), tupleDataEndOffset, slotsLen0);
             // Copy slots from accessor1 with the following transformation: newSlotIdx = oldSlotIdx + dataLen0
             for (int i = 0; i < slotsLen1 / 4; ++i) {
-                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4,
-                        src1.getInt(startOffset1 + i * 4) + dataLen0);
+                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4, src1.getInt(startOffset1 + i * 4) + dataLen0);
             }
             // Copy data0
             System.arraycopy(src0.array(), startOffset0 + slotsLen0, buffer.array(), tupleDataEndOffset + slotsLen0
@@ -133,16 +147,16 @@ public class FrameTupleAppender {
         }
         return false;
     }
-    
-    public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1, int offset1,
-            int dataLen1) {
+
+    public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1,
+            int offset1, int dataLen1) {
         int startOffset0 = accessor0.getTupleStartOffset(tIndex0);
         int endOffset0 = accessor0.getTupleEndOffset(tIndex0);
         int length0 = endOffset0 - startOffset0;
 
         int slotsLen1 = fieldSlots1.length * 4;
         int length1 = slotsLen1 + dataLen1;
-        
+
         if (tupleDataEndOffset + length0 + length1 + 4 + (tupleCount + 1) * 4 <= frameSize) {
             ByteBuffer src0 = accessor0.getBuffer();
             int slotsLen0 = accessor0.getFieldSlotsLength();
@@ -168,15 +182,15 @@ public class FrameTupleAppender {
         return false;
     }
 
-    public boolean appendConcat(int[] fieldSlots0, byte[] bytes0, int offset0, int dataLen0, IFrameTupleAccessor accessor1,
-            int tIndex1) {
+    public boolean appendConcat(int[] fieldSlots0, byte[] bytes0, int offset0, int dataLen0,
+            IFrameTupleAccessor accessor1, int tIndex1) {
         int slotsLen0 = fieldSlots0.length * 4;
         int length0 = slotsLen0 + dataLen0;
-        
+
         int startOffset1 = accessor1.getTupleStartOffset(tIndex1);
         int endOffset1 = accessor1.getTupleEndOffset(tIndex1);
         int length1 = endOffset1 - startOffset1;
-        
+
         if (tupleDataEndOffset + length0 + length1 + 4 + (tupleCount + 1) * 4 <= frameSize) {
             ByteBuffer src1 = accessor1.getBuffer();
             int slotsLen1 = accessor1.getFieldSlotsLength();
@@ -190,10 +204,9 @@ public class FrameTupleAppender {
                 buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4, src1.getInt(startOffset1 + i * 4) + dataLen0);
             }
             // Copy bytes0
-            System.arraycopy(bytes0, offset0, buffer.array(), tupleDataEndOffset + slotsLen0 + slotsLen1, 
-                    dataLen0);
+            System.arraycopy(bytes0, offset0, buffer.array(), tupleDataEndOffset + slotsLen0 + slotsLen1, dataLen0);
             // Copy data1
-            System.arraycopy(src1.array(), startOffset1 + slotsLen1, buffer.array(), tupleDataEndOffset + slotsLen0 
+            System.arraycopy(src1.array(), startOffset1 + slotsLen1, buffer.array(), tupleDataEndOffset + slotsLen0
                     + slotsLen1 + dataLen0, dataLen1);
             tupleDataEndOffset += (length0 + length1);
             buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
@@ -203,6 +216,7 @@ public class FrameTupleAppender {
         }
         return false;
     }
+
     public boolean appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields) {
         int fTargetSlotsLength = fields.length * 4;
         int length = fTargetSlotsLength;

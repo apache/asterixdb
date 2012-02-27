@@ -33,7 +33,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -135,7 +134,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider
                     .getInputRecordDescriptor(getOperatorId(), BUILD_ACTIVITY_ID);
@@ -179,7 +178,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void close() throws HyracksDataException {
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 @Override
@@ -198,14 +197,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private HashBuildTaskState state;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (HashBuildTaskState) env.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    state = (HashBuildTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             BUILD_ACTIVITY_ID), partition));
                     writer.open();
                 }

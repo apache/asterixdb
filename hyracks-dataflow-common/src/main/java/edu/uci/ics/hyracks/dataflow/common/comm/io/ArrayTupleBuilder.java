@@ -23,6 +23,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
+/**
+ * Array backed tuple builder.
+ * 
+ * @author vinayakb
+ */
 public class ArrayTupleBuilder implements IDataOutputProvider {
     private final ByteArrayAccessibleOutputStream baaos;
     private final DataOutputStream dos;
@@ -35,23 +40,56 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         fEndOffsets = new int[nFields];
     }
 
+    /**
+     * Resets the builder.
+     * 
+     * reset() must be called before attempting to create a new tuple.
+     */
     public void reset() {
         nextField = 0;
         baaos.reset();
     }
 
+    /**
+     * Get the end offsets of the fields in this tuple.
+     * 
+     * @return end offsets of the fields.
+     */
     public int[] getFieldEndOffsets() {
         return fEndOffsets;
     }
 
+    /**
+     * Get the data area in this builder.
+     * 
+     * @return Data byte array.
+     */
     public byte[] getByteArray() {
         return baaos.getByteArray();
     }
 
+    /**
+     * Get the size of the data area.
+     * 
+     * @return data area size.
+     */
     public int getSize() {
         return baaos.size();
     }
 
+    /**
+     * Add a field to the tuple from a field in a frame.
+     * 
+     * @param accessor
+     *            - Frame that contains the field to be copied into the tuple
+     *            builder.
+     * @param tIndex
+     *            - Tuple index of the tuple that contains the field to be
+     *            copied.
+     * @param fIndex
+     *            - Field index of the field to be copied.
+     * @throws HyracksDataException
+     */
     public void addField(IFrameTupleAccessor accessor, int tIndex, int fIndex) throws HyracksDataException {
         int startOffset = accessor.getTupleStartOffset(tIndex);
         int fStartOffset = accessor.getFieldStartOffset(tIndex, fIndex);
@@ -67,11 +105,32 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         fEndOffsets[nextField++] = baaos.size();
     }
 
+    /**
+     * Add a field to the tuple by serializing the given object using the given
+     * serializer.
+     * 
+     * @param serDeser
+     *            - Serializer
+     * @param instance
+     *            - Object to serialize
+     * @throws HyracksDataException
+     */
     public <T> void addField(ISerializerDeserializer<T> serDeser, T instance) throws HyracksDataException {
         serDeser.serialize(instance, dos);
         fEndOffsets[nextField++] = baaos.size();
     }
 
+    /**
+     * Add a field to the tuple by copying the data bytes from a byte array.
+     * 
+     * @param bytes
+     *            - Byte array to copy the field data from.
+     * @param start
+     *            - Start offset of the field to be copied in the byte array.
+     * @param length
+     *            - Length of the field to be copied.
+     * @throws HyracksDataException
+     */
     public void addField(byte[] bytes, int start, int length) throws HyracksDataException {
         try {
             dos.write(bytes, start, length);
@@ -81,11 +140,20 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         fEndOffsets[nextField++] = baaos.size();
     }
 
+    /**
+     * Get the {@link DataOutput} interface to write into the tuple builder.
+     */
     @Override
     public DataOutput getDataOutput() {
         return dos;
     }
 
+    /**
+     * Sets the byte offset of the end of the field into the field offset array.
+     * Make sure this method is called when the {@link DataOutput} interface is
+     * used to add field data into the tuple, at the end of adding a field's
+     * data.
+     */
     public void addFieldEndOffset() {
         fEndOffsets[nextField++] = baaos.size();
     }

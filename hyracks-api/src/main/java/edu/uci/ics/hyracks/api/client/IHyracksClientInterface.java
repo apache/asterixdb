@@ -14,14 +14,14 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
-import java.rmi.Remote;
 import java.util.EnumSet;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 
-public interface IHyracksClientInterface extends Remote {
+public interface IHyracksClientInterface {
     public ClusterControllerInfo getClusterControllerInfo() throws Exception;
 
     public void createApplication(String appName) throws Exception;
@@ -34,7 +34,9 @@ public interface IHyracksClientInterface extends Remote {
 
     public JobStatus getJobStatus(JobId jobId) throws Exception;
 
-    public void start(JobId jobId) throws Exception;
+    public void startJob(JobId jobId) throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
+
+    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
 }

@@ -19,11 +19,20 @@ import java.util.List;
 import org.kohsuke.args4j.Option;
 
 public class CCConfig {
-    @Option(name = "-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
-    public int port = 1099;
+    @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients", required = true)
+    public String clientNetIpAddress;
 
-    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller")
-    public int httpPort;
+    @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
+    public int clientNetPort = 1098;
+
+    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from ", required = true)
+    public String clusterNetIpAddress;
+
+    @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
+    public int clusterNetPort = 1099;
+
+    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 19001)")
+    public int httpPort = 16001;
 
     @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")
     public int heartbeatPeriod = 10000;
@@ -37,9 +46,21 @@ public class CCConfig {
     @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
     public int defaultMaxJobAttempts = 5;
 
+    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
+    public int jobHistorySize = 10;
+
+    @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
+    public String ccRoot = "ClusterControllerService";
+
     public void toCommandLine(List<String> cList) {
-        cList.add("-port");
-        cList.add(String.valueOf(port));
+        cList.add("-client-net-ip-address");
+        cList.add(clientNetIpAddress);
+        cList.add("-client-net-port");
+        cList.add(String.valueOf(clientNetPort));
+        cList.add("-cluster-net-ip-address");
+        cList.add(clusterNetIpAddress);
+        cList.add("-cluster-net-port");
+        cList.add(String.valueOf(clusterNetPort));
         cList.add("-http-port");
         cList.add(String.valueOf(httpPort));
         cList.add("-heartbeat-period");
@@ -50,5 +71,9 @@ public class CCConfig {
         cList.add(String.valueOf(profileDumpPeriod));
         cList.add("-default-max-job-attempts");
         cList.add(String.valueOf(defaultMaxJobAttempts));
+        cList.add("-job-history-size");
+        cList.add(String.valueOf(jobHistorySize));
+        cList.add("-cc-root");
+        cList.add(ccRoot);
     }
 }

@@ -2,25 +2,25 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.text</groupId>
   <artifactId>textclient</artifactId>
-  <version>0.1.8-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>text-example</artifactId>
-    <version>0.1.8-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.8-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
   		<artifactId>texthelper</artifactId>
-  		<version>0.1.8-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
@@ -41,11 +41,29 @@
         <artifactId>appassembler-maven-plugin</artifactId>
         <executions>
           <execution>
+          <id>textclient</id>
             <configuration>
               <programs>
                 <program>
                   <mainClass>edu.uci.ics.hyracks.examples.text.client.WordCountMain</mainClass>
                   <name>textclient</name>
+                </program>
+              </programs>
+              <repositoryLayout>flat</repositoryLayout>
+              <repositoryName>lib</repositoryName>
+            </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>assemble</goal>
+            </goals>
+          </execution>
+          <execution>
+          	<id>groupclient</id>
+            <configuration>
+              <programs>
+                <program>
+                  <mainClass>edu.uci.ics.hyracks.examples.text.client.ExternalGroupClient</mainClass>
+                  <name>groupclient</name>
                 </program>
               </programs>
               <repositoryLayout>flat</repositoryLayout>

@@ -21,12 +21,16 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface ISlotManager {
-	public void setFrame(ITreeIndexFrame frame);
-
 	public int findTupleIndex(ITupleReference searchKey,
 			ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
 			FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy);
 
+	public int getGreatestKeyIndicator();
+	
+	public int getErrorIndicator();
+
+	public void setFrame(ITreeIndexFrame frame);
+	
 	public int insertSlot(int tupleIndex, int tupleOff);
 
 	public int getSlotStartOff();

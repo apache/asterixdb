@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -57,11 +56,18 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
         this.delim = delim;
     }
 
-    /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.uci.ics.hyracks.api.context.IHyracksContext, edu.uci.ics.hyracks.api.job.IOperatorEnvironment, edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * edu.uci.ics.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.
+     * uci.ics.hyracks.api.context.IHyracksContext,
+     * edu.uci.ics.hyracks.api.job.IOperatorEnvironment,
+     * edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider, int,
+     * int)
      */
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IOperatorEnvironment env,
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         // Output files
@@ -97,7 +103,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                         int start = frameTupleAccessor.getTupleStartOffset(tIndex)
                                 + frameTupleAccessor.getFieldSlotsLength();
                         bbis.setByteBuffer(buffer, start);
-                        Object[] record = new Object[recordDescriptor.getFields().length];
+                        Object[] record = new Object[recordDescriptor.getFieldCount()];
                         for (int i = 0; i < record.length; ++i) {
                             Object instance = recordDescriptor.getFields()[i].deserialize(di);
                             if (i == 0) {

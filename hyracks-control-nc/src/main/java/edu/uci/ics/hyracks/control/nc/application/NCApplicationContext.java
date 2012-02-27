@@ -26,7 +26,6 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
         return nodeId;
     }
 
-    @Override
     public void setDistributedState(Serializable state) {
         distributedState = state;
     }

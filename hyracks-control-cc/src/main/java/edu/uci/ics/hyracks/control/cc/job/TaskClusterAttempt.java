@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.Map;
+
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+
 public class TaskClusterAttempt {
     public enum TaskClusterStatus {
         RUNNING,
@@ -26,26 +30,32 @@ public class TaskClusterAttempt {
 
     private final int attempt;
 
-    private TaskAttempt[] taskAttempts;
+    private Map<TaskId, TaskAttempt> taskAttempts;
 
     private TaskClusterStatus status;
 
     private int pendingTaskCounter;
 
+    private long startTime;
+
+    private long endTime;
+
     public TaskClusterAttempt(TaskCluster taskCluster, int attempt) {
         this.taskCluster = taskCluster;
         this.attempt = attempt;
+        startTime = -1;
+        endTime = -1;
     }
 
     public TaskCluster getTaskCluster() {
         return taskCluster;
     }
 
-    public void setTaskAttempts(TaskAttempt[] taskAttempts) {
+    public void setTaskAttempts(Map<TaskId, TaskAttempt> taskAttempts) {
         this.taskAttempts = taskAttempts;
     }
 
-    public TaskAttempt[] getTaskAttempts() {
+    public Map<TaskId, TaskAttempt> getTaskAttempts() {
         return taskAttempts;
     }
 
@@ -61,8 +71,24 @@ public class TaskClusterAttempt {
         return status;
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
     public void initializePendingTaskCounter() {
-        pendingTaskCounter = taskAttempts.length;
+        pendingTaskCounter = taskAttempts.size();
     }
 
     public int getPendingTaskCounter() {

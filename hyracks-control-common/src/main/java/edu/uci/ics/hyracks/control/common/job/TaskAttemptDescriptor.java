@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.control.common.job;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 
 public class TaskAttemptDescriptor implements Serializable {
@@ -28,6 +30,8 @@ public class TaskAttemptDescriptor implements Serializable {
     private final int[] nInputPartitions;
 
     private final int[] nOutputPartitions;
+
+    private NetworkAddress[][] inputPartitionLocations;
 
     public TaskAttemptDescriptor(TaskAttemptId taId, int nPartitions, int[] nInputPartitions, int[] nOutputPartitions) {
         this.taId = taId;
@@ -50,5 +54,20 @@ public class TaskAttemptDescriptor implements Serializable {
 
     public int[] getOutputPartitionCounts() {
         return nOutputPartitions;
+    }
+
+    public void setInputPartitionLocations(NetworkAddress[][] inputPartitionLocations) {
+        this.inputPartitionLocations = inputPartitionLocations;
+    }
+
+    public NetworkAddress[][] getInputPartitionLocations() {
+        return inputPartitionLocations;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskAttemptDescriptor[taId = " + taId + ", nPartitions = " + nPartitions + ", nInputPartitions = "
+                + Arrays.toString(nInputPartitions) + ", nOutputPartitions = " + Arrays.toString(nOutputPartitions)
+                + "]";
     }
 }

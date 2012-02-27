@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
@@ -34,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 		IRTreeFrame {
 	protected static final int pageNsnOff = smFlagOff + 1;
-	protected static final int rightPageOff = pageNsnOff + 4;
+	protected static final int rightPageOff = pageNsnOff + 8;
 
 	protected ITreeIndexTupleReference[] tuples;
 	protected ITreeIndexTupleReference cmpFrameTuple;
@@ -48,11 +49,12 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	protected static final int nearMinimumOverlapFactor = 32;
 	private static final double doubleEpsilon = computeDoubleEpsilon();
 	private static final int numTuplesEntries = 100;
-
-	public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, int keyFieldCount) {
-		super(tupleWriter, new UnorderedSlotManager());
-		this.tuples = new ITreeIndexTupleReference[keyFieldCount];
-		for (int i = 0; i < keyFieldCount; i++) {
+	protected final IPrimitiveValueProvider[] keyValueProviders;
+	
+	public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
+		super(tupleWriter, new UnorderedSlotManager());		
+		this.tuples = new ITreeIndexTupleReference[keyValueProviders.length];
+		for (int i = 0; i < keyValueProviders.length; i++) {
 			this.tuples[i] = tupleWriter.createTupleReference();
 		}
 		cmpFrameTuple = tupleWriter.createTupleReference();
@@ -63,8 +65,9 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 				numTuplesEntries);
 		rec = new Rectangle[4];
 		for (int i = 0; i < 4; i++) {
-			rec[i] = new Rectangle(keyFieldCount / 2);
+			rec[i] = new Rectangle(keyValueProviders.length / 2);
 		}
+		this.keyValueProviders = keyValueProviders;
 	}
 
 	private static double computeDoubleEpsilon() {
@@ -83,7 +86,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	@Override
 	public void initBuffer(byte level) {
 		super.initBuffer(level);
-		buf.putInt(pageNsnOff, 0);
+		buf.putLong(pageNsnOff, 0);
 		buf.putInt(rightPageOff, -1);
 	}
 
@@ -92,13 +95,13 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	@Override
-	public void setPageNsn(int pageNsn) {
-		buf.putInt(pageNsnOff, pageNsn);
+	public void setPageNsn(long pageNsn) {
+		buf.putLong(pageNsnOff, pageNsn);
 	}
 
 	@Override
-	public int getPageNsn() {
-		return buf.getInt(pageNsnOff);
+	public long getPageNsn() {
+		return buf.getLong(pageNsnOff);
 	}
 
 	@Override
@@ -141,22 +144,21 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	public void generateDist(ITupleReference tuple,
-			TupleEntryArrayList entries, Rectangle rec, int start, int end,
-			MultiComparator cmp) {
+			TupleEntryArrayList entries, Rectangle rec, int start, int end) {
 		int j = 0;
 		while (entries.get(j).getTupleIndex() == -1) {
 			j++;
 		}
 		frameTuple.resetByTupleIndex(this, entries.get(j).getTupleIndex());
-		rec.set(frameTuple, cmp);
+		rec.set(frameTuple, keyValueProviders);
 		for (int i = start; i < end; ++i) {
 			if (i != j) {
 				if (entries.get(i).getTupleIndex() != -1) {
 					frameTuple.resetByTupleIndex(this, entries.get(i)
 							.getTupleIndex());
-					rec.enlarge(frameTuple, cmp);
+					rec.enlarge(frameTuple, keyValueProviders);
 				} else {
-					rec.enlarge(tuple, cmp);
+					rec.enlarge(tuple, keyValueProviders);
 				}
 			}
 		}
@@ -167,28 +169,20 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 		return tupleWriter.createTupleReference();
 	}
 
-	public void adjustMBRImpl(ITreeIndexTupleReference[] tuples,
-			MultiComparator cmp) {
-		int maxFieldPos = cmp.getKeyFieldCount() / 2;
+	public void adjustMBRImpl(ITreeIndexTupleReference[] tuples) {
+		int maxFieldPos = keyValueProviders.length / 2;
 		for (int i = 1; i < getTupleCount(); i++) {
 			frameTuple.resetByTupleIndex(this, i);
 			for (int j = 0; j < maxFieldPos; j++) {
 				int k = maxFieldPos + j;
-				int c = cmp.getComparators()[j].compare(
-						frameTuple.getFieldData(j),
-						frameTuple.getFieldStart(j),
-						frameTuple.getFieldLength(j),
-						tuples[j].getFieldData(j), tuples[j].getFieldStart(j),
-						tuples[j].getFieldLength(j));
-				if (c < 0) {
+				double valA = keyValueProviders[j].getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
+				double valB = keyValueProviders[j].getValue(tuples[j].getFieldData(j), tuples[j].getFieldStart(j));
+				if (valA < valB) {
 					tuples[j].resetByTupleIndex(this, i);
 				}
-				c = cmp.getComparators()[k].compare(frameTuple.getFieldData(k),
-						frameTuple.getFieldStart(k),
-						frameTuple.getFieldLength(k),
-						tuples[k].getFieldData(k), tuples[k].getFieldStart(k),
-						tuples[k].getFieldLength(k));
-				if (c > 0) {
+				valA = keyValueProviders[k].getValue(frameTuple.getFieldData(k), frameTuple.getFieldStart(k));
+				valB = keyValueProviders[k].getValue(tuples[k].getFieldData(k), tuples[k].getFieldStart(k));
+				if (valA > valB) {
 					tuples[k].resetByTupleIndex(this, i);
 				}
 			}
@@ -196,18 +190,17 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements
 	}
 
 	@Override
-	public void computeMBR(ISplitKey splitKey, MultiComparator cmp) {
+	public void computeMBR(ISplitKey splitKey) {
 		RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
 		RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
-		frameTuple.setFieldCount(cmp.getFieldCount());
 
 		int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
 		frameTuple.resetByTupleOffset(buf, tupleOff);
 		int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0,
-				cmp.getKeyFieldCount());
+				keyValueProviders.length);
 
 		splitKey.initData(splitKeySize);
-		this.adjustMBR(tuples, cmp);
+		this.adjustMBR(tuples);
 		rTreeTupleWriterLeftFrame.writeTupleFields(tuples, 0,
 				rTreeSplitKey.getLeftPageBuffer(), 0);
 		rTreeSplitKey.getLeftTuple().resetByTupleOffset(

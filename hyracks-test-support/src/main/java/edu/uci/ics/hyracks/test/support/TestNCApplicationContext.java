@@ -42,18 +42,13 @@ public class TestNCApplicationContext implements INCApplicationContext {
     }
 
     @Override
-    public Serializable getDestributedState() {
+    public Serializable getDistributedState() {
         return distributedState;
     }
 
     @Override
     public IHyracksRootContext getRootContext() {
         return rootCtx;
-    }
-
-    @Override
-    public void setDistributedState(Serializable state) {
-        distributedState = state;
     }
 
     @Override

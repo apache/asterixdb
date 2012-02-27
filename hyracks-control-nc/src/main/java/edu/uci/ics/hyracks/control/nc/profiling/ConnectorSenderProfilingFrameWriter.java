@@ -31,12 +31,13 @@ public class ConnectorSenderProfilingFrameWriter implements IFrameWriter {
     public ConnectorSenderProfilingFrameWriter(IHyracksTaskContext ctx, IFrameWriter writer,
             ConnectorDescriptorId cdId, int senderIndex, int receiverIndex) {
         this.writer = writer;
+        int attempt = ctx.getTaskAttemptId().getAttempt();
         this.openCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + senderIndex + "." + receiverIndex + ".open", true);
+                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".open", true);
         this.closeCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + senderIndex + "." + receiverIndex + ".close", true);
+                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".close", true);
         this.frameCounter = ctx.getCounterContext().getCounter(
-                cdId + ".sender." + senderIndex + "." + receiverIndex + ".nextFrame", true);
+                cdId + ".sender." + attempt + "." + senderIndex + "." + receiverIndex + ".nextFrame", true);
     }
 
     @Override

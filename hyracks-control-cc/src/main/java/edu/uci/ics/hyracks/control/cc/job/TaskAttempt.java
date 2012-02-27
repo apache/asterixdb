@@ -29,18 +29,24 @@ public class TaskAttempt {
 
     private final TaskAttemptId taskId;
 
-    private final Task taskState;
+    private final Task task;
 
     private String nodeId;
 
     private TaskStatus status;
 
-    private Exception exception;
+    private String failureDetails;
 
-    public TaskAttempt(TaskClusterAttempt tcAttempt, TaskAttemptId taskId, Task taskState) {
+    private long startTime;
+
+    private long endTime;
+
+    public TaskAttempt(TaskClusterAttempt tcAttempt, TaskAttemptId taskId, Task task) {
         this.tcAttempt = tcAttempt;
         this.taskId = taskId;
-        this.taskState = taskState;
+        this.task = task;
+        startTime = -1;
+        endTime = -1;
     }
 
     public TaskClusterAttempt getTaskClusterAttempt() {
@@ -51,8 +57,8 @@ public class TaskAttempt {
         return taskId;
     }
 
-    public Task getTaskState() {
-        return taskState;
+    public Task getTask() {
+        return task;
     }
 
     public String getNodeId() {
@@ -67,12 +73,28 @@ public class TaskAttempt {
         return status;
     }
 
-    public Exception getException() {
-        return exception;
+    public String getFailureDetails() {
+        return failureDetails;
     }
 
-    public void setStatus(TaskStatus status, Exception exception) {
+    public void setStatus(TaskStatus status, String details) {
         this.status = status;
-        this.exception = exception;
+        this.failureDetails = details;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
     }
 }

@@ -19,9 +19,9 @@ import java.io.Serializable;
 public final class ActivityId implements Serializable {
     private static final long serialVersionUID = 1L;
     private final OperatorDescriptorId odId;
-    private final long id;
+    private final int id;
 
-    public ActivityId(OperatorDescriptorId odId, long id) {
+    public ActivityId(OperatorDescriptorId odId, int id) {
         this.odId = odId;
         this.id = id;
     }
@@ -30,7 +30,7 @@ public final class ActivityId implements Serializable {
         return odId;
     }
 
-    public long getLocalId() {
+    public int getLocalId() {
         return id;
     }
 
@@ -52,6 +52,16 @@ public final class ActivityId implements Serializable {
     }
 
     public String toString() {
-        return "ANID:[" + odId + "]:" + id;
+        return "ANID:" + odId + ":" + id;
+    }
+
+    public static ActivityId parse(String str) {
+        if (str.startsWith("ANID:")) {
+            str = str.substring(5);
+            int idIdx = str.lastIndexOf(':');
+            return new ActivityId(OperatorDescriptorId.parse(str.substring(0, idIdx)), Integer.parseInt(str
+                    .substring(idIdx + 1)));
+        }
+        throw new IllegalArgumentException("Unable to parse: " + str);
     }
 }

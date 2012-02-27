@@ -59,7 +59,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         writeBuffer = ctx.allocateFrame();
-        builder = new ArrayTupleBuilder(outputRecDesc.getFields().length);
+        builder = new ArrayTupleBuilder(outputRecDesc.getFieldCount());
         builderDos = builder.getDataOutput();
         appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(writeBuffer, true);

@@ -19,6 +19,5 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ICursorInitialState {
 	public ICachedPage getPage();
-
 	public void setPage(ICachedPage page);
 }

@@ -41,7 +41,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
 
     public SerializingDataWriter(IHyracksTaskContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter) {
         buffer = ctx.allocateFrame();
-        tb = new ArrayTupleBuilder(recordDescriptor.getFields().length);
+        tb = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
         this.recordDescriptor = recordDescriptor;
         this.frameWriter = frameWriter;
         tupleAppender = new FrameTupleAppender(ctx.getFrameSize());

@@ -18,11 +18,9 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class TreeIndexDropOperatorDescriptor extends
@@ -31,12 +29,12 @@ public class TreeIndexDropOperatorDescriptor extends
 	private static final long serialVersionUID = 1L;
 
 	private IStorageManagerInterface storageManager;
-	private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+	private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
 	private IFileSplitProvider fileSplitProvider;
 
 	public TreeIndexDropOperatorDescriptor(JobSpecification spec,
 			IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+			IIndexRegistryProvider<IIndex> treeIndexRegistryProvider,
 			IFileSplitProvider fileSplitProvider) {
 		super(spec, 0, 0);
 		this.storageManager = storageManager;
@@ -46,9 +44,8 @@ public class TreeIndexDropOperatorDescriptor extends
 
 	@Override
 	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IOperatorEnvironment env,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
+			IRecordDescriptorProvider recordDescProvider,
+			int partition, int nPartitions) {
 		return new TreeIndexDropOperatorNodePushable(ctx, storageManager,
 				treeIndexRegistryProvider, fileSplitProvider, partition);
 	}

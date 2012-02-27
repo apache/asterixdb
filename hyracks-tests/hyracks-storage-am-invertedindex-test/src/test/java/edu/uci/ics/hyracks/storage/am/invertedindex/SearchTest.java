@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.invertedindex;
 
 import java.io.DataOutputStream;
@@ -5,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +30,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
@@ -112,7 +130,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 		}
 	}
 
-	public void loadData() throws IOException {
+	public void loadData() throws IOException, TreeIndexException, PageAllocationException {
 		List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
 		// generate pairs for subsequent sorting and bulk-loading
 		int id = 0;
@@ -214,7 +232,9 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 			}
 			// remove trailing newline
 			strBuilder.deleteCharAt(strBuilder.length() - 1);
-			LOGGER.info(strBuilder.toString());
+			if (LOGGER.isLoggable(Level.INFO)) {
+				LOGGER.info(strBuilder.toString());
+			}
 		}
 	}
 
@@ -238,15 +258,21 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 	public void jaccardQueryTest() throws Exception {
 		JaccardSearchModifier searchModifier = new JaccardSearchModifier(1.0f);
 
-		LOGGER.info("JACCARD: " + 0.9f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.9f);
+		}
 		searchModifier.setJaccThresh(0.9f);
 		runQueries(searchModifier, 5);
 
-		LOGGER.info("JACCARD: " + 0.8f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.8f);
+		}
 		searchModifier.setJaccThresh(0.8f);
 		runQueries(searchModifier, 5);
 
-		LOGGER.info("JACCARD: " + 0.7f);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("JACCARD: " + 0.7f);
+		}
 		searchModifier.setJaccThresh(0.7f);
 		runQueries(searchModifier, 5);
 	}
@@ -261,15 +287,21 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 		EditDistanceSearchModifier searchModifier = new EditDistanceSearchModifier(
 				3, 0);
 
-		LOGGER.info("EDIT DISTANCE: " + 1);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("EDIT DISTANCE: " + 1);
+		}
 		searchModifier.setEdThresh(1);
 		runQueries(searchModifier, 5);
 
-		LOGGER.info("EDIT DISTANCE: " + 2);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("EDIT DISTANCE: " + 2);
+		}
 		searchModifier.setEdThresh(2);
 		runQueries(searchModifier, 5);
 
-		LOGGER.info("EDIT DISTANCE: " + 3);
+		if (LOGGER.isLoggable(Level.INFO)) {
+			LOGGER.info("EDIT DISTANCE: " + 3);
+		}
 		searchModifier.setEdThresh(3);
 		runQueries(searchModifier, 5);
 	}

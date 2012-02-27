@@ -86,11 +86,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     }
 
     private enum State {
-        INIT,
-        IN_RECORD,
-        EOR,
-        CR,
-        EOF
+        INIT, IN_RECORD, EOR, CR, EOF
     }
 
     private class FieldCursor {

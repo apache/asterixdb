@@ -15,21 +15,20 @@
 package edu.uci.ics.hyracks.api.comm;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 
 public final class NetworkAddress implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final InetAddress ipAddress;
+    private final byte[] ipAddress;
 
     private final int port;
 
-    public NetworkAddress(InetAddress ipAddress, int port) {
+    public NetworkAddress(byte[] ipAddress, int port) {
         this.ipAddress = ipAddress;
         this.port = port;
     }
 
-    public InetAddress getIpAddress() {
+    public byte[] getIpAddress() {
         return ipAddress;
     }
 

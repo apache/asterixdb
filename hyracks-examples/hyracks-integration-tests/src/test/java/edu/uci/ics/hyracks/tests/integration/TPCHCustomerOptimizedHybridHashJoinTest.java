@@ -1,9 +1,6 @@
 package edu.uci.ics.hyracks.tests.integration;
 
-import java.io.DataOutput;
 import java.io.File;
-import java.io.IOException;
-
 
 import org.junit.Test;
 
@@ -11,16 +8,14 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionGeneratorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
-import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.hash.UTF8StringBinaryHashFunctionGeneratorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
@@ -35,37 +30,12 @@ import edu.uci.ics.hyracks.dataflow.std.join.OptimizedHybridHashJoinOperatorDesc
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 
-
 public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegrationTest {
     private static final boolean DEBUG = false;
 
-    static private class NoopNullWriterFactory implements INullWriterFactory {
-
-        private static final long serialVersionUID = 1L;
-        public static final NoopNullWriterFactory INSTANCE = new NoopNullWriterFactory();
-
-        private NoopNullWriterFactory() {
-        }
-
-        @Override
-        public INullWriter createNullWriter() {
-            return new INullWriter() {
-                @Override
-                public void writeNull(DataOutput out) throws HyracksDataException {
-                    try {
-                        out.writeShort(0);
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
-            };
-        }
-    }
-    
-    
     @Test
     public void customerOrderCIDHybridHashJoin_Case1() throws Exception {
-    	JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
                 "data/tpch0.001/customer4.tbl"))) };
@@ -76,11 +46,9 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
-        
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders4.tbl"))) };
-        
-        
+
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -115,28 +83,24 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
-       
-        
-        
-        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 243, 1.2, 
-                                                                                                        new int[] { 0 }, new int[] { 1 },
-                                                                                                        new IBinaryHashFunctionGeneratorFactory[] { UTF8StringBinaryHashFunctionGeneratorFactory.INSTANCE },
-                                                                                                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, 
-                                                                                                        custOrderJoinDesc, 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0));
-        
-        
-        
+
+        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 243,
+                1.2, new int[] { 0 }, new int[] { 1 },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                custOrderJoinDesc, new JoinComparatorFactory(
+                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0));
+
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-        
+
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
-        
+
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
@@ -146,11 +110,10 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
         spec.addRoot(printer);
         runTest(spec);
     }
-    
 
     @Test
     public void customerOrderCIDHybridHashJoin_Case2() throws Exception {
-    	JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
                 "data/tpch0.001/customer3.tbl"))) };
@@ -161,11 +124,9 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
-        
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders4.tbl"))) };
-        
-        
+
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -200,28 +161,24 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
-       
-        
-        
-        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 122, 1.2, 
-                                                                                                        new int[] { 0 }, new int[] { 1 },
-                                                                                                        new IBinaryHashFunctionGeneratorFactory[] { UTF8StringBinaryHashFunctionGeneratorFactory.INSTANCE },
-                                                                                                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, 
-                                                                                                        custOrderJoinDesc, 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0));
-        
-        
-        
+
+        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 122,
+                1.2, new int[] { 0 }, new int[] { 1 },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                custOrderJoinDesc, new JoinComparatorFactory(
+                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0));
+
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-        
+
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
-        
+
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
@@ -231,11 +188,11 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
         spec.addRoot(printer);
         runTest(spec);
     }
-    
+
     @Test
     public void customerOrderCIDHybridHashJoin_Case3() throws Exception {
-    	
-    	JobSpecification spec = new JobSpecification();
+
+        JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
                 "data/tpch0.001/customer3.tbl"))) };
@@ -246,12 +203,9 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
-        
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders1.tbl"))) };
-        
-        
-        
+
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
@@ -286,28 +240,24 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE }, '|'), custDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, custScanner, NC1_ID);
-       
-        
-        
-        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 6, 122, 1.2, 
-                                                                                                        new int[] { 0 }, new int[] { 1 },
-                                                                                                        new IBinaryHashFunctionGeneratorFactory[] { UTF8StringBinaryHashFunctionGeneratorFactory.INSTANCE },
-                                                                                                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, 
-                                                                                                        custOrderJoinDesc, 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), 
-                                                                                                        new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0));
-        
-        
-        
+
+        OptimizedHybridHashJoinOperatorDescriptor join = new OptimizedHybridHashJoinOperatorDescriptor(spec, 6, 122,
+                1.2, new int[] { 0 }, new int[] { 1 },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                custOrderJoinDesc, new JoinComparatorFactory(
+                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0));
+
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
         IOperatorDescriptor printer = DEBUG ? new PrinterOperatorDescriptor(spec)
                 : new NullSinkOperatorDescriptor(spec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-        
+
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
-        
+
         IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
@@ -317,6 +267,5 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
         spec.addRoot(printer);
         runTest(spec);
     }
-    
 
 }

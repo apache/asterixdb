@@ -28,8 +28,8 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.jobqueue.SynchronizableEvent;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class ApplicationInstallationHandler extends AbstractHandler {
     private ClusterControllerService ccs;
@@ -54,7 +54,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
             }
             final String appName = parts[0];
             if (HttpMethods.PUT.equals(request.getMethod())) {
-                class OutputStreamGetter extends SynchronizableEvent {
+                class OutputStreamGetter extends SynchronizableWork {
                     private OutputStream os;
 
                     @Override
@@ -68,7 +68,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                 }
                 OutputStreamGetter r = new OutputStreamGetter();
                 try {
-                    ccs.getJobQueue().scheduleAndSync(r);
+                    ccs.getWorkQueue().scheduleAndSync(r);
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
@@ -78,7 +78,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                     r.os.close();
                 }
             } else if (HttpMethods.GET.equals(request.getMethod())) {
-                class InputStreamGetter extends SynchronizableEvent {
+                class InputStreamGetter extends SynchronizableWork {
                     private InputStream is;
 
                     @Override
@@ -92,7 +92,7 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                 }
                 InputStreamGetter r = new InputStreamGetter();
                 try {
-                    ccs.getJobQueue().scheduleAndSync(r);
+                    ccs.getWorkQueue().scheduleAndSync(r);
                 } catch (Exception e) {
                     throw new IOException(e);
                 }

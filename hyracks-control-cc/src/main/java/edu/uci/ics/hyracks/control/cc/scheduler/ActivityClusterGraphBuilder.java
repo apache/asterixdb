@@ -22,13 +22,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.util.Pair;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.ActivityClusterId;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -57,7 +58,7 @@ public class ActivityClusterGraphBuilder {
                         int producerOutputIndex = spec.getProducerOutputIndex(conn);
                         ActivityId inTask = jag.getOperatorOutputMap().get(producerId).get(producerOutputIndex);
                         if (!eqSet.getActivities().contains(inTask)) {
-                            return new Pair<ActivityId, ActivityId>(t, inTask);
+                            return Pair.<ActivityId, ActivityId> of(t, inTask);
                         }
                     }
                 }
@@ -70,7 +71,7 @@ public class ActivityClusterGraphBuilder {
                         int consumerInputIndex = spec.getConsumerInputIndex(conn);
                         ActivityId outTask = jag.getOperatorInputMap().get(consumerId).get(consumerInputIndex);
                         if (!eqSet.getActivities().contains(outTask)) {
-                            return new Pair<ActivityId, ActivityId>(t, outTask);
+                            return Pair.<ActivityId, ActivityId> of(t, outTask);
                         }
                     }
                 }
@@ -102,7 +103,7 @@ public class ActivityClusterGraphBuilder {
             changed = false;
             Pair<ActivityId, ActivityId> pair = findMergePair(jag, spec, stages);
             if (pair != null) {
-                merge(stageMap, stages, pair.first, pair.second);
+                merge(stageMap, stages, pair.getLeft(), pair.getRight());
                 changed = true;
             }
         }

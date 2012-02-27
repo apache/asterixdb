@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 
@@ -26,10 +26,10 @@ public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder
     private byte[] targetBuf;
     private int pos;
 
-    public FixedSizeElementInvertedListBuilder(ITypeTrait[] invListFields) {
+    public FixedSizeElementInvertedListBuilder(ITypeTraits[] invListFields) {
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
-            tmp += invListFields[i].getStaticallyKnownDataLength();
+            tmp += invListFields[i].getFixedLength();
         }
         listElementSize = tmp;
     }

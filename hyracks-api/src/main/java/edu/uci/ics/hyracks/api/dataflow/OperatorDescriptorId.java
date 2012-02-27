@@ -49,4 +49,12 @@ public final class OperatorDescriptorId implements Serializable {
     public String toString() {
         return "ODID:" + id;
     }
+
+    public static OperatorDescriptorId parse(String str) {
+        if (str.startsWith("ODID:")) {
+            str = str.substring(5);
+            return new OperatorDescriptorId(Integer.parseInt(str));
+        }
+        throw new IllegalArgumentException("Unable to parse: " + str);
+    }
 }

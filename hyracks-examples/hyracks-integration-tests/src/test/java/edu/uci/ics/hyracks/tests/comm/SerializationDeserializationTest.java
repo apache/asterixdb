@@ -19,6 +19,8 @@ import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -39,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class SerializationDeserializationTest {
+    private static final Logger LOGGER = Logger.getLogger(SerializationDeserializationTest.class.getName());
     private static final String DBLP_FILE = "data/dblp.txt";
 
     private static class SerDeserRunner {
@@ -125,7 +128,9 @@ public class SerializationDeserializationTest {
         reader.open();
         Object[] arr;
         while ((arr = reader.readData()) != null) {
-            System.err.println(arr[0] + " " + arr[1]);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(arr[0] + " " + arr[1]);
+            }
         }
         reader.close();
     }

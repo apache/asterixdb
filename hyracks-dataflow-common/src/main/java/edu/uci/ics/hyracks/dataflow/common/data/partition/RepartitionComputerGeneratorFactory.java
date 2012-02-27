@@ -2,17 +2,17 @@ package edu.uci.ics.hyracks.dataflow.common.data.partition;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerGeneratorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFamily;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class RepartitionComputerGeneratorFactory implements ITuplePartitionComputerGeneratorFactory{
+public class RepartitionComputerGeneratorFactory implements ITuplePartitionComputerFamily{
 	
 	 private static final long serialVersionUID = 1L;
 
 	    private int factor;
-	    private ITuplePartitionComputerGeneratorFactory delegateFactory;
+	    private ITuplePartitionComputerFamily delegateFactory;
 
-	    public RepartitionComputerGeneratorFactory(int factor, ITuplePartitionComputerGeneratorFactory delegate) {
+	    public RepartitionComputerGeneratorFactory(int factor, ITuplePartitionComputerFamily delegate) {
 	        this.factor = factor;
 	        this.delegateFactory = delegate;
 	    }

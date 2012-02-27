@@ -15,22 +15,22 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class FixedSizeTupleReference implements ITupleReference {
 
-    private final ITypeTrait[] typeTraits;
+    private final ITypeTraits[] typeTraits;
     private final int[] fieldStartOffsets;
     private byte[] data;
     private int startOff;
 
-    public FixedSizeTupleReference(ITypeTrait[] typeTraits) {
+    public FixedSizeTupleReference(ITypeTraits[] typeTraits) {
         this.typeTraits = typeTraits;
         this.fieldStartOffsets = new int[typeTraits.length];
         this.fieldStartOffsets[0] = 0;
         for (int i = 1; i < typeTraits.length; i++) {
-            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + typeTraits[i - 1].getStaticallyKnownDataLength();
+            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + typeTraits[i - 1].getFixedLength();
         }
     }
 
@@ -51,7 +51,7 @@ public class FixedSizeTupleReference implements ITupleReference {
 
     @Override
     public int getFieldLength(int fIdx) {
-        return typeTraits[fIdx].getStaticallyKnownDataLength();
+        return typeTraits[fIdx].getFixedLength();
     }
 
     @Override

@@ -16,63 +16,58 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public abstract class AbstractTreeIndexOperatorDescriptor extends
 		AbstractSingleActivityOperatorDescriptor implements
-		ITreeIndexOperatorDescriptorHelper {
+		ITreeIndexOperatorDescriptor {
 
 	private static final long serialVersionUID = 1L;
 
 	protected final IFileSplitProvider fileSplitProvider;
 
 	protected final IBinaryComparatorFactory[] comparatorFactories;
-	protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
 
 	protected final ITreeIndexFrameFactory interiorFrameFactory;
 	protected final ITreeIndexFrameFactory leafFrameFactory;
 
 	protected final IStorageManagerInterface storageManager;
-	protected final IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+	protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
 
-	protected final ITypeTrait[] typeTraits;
-
-	protected final ITreeIndexOpHelperFactory opHelperFactory;
+	protected final ITypeTraits[] typeTraits;
+	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
 
 	public AbstractTreeIndexOperatorDescriptor(JobSpecification spec,
 			int inputArity, int outputArity, RecordDescriptor recDesc,
 			IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider,
+			IIndexRegistryProvider<IIndex> indexRegistryProvider,
 			IFileSplitProvider fileSplitProvider,
 			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTrait[] typeTraits,
+			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
-			IPrimitiveValueProviderFactory[] valueProviderFactories,
-			ITreeIndexOpHelperFactory opHelperFactory) {
+			IIndexDataflowHelperFactory dataflowHelperFactory) {
 		super(spec, inputArity, outputArity);
 		this.fileSplitProvider = fileSplitProvider;
 		this.storageManager = storageManager;
-		this.treeIndexRegistryProvider = treeIndexRegistryProvider;
+		this.indexRegistryProvider = indexRegistryProvider;
 		this.interiorFrameFactory = interiorFrameFactory;
 		this.leafFrameFactory = leafFrameFactory;
 		this.typeTraits = typeTraits;
 		this.comparatorFactories = comparatorFactories;
-		this.valueProviderFactories = valueProviderFactories;
-		this.opHelperFactory = opHelperFactory;
-		if (outputArity > 0)
+		this.dataflowHelperFactory = dataflowHelperFactory;
+		if (outputArity > 0) {
 			recordDescriptors[0] = recDesc;
+		}
 	}
 
 	@Override
-	public IFileSplitProvider getTreeIndexFileSplitProvider() {
+	public IFileSplitProvider getFileSplitProvider() {
 		return fileSplitProvider;
 	}
 
@@ -82,13 +77,8 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	}
 
 	@Override
-	public ITypeTrait[] getTreeIndexTypeTraits() {
+	public ITypeTraits[] getTreeIndexTypeTraits() {
 		return typeTraits;
-	}
-
-	@Override
-	public IPrimitiveValueProviderFactory[] getTreeIndexValueProviderFactories() {
-		return valueProviderFactories;
 	}
 
 	@Override
@@ -107,8 +97,8 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	}
 
 	@Override
-	public IIndexRegistryProvider<ITreeIndex> getTreeIndexRegistryProvider() {
-		return treeIndexRegistryProvider;
+	public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
+		return indexRegistryProvider;
 	}
 
 	@Override
@@ -117,7 +107,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	}
 
 	@Override
-	public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
-		return opHelperFactory;
+	public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
+		return dataflowHelperFactory;
 	}
 }

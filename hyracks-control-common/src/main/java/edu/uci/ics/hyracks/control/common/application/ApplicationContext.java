@@ -59,7 +59,6 @@ public abstract class ApplicationContext implements IApplicationContext {
         this.serverCtx = serverCtx;
         this.appName = appName;
         this.applicationRootDir = new File(new File(serverCtx.getBaseDir(), APPLICATION_ROOT), appName);
-        status = ApplicationStatus.CREATED;
         FileUtils.deleteDirectory(applicationRootDir);
         applicationRootDir.mkdirs();
     }
@@ -87,9 +86,6 @@ public abstract class ApplicationContext implements IApplicationContext {
     }
 
     public void initialize() throws Exception {
-        if (status != ApplicationStatus.CREATED) {
-            throw new IllegalStateException();
-        }
         if (deploymentDescriptor != null) {
             String bootstrapClass = null;
             switch (serverCtx.getServerType()) {
@@ -107,7 +103,6 @@ public abstract class ApplicationContext implements IApplicationContext {
                 start();
             }
         }
-        status = ApplicationStatus.INITIALIZED;
     }
 
     protected abstract void start() throws Exception;
@@ -168,7 +163,6 @@ public abstract class ApplicationContext implements IApplicationContext {
     }
 
     public void deinitialize() throws Exception {
-        status = ApplicationStatus.DEINITIALIZED;
         stop();
         File expandedFolder = getExpandedFolder();
         FileUtils.deleteDirectory(expandedFolder);
@@ -195,12 +189,20 @@ public abstract class ApplicationContext implements IApplicationContext {
     }
 
     @Override
-    public Serializable getDestributedState() {
+    public Serializable getDistributedState() {
         return distributedState;
     }
 
     @Override
     public ClassLoader getClassLoader() {
         return classLoader;
+    }
+
+    public void setStatus(ApplicationStatus status) {
+        this.status = status;
+    }
+
+    public ApplicationStatus getStatus() {
+        return status;
     }
 }

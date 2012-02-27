@@ -31,4 +31,11 @@ public abstract class AbstractMToNConnectorDescriptor extends AbstractConnectorD
         targetBitmap.clear();
         targetBitmap.set(0, nConsumerPartitions);
     }
+
+    @Override
+    public void indicateSourcePartitions(int nProducerPartitions, int nConsumerPartitions, int consumerIndex,
+            BitSet sourceBitmap) {
+        sourceBitmap.clear();
+        sourceBitmap.set(0, nProducerPartitions);
+    }
 }

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.io.DataInput;
@@ -13,23 +27,22 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionGeneratorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerGeneratorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerGeneratorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFamily;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerGeneratorFactory;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -42,48 +55,45 @@ import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 /**
  * @author pouria
- *  This class guides the joining process, and switches between different
-    joining techniques, w.r.t the implemented optimizations and skew in size of the
-    partitions.
-    
-    - Operator overview:
-    Assume we are trying to do (R Join S), with M buffers available, while we have an estimate on the size
-    of R (in terms of buffers). HHJ (Hybrid Hash Join) has two main phases: Build and Probe, where in our implementation Probe phase
-    can apply HHJ recursively, based on the value of M and size of R and S. HHJ phases proceed as follow:
-    
-    * BUILD:
-    – Calculate number of partitions (Based on the size of R, fudge factor and M) [See Shapiro's paper for the detailed discussion].
-    – Initialize the build phase (one frame per partition – all partitions considered resident at first)
-    – Read tuples of R, frame by frame, and hash each tuple (based on a given hash function) to find
-        its target partition and try to append it to that partition:
-    – If target partition's buffer is full, try to allocate a new buffer for it.
-    – if no free buffer is available, find the largest resident partition and spill it. Using its freed
-        buffers after spilling, allocate a new buffer for the target partition.
-    – Being done with R, close the build phase. (During closing we write the very last buffer of each
-    spilled partition to the disk, and we do partition tuning, where we try to bring back as many buffers, belonging to
-    spilled partitions as possible into memory, based on the free buffers - We will stop at the point where remaining free buffers is not enough
-    for reloading an entire partition back into memory)
-    – Create the hash table for the resident partitions (basically we create an in-memory hash join here)
-
-    * PROBE:
-    – Initialize the probe phase on S (mainly allocate one buffer per spilled partition, and one buffer
-        for the whole resident partitions)
-    – Read tuples of S, frame by frame and hash each tuple T to its target partition P
-    – if P is a resident partition, pass T to the in-memory hash join and generate the output record,
-        if any matching(s) record found
-    – if P is spilled, write T to the dedicated buffer for P (on the probe side)
-    – Once scanning of S is done, we try to join partition pairs (Ri, Si) of the spilled partitions:
-    – if any of Ri or Si is smaller than M, then we simply use an in-memory hash join to join them
-    – otherwise we apply HHJ recursively:
-    – if after applying HHJ recursively, we do not gain enough size reduction (max size of the
-        resulting partitions were more than 80% of the initial Ri,Si size) then we switch to
-        nested loop join for joining.
-    – (At each step of partition-pair joining, we consider role reversal, which means if size of Si were
-        greater than Ri, then we make sure that we switch the roles of build/probe between them)
+ *         This class guides the joining process, and switches between different
+ *         joining techniques, w.r.t the implemented optimizations and skew in size of the
+ *         partitions.
+ *         - Operator overview:
+ *         Assume we are trying to do (R Join S), with M buffers available, while we have an estimate on the size
+ *         of R (in terms of buffers). HHJ (Hybrid Hash Join) has two main phases: Build and Probe, where in our implementation Probe phase
+ *         can apply HHJ recursively, based on the value of M and size of R and S. HHJ phases proceed as follow:
+ *         BUILD:
+ *         – Calculate number of partitions (Based on the size of R, fudge factor and M) [See Shapiro's paper for the detailed discussion].
+ *         – Initialize the build phase (one frame per partition – all partitions considered resident at first)
+ *         – Read tuples of R, frame by frame, and hash each tuple (based on a given hash function) to find
+ *         its target partition and try to append it to that partition:
+ *         – If target partition's buffer is full, try to allocate a new buffer for it.
+ *         – if no free buffer is available, find the largest resident partition and spill it. Using its freed
+ *         buffers after spilling, allocate a new buffer for the target partition.
+ *         – Being done with R, close the build phase. (During closing we write the very last buffer of each
+ *         spilled partition to the disk, and we do partition tuning, where we try to bring back as many buffers, belonging to
+ *         spilled partitions as possible into memory, based on the free buffers - We will stop at the point where remaining free buffers is not enough
+ *         for reloading an entire partition back into memory)
+ *         – Create the hash table for the resident partitions (basically we create an in-memory hash join here)
+ *         PROBE:
+ *         – Initialize the probe phase on S (mainly allocate one buffer per spilled partition, and one buffer
+ *         for the whole resident partitions)
+ *         – Read tuples of S, frame by frame and hash each tuple T to its target partition P
+ *         – if P is a resident partition, pass T to the in-memory hash join and generate the output record,
+ *         if any matching(s) record found
+ *         – if P is spilled, write T to the dedicated buffer for P (on the probe side)
+ *         – Once scanning of S is done, we try to join partition pairs (Ri, Si) of the spilled partitions:
+ *         – if any of Ri or Si is smaller than M, then we simply use an in-memory hash join to join them
+ *         – otherwise we apply HHJ recursively:
+ *         – if after applying HHJ recursively, we do not gain enough size reduction (max size of the
+ *         resulting partitions were more than 80% of the initial Ri,Si size) then we switch to
+ *         nested loop join for joining.
+ *         – (At each step of partition-pair joining, we consider role reversal, which means if size of Si were
+ *         greater than Ri, then we make sure that we switch the roles of build/probe between them)
  */
 
 public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-	
+
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
     private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
 
@@ -98,7 +108,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final double fudgeFactor;
     private final int[] probeKeys;
     private final int[] buildKeys;
-    private final IBinaryHashFunctionGeneratorFactory[] hashFunctionGeneratorFactories;
+    private final IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories;
     private final IBinaryComparatorFactory[] comparatorFactories; //For in-mem HJ
     private final ITuplePairComparatorFactory tuplePairComparatorFactory0; //For NLJ in probe
     private final ITuplePairComparatorFactory tuplePairComparatorFactory1; //For NLJ in probe
@@ -107,7 +117,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final INullWriterFactory[] nullWriterFactories1;
 
     public OptimizedHybridHashJoinOperatorDescriptor(JobSpecification spec, int memsize, int inputsize0, double factor,
-            int[] keys0, int[] keys1, IBinaryHashFunctionGeneratorFactory[] hashFunctionGeneratorFactories,
+            int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory0,
             ITuplePairComparatorFactory tupPaircomparatorFactory1, boolean isLeftOuter,
@@ -130,7 +140,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     }
 
     public OptimizedHybridHashJoinOperatorDescriptor(JobSpecification spec, int memsize, int inputsize0, double factor,
-            int[] keys0, int[] keys1, IBinaryHashFunctionGeneratorFactory[] hashFunctionGeneratorFactories,
+            int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory0, ITuplePairComparatorFactory tupPaircomparatorFactory1)
             throws HyracksDataException {
@@ -178,8 +188,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         }
         if (memorySize > buildSize) {
             return 1; //We will switch to in-Mem HJ eventually
-        } 
-        numberOfPartitions = (int) (Math.ceil((double) (buildSize * factor / nPartitions - memorySize) / (double) (memorySize - 1)));
+        }
+        numberOfPartitions = (int) (Math.ceil((double) (buildSize * factor / nPartitions - memorySize)
+                / (double) (memorySize - 1)));
         if (numberOfPartitions <= 0) {
             numberOfPartitions = 1; //becomes in-memory hash join
         }
@@ -214,7 +225,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         }
 
     }
-    
+
     /*
      * Build phase of Hybrid Hash Join:
      * Creating an instance of Hybrid Hash Join, using Shapiro's formula
@@ -230,7 +241,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
 
             final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
@@ -252,18 +263,19 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(ctx.getJobletContext()
                         .getJobId(), new TaskId(getActivityId(), partition));
 
-                ITuplePartitionComputer probeHpc = new FieldHashPartitionComputerGeneratorFactory(probeKeys,
+                ITuplePartitionComputer probeHpc = new FieldHashPartitionComputerFamily(probeKeys,
                         hashFunctionGeneratorFactories).createPartitioner(0);
-                ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerGeneratorFactory(buildKeys,
+                ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerFamily(buildKeys,
                         hashFunctionGeneratorFactories).createPartitioner(0);
 
                 @Override
                 public void open() throws HyracksDataException {
-                    if (memsize <= 2){  //Dedicated buffers: One buffer to read and one buffer for output
+                    if (memsize <= 2) { //Dedicated buffers: One buffer to read and one buffer for output
                         throw new HyracksDataException("not enough memory for Hybrid Hash Join");
                     }
                     state.memForJoin = memsize - 2;
-                    state.numOfPartitions = getNumberOfPartitions(state.memForJoin, inputsize0, fudgeFactor, nPartitions);
+                    state.numOfPartitions = getNumberOfPartitions(state.memForJoin, inputsize0, fudgeFactor,
+                            nPartitions);
                     state.hybridHJ = new OptimizedHybridHashJoin(ctx, state.memForJoin, state.numOfPartitions,
                             PROBE_REL, BUILD_REL, probeKeys, buildKeys, comparators, probeRd, buildRd, probeHpc,
                             buildHpc);
@@ -278,7 +290,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void close() throws HyracksDataException {
                     state.hybridHJ.closeBuild();
-                    env.setTaskState(state);
+                    ctx.setTaskState(state);
                 }
 
                 @Override
@@ -289,6 +301,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
             return op;
         }
     }
+
     /*
      * Probe phase of Hybrid Hash Join:
      * Reading the probe side and partitioning it, resident tuples get
@@ -300,14 +313,13 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private class ProbeAndJoinActivityNode extends AbstractActivityNode {
 
         private static final long serialVersionUID = 1L;
-        
 
         public ProbeAndJoinActivityNode(ActivityId id) {
             super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx, final IOperatorEnvironment env,
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
 
             final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
@@ -331,17 +343,17 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 private BuildAndPartitionTaskState state;
                 private ByteBuffer rPartbuff = ctx.allocateFrame();
 
-                private ITuplePartitionComputerGeneratorFactory hpcf0 = new FieldHashPartitionComputerGeneratorFactory(
-                        probeKeys, hashFunctionGeneratorFactories);
-                private ITuplePartitionComputerGeneratorFactory hpcf1 = new FieldHashPartitionComputerGeneratorFactory(
-                        buildKeys, hashFunctionGeneratorFactories);
+                private ITuplePartitionComputerFamily hpcf0 = new FieldHashPartitionComputerFamily(probeKeys,
+                        hashFunctionGeneratorFactories);
+                private ITuplePartitionComputerFamily hpcf1 = new FieldHashPartitionComputerFamily(buildKeys,
+                        hashFunctionGeneratorFactories);
 
                 private ITuplePartitionComputer hpcRep0;
                 private ITuplePartitionComputer hpcRep1;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (BuildAndPartitionTaskState) env.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    state = (BuildAndPartitionTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             BUILD_AND_PARTITION_ACTIVITY_ID), partition));
 
                     writer.open();
@@ -366,9 +378,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                     BitSet partitionStatus = state.hybridHJ.getPartitinStatus();
                     hpcRep0 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf0)
-                    .createPartitioner(0);
+                            .createPartitioner(0);
                     hpcRep1 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf1)
-                    .createPartitioner(0);
+                            .createPartitioner(0);
 
                     rPartbuff.clear();
                     for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid = partitionStatus.nextSetBit(pid + 1)) {
@@ -376,7 +388,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         RunFileReader bReader = state.hybridHJ.getBuildRFReader(pid);
                         RunFileReader pReader = state.hybridHJ.getProbeRFReader(pid);
 
-                        if (bReader == null || pReader == null) {   //either of sides (or both) does not have any tuple, thus no need for joining (no potential match)
+                        if (bReader == null || pReader == null) { //either of sides (or both) does not have any tuple, thus no need for joining (no potential match)
                             continue;
                         }
                         int bSize = state.hybridHJ.getBuildPartitionSizeInTup(pid);
@@ -390,42 +402,45 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 private void joinPartitionPair(OptimizedHybridHashJoin ohhj, RunFileReader buildSideReader,
                         RunFileReader probeSideReader, int pid, int beforeMax, int level) throws HyracksDataException {
-                    ITuplePartitionComputer probeHpc = new FieldHashPartitionComputerGeneratorFactory(probeKeys,
+                    ITuplePartitionComputer probeHpc = new FieldHashPartitionComputerFamily(probeKeys,
                             hashFunctionGeneratorFactories).createPartitioner(level);
-                    ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerGeneratorFactory(buildKeys,
+                    ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerFamily(buildKeys,
                             hashFunctionGeneratorFactories).createPartitioner(level);
 
                     long buildPartSize = ohhj.getBuildPartitionSize(pid) / ctx.getFrameSize();
                     long probePartSize = ohhj.getProbePartitionSize(pid) / ctx.getFrameSize();
 
-                        //Apply in-Mem HJ if possible
+                    //Apply in-Mem HJ if possible
                     if ((buildPartSize < state.memForJoin) || (probePartSize < state.memForJoin)) {
                         int tabSize = -1;
                         if (buildPartSize < probePartSize) {
                             tabSize = ohhj.getBuildPartitionSizeInTup(pid);
-                            if(tabSize == 0){
-                                throw new HyracksDataException("Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
+                            if (tabSize == 0) {
+                                throw new HyracksDataException(
+                                        "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Build Side is smaller
                             applyInMemHashJoin(probeKeys, buildKeys, tabSize, probeRd, buildRd, hpcRep1, hpcRep0,
                                     buildSideReader, probeSideReader);
-                            
+
                         } else { //Role Reversal
                             tabSize = ohhj.getProbePartitionSizeInTup(pid);
-                            if(tabSize == 0){
-                                throw new HyracksDataException("Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
+                            if (tabSize == 0) {
+                                throw new HyracksDataException(
+                                        "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Probe Side is smaller
                             applyInMemHashJoin(buildKeys, probeKeys, tabSize, buildRd, probeRd, hpcRep0, hpcRep1,
                                     probeSideReader, buildSideReader);
                         }
                     }
-                        //Apply (Recursive) HHJ
+                    //Apply (Recursive) HHJ
                     else {
                         OptimizedHybridHashJoin rHHj;
                         if (buildPartSize < probePartSize) { //Build Side is smaller
 
-                            int n = getNumberOfPartitions(state.memForJoin, (int) buildPartSize, fudgeFactor, nPartitions);
+                            int n = getNumberOfPartitions(state.memForJoin, (int) buildPartSize, fudgeFactor,
+                                    nPartitions);
                             rHHj = new OptimizedHybridHashJoin(ctx, state.memForJoin, n, PROBE_REL, BUILD_REL,
                                     probeKeys, buildKeys, comparators, probeRd, buildRd, probeHpc, buildHpc);
 
@@ -485,7 +500,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 }
                             }
                         } else { //Role Reversal (Probe Side is smaller)
-                            int n = getNumberOfPartitions(state.memForJoin, (int) probePartSize, fudgeFactor, nPartitions);
+                            int n = getNumberOfPartitions(state.memForJoin, (int) probePartSize, fudgeFactor,
+                                    nPartitions);
                             rHHj = new OptimizedHybridHashJoin(ctx, state.memForJoin, n, BUILD_REL, PROBE_REL,
                                     buildKeys, probeKeys, comparators, buildRd, probeRd, buildHpc, probeHpc);
 
@@ -560,7 +576,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     bReader.open();
                     rPartbuff.clear();
                     while (bReader.nextFrame(rPartbuff)) {
-                        ByteBuffer copyBuffer = ctx.allocateFrame();    //We need to allocate a copyBuffer, because this buffer gets added to the buffers list in the InMemoryHashJoin
+                        ByteBuffer copyBuffer = ctx.allocateFrame(); //We need to allocate a copyBuffer, because this buffer gets added to the buffers list in the InMemoryHashJoin
                         FrameUtils.copy(rPartbuff, copyBuffer);
                         FrameUtils.makeReadable(copyBuffer);
                         joiner.build(copyBuffer);

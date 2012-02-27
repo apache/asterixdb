@@ -19,7 +19,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class AbstractSlotManager implements ISlotManager {
-
+	
+	protected final int GREATEST_KEY_INDICATOR = -1;
+    protected final int ERROR_INDICATOR = -2;
+	
 	protected static final int slotSize = 4;
 	protected ITreeIndexFrame frame;
 
@@ -58,4 +61,14 @@ public abstract class AbstractSlotManager implements ISlotManager {
 	public int getSlotOff(int tupleIndex) {
 		return getSlotStartOff() - tupleIndex * slotSize;
 	}
+	
+	@Override
+    public int getGreatestKeyIndicator() {
+        return GREATEST_KEY_INDICATOR;
+    }
+
+    @Override
+    public int getErrorIndicator() {
+        return ERROR_INDICATOR;
+    }
 }

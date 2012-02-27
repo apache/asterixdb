@@ -62,7 +62,7 @@ public class FrameDeserializer {
     public Object[] deserializeRecord() throws HyracksDataException {
         int start = frameTupleAccessor.getTupleStartOffset(tIndex) + frameTupleAccessor.getFieldSlotsLength();
         bbis.setByteBuffer(buffer, start);
-        Object[] record = new Object[recordDescriptor.getFields().length];
+        Object[] record = new Object[recordDescriptor.getFieldCount()];
         for (int i = 0; i < record.length; ++i) {
             Object instance = recordDescriptor.getFields()[i].deserialize(di);
             if (LOGGER.isLoggable(Level.FINEST)) {

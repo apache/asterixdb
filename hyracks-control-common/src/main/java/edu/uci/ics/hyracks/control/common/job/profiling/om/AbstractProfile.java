@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,12 +38,14 @@ public abstract class AbstractProfile implements Serializable {
     public abstract JSONObject toJSON() throws JSONException;
 
     protected void populateCounters(JSONObject jo) throws JSONException {
+        JSONArray countersObj = new JSONArray();
         for (Map.Entry<String, Long> e : counters.entrySet()) {
             JSONObject jpe = new JSONObject();
             jpe.put("name", e.getKey());
             jpe.put("value", e.getValue());
-            jo.accumulate("counters", jpe);
+            countersObj.put(jpe);
         }
+        jo.put("counters", countersObj);
     }
 
     protected void merge(AbstractProfile profile) {

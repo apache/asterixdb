@@ -17,94 +17,76 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-	public void setPage(ICachedPage page);
-
-	public ICachedPage getPage();
-
-	public ByteBuffer getBuffer();
-
-	public int findTupleIndex(ITupleReference tuple, MultiComparator cmp)
-			throws Exception;
-
-	public void insert(ITupleReference tuple, MultiComparator cmp,
-			int tupleIndex) throws Exception;
-
-	public void update(int rid, ITupleReference tuple) throws Exception;
-
-	public void delete(ITupleReference tuple, MultiComparator cmp,
-			boolean exactDelete) throws Exception;
-
-	// returns true if slots were modified, false otherwise
-	public boolean compact(MultiComparator cmp);
-
-	public boolean compress(MultiComparator cmp) throws HyracksDataException;
 
 	public void initBuffer(byte level);
+	
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple);
+	
+	public void insert(ITupleReference tuple, int tupleIndex);    
+    
+	public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex);
+	
+	public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
+    
+    public void delete(ITupleReference tuple, int tupleIndex);
 
-	public int getTupleCount();
+    // returns true if slots were modified, false otherwise
+    public boolean compact();
 
-	// assumption: page must be write-latched at this point
-	public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple,
-			MultiComparator cmp);
+    // returns true if compressed.
+    public boolean compress() throws HyracksDataException;
 
-	public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple,
-			MultiComparator cmp);
+    public int getTupleCount();
 
-	public int getTupleOffset(int slotNum);
+    public int getTupleOffset(int slotNum);
 
-	public int getTotalFreeSpace();
+    public int getTotalFreeSpace();
 
-	public void setPageLsn(int pageLsn);
+    public void setPageLsn(long pageLsn);
 
-	public int getPageLsn();
+    public long getPageLsn();
 
-	// for debugging
-	public void printHeader();
+    public void setPage(ICachedPage page);
 
-	public String printKeys(MultiComparator cmp,
-			ISerializerDeserializer[] fields) throws HyracksDataException;
+    public ICachedPage getPage();
 
-	// TODO; what if tuples more than half-page size?
-	public int split(ITreeIndexFrame rightFrame, ITupleReference tuple,
-			MultiComparator cmp, ISplitKey splitKey) throws Exception;
+    public ByteBuffer getBuffer();
+    
+    // for debugging
+    public String printHeader();
 
-	public ISlotManager getSlotManager();
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
 
-	// ATTENTION: in b-tree operations it may not always be possible to
-	// determine whether an ICachedPage is a leaf or interior node
-	// a compatible interior and leaf implementation MUST return identical
-	// values when given the same ByteBuffer for the functions below
-	public boolean isLeaf();
+    public ISlotManager getSlotManager();
 
-	public boolean isInterior();
+    // ATTENTION: in b-tree operations it may not always be possible to
+    // determine whether an ICachedPage is a leaf or interior node
+    // a compatible interior and leaf implementation MUST return identical
+    // values when given the same ByteBuffer for the functions below
+    public boolean isLeaf();
 
-	public byte getLevel();
+    public boolean isInterior();
 
-	public void setLevel(byte level);
+    public byte getLevel();
 
-	public boolean getSmFlag(); // structure modification flag
+    public void setLevel(byte level);
 
-	public void setSmFlag(boolean smFlag);
+    public int getSlotSize();
 
-	public int getSlotSize();
+    // for debugging
+    public int getFreeSpaceOff();
 
-	// TODO: should be removed after new tuple format
-	public void setPageTupleFieldCount(int fieldCount);
+    public void setFreeSpaceOff(int freeSpace);
 
-	// for debugging
-	public int getFreeSpaceOff();
+    public ITreeIndexTupleWriter getTupleWriter();
 
-	public void setFreeSpaceOff(int freeSpace);
-
-	public ITreeIndexTupleWriter getTupleWriter();
-
-	public int getPageHeaderSize();
+    public int getPageHeaderSize();
+    
+    public ITreeIndexTupleReference createTupleReference();
 }

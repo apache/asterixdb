@@ -5,7 +5,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -32,7 +32,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     private ICachedPage[] pages = new ICachedPage[10];
     private int[] elementIndexes = new int[10];
 
-    public FixedSizeElementInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTrait[] invListFields) {
+    public FixedSizeElementInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields) {
         this.bufferCache = bufferCache;
         this.fileId = fileId;
         this.currentElementIx = 0;
@@ -40,7 +40,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
 
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
-            tmp += invListFields[i].getStaticallyKnownDataLength();
+            tmp += invListFields[i].getFixedLength();
         }
         elementSize = tmp;
         this.currentOff = -elementSize;

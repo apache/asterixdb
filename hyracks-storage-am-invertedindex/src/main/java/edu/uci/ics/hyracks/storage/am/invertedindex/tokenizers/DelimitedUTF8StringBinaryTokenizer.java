@@ -19,69 +19,63 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
-public class DelimitedUTF8StringBinaryTokenizer extends
-		AbstractUTF8StringBinaryTokenizer {
+public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
 
-	public DelimitedUTF8StringBinaryTokenizer(boolean ignoreTokenCount,
-			boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
-		super(ignoreTokenCount, sourceHasTypeTag, tokenFactory);
-	}
+    public DelimitedUTF8StringBinaryTokenizer(boolean ignoreTokenCount, boolean sourceHasTypeTag,
+            ITokenFactory tokenFactory) {
+        super(ignoreTokenCount, sourceHasTypeTag, tokenFactory);
+    }
 
-	@Override
-	public boolean hasNext() {
-		// skip delimiters
-		while (index < length && isSeparator(StringUtils.charAt(data, index))) {
-			index += StringUtils.charSize(data, index);
-		}
-		return index < length;
-	}
+    @Override
+    public boolean hasNext() {
+        // skip delimiters
+        while (index < length && isSeparator(UTF8StringPointable.charAt(data, index))) {
+            index += UTF8StringPointable.charSize(data, index);
+        }
+        return index < length;
+    }
 
-	private boolean isSeparator(char c) {
-		return !(Character.isLetterOrDigit(c)
-				|| Character.getType(c) == Character.OTHER_LETTER || Character
-				.getType(c) == Character.OTHER_NUMBER);
-	}
+    private boolean isSeparator(char c) {
+        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER || Character.getType(c) == Character.OTHER_NUMBER);
+    }
 
-	@Override
-	public void next() {
-		tokenLength = 0;
-		int currentTokenStart = index;
-		while (index < length && !isSeparator(StringUtils.charAt(data, index))) {
-			index += StringUtils.charSize(data, index);
-			tokenLength++;
-		}
-		int tokenCount = 1;
-		if (tokenLength > 0 && !ignoreTokenCount) {
-			// search if we got the same token before
-			for (int i = 0; i < tokensStart.length(); ++i) {
-				if (tokenLength == tokensLength.get(i)) {
-					int tokenStart = tokensStart.get(i);
-					tokenCount++; // assume we found it
-					int offset = 0;
-					int currLength = 0;
-					while (currLength < tokenLength) {
-						// case insensitive comparison
-						if (StringUtils.toLowerCase(StringUtils.charAt(data,
-								currentTokenStart + offset)) != StringUtils
-								.toLowerCase(StringUtils.charAt(data,
-										tokenStart + offset))) {
-							tokenCount--;
-							break;
-						}
-						offset += StringUtils.charSize(data, currentTokenStart
-								+ offset);
-						currLength++;
-					}
-				}
-			}
-			// add the new token to the list of seen tokens
-			tokensStart.add(currentTokenStart);
-			tokensLength.add(tokenLength);
-		}
+    @Override
+    public void next() {
+        tokenLength = 0;
+        int currentTokenStart = index;
+        while (index < length && !isSeparator(UTF8StringPointable.charAt(data, index))) {
+            index += UTF8StringPointable.charSize(data, index);
+            tokenLength++;
+        }
+        int tokenCount = 1;
+        if (tokenLength > 0 && !ignoreTokenCount) {
+            // search if we got the same token before
+            for (int i = 0; i < tokensStart.length(); ++i) {
+                if (tokenLength == tokensLength.get(i)) {
+                    int tokenStart = tokensStart.get(i);
+                    tokenCount++; // assume we found it
+                    int offset = 0;
+                    int currLength = 0;
+                    while (currLength < tokenLength) {
+                        // case insensitive comparison
+                        if (Character.toLowerCase(UTF8StringPointable.charAt(data, currentTokenStart + offset)) != Character
+                                .toLowerCase(UTF8StringPointable.charAt(data, tokenStart + offset))) {
+                            tokenCount--;
+                            break;
+                        }
+                        offset += UTF8StringPointable.charSize(data, currentTokenStart + offset);
+                        currLength++;
+                    }
+                }
+            }
+            // add the new token to the list of seen tokens
+            tokensStart.add(currentTokenStart);
+            tokensLength.add(tokenLength);
+        }
 
-		// set token
-		token.reset(data, currentTokenStart, index, tokenLength, tokenCount);
-	}
+        // set token
+        token.reset(data, currentTokenStart, index, tokenLength, tokenCount);
+    }
 }

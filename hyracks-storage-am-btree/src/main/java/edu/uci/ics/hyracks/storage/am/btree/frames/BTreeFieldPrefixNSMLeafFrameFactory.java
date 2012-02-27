@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
-    private ITreeIndexTupleWriterFactory tupleWriterFactory;
-
+    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    
     public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }
@@ -31,5 +31,10 @@ public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFacto
     @Override
     public IBTreeLeafFrame createFrame() {
         return new BTreeFieldPrefixNSMLeafFrame(tupleWriterFactory.createTupleWriter());
+    }
+
+    @Override
+    public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+       return tupleWriterFactory;
     }
 }

@@ -22,43 +22,43 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class HashedUTF8NGramToken extends UTF8NGramToken {
-	public HashedUTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
-		super(tokenTypeTag, countTypeTag);
-	}
+    public HashedUTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
+        super(tokenTypeTag, countTypeTag);
+    }
 
-	@Override
-	public void serializeToken(DataOutput dos) throws IOException {
-		handleTokenTypeTag(dos);
+    @Override
+    public void serializeToken(DataOutput dos) throws IOException {
+        handleTokenTypeTag(dos);
 
-		int hash = GOLDEN_RATIO_32;
+        int hash = GOLDEN_RATIO_32;
 
-		// pre chars
-		for (int i = 0; i < numPreChars; i++) {
-			hash ^= PRECHAR;
-			hash *= GOLDEN_RATIO_32;
-		}
+        // pre chars
+        for (int i = 0; i < numPreChars; i++) {
+            hash ^= PRECHAR;
+            hash *= GOLDEN_RATIO_32;
+        }
 
-		// regular chars
-		int numRegGrams = tokenLength - numPreChars - numPostChars;
-		int pos = start;
-		for (int i = 0; i < numRegGrams; i++) {
-			hash ^= StringUtils.toLowerCase(StringUtils.charAt(data, pos));
-			hash *= GOLDEN_RATIO_32;
-			pos += StringUtils.charSize(data, pos);
-		}
+        // regular chars
+        int numRegGrams = tokenLength - numPreChars - numPostChars;
+        int pos = start;
+        for (int i = 0; i < numRegGrams; i++) {
+            hash ^= Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
+            hash *= GOLDEN_RATIO_32;
+            pos += UTF8StringPointable.charSize(data, pos);
+        }
 
-		// post chars
-		for (int i = 0; i < numPostChars; i++) {
-			hash ^= POSTCHAR;
-			hash *= GOLDEN_RATIO_32;
-		}
+        // post chars
+        for (int i = 0; i < numPostChars; i++) {
+            hash ^= POSTCHAR;
+            hash *= GOLDEN_RATIO_32;
+        }
 
-		// token count
-		hash += tokenCount;
+        // token count
+        hash += tokenCount;
 
-		dos.writeInt(hash);
-	}
+        dos.writeInt(hash);
+    }
 }

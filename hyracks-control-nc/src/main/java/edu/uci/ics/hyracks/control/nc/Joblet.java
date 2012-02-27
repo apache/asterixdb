@@ -18,14 +18,13 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
@@ -34,34 +33,37 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.api.naming.MultipartName;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
+import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class Joblet implements IHyracksJobletContext, ICounterContext {
-    private static final long serialVersionUID = 1L;
-
     private final NodeControllerService nodeController;
 
     private final INCApplicationContext appCtx;
 
     private final JobId jobId;
 
+    private final JobActivityGraph jag;
+
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
-    private final Map<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>> envMap;
+    private final IOperatorEnvironment env;
 
     private final Map<TaskId, ITaskState> taskStateMap;
 
@@ -69,24 +71,29 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final Map<String, Counter> counterMap;
 
-    private final Map<MultipartName, Object> localVariableMap;
-
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final IWorkspaceFileFactory fileFactory;
 
-    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx) {
+    private IJobletEventListener jobletEventListener;
+
+    private JobStatus cleanupStatus;
+
+    private boolean cleanupPending;
+
+    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
+        this.jag = jag;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
-        envMap = new HashMap<OperatorDescriptorId, Map<Integer, IOperatorEnvironment>>();
+        env = new OperatorEnvironmentImpl(nodeController.getId());
         taskStateMap = new HashMap<TaskId, ITaskState>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
-        localVariableMap = new HashMap<MultipartName, Object>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
+        cleanupPending = false;
     }
 
     @Override
@@ -94,34 +101,27 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jobId;
     }
 
-    public synchronized IOperatorEnvironment getEnvironment(OperatorDescriptorId opId, int partition) {
-        if (!envMap.containsKey(opId)) {
-            envMap.put(opId, new HashMap<Integer, IOperatorEnvironment>());
-        }
-        Map<Integer, IOperatorEnvironment> opEnvMap = envMap.get(opId);
-        if (!opEnvMap.containsKey(partition)) {
-            opEnvMap.put(partition, new OperatorEnvironmentImpl(nodeController.getId()));
-        }
-        return opEnvMap.get(partition);
+    public JobActivityGraph getJobActivityGraph() {
+        return jag;
+    }
+
+    public IOperatorEnvironment getEnvironment() {
+        return env;
     }
 
     public void addTask(Task task) {
         taskMap.put(task.getTaskAttemptId(), task);
     }
 
+    public void removeTask(Task task) {
+        taskMap.remove(task.getTaskAttemptId());
+        if (cleanupPending && taskMap.isEmpty()) {
+            performCleanup();
+        }
+    }
+
     public Map<TaskAttemptId, Task> getTaskMap() {
         return taskMap;
-    }
-
-    public synchronized Object lookupLocalVariable(MultipartName name) throws HyracksDataException {
-        if (!localVariableMap.containsKey(name)) {
-            throw new HyracksDataException("Unknown variable: " + name);
-        }
-        return localVariableMap.get(name);
-    }
-
-    public synchronized void setLocalVariable(MultipartName name, Object value) {
-        localVariableMap.put(name, value);
     }
 
     private final class OperatorEnvironmentImpl implements IOperatorEnvironment {
@@ -146,33 +146,18 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
     }
 
-    public Executor getExecutor() {
-        return nodeController.getExecutor();
-    }
-
-    public synchronized void notifyTaskComplete(Task task) throws Exception {
-        taskMap.remove(task);
-        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
-        task.dumpProfile(taskProfile);
-        nodeController.notifyTaskComplete(jobId, task.getTaskAttemptId(), taskProfile);
-    }
-
-    public synchronized void notifyTaskFailed(Task task, Exception exception) {
-        taskMap.remove(task);
-        nodeController.notifyTaskFailed(jobId, task.getTaskAttemptId(), exception);
-    }
-
     public NodeControllerService getNodeController() {
         return nodeController;
     }
 
-    public synchronized void dumpProfile(JobletProfile jProfile) {
+    public void dumpProfile(JobletProfile jProfile) {
         Map<String, Long> counters = jProfile.getCounters();
         for (Map.Entry<String, Counter> e : counterMap.entrySet()) {
             counters.put(e.getKey(), e.getValue().get());
         }
         for (Task task : taskMap.values()) {
-            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId());
+            TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
+                    new Hashtable<PartitionId, PartitionProfile>(task.getPartitionSendProfile()));
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }
@@ -194,7 +179,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public void close() {
-        deallocatableRegistry.close();
+        nodeController.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                deallocatableRegistry.close();
+            }
+        });
     }
 
     @Override
@@ -245,6 +235,37 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         IPartitionCollector collector = partitionRequestMap.get(channel.getPartitionId());
         if (collector != null) {
             collector.addPartitions(Collections.singleton(channel));
+        }
+    }
+
+    public IJobletEventListener getJobletEventListener() {
+        return jobletEventListener;
+    }
+
+    public void setJobletEventListener(IJobletEventListener jobletEventListener) {
+        this.jobletEventListener = jobletEventListener;
+    }
+
+    public void cleanup(JobStatus status) {
+        cleanupStatus = status;
+        cleanupPending = true;
+        if (taskMap.isEmpty()) {
+            performCleanup();
+        }
+    }
+
+    private void performCleanup() {
+        nodeController.getJobletMap().remove(jobId);
+        IJobletEventListener listener = getJobletEventListener();
+        if (listener != null) {
+            listener.jobletFinish(cleanupStatus);
+        }
+        close();
+        cleanupPending = false;
+        try {
+            nodeController.getClusterController().notifyJobletCleanup(jobId, nodeController.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

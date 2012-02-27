@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +47,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final Set<String> participatingNodeIds;
 
+    private final Set<String> cleanupPendingNodeIds;
+
     private final JobProfile profile;
 
     private Set<ActivityCluster> activityClusters;
@@ -69,11 +69,16 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception exception;
 
+    private JobStatus pendingStatus;
+
+    private Exception pendingException;
+
     public JobRun(JobId jobId, JobActivityGraph plan) {
         this.jobId = jobId;
         this.jag = plan;
         pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<String>();
+        cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
@@ -101,6 +106,23 @@ public class JobRun implements IJobStatusConditionVariable {
         return status;
     }
 
+    public synchronized Exception getException() {
+        return exception;
+    }
+
+    public void setPendingStatus(JobStatus status, Exception exception) {
+        this.pendingStatus = status;
+        this.pendingException = exception;
+    }
+
+    public JobStatus getPendingStatus() {
+        return pendingStatus;
+    }
+
+    public synchronized Exception getPendingException() {
+        return pendingException;
+    }
+
     public long getCreateTime() {
         return createTime;
     }
@@ -125,10 +147,6 @@ public class JobRun implements IJobStatusConditionVariable {
         this.endTime = endTime;
     }
 
-    public synchronized Exception getException() {
-        return exception;
-    }
-
     @Override
     public synchronized void waitForCompletion() throws Exception {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
@@ -141,6 +159,10 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public Set<String> getParticipatingNodeIds() {
         return participatingNodeIds;
+    }
+
+    public Set<String> getCleanupPendingNodeIds() {
+        return cleanupPendingNodeIds;
     }
 
     public JobProfile getJobProfile() {
@@ -175,6 +197,8 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
+        result.put("application-name", jag.getApplicationName());
+        result.put("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getCreateTime());
         result.put("end-time", getCreateTime());
@@ -260,7 +284,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
                     acTasks.put(entry);
                 }
-                planJSON.put("task-map", acTasks);
+                planJSON.put("activities", acTasks);
 
                 JSONArray tClusters = new JSONArray();
                 for (TaskCluster tc : acp.getTaskClusters()) {
@@ -292,25 +316,21 @@ public class JobRun implements IJobStatusConditionVariable {
                             JSONObject attempt = new JSONObject();
                             attempt.put("attempt", tca.getAttempt());
                             attempt.put("status", tca.getStatus());
+                            attempt.put("start-time", tca.getStartTime());
+                            attempt.put("end-time", tca.getEndTime());
 
                             JSONArray taskAttempts = new JSONArray();
-                            for (TaskAttempt ta : tca.getTaskAttempts()) {
+                            for (TaskAttempt ta : tca.getTaskAttempts().values()) {
                                 JSONObject taskAttempt = new JSONObject();
+                                taskAttempt.put("task-id", ta.getTaskAttemptId().getTaskId());
                                 taskAttempt.put("task-attempt-id", ta.getTaskAttemptId());
                                 taskAttempt.put("status", ta.getStatus());
                                 taskAttempt.put("node-id", ta.getNodeId());
-                                Exception e = ta.getException();
-                                if (e != null) {
-                                    JSONObject ex = new JSONObject();
-                                    ex.put("exception-class", e.getClass().getName());
-                                    ex.put("exception-message", e.getMessage());
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    PrintWriter pw = new PrintWriter(baos);
-                                    e.printStackTrace(pw);
-                                    pw.close();
-                                    ex.put("exception-stacktrace", new String(baos.toByteArray()));
-
-                                    taskAttempt.put("exception", ex);
+                                taskAttempt.put("start-time", ta.getStartTime());
+                                taskAttempt.put("end-time", ta.getEndTime());
+                                String failureDetails = ta.getFailureDetails();
+                                if (failureDetails != null) {
+                                    taskAttempt.put("failure-details", failureDetails);
                                 }
                                 taskAttempts.put(taskAttempt);
                             }
@@ -330,6 +350,8 @@ public class JobRun implements IJobStatusConditionVariable {
             aClusters.put(acJSON);
         }
         result.put("activity-clusters", aClusters);
+
+        result.put("profile", profile.toJSON());
 
         return result;
     }

@@ -15,43 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 
 public class MultiComparator {
 
-	private static final long serialVersionUID = 1L;
+	private final IBinaryComparator[] cmps;
 
-	private IBinaryComparator[] cmps = null;
-	private ITypeTrait[] typeTraits;
-	private IPrimitiveValueProvider[] valueProviders = null;
-
-	private IBinaryComparator intCmp = IntegerBinaryComparatorFactory.INSTANCE
-			.createBinaryComparator();
-
-	public IBinaryComparator getIntCmp() {
-		return intCmp;
-	}
-
-	public MultiComparator(ITypeTrait[] typeTraits, IBinaryComparator[] cmps) {
-		this.typeTraits = typeTraits;
+	public MultiComparator(IBinaryComparator[] cmps) {
 		this.cmps = cmps;
-	}
-
-	public MultiComparator(ITypeTrait[] typeTraits, IBinaryComparator[] cmps,
-			IPrimitiveValueProvider[] valueProviders) {
-		this.typeTraits = typeTraits;
-		this.cmps = cmps;
-		this.valueProviders = valueProviders;
 	}
 
 	public int compare(ITupleReference tupleA, ITupleReference tupleB) {
@@ -83,20 +55,6 @@ public class MultiComparator {
 		return 0;
 	}
 
-	public String printTuple(ITupleReference tuple,
-			ISerializerDeserializer[] fields) throws HyracksDataException {
-		StringBuilder strBuilder = new StringBuilder();
-		for (int i = 0; i < tuple.getFieldCount(); i++) {
-			ByteArrayInputStream inStream = new ByteArrayInputStream(
-					tuple.getFieldData(i), tuple.getFieldStart(i),
-					tuple.getFieldLength(i));
-			DataInput dataIn = new DataInputStream(inStream);
-			Object o = fields[i].deserialize(dataIn);
-			strBuilder.append(o.toString() + " ");
-		}
-		return strBuilder.toString();
-	}
-
 	public IBinaryComparator[] getComparators() {
 		return cmps;
 	}
@@ -104,21 +62,4 @@ public class MultiComparator {
 	public int getKeyFieldCount() {
 		return cmps.length;
 	}
-
-	public void setComparators(IBinaryComparator[] cmps) {
-		this.cmps = cmps;
-	}
-
-	public int getFieldCount() {
-		return typeTraits.length;
-	}
-
-	public ITypeTrait[] getTypeTraits() {
-		return typeTraits;
-	}
-
-	public IPrimitiveValueProvider[] getValueProviders() {
-		return valueProviders;
-	}
-
 }
