@@ -1,0 +1,33 @@
+ARecordType: 
+field: x
+AbstractCollectionType: 
+ARecordType: 
+field: r
+AbstractCollectionType: 
+AbstractCollectionType: 
+AString: {a}
+AString: {b}
+AString: {c}
+AbstractCollectionType: 
+AString: {d}
+AString: {e}
+AString: {f}
+field: y
+AbstractCollectionType: 
+ARecordType: 
+field: s
+AbstractCollectionType: 
+AbstractCollectionType: 
+AInt32: {1}
+AInt32: {2}
+AInt32: {3}
+AbstractCollectionType: 
+AInt32: {4}
+AInt32: {5}
+AInt32: {6}
+field: z
+AbstractCollectionType: 
+ARecordType: 
+field: t
+AbstractCollectionType: 
+ADateTime: { 2011-9-16:11:0:0:0:0:0 }

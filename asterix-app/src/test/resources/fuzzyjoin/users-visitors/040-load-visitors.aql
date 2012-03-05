@@ -1,0 +1,19 @@
+use dataverse fuzzy1;
+
+declare type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: {{int32}},
+  interests: {{string}}
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Visitors(VisitorType) 
+  partitioned by key vid on group1;
+
+load dataset Visitors 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///asterix/asterix-app/data/users-visitors-small/visitors.json"),("format"="asm")) pre-sorted;
+
+

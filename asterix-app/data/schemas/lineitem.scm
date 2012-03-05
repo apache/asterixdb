@@ -1,0 +1,1 @@
+l_orderkey:int32|l_partkey:int32|l_suppkey:int32|l_linenumber:int32|l_quantity:double|l_extendedprice:double|l_discount:double|l_tax:double|l_returnflag:string|l_linestatus: string|l_shipdate:string|l_commitdate:string|l_receiptdate:string|l_shipinstruct:string|l_shipmode:string|l_comment: string

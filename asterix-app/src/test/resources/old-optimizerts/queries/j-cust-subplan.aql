@@ -1,0 +1,4 @@
+for $c in recordset(['cid', 'int32', 'name', 'string', 'age', 'int32'], 'osfiles', ['nc1', 'data/spj01/cust1.adm'], ['nc2', 'data/spj01/cust2.adm'])
+where some $c2 in [ $c ]
+      satisfies substring($c2.name, 1, 1) = "J"
+return $c

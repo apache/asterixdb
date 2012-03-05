@@ -1,0 +1,180 @@
+drop dataverse tpch if exists;
+create dataverse tpch;
+  
+
+use dataverse tpch;
+
+create type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: int32, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type RegionType as closed {
+	r_regionkey: int32, 
+	r_name: string, 
+	r_comment: string
+} 
+
+create type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+create type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset LineItem(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+create dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+create dataset Supplier(SupplierType)
+  partitioned by key s_suppkey on group1;
+create dataset Region(RegionType) 
+  partitioned by key r_regionkey on group1;
+create dataset Nation(NationType) 
+  partitioned by key n_nationkey on group1;
+create dataset Part(PartType)
+  partitioned by key p_partkey on group1;
+create dataset Partsupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+create dataset Customer(CustomerType) 
+  partitioned by key c_custkey on group1;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Orders 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Supplier 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Region 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Nation 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Part 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Partsupp 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Customer 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+
+write output to nc1:"rttest/tpch_q5_local_supplier_volume.adm";
+
+
+
+for $c in dataset('Customer')
+for $o1 in 
+(  for $o in dataset('Orders')
+   for $l1 in (
+     for $l in dataset('LineItem')
+     for $s1 in 
+     (  for $s in dataset('Supplier')
+        for $n1 in 
+        (  for $n in dataset('Nation')
+           for $r in dataset('Region')
+             where $n.n_regionkey = $r.r_regionkey
+           return 
+              {"n_name": $n.n_name, "n_nationkey": $n.n_nationkey}  )
+        where $s.s_nationkey = $n1.n_nationkey
+        return 
+           { "n_name": $n1.n_name, "s_suppkey": $s.s_suppkey, "s_nationkey": $s.s_nationkey }  )
+     where $l.l_suppkey = $s1.s_suppkey      
+     return 
+        { "n_name": $s1.n_name, "l_extendedprice": $l.l_extendedprice, "l_discount": $l.l_discount, "l_orderkey": $l.l_orderkey, "s_nationkey": $s1.s_nationkey }  )
+   where $l1.l_orderkey = $o.o_orderkey and $o.o_orderdate >= '1990-01-01' and $o.o_orderdate < '1995-01-01'
+   return 
+     { "n_name": $l1.n_name, "l_extendedprice": $l1.l_extendedprice, "l_discount": $l1.l_discount, "s_nationkey": $l1.s_nationkey, "o_custkey": $o.o_custkey }  )
+where $c.c_nationkey = $o1.s_nationkey and $c.c_custkey = $o1.o_custkey
+/*+ hash*/     
+group by $n_name := $o1.n_name with $o1
+let $revenue := sum (
+  for $i in $o1 
+  return 
+    $i.l_extendedprice * (1 - $i.l_discount)
+)
+order by $revenue desc
+return 
+  { "n_name": $n_name, "revenue": $revenue }

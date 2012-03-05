@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_get-item_01.adm";
+
+let $x :=  [1, 2, 3, 4]
+return $x[2]

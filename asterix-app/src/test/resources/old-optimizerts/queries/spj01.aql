@@ -1,0 +1,8 @@
+declare function samecust($cust, $ord)
+{$cust.cid = $ord.cid}
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where samecust($c, $o)
+ and $c.age < 21 and $o.total > 1000.00
+return { "custname":$c.name, "orddate":$o.date } 

@@ -1,0 +1,41 @@
+use dataverse demo1112;
+
+declare type ExampleType as open {
+  id: int32,
+  name: string,
+  age: float,
+  salary: double,
+  married: boolean,
+  interests: {{string}},
+  children: [string],
+  address: AddressType,
+  dob: date,
+  time: time,
+  datetime: datetime,
+  duration: duration,
+  location2d: point,
+  location3d: point3d,
+  line: line,
+  polygon: polygon
+  
+  // ?
+  
+  // binary
+  // union
+}
+
+declare type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset All(ExampleType)
+  partitioned by key id on group1;
+
+drop dataset All;

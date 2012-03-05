@@ -1,0 +1,808 @@
+{
+ "connectors": [
+  {
+   "connector": {
+    "id": "9e451fd1-ca4d-44e7-9c01-5fd0bc520dfa",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:b07bbb40-a41c-4d00-994b-f5fa5d3eca34",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:800cab7e-8228-4c85-b19a-39cb844893b7",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "d506b416-5ef6-4e79-ad8b-97d870b2e7fd",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:67d4cc31-c6fb-48d3-8ca3-af44628f68ca",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:a80baf03-e23a-4e51-828a-b9ec8620767b",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "0283040e-2cb1-48ce-8a12-3fd02e02a867",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:ce6dab26-9823-4e74-9834-914ab6798874",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:2c7f5446-ca70-424e-b72b-dcbfba13c5fc",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "d3c6f04b-30b0-4eca-8666-d926559d2242",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:83b6ee56-1fba-4df7-bd13-89de2edfc4dc",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:f0024d8c-b182-4c84-9642-562b7f873cb1",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "27771271-9fd0-4e54-b864-ec0241e06350",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:40fc40ba-d7e5-44a2-a9a6-88642a2e2f79",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:019d92ce-5cb6-4ed4-a55b-5088b1298356",
+   "out-operator-port": 1,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "798874c1-f95e-4534-8944-fb04dd5c5d9d",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:61e21faf-53be-44c7-a39b-d621a19b3dc6",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:f323df6e-1caa-4cb2-9c2c-903df08ee288",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "dd64cb43-3d38-488c-90df-6703049dcbed",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:86cf6620-ce7a-447d-82ac-32d71720d008",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:162900ff-b4a6-4d0c-b9c2-6595f9d11e4e",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "b4eab7c7-58a5-4908-b117-f6a455cf28df",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:899fc36b-024c-402f-a155-a218dc3358ee",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:83b6ee56-1fba-4df7-bd13-89de2edfc4dc",
+   "out-operator-port": 1,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "92abc733-323e-4fc4-a0d3-574f1a2380b9",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:f0024d8c-b182-4c84-9642-562b7f873cb1",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:ce6dab26-9823-4e74-9834-914ab6798874",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "a442c8f4-dbe3-4549-8116-fabf2133cb37",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:939559d4-4753-42ca-a96b-5a4d867521e4",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:84042597-2ad3-41fd-95be-7c7a8c9ba6e7",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "7561fed7-fe79-4f41-a0c7-fe3038cd4df8",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningMergingConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:649b70fe-e549-4f38-b248-1868bf691b87",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:899fc36b-024c-402f-a155-a218dc3358ee",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "436185ad-9c58-43d3-b654-d4279a41d3ca",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:11496054-b3b3-4730-b43a-7130c474ef1f",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:55442d10-e749-4178-99e7-c29d40c980d1",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "5fcce470-62bb-4415-b970-feb258ceb126",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:2c7f5446-ca70-424e-b72b-dcbfba13c5fc",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:094cb8b2-df6d-4f73-a8f5-00a6ce14d59b",
+   "out-operator-port": 1,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "f07cdaf4-448b-452d-8340-16c2836e950a",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:a80baf03-e23a-4e51-828a-b9ec8620767b",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:ad75356e-262b-468d-ad27-5ead6cfa49b3",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "aeab0d67-4610-4190-a116-a0d592bfbc76",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:bd489957-baec-4872-9b64-6ce7ecc36ed1",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:cf5387c0-3490-4c50-b47e-ac20c5e961a7",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "6681661c-aa41-4fe3-8c05-4e77910babc3",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:7e45e056-61c7-47a0-a5d0-5e145b48b64b",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:6a50b453-2460-4ee8-8fc4-9855ecb54862",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "83d3048b-5b1e-4835-aaa0-ab6f9bca2cac",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:55442d10-e749-4178-99e7-c29d40c980d1",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:019d92ce-5cb6-4ed4-a55b-5088b1298356",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "43aabbac-532e-4bf5-88c1-adf115c4e5ef",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:6cc231d4-a25c-4301-98f9-3a9dd548a635",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:c29fedec-a107-4d03-822b-5f08d44fbfc2",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "2c5b8681-b3d6-43e4-9a43-b662626231ff",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:019d92ce-5cb6-4ed4-a55b-5088b1298356",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:bd489957-baec-4872-9b64-6ce7ecc36ed1",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "448a4dcf-989b-455a-b8db-37fd73633a08",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:84042597-2ad3-41fd-95be-7c7a8c9ba6e7",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:cf5387c0-3490-4c50-b47e-ac20c5e961a7",
+   "out-operator-port": 1,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "08d1bec0-36f2-42d5-a8c7-1d07f993dfe0",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:162900ff-b4a6-4d0c-b9c2-6595f9d11e4e",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:094cb8b2-df6d-4f73-a8f5-00a6ce14d59b",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "0bddc12e-bcbb-4993-8d32-b657505305fc",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:6a50b453-2460-4ee8-8fc4-9855ecb54862",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:83b6ee56-1fba-4df7-bd13-89de2edfc4dc",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "e066c3c9-3a65-46ae-ab78-417c872d8482",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:094cb8b2-df6d-4f73-a8f5-00a6ce14d59b",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:11496054-b3b3-4730-b43a-7130c474ef1f",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "63433aaf-1046-48ca-8bce-ddb9e645aaaf",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:73e52bad-0cff-4d55-b95b-176b16f7f464",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:fe17ac32-aa06-4273-bfeb-6ad12004146d",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "3194b91e-6df6-47c2-86f9-e933849a1d51",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:4c0306ed-84f7-4dd8-987c-a800d925505a",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:73e52bad-0cff-4d55-b95b-176b16f7f464",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "2d0cbb34-5d09-4924-b7d7-d754578d369b",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNReplicatingConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:34bea0d2-8c02-46af-a281-d359e73e8459",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:dde20475-0341-40cd-8d87-47019d4af7e7",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "061b01cf-dd3d-4e4a-b4d1-2e55430b7eff",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:fe17ac32-aa06-4273-bfeb-6ad12004146d",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:97f7b483-5810-4f62-a3f2-8dc108f211bf",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "c74fdcf7-75b1-469f-aa4f-bdeec91ea356",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:470b4218-4ff6-4699-b05d-d5624f70c346",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:5f398745-a0da-4a93-8654-add2e550003c",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "8742990b-c6b3-43f5-84e4-22df1a61d7c6",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:800cab7e-8228-4c85-b19a-39cb844893b7",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:86cf6620-ce7a-447d-82ac-32d71720d008",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "6d59eadb-3286-49f0-80d6-d7ad9d4247a3",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:ad75356e-262b-468d-ad27-5ead6cfa49b3",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:649b70fe-e549-4f38-b248-1868bf691b87",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "b400c160-9fca-4151-a5a1-2387da980702",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:f323df6e-1caa-4cb2-9c2c-903df08ee288",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:67d4cc31-c6fb-48d3-8ca3-af44628f68ca",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "807b4c5d-ac3f-49e2-a65a-e58348346e49",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:fe400283-741d-4b35-bc79-9e430715f3fb",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:b07bbb40-a41c-4d00-994b-f5fa5d3eca34",
+   "out-operator-port": 1,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "6555a4da-7164-40c7-9c11-ce6bb098e1bd",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:cf5387c0-3490-4c50-b47e-ac20c5e961a7",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:34bea0d2-8c02-46af-a281-d359e73e8459",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "90ee0791-9c0e-47e8-832d-8344d8f4c36f",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:3796886b-044c-4bfd-b682-9c3a2df05f31",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:40fc40ba-d7e5-44a2-a9a6-88642a2e2f79",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "0c93505b-ac0f-4485-98dd-ad1310c8a8af",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:8e7bd09e-3fe2-4022-b493-64320be10f22",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:6cc231d4-a25c-4301-98f9-3a9dd548a635",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "dfac2841-28bd-4d2c-be58-60e800885ecb",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:5f398745-a0da-4a93-8654-add2e550003c",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:4c0306ed-84f7-4dd8-987c-a800d925505a",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "58da74ca-aa5a-4d1c-95a1-46a17239430b",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:c29fedec-a107-4d03-822b-5f08d44fbfc2",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:b07bbb40-a41c-4d00-994b-f5fa5d3eca34",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "b58210fa-978c-434f-8417-12fba92a25a9",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningMergingConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:97f7b483-5810-4f62-a3f2-8dc108f211bf",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:fe400283-741d-4b35-bc79-9e430715f3fb",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  },
+  {
+   "connector": {
+    "id": "b7081523-098e-47bd-8b86-27d8d7c4c199",
+    "java-class": "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor",
+    "type": "connector"
+   },
+   "in-operator-id": "ODID:17c0bf1d-edab-423b-a932-23d1c3111b0e",
+   "in-operator-port": 0,
+   "out-operator-id": "ODID:7e45e056-61c7-47a0-a5d0-5e145b48b64b",
+   "out-operator-port": 0,
+   "type": "connector-info"
+  }
+ ],
+ "operators": [
+  {
+   "id": "939559d4-4753-42ca-a96b-5a4d867521e4",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "97f7b483-5810-4f62-a3f2-8dc108f211bf",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "bd489957-baec-4872-9b64-6ce7ecc36ed1",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["stream-project [1, 3]"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "2c7f5446-ca70-424e-b72b-dcbfba13c5fc",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [4] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@3a747fa2]",
+    "unnest 5 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor$1@366782a9"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "8e7bd09e-3fe2-4022-b493-64320be10f22",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "61e21faf-53be-44c7-a39b-d621a19b3dc6",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "c29fedec-a107-4d03-822b-5f08d44fbfc2",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2, 3] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@45b34126, edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@7b7a4989]",
+    "assign [4] := [edu.uci.ics.asterix.runtime.evaluators.tagged.functions.LenDescriptor$1@197200b4]",
+    "unnest 5 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor$1@b8c3679"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "dde20475-0341-40cd-8d87-47019d4af7e7",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["sink-write [0] outputFile"],
+   "out-arity": 0,
+   "type": "operator"
+  },
+  {
+   "id": "83b6ee56-1fba-4df7-bd13-89de2edfc4dc",
+   "in-arity": 2,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "019d92ce-5cb6-4ed4-a55b-5088b1298356",
+   "in-arity": 2,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "6cc231d4-a25c-4301-98f9-3a9dd548a635",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "470b4218-4ff6-4699-b05d-d5624f70c346",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "fe17ac32-aa06-4273-bfeb-6ad12004146d",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "ce6dab26-9823-4e74-9834-914ab6798874",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "cf5387c0-3490-4c50-b47e-ac20c5e961a7",
+   "in-arity": 2,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "86cf6620-ce7a-447d-82ac-32d71720d008",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "84042597-2ad3-41fd-95be-7c7a8c9ba6e7",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "f0024d8c-b182-4c84-9642-562b7f873cb1",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "3796886b-044c-4bfd-b682-9c3a2df05f31",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "649b70fe-e549-4f38-b248-1868bf691b87",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "a80baf03-e23a-4e51-828a-b9ec8620767b",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "34bea0d2-8c02-46af-a281-d359e73e8459",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [4] := [edu.uci.ics.asterix.runtime.evaluators.tagged.functions.AbstractRecordConstructorDescriptor$1@224c47db]",
+    "stream-project [4]"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "800cab7e-8228-4c85-b19a-39cb844893b7",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "094cb8b2-df6d-4f73-a8f5-00a6ce14d59b",
+   "in-arity": 2,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "17c0bf1d-edab-423b-a932-23d1c3111b0e",
+   "in-arity": 0,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": ["ets"],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "11496054-b3b3-4730-b43a-7130c474ef1f",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [12] := [edu.uci.ics.asterix.runtime.evaluators.tagged.functions.SimilarityDescriptor$1@3e018c74]",
+    "stream-select edu.uci.ics.asterix.runtime.evaluators.comparisons.ComparisonEvalFactory@57ac3379"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "fe400283-741d-4b35-bc79-9e430715f3fb",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2] := [ColumnAccess(0)]",
+    "running-aggregate [3] := [edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor$1@6a6779e6]",
+    "assign [4] := [ConstantEvalFactory true]"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "73e52bad-0cff-4d55-b95b-176b16f7f464",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "f323df6e-1caa-4cb2-9c2c-903df08ee288",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "899fc36b-024c-402f-a155-a218dc3358ee",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2] := [ColumnAccess(0)]",
+    "running-aggregate [3] := [edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor$1@2f74219d]",
+    "assign [4] := [ConstantEvalFactory true]"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "b07bbb40-a41c-4d00-994b-f5fa5d3eca34",
+   "in-arity": 2,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "ad75356e-262b-468d-ad27-5ead6cfa49b3",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "40fc40ba-d7e5-44a2-a9a6-88642a2e2f79",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "6a50b453-2460-4ee8-8fc4-9855ecb54862",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2, 3] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@714ae2c1, edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@6b6d2702]",
+    "assign [4] := [edu.uci.ics.asterix.runtime.evaluators.tagged.functions.LenDescriptor$1@4b1c2b67]",
+    "unnest 5 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor$1@26659db7"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "5f398745-a0da-4a93-8654-add2e550003c",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "55442d10-e749-4178-99e7-c29d40c980d1",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "162900ff-b4a6-4d0c-b9c2-6595f9d11e4e",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [4] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@59556d12]",
+    "unnest 5 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor$1@776be68f"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "67d4cc31-c6fb-48d3-8ca3-af44628f68ca",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@4cedf389]",
+    "unnest 3 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor$1@1a0fced4"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "7e45e056-61c7-47a0-a5d0-5e145b48b64b",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor",
+   "out-arity": 1,
+   "type": "operator"
+  },
+  {
+   "id": "4c0306ed-84f7-4dd8-987c-a800d925505a",
+   "in-arity": 1,
+   "java-class": "edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor",
+   "micro-operators": [
+    "assign [2] := [edu.uci.ics.asterix.runtime.evaluators.tagged.FieldAccessByNameEvalFactory@3d3cdaa]",
+    "unnest 3 <- edu.uci.ics.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor$1@466355dc"
+   ],
+   "out-arity": 1,
+   "type": "operator"
+  }
+ ],
+ "type": "job"
+}
+

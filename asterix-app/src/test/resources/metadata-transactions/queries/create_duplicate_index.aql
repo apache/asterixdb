@@ -1,0 +1,5 @@
+use dataverse custord;
+
+create index ordCustId on Orders(cid);
+
+

@@ -1,0 +1,3 @@
+{ "cell": rectangle("5.0,5.0 | 10.0,10.0"), "count": 1 }
+{ "cell": rectangle("5.0,0.0 | 10.0,5.0"), "count": 3 }
+{ "cell": rectangle("0.0,0.0 | 5.0,5.0"), "count": 12 }

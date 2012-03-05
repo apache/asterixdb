@@ -1,0 +1,51 @@
+drop dataverse events if exists;
+create dataverse events;
+use dataverse events;
+
+
+create type AddressType as closed {
+  /*+ val-files data/events/streets.txt */
+  street: string,
+  /*+ val-files data/events/cities.txt */
+  city: string,
+  /*+ interval long 100000 999999 */
+  zip: string,
+  /*+ val-file-same-idx data/events/latlongs.txt city */
+  latlong: point
+}
+
+/*+ dgen event.adm 5*/
+create type EventType as closed {
+  /*+ auto 100000 */
+  event_id: int64,
+  /*+ insert-rand-int event- - */ 
+  name: string,
+  location: AddressType ?,
+  /*+ list 1 3 */
+  organizers: {{
+   /*+ gen-fields int 0 2 other */ 
+   {
+     /*+ val-files data/uscensus/dist.all.first.cleaned data/uscensus/dist.all.last.cleaned */
+     name: string
+   }
+  }},
+  /*+ list 1 2 */
+  sponsoring_sigs: [
+    {
+      /*+ interval int 100 120 */    
+      sig_id: int32,
+      /*+ val-files data/events/chapter_names.txt */      
+      chapter_name: string
+    }
+  ],
+  /*+ list-val-file data/events/interests.txt 1 4 */  
+  interest_keywords: {{string}},
+  /*+ interval double 5 20 */
+  price: double?,
+  /*+ datetime-between-years 1999 2012 */
+  start_time: datetime,
+  /*+ datetime-add-rand-hours 1 4 start_time */
+  end_time: datetime
+}
+
+

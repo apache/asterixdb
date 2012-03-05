@@ -1,0 +1,43 @@
+use dataverse fuzzy1;
+
+declare type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+write output to nc1:"/tmp/dblp.adm";
+
+for $paperR in dataset('DBLP')
+where $paperR.id = 1
+for $authorR in word-tokens($paperR.authors)
+for $paperS in dataset('DBLP')
+for $authorS in word-tokens($paperS.authors)
+where $authorR = $authorS
+return {'R': {'dblpid': $paperR.dblpid, 'authors': $paperR.authors}, 
+        'S': {'dblpid': $paperS.dblpid, 'authors': $paperS.authors}}
+
+/*
+java.lang.RuntimeException: java.lang.IllegalArgumentException
+        at edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable.run(OperatorRunnable.java:70)
+        at edu.uci.ics.hyracks.control.nc.Stagelet$1.run(Stagelet.java:120)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+        at java.lang.Thread.run(Thread.java:619)
+Caused by: java.lang.IllegalArgumentException
+        at edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils.charAt(StringUtils.java:62)
+        at edu.uci.ics.asterix.jobgen.data.tagged.AqlSchemalessPrinterFactory$1.print(AqlSchemalessPrinterFactory.java:103)
+        at edu.uci.ics.asterix.jobgen.data.tagged.AqlSchemalessPrinterFactory$1.print(AqlSchemalessPrinterFactory.java:112)
+        at edu.uci.ics.aqua.runtime.operators.std.PrinterRuntime.printTuple(PrinterRuntime.java:90)
+        at edu.uci.ics.aqua.runtime.operators.std.PrinterRuntime.nextFrame(PrinterRuntime.java:58)
+        at edu.uci.ics.aqua.runtime.operators.base.AquaMetaOperatorDescriptor$2.nextFrame(AquaMetaOperatorDescriptor.java:123)
+        at edu.uci.ics.hyracks.control.nc.runtime.OperatorRunnable.run(OperatorRunnable.java:62)
+        ... 4 more
+*/

@@ -1,0 +1,5 @@
+for $current_sig in dataset('SIGroup')
+where
+   every $old_sig in dataset('SIGroup', getCurrentDateTime() - dtduration(0, 24, 0, 0))
+   satisfies $old_sig.name != $current_sig.name
+return $current_sig

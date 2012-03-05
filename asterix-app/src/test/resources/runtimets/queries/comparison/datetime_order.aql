@@ -1,0 +1,17 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/comparison_datetime_order.adm";
+
+let $dt1 := datetime("2011-12-31T14:00:00-10:00")
+let $dt2 := datetime("2012-01-01T00:00:00Z")
+let $dt3 := datetime("2005-01-01T00:00:00+04:00")
+let $dt4 := datetime("2011-12-31T13:00:00-11:00")
+let $dt5 := datetime("2012-04-06T00:00:00Z")
+
+for $dt in [$dt1, $dt2, $dt3, $dt4, $dt5]
+order by $dt
+return $dt

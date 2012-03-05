@@ -1,0 +1,39 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+create dataset CSX(CSXType) partitioned by key id on group1;
+
+load dataset DBLP from nc1:'data/pub-small/dblp-small-id.txt' delimited by ':';
+load dataset CSX from nc1:'data/pub-small/csx-small-id.txt' delimited by ':';
+
+write output to nc1:'rttest/fuzzyjoin_dblp-csx-aqlplus_2.adm';
+
+set simthreshold '.5f';
+
+for $csx in dataset('CSX')
+for $dblp in dataset('DBLP')
+where $dblp.title ~= $csx.title
+order by $dblp.id, $csx.id
+return {'dblp': $dblp, 'csx': $csx}

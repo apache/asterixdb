@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/boolean_and_01.adm";
+
+for $x in ["true"]
+for $y in ["false"]
+return $x and $y

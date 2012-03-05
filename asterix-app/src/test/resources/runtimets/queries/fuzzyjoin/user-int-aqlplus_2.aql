@@ -1,0 +1,26 @@
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: <string>
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset Users(UserType) partitioned by key uid on group1;
+
+load dataset Users from nc1:'data/users-visitors-small/users.json';
+
+write output to nc1:'rttest/fuzzyjoin_user-int-aqlplus_2.adm';
+
+set simthreshold '.5f';
+
+for $user2 in dataset('Users')
+for $user in dataset('Users')
+where $user.interests ~= $user2.interests and $user.uid < $user2.uid
+order by $user.uid, $user2.uid
+return { 'user': $user, 'user2': $user2 }

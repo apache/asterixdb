@@ -1,0 +1,6 @@
+use dataverse custord;
+
+write output to nc1:"rttest/custord_q3.adm";
+      
+for $o in dataset('Orders')
+return {"id" : $o.oid, "total": $o.total} 

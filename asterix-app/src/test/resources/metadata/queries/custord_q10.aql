@@ -1,0 +1,7 @@
+use dataverse Metadata;
+
+write output to nc1:"rttest/custord_q10.adm";
+
+for $c in dataset('Dataset')
+return $c
+

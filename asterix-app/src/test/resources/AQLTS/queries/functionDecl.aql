@@ -1,0 +1,7 @@
+declare function add($a, $b){
+	$a + $b
+}
+
+declare function minus($a, $b){
+	$a - $b
+}

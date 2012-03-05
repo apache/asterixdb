@@ -1,0 +1,39 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: {{string}}
+}
+
+create type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: {{string}}
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Users(UserType) partitioned by key uid on group1;
+create dataset Visitors(VisitorType) partitioned by key vid on group1;
+
+
+load dataset Users 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/users-visitors-small/users.json"),("format"="adm"));
+
+load dataset Visitors 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/users-visitors-small/visitors.json"),("format"="adm"));
+
+write output to nc1:'rttest/nested-loop-join_01.adm';
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where len($user.lottery_numbers) = len($visitor.lottery_numbers)
+order by $user.uid, $visitor.vid
+return {'user': $user, 'visitor': $visitor, 'user-lottery_numbers-len': len($user.lottery_numbers), 'visitor-lottery_numbers-len': len($visitor.lottery_numbers)}

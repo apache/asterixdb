@@ -1,0 +1,60 @@
+use dataverse demo1112;
+
+declare type EmpType as open {
+  cid: int32, 
+  name: string,
+  address: {
+  number: int32, 
+  street: string,
+  city: string
+   },
+  age: int32?,
+  interests: {{string}},
+  children: [string]
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Emp(EmpType) 
+  partitioned by key cid on group1;
+
+write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_emp_q1.adm";
+
+/*
+for $o in dataset('Emp')
+let $l1 := [$o.total, $o.lastorder] // work  
+let $l2 := [ $l1[0], $l1[1]]
+let $l3 := <$o.total, $o.lastorder> // work  
+let $l4 := < $o.children[0], $o.children[1]>
+return { "list1": $l1, "list2": $l2, "list3": $l3, "list4": $l4}
+*/
+/*
+for $o in dataset('Emp')
+
+return { "list0": $l3, "list1": $l7}
+*/
+
+// this query works
+
+for $o in dataset('Emp')
+let $l1 := [$o.cid, $o.name] // work
+let $l2 := [$o.cid , $o.lastorder, $o.name, $o.address, $o.total, $l1, $l1[0], $l1[1]] // work 
+let $l3 := [$o.cid, $l2[5], $l2[6], $l2[7], $o.lastorder]
+return { "list0": $o.children, "list1": $l1, "list2": $l2, "list3": $l3}
+
+
+//for $o in dataset('Emp')
+//let $l0 := [$o.cid, $o.cid] // work 
+//let $l1 := [$o.openlist, $o.total] // work
+//let $l2 := [$o.cid, $o.name] // work
+//let $l3 := [$o.cid, $o.total] // work 
+//let $l4 := [$o.cid , $o.total, $o.lastorder] // work 
+//let $l5 := [$o.cid , $o.lastorder, $o.total] // work 
+//let $l6 := [$o.cid , $o.lastorder, $o.name, $o.address, $o.total, $l2, $l2[0], $l2[1]] // work 
+//let $l7 := [$o.cid, $l6[0], $o.lastorder]
+//return { "list": $l7, "list2": $l6}
+//return { "list": $l0, "list1": $l1}
+//return { "custname":$o.name, "children" : $o.children, "firstChild": $o.children[0] ,  "secondChild": $o.children[1], "interests": $o.interests}

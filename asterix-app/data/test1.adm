@@ -1,0 +1,8 @@
+1
+12340
+12.34
+"I'm a string."
+{ "given name": "John", "surname": "Smith" }
+[ "apples", "oranges", "plums" ]
+{{ "apples", "oranges" }}
+{ "name": "Lee", "friends": [ "Smith", "Johnson" ] }

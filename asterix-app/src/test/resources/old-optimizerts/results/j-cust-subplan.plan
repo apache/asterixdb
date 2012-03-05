@@ -1,0 +1,16 @@
+-- SINK_WRITE  |PARTITIONED|
+  -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+    -- STREAM_PROJECT  |PARTITIONED|
+      -- STREAM_SELECT  |PARTITIONED|
+        -- SUBPLAN  |PARTITIONED|
+                {
+                  -- AGGREGATE  |UNPARTITIONED|
+                    -- STREAM_SELECT  |UNPARTITIONED|
+                      -- ASSIGN  |UNPARTITIONED|
+                        -- ASSIGN  |UNPARTITIONED|
+                          -- ASSIGN  |UNPARTITIONED|
+                            -- UNNEST  |UNPARTITIONED|
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                }
+          -- AQL_DATASET_UNNEST  |PARTITIONED|
+            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,35 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  cashBack: int32,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+create external dataset Customers(CustomerType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+        
+write output to nc1:"rttest/custord_customer_q_06.adm";
+      
+for $c in dataset('Customers')
+let $rec := $c.lastorder
+let $m := [$c.cid, $rec.oid]
+let $n := [$m[?], $m[1], $m[4]]
+return { "customerid": $c.name, "orderedlist": $n}

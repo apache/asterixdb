@@ -1,0 +1,6 @@
+{  "oid": 1000,  "cid": 1,  "orderstatus": "ORDER_DELIVERED",  "orderpriority": "LOW",  "clerk": "Kathryne", "total": 97.20656f, "items": [{ "number": int64("56910"), "storeIds": {{ 34i8, 61i8 }}} , { "number": int64("5895"), "storeIds": {{ 15i8, 48i8 }}}] }
+{  "oid": 10000,  "cid": 5,  "orderstatus": "ORDER_DELIVERED",  "orderpriority": "HIGH",  "clerk": "ALEX",  "total": 7.206f, "items": [{ "number": int64("48636"), "storeIds": {{ 48i8, 84i8 }}} , { "number": int64("8545"), "storeIds": {{ 56i8, 78i8 }}}]}
+{  "oid": 100,  "cid": 1, "orderstatus": "ORDER_DELIVERED", "orderpriority": "HIGH",  "clerk": "YASSER", "total": 124.26f, "items": [{ "number": int64("20158"), "storeIds": {{ 69i8, 20i8 }}} , { "number": int64("1052"), "storeIds": {{ 95i8, 38i8 }}}]}
+{  "oid": 10,  "cid": 5,  "orderstatus": "ORDER_DELIVERED", "orderpriority": "HIGH",  "clerk": "MIKE",  "total": 14.2326f,  "items": [{ "number": int64("58485"), "storeIds": {{ 28i8, 58i8 }}} , { "number": int64("6842"), "storeIds": {{ 45i8, 45i8 }}}]}
+
+

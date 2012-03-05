@@ -1,0 +1,20 @@
+use dataverse demo0927;
+
+declare type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+load dataset Orders from nc1:"/tmp/orderData.json";
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///tmp/orderData.json"),("format"="adm")) pre-sorted;
+

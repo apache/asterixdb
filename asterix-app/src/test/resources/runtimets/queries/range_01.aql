@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/range_01.adm";
+
+for $x in range(20,30)
+return $x
+

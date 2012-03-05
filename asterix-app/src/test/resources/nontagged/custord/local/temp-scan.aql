@@ -1,0 +1,33 @@
+use dataverse demo1112;
+
+declare type ExampleType as open {
+  id: int32,
+  dob: date,
+  time: time,
+  datetime: datetime,
+  duration: duration
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Temp(ExampleType)
+  partitioned by key id on group1;
+  
+write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_temp_3.adm";
+
+
+for $o in dataset('Temp')
+return $o
+
+
+/*
+for $o in dataset('Orders')
+let $c1 := int8("80")
+let $c2 := int16("160")
+let $c3 := int32("320")
+let $c4 := int64("640")
+return {"int8": $c1,"int16": $c2,"int32": $c3, "int8co": $o.int8co, "int64": $c4}
+*/

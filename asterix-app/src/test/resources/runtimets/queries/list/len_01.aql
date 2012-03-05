@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_len_01.adm";
+
+for $l in [1]
+return [
+  len([]), len([1]), len([1, 2]), len([1, 2, 3]), 
+  len({{}}), len({{1}}), len({{1, 2}}), len({{1, 2, 3}})]

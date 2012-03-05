@@ -1,0 +1,31 @@
+use dataverse fuzzy1;
+
+declare type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: {{int32}},
+  interests: {{string}}
+}
+
+declare type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: {{int32}},
+  interests: {{string}}
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Users(UserType) 
+  partitioned by key uid on group1;
+declare dataset Visitors(VisitorType) 
+  partitioned by key vid on group1;
+
+write output to nc1:'/tmp/users-visitors.adm';
+
+set simthreshold '.5';
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $user.lottery_numbers ~= $visitor.lottery_numbers
+return { 'user': $user, 'visitor': $visitor }

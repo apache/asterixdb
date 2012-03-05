@@ -1,0 +1,17 @@
+use dataverse fuzzy1;
+
+declare type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+drop dataset DBLP;
+

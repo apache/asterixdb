@@ -1,0 +1,29 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+
+load dataset DBLP
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+
+
+write output to nc1:'rttest/fuzzyjoin_dblp-lookup_1.adm';
+
+for $paper in dataset('DBLP')
+where $paper.id = 1
+return $paper
+

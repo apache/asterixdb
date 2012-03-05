@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/writers_print_01.adm" using "edu.uci.ics.hyracks.algebricks.core.algebra.runtime.writers.PrinterBasedWriterFactory";
+
+for $x in ["foo", "bar"]
+return $x

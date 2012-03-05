@@ -1,0 +1,583 @@
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 1, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 2, "lenDBLP": 12, "lenCSX": 20, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 1, "idCSX": 4, "lenDBLP": 12, "lenCSX": 9, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 292, 296, 299, 301 ] }
+{ "idDBLP": 1, "idCSX": 10, "lenDBLP": 12, "lenCSX": 15, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 1, "idCSX": 13, "lenDBLP": 12, "lenCSX": 11, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 1, "idCSX": 17, "lenDBLP": 12, "lenCSX": 4, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 1, "idCSX": 22, "lenDBLP": 12, "lenCSX": 10, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 1, "idCSX": 23, "lenDBLP": 12, "lenCSX": 7, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 1, "idCSX": 28, "lenDBLP": 12, "lenCSX": 10, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 1, "idCSX": 40, "lenDBLP": 12, "lenCSX": 11, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 1, "idCSX": 41, "lenDBLP": 12, "lenCSX": 19, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 1, "idCSX": 49, "lenDBLP": 12, "lenCSX": 9, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 1, "idCSX": 50, "lenDBLP": 12, "lenCSX": 9, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 92, 97, 292 ] }
+{ "idDBLP": 1, "idCSX": 54, "lenDBLP": 12, "lenCSX": 13, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 1, "idCSX": 55, "lenDBLP": 12, "lenCSX": 5, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 1, "idCSX": 56, "lenDBLP": 12, "lenCSX": 5, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 1, "idCSX": 59, "lenDBLP": 12, "lenCSX": 9, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 1, "idCSX": 65, "lenDBLP": 12, "lenCSX": 7, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 270, 292, 296 ] }
+{ "idDBLP": 1, "idCSX": 76, "lenDBLP": 12, "lenCSX": 5, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 292 ] }
+{ "idDBLP": 1, "idCSX": 77, "lenDBLP": 12, "lenCSX": 11, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 1, "idCSX": 77, "lenDBLP": 12, "lenCSX": 11, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 1, "idCSX": 84, "lenDBLP": 12, "lenCSX": 13, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 1, "idCSX": 95, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 1, "idCSX": 97, "lenDBLP": 12, "lenCSX": 26, "tokensDBLP": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 3, "idCSX": 53, "lenDBLP": 5, "lenCSX": 16, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 3, "idCSX": 79, "lenDBLP": 5, "lenCSX": 8, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 3, "idCSX": 85, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 3, "idCSX": 85, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 3, "idCSX": 86, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 3, "idCSX": 86, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 3, "idCSX": 89, "lenDBLP": 5, "lenCSX": 10, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 3, "idCSX": 90, "lenDBLP": 5, "lenCSX": 11, "tokensDBLP": [ 249, 266, 278, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 4, "idCSX": 26, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 128, 191, 240, 257, 297, 301 ], "tokensCSX": [ 14, 240, 296 ] }
+{ "idDBLP": 4, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 128, 191, 240, 257, 297, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 4, "idCSX": 87, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 128, 191, 240, 257, 297, 301 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 4, "idCSX": 87, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 128, 191, 240, 257, 297, 301 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 5, "idCSX": 32, "lenDBLP": 3, "lenCSX": 7, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 198, 298 ] }
+{ "idDBLP": 5, "idCSX": 52, "lenDBLP": 3, "lenCSX": 7, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 5, "idCSX": 53, "lenDBLP": 3, "lenCSX": 16, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 5, "idCSX": 57, "lenDBLP": 3, "lenCSX": 6, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 5, "idCSX": 84, "lenDBLP": 3, "lenCSX": 13, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 5, "idCSX": 98, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 5, "idCSX": 98, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 198, 294, 297 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 6, "idCSX": 2, "lenDBLP": 13, "lenCSX": 20, "tokensDBLP": [ 27, 28, 53, 60, 80, 101, 141, 190, 194, 270, 292, 295, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 7, "idCSX": 1, "lenDBLP": 2, "lenCSX": 12, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 7, "idCSX": 24, "lenDBLP": 2, "lenCSX": 10, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 7, "idCSX": 49, "lenDBLP": 2, "lenCSX": 9, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 7, "idCSX": 54, "lenDBLP": 2, "lenCSX": 13, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 7, "idCSX": 55, "lenDBLP": 2, "lenCSX": 5, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 7, "idCSX": 56, "lenDBLP": 2, "lenCSX": 5, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 7, "idCSX": 95, "lenDBLP": 2, "lenCSX": 12, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 7, "idCSX": 97, "lenDBLP": 2, "lenCSX": 26, "tokensDBLP": [ 260, 290 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 8, "idCSX": 69, "lenDBLP": 13, "lenCSX": 18, "tokensDBLP": [ 48, 79, 85, 121, 139, 222, 253, 291, 292, 294, 295, 298, 300 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 8, "idCSX": 72, "lenDBLP": 13, "lenCSX": 16, "tokensDBLP": [ 48, 79, 85, 121, 139, 222, 253, 291, 292, 294, 295, 298, 300 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 9, "idCSX": 28, "lenDBLP": 5, "lenCSX": 10, "tokensDBLP": [ 2, 43, 142, 161, 296 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 9, "idCSX": 67, "lenDBLP": 5, "lenCSX": 9, "tokensDBLP": [ 2, 43, 142, 161, 296 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 9, "idCSX": 81, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 2, 43, 142, 161, 296 ], "tokensCSX": [ 2, 16, 230, 296 ] }
+{ "idDBLP": 10, "idCSX": 85, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 77, 180, 235, 254, 266, 286, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 10, "idCSX": 86, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 77, 180, 235, 254, 266, 286, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 10, "idCSX": 89, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 77, 180, 235, 254, 266, 286, 293, 299 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 10, "idCSX": 90, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 77, 180, 235, 254, 266, 286, 293, 299 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 11, "idCSX": 53, "lenDBLP": 3, "lenCSX": 16, "tokensDBLP": [ 65, 278, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 11, "idCSX": 79, "lenDBLP": 3, "lenCSX": 8, "tokensDBLP": [ 65, 278, 300 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 12, "idCSX": 40, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 12, "idCSX": 52, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 12, "idCSX": 52, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 12, "idCSX": 53, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 12, "idCSX": 53, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 12, "idCSX": 54, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 12, "idCSX": 54, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 12, "idCSX": 55, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 12, "idCSX": 55, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 12, "idCSX": 56, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 12, "idCSX": 56, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 12, "idCSX": 57, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 12, "idCSX": 57, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 12, "idCSX": 89, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 132, 151, 210, 211, 225, 285, 289, 294 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 13, "idCSX": 52, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 50, 52, 67, 294, 295, 297, 300, 301 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 13, "idCSX": 53, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 50, 52, 67, 294, 295, 297, 300, 301 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 13, "idCSX": 57, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 50, 52, 67, 294, 295, 297, 300, 301 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 13, "idCSX": 84, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 50, 52, 67, 294, 295, 297, 300, 301 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 13, "idCSX": 98, "lenDBLP": 8, "lenCSX": 3, "tokensDBLP": [ 50, 52, 67, 294, 295, 297, 300, 301 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 14, "idCSX": 40, "lenDBLP": 9, "lenCSX": 11, "tokensDBLP": [ 122, 165, 210, 225, 277, 285, 289, 290, 296 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 15, "idCSX": 85, "lenDBLP": 7, "lenCSX": 5, "tokensDBLP": [ 12, 20, 70, 266, 270, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 15, "idCSX": 86, "lenDBLP": 7, "lenCSX": 5, "tokensDBLP": [ 12, 20, 70, 266, 270, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 15, "idCSX": 89, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 12, 20, 70, 266, 270, 297, 298 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 15, "idCSX": 90, "lenDBLP": 7, "lenCSX": 11, "tokensDBLP": [ 12, 20, 70, 266, 270, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 16, "idCSX": 1, "lenDBLP": 10, "lenCSX": 12, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 16, "idCSX": 2, "lenDBLP": 10, "lenCSX": 20, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 16, "idCSX": 4, "lenDBLP": 10, "lenCSX": 9, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 292, 296, 299, 301 ] }
+{ "idDBLP": 16, "idCSX": 10, "lenDBLP": 10, "lenCSX": 15, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 16, "idCSX": 13, "lenDBLP": 10, "lenCSX": 11, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 16, "idCSX": 17, "lenDBLP": 10, "lenCSX": 4, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 16, "idCSX": 22, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 16, "idCSX": 23, "lenDBLP": 10, "lenCSX": 7, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 16, "idCSX": 28, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 16, "idCSX": 28, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 16, "idCSX": 39, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 243, 293, 296 ] }
+{ "idDBLP": 16, "idCSX": 40, "lenDBLP": 10, "lenCSX": 11, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 16, "idCSX": 41, "lenDBLP": 10, "lenCSX": 19, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 16, "idCSX": 44, "lenDBLP": 10, "lenCSX": 8, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 178, 243, 296, 297, 301 ] }
+{ "idDBLP": 16, "idCSX": 50, "lenDBLP": 10, "lenCSX": 9, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 92, 97, 292 ] }
+{ "idDBLP": 16, "idCSX": 52, "lenDBLP": 10, "lenCSX": 7, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 16, "idCSX": 53, "lenDBLP": 10, "lenCSX": 16, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 16, "idCSX": 57, "lenDBLP": 10, "lenCSX": 6, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 16, "idCSX": 59, "lenDBLP": 10, "lenCSX": 9, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 16, "idCSX": 65, "lenDBLP": 10, "lenCSX": 7, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 270, 292, 296 ] }
+{ "idDBLP": 16, "idCSX": 76, "lenDBLP": 10, "lenCSX": 5, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 292 ] }
+{ "idDBLP": 16, "idCSX": 77, "lenDBLP": 10, "lenCSX": 11, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 16, "idCSX": 84, "lenDBLP": 10, "lenCSX": 13, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 16, "idCSX": 98, "lenDBLP": 10, "lenCSX": 3, "tokensDBLP": [ 54, 113, 162, 243, 292, 294, 295, 296, 297, 300 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 17, "idCSX": 1, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 17, "idCSX": 2, "lenDBLP": 8, "lenCSX": 20, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 17, "idCSX": 3, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 216, 270, 299 ] }
+{ "idDBLP": 17, "idCSX": 10, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 17, "idCSX": 15, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 17, "idCSX": 19, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 194, 270 ] }
+{ "idDBLP": 17, "idCSX": 45, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 224, 270 ] }
+{ "idDBLP": 17, "idCSX": 49, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 17, "idCSX": 53, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 17, "idCSX": 54, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 17, "idCSX": 55, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 17, "idCSX": 56, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 17, "idCSX": 65, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 270, 292, 296 ] }
+{ "idDBLP": 17, "idCSX": 67, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 17, "idCSX": 81, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 2, 16, 230, 296 ] }
+{ "idDBLP": 17, "idCSX": 81, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 2, 16, 230, 296 ] }
+{ "idDBLP": 17, "idCSX": 82, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 16, 230, 289 ] }
+{ "idDBLP": 17, "idCSX": 82, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 16, 230, 289 ] }
+{ "idDBLP": 17, "idCSX": 84, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 17, "idCSX": 84, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 17, "idCSX": 95, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 17, "idCSX": 97, "lenDBLP": 8, "lenCSX": 26, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 17, "idCSX": 100, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 16, 230, 270, 290, 295, 297, 298, 300 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 19, "idCSX": 2, "lenDBLP": 6, "lenCSX": 20, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 19, "idCSX": 12, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 289, 297, 298, 301 ] }
+{ "idDBLP": 19, "idCSX": 16, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 8, 26, 289, 299, 301 ] }
+{ "idDBLP": 19, "idCSX": 25, "lenDBLP": 6, "lenCSX": 22, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 19, "idCSX": 36, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 289, 296 ] }
+{ "idDBLP": 19, "idCSX": 41, "lenDBLP": 6, "lenCSX": 19, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 19, "idCSX": 42, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 19, "idCSX": 43, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 19, "idCSX": 51, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 289, 299 ] }
+{ "idDBLP": 19, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 19, "idCSX": 82, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 16, 230, 289 ] }
+{ "idDBLP": 19, "idCSX": 84, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 19, "idCSX": 99, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 44, 253, 289, 291, 294, 300 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 20, "idCSX": 1, "lenDBLP": 5, "lenCSX": 12, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 20, "idCSX": 49, "lenDBLP": 5, "lenCSX": 9, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 20, "idCSX": 54, "lenDBLP": 5, "lenCSX": 13, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 20, "idCSX": 55, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 20, "idCSX": 56, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 20, "idCSX": 95, "lenDBLP": 5, "lenCSX": 12, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 20, "idCSX": 97, "lenDBLP": 5, "lenCSX": 26, "tokensDBLP": [ 87, 290, 295, 298, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 21, "idCSX": 54, "lenDBLP": 5, "lenCSX": 13, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 21, "idCSX": 70, "lenDBLP": 5, "lenCSX": 4, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 194, 262 ] }
+{ "idDBLP": 21, "idCSX": 84, "lenDBLP": 5, "lenCSX": 13, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 21, "idCSX": 85, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 21, "idCSX": 86, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 21, "idCSX": 89, "lenDBLP": 5, "lenCSX": 10, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 21, "idCSX": 89, "lenDBLP": 5, "lenCSX": 10, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 21, "idCSX": 89, "lenDBLP": 5, "lenCSX": 10, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 21, "idCSX": 90, "lenDBLP": 5, "lenCSX": 11, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 21, "idCSX": 90, "lenDBLP": 5, "lenCSX": 11, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 21, "idCSX": 90, "lenDBLP": 5, "lenCSX": 11, "tokensDBLP": [ 262, 266, 268, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 22, "idCSX": 8, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 100, 293, 296, 298 ] }
+{ "idDBLP": 22, "idCSX": 9, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 105, 293, 296, 301 ] }
+{ "idDBLP": 22, "idCSX": 10, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 22, "idCSX": 13, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 22, "idCSX": 15, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 22, "idCSX": 20, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 299, 301 ] }
+{ "idDBLP": 22, "idCSX": 21, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 22, "idCSX": 22, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 22, "idCSX": 23, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 22, "idCSX": 24, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 25, "lenDBLP": 6, "lenCSX": 22, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 22, "idCSX": 27, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 22, "idCSX": 31, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 22, "idCSX": 33, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 22, "idCSX": 37, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 8, 206, 293 ] }
+{ "idDBLP": 22, "idCSX": 39, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 243, 293, 296 ] }
+{ "idDBLP": 22, "idCSX": 41, "lenDBLP": 6, "lenCSX": 19, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 22, "idCSX": 42, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 22, "idCSX": 49, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 22, "idCSX": 52, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 22, "idCSX": 53, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 22, "idCSX": 53, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 22, "idCSX": 57, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 22, "idCSX": 58, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 60, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 63, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 67, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 69, "lenDBLP": 6, "lenCSX": 18, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 22, "idCSX": 72, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 22, "idCSX": 75, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 22, "idCSX": 79, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 22, "idCSX": 79, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 22, "idCSX": 83, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 22, "idCSX": 84, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 22, "idCSX": 90, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 22, "idCSX": 95, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 22, "idCSX": 97, "lenDBLP": 6, "lenCSX": 26, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 22, "idCSX": 98, "lenDBLP": 6, "lenCSX": 3, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 22, "idCSX": 99, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 7, 278, 293, 294, 297, 298 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 23, "idCSX": 52, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 23, "idCSX": 53, "lenDBLP": 4, "lenCSX": 16, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 23, "idCSX": 57, "lenDBLP": 4, "lenCSX": 6, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 23, "idCSX": 79, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 23, "idCSX": 84, "lenDBLP": 4, "lenCSX": 13, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 23, "idCSX": 98, "lenDBLP": 4, "lenCSX": 3, "tokensDBLP": [ 181, 269, 294, 297 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 24, "idCSX": 52, "lenDBLP": 7, "lenCSX": 7, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 24, "idCSX": 53, "lenDBLP": 7, "lenCSX": 16, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 24, "idCSX": 54, "lenDBLP": 7, "lenCSX": 13, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 24, "idCSX": 57, "lenDBLP": 7, "lenCSX": 6, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 24, "idCSX": 70, "lenDBLP": 7, "lenCSX": 4, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 194, 262 ] }
+{ "idDBLP": 24, "idCSX": 84, "lenDBLP": 7, "lenCSX": 13, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 24, "idCSX": 84, "lenDBLP": 7, "lenCSX": 13, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 24, "idCSX": 89, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 24, "idCSX": 89, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 24, "idCSX": 90, "lenDBLP": 7, "lenCSX": 11, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 24, "idCSX": 90, "lenDBLP": 7, "lenCSX": 11, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 24, "idCSX": 98, "lenDBLP": 7, "lenCSX": 3, "tokensDBLP": [ 262, 268, 294, 295, 297, 298, 300 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 25, "idCSX": 88, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 75, 144, 154, 247, 293, 301 ], "tokensCSX": [ 75, 144, 154, 247, 293, 301 ] }
+{ "idDBLP": 25, "idCSX": 88, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 75, 144, 154, 247, 293, 301 ], "tokensCSX": [ 75, 144, 154, 247, 293, 301 ] }
+{ "idDBLP": 25, "idCSX": 88, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 75, 144, 154, 247, 293, 301 ], "tokensCSX": [ 75, 144, 154, 247, 293, 301 ] }
+{ "idDBLP": 25, "idCSX": 88, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 75, 144, 154, 247, 293, 301 ], "tokensCSX": [ 75, 144, 154, 247, 293, 301 ] }
+{ "idDBLP": 27, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 27, "idCSX": 70, "lenDBLP": 6, "lenCSX": 4, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 194, 262 ] }
+{ "idDBLP": 27, "idCSX": 84, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 27, "idCSX": 89, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 27, "idCSX": 89, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 27, "idCSX": 90, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 27, "idCSX": 90, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 159, 251, 262, 268, 271, 301 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 28, "idCSX": 26, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 13, 136, 240, 278, 286, 292 ], "tokensCSX": [ 14, 240, 296 ] }
+{ "idDBLP": 28, "idCSX": 53, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 13, 136, 240, 278, 286, 292 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 28, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 13, 136, 240, 278, 286, 292 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 28, "idCSX": 79, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 13, 136, 240, 278, 286, 292 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 28, "idCSX": 87, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 13, 136, 240, 278, 286, 292 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 29, "idCSX": 1, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 29, "idCSX": 49, "lenDBLP": 7, "lenCSX": 9, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 29, "idCSX": 54, "lenDBLP": 7, "lenCSX": 13, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 29, "idCSX": 55, "lenDBLP": 7, "lenCSX": 5, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 29, "idCSX": 56, "lenDBLP": 7, "lenCSX": 5, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 29, "idCSX": 75, "lenDBLP": 7, "lenCSX": 7, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 29, "idCSX": 95, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 29, "idCSX": 97, "lenDBLP": 7, "lenCSX": 26, "tokensDBLP": [ 73, 140, 184, 290, 292, 295, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 30, "idCSX": 3, "lenDBLP": 4, "lenCSX": 16, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 216, 270, 299 ] }
+{ "idDBLP": 30, "idCSX": 4, "lenDBLP": 4, "lenCSX": 9, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 292, 296, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 10, "lenDBLP": 4, "lenCSX": 15, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 16, "lenDBLP": 4, "lenCSX": 12, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 8, 26, 289, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 18, "lenDBLP": 4, "lenCSX": 5, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 299 ] }
+{ "idDBLP": 30, "idCSX": 20, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 21, "lenDBLP": 4, "lenCSX": 12, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 30, "idCSX": 23, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 30, "idCSX": 24, "lenDBLP": 4, "lenCSX": 10, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 25, "lenDBLP": 4, "lenCSX": 22, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 27, "lenDBLP": 4, "lenCSX": 15, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 30, "idCSX": 28, "lenDBLP": 4, "lenCSX": 10, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 30, "idCSX": 31, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 30, "idCSX": 35, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 296, 299 ] }
+{ "idDBLP": 30, "idCSX": 40, "lenDBLP": 4, "lenCSX": 11, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 30, "idCSX": 51, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 289, 299 ] }
+{ "idDBLP": 30, "idCSX": 58, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 60, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 61, "lenDBLP": 4, "lenCSX": 3, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 299 ] }
+{ "idDBLP": 30, "idCSX": 63, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 67, "lenDBLP": 4, "lenCSX": 9, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 69, "lenDBLP": 4, "lenCSX": 18, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 30, "idCSX": 83, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 30, "idCSX": 84, "lenDBLP": 4, "lenCSX": 13, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 30, "idCSX": 94, "lenDBLP": 4, "lenCSX": 10, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 86, 163, 299 ] }
+{ "idDBLP": 30, "idCSX": 100, "lenDBLP": 4, "lenCSX": 10, "tokensDBLP": [ 117, 261, 299, 300 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 31, "idCSX": 1, "lenDBLP": 2, "lenCSX": 12, "tokensDBLP": [ 112, 220 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 33, "idCSX": 43, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 123, 204, 286, 293, 299 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 33, "idCSX": 60, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 123, 204, 286, 293, 299 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 33, "idCSX": 85, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 123, 204, 286, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 33, "idCSX": 86, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 123, 204, 286, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 34, "idCSX": 7, "lenDBLP": 9, "lenCSX": 5, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 81, 301 ] }
+{ "idDBLP": 34, "idCSX": 23, "lenDBLP": 9, "lenCSX": 7, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 34, "idCSX": 28, "lenDBLP": 9, "lenCSX": 10, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 34, "idCSX": 52, "lenDBLP": 9, "lenCSX": 7, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 34, "idCSX": 53, "lenDBLP": 9, "lenCSX": 16, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 34, "idCSX": 57, "lenDBLP": 9, "lenCSX": 6, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 34, "idCSX": 84, "lenDBLP": 9, "lenCSX": 13, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 34, "idCSX": 84, "lenDBLP": 9, "lenCSX": 13, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 34, "idCSX": 98, "lenDBLP": 9, "lenCSX": 3, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 34, "idCSX": 100, "lenDBLP": 9, "lenCSX": 10, "tokensDBLP": [ 81, 156, 160, 261, 294, 297, 299, 300, 301 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 36, "idCSX": 15, "lenDBLP": 7, "lenCSX": 15, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 36, "idCSX": 25, "lenDBLP": 7, "lenCSX": 22, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 36, "idCSX": 42, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 36, "idCSX": 43, "lenDBLP": 7, "lenCSX": 7, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 36, "idCSX": 67, "lenDBLP": 7, "lenCSX": 9, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 36, "idCSX": 84, "lenDBLP": 7, "lenCSX": 13, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 36, "idCSX": 99, "lenDBLP": 7, "lenCSX": 9, "tokensDBLP": [ 3, 208, 235, 291, 295, 298, 300 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 37, "idCSX": 27, "lenDBLP": 5, "lenCSX": 15, "tokensDBLP": [ 82, 271, 278, 286, 299 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 37, "idCSX": 46, "lenDBLP": 5, "lenCSX": 6, "tokensDBLP": [ 82, 271, 278, 286, 299 ], "tokensCSX": [ 271, 296 ] }
+{ "idDBLP": 37, "idCSX": 53, "lenDBLP": 5, "lenCSX": 16, "tokensDBLP": [ 82, 271, 278, 286, 299 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 37, "idCSX": 79, "lenDBLP": 5, "lenCSX": 8, "tokensDBLP": [ 82, 271, 278, 286, 299 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 38, "idCSX": 44, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 29, 178, 278, 298 ], "tokensCSX": [ 178, 243, 296, 297, 301 ] }
+{ "idDBLP": 38, "idCSX": 53, "lenDBLP": 4, "lenCSX": 16, "tokensDBLP": [ 29, 178, 278, 298 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 38, "idCSX": 79, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 29, 178, 278, 298 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 39, "idCSX": 24, "lenDBLP": 9, "lenCSX": 10, "tokensDBLP": [ 99, 138, 242, 260, 286, 292, 296, 299, 300 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 39, "idCSX": 60, "lenDBLP": 9, "lenCSX": 7, "tokensDBLP": [ 99, 138, 242, 260, 286, 292, 296, 299, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 40, "idCSX": 1, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 24, 45, 256, 282, 294, 298, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 40, "idCSX": 17, "lenDBLP": 7, "lenCSX": 4, "tokensDBLP": [ 24, 45, 256, 282, 294, 298, 301 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 41, "idCSX": 32, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 71, 147, 198, 256, 301 ], "tokensCSX": [ 198, 298 ] }
+{ "idDBLP": 41, "idCSX": 98, "lenDBLP": 5, "lenCSX": 3, "tokensDBLP": [ 71, 147, 198, 256, 301 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 42, "idCSX": 43, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 127, 204, 222, 293, 299 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 42, "idCSX": 85, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 127, 204, 222, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 42, "idCSX": 86, "lenDBLP": 5, "lenCSX": 5, "tokensDBLP": [ 127, 204, 222, 293, 299 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 43, "idCSX": 8, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 100, 293, 296, 298 ] }
+{ "idDBLP": 43, "idCSX": 9, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 105, 293, 296, 301 ] }
+{ "idDBLP": 43, "idCSX": 10, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 43, "idCSX": 13, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 43, "idCSX": 15, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 43, "idCSX": 20, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 299, 301 ] }
+{ "idDBLP": 43, "idCSX": 21, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 43, "idCSX": 22, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 43, "idCSX": 23, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 43, "idCSX": 24, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 25, "lenDBLP": 8, "lenCSX": 22, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 43, "idCSX": 27, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 43, "idCSX": 31, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 43, "idCSX": 33, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 43, "idCSX": 37, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 8, 206, 293 ] }
+{ "idDBLP": 43, "idCSX": 39, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 243, 293, 296 ] }
+{ "idDBLP": 43, "idCSX": 41, "lenDBLP": 8, "lenCSX": 19, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 43, "idCSX": 42, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 43, "idCSX": 49, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 43, "idCSX": 52, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 43, "idCSX": 53, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 43, "idCSX": 57, "lenDBLP": 8, "lenCSX": 6, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 43, "idCSX": 58, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 60, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 60, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 63, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 67, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 69, "lenDBLP": 8, "lenCSX": 18, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 43, "idCSX": 72, "lenDBLP": 8, "lenCSX": 16, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 43, "idCSX": 75, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 43, "idCSX": 79, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 43, "idCSX": 83, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 43, "idCSX": 84, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 43, "idCSX": 90, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 43, "idCSX": 95, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 43, "idCSX": 97, "lenDBLP": 8, "lenCSX": 26, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 43, "idCSX": 98, "lenDBLP": 8, "lenCSX": 3, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 43, "idCSX": 99, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 38, 72, 286, 293, 294, 295, 299, 300 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 44, "idCSX": 1, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 44, "idCSX": 37, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 8, 206, 293 ] }
+{ "idDBLP": 44, "idCSX": 49, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 44, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 44, "idCSX": 55, "lenDBLP": 6, "lenCSX": 5, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 44, "idCSX": 56, "lenDBLP": 6, "lenCSX": 5, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 44, "idCSX": 95, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 44, "idCSX": 97, "lenDBLP": 6, "lenCSX": 26, "tokensDBLP": [ 51, 206, 290, 295, 296, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 46, "idCSX": 11, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 21, 37, 110, 124, 149, 294, 296, 297 ], "tokensCSX": [ 37, 301 ] }
+{ "idDBLP": 46, "idCSX": 43, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 21, 37, 110, 124, 149, 294, 296, 297 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 48, "idCSX": 1, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 130, 152, 187, 273, 274, 295, 299, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 48, "idCSX": 2, "lenDBLP": 8, "lenCSX": 20, "tokensDBLP": [ 130, 152, 187, 273, 274, 295, 299, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 48, "idCSX": 77, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 130, 152, 187, 273, 274, 295, 299, 300 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 49, "idCSX": 1, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 6, 15, 100, 171, 274, 294, 296, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 49, "idCSX": 8, "lenDBLP": 8, "lenCSX": 15, "tokensDBLP": [ 6, 15, 100, 171, 274, 294, 296, 300 ], "tokensCSX": [ 100, 293, 296, 298 ] }
+{ "idDBLP": 49, "idCSX": 77, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 6, 15, 100, 171, 274, 294, 296, 300 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 50, "idCSX": 1, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 50, "idCSX": 2, "lenDBLP": 6, "lenCSX": 20, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 50, "idCSX": 4, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 292, 296, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 8, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 100, 293, 296, 298 ] }
+{ "idDBLP": 50, "idCSX": 9, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 105, 293, 296, 301 ] }
+{ "idDBLP": 50, "idCSX": 10, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 10, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 13, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 50, "idCSX": 13, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 50, "idCSX": 15, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 50, "idCSX": 16, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 8, 26, 289, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 20, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 21, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 50, "idCSX": 22, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 50, "idCSX": 22, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 50, "idCSX": 23, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 50, "idCSX": 23, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 50, "idCSX": 24, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 25, "lenDBLP": 6, "lenCSX": 22, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 27, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 50, "idCSX": 28, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 50, "idCSX": 31, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 296, 299 ] }
+{ "idDBLP": 50, "idCSX": 33, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 50, "idCSX": 37, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 8, 206, 293 ] }
+{ "idDBLP": 50, "idCSX": 37, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 8, 206, 293 ] }
+{ "idDBLP": 50, "idCSX": 39, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 243, 293, 296 ] }
+{ "idDBLP": 50, "idCSX": 40, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 50, "idCSX": 41, "lenDBLP": 6, "lenCSX": 19, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 50, "idCSX": 41, "lenDBLP": 6, "lenCSX": 19, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 50, "idCSX": 42, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 50, "idCSX": 49, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 50, "idCSX": 50, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 92, 97, 292 ] }
+{ "idDBLP": 50, "idCSX": 58, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 59, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 50, "idCSX": 60, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 63, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 65, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 270, 292, 296 ] }
+{ "idDBLP": 50, "idCSX": 67, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 69, "lenDBLP": 6, "lenCSX": 18, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 50, "idCSX": 72, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 50, "idCSX": 75, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 50, "idCSX": 76, "lenDBLP": 6, "lenCSX": 5, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 292 ] }
+{ "idDBLP": 50, "idCSX": 77, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 50, "idCSX": 79, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 50, "idCSX": 83, "lenDBLP": 6, "lenCSX": 8, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 293, 299 ] }
+{ "idDBLP": 50, "idCSX": 90, "lenDBLP": 6, "lenCSX": 11, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 50, "idCSX": 95, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 50, "idCSX": 97, "lenDBLP": 6, "lenCSX": 26, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 50, "idCSX": 99, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 8, 47, 292, 293, 295, 300 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 51, "idCSX": 25, "lenDBLP": 3, "lenCSX": 22, "tokensDBLP": [ 22, 158, 297 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 51, "idCSX": 92, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 22, 158, 297 ], "tokensCSX": [ 22, 158, 297 ] }
+{ "idDBLP": 51, "idCSX": 92, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 22, 158, 297 ], "tokensCSX": [ 22, 158, 297 ] }
+{ "idDBLP": 51, "idCSX": 93, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 22, 158, 297 ], "tokensCSX": [ 22, 158, 297 ] }
+{ "idDBLP": 51, "idCSX": 93, "lenDBLP": 3, "lenCSX": 3, "tokensDBLP": [ 22, 158, 297 ], "tokensCSX": [ 22, 158, 297 ] }
+{ "idDBLP": 52, "idCSX": 27, "lenDBLP": 7, "lenCSX": 15, "tokensDBLP": [ 32, 41, 78, 186, 194, 286, 292 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 53, "idCSX": 1, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 53, "idCSX": 15, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 53, "idCSX": 49, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 53, "idCSX": 54, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 53, "idCSX": 55, "lenDBLP": 6, "lenCSX": 5, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 53, "idCSX": 56, "lenDBLP": 6, "lenCSX": 5, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 53, "idCSX": 67, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 53, "idCSX": 95, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 53, "idCSX": 97, "lenDBLP": 6, "lenCSX": 26, "tokensDBLP": [ 23, 208, 290, 295, 300, 301 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 54, "idCSX": 9, "lenDBLP": 9, "lenCSX": 16, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 105, 293, 296, 301 ] }
+{ "idDBLP": 54, "idCSX": 25, "lenDBLP": 9, "lenCSX": 22, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 54, "idCSX": 91, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ] }
+{ "idDBLP": 54, "idCSX": 91, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ] }
+{ "idDBLP": 54, "idCSX": 91, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ] }
+{ "idDBLP": 54, "idCSX": 91, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ] }
+{ "idDBLP": 54, "idCSX": 91, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ], "tokensCSX": [ 36, 55, 105, 172, 189, 230, 292, 293, 299 ] }
+{ "idDBLP": 55, "idCSX": 53, "lenDBLP": 7, "lenCSX": 16, "tokensDBLP": [ 34, 133, 145, 175, 286, 292, 296 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 56, "idCSX": 25, "lenDBLP": 5, "lenCSX": 22, "tokensDBLP": [ 174, 252, 273, 295, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 57, "idCSX": 69, "lenDBLP": 5, "lenCSX": 18, "tokensDBLP": [ 18, 185, 295, 298, 300 ], "tokensCSX": [ 79, 185, 293, 298, 299 ] }
+{ "idDBLP": 58, "idCSX": 23, "lenDBLP": 8, "lenCSX": 7, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 58, "idCSX": 28, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 58, "idCSX": 50, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 92, 97, 292 ] }
+{ "idDBLP": 58, "idCSX": 77, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 58, "idCSX": 84, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 58, "idCSX": 100, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 57, 58, 92, 256, 261, 292, 293, 296 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 59, "idCSX": 25, "lenDBLP": 6, "lenCSX": 22, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 59, "idCSX": 42, "lenDBLP": 6, "lenCSX": 10, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 59, "idCSX": 43, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 59, "idCSX": 52, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 59, "idCSX": 53, "lenDBLP": 6, "lenCSX": 16, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 59, "idCSX": 57, "lenDBLP": 6, "lenCSX": 6, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 59, "idCSX": 60, "lenDBLP": 6, "lenCSX": 7, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 286, 293, 299 ] }
+{ "idDBLP": 59, "idCSX": 84, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 59, "idCSX": 84, "lenDBLP": 6, "lenCSX": 13, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 59, "idCSX": 98, "lenDBLP": 6, "lenCSX": 3, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 198, 294, 297 ] }
+{ "idDBLP": 59, "idCSX": 99, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 106, 286, 291, 294, 295, 300 ], "tokensCSX": [ 291, 293 ] }
+{ "idDBLP": 61, "idCSX": 1, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 211, 269, 281, 282, 285, 289, 293, 297 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 61, "idCSX": 17, "lenDBLP": 8, "lenCSX": 4, "tokensDBLP": [ 211, 269, 281, 282, 285, 289, 293, 297 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 61, "idCSX": 34, "lenDBLP": 8, "lenCSX": 14, "tokensDBLP": [ 211, 269, 281, 282, 285, 289, 293, 297 ], "tokensCSX": [ 281 ] }
+{ "idDBLP": 61, "idCSX": 79, "lenDBLP": 8, "lenCSX": 8, "tokensDBLP": [ 211, 269, 281, 282, 285, 289, 293, 297 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 61, "idCSX": 89, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 211, 269, 281, 282, 285, 289, 293, 297 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 62, "idCSX": 2, "lenDBLP": 9, "lenCSX": 20, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 62, "idCSX": 3, "lenDBLP": 9, "lenCSX": 16, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 216, 270, 299 ] }
+{ "idDBLP": 62, "idCSX": 10, "lenDBLP": 9, "lenCSX": 15, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }
+{ "idDBLP": 62, "idCSX": 15, "lenDBLP": 9, "lenCSX": 15, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 208, 270, 293, 298 ] }
+{ "idDBLP": 62, "idCSX": 19, "lenDBLP": 9, "lenCSX": 7, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 194, 270 ] }
+{ "idDBLP": 62, "idCSX": 45, "lenDBLP": 9, "lenCSX": 11, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 224, 270 ] }
+{ "idDBLP": 62, "idCSX": 53, "lenDBLP": 9, "lenCSX": 16, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 132, 145, 151, 270, 278, 294, 296, 297, 301 ] }
+{ "idDBLP": 62, "idCSX": 65, "lenDBLP": 9, "lenCSX": 7, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 270, 292, 296 ] }
+{ "idDBLP": 62, "idCSX": 67, "lenDBLP": 9, "lenCSX": 9, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 2, 208, 270, 293, 299 ] }
+{ "idDBLP": 62, "idCSX": 79, "lenDBLP": 9, "lenCSX": 8, "tokensDBLP": [ 9, 179, 269, 270, 277, 281, 285, 289, 297 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 63, "idCSX": 24, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 260, 263, 281, 285, 289, 294, 297 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 63, "idCSX": 34, "lenDBLP": 7, "lenCSX": 14, "tokensDBLP": [ 260, 263, 281, 285, 289, 294, 297 ], "tokensCSX": [ 281 ] }
+{ "idDBLP": 63, "idCSX": 95, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 260, 263, 281, 285, 289, 294, 297 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 64, "idCSX": 1, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 248, 258, 260, 282, 293, 299, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 64, "idCSX": 1, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 248, 258, 260, 282, 293, 299, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 64, "idCSX": 17, "lenDBLP": 7, "lenCSX": 4, "tokensDBLP": [ 248, 258, 260, 282, 293, 299, 301 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 64, "idCSX": 24, "lenDBLP": 7, "lenCSX": 10, "tokensDBLP": [ 248, 258, 260, 282, 293, 299, 301 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 65, "idCSX": 34, "lenDBLP": 9, "lenCSX": 14, "tokensDBLP": [ 89, 183, 229, 281, 285, 289, 294, 296, 297 ], "tokensCSX": [ 281 ] }
+{ "idDBLP": 65, "idCSX": 41, "lenDBLP": 9, "lenCSX": 19, "tokensDBLP": [ 89, 183, 229, 281, 285, 289, 294, 296, 297 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 66, "idCSX": 23, "lenDBLP": 10, "lenCSX": 7, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 261, 292, 293 ] }
+{ "idDBLP": 66, "idCSX": 28, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 66, "idCSX": 34, "lenDBLP": 10, "lenCSX": 14, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 281 ] }
+{ "idDBLP": 66, "idCSX": 79, "lenDBLP": 10, "lenCSX": 8, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 269, 278, 293, 300 ] }
+{ "idDBLP": 66, "idCSX": 84, "lenDBLP": 10, "lenCSX": 13, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 16, 17, 230, 261, 262, 291, 294, 296, 297, 298, 300, 301 ] }
+{ "idDBLP": 66, "idCSX": 100, "lenDBLP": 10, "lenCSX": 10, "tokensDBLP": [ 63, 90, 157, 261, 269, 281, 285, 289, 296, 299 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 67, "idCSX": 1, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 91, 281, 282, 285, 289, 294 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 67, "idCSX": 17, "lenDBLP": 6, "lenCSX": 4, "tokensDBLP": [ 91, 281, 282, 285, 289, 294 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 67, "idCSX": 34, "lenDBLP": 6, "lenCSX": 14, "tokensDBLP": [ 91, 281, 282, 285, 289, 294 ], "tokensCSX": [ 281 ] }
+{ "idDBLP": 68, "idCSX": 97, "lenDBLP": 3, "lenCSX": 26, "tokensDBLP": [ 30, 49, 74 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 69, "idCSX": 94, "lenDBLP": 1, "lenCSX": 10, "tokensDBLP": [ 86 ], "tokensCSX": [ 86, 163, 299 ] }
+{ "idDBLP": 71, "idCSX": 2, "lenDBLP": 11, "lenCSX": 20, "tokensDBLP": [ 11, 46, 64, 126, 135, 164, 258, 282, 292, 293, 301 ], "tokensCSX": [ 101, 126, 152, 270, 289, 292, 298, 301 ] }
+{ "idDBLP": 72, "idCSX": 41, "lenDBLP": 6, "lenCSX": 19, "tokensDBLP": [ 33, 35, 97, 150, 163, 229 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 72, "idCSX": 50, "lenDBLP": 6, "lenCSX": 9, "tokensDBLP": [ 33, 35, 97, 150, 163, 229 ], "tokensCSX": [ 92, 97, 292 ] }
+{ "idDBLP": 72, "idCSX": 95, "lenDBLP": 6, "lenCSX": 12, "tokensDBLP": [ 33, 35, 97, 150, 163, 229 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 73, "idCSX": 1, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 73, "idCSX": 16, "lenDBLP": 7, "lenCSX": 12, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 8, 26, 289, 299, 301 ] }
+{ "idDBLP": 73, "idCSX": 17, "lenDBLP": 7, "lenCSX": 4, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 243, 282, 301 ] }
+{ "idDBLP": 73, "idCSX": 25, "lenDBLP": 7, "lenCSX": 22, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 73, "idCSX": 26, "lenDBLP": 7, "lenCSX": 6, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 14, 240, 296 ] }
+{ "idDBLP": 73, "idCSX": 33, "lenDBLP": 7, "lenCSX": 8, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 73, "idCSX": 75, "lenDBLP": 7, "lenCSX": 7, "tokensDBLP": [ 14, 26, 275, 282, 293, 299, 301 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 74, "idCSX": 25, "lenDBLP": 12, "lenCSX": 22, "tokensDBLP": [ 1, 56, 59, 108, 120, 169, 202, 274, 296, 297, 299, 301 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 74, "idCSX": 41, "lenDBLP": 12, "lenCSX": 19, "tokensDBLP": [ 1, 56, 59, 108, 120, 169, 202, 274, 296, 297, 299, 301 ], "tokensCSX": [ 108, 150, 229, 289, 292, 293, 296, 301 ] }
+{ "idDBLP": 74, "idCSX": 43, "lenDBLP": 12, "lenCSX": 7, "tokensDBLP": [ 1, 56, 59, 108, 120, 169, 202, 274, 296, 297, 299, 301 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 74, "idCSX": 80, "lenDBLP": 12, "lenCSX": 10, "tokensDBLP": [ 1, 56, 59, 108, 120, 169, 202, 274, 296, 297, 299, 301 ], "tokensCSX": [ 1, 241, 296, 301 ] }
+{ "idDBLP": 74, "idCSX": 87, "lenDBLP": 12, "lenCSX": 16, "tokensDBLP": [ 1, 56, 59, 108, 120, 169, 202, 274, 296, 297, 299, 301 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 75, "idCSX": 27, "lenDBLP": 4, "lenCSX": 15, "tokensDBLP": [ 245, 271, 275, 301 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 75, "idCSX": 33, "lenDBLP": 4, "lenCSX": 8, "tokensDBLP": [ 245, 271, 275, 301 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 75, "idCSX": 46, "lenDBLP": 4, "lenCSX": 6, "tokensDBLP": [ 245, 271, 275, 301 ], "tokensCSX": [ 271, 296 ] }
+{ "idDBLP": 75, "idCSX": 75, "lenDBLP": 4, "lenCSX": 7, "tokensDBLP": [ 245, 271, 275, 301 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 76, "idCSX": 1, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 76, "idCSX": 42, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 4, 291, 293, 296 ] }
+{ "idDBLP": 76, "idCSX": 49, "lenDBLP": 8, "lenCSX": 9, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 290, 293 ] }
+{ "idDBLP": 76, "idCSX": 54, "lenDBLP": 8, "lenCSX": 13, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 76, "idCSX": 55, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 76, "idCSX": 56, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 132, 151, 290, 298 ] }
+{ "idDBLP": 76, "idCSX": 80, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 1, 241, 296, 301 ] }
+{ "idDBLP": 76, "idCSX": 85, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 76, "idCSX": 86, "lenDBLP": 8, "lenCSX": 5, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 204, 249, 266, 278, 293 ] }
+{ "idDBLP": 76, "idCSX": 89, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 211, 262, 266, 268, 297, 298, 301 ] }
+{ "idDBLP": 76, "idCSX": 90, "lenDBLP": 8, "lenCSX": 11, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 262, 266, 268, 293, 296, 297, 298 ] }
+{ "idDBLP": 76, "idCSX": 95, "lenDBLP": 8, "lenCSX": 12, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 76, "idCSX": 97, "lenDBLP": 8, "lenCSX": 26, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 49, 290, 293 ] }
+{ "idDBLP": 76, "idCSX": 100, "lenDBLP": 8, "lenCSX": 10, "tokensDBLP": [ 4, 241, 249, 268, 290, 291, 295, 301 ], "tokensCSX": [ 16, 241, 261, 301 ] }
+{ "idDBLP": 77, "idCSX": 1, "lenDBLP": 4, "lenCSX": 12, "tokensDBLP": [ 109, 273, 274, 299 ], "tokensCSX": [ 17, 220, 258, 274, 282, 290, 292, 293, 296, 299, 300, 301 ] }
+{ "idDBLP": 77, "idCSX": 77, "lenDBLP": 4, "lenCSX": 11, "tokensDBLP": [ 109, 273, 274, 299 ], "tokensCSX": [ 57, 274, 292, 296, 298, 301 ] }
+{ "idDBLP": 78, "idCSX": 40, "lenDBLP": 5, "lenCSX": 11, "tokensDBLP": [ 83, 129, 176, 247, 299 ], "tokensCSX": [ 176, 210, 292, 296, 299, 301 ] }
+{ "idDBLP": 78, "idCSX": 52, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 83, 129, 176, 247, 299 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 78, "idCSX": 57, "lenDBLP": 5, "lenCSX": 6, "tokensDBLP": [ 83, 129, 176, 247, 299 ], "tokensCSX": [ 129, 132, 151, 294, 297, 298 ] }
+{ "idDBLP": 79, "idCSX": 43, "lenDBLP": 5, "lenCSX": 7, "tokensDBLP": [ 62, 76, 202, 206, 301 ], "tokensCSX": [ 37, 202, 204, 291, 293, 301 ] }
+{ "idDBLP": 80, "idCSX": 33, "lenDBLP": 1, "lenCSX": 8, "tokensDBLP": [ 275 ], "tokensCSX": [ 275, 293 ] }
+{ "idDBLP": 80, "idCSX": 75, "lenDBLP": 1, "lenCSX": 7, "tokensDBLP": [ 275 ], "tokensCSX": [ 73, 275, 293, 298 ] }
+{ "idDBLP": 83, "idCSX": 13, "lenDBLP": 13, "lenCSX": 11, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 83, "idCSX": 24, "lenDBLP": 13, "lenCSX": 10, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 83, "idCSX": 27, "lenDBLP": 13, "lenCSX": 15, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 83, "idCSX": 28, "lenDBLP": 13, "lenCSX": 10, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 83, "idCSX": 59, "lenDBLP": 13, "lenCSX": 9, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 83, "idCSX": 87, "lenDBLP": 13, "lenCSX": 16, "tokensDBLP": [ 255, 259, 265, 267, 272, 276, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 84, "idCSX": 13, "lenDBLP": 14, "lenCSX": 11, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 84, "idCSX": 24, "lenDBLP": 14, "lenCSX": 10, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 84, "idCSX": 27, "lenDBLP": 14, "lenCSX": 15, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 84, "idCSX": 28, "lenDBLP": 14, "lenCSX": 10, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 43, 243, 261, 279, 292, 296 ] }
+{ "idDBLP": 84, "idCSX": 59, "lenDBLP": 14, "lenCSX": 9, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 84, "idCSX": 87, "lenDBLP": 14, "lenCSX": 16, "tokensDBLP": [ 259, 264, 265, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 292 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 86, "idCSX": 95, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 199, 209, 213, 232, 233, 263, 273, 275, 279, 296, 298, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 86, "idCSX": 95, "lenDBLP": 12, "lenCSX": 12, "tokensDBLP": [ 199, 209, 213, 232, 233, 263, 273, 275, 279, 296, 298, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 87, "idCSX": 3, "lenDBLP": 13, "lenCSX": 16, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 216, 270, 299 ] }
+{ "idDBLP": 87, "idCSX": 13, "lenDBLP": 13, "lenCSX": 11, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 87, "idCSX": 24, "lenDBLP": 13, "lenCSX": 10, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 87, "idCSX": 27, "lenDBLP": 13, "lenCSX": 15, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 87, "idCSX": 59, "lenDBLP": 13, "lenCSX": 9, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 87, "idCSX": 87, "lenDBLP": 13, "lenCSX": 16, "tokensDBLP": [ 200, 216, 255, 259, 267, 272, 276, 279, 280, 284, 287, 288, 291 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 88, "idCSX": 3, "lenDBLP": 15, "lenCSX": 16, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 216, 270, 299 ] }
+{ "idDBLP": 88, "idCSX": 13, "lenDBLP": 15, "lenCSX": 11, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 88, "idCSX": 24, "lenDBLP": 15, "lenCSX": 10, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 88, "idCSX": 27, "lenDBLP": 15, "lenCSX": 15, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 88, "idCSX": 59, "lenDBLP": 15, "lenCSX": 9, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 88, "idCSX": 87, "lenDBLP": 15, "lenCSX": 16, "tokensDBLP": [ 148, 200, 216, 259, 267, 272, 276, 277, 279, 280, 283, 284, 287, 288, 291 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 89, "idCSX": 24, "lenDBLP": 9, "lenCSX": 10, "tokensDBLP": [ 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 239, 260, 272, 293, 299 ] }
+{ "idDBLP": 89, "idCSX": 45, "lenDBLP": 9, "lenCSX": 11, "tokensDBLP": [ 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 224, 270 ] }
+{ "idDBLP": 89, "idCSX": 87, "lenDBLP": 9, "lenCSX": 16, "tokensDBLP": [ 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 90, "idCSX": 45, "lenDBLP": 13, "lenCSX": 11, "tokensDBLP": [ 19, 98, 143, 182, 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 224, 270 ] }
+{ "idDBLP": 90, "idCSX": 54, "lenDBLP": 13, "lenCSX": 13, "tokensDBLP": [ 19, 98, 143, 182, 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 132, 151, 182, 240, 262, 289, 290, 293, 299 ] }
+{ "idDBLP": 90, "idCSX": 64, "lenDBLP": 13, "lenCSX": 8, "tokensDBLP": [ 19, 98, 143, 182, 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 143, 296 ] }
+{ "idDBLP": 90, "idCSX": 87, "lenDBLP": 13, "lenCSX": 16, "tokensDBLP": [ 19, 98, 143, 182, 193, 203, 224, 238, 239, 244, 257, 290, 301 ], "tokensCSX": [ 108, 193, 240, 257, 272, 296, 301 ] }
+{ "idDBLP": 91, "idCSX": 95, "lenDBLP": 11, "lenCSX": 12, "tokensDBLP": [ 195, 197, 201, 213, 219, 226, 234, 263, 296, 298, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 93, "idCSX": 25, "lenDBLP": 6, "lenCSX": 22, "tokensDBLP": [ 116, 146, 227, 252, 293, 298 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 94, "idCSX": 25, "lenDBLP": 5, "lenCSX": 22, "tokensDBLP": [ 104, 227, 252, 270, 298 ], "tokensCSX": [ 26, 105, 108, 158, 252, 291, 293, 298, 299, 301 ] }
+{ "idDBLP": 95, "idCSX": 22, "lenDBLP": 16, "lenCSX": 10, "tokensDBLP": [ 42, 107, 115, 137, 192, 212, 214, 228, 236, 246, 250, 287, 288, 291, 296, 301 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 95, "idCSX": 72, "lenDBLP": 16, "lenCSX": 16, "tokensDBLP": [ 42, 107, 115, 137, 192, 212, 214, 228, 236, 246, 250, 287, 288, 291, 296, 301 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 96, "idCSX": 22, "lenDBLP": 18, "lenCSX": 10, "tokensDBLP": [ 88, 168, 192, 212, 214, 228, 236, 246, 250, 263, 264, 283, 284, 287, 288, 291, 296, 301 ], "tokensCSX": [ 192, 292, 293, 301 ] }
+{ "idDBLP": 96, "idCSX": 72, "lenDBLP": 18, "lenCSX": 16, "tokensDBLP": [ 88, 168, 192, 212, 214, 228, 236, 246, 250, 263, 264, 283, 284, 287, 288, 291, 296, 301 ], "tokensCSX": [ 85, 236, 293, 298 ] }
+{ "idDBLP": 96, "idCSX": 95, "lenDBLP": 18, "lenCSX": 12, "tokensDBLP": [ 88, 168, 192, 212, 214, 228, 236, 246, 250, 263, 264, 283, 284, 287, 288, 291, 296, 301 ], "tokensCSX": [ 97, 213, 263, 290, 293, 301 ] }
+{ "idDBLP": 98, "idCSX": 13, "lenDBLP": 14, "lenCSX": 11, "tokensDBLP": [ 95, 217, 221, 223, 254, 264, 265, 276, 277, 283, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 293, 296 ] }
+{ "idDBLP": 98, "idCSX": 27, "lenDBLP": 14, "lenCSX": 15, "tokensDBLP": [ 95, 217, 221, 223, 254, 264, 265, 276, 277, 283, 284, 287, 288, 291 ], "tokensCSX": [ 78, 271, 276, 293, 296, 299 ] }
+{ "idDBLP": 98, "idCSX": 59, "lenDBLP": 14, "lenCSX": 9, "tokensDBLP": [ 95, 217, 221, 223, 254, 264, 265, 276, 277, 283, 284, 287, 288, 291 ], "tokensCSX": [ 276, 292, 296, 301 ] }
+{ "idDBLP": 99, "idCSX": 10, "lenDBLP": 6, "lenCSX": 15, "tokensDBLP": [ 25, 61, 84, 125, 196, 301 ], "tokensCSX": [ 61, 270, 292, 293, 299, 301 ] }

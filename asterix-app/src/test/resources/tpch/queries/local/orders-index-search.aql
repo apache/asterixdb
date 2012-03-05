@@ -1,0 +1,33 @@
+use dataverse tpch;
+
+
+declare type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+
+declare index idx_Orders_Custkey on Orders(o_custkey);
+
+write output to nc1:"/tmp/orders-index-search.adm";
+
+
+for $o in dataset('Orders')
+where
+  $o.o_custkey = 40
+return {  
+  "o_orderkey": $o.o_orderkey,
+  "o_custkey": $o.o_custkey 
+}

@@ -1,0 +1,85 @@
+use dataverse tpch;
+
+declare type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+declare type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+declare type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+declare dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+
+write output to nc1:"/tmp/inlined_q18_large_volume_customer.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where
+  $c.c_custkey = $o.o_custkey
+for $t in 
+(
+  for $l in dataset('LineItems')
+  group by $l_orderkey := $l.l_orderkey with $l
+  return 
+    { "l_orderkey": $l_orderkey, 
+      "t_sum_quantity": sum(for $i in $l return $i.l_quantity) }
+) 
+where 
+  $o.o_orderkey = $t.l_orderkey and $t.t_sum_quantity > 300
+for $l in dataset('LineItems')
+where
+  $l.l_orderkey = $o.o_orderkey 
+group by $c_name := $c.c_name, $c_custkey := $c.c_custkey, $o_orderkey := $o.o_orderkey, 
+         $o_orderdate := $o.o_orderdate, $o_totalprice := $o.o_totalprice with $l
+order by $o_totalprice desc, $o_orderdate 
+limit 100
+return {  
+  "c_name": $c_name,
+  "c_custkey": $c_custkey,
+  "o_orderkey": $o_orderkey,
+  "o_orderdate": $o_orderdate,
+  "o_totalprice": $o_totalprice,
+  "sum_quantity": sum(for $j in $l return $j.l_quantity)  
+}
+

@@ -1,0 +1,26 @@
+drop dataverse tpch if exists;
+create dataverse tpch;
+
+use dataverse tpch;
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create nodegroup group1 if not exists  on nc1;
+
+create dataset Regions_group_no_agg(RegionType) 
+  partitioned by key r_regionkey on group1;
+
+write output to nc1:"rttest/tpch_group_no_agg.adm";
+
+load dataset Regions_group_no_agg 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+for $r in dataset('Regions_group_no_agg')
+group by $name := $r.r_name  with $r
+order by $name
+return $name

@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/tokenizers_counthashed-gram-tokens_02.adm";
+
+let $txt := "Jürgen S. Generic's Car"
+let $tokens := counthashed-gram-tokens($txt, 3, true)
+for $token in $tokens
+return $token

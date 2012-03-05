@@ -1,0 +1,4 @@
+for $user in dataset('User')
+for $mv in dataset('Movie')
+where some $i in $user.interests satisfies $i.movie = $mv.movie
+return { "name": $user.name, "movie": $mv.movie }

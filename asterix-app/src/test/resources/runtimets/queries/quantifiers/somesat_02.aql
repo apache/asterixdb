@@ -1,0 +1,53 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as open {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+create type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset CustomerSomeSat02(CustomerType)
+  partitioned by key cid on group1;
+create dataset OrdersSomeSat02(OrderType)
+  partitioned by key oid on group1;
+
+load dataset CustomerSomeSat02 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
+
+load dataset OrdersSomeSat02 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
+
+write output to nc1:"rttest/quantifiers_somesat_02.adm";
+
+for $x in dataset('CustomerSomeSat02')
+where some $y in dataset('OrdersSomeSat02')
+      satisfies $y.cid = $x.cid
+order by $x.cid      
+return $x.cid

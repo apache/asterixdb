@@ -1,0 +1,41 @@
+use dataverse events;
+
+declare type UserType as {
+  u_name: string,
+  interests: {{string}},
+  member_of: {{
+    {
+      sig_name: string,
+      chap_name: string
+    }
+  }} 
+}
+
+declare type EventType as {
+  e_name: string,
+  organizer: string,
+  sponsoring_sigs: [ 
+    {
+      sig_name: string,
+      chap_name: string
+    }
+  ],
+  interest_keywords: {{string}},
+  start_time: datetime,
+  end_time: datetime
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Users(UserType) partitioned by key u_name on group1;
+declare dataset Events(EventType) partitioned by key e_name on group1;
+
+write output to nc1:"/tmp/denorm_user_event.adm";
+
+for $u in dataset('Users')
+let $events := 
+  for $e in dataset('Events')
+  where $e.organizer = $u.u_name
+  order by $e.start_time asc
+  return $e
+return { "user": $u, "org_events": $events }  

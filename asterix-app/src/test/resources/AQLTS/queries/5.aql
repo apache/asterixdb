@@ -1,0 +1,10 @@
+for $event in dataset('Event')
+where $event.name = "The Night of the Ad Eaters, 29th edition"
+let $collocated_events :=
+   for $collocated_event in dataset('Events')
+   where $collocated_event.location.street ~= $event.location.street
+   and $collocated_event.location.city = $event.location.city
+   and $collocated_event.location.state = $event.location.state
+   and $collocated_event.location.zip = $event.location.zip
+   return { "event_name" : $collocated_event.name }
+return { "collocated_evnets" : $collocated_events }

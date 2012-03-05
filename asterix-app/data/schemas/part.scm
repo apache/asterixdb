@@ -1,0 +1,1 @@
+p_partkey: int32|p_name: string|p_mfgr: string|p_brand: string|p_type: string|p_size: int32|p_container: string|p_retailprice: double|p_comment: string|

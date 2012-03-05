@@ -1,0 +1,16 @@
+use dataverse fuzzy1;
+
+declare type CSXType as open {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset CSX(CSXType) 
+  partitioned by key id on group1;
+
+drop dataset CSX;

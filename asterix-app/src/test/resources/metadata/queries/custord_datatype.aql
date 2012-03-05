@@ -1,0 +1,7 @@
+use dataverse Metadata;
+
+write output to nc1:"rttest/custord_datatype.adm";
+     
+for $c in dataset('Datatype')
+where $c.DataverseName = "custord"
+return $c

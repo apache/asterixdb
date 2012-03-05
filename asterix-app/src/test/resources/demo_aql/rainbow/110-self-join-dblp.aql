@@ -1,0 +1,28 @@
+use dataverse demo_aql;
+
+declare type DBLPType as open {
+ id: int32,
+ dblpid: string,
+ title: string,
+ authors: string,
+ misc: string
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
+
+declare dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+write output to rainbow-01:"/home/onose/hyracks-rainbow/results/110-self-join-dblp.adm";
+
+set simthreshold '.8f';
+
+for $k in (
+  for $i in dataset('DBLP')
+  for $j in dataset('DBLP')
+  where $i.title ~= $j.title
+  order by $i.id, $j.id
+  return {'dblp1': $i, 'dblp2': $j}
+) 
+where $k.dblp1.id < $k.dblp2.id
+return $k

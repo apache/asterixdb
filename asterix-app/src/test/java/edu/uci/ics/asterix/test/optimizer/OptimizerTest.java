@@ -1,0 +1,177 @@
+package edu.uci.ics.asterix.test.optimizer;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.logging.Logger;
+
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.internal.AssumptionViolatedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
+import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
+import edu.uci.ics.asterix.api.java.AsterixJavaClient;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.test.base.AsterixTestHelper;
+import edu.uci.ics.asterix.test.common.TestHelper;
+
+@RunWith(Parameterized.class)
+public class OptimizerTest {
+
+    private static final Logger LOGGER = Logger.getLogger(OptimizerTest.class.getName());
+
+    private static final String SEPARATOR = File.separator;
+    private static final String EXTENSION_QUERY = "aql";
+    private static final String EXTENSION_RESULT = "plan";
+    private static final String FILENAME_IGNORE = "ignore.txt";
+    private static final String FILENAME_ONLY = "only.txt";
+    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR
+            + "optimizerts" + SEPARATOR;
+    private static final String PATH_QUERIES = PATH_BASE + "queries" + SEPARATOR;
+    private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
+    private static final String PATH_ACTUAL = "opttest" + SEPARATOR;
+
+    private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
+    private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-metadata.properties";
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        // File outdir = new File(PATH_ACTUAL);
+        // outdir.mkdirs();
+
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
+        System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
+        File outdir = new File(PATH_ACTUAL);
+        outdir.mkdirs();
+        AsterixHyracksIntegrationUtil.init();
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        // _bootstrap.stop();
+        File outdir = new File(PATH_ACTUAL);
+        File[] files = outdir.listFiles();
+        if (files == null || files.length == 0) {
+            outdir.delete();
+        }
+    }
+
+    private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
+        for (File file : dir.listFiles()) {
+            if (file.isDirectory() && !file.getName().startsWith(".")) {
+                suiteBuild(file, testArgs, path + file.getName() + SEPARATOR);
+            }
+            if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)
+            // && !ignore.contains(path + file.getName())
+            ) {
+                String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
+                File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
+                File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
+                testArgs.add(new Object[] { file, expectedFile, actualFile });
+            }
+        }
+    }
+
+    @Parameters
+    public static Collection<Object[]> tests() {
+        Collection<Object[]> testArgs = new ArrayList<Object[]>();
+        suiteBuild(new File(PATH_QUERIES), testArgs, "");
+        return testArgs;
+    }
+
+    private File actualFile;
+    private File expectedFile;
+    private File queryFile;
+
+    public OptimizerTest(File queryFile, File expectedFile, File actualFile) {
+        this.queryFile = queryFile;
+        this.expectedFile = expectedFile;
+        this.actualFile = actualFile;
+    }
+
+    @Test
+    public void test() throws Exception {
+        try {
+            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length())
+                    .replace(SEPARATOR.charAt(0), '/');
+            if (!only.isEmpty()) {
+                boolean toRun = TestHelper.isInPrefixList(only, queryFileShort);
+                if (!toRun) {
+                    LOGGER.info("SKIP TEST: \"" + queryFile.getPath()
+                            + "\" \"only.txt\" not empty and not in \"only.txt\".");
+                }
+                Assume.assumeTrue(toRun);
+            }
+            boolean skipped = TestHelper.isInPrefixList(ignore, queryFileShort);
+            if (skipped) {
+                LOGGER.info("SKIP TEST: \"" + queryFile.getPath() + "\" in \"ignore.txt\".");
+            }
+            Assume.assumeTrue(!skipped);
+
+            LOGGER.severe("RUN TEST: \"" + queryFile.getPath() + "\"");
+
+            Reader query = new BufferedReader(new FileReader(queryFile));
+            PrintWriter plan = new PrintWriter(actualFile);
+            AsterixJavaClient asterix = new AsterixJavaClient(query, plan);
+            try {
+                asterix.compile(true, false, false, false, true, true, false);
+            } catch (AsterixException e) {
+                plan.close();
+                query.close();
+                throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
+            }
+            plan.close();
+            query.close();
+
+            BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
+            BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+
+            String lineExpected, lineActual;
+            int num = 1;
+            try {
+                while ((lineExpected = readerExpected.readLine()) != null) {
+                    lineActual = readerActual.readLine();
+                    // Assert.assertEquals(lineExpected, lineActual);
+                    if (lineActual == null) {
+                        throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< "
+                                + lineExpected + "\n> ");
+                    }
+                    if (!lineExpected.equals(lineActual)) {
+                        throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< "
+                                + lineExpected + "\n> " + lineActual);
+                    }
+                    ++num;
+                }
+                lineActual = readerActual.readLine();
+                // Assert.assertEquals(null, lineActual);
+                if (lineActual != null) {
+                    throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< \n> "
+                            + lineActual);
+                }
+                LOGGER.severe("Test \"" + queryFile.getPath() + "\" PASSED!");
+                actualFile.delete();
+            } finally {
+                readerExpected.close();
+                readerActual.close();
+            }
+        } catch (Exception e) {
+            if (!(e instanceof AssumptionViolatedException)) {
+                LOGGER.severe("Test \"" + queryFile.getPath() + "\" FAILED!");
+                throw new Exception("Test \"" + queryFile.getPath() + "\" FAILED!", e);
+            } else {
+                throw e;
+            }
+        }
+    }
+}

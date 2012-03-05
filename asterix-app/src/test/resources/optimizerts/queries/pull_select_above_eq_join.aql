@@ -1,0 +1,36 @@
+drop dataverse pull-select-above-eq-join if exists;
+
+create dataverse pull-select-above-eq-join;
+
+use dataverse pull-select-above-eq-join;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  city: string,
+  lottery_numbers: {{int32}}
+}
+
+create type VisitorType as open {
+  vid: int32, 
+  name: string,
+  city: string,
+  lottery_numbers: {{int32}}
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Users(UserType) 
+  partitioned by key uid on group1;
+
+create dataset Visitors(VisitorType) 
+  partitioned by key vid on group1;
+
+
+write output to nc1:"/tmp/pull-select-above-eq-join.adm";
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $user.name = $visitor.name
+      and $user.city != $visitor.city
+return {"uid": $user.uid, "vid": $visitor.vid}

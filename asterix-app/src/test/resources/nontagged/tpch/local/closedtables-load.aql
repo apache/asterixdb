@@ -1,0 +1,117 @@
+use dataverse tpch;
+
+declare type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: int32, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+declare type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+declare type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+declare type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+declare type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+declare type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+declare type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+declare type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+declare dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+declare dataset Suppliers(SupplierType)
+  partitioned by key s_suppkey on group1;
+declare dataset Nations(NationType) 
+  partitioned by key n_nationkey on group1;
+declare dataset Regions(RegionType)
+  partitioned by key r_regionkey on group1;
+declare dataset Parts(PartType)
+  partitioned by key p_partkey on group1;
+declare dataset PartSupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+
+//load dataset LineItems from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/lineitem.json" pre-sorted;
+//load dataset Orders from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/orders.json" pre-sorted;
+//load dataset Customers from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/customer.json" pre-sorted;
+//load dataset Suppliers from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/supplier.json" pre-sorted;
+//load dataset Nations from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/nation.json" pre-sorted;
+//load dataset Regions from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/region.json" pre-sorted;
+//load dataset Parts from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/part.json" pre-sorted;
+load dataset PartSupp from nc1:"/home/yasser/Dropbox/Research/data/tpch_data/alldata/jsonformat/partsupp.json" pre-sorted;
+

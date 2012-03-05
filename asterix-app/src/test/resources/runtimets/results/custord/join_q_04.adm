@@ -1,0 +1,3 @@
+{ "cust_name": "Jodi Rotruck", "orderedlist": [ 1000, 66, 775 ], "unorderedlist": {{ 1000, 66, 775 }}, "ol_item1": 1000, "ol_item2": 66, "ol_item5": null, "ul_item1": 1000 }
+{ "cust_name": "Jodi Alex", "orderedlist": [ 10, 48, 5 ], "unorderedlist": {{ 10, 48, 5 }}, "ol_item1": 10, "ol_item2": 48, "ol_item5": null, "ul_item1": 10 }
+{ "cust_name": "Jodi Rotruck", "orderedlist": [ 10, 66, 775 ], "unorderedlist": {{ 10, 66, 775 }}, "ol_item1": 10, "ol_item2": 66, "ol_item5": null, "ul_item1": 10 }

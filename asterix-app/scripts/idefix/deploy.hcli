@@ -1,0 +1,2 @@
+connect to "localhost";
+create application asterix "/home/nicnic/workspace/asterix/trunk/asterix/asterix-app/target/asterix-app-0.0.2-SNAPSHOT-binary-assembly.zip";

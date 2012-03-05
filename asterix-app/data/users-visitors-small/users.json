@@ -1,0 +1,10 @@
+{ "uid": 10,  "name": "Jodi Rotruck",    "lottery_numbers": [10, 15, 20], "interests": {{"hiking", "running", "swimming"}} }
+{ "uid": 20,  "name": "Clint Coil",      "lottery_numbers": [20, 25, 30], "interests": {{"biking", "painting"}} }
+{ "uid": 30,  "name": "Marvella Loud",   "lottery_numbers": [40, 41, 42], "interests": {{}} }
+{ "uid": 40,  "name": "Tamie Pollara",   "lottery_numbers": [45, 46, 47], "interests": {{"singing", "acting", "running"}} }
+{ "uid": 50,  "name": "Lance Pracht",    "lottery_numbers": [10, 20, 41], "interests": {{"biking", "acting", "painting"}} }
+{ "uid": 60,  "name": "Larry Gothier",   "lottery_numbers": [25, 30, 31], "interests": {{"acting", "running"}} }
+{ "uid": 70,  "name": "Obdulia Dicosmo", "lottery_numbers": [10, 15, 40], "interests": {{"running", "hiking", "biking"}} }
+{ "uid": 80,  "name": "Elias Leonardo",  "lottery_numbers": [45, 46, 47], "interests": {{"biking", "singing"}} }
+{ "uid": 90,  "name": "Myrtice Cubias",  "lottery_numbers": [20, 25, 43], "interests": {{"kayaking", "running"}} }
+{ "uid": 100, "name": "Curt Savage",     "lottery_numbers": [47, 50, 53], "interests": {{"singing", "painting", "biking"}} }

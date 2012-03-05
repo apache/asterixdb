@@ -1,0 +1,7 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_like_01.adm";
+
+[like("A6BBB", "_6%"), like("A8BBB", "_6%")]

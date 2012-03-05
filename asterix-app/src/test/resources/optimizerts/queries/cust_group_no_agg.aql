@@ -1,0 +1,28 @@
+drop dataverse group_no_agg if exists;
+
+create dataverse group_no_agg;
+
+use dataverse group_no_agg;
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+
+write output to nc1:"/tmp/.adm";
+
+for $c in dataset('Customers')
+group by $name := $c.c_name  with $c
+return $name
+

@@ -1,0 +1,21 @@
+{"id": 21, "tweetid": 69902639026020352i64, "loc": point("34.5,-100.5"), "time": datetime("2011-05-15T16:11:02"), "text": "thats that smokers cough maam &lt;&lt;&lt;&lt;&lt;--- @x_incredibleL :: Allergies. i got that &quot;cough&quot; lol"} 
+{"id": 22, "tweetid": 69988755800465408i64, "loc": point("34.5,-97.5"), "time": datetime("2011-05-15T21:53:14"), "text": "Allergies fuckin over me..#damn"} 
+{"id": 23, "tweetid": 69940039605432320i64, "loc": point("34.5,-97.5"), "time": datetime("2011-05-15T18:39:39"), "text": "Natural Asthma Remedy - Deal With Your Asthma in a Natural Way.. Allergies"} 
+{"id": 24, "tweetid": 69834276929159169i64, "loc": point("25.5,-100.5"), "time": datetime("2011-05-15T11:39:23"), "text": "Damn Allergies... sneezing like crazy! &gt;_&lt;"} 
+{"id": 25, "tweetid": 69950146787553281i64, "loc": point("25.5,-97.5"), "time": datetime("2011-05-15T19:19:49"), "text": "pass me an asthma pump"} 
+{"id": 26, "tweetid": 69754524767756289i64, "loc": point("25.5,-97.5"), "time": datetime("2011-05-15T06:22:29"), "text": "Never knew allergies could actually keep me from sleeping"} 
+{"id": 27, "tweetid": 69999864498487297i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T22:37:22"), "text": "@ItsCrystal320 gooodd mommy! Except my allergies have been acting up :( and Im having issues with you know who. Smh nothing new. Lol"} 
+{"id": 28, "tweetid": 69996796616777728i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T22:25:11"), "text": "My allergies act up so much while Im in this house!!! Idk why! Sneezing, now my eye is swollen!! Smh."} 
+{"id": 29, "tweetid": 69977295351316480i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T21:07:41"), "text": "@GOLDenNote6 lmmmaaaoooo!!!! nnnnooo! ur the one that needs the asthma pump!"} 
+{"id": 30, "tweetid": 69972022586912768i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T20:46:44"), "text": "@TinaLee90 hell yeah ! He snapped cause she got allergies and heavy she be snorting and coughing while he trying to study"} 
+{"id": 31, "tweetid": 69965044678524928i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T20:19:01"), "text": "Back home and my ears begin to itch!!! Omg allergies go away please! #thingsicanlivewithout"} 
+{"id": 32, "tweetid": 69961997680246784i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T20:06:54"), "text": "@BravoAndy allergies acting up again or you just digging the glasses? Haha u rock it though!"} 
+{"id": 33, "tweetid": 69946356248215552i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T19:04:45"), "text": "My allergies act up at the worst times -_-"} 
+{"id": 34, "tweetid": 69929466691993600i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T17:57:38"), "text": "Hate being sick!!! -_____- I hate you allergies! :/"} 
+{"id": 35, "tweetid": 69928014615556096i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T17:51:52"), "text": "Allergies please go away :("} 
+{"id": 36, "tweetid": 69916338092654592i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T17:05:28"), "text": "I feel tired....i got asthma :( but it was still an awesome birthday"} 
+{"id": 37, "tweetid": 69911241975529474i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T16:45:13"), "text": "Cant stand that asthma commercial with the gold fish -__-"} 
+{"id": 38, "tweetid": 69910467233062912i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T16:42:08"), "text": "@PapisFavWave whats wrong? Got a cold? Asthma ?"} 
+{"id": 39, "tweetid": 69908652202536961i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T16:34:56"), "text": "My allergies are killing me!"} 
+{"id": 40, "tweetid": 69897794273546240i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T15:51:47"), "text": "and allergies"} 
+{"id": 41, "tweetid": 69893733449080832i64, "loc": point("25.5,-80.5"), "time": datetime("2011-05-15T15:35:39"), "text": "Repeated splashing of water about the skin, specifically following an exposure to pollution and dirt, makes sure... http://bit.ly/mnWnJo"} 

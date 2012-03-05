@@ -1,0 +1,362 @@
+options {
+
+	  
+       STATIC = false;
+	
+}
+
+PARSER_BEGIN(AdmLexer)
+
+package edu.uci.ics.asterix.adm.parser.nontagged;
+
+import java.io.*;
+
+public class AdmLexer {
+
+	public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException {
+	   	File file = new File(args[0]);
+	   	Reader freader = new BufferedReader(new InputStreamReader
+                      (new FileInputStream(file), "UTF-8"));
+		AdmLexer flexer = new AdmLexer(freader);
+		Token t = null;
+		do {
+		   t = flexer.next();		   
+		   System.out.println(AdmLexerConstants.tokenImage[t.kind]);
+		} while (t.kind != EOF);
+	    freader.close();
+	}
+	
+	public Token next() throws ParseException {
+	   return getNextToken();
+	}
+	
+	public String tokenKindToString(int tokenKind) {
+	   return AdmLexerConstants.tokenImage[tokenKind];
+	}
+}
+
+PARSER_END(AdmLexer)
+
+<DEFAULT>
+TOKEN :
+{
+	<NULL_LITERAL : "null">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TRUE_LITERAL : "true">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<FALSE_LITERAL : "false">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<BOOLEAN_CONS : ("boolean") >	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<CONSTRUCTOR_OPEN : ("(")>	
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<CONSTRUCTOR_CLOSE : (")")>	
+}
+
+<DEFAULT>
+TOKEN:
+{
+	<INT8_LITERAL : ("-" | "+")? (<DIGIT>)+ ("i8")>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<INT8_CONS : ("int8") >	
+}
+
+<DEFAULT>
+TOKEN:
+{
+	<INT16_LITERAL : ("-" | "+")? (<DIGIT>)+ ("i16")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<INT16_CONS : ("int16") >	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<INT32_LITERAL : ("-" | "+")? (<DIGIT>)+ ("i32")>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<INT32_CONS : ("int32")>	
+}
+
+<DEFAULT>
+TOKEN:
+{
+	<INT64_LITERAL : ("-" | "+")? (<DIGIT>)+ ("i64")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<INT64_CONS : ("int64") >	
+}
+
+<DEFAULT>
+TOKEN:
+{
+	<INT_LITERAL : ("-" | "+")? (<DIGIT>)+>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<CIRCLE_LITERAL : "P"<DOUBLE_LITERAL>(",") <DOUBLE_LITERAL> ("R") <DOUBLE_LITERAL> >	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<CIRCLE_CONS : ("circle") >	
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<TIMEZONE_LITERAL : (("+"|"-")<INTEGER>(":")<INTEGER>) | ("Z") >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DATE_LITERAL : ("-")?<INTEGER>("-")<INTEGER>("-")<INTEGER> (<TIMEZONE_LITERAL>)? >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DATE_CONS : ("date")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TIME_LITERAL : <INTEGER>(":")<INTEGER>(":")<INTEGER> ( (":")<INTEGER>)? (<TIMEZONE_LITERAL>)? >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TIME_CONS : ("time")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DATETIME_LITERAL : ("-")? <INTEGER>("-")<INTEGER>("-")<INTEGER>("T")<INTEGER>(":")<INTEGER>(":")<INTEGER> ( (":")<INTEGER>)? (<TIMEZONE_LITERAL>)?>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DATETIME_CONS : ("datetime")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DURATION_LITERAL : ("-")? ("D")(<INTEGER>("Y"))?(<INTEGER>("M"))?(<INTEGER>("D"))?(("T")(<INTEGER>("H"))?(<INTEGER>("M"))?(<INTEGER>("S"))?)?>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DURATION_CONS : ("duration")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<#DIGIT : ["0" - "9"]>
+}
+
+TOKEN:
+{
+  < DOUBLE_LITERAL: 
+	      ("-" | "+")? <INTEGER> ( "." <INTEGER> )? (<EXPONENT>)? 
+	    | ("-" | "+")? "." <INTEGER>
+  >
+  | < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+	| <INTEGER : (<DIGIT>)+ >
+	| <FLOAT_LITERAL: <DOUBLE_LITERAL>("f"|"F")>
+ }
+
+
+<DEFAULT>
+TOKEN :
+{
+	<FLOAT_CONS : ("float")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DOUBLE_CONS : ("double")>	
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") >
+	|
+	< #EscapeQuot: "\\\"" >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<STRING_CONS : ("string")>	
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<POINT_LITERAL : "P"<DOUBLE_LITERAL>(",")<DOUBLE_LITERAL>>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<POINT_CONS : ("point")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<POINT3D_LITERAL : "P" <DOUBLE_LITERAL>(",") <DOUBLE_LITERAL> (",") <DOUBLE_LITERAL>>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<POINT3D_CONS : ("point3d")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<LINE_LITERAL : "P"<DOUBLE_LITERAL>(",") <DOUBLE_LITERAL> ("P") <DOUBLE_LITERAL> (",") <DOUBLE_LITERAL>>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<LINE_CONS : ("line")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<POLYGON_LITERAL : "P"<DOUBLE_LITERAL>(",") <DOUBLE_LITERAL> ("P") <DOUBLE_LITERAL> (",") <DOUBLE_LITERAL> (("P") <DOUBLE_LITERAL> (",") <DOUBLE_LITERAL>)+>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<POLYGON_CONS : ("polygon")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<RECTANGLE_CONS : ("rectangle")>	
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<RECTANGLE_LITERAL : "P"<DOUBLE_LITERAL>(",") <DOUBLE_LITERAL> ("P") <DOUBLE_LITERAL> (",") <DOUBLE_LITERAL>>		
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<START_RECORD : "{">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_RECORD : "}">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<COMMA : ",">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<COLON : ":">
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<START_ORDERED_LIST : "[">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_ORDERED_LIST : "]">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<START_UNORDERED_LIST : "{{">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_UNORDERED_LIST : "}}">
+}
+
+
+
+
+SKIP:
+{
+    " "
+|   "\t"
+|   "\r"
+|   "\n"
+}

@@ -1,0 +1,1 @@
+o_orderkey: int32|o_custkey: int32|o_orderstatus: string|o_totalprice: double|o_orderdate: string|o_orderpriority: string|o_clerk: string|o_shippriority: int32|o_comment: string

@@ -1,0 +1,159 @@
+use dataverse tpch;
+
+declare type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+declare type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+declare type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+declare type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+declare type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+declare type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+declare type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+declare type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03,
+rainbow-04, rainbow-05;
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+declare dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+declare dataset Suppliers(SupplierType)
+  partitioned by key s_suppkey on group1;
+declare dataset Nations(NationType) 
+  partitioned by key n_nationkey on group1;
+declare dataset Regions(RegionType)
+  partitioned by key r_regionkey on group1;
+declare dataset Parts(PartType)
+  partitioned by key p_partkey on group1;
+declare dataset PartSupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+
+
+load dataset Customers from 
+   rainbow-01:"/data/onose/fiftygigs/customer.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/customer.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/customer.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/customer.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/customer.tbl.5"
+     delimited by "|" pre-sorted;
+
+load dataset Suppliers from 
+   rainbow-01:"/data/onose/fiftygigs/supplier.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/supplier.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/supplier.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/supplier.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/supplier.tbl.5"
+     delimited by "|" pre-sorted;
+
+load dataset Nations from rainbow-05:"/data/onose/fiftygigs/nation.tbl"  delimited by "|" pre-sorted;
+
+load dataset Regions from rainbow-05:"/data/onose/fiftygigs/region.tbl"  delimited by "|" pre-sorted;
+
+load dataset Parts from 
+   rainbow-01:"/data/onose/fiftygigs/part.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/part.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/part.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/part.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/part.tbl.5"
+     delimited by "|" pre-sorted;
+
+load dataset PartSupp from 
+   rainbow-01:"/data/onose/fiftygigs/partsupp.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/partsupp.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/partsupp.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/partsupp.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/partsupp.tbl.5"
+     delimited by "|" pre-sorted;
+
+load dataset Orders from 
+   rainbow-01:"/data/onose/fiftygigs/orders.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/orders.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/orders.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/orders.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/orders.tbl.5"
+     delimited by "|" pre-sorted;
+
+load dataset LineItems from 
+   rainbow-01:"/data/onose/fiftygigs/lineitem.tbl.1",
+   rainbow-02:"/data/onose/fiftygigs/lineitem.tbl.2",
+   rainbow-03:"/data/onose/fiftygigs/lineitem.tbl.3",
+   rainbow-04:"/data/onose/fiftygigs/lineitem.tbl.4",
+   rainbow-05:"/data/onose/fiftygigs/lineitem.tbl.5"
+     delimited by "|" pre-sorted;

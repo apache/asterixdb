@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_scan-collection_01.adm";
+
+for $u in [1, 2, 3]
+return $u

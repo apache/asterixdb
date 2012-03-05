@@ -1,0 +1,14 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_listify_02.adm";
+
+let $token_list := 
+  for $token in ["foo", "bar"] return $token
+return $token_list
+
+
+
+
+

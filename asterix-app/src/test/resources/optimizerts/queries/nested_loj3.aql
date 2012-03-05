@@ -1,0 +1,92 @@
+drop dataverse tpch if exists;
+create dataverse tpch;
+use dataverse tpch;
+
+create type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+
+create type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+create dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+create dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+create dataset PartSupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+
+write output to nc1:"/tmp/nested_loj.adm";
+
+for $c in dataset('Customers')
+let $orders := 
+  for $o in dataset('Orders')
+  where $o.o_custkey = $c.c_custkey
+  let $items := 
+    for $l in dataset('LineItems')
+    where $l.l_orderkey = $o.o_orderkey
+    let $partsupp := 
+      for $ps in dataset('PartSupp')
+      where $ps.ps_partkey = $l.l_partkey and $ps.ps_suppkey = $l.l_suppkey
+      return $ps     
+    return {
+        "item": $l,
+        "part_supplier": $partsupp
+    }    
+  return {
+     "order": $o,
+     "items": $items
+  }  
+return {
+  "cust": $c,
+  "orders": $orders
+}  

@@ -1,0 +1,31 @@
+drop dataverse test if exists;
+  
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as closed {
+	id: int32,
+	tweetid: int64,
+	loc: point,
+	time: datetime,
+	text: string
+}
+
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset MyData(MyRecord)
+  partitioned by key id on group1;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
+
+
+delete $l from dataset MyData where $l.id>=50 die after 1500;
+
+write output to nc1:"rttest/failure_delete-rtree.adm";      
+
+for $o in dataset('MyData')
+order by $o.id
+return {"id":$o.id}

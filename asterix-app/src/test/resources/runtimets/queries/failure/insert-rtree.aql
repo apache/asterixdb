@@ -1,0 +1,65 @@
+drop dataverse test if exists;
+
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as closed {
+	id: int32,
+	tweetid: int64,
+	loc: point,
+	time: datetime,
+	text: string
+}
+
+create type MyMiniRecord as closed {
+  id: int32,
+  loc: point
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset MyData(MyRecord)
+  partitioned by key id on group1;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
+
+
+create dataset MyMiniData(MyMiniRecord)
+  partitioned by key id on group1;
+
+load dataset MyMiniData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData0.json"),("format"="adm")) pre-sorted;
+
+
+create index rtree_index_loc_0 on MyData(loc) type rtree;
+create index rtree_index_loc on MyMiniData(loc) type rtree;
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	where $m.id<1000
+	return {
+		"id": $m.id,
+		"loc": $m.loc
+	}
+);
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	where $m.id>=1000
+	die after 1000
+	return {
+		"id": $m.id,
+		"loc": $m.loc
+	}
+);
+
+write output to nc1:"rttest/failure_insert-rtree.adm";
+
+for $o in dataset('MyMiniData')
+order by $o.id
+return {"id":$o.id}

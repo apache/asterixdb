@@ -1,0 +1,27 @@
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: <string>
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset Users(UserType) partitioned by key uid on group1;
+
+load dataset Users from nc1:'data/users-visitors-small/users.json';
+
+write output to nc1:'rttest/fuzzyjoin_user-lot-aqlplus_1.1.adm';
+
+set simthreshold '.5f';
+
+for $user in dataset('Users')
+for $user2 in dataset('Users')
+where $user.lottery_numbers ~= $user2.lottery_numbers and $user.uid < $user2.uid
+let $sim := similarity-jaccard($user.lottery_numbers, $user2.lottery_numbers)
+order by $sim desc, $user.uid, $user2.uid limit 3
+return { 'user': $user, 'user2': $user2, 'sim': $sim }

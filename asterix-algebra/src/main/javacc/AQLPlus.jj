@@ -1,0 +1,1628 @@
+options {
+
+	  
+       STATIC = false;
+	
+}
+
+
+PARSER_BEGIN(AQLPlusParser)
+
+package edu.uci.ics.asterix.aqlplus.parser;
+
+import java.io.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Stack;
+import java.util.Map;
+import java.util.HashMap;
+
+import edu.uci.ics.asterix.aql.literal.FloatLiteral;
+import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
+import edu.uci.ics.asterix.aql.literal.FalseLiteral;
+import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.literal.IntegerLiteral;
+import edu.uci.ics.asterix.aql.literal.NullLiteral;
+import edu.uci.ics.asterix.aql.literal.StringLiteral;
+import edu.uci.ics.asterix.aql.literal.TrueLiteral;
+
+import edu.uci.ics.asterix.aql.parser.ScopeChecker;
+import edu.uci.ics.asterix.aql.base.*;
+import edu.uci.ics.asterix.aql.expression.*;
+import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
+import edu.uci.ics.asterix.aql.expression.UnaryExpr.Sign;
+import edu.uci.ics.asterix.aql.base.Statement.Kind;
+import edu.uci.ics.asterix.aql.context.Scope;
+import edu.uci.ics.asterix.aql.context.RootScopeFactory;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+
+public class AQLPlusParser extends ScopeChecker {
+
+/*
+    private void printHints(Token t) {
+       //System.err.println("token="+t.image+"\t special="+t.specialToken); 
+       if (t.specialToken == null) return;
+       Token tmp_t = t.specialToken;
+       while (tmp_t.specialToken != null) tmp_t = tmp_t.specialToken;    
+       while (tmp_t != null) {
+         System.out.println(tmp_t.image);
+         tmp_t = tmp_t.next;
+       }
+    }
+*/
+  
+    private static final String HASH_GROUP_BY_HINT = "hash";
+    private static final String BROADCAST_JOIN_HINT = "bcast";
+    private static final String INMEMORY_HINT = "inmem";
+    
+   
+    private static String getHint(Token t) {
+       if (t.specialToken == null) {
+         return null;
+       }       
+       String s = t.specialToken.image;
+       int n = s.length();
+       if (n < 2) {
+         return null;
+       }  
+       return s.substring(1).trim();
+    }
+
+	public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, AsterixException {
+			File file = new File(args[0]);
+			Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+		    AQLPlusParser parser = new AQLPlusParser(fis);
+		    Statement st = parser.Statement();
+		    st.accept(new AQLPrintVisitor(), 0);
+		    
+//		    System.out.println("FunctionCalls not found:");
+//		    for(FunctionDescriptor fd: notFoundFunctionList)
+//		    {
+//			if(lookupFunctionSignature(fd.getValue(), fd.getArity())!=null)
+//				notFoundFunctionList.remove(fd);
+//		    }
+//			System.out.println(notFoundFunctionList.toString());
+
+	}
+
+    public void initScope() {
+            scopeStack.push(RootScopeFactory.createRootScope(this));
+    }
+}
+
+PARSER_END(AQLPlusParser)
+
+
+Statement Statement() throws ParseException:
+{
+  Query query = null;
+  // scopeStack.push(RootScopeFactory.createRootScope(this));
+  initScope();
+  List<Statement> decls = new ArrayList<Statement>();
+}
+{
+    (
+      (
+        ( 
+          "use"
+            {
+              decls.add(DataverseDeclaration());
+            }           
+          | "declare"
+            (   "function" { 
+                              decls.add(FunctionDeclaration()); 
+                           } 
+              | "type"     { 
+                              decls.add(TypeDeclaration()); 
+                           }
+            )        
+          | "load" {
+                       decls.add(LoadStatement());
+                   }  
+             
+          | "write" {
+                       decls.add(WriteStatement());
+                    }              
+          | "set" {
+                       decls.add(SetStatement());
+                    }
+                                                     
+        )*
+        (query = Query())?
+      )
+
+      <EOF>
+    )
+    {
+      if (query == null) {
+        query = new Query(true);
+      }
+      query.setPrologDeclList(decls);
+    
+//        for(FunctionDecl fdc : fdList)
+//        {
+//        	FunctionDescriptor fd = (FunctionDescriptor) fdc.getIdent();
+//                notFoundFunctionList.remove(fd);
+//        }
+// }
+      return query;
+    }
+}
+
+Statement SetStatement() throws ParseException:
+{
+  String pn = null;
+  Statement stmt = null;
+}
+{
+  <IDENTIFIER>  { pn = token.image; }  
+  <STRING_LITERAL>
+    { String pv = removeQuotesAndEscapes(token.image); }
+    ";"
+  {
+    return new SetStatement(pn, pv);
+  }
+}
+
+Statement WriteStatement() throws ParseException:
+{
+  Identifier nodeName = null;
+  String fileName = null;
+  Identifier datasetName = null;
+  Statement stmt = null;
+  Query query;
+}
+{
+  (( "output" "to" 
+    <IDENTIFIER> { nodeName = new Identifier(token.image); } 
+    ":" <STRING_LITERAL> { 
+             fileName = removeQuotesAndEscapes(token.image);
+             stmt = new WriteStatement(nodeName, fileName, null);         
+         } )
+    |
+   ( "into" 
+     <DATASET> <IDENTIFIER> { datasetName = new Identifier(token.image); }
+     <LEFTPAREN> query = Query() <RIGHTPAREN>
+     {
+        stmt = new WriteFromQueryResultStatement(datasetName, query, getVarCounter());
+     } ))  
+        
+    ";"
+    {
+      return stmt;
+    }
+}
+
+DataverseDecl DataverseDeclaration() throws ParseException:
+{
+  Identifier dvName = null;  
+}
+{
+  "dataverse" <IDENTIFIER> { dvName = new Identifier(token.image); }
+  ";"
+  {
+    return new DataverseDecl(dvName);
+  }
+}
+
+LoadFromFileStatement LoadStatement() throws ParseException:
+{
+  Identifier datasetName = null;
+  boolean alreadySorted = false;
+  String adapter;
+  Map<String,String> properties = new HashMap<String,String>(); 
+  String name;
+  String value;
+}
+{
+   <DATASET> <IDENTIFIER> { datasetName = new Identifier(token.image); }
+ 
+   "using" 
+  (
+    <STRING_LITERAL>
+    {
+      adapter = removeQuotesAndEscapes(token.image);
+    }
+    <LEFTPAREN>
+    (
+      (
+        <LEFTPAREN>
+        (
+          <STRING_LITERAL>
+          {
+            name = removeQuotesAndEscapes(token.image);
+          }
+          "=" <STRING_LITERAL>
+          {
+            value = removeQuotesAndEscapes(token.image);
+          }
+        )
+        <RIGHTPAREN>
+        {
+      	  properties.put(name, value);
+        }
+      )
+      (
+        "," <LEFTPAREN>
+        (
+          <STRING_LITERAL>
+          {
+            name = removeQuotesAndEscapes(token.image);
+          }
+          "=" <STRING_LITERAL>
+          {
+            value = removeQuotesAndEscapes(token.image);
+          }
+        )
+        <RIGHTPAREN>
+        {
+      	  properties.put(name, value);
+        }
+      )*
+    )?
+    <RIGHTPAREN>
+  )
+ 
+    ("pre-sorted" 
+      {  alreadySorted = true; }
+    )?
+        
+  ";"
+  {
+     return new LoadFromFileStatement(datasetName, adapter, properties, alreadySorted);
+  }   
+}
+
+TypeDecl TypeDeclaration() throws ParseException:
+{
+  Identifier ident;
+  TypeExpression typeExpr;
+}
+{
+  <IDENTIFIER>
+  {
+    ident = new Identifier(token.image.toString());
+  }
+  "as"
+  ( typeExpr = TypeExpr() )
+  {
+    return new TypeDecl(ident, typeExpr);
+  }
+}
+
+TypeExpression TypeExpr() throws ParseException:
+{
+  TypeExpression typeExpr = null;
+}
+{
+  (
+      typeExpr = RecordTypeDef()
+    | typeExpr = TypeReference()
+    | typeExpr = OrderedListTypeDef()
+    | typeExpr = UnorderedListTypeDef()  
+  )  
+  {
+    return typeExpr;
+  }
+}
+
+RecordTypeDefinition RecordTypeDef() throws ParseException:
+{
+  RecordTypeDefinition recType = new RecordTypeDefinition();
+  RecordTypeDefinition.RecordKind recordKind = null; 
+}
+{
+  ( "closed" { recordKind = RecordTypeDefinition.RecordKind.CLOSED; } 
+    | "open" { recordKind = RecordTypeDefinition.RecordKind.OPEN; } )?
+   "{"
+		( 
+		  RecordField(recType)
+		  ( ","  RecordField(recType) )*
+		)?
+   "}"
+   {
+      if (recordKind == null) {
+        recordKind = RecordTypeDefinition.RecordKind.OPEN;
+      }
+      recType.setRecordKind(recordKind);
+      return recType;
+   } 
+}
+
+void RecordField(RecordTypeDefinition recType) throws ParseException:
+{
+        String fieldName;
+        TypeExpression type = null; 
+        boolean nullable = false;
+}
+{
+      <IDENTIFIER>
+      	{
+	     Token t = getToken(0);
+	     fieldName = t.toString();
+	    }
+	  ":"
+	  ( type =  TypeExpr() )
+	  ("?" { nullable = true; } )?
+	  {
+	     recType.addField(fieldName, type, nullable);
+	  }   
+}
+
+TypeReferenceExpression TypeReference() throws ParseException:
+{}
+{
+  <IDENTIFIER>
+  	{
+	  Token t = getToken(0);
+	  Identifier id = new Identifier(t.toString());
+	  return new TypeReferenceExpression(id);
+	}      
+}
+
+OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
+{  
+  TypeExpression type = null;
+}
+{
+  "["
+    ( type =  TypeExpr() )
+  "]"
+  {
+    return new OrderedListTypeDefinition(type);
+  }
+}
+
+
+UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
+{  
+  TypeExpression type = null;
+}
+{
+  "<"
+    ( type =  TypeExpr() )
+  ">"
+  {
+    return new UnorderedListTypeDefinition(type);
+  }
+}
+
+
+FunctionDecl FunctionDeclaration() throws ParseException:
+{
+  FunctionDecl func = new FunctionDecl();
+  FunIdentifier ident = new FunIdentifier();
+  int arity = 0;
+  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  Expression funcBody;
+  VarIdentifier var = null;
+  createNewScope();
+}
+{
+
+    <IDENTIFIER>
+	{
+	  Token t = getToken(0);
+	  ident.setValue(t.toString());
+	}
+    <LEFTPAREN> (<VARIABLE>
+    {
+      var = new VarIdentifier();
+      var.setValue(getToken(0).toString());
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+      arity++;
+    }
+    ("," <VARIABLE>
+    {
+      var = new VarIdentifier();
+      var.setValue(getToken(0).toString());
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+      arity++;
+    })*)? <RIGHTPAREN> "{" funcBody = Expression() "}"
+
+    {
+      ident.setArity(arity);
+      getCurrentScope().addFunctionDescriptor(ident, false);
+      func.setIdent(ident);
+      func.setFuncBody(funcBody);
+      func.setParamList(paramList);
+      return func;
+    }
+}
+
+Query Query()throws ParseException:
+{
+  Query query = new Query();
+  Expression expr;
+}
+{
+    expr = Expression()
+
+    {
+      query.setBody(expr);
+      return query;
+    }
+}
+
+
+
+Expression Expression():
+{
+  Expression expr = null;
+  Expression exprP = null;
+}
+{
+(
+  
+//OperatorExpr | IfThenElse | FLWOGRExpression | QuantifiedExpression
+    expr = OperatorExpr()
+    | expr = IfThenElse()
+    | expr = FLWOGR()
+    | expr = QuantifiedExpression()
+
+
+)
+	{
+	  return (exprP==null) ? expr : exprP;
+	}
+}
+
+
+
+Expression OperatorExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+	operand = AndExpr()
+	(
+	
+	  "or"
+  	{
+  	  if (op == null) {
+  	    op = new OperatorExpr();
+  	    op.addOperand(operand);
+	    op.setCurrentop(true);  	      	     
+  	  }  
+  	  Token t = getToken(0);
+      op.addOperator(t.toString());
+	}
+
+	operand = AndExpr()
+	{
+	  op.addOperand(operand);
+	}
+
+	)*
+	
+	{
+	  return op==null? operand: op;
+	}
+}
+
+Expression AndExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+	operand = RelExpr()
+	(
+	
+	  "and"
+  	{
+  	  if (op == null) {
+  	    op = new OperatorExpr();
+  	    op.addOperand(operand);
+	    op.setCurrentop(true);  	      	     
+  	  }  
+  	  Token t = getToken(0);
+      op.addOperator(t.toString());
+	}
+
+	operand = RelExpr()
+	{
+	  op.addOperand(operand);
+	}
+
+	)*
+	
+	{
+	  return op==null? operand: op;
+	}
+}
+
+
+
+Expression RelExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+  boolean broadcast = false;
+}
+{
+    operand = AddExpr()
+    {
+      if (operand instanceof VariableExpr) {
+        String hint = getHint(token);
+        if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
+          broadcast = true;       
+        }
+      }
+    } 
+
+    (
+      LOOKAHEAD(2)( "<" | ">" | "<=" | ">=" | "=" | "!=" |"~=")
+  	  {
+  	    if (op == null) {
+  	      op = new OperatorExpr();
+  	      op.addOperand(operand, broadcast);
+          op.setCurrentop(true);
+          broadcast = false;
+  	    }   
+  	    Token t = getToken(0);
+        op.addOperator(t.toString());
+	  }
+	  
+ 	  operand = AddExpr()
+	  {
+         broadcast = false;
+	     if (operand instanceof VariableExpr) {
+           String hint = getHint(token);
+           if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
+             broadcast = true;
+           }
+         } 
+         op.addOperand(operand, broadcast);
+      } 
+    )?
+ 	
+ 	{
+ 	  return op==null? operand: op;
+ 	}
+}
+
+Expression AddExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;  
+}
+{
+	operand = MultExpr()
+
+	( ("+" | "-")
+  	{
+  	  if (op == null) {
+  	    op = new OperatorExpr();
+        op.addOperand(operand);  	    
+        op.setCurrentop(true);        
+  	  } 
+  	  Token t = getToken(0);
+	  ((OperatorExpr)op).addOperator(t.toString());
+	}
+
+	operand = MultExpr()
+	{
+	  op.addOperand(operand);
+	}
+	)*
+	
+	{
+ 	  return op==null? operand: op;
+ 	}
+}
+
+Expression MultExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+	operand = UnionExpr()
+
+	(( "*" | "/" | "%" | <CARET> | "idiv")
+  	{
+  	  if (op == null) {
+  	    op = new OperatorExpr();
+        op.addOperand(operand);
+        op.setCurrentop(true);          	    
+  	  } 
+  	  Token t = getToken(0);
+	  op.addOperator(t.toString());
+	}
+	operand = UnionExpr()
+	{
+	   op.addOperand(operand);
+	}
+	)*
+	
+ 	{
+ 	  return op==null?operand:op;
+ 	}	
+}
+
+Expression UnionExpr() throws ParseException:
+{
+    UnionExpr union = null;
+    Expression operand1 = null;
+    Expression operand2 = null;
+}
+{
+   operand1 = UnaryExpr() 
+   ("union" 
+       (operand2 = UnaryExpr()) {
+          if (union == null) {
+             union = new UnionExpr();
+             union.addExpr(operand1); 
+          }
+          union.addExpr(operand2);   
+       } )*
+   {
+     return (union == null)? operand1: union;
+   }
+}
+
+Expression UnaryExpr() throws ParseException:
+{
+	Expression uexpr = null;
+	Expression expr = null;
+}
+{
+	(( "+"|"-") 
+	{
+	  	uexpr = new UnaryExpr(); 
+		Token t = getToken(0);
+		if("+".equals(t.toString()))
+			((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
+		else if("-".equals(t.toString()))
+			((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
+		else 
+			throw new ParseException();
+	}
+	)?
+	
+	expr = ValueExpr()
+	{
+		if(uexpr!=null){
+			((UnaryExpr)uexpr).setExpr(expr);
+			return uexpr;
+		}
+		else{
+			return expr;
+		}
+	}
+}
+
+Expression ValueExpr() throws ParseException:
+{
+  Expression expr;
+}
+{
+  expr = FieldOrIndexAccessor()
+  {
+    return expr;
+  }
+}
+
+
+Expression FieldOrIndexAccessor()throws ParseException:
+{
+  Expression expr = null;
+  Identifier ident = null;
+  AbstractAccessor fa = null;
+  int index;
+
+}
+{
+	( expr = PrimaryExpr()
+
+	)
+
+
+	(
+	(
+	  	ident = Field()
+	{
+		  if(fa == null)
+		  	fa = new FieldAccessor(expr, ident);
+		  else
+		  	fa = new FieldAccessor(fa, ident);
+	}
+	)
+	| (
+		index = Index()
+		{
+		  if(fa == null)
+		  	fa = new IndexAccessor(expr, index);
+		  else
+		  	fa = new IndexAccessor(fa, index);
+		}
+	) 
+	)*
+
+	
+  	{
+ 	  return fa==null?expr:fa;
+ 	}
+}
+
+Identifier Field() throws ParseException:
+{
+  Identifier ident = null;
+
+}
+{
+  "." < IDENTIFIER >
+  	{
+    
+  	ident = new Identifier();
+	ident.setValue(getToken(0).toString());
+
+	  return ident;
+	}
+}
+
+int Index() throws ParseException:
+{
+	Expression expr = null;
+	int idx = -2;
+}
+{
+  "[" ( expr = Expression()
+	{
+		if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
+		{
+			ILiteral lit = ((LiteralExpr)expr).getValue();
+			if(lit.getLiteralType() == ILiteral.Type.INTEGER) {
+				idx = Integer.valueOf(lit.getStringValue());
+			}	
+			else {
+				throw new ParseException("Index should be an INTEGER");				
+            }
+		}
+
+	}
+
+  	| "?"
+	{
+		idx = IndexAccessor.ANY;
+	  // ANY
+	}
+ 	 
+  	)
+
+   "]"
+	{
+	  return idx;
+	}
+}
+
+
+Expression PrimaryExpr()throws ParseException:
+{
+  Expression expr = null;
+}
+{
+  //ILiteral | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | ParenthesizedExpression
+	(
+	  expr =Literal() 
+	   | expr = FunctionCallExpr()
+	   | expr =VariableRef() 
+	   
+    {
+      if(((VariableExpr)expr).getIsNewVar() == true)
+      	throw new ParseException("can't find variable " + ((VariableExpr)expr).getVar());
+    }
+    	   | expr = ListConstructor()
+	   | expr = RecordConstructor()
+	   | expr = ParenthesizedExpression()
+	   | expr = MetaVariableRef()
+	)
+ 	{
+ 	  return expr;
+ 	}
+}
+
+Expression Literal() throws ParseException:
+{
+
+  LiteralExpr lit = new LiteralExpr();
+  Token t;
+}
+{
+(
+      <STRING_LITERAL>
+	{
+	  t= getToken(0);
+	  lit.setValue( new StringLiteral(removeQuotesAndEscapes(t.image)));
+	}
+    
+ 	 | <INTEGER_LITERAL>
+    {
+      t= getToken(0);
+	  lit.setValue(new IntegerLiteral(new Integer(t.image)));
+	}
+     | < FLOAT_LITERAL >
+    {
+      t= getToken(0);
+      lit.setValue(new FloatLiteral(new Float(t.image)));
+    }     
+	 | < DOUBLE_LITERAL >
+    {
+      t= getToken(0);
+	  lit.setValue(new DoubleLiteral(new Double(t.image)));
+	}	  
+ 	 | <NULL>
+	{
+	  t= getToken(0);
+	  lit.setValue(NullLiteral.INSTANCE);
+	}
+   	 | <TRUE>
+	{
+	  t= getToken(0);
+	  lit.setValue(TrueLiteral.INSTANCE);
+	}   	 
+   	 | <FALSE>
+	{
+	  t= getToken(0);
+	  lit.setValue(FalseLiteral.INSTANCE);
+	}
+)
+    {
+      return lit;
+    }
+}
+
+
+VariableExpr VariableRef() throws ParseException:
+{
+	VariableExpr varExp = new VariableExpr();
+	VarIdentifier var = new VarIdentifier();
+	Token t;
+}
+{
+      <VARIABLE>
+    {
+     t = getToken(0);//get current token
+     String varName = t.toString(); 
+     Identifier ident = lookupSymbol(varName);
+     if (isInForbiddenScopes(varName)) {
+       throw new ParseException("Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
+     }
+     if(ident != null) { // exist such ident
+       varExp.setIsNewVar(false);
+       varExp.setVar((VarIdentifier)ident);       
+     } else {
+       varExp.setVar(var);     
+     }
+     var.setValue(t.toString());        
+     return varExp;
+    }
+}
+
+
+VariableExpr Variable() throws ParseException:
+{
+	VariableExpr varExp = new VariableExpr();
+	VarIdentifier var = new VarIdentifier();
+	Token t;
+}
+{
+      <VARIABLE>
+    {
+     t = getToken(0);//get current token
+     Identifier ident = lookupSymbol(t.toString());
+     if(ident != null) { // exist such ident
+       varExp.setIsNewVar(false);
+     }  
+     varExp.setVar(var);     
+     var.setValue(t.toString());        
+     return varExp;
+    }
+}
+
+MetaVariableExpr MetaVariableRef() throws ParseException:
+{
+    MetaVariableExpr metaVarExp = new MetaVariableExpr();
+    VarIdentifier var = new VarIdentifier();
+    Token t;
+}
+{
+      <METAVARIABLE>
+    {
+     t = getToken(0);//get current token
+     metaVarExp.setVar(var);     
+     var.setValue(t.toString());        
+     return metaVarExp;
+    }
+}
+
+Expression ListConstructor() throws ParseException:
+{
+	Expression expr = null;
+}
+{
+    (
+    	expr = OrderedListConstructor() | expr = UnorderedListConstructor()
+    )
+    
+    {
+      return expr;
+    }
+}
+
+
+ListConstructor OrderedListConstructor() throws ParseException:
+{
+  	ListConstructor expr = new ListConstructor();
+  	Expression tmp = null;
+  	List<Expression> exprList = new ArrayList<Expression>();
+  	expr.setType(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR);
+}
+{
+
+    "[" 
+	    ( tmp = Expression()
+			{
+			  exprList.add(tmp);
+			}
+		
+		    ("," tmp = Expression() { exprList.add(tmp);  })*
+	    )? 
+    
+    "]"
+
+    {
+      expr.setExprList(exprList);
+      return expr;
+    }    
+}
+
+ListConstructor UnorderedListConstructor() throws ParseException:
+{
+  	ListConstructor expr = new ListConstructor();
+  	Expression tmp = null;
+  	List<Expression> exprList = new ArrayList<Expression>();
+  	expr.setType(ListConstructor.Type.UNORDERED_LIST_CONSTRUCTOR);
+}
+{
+
+    "{{" ( tmp = Expression()
+	{
+	  exprList.add(tmp);
+	}
+    ("," tmp = Expression() { exprList.add(tmp);  })*)? "}}"
+    {
+      expr.setExprList(exprList);
+      return expr;
+    }    
+}
+
+RecordConstructor RecordConstructor() throws ParseException:
+{
+  	RecordConstructor expr = new RecordConstructor();
+  	FieldBinding tmp = null;
+  	List<FieldBinding> fbList = new ArrayList<FieldBinding>();
+}
+{
+    "{" (tmp = FieldBinding()
+    {
+      fbList.add(tmp);
+    }
+    ("," tmp = FieldBinding() { fbList.add(tmp);  })*)? "}"
+    {
+      expr.setFbList(fbList);
+      return expr;
+    }       
+}
+
+FieldBinding FieldBinding() throws ParseException:
+{
+	FieldBinding fb = new FieldBinding();
+	Expression left, right;
+}
+{
+    left = Expression() ":" right = Expression()
+    {
+      fb.setLeftExpr(left);
+      fb.setRightExpr(right);
+      return fb;
+    }
+}
+
+Expression FunctionCallExpr() throws ParseException:
+{
+  CallExpr pf = new CallExpr();
+  List<Expression > argList = new ArrayList<Expression >();
+  Expression tmp;
+  int arity = 0;
+  Token funcName;
+}
+{
+    ( <IDENTIFIER> | <DATASET> )
+    {
+		funcName = getToken(0);
+    }
+     <LEFTPAREN> (tmp = Expression()
+     {
+       argList.add(tmp);
+       arity ++;
+     } ("," tmp = Expression() { argList.add(tmp); arity++; })*)? <RIGHTPAREN>
+
+     {
+       FunIdentifier fd = lookupFunctionSignature(funcName.toString(), arity);
+	     if(fd == null)
+	     {
+	        fd = new FunIdentifier(funcName.toString(), arity);
+//	     	notFoundFunctionList.add(fd);
+	     }
+//	     	throw new ParseException("can't find function "+ funcName.toString() + "@" + arity);
+       pf.setIdent(fd);
+       pf.setExprList(argList);
+       return pf;
+     }
+}
+
+
+Expression ParenthesizedExpression() throws ParseException:
+{
+  Expression expr;
+}
+{
+    <LEFTPAREN> expr = Expression() <RIGHTPAREN>
+    {
+      return expr;
+    }
+}
+
+Expression IfThenElse() throws ParseException:
+{
+  Expression condExpr;
+  Expression thenExpr;
+  Expression elseExpr;
+  IfExpr ifExpr = new IfExpr();
+}
+{
+    "if" <LEFTPAREN> condExpr = Expression() <RIGHTPAREN> "then" thenExpr = Expression() "else" elseExpr = Expression()
+
+    {
+      ifExpr.setCondExpr(condExpr);
+      ifExpr.setThenExpr(thenExpr);
+      ifExpr.setElseExpr(elseExpr);
+      return ifExpr;
+    }
+}
+
+Expression  FLWOGR() throws ParseException:
+{
+	FLWOGRExpression flworg = new FLWOGRExpression();
+	List<Clause> clauseList = new ArrayList<Clause>();
+	Expression returnExpr;
+	Clause tmp;
+	createNewScope();
+}
+{
+     (tmp = ForClause()  {clauseList.add(tmp);} | tmp = LetClause() {clauseList.add(tmp);} | tmp = MetaVariableClause() {clauseList.add(tmp);})
+      (tmp = Clause() {clauseList.add(tmp);})* "return" returnExpr = Expression()
+
+     {
+       flworg.setClauseList(clauseList);
+       flworg.setReturnExpr(returnExpr);
+       removeCurrentScope();
+       return flworg;
+     }
+}
+
+List<Clause> Clauses() throws ParseException:
+{
+    List<Clause> clauses = new ArrayList<Clause>();
+    Clause c = null;
+}
+{
+    (
+        (
+            c = Clause() {
+                clauses.add(c);
+            }
+        )*
+    )
+    {
+        return clauses;
+    }
+}
+
+Clause Clause() throws ParseException :
+{
+  Clause clause;
+}
+{
+    (
+         clause = ForClause() 
+       | clause = LetClause() 
+       | clause = WhereClause() 
+       | clause = OrderbyClause() 
+       | clause = GroupClause() 
+       | clause = LimitClause()
+       | clause = DistinctClause()
+       | clause = MetaVariableClause()
+       | clause = JoinClause()
+    )
+    {
+      return clause;
+    }
+}
+
+Clause MetaVariableClause() throws ParseException :
+{
+    MetaVariableClause mc = new MetaVariableClause();
+    VarIdentifier var = new VarIdentifier();
+    Token t;
+}
+{
+    <METAVARIABLECLAUSE>
+    {
+      t = getToken(0);
+      mc.setVar(var);     
+      var.setValue(t.toString());        
+      return mc;
+    }
+}
+
+Clause JoinClause() throws ParseException :
+{
+    Expression whereExpr;
+    List<Clause> leftClauses, rightClauses;
+    JoinClause.JoinKind kind = JoinClause.JoinKind.INNER; 
+}
+{
+    ("join" | "loj" { kind = JoinClause.JoinKind.LEFT_OUTER; } ) 
+      <LEFTPAREN> <LEFTPAREN> leftClauses = Clauses() <RIGHTPAREN> "," 
+      <LEFTPAREN> rightClauses = Clauses() <RIGHTPAREN> "," 
+      whereExpr = Expression() <RIGHTPAREN>
+    {
+      JoinClause jc = new JoinClause(kind);
+      jc.setLeftClauses(leftClauses);
+      jc.setRightClauses(rightClauses);
+      jc.setWhereExpr(whereExpr);
+      return jc;
+    }
+}
+
+Clause ForClause()throws ParseException :
+{
+	ForClause fc = new ForClause();
+	VariableExpr varExp;
+	VariableExpr varPos = null;
+	Expression inExp;
+	extendCurrentScope();
+}
+{
+    "for" varExp = Variable()
+    {
+     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+	}
+	("at" varPos = Variable()
+	  {
+	     getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
+	  } 
+	 )? 
+      "in" ( inExp = Expression() )
+    {
+      fc.setVarExpr(varExp);
+      fc.setInExpr(inExp);
+      if (varPos != null) {
+        fc.setPosExpr(varPos);
+      }
+      return fc;
+    }
+}
+
+Clause LetClause() throws ParseException:
+{
+	LetClause lc = new LetClause();
+	VariableExpr varExp;
+	Expression beExp;
+	extendCurrentScope();
+}
+{
+    "let" varExp = Variable()
+    {
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+	}
+     ":=" beExp = Expression()
+    {
+      lc.setVarExpr(varExp);
+      lc.setBeExpr(beExp);
+      return lc;
+    }
+}
+
+Clause WhereClause()throws ParseException :
+{
+  WhereClause wc = new WhereClause();
+  Expression whereExpr;
+}
+{
+    "where" whereExpr = Expression()
+    {
+      wc.setWhereExpr(whereExpr);
+      return wc;
+    }
+}
+
+Clause OrderbyClause()throws ParseException :
+{
+  OrderbyClause oc = new OrderbyClause();
+  Expression orderbyExpr;
+  List<Expression> orderbyList = new ArrayList<Expression>();
+  List<OrderbyClause.OrderModifier> modifierList = new ArrayList<OrderbyClause.OrderModifier >();
+  int numOfOrderby = 0;
+}
+{
+  (
+    "order" 
+      {
+         String hint = getHint(token);
+         if (hint != null && hint.startsWith(INMEMORY_HINT)) {
+           String splits[] = hint.split(" +"); 
+           int numFrames = Integer.parseInt(splits[1]);
+           int numTuples = Integer.parseInt(splits[2]);
+           oc.setNumFrames(numFrames);
+           oc.setNumTuples(numTuples);   
+         } 
+      }     
+    "by" orderbyExpr = Expression()
+    {
+      orderbyList.add(orderbyExpr);
+      OrderbyClause.OrderModifier modif = OrderbyClause.OrderModifier.ASC;       
+    }
+    ( ("asc" { modif = OrderbyClause.OrderModifier.ASC; })
+    | ("desc" { modif = OrderbyClause.OrderModifier.DESC; }))?
+    {
+      modifierList.add(modif);
+    }
+    
+    ("," orderbyExpr = Expression()
+    {
+      orderbyList.add(orderbyExpr);
+      modif = OrderbyClause.OrderModifier.ASC;
+    }
+    ( ("asc" { modif = OrderbyClause.OrderModifier.ASC; })
+    | ("desc" { modif = OrderbyClause.OrderModifier.DESC; }))?
+    {
+      modifierList.add(modif);
+    }    
+    )*
+)
+    {
+      oc.setModifierList(modifierList);
+      oc.setOrderbyList(orderbyList);
+      return oc;
+    }
+}
+Clause GroupClause()throws ParseException :
+{
+  	GroupbyClause gbc = new GroupbyClause();
+  	// GbyVariableExpressionPair pair = new GbyVariableExpressionPair();
+ 	List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
+    List<GbyVariableExpressionPair> decorPairList = new ArrayList<GbyVariableExpressionPair>();
+	List<VariableExpr> withVarList= new ArrayList<VariableExpr>();
+	VariableExpr var = null;
+	VariableExpr withVar = null;
+	Expression expr = null;
+	VariableExpr decorVar = null;
+	Expression decorExpr = null;
+}
+{
+  	{
+  	  Scope newScope = extendCurrentScopeNoPush(true); 
+  	  // extendCurrentScope(true);
+  	}
+    "group"
+      {
+         String hint = getHint(token);
+         if (hint != null && hint.equals(HASH_GROUP_BY_HINT)) {
+           gbc.setHashGroupByHint(true);   
+         } 
+      } 
+    "by" (LOOKAHEAD(2)  var = Variable()
+    {
+      newScope.addNewVarSymbolToScope(var.getVar());
+    } ":=")?
+    expr = Expression() 
+       {
+         GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);    
+         vePairList.add(pair1);
+       }
+    ("," ( LOOKAHEAD(2) var = Variable()
+    {
+      newScope.addNewVarSymbolToScope(var.getVar());
+    } ":=")?
+    	expr = Expression()  
+    	 {
+           GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);    
+           vePairList.add(pair2);
+         }
+    	)*
+    ("decor" decorVar = Variable() ":=" decorExpr = Expression()
+       {    
+         newScope.addNewVarSymbolToScope(decorVar.getVar()); 
+         GbyVariableExpressionPair pair3 = new GbyVariableExpressionPair(decorVar, decorExpr);
+         decorPairList.add(pair3);
+       }
+      ("," "decor" decorVar = Variable() ":=" decorExpr = Expression()
+           { 
+             newScope.addNewVarSymbolToScope(decorVar.getVar()); 
+             GbyVariableExpressionPair pair4 = new GbyVariableExpressionPair(decorVar, decorExpr);
+             decorPairList.add(pair4);              
+           }
+       )*            
+    )?	
+    "with" withVar = VariableRef()
+    {
+      if(withVar.getIsNewVar()==true)
+      	throw new ParseException("can't find variable " + withVar.getVar());
+      withVarList.add(withVar);
+      newScope.addNewVarSymbolToScope(withVar.getVar());
+    }
+    ("," withVar = VariableRef()
+    {
+      if(withVar.getIsNewVar()==true)
+      	throw new ParseException("can't find variable " + withVar.getVar());
+      withVarList.add(withVar);
+      newScope.addNewVarSymbolToScope(withVar.getVar());
+    })*
+    {
+      gbc.setGbyPairList(vePairList);
+      gbc.setDecorPairList(decorPairList);
+      gbc.setWithVarList(withVarList);
+      replaceCurrentScope(newScope);
+      return gbc;
+    }
+}
+
+
+LimitClause LimitClause() throws ParseException:
+{
+	LimitClause lc = new LimitClause();
+	Expression expr;
+	pushForbiddenScope(getCurrentScope());
+}
+{
+    "limit" expr = Expression()    { lc.setLimitExpr(expr);    }
+    ("offset" expr = Expression() { lc.setOffset(expr);    })?
+
+  {
+    popForbiddenScope();   
+    return lc;
+  }
+}
+
+DistinctClause DistinctClause() throws ParseException:
+{
+  List<Expression> exprs = new ArrayList<Expression>();
+  Expression expr;
+}
+{
+  "distinct" "by" expr = Expression() 
+  {
+    exprs.add(expr);
+  }
+  ("," expr = Expression() 
+  	{
+  		exprs.add(expr); 
+  	} 
+  )*
+  {
+  	return new DistinctClause(exprs);
+  }
+}
+
+
+QuantifiedExpression QuantifiedExpression()throws ParseException:
+{
+  QuantifiedExpression qc = new QuantifiedExpression();
+  List<QuantifiedPair> quantifiedList = new ArrayList<QuantifiedPair>();
+  Expression satisfiesExpr;
+  VariableExpr var;
+  Expression inExpr;
+  QuantifiedPair pair;
+}
+{
+  {
+    createNewScope();
+  }
+	
+   (      ("some"  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
+		| ("every" {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+	var = Variable() "in" inExpr = Expression() 
+	{
+	  pair = new QuantifiedPair(var, inExpr);
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+      quantifiedList.add(pair);
+	}
+	(
+	"," var = Variable() "in" inExpr = Expression() 
+	{ 
+      pair = new QuantifiedPair(var, inExpr);
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+      quantifiedList.add(pair);	
+	}
+	)*
+	 "satisfies" satisfiesExpr = Expression()
+	 {
+	   qc.setSatisfiesExpr(satisfiesExpr);
+	   qc.setQuantifiedList(quantifiedList);
+	   removeCurrentScope();
+	   return qc;
+	 }
+}
+
+TOKEN_MGR_DECLS:
+{
+        public int commentDepth = 0;
+}
+
+<DEFAULT>
+TOKEN :
+{
+   <CARET : "^"  >
+}
+
+<DEFAULT>
+TOKEN :
+{
+   <DATASET : "dataset"  >
+}
+
+<DEFAULT>
+TOKEN :
+{
+   <LEFTPAREN : "("  >
+}
+
+<DEFAULT>
+TOKEN :
+{
+   <RIGHTPAREN : ")"  >
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<INTEGER_LITERAL : (<DIGIT>)+ >
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<NULL : "null">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TRUE : "true">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<FALSE : "false">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<#DIGIT : ["0" - "9"]>
+}
+
+
+TOKEN:
+{
+  < DOUBLE_LITERAL: <INTEGER>
+        | <INTEGER> ( "." <INTEGER> )?
+        | "." <INTEGER>
+  >
+  |
+  < FLOAT_LITERAL: <INTEGER> ( "f" | "F" )
+        | <INTEGER> ( "." <INTEGER> ( "f" | "F" ) )?
+        | "." <INTEGER> ( "f" | "F" )
+  >
+  |
+  <INTEGER : (<DIGIT>)+ >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<#LETTER : ["A" - "Z", "a" - "z"]>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<SPECIALCHARS : ["$", "_", "-"]  >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") | ("\'"(<EscapeApos> | ~["\'"])* "\'")>
+	|
+	< #EscapeQuot: "\\\"" >
+	|
+    < #EscapeApos: "\\\'" >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<IDENTIFIER : (<LETTER>)+ (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<VARIABLE : "$" <IDENTIFIER> >
+}
+
+<DEFAULT>
+TOKEN :
+{
+    <METAVARIABLECLAUSE : "#" <IDENTIFIER> >
+}
+
+<DEFAULT>
+TOKEN :
+{
+    <METAVARIABLE : "$$" <IDENTIFIER> >
+}
+
+SKIP:
+{
+    " "
+|   "\t"
+|   "\r"
+|   "\n"
+}
+
+SKIP:
+{
+	<"//" (~["\n"])* "\n">
+}
+
+SKIP:
+{
+	<"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?> 
+}
+
+
+SKIP:
+{
+        <"/*"> {commentDepth=1;}: INSIDE_COMMENT
+}
+
+<INSIDE_COMMENT>
+SPECIAL_TOKEN:
+{
+       <"+"(" ")*(~["/","*"])*>
+}
+
+<INSIDE_COMMENT>
+SKIP:
+{
+        <"/*"> {commentDepth++;}
+}
+
+<INSIDE_COMMENT>
+SKIP:
+{
+        <"*/"> {commentDepth--; if (commentDepth == 0) SwitchTo(DEFAULT);}
+|       <~[]>
+}

@@ -1,0 +1,8 @@
+use dataverse custord;
+
+write output to nc1:"rttest/custord_q4.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.cid = $o.cid 
+return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total} 

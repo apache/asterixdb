@@ -1,0 +1,5 @@
+for $user in 
+	let $data := dataset('User')
+	return $data
+where some $i in $user.interests satisfies $i = "movies"
+return { "name": $user.name }

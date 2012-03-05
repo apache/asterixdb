@@ -1,0 +1,39 @@
+drop dataverse test if exists;
+  
+create dataverse test;
+use dataverse test;
+
+
+create type AddressType as closed {
+  street: string,
+  city: string,
+  zip: string,
+  latlong: point
+}
+
+create type UserType as open {
+  name: string,
+  email: string,
+  interests: {{string}},
+  address: AddressType,
+  member_of: {{
+    {
+      sig_id: int32,
+      chapter_name: string,
+      member_since: date
+    }
+  }}
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create external dataset User(UserType) 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/user.adm"),("format"="adm"));
+
+write output to nc1:"rttest/dapd_q1.adm";
+
+for $user in dataset('User')
+where some $i in $user.interests
+  satisfies $i = "movies"
+return {"name": $user.name}

@@ -1,0 +1,6 @@
+use dataverse Metadata;
+
+write output to nc1:"rttest/metadata_datatype.adm";
+     
+for $c in dataset('Datatype')
+return $c

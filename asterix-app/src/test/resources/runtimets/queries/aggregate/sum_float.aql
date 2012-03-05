@@ -1,0 +1,18 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_sum_float.adm";
+
+sum( 
+ for $x in [float("1"), float("2"), float("3")] 
+ return $x
+)
+
+
+
+
+
+

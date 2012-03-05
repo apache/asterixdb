@@ -1,0 +1,23 @@
+use dataverse demo_aql;
+
+declare type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/tmp/05-count-param1.adm";
+
+count(
+for $o in dataset('Orders')
+where not(is-null($o.param1)) 
+return $o
+)

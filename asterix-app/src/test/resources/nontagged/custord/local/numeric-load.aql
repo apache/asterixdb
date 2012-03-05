@@ -1,0 +1,22 @@
+use dataverse demo1112;
+
+declare type ExampleType as open {
+  id: int32,
+  int8Field: int8,
+  int16Field: int16,
+  int32Field: int32,
+  int64Field: int64,
+  floatField: float,
+  doubleField: double
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Numeric(ExampleType)
+  partitioned by key id on group1;
+
+load dataset Numeric from nc1:"/home/yasser/Dropbox/Research/data/numericData.json";
+

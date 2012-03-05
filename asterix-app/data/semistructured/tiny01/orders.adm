@@ -1,0 +1,6 @@
+{  "oid": 4250,  "cid": 112,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "MEDIUM",  "clerk": "Cathrin",  "total": 8.038574f }
+{  "oid": 4609,  "cid": 617,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "MEDIUM",  "clerk": "Cathrin",  "total": 10.936058f }
+{  "oid": 4611,  "cid": 617,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "LOW",  "clerk": "Cathrin",  "total": 73.21337f }
+{  "oid": 4610,  "cid": 617,  "orderstatus": "ORDER_DELIVERED",  "orderpriority": "HIGH",  "clerk": "Katherine",  "total": 76.6797f }
+{  "oid": 4607,  "cid": 617,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "LOW",  "clerk": "Cathrin",  "total": 15.917521f,  "param1": 1916158800,  "param2": 2065595214,  "param3": -298140108,  "param4": 1498292871,  "param5": 155414348,  "param6": 731003746,  "param7": 235979605,  "param8": -990597878,  "param9": 1976842572,  "param10": -1736593971 }
+{  "oid": 4608,  "cid": 617,  "orderstatus": "ORDER_SHIPPED",  "orderpriority": "MEDIUM",  "clerk": "Kathrin",  "total": 28.679825f,  "param1": -1951001249,  "param2": 796428052,  "param3": -750694771,  "param4": 2032084887,  "param5": 1156211934,  "param6": -173714105,  "param7": -710899646,  "param8": -1371413929,  "param9": -133847829,  "param10": -876068261 }

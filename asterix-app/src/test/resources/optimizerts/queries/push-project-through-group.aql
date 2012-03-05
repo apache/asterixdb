@@ -1,0 +1,28 @@
+drop dataverse fuzzyjoin_080 if exists;
+
+create dataverse fuzzyjoin_080;
+
+use dataverse fuzzyjoin_080;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+
+write output to nc1:'rttest/fuzzyjoin_080.adm';
+
+    for $paperDBLP in dataset('DBLP')
+    let $matches :=
+            for $paper in dataset('DBLP')
+            where $paper.authors = $paperDBLP.authors        
+            return $paper.title
+    return {'id': $paperDBLP.id, 'matches':$matches}

@@ -1,0 +1,33 @@
+use dataverse events;
+
+declare type UserType as open {
+  name: string,
+  email: string,
+  interests: {{string}},
+  address: AddressType,
+  member_of: {{
+    {
+      sig_name: string,
+      chapter_name: string,
+      member_since: date
+    }
+  }}
+}
+
+declare type AddressType as closed {
+  street: string,
+  city: string,
+  zip: string,
+  latlong: point
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset User(UserType) partitioned by key name on group1;
+
+write output to nc1:"/tmp/q1.adm";
+
+for $user in dataset('User')
+where some $i in $user.interests
+  satisfies $i = "movies"
+return {"name": $user.name}
