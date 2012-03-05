@@ -1,0 +1,6 @@
+for $x in dataset('A')
+order by $x.a
+order by $x.a
+order by $x.b
+order by $x.b
+return $x

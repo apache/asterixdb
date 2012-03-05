@@ -1,0 +1,54 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+
+load dataset DBLP 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+
+write output to nc1:'rttest/fuzzyjoin_dblp-2.1_5.3.1.adm';
+
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperDBLP in dataset('DBLP')
+    let $idDBLP := $paperDBLP.id
+    let $tokensUnrankedDBLP := counthashed-word-tokens($paperDBLP.title)
+    let $lenDBLP := len($tokensUnrankedDBLP)
+    let $tokensDBLP :=
+        for $tokenUnranked in $tokensUnrankedDBLP
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $id := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            /*+ hash */ 
+            group by $tokenGroupped := $token with $id
+            /*+ inmem 1 302 */
+            order by count($id), $tokenGroupped
+            return $tokenGroupped
+        where $tokenUnranked = /*+ bcast*/ $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenDBLP in subset-collection(
+                                $tokensDBLP, 
+                                0,
+                                prefix-len-jaccard($lenDBLP, .5f))
+    order by $idDBLP
+    return {'id': $idDBLP, 'prefixToken': $prefixTokenDBLP, 'tokens': $tokensDBLP}

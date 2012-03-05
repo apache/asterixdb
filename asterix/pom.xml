@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>edu.uci.ics.asterix</groupId>
+	<artifactId>asterix</artifactId>
+	<version>0.0.4-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.1</version>
+				<configuration>
+                    <tagBase>https://grape.ics.uci.edu/svn/asterix/tags/asterix</tagBase>
+                    <goals>package source:jar javadoc:jar deploy:deploy</goals>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<scm>
+		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</connection>
+		<developerConnection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</developerConnection>
+		<url>https://grape.ics.uci.edu/wiki/asterix/browser/trunk/asterix</url>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>asterix-releases</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/asterix-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>asterix-snapshots</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/asterix-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+    <profiles>
+        <profile>
+          <id>32bitvm</id>
+          <activation>
+            <property>
+              <name>sun.arch.data.model</name>
+              <value>32</value>
+            </property>
+          </activation>
+          <properties>
+            <test.heap.size>2047</test.heap.size>
+          </properties>
+        </profile>
+
+        <profile>
+          <id>64bitvm</id>
+          <activation>
+            <property>
+              <name>sun.arch.data.model</name>
+              <value>64</value>
+            </property>
+          </activation>
+          <properties>
+            <test.heap.size>3072</test.heap.size>
+          </properties>
+        </profile>
+    </profiles>
+
+	<modules>
+		<module>asterix-common</module>
+		<module>asterix-algebra</module>
+		<module>asterix-app</module>
+		<module>asterix-tools</module>
+		<module>asterix-transactions</module>
+		<module>asterix-runtime</module>
+		<module>asterix-om</module>
+		<module>asterix-aql</module>
+                <module>asterix-hyracks-glue</module>
+                <module>asterix-external-data</module>
+                <module>asterix-metadata</module>
+                <module>asterix-dist</module>
+        </modules>
+
+	<repositories>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>asterix-public</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/groups/asterix-public/</url>
+		</repository>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>third-party</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/third-party/</url>
+		</repository>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<id>algebricks-releases</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-releases/</url>
+		</repository>
+		<repository>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>algebricks-snapshots</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
+		</repository>
+	</repositories>
+
+</project>

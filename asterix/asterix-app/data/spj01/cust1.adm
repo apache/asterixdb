@@ -1,0 +1,4 @@
+{ "cid": 1, "name": "CustomerA", "age": 19 }
+{ "cid": 2, "name": "CustomerB", "age": 62 }
+{ "cid": 4, "name": "JimmyC", "age": 28 }
+{ "cid": 3, "name": "CustomerC", "age": 34 }

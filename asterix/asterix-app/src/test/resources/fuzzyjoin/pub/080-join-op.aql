@@ -1,0 +1,35 @@
+use dataverse fuzzy1;
+
+declare type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+declare type CSXType as open {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+declare dataset CSX(CSXType) 
+  partitioned by key id on group1;
+
+write output to nc1:'/tmp/pub.adm';
+
+set simthreshold '.5';
+
+for $paperR in dataset('DBLP')
+for $paperS in dataset('CSX')
+where $paperR.title ~= $paperS.title
+return { 'R': { 'dblpid': $paperR.dblpid, 'title': $paperR.title },
+         'S': { 'csxid': $paperS.csxid, 'title': $paperS.title }}

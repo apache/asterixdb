@@ -1,0 +1,23 @@
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+create type TOKENSRANKEDADMType as closed {
+  token: int32,
+  rank: int32
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by key rank on group1;
+
+write output to nc1:'rttest/introhashpartitionmerge.adm';
+
+        for $token1 in dataset('TOKENSRANKEDADM')
+        for $token2 in
+            for $tokenRanked in dataset('TOKENSRANKEDADM')
+            order by $tokenRanked.rank
+            return $tokenRanked
+        where $token1.token = $token2.token
+        order by $token2.rank
+        return $token2.rank

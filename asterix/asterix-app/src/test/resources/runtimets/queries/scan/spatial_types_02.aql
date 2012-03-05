@@ -1,0 +1,27 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type SpatialType as open {
+  id: int32,
+  point: point,
+  point3d: point3d,
+  line: line,
+  polygon: polygon,
+  circle: circle
+}
+
+create nodegroup group1 on nc1;
+
+create dataset Spatial2(SpatialType) 
+	partitioned by key id on group1;
+
+load dataset Spatial2 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+        
+write output to nc1:"rttest/scan_spatial_types_02.adm";
+      
+for $a in dataset('Spatial2')
+return $a 

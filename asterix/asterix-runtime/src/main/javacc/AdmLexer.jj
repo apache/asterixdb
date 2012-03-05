@@ -1,0 +1,150 @@
+options {
+
+	  
+       STATIC = false;
+	
+}
+
+PARSER_BEGIN(AdmLexer)
+
+package edu.uci.ics.asterix.adm.parser;
+
+import java.io.*;
+
+public class AdmLexer {
+
+	public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException {
+	   	File file = new File(args[0]);
+		Reader freader =  new BufferedReader(new InputStreamReader 
+		         (new FileInputStream(file), "UTF-8"));		
+		AdmLexer flexer = new AdmLexer(freader);
+		Token t = null;
+		do {
+		   t = flexer.next();		   
+		   System.out.println(AdmLexerConstants.tokenImage[t.kind]);
+		} while (t.kind != EOF);
+	    freader.close();
+	}
+	
+	public Token next() throws ParseException {
+	   return getNextToken();
+	}
+	
+	public String tokenKindToString(int tokenKind) {
+	   return AdmLexerConstants.tokenImage[tokenKind];
+	}
+}
+
+PARSER_END(AdmLexer)
+
+<DEFAULT>
+TOKEN :
+{
+	<NULL_LITERAL : "null">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TRUE_LITERAL : "true">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<FALSE_LITERAL : "false">
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<INTEGER_LITERAL : ("-")? (<DIGIT>)+ >
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<#DIGIT : ["0" - "9"]>
+}
+
+
+TOKEN:
+{
+  < DOUBLE_LITERAL: 
+	      ("-")? <INTEGER> ( "." <INTEGER> )? (<EXPONENT>)? 
+	    | ("-")? "." <INTEGER>
+  >
+  | < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+	| <INTEGER : (<DIGIT>)+ >
+	| <FLOAT_LITERAL: <DOUBLE_LITERAL>("f"|"F")>
+ }
+
+<DEFAULT>
+TOKEN :
+{
+	<STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") >
+	|
+	< #EscapeQuot: "\\\"" >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<START_RECORD : "{">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_RECORD : "}">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<COMMA : ",">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<COLON : ":">
+}
+
+
+<DEFAULT>
+TOKEN :
+{
+	<START_ORDERED_LIST : "[">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_ORDERED_LIST : "]">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<START_UNORDERED_LIST : "{{">
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<END_UNORDERED_LIST : "}}">
+}
+
+
+
+
+SKIP:
+{
+    " "
+|   "\t"
+|   "\r"
+|   "\n"
+}

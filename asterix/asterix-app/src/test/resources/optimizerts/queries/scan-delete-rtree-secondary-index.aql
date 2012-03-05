@@ -1,0 +1,27 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int32,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset MyData(MyRecord)
+  partitioned by key id on group1;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+
+create index rtree_index_point on MyData(point) type rtree;
+
+delete $m from dataset MyData where $m.id>5;

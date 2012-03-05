@@ -1,0 +1,28 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type EmpType as open {
+  id: int32, 
+  name: string,
+  address: {
+  number: int32, 
+  street: string,
+  city: string
+   },
+  age: int32?,
+  interests: {{string}}?,
+  children: [string]?
+}
+
+create external dataset Emp(EmpType) 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/employee.json"),("format"="adm"));
+        
+write output to nc1:"rttest/employee_q_02.adm";
+      
+for $e in dataset('Emp')
+let $m := [{"EmpName": $e.name, "parent_interest_1": $e.interests[?], "child1Name": $e.children[?], "child2Name": $e.children[1]}]
+return $m 

@@ -1,0 +1,88 @@
+use dataverse fuzzy1;
+
+declare type DBLPType as open {
+ id: int32,
+ dblpid: string,
+ title: string,
+ authors: string,
+ misc: string
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03,
+rainbow-04, rainbow-05;
+
+declare dataset DBLP(DBLPType) 
+  partitioned by key id on group1;
+
+write output to rainbow-01:"/home/hyracks/dblp-self-join.adm";
+
+//
+// -- - Stage 3 - --
+//
+for $ridpair in 
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperR in dataset('DBLP')
+    let $tokensR :=
+        for $word in counthashed-word-tokens($paperR.title)
+        for $token at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            for $word in counthashed-word-tokens($paper.title)
+            group by $item := $word with $paper
+            order by count($paper)
+            return $item
+        where $word = $token
+        order by $i
+        return $i
+    for $prefix_tokenR in subset-collection(
+                                $tokensR, 
+                                0,
+                                prefix-len(
+                                    len($tokensR), 'Jaccard', .8))
+
+    for $paperS in dataset('DBLP')
+    let $tokensS :=
+        for $word in counthashed-word-tokens($paperS.title)
+        for $token at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            for $word in counthashed-word-tokens($paper.title)
+            group by $item := $word with $paper
+            order by count($paper)
+            return $item
+        where $word = $token
+        order by $i
+        return $i
+    for $prefix_tokenS in subset-collection(
+                                $tokensS, 
+                                0,
+                                prefix-len(
+                                    len($tokensS), 'Jaccard', .8))
+
+    where $prefix_tokenR = $prefix_tokenS
+
+    let $sim := similarity(
+                    len(counthashed-word-tokens($paperR.title)),
+                    $tokensR,
+                    len(counthashed-word-tokens($paperS.title)),
+                    $tokensS,
+                    $prefix_tokenR,
+                    'Jaccard',
+                    .8)
+    where $sim >= .8 // and $paperR.id != $paperS.id
+    group by $idR := $paperR.id, $idS := $paperS.id with $sim
+    where $idR < $idS
+    return {'idR': $idR, 'idS': $idS, 'sim': $sim[0]}
+
+for $paperR in dataset('DBLP')
+for $paperS in dataset('DBLP')
+where $ridpair.idR = $paperR.id and $ridpair.idS = $paperS.id
+return {'R': {'dblpid': $paperR.dblpid, 'title': $paperR.title}, 
+        'S': {'dblpid': $paperS.dblpid, 'title': $paperS.title}, 
+        'sim': $ridpair.sim}

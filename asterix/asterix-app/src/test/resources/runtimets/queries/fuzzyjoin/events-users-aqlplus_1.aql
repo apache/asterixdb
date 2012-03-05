@@ -1,0 +1,44 @@
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+
+create type AddressType as closed {
+ street: string,
+ city: string,
+ zip: string,
+ latlong: point
+}
+
+create type UserType as open{
+ name: string,
+ interests: <string>,
+ address: AddressType,
+ member_of: <
+  {
+    sig_id: int32,
+    chapter_name: string,
+    member_since: date
+  }
+>
+}
+
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset User(UserType)
+ partitioned by key name on group1;
+load dataset User from nc1:'data/events/tiny/user.adm';
+
+write output to nc1:'rttest/fuzzyjoin_events-users-aqlplus_1.adm';
+
+set simthreshold '.5f';
+
+for $user in dataset('User')
+let $similar_users :=
+ for $similar_user in dataset('User')
+ where $user.interests ~= $similar_user.interests
+ order by $similar_user.name 
+ return { "user_name": $similar_user.name }
+order by $user.name 
+return { "user_name": $user.name, "similar_users": $similar_users }

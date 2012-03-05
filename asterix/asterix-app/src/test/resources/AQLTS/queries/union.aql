@@ -1,0 +1,8 @@
+(for $l in foo1()
+return $l)
+union
+(for $l in foo2()
+return $l)
+union
+(for $l in foo3()
+return $l)

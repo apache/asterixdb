@@ -1,0 +1,17 @@
+declare function calculate($events){
+for $event in $events
+for $sponsor in $event.sponsoring_sigs
+let $es := { "event": $event, "sponsor": $sponsor }
+group by $sig_name := $sponsor.sig_name with $es
+let $sig_sponsorship_count := count($es)
+let $by_chapter :=
+   for $e in $es
+   group by $chapter_name := $e.sponsor.chapter_name with $es
+   return { "chapter_name": $chapter_name, "escount" : count($es) }
+order by $sig_sponsorship_count desc
+limit 5
+return { "sig_name": $sig_name, "total_count": $sig_sponsorship_count, "chapter_breakdown": $by_chapter }
+}
+
+let $result := calculate(dataset('Events'))
+return $result

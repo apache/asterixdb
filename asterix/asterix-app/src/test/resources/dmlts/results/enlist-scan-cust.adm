@@ -1,0 +1,10 @@
+{ "cid": 59, "name": "Lance Pracht", "age": 27, "address": { "number": 342, "street": "Washington St.", "city": "Mountain View" }, "lastorder": { "oid": 59, "total": 26.975239f } }
+{ "cid": 74, "name": "Myrtice Cubias", "age": 11, "address": { "number": 9048, "street": "Park St.", "city": "San Jose" }, "lastorder": { "oid": 74, "total": 47.675938f } }
+{ "cid": 76, "name": "Marvella Loud", "age": 72, "address": { "number": 6988, "street": "7th St.", "city": "Sunnyvale" }, "lastorder": { "oid": 76, "total": 12.811708f } }
+{ "cid": 530, "name": "Clint Coil", "age": 79, "address": { "number": 4491, "street": "7th St.", "city": "San Jose" }, "lastorder": { "oid": 530, "total": 7.5879574f } }
+{ "cid": 586, "name": "Tamie Pollara", "age": 89, "address": { "number": 7424, "street": "Oak St.", "city": "Sunnyvale" }, "lastorder": { "oid": 586, "total": 22.163845f } }
+{ "cid": 758, "name": "Curt Savage", "age": 81, "address": { "number": 5651, "street": "Main St.", "city": "Seattle" }, "lastorder": { "oid": 758, "total": 45.33596f } }
+{ "cid": 775, "name": "Jodi Rotruck", "age": 69, "address": { "number": 8389, "street": "Hill St.", "city": "Mountain View" }, "lastorder": { "oid": 775, "total": 38.618626f } }
+{ "cid": 939, "name": "Larry Gothier", "age": 34, "address": { "number": 1786, "street": "Park St.", "city": "Mountain View" }, "lastorder": { "oid": 939, "total": 33.49055f } }
+{ "cid": 953, "name": "Elias Leonardo", "age": 62, "address": { "number": 7831, "street": "Main St.", "city": "San Jose" }, "lastorder": { "oid": 953, "total": 79.990875f } }
+{ "cid": 996, "name": "Obdulia Dicosmo", "age": 14, "address": { "number": 9237, "street": "Cedar St.", "city": "Los Angeles" }, "lastorder": { "oid": 996, "total": 94.23889f } }

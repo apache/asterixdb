@@ -1,0 +1,39 @@
+drop dataverse events if exists;
+create dataverse events;
+use dataverse events;
+
+
+create type AddressType as closed {
+  /*+ val-files data/events/streets.txt */
+  street: string,
+  /*+ val-files data/events/cities.txt */
+  city: string,
+  /*+ interval long 100000 999999 */
+  zip: string,
+  /*+ val-file-same-idx data/events/latlongs.txt city */
+  latlong: point
+}
+
+/*+ dgen user.adm 3*/
+create type UserType as open /*+ gen-fields int 0 10 field */ { 
+  /*+ val-files data/uscensus/dist.all.first.cleaned data/uscensus/dist.all.last.cleaned */
+  name: string,
+  /*+ insert-rand-int user @example.com */
+  email: string,
+  /*+ list-val-file data/events/interests.txt 0 7 */  
+  interests: {{string}},
+  address: AddressType,
+  /*+ list 1 10 */
+  member_of: {{
+    /*+ gen-fields int 0 2 other */
+    {
+      /*+ interval int 100000 999999 */    
+      sig_id: int32,
+      /*+ val-files data/events/chapter_names.txt */
+      chapter_name: string,
+      /*+ date-between-years 1970 1998 */ 
+      member_since: date
+    }
+  }}
+}
+

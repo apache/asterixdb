@@ -1,0 +1,9 @@
+{ "DataverseName": "Metadata", "DatasetName": "Dataset", "IndexName": "$Dataset", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName", "DatasetName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Dataset", "IndexName": "DatatypeName", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName", "DatatypeName", "DatasetName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Dataset", "IndexName": "GroupName", "IndexStructure": "BTREE", "SearchKey": [ "GroupName", "DataverseName", "DatasetName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Datatype", "IndexName": "$Datatype", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName", "DatatypeName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Datatype", "IndexName": "DatatypeName", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName", "NestedDatatypeName", "TopDatatypeName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Dataverse", "IndexName": "$Dataverse", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Index", "IndexName": "$Index", "IndexStructure": "BTREE", "SearchKey": [ "DataverseName", "DatasetName", "IndexName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Node", "IndexName": "$Node", "IndexStructure": "BTREE", "SearchKey": [ "NodeName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}
+{ "DataverseName": "Metadata", "DatasetName": "Nodegroup", "IndexName": "$Nodegroup", "IndexStructure": "BTREE", "SearchKey": [ "GroupName" ], "Timestamp": "Sun May 08 16:32:43 PDT 2011"}

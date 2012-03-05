@@ -1,0 +1,49 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerOrderType as open {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  orders: [OrderType]
+}
+
+create type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset CustomerOrders(CustomerOrderType) 
+  partitioned by key cid on group1;
+
+
+load dataset CustomerOrders
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/custord-tiny/custorder-tiny.adm"),("format"="adm")) pre-sorted;
+
+
+write output to nc1:"rttest/custord_freq_clark.adm";
+
+for $c in dataset('CustomerOrders')
+for $o in $c.orders
+group by $clerk := $o.clerk with $o
+let $count := count($o)
+order by $count, $clerk desc
+return { "clerk": $clerk, "ordercount": $count }
+

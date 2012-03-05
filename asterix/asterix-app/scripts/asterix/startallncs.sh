@@ -1,0 +1,10 @@
+ssh asterix-001 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-002 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-003 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-004 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-005 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-006 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-007 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-008 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-009 ~/hyracks-asterix/bin/startnc.sh
+ssh asterix-010 ~/hyracks-asterix/bin/startnc.sh

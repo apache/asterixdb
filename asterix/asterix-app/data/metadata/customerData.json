@@ -1,0 +1,2 @@
+{  "cid": 5,  "name": "Jodi Alex",  "age": 19, "address": null, "interests" : {{ "Reading", "Hiking"}}, "children" : [ {"name": "Amy", "dob": "1988-10-12"}, {"name": "Alex", "dob": "1986-9-15"}] }
+{  "cid": 1,  "name": "Mike Rotruck",  "address": {  "street": { "number": 389, "name": "Palo verde"},  "city": "Mountain View", "state": "CA", "zip": int16("92611") }, "interests" : {{ "Reading", "Hiking"}}, "children" : [ {"name": "Amy", "dob": "1988-10-12"}, {"name": "Alex", "dob": "1986-9-15"}]}

@@ -1,0 +1,31 @@
+drop dataverse custord if exists;
+create dataverse custord;
+use dataverse custord;
+
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as open {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType) 
+  partitioned by key cid on group1;
+
+load dataset Customers 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;

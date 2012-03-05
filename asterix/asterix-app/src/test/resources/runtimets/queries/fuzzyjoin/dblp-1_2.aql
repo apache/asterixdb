@@ -1,0 +1,33 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+
+load dataset DBLP 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+
+write output to nc1:'rttest/fuzzyjoin_dblp-1_2.adm';
+
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $paperid := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            group by $tokenGroupped := $token with $paperid
+            order by count($paperid), $tokenGroupped
+            return $tokenGroupped

@@ -1,0 +1,59 @@
+{ "nation": "ARGENTINA", "o_year": 1997, "sum_profit": 18247.873399999993d }
+{ "nation": "ARGENTINA", "o_year": 1996, "sum_profit": 7731.089399999995d }
+{ "nation": "ARGENTINA", "o_year": 1995, "sum_profit": 134490.5697d }
+{ "nation": "ARGENTINA", "o_year": 1994, "sum_profit": 36767.101500000004d }
+{ "nation": "ARGENTINA", "o_year": 1993, "sum_profit": 35857.08d }
+{ "nation": "ARGENTINA", "o_year": 1992, "sum_profit": 35740.0d }
+{ "nation": "ETHIOPIA", "o_year": 1998, "sum_profit": 2758.7801999999992d }
+{ "nation": "ETHIOPIA", "o_year": 1997, "sum_profit": 19419.294599999997d }
+{ "nation": "ETHIOPIA", "o_year": 1995, "sum_profit": 51231.87439999999d }
+{ "nation": "ETHIOPIA", "o_year": 1994, "sum_profit": 3578.9478999999974d }
+{ "nation": "ETHIOPIA", "o_year": 1992, "sum_profit": 1525.8234999999986d }
+{ "nation": "IRAN", "o_year": 1998, "sum_profit": 37817.229600000006d }
+{ "nation": "IRAN", "o_year": 1997, "sum_profit": 52643.77359999999d }
+{ "nation": "IRAN", "o_year": 1996, "sum_profit": 70143.77609999999d }
+{ "nation": "IRAN", "o_year": 1995, "sum_profit": 84094.58260000001d }
+{ "nation": "IRAN", "o_year": 1994, "sum_profit": 18140.925599999995d }
+{ "nation": "IRAN", "o_year": 1993, "sum_profit": 78655.1676d }
+{ "nation": "IRAN", "o_year": 1992, "sum_profit": 87142.2396d }
+{ "nation": "IRAQ", "o_year": 1998, "sum_profit": 22860.8082d }
+{ "nation": "IRAQ", "o_year": 1997, "sum_profit": 93676.24359999999d }
+{ "nation": "IRAQ", "o_year": 1996, "sum_profit": 45103.3242d }
+{ "nation": "IRAQ", "o_year": 1994, "sum_profit": 36010.728599999995d }
+{ "nation": "IRAQ", "o_year": 1993, "sum_profit": 33221.9399d }
+{ "nation": "IRAQ", "o_year": 1992, "sum_profit": 47755.05900000001d }
+{ "nation": "KENYA", "o_year": 1998, "sum_profit": 47441.812d }
+{ "nation": "KENYA", "o_year": 1997, "sum_profit": 118144.65099999998d }
+{ "nation": "KENYA", "o_year": 1996, "sum_profit": 75090.5437d }
+{ "nation": "KENYA", "o_year": 1995, "sum_profit": 87626.6791d }
+{ "nation": "KENYA", "o_year": 1994, "sum_profit": 130302.4071d }
+{ "nation": "KENYA", "o_year": 1993, "sum_profit": 185952.9548d }
+{ "nation": "KENYA", "o_year": 1992, "sum_profit": 310009.1845d }
+{ "nation": "MOROCCO", "o_year": 1998, "sum_profit": 172158.9448d }
+{ "nation": "MOROCCO", "o_year": 1997, "sum_profit": 92247.75379999999d }
+{ "nation": "MOROCCO", "o_year": 1996, "sum_profit": 273187.9262d }
+{ "nation": "MOROCCO", "o_year": 1995, "sum_profit": 380050.2938d }
+{ "nation": "MOROCCO", "o_year": 1994, "sum_profit": 262538.8032d }
+{ "nation": "MOROCCO", "o_year": 1993, "sum_profit": 211233.76599999992d }
+{ "nation": "MOROCCO", "o_year": 1992, "sum_profit": 336202.0852d }
+{ "nation": "PERU", "o_year": 1998, "sum_profit": 143951.22939999998d }
+{ "nation": "PERU", "o_year": 1997, "sum_profit": 197680.59720000002d }
+{ "nation": "PERU", "o_year": 1996, "sum_profit": 236156.92649999997d }
+{ "nation": "PERU", "o_year": 1995, "sum_profit": 190426.59480000002d }
+{ "nation": "PERU", "o_year": 1994, "sum_profit": 118171.16209999999d }
+{ "nation": "PERU", "o_year": 1993, "sum_profit": 102292.5426d }
+{ "nation": "PERU", "o_year": 1992, "sum_profit": 135197.25370000003d }
+{ "nation": "UNITED KINGDOM", "o_year": 1998, "sum_profit": 115488.22360000003d }
+{ "nation": "UNITED KINGDOM", "o_year": 1997, "sum_profit": 224769.43809999994d }
+{ "nation": "UNITED KINGDOM", "o_year": 1996, "sum_profit": 367799.3432d }
+{ "nation": "UNITED KINGDOM", "o_year": 1995, "sum_profit": 563229.4064d }
+{ "nation": "UNITED KINGDOM", "o_year": 1994, "sum_profit": 305695.22239999997d }
+{ "nation": "UNITED KINGDOM", "o_year": 1993, "sum_profit": 762202.0801000001d }
+{ "nation": "UNITED KINGDOM", "o_year": 1992, "sum_profit": 109066.47399999999d }
+{ "nation": "UNITED STATES", "o_year": 1998, "sum_profit": 3957.0431999999996d }
+{ "nation": "UNITED STATES", "o_year": 1997, "sum_profit": 94729.5704d }
+{ "nation": "UNITED STATES", "o_year": 1996, "sum_profit": 79297.8567d }
+{ "nation": "UNITED STATES", "o_year": 1995, "sum_profit": 62201.23360000001d }
+{ "nation": "UNITED STATES", "o_year": 1994, "sum_profit": 43075.6299d }
+{ "nation": "UNITED STATES", "o_year": 1993, "sum_profit": 27168.486199999992d }
+{ "nation": "UNITED STATES", "o_year": 1992, "sum_profit": 34092.366d }

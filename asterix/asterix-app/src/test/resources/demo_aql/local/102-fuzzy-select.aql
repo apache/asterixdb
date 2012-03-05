@@ -1,0 +1,22 @@
+use dataverse demo_aql;
+
+declare type DBLPType as open {
+ id: int32,
+ dblpid: string,
+ title: string,
+ authors: string,
+ misc: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset DBLP(DBLPType)
+ partitioned by key id on group1;
+
+write output to nc1:"/tmp/102-fuzzy-select.adm";
+
+for $x in dataset('DBLP')
+let $ed := edit-distance($x.authors, "Michael Carey")
+where $ed <= 3
+order by $ed, $x.authors
+return { "edit-distance":$ed, "authors":$x.authors, "title":$x.title }

@@ -1,0 +1,35 @@
+drop dataverse colocated if exists;
+
+create dataverse colocated;
+
+use dataverse colocated;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: {{int32}}
+}
+
+create type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: {{int32}}
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create nodegroup group2 if not exists on nc2;
+
+create dataset Users(UserType) 
+  partitioned by key uid on group1;
+
+create dataset Visitors(VisitorType) 
+  partitioned by key vid on group2;
+
+
+write output to nc1:"/tmp/fuzzy1.adm";
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $user.uid = $visitor.vid
+return { "user_name" : $user.name, "visitor_name" : $visitor.name }

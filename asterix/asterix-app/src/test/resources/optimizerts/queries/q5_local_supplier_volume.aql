@@ -1,0 +1,122 @@
+drop dataverse q5_local_supplier if exists;
+
+create dataverse q5_local_supplier;
+
+use dataverse q5_local_supplier;
+
+create type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+create dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+create dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+create dataset Suppliers(SupplierType)
+  partitioned by key s_suppkey on group1;
+create dataset Nations(NationType) 
+  partitioned by key n_nationkey on group1;
+create dataset Regions(RegionType)
+  partitioned by key r_regionkey on group1;
+  
+write output to nc1:"/tmp/q5_local_supplier.adm";
+
+
+for $c in dataset('Customers')
+for $o1 in 
+(  for $o in dataset('Orders')
+   for $l1 in (
+     for $l in dataset('LineItems')
+     for $s1 in 
+     (  for $s in dataset('Suppliers')
+        for $n1 in 
+        (  for $n in dataset('Nations')
+           for $r in dataset('Regions')
+             where $n.n_regionkey = $r.r_regionkey and $r.r_name = 'ASIA'
+           return 
+              {"n_name": $n.n_name, "n_nationkey": $n.n_nationkey}  )
+        where $s.s_nationkey = $n1.n_nationkey
+        return 
+           { "n_name": $n1.n_name, "s_suppkey": $s.s_suppkey, "s_nationkey": $s.s_nationkey }  )
+     where $l.l_suppkey = $s1.s_suppkey      
+     return 
+        { "n_name": $s1.n_name, "l_extendedprice": $l.l_extendedprice, "l_discount": $l.l_discount, "l_orderkey": $l.l_orderkey, "s_nationkey": $s1.s_nationkey }  )
+   where $l1.l_orderkey = $o.o_orderkey and $o.o_orderdate >= '1994-01-01' and $o.o_orderdate < '1995-01-01'
+   return 
+     { "n_name": $l1.n_name, "l_extendedprice": $l1.l_extendedprice, "l_discount": $l1.l_discount, "s_nationkey": $l1.s_nationkey, "o_custkey": $o.o_custkey }  )
+where $c.c_nationkey = $o1.s_nationkey and $c.c_custkey = $o1.o_custkey     
+/*+ hash*/
+group by $n_name := $o1.n_name with $o1
+let $revenue := sum (
+  for $i in $o1 
+  return 
+    $i.l_extendedprice * (1 - $i.l_discount)
+)
+order by $revenue desc
+return 
+  { "n_name": $n_name, "revenue": $revenue }

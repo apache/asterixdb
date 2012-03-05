@@ -1,0 +1,42 @@
+use dataverse demo0927;
+
+declare type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+declare type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+
+declare type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
+
+declare dataset Customers(CustomerType) 
+  partitioned by key cid on group1;
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to rainbow-01:"/home/hyracks/custorder.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.cid = $o.cid and $c.age < 21
+return {"cust":$c.name, "custage": $c.age, "ordertot":$o.total} 

@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_unary-minus_int_01.adm";
+
+let $c1 := int8("+80")
+let $c2 := int16("160")
+let $c3 := int32("+320")
+let $c4 := int64("-640")
+return {"int8": numeric-unary-minus($c1),"int16": numeric-unary-minus($c2),"int32": numeric-unary-minus($c3),"int64": numeric-unary-minus($c4)}

@@ -1,0 +1,37 @@
+drop dataverse events if exists;
+create dataverse events;
+use dataverse events;
+
+
+create type AddressType as closed {
+  street: string,
+  city: string,
+  zip: string,
+  latlong: point
+}
+
+create type UserType as open {
+  name: string,
+  email: string,
+  interests: {{string}},
+  address: AddressType,
+  member_of: {{
+    {
+      sig_name: string,
+      chapter_name: string,
+      member_since: date
+    }
+  }}
+}
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset User(UserType) partitioned by key name on group1;
+
+write output to nc1:"/tmp/q1.adm";
+
+for $user in dataset('User')
+where some $i in $user.interests
+  satisfies $i = "movies"
+return {"name": $user.name}

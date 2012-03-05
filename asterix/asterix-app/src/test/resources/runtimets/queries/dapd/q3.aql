@@ -1,0 +1,51 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+
+create type AddressType as closed {
+ street: string,
+ city: string,
+ zip: string,
+ latlong: point2d
+}
+
+create type UserType as open{
+ name: string,
+ interests: {{string}},
+ address: AddressType,
+ member_of: {{
+  {
+    sig_id: int32,
+    chapter_name: string,
+    member_since: date
+  }
+}}
+}
+
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset User(UserType)
+ partitioned by key name on group1;
+
+load dataset User 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/user.adm"),("format"="json")) pre-sorted;
+
+
+write output to nc1:'rttest/dapd_q3.adm';
+
+set simthreshold '.5f';
+
+for $user in dataset('User')
+let $similar_users :=
+  for $similar_user in dataset('User')
+  where $user.name != $similar_user.name
+       and $user.interests ~= $similar_user.interests
+  let $sim := similarity-jaccard($user.interests, $similar_user.interests)
+  order by $sim desc
+  limit 10
+  return { "user_name": $similar_user.name }
+order by $user.name  
+return { "user_name" : $user.name, "similar_users" : $similar_users }

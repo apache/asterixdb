@@ -1,0 +1,27 @@
+drop dataverse orders-aggreg if exists;
+
+create dataverse orders-aggreg;
+
+use dataverse orders-aggreg;
+
+create type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/tmp/orders-aggreg.adm";
+
+for $o in dataset('Orders')
+group by $cid := $o.cid with $o
+return { "cid": $cid , "ordpercust": count($o),  
+         "totalcust": sum(for $i in $o return $i.total), 
+         "avgcust": avg(for $i in $o return $i.total) } 

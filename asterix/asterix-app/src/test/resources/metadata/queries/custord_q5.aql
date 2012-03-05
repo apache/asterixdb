@@ -1,0 +1,21 @@
+drop nodegroup fuzzynodegroup if exists;
+
+drop dataverse fuzzyjoin if exists;
+
+use dataverse custord;
+
+create dataset Customers if not exists (CustomerType)
+  partitioned by key cid, name on group1;
+  
+drop dataset employees if exists;
+
+create index custName if not exists on Customers(name, cid);
+
+drop index Customers.custAddress if exists;
+
+create type StreetType if not exists as closed {
+  number: int32?,
+  name: string
+}
+
+drop type DBLPType if exists;

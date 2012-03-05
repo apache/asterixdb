@@ -1,0 +1,95 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+create dataset CSX(CSXType) partitioned by key id on group1;
+
+load dataset DBLP 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+
+load dataset CSX 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+
+write output to nc1:'rttest/fuzzyjoin_dblp-csx-2_2.adm';
+
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperDBLP in dataset('DBLP')
+    let $tokensDBLP :=
+        for $tokenUnranked in counthashed-word-tokens($paperDBLP.title)
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $id := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            group by $tokenGroupped := $token with $id
+            order by count($id), $tokenGroupped
+            return $tokenGroupped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenDBLP in subset-collection(
+                                $tokensDBLP,
+                                0,
+                                prefix-len-jaccard(len($tokensDBLP), .5f))
+
+    for $paperCSX in dataset('CSX')
+    let $tokensCSX :=
+        for $tokenUnranked in counthashed-word-tokens($paperCSX.title)
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $id := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            group by $tokenGroupped := $token with $id
+            order by count($id), $tokenGroupped
+            return $tokenGroupped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenCSX in subset-collection(
+                                $tokensCSX,
+                                0,
+                                prefix-len-jaccard(len($tokensCSX), .5f))
+
+    where $prefixTokenDBLP = $prefixTokenCSX
+
+    let $sim := similarity-jaccard-prefix(
+                    len(counthashed-word-tokens($paperDBLP.title)),
+                    $tokensDBLP,
+                    len(counthashed-word-tokens($paperCSX.title)),
+                    $tokensCSX,
+                    $prefixTokenDBLP,
+                    .5f)
+    where $sim >= .5f
+    group by $idDBLP := $paperDBLP.id, $idCSX := $paperCSX.id, $sim := $sim with $sim
+    order by $idDBLP, $idCSX
+    return {'idDBLP': $idDBLP, 'idCSX': $idCSX, 'sim': $sim[0]}

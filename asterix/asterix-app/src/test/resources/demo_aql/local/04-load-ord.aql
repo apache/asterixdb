@@ -1,0 +1,19 @@
+use dataverse demo_aql;
+
+declare type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+load dataset Orders 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///tmp/orders.adm"),("format"="adm"));

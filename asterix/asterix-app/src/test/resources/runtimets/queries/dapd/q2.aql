@@ -1,0 +1,56 @@
+drop dataverse test if exists;
+  
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  street: string,
+  city: string,
+  zip: string,
+  latlong: point
+}
+
+create type EventType as closed {
+  event_id: int32, 
+  name: string,
+  location: AddressType	?,
+  organizers: {{ 
+   {
+     name: string
+   }
+  }},
+  sponsoring_sigs: [
+    {
+      sig_id: int32,
+      chapter_name: string
+    }
+  ],
+  interest_keywords: {{string}},
+  price: double?,
+  start_time: datetime,
+  end_time: datetime
+}
+
+
+
+create nodegroup group1  if not exists on nc1, nc2;
+
+create external dataset Event(EventType) 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/event.adm"),("format"="adm"));
+
+write output to nc1:"rttest/dapd_q2.adm";
+
+for $event in dataset('Event')
+for $sponsor in $event.sponsoring_sigs
+let $es := { "event": $event, "sponsor": $sponsor }
+group by $sig_id := $sponsor.sig_id with $es
+let $sig_sponsorship_count := count($es)
+let $by_chapter :=
+   for $e in $es
+   group by $chapter_name := $e.sponsor.chapter_name with $e
+   return { "chapter_name": $chapter_name, "escount" : count($e) }
+order by $sig_sponsorship_count desc
+limit 5
+return { "sig_id": $sig_id, "total_count": $sig_sponsorship_count, "chapter_breakdown": $by_chapter }
+

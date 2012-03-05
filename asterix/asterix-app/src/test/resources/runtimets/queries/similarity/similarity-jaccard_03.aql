@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_similarity-jaccard_03.adm";
+
+let $a := ["a"]
+let $b := [ ]
+let $jacc := similarity-jaccard($a, $b)
+return $jacc

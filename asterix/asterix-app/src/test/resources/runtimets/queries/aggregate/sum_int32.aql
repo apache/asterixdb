@@ -1,0 +1,18 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_sum_int32.adm";
+
+sum( 
+ for $x in [1, 2, int32("3")] 
+ return $x
+)
+
+
+
+
+
+

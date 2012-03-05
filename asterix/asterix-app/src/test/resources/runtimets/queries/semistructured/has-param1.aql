@@ -1,0 +1,25 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create external dataset Orders(OrderType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));
+
+write output to nc1:"rttest/semistructured_has-param1.adm";
+
+for $o in dataset('Orders')
+where not(is-null($o.param1))
+order by $o.oid 
+return $o

@@ -1,0 +1,56 @@
+drop dataverse test if exists;
+drop nodegroup group0 if exists;
+  
+create dataverse test;
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as open {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+create nodegroup group0 if not exists on nc1;
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset c1(CustomerType) 
+  partitioned by key cid on group0;
+create dataset c2(CustomerType) 
+  partitioned by key cid on group1;  
+  
+load dataset c1 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
+
+
+write into dataset c2 (
+
+  for $c in dataset('c1')
+  return $c 
+
+);
+
+
+write output to nc1:"rttest/custord_load-test.adm";
+
+for $c in dataset('c2')
+order by $c.cid
+return $c
+
+
+
+// write output to nc1:"rttest/denorm-cust-order_01.adm";
+
+
+

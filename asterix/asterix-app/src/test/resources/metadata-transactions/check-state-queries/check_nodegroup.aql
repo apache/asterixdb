@@ -1,0 +1,6 @@
+use dataverse Metadata;
+
+write output to nc1:"rttest/check_nodegroup.adm";
+     
+for $c in dataset('Nodegroup')
+return $c

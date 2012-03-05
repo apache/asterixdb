@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/divide.adm";
+
+let $x := [ "foo", "bar" ]
+let $r := { "a": 1+2, "b": $x[0] }
+let $f := $r.b
+return $f

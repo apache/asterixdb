@@ -1,0 +1,37 @@
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type TOKENSRANKEDADMType as closed {
+  token: int32,
+  rank: int32
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by key rank on group1;
+
+write output to nc1:'rttest/unnest_list_in_subplan.adm';
+
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperDBLP in dataset('DBLP')
+    let $idDBLP := $paperDBLP.id
+    let $tokensUnrankedDBLP := counthashed-word-tokens($paperDBLP.title)
+    let $tokensDBLP :=
+        for $tokenUnranked in $tokensUnrankedDBLP
+        for $tokenRanked in dataset('TOKENSRANKEDADM')
+        where $tokenUnranked = $tokenRanked.token
+        order by $tokenRanked.rank
+        return $tokenRanked.rank
+    return {'id': $idDBLP, 'tokens': $tokensDBLP}

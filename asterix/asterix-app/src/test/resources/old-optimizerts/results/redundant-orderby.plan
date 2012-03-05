@@ -1,0 +1,18 @@
+-- SINK_WRITE  |PARTITIONED|
+  -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+    -- STREAM_PROJECT  |PARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        -- STABLE_SORT [$$8(ASCENDING)]  |PARTITIONED|
+          -- RANGE_PARTITION_EXCHANGE [$$8(ASCENDING)]  |PARTITIONED|
+            -- STREAM_PROJECT  |PARTITIONED|
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                -- STABLE_SORT [$$6(ASCENDING)]  |PARTITIONED|
+                  -- RANGE_PARTITION_EXCHANGE [$$6(ASCENDING)]  |PARTITIONED|
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      -- ASSIGN  |PARTITIONED|
+                        -- ASSIGN  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- ASSIGN  |PARTITIONED|
+                              -- ASSIGN  |PARTITIONED|
+                                -- AQL_DATASET_UNNEST  |PARTITIONED|
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

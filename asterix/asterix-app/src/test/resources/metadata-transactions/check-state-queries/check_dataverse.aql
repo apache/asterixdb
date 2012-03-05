@@ -1,0 +1,6 @@
+use dataverse Metadata;
+
+write output to nc1:"rttest/check_dataverse.adm";
+
+for $c in dataset('Dataverse')
+return $c

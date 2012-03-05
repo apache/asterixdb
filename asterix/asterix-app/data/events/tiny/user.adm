@@ -1,0 +1,59 @@
+{
+  "name": "Smith",
+  "email": "smith@example.com",
+  "interests": {{"nature", "birds"}},
+  "address": { 
+    "street": "Main",
+    "city": "Gotham",
+    "zip": "00000",
+    "latlong": point("80.10E5,-10E5")  
+  },
+  "member_of": {{
+     {
+       "sig_id": 14,
+       "chapter_name": "Laguna Beach",
+       "member_since": date("1997-11-19")
+     }
+  }}
+}
+{
+  "name": "John",
+  "email": "john@example.com",
+  "interests": {{"nature", "movies"}},
+  "address": { 
+    "street": "Main",
+    "city": "Gotham",
+    "zip": "00000",
+    "latlong": point("80.10E5,-10E5")  
+  },
+  "member_of": {{
+     {
+       "sig_id": 14,
+       "chapter_name": "San Clemente",
+       "member_since": date("1997-11-19")
+     }
+  }}
+}
+{
+  "name": "Jimmy",
+  "email": "jimmy@example.com",
+  "interests": {{"movies"}},
+  "address": { 
+    "street": "Main",
+    "city": "Gotham",
+    "zip": "00000",
+    "latlong": point("80.10E5,-10E5")  
+  },
+  "member_of": {{
+     {
+       "sig_id": 14,
+       "chapter_name": "Laguna Beach",
+       "member_since": date("1997-11-19")
+     },
+     {
+       "sig_id": 31,
+       "chapter_name": "Huntington Beach",
+       "member_since": date("1997-11-19")
+     }
+  }}
+}

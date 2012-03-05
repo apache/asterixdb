@@ -1,0 +1,23 @@
+use dataverse fuzzy1;
+
+declare type DBLPType as open {
+ id: int32,
+ dblpid: string,
+ title: string,
+ authors: string,
+ misc: string
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03,
+rainbow-04, rainbow-05;
+
+declare dataset DBLP(DBLPType)
+ partitioned by key id on group1;
+
+write output to rainbow-01:"/home/hyracks/out.txt";
+
+for $x in dataset('DBLP')
+let $ed := edit-distance($x.authors, "Michael Carey")
+where $ed <= 3
+order by $ed, $x.authors
+return { "edit-distance":$ed, "authors":$x.authors, "title":$x.title }

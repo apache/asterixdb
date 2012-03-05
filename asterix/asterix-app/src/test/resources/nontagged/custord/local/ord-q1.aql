@@ -1,0 +1,72 @@
+use dataverse demo1112;
+
+declare type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  hoList: [int32]
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_ord_q1.adm";
+
+
+
+
+
+// q5:
+for $o in dataset('Orders')
+let $n := embed-type($o.hoList)
+let $c1 := [$o.heList, $n]
+return { "orderid": $o.oid, "heterorderedlist": $c1}
+
+/*
+
+
+// test with empty lists and with accessors on unorderedlist or anytype
+// q3:
+for $o in dataset('Orders')
+let $r := $o.lastorder
+let $l := [$o.DOB, $o.orderstatus]
+////let $nf := $r.oid
+where $o.cid = int32("775")
+////return { "oid" : $o.oid, "loc":$o.loc, "line":$o.line, "ploygon":$o.poly, "year": year($o.DOB)}
+////return { "field1": $nf } // does not wrok
+return { "orderid": $o.oid, "ordertot":$o.total, "list": $l, "item1": $l[0], "item2": $l[1], "item3": $l[2], "record": $r, "favorite numbers": $o.favnumbers, "number1": $o.favnumbers[0], "number2": $o.favnumbers[1], "number3": $o.favnumbers[2], "number6": $o.favnumbers[5]  }
+
+
+// q4:
+for $o in dataset('Orders')
+let $r := $o.lastorder
+let $l := [$o.DOB, $o.orderstatus]
+////let $nf := $r.oid
+where $o.cid = int32("775")
+////return { "oid" : $o.oid, "loc":$o.loc, "line":$o.line, "ploygon":$o.poly, "year": year($o.DOB)}
+////return { "field1": $nf } // does not wrok
+return { "orderid": $o.oid, "ordertot":$o.total, "list": $l, "item1": $l[0], "item2": $l[1], "item3": $l[2], "record": $r, "favorite numbers": $o.favnumbers, "number1": $o.favnumbers[0], "number2": $o.favnumbers[1], "number3": $o.favnumbers[2], "number6": $o.favnumbers[5]  }
+
+
+// q5:
+for $a in [10.0, 20.0 ,30.0]
+return { "ith numbers": $a}
+
+// q6:
+let $list := [10.0, 20.0 ,30.0]
+for $a in $list
+return { "list": $list, "ith numbers": $a}
+
+// q7 
+for $o in dataset('Orders')
+let $list := $o.favnumbers
+for $a in $list
+return { "list": $list, "ith numbers": $a}
+*/

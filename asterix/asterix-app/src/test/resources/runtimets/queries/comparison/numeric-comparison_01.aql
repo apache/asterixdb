@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/comparison_numeric-comparison_01.adm";
+
+let $l := [1.1f, 1.0f, 1.2f, 0.9, 1.3, 1, 2]
+for $i in $l
+for $j in $l
+return [$i, $j, "=", $i = $j, "<", $i < $j, "<=", $i <= $j, ">", $i > $j, ">=", $i >= $j]

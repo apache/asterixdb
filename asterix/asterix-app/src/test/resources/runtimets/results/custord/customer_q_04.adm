@@ -1,0 +1,3 @@
+{ "id": 775, "custname": "Jodi Rotruck", "age": null, "MathcashBack": { "cashBack": 100, "cashBack+5": 105, "cashBack-5": 95, "cashBack*5": 500, "cashBack/5": 20, "-cashBack": -100 } }
+{ "id": 5, "custname": "Jodi Alex", "age": 19, "MathcashBack": { "cashBack": 350, "cashBack+5": 355, "cashBack-5": 345, "cashBack*5": 1750, "cashBack/5": 70, "-cashBack": -350 } }
+{ "id": 4, "custname": "Mary Carey", "age": 12, "MathcashBack": { "cashBack": 450, "cashBack+5": 455, "cashBack-5": 445, "cashBack*5": 2250, "cashBack/5": 90, "-cashBack": -450 } }

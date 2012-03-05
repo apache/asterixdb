@@ -1,0 +1,20 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TempType as open {
+  id: int32,
+  date: date,
+  time: time,
+  datetime: datetime,
+  duration: duration
+}
+
+create external dataset Temp(TempType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/tempData.json"),("format"="adm"));
+        
+write output to nc1:"rttest/scan_temp_types_01.adm";
+      
+for $a in dataset('Temp')
+return $a 

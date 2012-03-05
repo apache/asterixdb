@@ -1,0 +1,10 @@
+use dataverse custord;
+
+drop index Customers.custName;
+
+// Creating this duplicate type should fail, 
+// and rollback should add the secondary index again.
+create type StreetType as closed {
+  number: int32?,
+  name: string
+}

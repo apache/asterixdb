@@ -1,0 +1,23 @@
+use dataverse demo1112;
+
+declare type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  hoList: [int32]
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_ord_3.adm";
+
+for $o in dataset('Orders')
+return $o

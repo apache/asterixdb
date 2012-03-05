@@ -1,0 +1,7 @@
+// count, sum, avg
+for $o in recordset(['oid', 'int32', 'date', 'int32', 'cid', 'int32', 'total', 'float'], 'osfiles', ['nc1', 'data/spj01/ord1.adm'], ['nc2', 'data/spj01/ord2.adm'])
+group by $cid := $o.cid with $o
+return { "cid": $cid , "ordpercust": count($o),  
+         "totalcust": sum(for $i in $o return $i.total), 
+         "avgcust": avg(for $i in $o return $i.total) } 
+ 

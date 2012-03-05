@@ -1,0 +1,15 @@
+use dataverse fuzzy1;
+
+declare type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: {{int32}},
+  interests: {{string}}
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Visitors(VisitorType) 
+  partitioned by key vid on group1;
+
+drop dataset Visitors;

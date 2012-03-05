@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/tokenizers_word-tokens_02.adm";
+
+let $txt := "ΩΣ"
+let $tokens := word-tokens($txt)
+for $token in $tokens
+return $token

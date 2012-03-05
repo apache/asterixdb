@@ -1,0 +1,8 @@
+use dataverse test;
+
+write output to nc1:"rttest/ifthenelse_01.adm";
+
+if (2>1) then
+    20
+else
+    10

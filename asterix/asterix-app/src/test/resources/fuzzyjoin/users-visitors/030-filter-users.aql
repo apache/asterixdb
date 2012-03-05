@@ -1,0 +1,21 @@
+use dataverse fuzzy1;
+
+declare type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: {{int32}},
+  interests: {{string}}
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Users(UserType) 
+  partitioned by key uid on group1;
+
+write output to nc1:'/tmp/users.adm';
+
+for $u in dataset('Users')
+// where $u.uid > 1
+// where $u.name = 'Jodi Rotruck'
+return $u
+// return's:q1 { 'user_name': $u.name }

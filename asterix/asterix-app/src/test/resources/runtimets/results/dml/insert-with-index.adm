@@ -1,0 +1,9 @@
+{ "l_orderkey": 1, "l_linenumber": 2, "l_suppkey": 68 }
+{ "l_orderkey": 1, "l_linenumber": 3, "l_suppkey": 64 }
+{ "l_orderkey": 1, "l_linenumber": 4, "l_suppkey": 3 }
+{ "l_orderkey": 3, "l_linenumber": 1, "l_suppkey": 5 }
+{ "l_orderkey": 3, "l_linenumber": 2, "l_suppkey": 20 }
+{ "l_orderkey": 3, "l_linenumber": 4, "l_suppkey": 30 }
+{ "l_orderkey": 4, "l_linenumber": 1, "l_suppkey": 89 }
+{ "l_orderkey": 5, "l_linenumber": 3, "l_suppkey": 38 }
+{ "l_orderkey": 7, "l_linenumber": 3, "l_suppkey": 95 }

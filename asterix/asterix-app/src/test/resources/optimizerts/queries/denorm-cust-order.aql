@@ -1,0 +1,50 @@
+drop dataverse custorder if exists;
+
+create dataverse custorder;
+
+use dataverse custorder;
+
+
+create type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+
+
+create type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType) 
+  partitioned by key cid on group1;
+create dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/tmp/custorder.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.cid = $o.cid
+group by $cid := $c.cid decor $cust := $c with $o
+return {"cid":$cid, "cust":$cust, "cnt-orders": count($o), "orders":$o} 
+

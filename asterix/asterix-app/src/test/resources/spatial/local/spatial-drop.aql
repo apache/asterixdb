@@ -1,0 +1,16 @@
+use dataverse demo1112;
+
+declare type MyRecord as open {
+  id: int32,
+  point: point,
+  kwds: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset MyData(MyRecord)
+  partitioned by key id on group1;
+
+drop dataset MyData;

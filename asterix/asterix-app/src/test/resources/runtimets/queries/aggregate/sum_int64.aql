@@ -1,0 +1,18 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_sum_int64.adm";
+
+sum( 
+ for $x in [int64("1"), int64("2"), int64("3")] 
+ return $x
+)
+
+
+
+
+
+

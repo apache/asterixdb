@@ -1,0 +1,20 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_union_02.adm";
+
+for $z in (
+(
+for $x in {{3,2}}
+return $x
+)
+union
+(
+for $y in {{2,1}}
+return $y
+)
+)
+order by $z
+return $z
+

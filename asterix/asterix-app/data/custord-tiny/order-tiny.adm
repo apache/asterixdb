@@ -1,0 +1,10 @@
+{  "oid": 1000,  "cid": 775,  "orderstatus": "ORDER_DELIVERED",  "orderpriority": "LOW",  "clerk": "Kathryne",  "total": 97.20656f }
+{  "oid": 775,  "cid": 775,  "orderstatus": "ORDER_SHIPPED",  "orderpriority": "MEDIUM",  "clerk": "Cathrin",  "total": 38.618626f }
+{  "oid": 1003,  "cid": 530,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "MEDIUM",  "clerk": "Cat",  "total": 90.28984f }
+{  "oid": 1006,  "cid": 530,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "MEDIUM",  "clerk": "Cathryn",  "total": 75.115845f }
+{  "oid": 1001,  "cid": 530,  "orderstatus": "ORDER_SHIPPED",  "orderpriority": "PREMIUM",  "clerk": "Catherine",  "total": 57.400013f }
+{  "oid": 1002,  "cid": 530,  "orderstatus": "PAYMENT_RECEIVED",  "orderpriority": "HIGH",  "clerk": "Cat",  "total": 24.876362f }
+{  "oid": 1005,  "cid": 530,  "orderstatus": "ORDER_SHIPPED",  "orderpriority": "PREMIUM",  "clerk": "Catherine",  "total": 87.70298f }
+{  "oid": 530,  "cid": 530,  "orderstatus": "ORDER_DELIVERED",  "orderpriority": "MEDIUM",  "clerk": "Cathrin",  "total": 7.5879574f }
+{  "oid": 1004,  "cid": 530,  "orderstatus": "ORDER_SHIPPED",  "orderpriority": "LOW",  "clerk": "Kathrin",  "total": 98.68669f }
+{  "oid": 1008,  "cid": 76,  "orderstatus": "ORDER_PLACED",  "orderpriority": "MEDIUM",  "clerk": "Kathrin",  "total": 83.0944f }

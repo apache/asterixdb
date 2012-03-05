@@ -1,0 +1,24 @@
+drop dataverse twitter if exists;
+create dataverse twitter;
+use dataverse twitter;
+
+create type Tweet as open {
+  id: int32,
+  tweetid: int64,
+  loc: point,
+  time: string,
+  text: string
+}
+
+create external dataset TwitterData(Tweet)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm"));
+
+write output to nc1:"/tmp/count-tweets.adm";
+
+for $t in dataset('TwitterData')
+let $tokens := word-tokens($t.text)
+for $token in $tokens
+group by $tok := $token with $token
+return { "word": $tok, "count": count($token) }
+

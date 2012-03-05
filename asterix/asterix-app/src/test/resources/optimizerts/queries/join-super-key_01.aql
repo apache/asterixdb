@@ -1,0 +1,82 @@
+drop dataverse join-super-key_1 if exists;
+
+create dataverse join-super-key_1;
+
+use dataverse join-super-key_1;
+
+create type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+create type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+write output to nc1:"/tmp/join-super-key_01.adm";
+
+create dataset LineItems(LineItemType)
+  partitioned by key l_partkey, l_linenumber on group1;
+create dataset PartSupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+
+
+for $li in dataset('LineItems')
+for $ps in dataset('PartSupp')
+where $li.l_partkey = $ps.ps_partkey and $li.l_suppkey = $ps.ps_suppkey and 
+      $li.l_extendedprice = $ps.ps_supplycost
+return {
+  "l_partkey": $li.l_partkey
+}
+
+

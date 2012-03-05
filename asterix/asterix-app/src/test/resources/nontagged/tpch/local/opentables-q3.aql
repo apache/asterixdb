@@ -1,0 +1,51 @@
+use dataverse tpch;
+
+declare type LineItemType as open {
+  l_orderkey: int32, 
+  l_linenumber: int32
+}
+
+declare type OrderType as open {
+  o_orderkey: int32
+}
+
+declare type CustomerType as open {
+  c_custkey: int32
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+declare dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+
+write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_open_3.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where
+  $c.c_mktsegment = 'BUILDING' and $c.c_custkey = $o.o_custkey 
+for $l in dataset('LineItems')
+where
+  $l.l_orderkey = $o.o_orderkey and
+  $o.o_orderdate < '1995-03-15' and $l.l_shipdate > '1995-03-15'
+group by $l_orderkey := $l.l_orderkey, $o_orderdate := $o.o_orderdate, $o_shippriority := $o.o_shippriority
+  with $l
+let $revenue := sum (
+  for $i in $l 
+  return 
+    $i.l_extendedprice * (1 - $i.l_discount)
+)
+order by $revenue desc, $o_orderdate
+limit 10
+return {  
+  "l_orderkey": $l_orderkey,
+  "revenue": $revenue,
+  "o_orderdate": $o_orderdate,
+  "o_shippriority": $o_shippriority 
+}

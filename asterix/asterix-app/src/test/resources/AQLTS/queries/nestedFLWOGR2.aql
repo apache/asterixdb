@@ -1,0 +1,6 @@
+for $i in [1,2,30,for $tmp in dataset('number') return $tmp]
+for $j in {{4,5,6}}
+return 
+	for $k in if ($i>$j) then $i else $j
+	where $k <10
+	return $k

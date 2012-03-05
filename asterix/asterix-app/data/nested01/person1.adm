@@ -1,0 +1,3 @@
+{ "ssn": 123456789, "name": "John Smith", "age": 41, "friends": [ "Bogdan Popescu", "Jean Dupont" ] }
+{ "ssn": 113456789, "name": "Johannes Schmidt", "age": 36, "friends": [ "Ivan Ivanov" ] }
+{ "ssn": 103456789, "name": "Ivan Ivanov", "age": 25, "friends": [ "Bogdan Popescu" ] }

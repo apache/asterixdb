@@ -1,0 +1,20 @@
+-- SINK_WRITE  |UNPARTITIONED|
+  -- STREAM_PROJECT  |UNPARTITIONED|
+    -- ASSIGN  |UNPARTITIONED|
+      -- STREAM_LIMIT  |UNPARTITIONED|
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          -- STREAM_LIMIT  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- IN_MEMORY_HASH_PAIRWISE_JOIN [$$18][$$19]  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$18]  |PARTITIONED|
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    -- ASSIGN  |PARTITIONED|
+                      -- ASSIGN  |PARTITIONED|
+                        -- AQL_DATASET_UNNEST  |PARTITIONED|
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$19]  |PARTITIONED|
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    -- ASSIGN  |PARTITIONED|
+                      -- ASSIGN  |PARTITIONED|
+                        -- AQL_DATASET_UNNEST  |PARTITIONED|
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

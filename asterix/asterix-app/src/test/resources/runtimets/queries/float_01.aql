@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/float_01.adm";
+
+for $f in [1f, 1F, 1.1f, 1.1F, .1f, .1F]
+return $f

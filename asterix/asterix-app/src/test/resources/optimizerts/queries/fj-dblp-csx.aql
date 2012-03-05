@@ -1,0 +1,76 @@
+drop dataverse fj-dblp-csx if exists;
+
+create dataverse fj-dblp-csx;
+
+use dataverse fj-dblp-csx;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) partitioned by key id on group1;
+create dataset CSX(CSXType) partitioned by key id on group1;
+
+write output to nc1:'rttest/fj-dblp-csx.adm';
+
+    for $paperDBLP in dataset('DBLP')
+    let $idDBLP := $paperDBLP.id
+    let $unrankedTokensDBLP := counthashed-word-tokens($paperDBLP.title)
+    let $tokensDBLP :=
+        for $token in $unrankedTokensDBLP
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            // for $paper in dataset('DBLP')
+            // for $token in counthashed-word-tokens($paper.title) 
+            // group by $tokenGroupped := $token with $paper
+            // order by count($paper), $tokenGroupped
+            // return $tokenGroupped
+            for $paper in dataset('DBLP')
+            return $paper.title            
+        where $token = $tokenRanked
+        order by $i
+        return $i
+   
+    for $prefixTokenDBLP in $tokensDBLP 
+
+    for $paperCSX in dataset('CSX')
+    let $idCSX := $paperCSX.id
+    let $unrankedTokensCSX := counthashed-word-tokens($paperCSX.title)
+    let $tokensCSX :=        
+        for $token in $unrankedTokensCSX
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            // for $paper in dataset('DBLP')
+            // for $token in counthashed-word-tokens($paper.title) 
+            // group by $tokenGroupped := $token with $paper
+            // order by count($paper), $tokenGroupped
+            // return $tokenGroupped
+            for $paper in dataset('DBLP')
+            return $paper.title
+        where $token = $tokenRanked
+        order by $i
+        return $i
+        
+    for $prefixTokenCSX in $tokensCSX    
+    where $prefixTokenDBLP = $prefixTokenCSX
+    group by $idDBLP := $idDBLP, $idCSX := $idCSX with $paperDBLP 
+    order by $idDBLP, $idCSX
+    return {'idDBLP': $idDBLP, 'idCSX': $idCSX}

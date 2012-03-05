@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+
+write output to nc1:"rttest/records_field-access-by-index_01.adm";
+
+let $x := { "foo1": 10, "bar1": 20, "foo2": 30, "bar2": 40 }
+return field-access-by-index($x,2)

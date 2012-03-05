@@ -1,0 +1,20 @@
+use dataverse demo1112;
+
+declare type ExampleType as open {
+  id: int32,
+  point: point,
+  point3d: point3d,
+  line: line,
+  polygon: polygon
+}
+
+
+declare nodegroup group1 on nc1, nc2;
+
+set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+
+declare dataset Spatial(ExampleType)
+  partitioned by key id on group1;
+
+load dataset Spatial from nc1:"/home/yasser/Dropbox/Research/data/spatialData.json";
+

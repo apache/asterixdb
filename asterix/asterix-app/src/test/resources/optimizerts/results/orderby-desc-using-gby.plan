@@ -1,0 +1,18 @@
+-- SINK_WRITE  |PARTITIONED|
+  -- STREAM_PROJECT  |PARTITIONED|
+    -- ASSIGN  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$1(DESC) ]  |PARTITIONED|
+        -- PRE_CLUSTERED_GROUP_BY[$$9]  |PARTITIONED|
+                {
+                  -- AGGREGATE  |LOCAL|
+                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                }
+          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            -- STABLE_SORT [$$9(DESC)]  |LOCAL|
+              -- HASH_PARTITION_EXCHANGE [$$9]  |PARTITIONED|
+                -- STREAM_PROJECT  |PARTITIONED|
+                  -- ASSIGN  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

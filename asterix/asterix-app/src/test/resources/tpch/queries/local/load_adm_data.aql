@@ -1,0 +1,137 @@
+use dataverse tpch;
+
+declare type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+declare type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+declare type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+declare type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+declare type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+declare type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+declare type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+declare type PartSuppType as closed {
+  ps_partkey: int32, 
+  ps_suppkey: int32,
+  ps_availqty: int32,
+  ps_supplycost: double,
+  ps_comment: string 
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+declare dataset Orders(OrderType)
+  partitioned by key o_orderkey on group1;
+declare dataset Customers(CustomerType) 
+  partitioned by key c_custkey on group1;
+declare dataset Suppliers(SupplierType)
+  partitioned by key s_suppkey on group1;
+declare dataset Nations(NationType) 
+  partitioned by key n_nationkey on group1;
+declare dataset Regions(RegionType)
+  partitioned by key r_regionkey on group1;
+declare dataset Parts(PartType)
+  partitioned by key p_partkey on group1;
+declare dataset PartSupp(PartSuppType)
+  partitioned by key ps_partkey, ps_suppkey on group1;  
+
+load dataset LineItems 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/lineitems.adm"),("format="adm")) pre-sorted;
+
+load dataset Orders 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/orders.adm"),("format"="adm")) pre-sorted;
+
+load dataset Customers 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/customers.adm"),("format"="adm")) pre-sorted;
+
+load dataset Suppliers 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/suppliers.adm"),("format"="adm")) pre-sorted;
+
+load dataset Nations 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/nations.adm"),("format"="adm")) pre-sorted;
+
+load dataset Regions 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/regions.adm"),("format"="adm")) pre-sorted;
+
+load dataset Parts 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/parts.adm"),("format"="adm")) pre-sorted;
+
+load dataset PartSupp 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1:///opt/tpch/tpch0.001/tbl/partsupp.adm"),("format"="adm")) pre-sorted;

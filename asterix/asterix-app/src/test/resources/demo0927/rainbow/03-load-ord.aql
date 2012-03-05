@@ -1,0 +1,18 @@
+use dataverse demo0927;
+
+declare type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
+
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+load dataset Orders from rainbow-01:"/home/hyracks/demo-data/orderData.json";
+// delete dataset Orders;

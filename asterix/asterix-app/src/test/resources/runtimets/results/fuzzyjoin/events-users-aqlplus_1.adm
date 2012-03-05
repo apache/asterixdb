@@ -1,0 +1,3 @@
+{ "user_name": "Jimmy", "similar_users": [ { "user_name": "Jimmy" }, { "user_name": "John" } ] }
+{ "user_name": "John", "similar_users": [ { "user_name": "Jimmy" }, { "user_name": "John" } ] }
+{ "user_name": "Smith", "similar_users": [ { "user_name": "Smith" } ] }

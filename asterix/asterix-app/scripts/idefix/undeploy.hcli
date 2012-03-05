@@ -1,0 +1,2 @@
+connect to "localhost";
+destroy application asterix;

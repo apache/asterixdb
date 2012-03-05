@@ -1,0 +1,37 @@
+drop dataverse custlimit if exists;
+
+create dataverse custlimit;
+
+use dataverse custlimit;
+
+create type AddressType as closed {
+  number: int32,
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32,
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType)
+  partitioned by key cid on group1;
+
+write output to nc1:"/tmp/custlimit.adm";
+
+for $c in dataset('Customers')
+order by $c.age
+limit 10 // offset 10000
+return {"custname":$c.name, "custage":$c.age}

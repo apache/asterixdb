@@ -1,0 +1,5 @@
+for $p in recordset(['pid', 'int32', 'oid', 'int32', 'value', 'float'], 'osfiles', ['nc1', 'data/spj01/payment1.adm'], ['nc2', 'data/spj01/payment2.adm'])
+for $o in recordset(['oid', 'int32', 'date', 'int32', 'cid', 'int32', 'total', 'float'], 'osfiles', ['nc1', 'data/spj01/ord1.adm'], ['nc2', 'data/spj01/ord2.adm'])
+where $o.oid = $p.oid and $o.total > $p.value
+return 
+{ "order-id": $o.oid, "balance": $o.total - $p.value }

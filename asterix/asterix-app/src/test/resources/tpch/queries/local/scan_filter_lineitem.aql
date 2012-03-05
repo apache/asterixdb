@@ -1,0 +1,40 @@
+use dataverse tpch;
+
+declare type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset LineItems(LineItemType)
+  partitioned by key l_orderkey, l_linenumber on group1;
+
+// load dataset LineItems from nc1:"/opt/tpch/tengigs/lineitem.tbl" delimited by "|";
+
+// for external datasets, use:
+//
+// declare dataset LineItems(LineItemType)
+//   splits nc1:"/opt/tmp/tpch0.001/lineitem.tbl" delimited by "|";
+
+
+write output to nc1:"/tmp/li_10x.adm";
+
+for $li in dataset('LineItems')
+where $li.l_orderkey = 1
+return $li
+

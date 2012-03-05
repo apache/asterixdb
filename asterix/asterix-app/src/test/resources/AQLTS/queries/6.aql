@@ -1,0 +1,10 @@
+for $user in dataset('Users')
+let $similar_users :=
+   for $similar_user in dataset('Users')
+   let $similarity := jaccard_similarity($user.interests, $similar_user.interests)
+   where $user != $similar_user
+   and $similarity >= .75
+   order by $similarity desc
+   limit 10
+   return { "user_name" : $similar_user.name, "similarity" : $similarity }
+return { "user_name" : $user.name, "similar_users" : $similar_users }

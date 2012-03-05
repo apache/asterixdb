@@ -1,0 +1,12 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/comparison_gte_01.adm";
+
+for $x in [1, 3, 2]
+where $x >= 2
+return $x
+ 

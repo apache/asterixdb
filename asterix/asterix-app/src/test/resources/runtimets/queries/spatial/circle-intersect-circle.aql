@@ -1,0 +1,21 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as open {
+  id: int32,
+  point: point,
+  kwds: string
+}
+
+create external dataset MyData(MyRecord)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+
+write output to nc1:"rttest/spatial_circle-intersect-circle.adm";
+
+for $o in dataset('MyData')
+where spatial-intersect(create-circle(create-point(0.0,0.0), 5.0), create-circle(create-point(9.9,0.0), 5.0))
+order by $o.id
+return {"id":$o.id}
+ 

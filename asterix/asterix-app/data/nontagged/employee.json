@@ -1,0 +1,4 @@
+{  "name": "Jodi Rotruck", "lastorder": {  "oid": 75,  "total": 8377.618626f }, "id": 775,  "address": {  "number": 8389,  "street": "Hill St.",  "city": "Mountain View" }, "children": ["Ross", "Martin"], "openlist": [10, 2.0f, 3.0, 40] , "total": 97.20656f}
+{  "address": {  "number": 158,  "street": "Palo verde",  "city": "Irvine" }, "id": 5,  "name": "Jodi Alex", "age": 19, "openlist": [10, 2.0f, 3.0, 40] , "total": 55.56f }
+{  "id": 5,  "name": "Mike Mark",  "address": {  "number": 8,  "street": "Main St.",  "city": "LA" }, "interests": {{"eating", "cooking"}}, "openlist": [10, 2.0f, 3.0, 40] , "lastorder": {  "oid": 5,  "total": 83.6 } }
+{  "id": 5,  "name": "Mike ley", "address": {  "number": 9,  "street": "Campus St.",  "city": "Long beach" }, "interests": {{"writing", "surfing"}}, "children": [ "Mike", "Eric" ], "openlist": [10, 2.0f, 3.0, 40], "total": 97 , "lastorder": {  "oid": 767675,  "total": 7.618f } }

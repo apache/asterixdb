@@ -1,0 +1,43 @@
+use dataverse demo1112;
+
+declare type CustomerType as open {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+declare type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+
+declare type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+declare nodegroup group1 on nc1, nc2;
+
+declare dataset Customers(CustomerType) 
+  partitioned by key cid on group1;
+declare dataset Orders(OrderType)
+  partitioned by key oid on group1;
+
+write output to nc1:"/tmp/split01.adm";
+
+let $os := for $o in dataset('Orders') return $o
+for $o1 in $os
+for $o2 in $os
+where $o1.cid = $o2.cid
+return { "o1": $o1.oid, "o2": $o2.oid, "cid": $o1.cid }

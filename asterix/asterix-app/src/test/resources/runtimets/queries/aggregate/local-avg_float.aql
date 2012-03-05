@@ -1,0 +1,18 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_local-avg_float.adm";
+
+local-avg( 
+ for $x in [float("1"), float("2"), float("3")] 
+ return $x
+)
+
+
+
+
+
+
