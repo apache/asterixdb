@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -78,13 +78,13 @@
     <dependency>
         <groupId>edu.uci.ics.hyracks</groupId>
         <artifactId>hyracks-dataflow-std</artifactId>
-        <version>0.2.0</version>
+        <version>0.2.1-SNAPSHOT</version>
         <scope>compile</scope>
     </dependency>
     <dependency>
     	<groupId>edu.uci.ics.hyracks</groupId>
     	<artifactId>hyracks-data-std</artifactId>
-    	<version>0.2.0</version>
+    	<version>0.2.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>
