@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>hyracks-algebricks-examples</artifactId>
-		<version>0.2.0-SNAPSHOT</version>
+		<version>0.2.0</version>
 	</parent>
 
 	<build>
@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-algebricks-compiler</artifactId>
-			<version>0.2.0-SNAPSHOT</version>
+			<version>0.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

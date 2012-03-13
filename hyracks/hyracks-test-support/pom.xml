@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-test-support</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
 
   <build>
@@ -27,26 +27,26 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.0</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.0</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-invertedindex</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.0</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
