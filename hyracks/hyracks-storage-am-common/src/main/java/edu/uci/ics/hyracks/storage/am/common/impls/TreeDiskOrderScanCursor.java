@@ -21,130 +21,133 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
-    private int tupleIndex = 0;
-    private int fileId = -1;
-    int currentPageId = -1;
-    int maxPageId = -1;
-    private ICachedPage page = null;
-    private ITreeIndexFrame frame = null;
-    private IBufferCache bufferCache = null;
+	private int tupleIndex = 0;
+	private int fileId = -1;
+	private int currentPageId = -1;
+	private int maxPageId = -1;
+	private ICachedPage page = null;	
+	private IBufferCache bufferCache = null;
+	
+	private final ITreeIndexFrame frame;
+	private final ITreeIndexTupleReference frameTuple;
+	
+	public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
+		this.frame = frame;		
+		this.frameTuple = frame.createTupleReference();
+	}
 
-    private ITreeIndexTupleReference frameTuple;
+	@Override
+	public void close() throws Exception {
+		page.releaseReadLatch();
+		bufferCache.unpin(page);
+		page = null;
+	}
 
-    public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
-        this.frame = frame;
-        this.frameTuple = frame.getTupleWriter().createTupleReference();
-    }
+	@Override
+	public ITreeIndexTupleReference getTuple() {
+		return frameTuple;
+	}
 
-    @Override
-    public void close() throws Exception {
-        page.releaseReadLatch();
-        bufferCache.unpin(page);
-        page = null;
-    }
+	@Override
+	public ICachedPage getPage() {
+		return page;
+	}
 
-    @Override
-    public ITreeIndexTupleReference getTuple() {
-        return frameTuple;
-    }
+	private boolean positionToNextLeaf(boolean skipCurrent)
+			throws HyracksDataException {
+		while ((frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId)) {
+			currentPageId++;
 
-    @Override
-    public ICachedPage getPage() {
-        return page;
-    }
+			ICachedPage nextPage = bufferCache.pin(
+					BufferedFileHandle.getDiskPageId(fileId, currentPageId),
+					false);
+			nextPage.acquireReadLatch();
 
-    private boolean positionToNextLeaf(boolean skipCurrent) throws HyracksDataException {
-        while ((frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId) || (frame.getTupleCount() == 0)) {
-            currentPageId++;
+			page.releaseReadLatch();
+			bufferCache.unpin(page);
 
-            ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
-            nextPage.acquireReadLatch();
+			page = nextPage;
+			frame.setPage(page);
+			tupleIndex = 0;
+			skipCurrent = false;
+		}
+		if (currentPageId <= maxPageId)
+			return true;
+		else
+			return false;
+	}
 
-            page.releaseReadLatch();
-            bufferCache.unpin(page);
+	@Override
+	public boolean hasNext() throws Exception {		
+		if (currentPageId > maxPageId) {
+			return false;
+		}
+		if (tupleIndex >= frame.getTupleCount()) {
+			boolean nextLeafExists = positionToNextLeaf(true);
+			if (nextLeafExists) {
+				frameTuple.resetByTupleIndex(frame, tupleIndex);
+				return true;
+			} else {
+				return false;
+			}
+		}		
+		frameTuple.resetByTupleIndex(frame, tupleIndex);		
+		return true;
+	}
 
-            page = nextPage;
-            frame.setPage(page);
-            tupleIndex = 0;
-            skipCurrent = false;
-        }
-        if (currentPageId <= maxPageId)
-            return true;
-        else
-            return false;
-    }
+	@Override
+	public void next() throws Exception {
+		tupleIndex++;
+	}
 
-    @Override
-    public boolean hasNext() throws Exception {
-        if (tupleIndex >= frame.getTupleCount()) {
-            boolean nextLeafExists = positionToNextLeaf(true);
-            if (nextLeafExists) {
-                frameTuple.resetByTupleIndex(frame, tupleIndex);
-                return true;
-            } else {
-                return false;
-            }
-        }
+	@Override
+	public void open(ICursorInitialState initialState,
+			ISearchPredicate searchPred) throws HyracksDataException {
+		// in case open is called multiple times without closing
+		if (page != null) {
+			page.releaseReadLatch();
+			bufferCache.unpin(page);
+		}
+		page = initialState.getPage();
+		tupleIndex = 0;		
+		frame.setPage(page);
+		positionToNextLeaf(false);
+	}
 
-        frameTuple.resetByTupleIndex(frame, tupleIndex);
-        return true;
-    }
+	@Override
+	public void reset() {
+		tupleIndex = 0;
+		currentPageId = -1;
+		maxPageId = -1;
+		page = null;
+	}
 
-    @Override
-    public void next() throws Exception {
-        tupleIndex++;
-    }
+	@Override
+	public void setBufferCache(IBufferCache bufferCache) {
+		this.bufferCache = bufferCache;
+	}
 
-    @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        // in case open is called multiple times without closing
-        if (page != null) {
-            page.releaseReadLatch();
-            bufferCache.unpin(page);
-        }
+	@Override
+	public void setFileId(int fileId) {
+		this.fileId = fileId;
+	}
 
-        page = initialState.getPage();
-        tupleIndex = 0;
-        frame.setPage(page);
-        MultiComparator lowKeyCmp = searchPred.getLowKeyComparator();
-        frameTuple.setFieldCount(lowKeyCmp.getFieldCount());
-        boolean leafExists = positionToNextLeaf(false);
-        if (!leafExists) {
-            throw new HyracksDataException(
-                    "Failed to open disk-order scan cursor for tree index. Traget tree index has no leaves.");
-        }
-    }
+	public void setCurrentPageId(int currentPageId) {
+		this.currentPageId = currentPageId;
+	}
 
-    @Override
-    public void reset() {
-        tupleIndex = 0;
-        currentPageId = -1;
-        maxPageId = -1;
-        page = null;
-    }
+	public void setMaxPageId(int maxPageId) {
+		this.maxPageId = maxPageId;
+	}
 
-    @Override
-    public void setBufferCache(IBufferCache bufferCache) {
-        this.bufferCache = bufferCache;
-    }
-
-    @Override
-    public void setFileId(int fileId) {
-        this.fileId = fileId;
-    }
-
-    public void setCurrentPageId(int currentPageId) {
-        this.currentPageId = currentPageId;
-    }
-
-    public void setMaxPageId(int maxPageId) {
-        this.maxPageId = maxPageId;
-    }
+	@Override
+	public boolean exclusiveLatchNodes() {
+		return false;
+	}
 }

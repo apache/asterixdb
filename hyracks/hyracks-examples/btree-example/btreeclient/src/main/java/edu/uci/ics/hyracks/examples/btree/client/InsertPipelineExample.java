@@ -15,42 +15,41 @@
 
 package edu.uci.ics.hyracks.examples.btree.client;
 
-import java.util.UUID;
-
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.hyracks.api.client.HyracksRMIConnection;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.hash.UTF8StringBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
+import edu.uci.ics.hyracks.examples.btree.helper.IndexRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
-import edu.uci.ics.hyracks.examples.btree.helper.TreeIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
@@ -64,7 +63,7 @@ public class InsertPipelineExample {
         public String host;
 
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1099)")
-        public int port = 1099;
+        public int port = 1098;
 
         @Option(name = "-app", usage = "Hyracks Application name", required = true)
         public String app;
@@ -87,12 +86,12 @@ public class InsertPipelineExample {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
 
-        IHyracksClientConnection hcc = new HyracksRMIConnection(options.host, options.port);
+        IHyracksClientConnection hcc = new HyracksConnection(options.host, options.port);
 
         JobSpecification job = createJob(options);
 
         long start = System.currentTimeMillis();
-        UUID jobId = hcc.createJob(options.app, job);
+        JobId jobId = hcc.createJob(options.app, job);
         hcc.start(jobId);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
@@ -129,17 +128,21 @@ public class InsertPipelineExample {
         // run data generator on first nodecontroller given
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dataGen, splitNCs[0]);
 
-        IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = TreeIndexRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> indexRegistryProvider = IndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
         // prepare insertion into primary index
         // tuples to be put into B-Tree shall have 4 fields
         int primaryFieldCount = 4;
-        ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
-        primaryTypeTraits[0] = new TypeTrait(4);
-        primaryTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[2] = new TypeTrait(4);
-        primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
+        ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
+        primaryTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        primaryTypeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[2] = IntegerPointable.TYPE_TRAITS;
+        primaryTypeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
+
+        // comparator factories for primary index
+        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
+        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
@@ -150,27 +153,29 @@ public class InsertPipelineExample {
         // tuple
         int[] primaryFieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input
                                                         // tuple to field 0 of
-                                                        // B-Tree tuple, etc.
-        // comparator factories for primary index
-        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
-        primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+                                                        // B-Tree tuple, etc.        
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
-        ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
-        
+        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
+
         // create operator descriptor
-        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, treeIndexRegistryProvider, primarySplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, null, primaryFieldPermutation,
-                IndexOp.INSERT, opHelperFactory);
+        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+                spec, recDesc, storageManager, indexRegistryProvider, primarySplitProvider,
+                primaryInteriorFrameFactory, primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories,
+                primaryFieldPermutation, IndexOp.INSERT, dataflowHelperFactory);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
         // tuples to be put into B-Tree shall have 2 fields
         int secondaryFieldCount = 2;
-        ITypeTrait[] secondaryTypeTraits = new ITypeTrait[secondaryFieldCount];
-        secondaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        secondaryTypeTraits[1] = new TypeTrait(4);
+        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[secondaryFieldCount];
+        secondaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        secondaryTypeTraits[1] = IntegerPointable.TYPE_TRAITS;
+
+        // comparator factories for secondary index
+        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
+        secondaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        secondaryComparatorFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // create factories and providers for secondary B-Tree
         TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(secondaryTypeTraits);
@@ -181,17 +186,13 @@ public class InsertPipelineExample {
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
         int[] secondaryFieldPermutation = { 1, 2 };
-        // comparator factories for primary index
-        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
-        secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-        secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
                 options.secondaryBTreeName);
         // create operator descriptor
-        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec,
-                recDesc, storageManager, treeIndexRegistryProvider, secondarySplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, null,
-                secondaryFieldPermutation, IndexOp.INSERT, opHelperFactory);
+        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+                spec, recDesc, storageManager, indexRegistryProvider, secondarySplitProvider,
+                secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, dataflowHelperFactory);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator
@@ -201,8 +202,8 @@ public class InsertPipelineExample {
         // distribute the records from the datagen via hashing to the bulk load
         // ops
         IBinaryHashFunctionFactory[] hashFactories = new IBinaryHashFunctionFactory[1];
-        hashFactories[0] = UTF8StringBinaryHashFunctionFactory.INSTANCE;
-        IConnectorDescriptor hashConn = new MToNHashPartitioningConnectorDescriptor(spec,
+        hashFactories[0] = PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY);
+        IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
                 new FieldHashPartitionComputerFactory(new int[] { 0 }, hashFactories));
 
         // connect the ops

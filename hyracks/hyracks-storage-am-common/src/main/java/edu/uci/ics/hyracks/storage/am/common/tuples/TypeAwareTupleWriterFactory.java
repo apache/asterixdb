@@ -15,22 +15,23 @@
 
 package edu.uci.ics.hyracks.storage.am.common.tuples;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
-public class TypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
+public class TypeAwareTupleWriterFactory implements
+		ITreeIndexTupleWriterFactory {
 
-    private static final long serialVersionUID = 1L;
-    private ITypeTrait[] typeTraits;
+	private static final long serialVersionUID = 1L;
+	private ITypeTraits[] typeTraits;
 
-    public TypeAwareTupleWriterFactory(ITypeTrait[] typeTraits) {
-        this.typeTraits = typeTraits;
-    }
+	public TypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
+		this.typeTraits = typeTraits;
+	}
 
-    @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
-        return new TypeAwareTupleWriter(typeTraits);
-    }
+	@Override
+	public ITreeIndexTupleWriter createTupleWriter() {
+		return new TypeAwareTupleWriter(typeTraits);
+	}
 
 }

@@ -14,17 +14,15 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
+import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor {
@@ -40,12 +38,15 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
 
     protected final int outputArity;
 
+    protected String displayName;
+
     public AbstractOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity) {
-        odId = new OperatorDescriptorId(UUID.randomUUID());
+        odId = spec.createOperatorDescriptorId();
         this.inputArity = inputArity;
         this.outputArity = outputArity;
         recordDescriptors = new RecordDescriptor[outputArity];
         spec.getOperatorMap().put(getOperatorId(), this);
+        displayName = getClass().getName() + "[" + odId + "]";
     }
 
     @Override
@@ -68,8 +69,16 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
         return recordDescriptors;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     @Override
-    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
             ICCApplicationContext appCtx) {
         // do nothing
     }
@@ -77,11 +86,11 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject jop = new JSONObject();
-        jop.put("type", "operator");
-        jop.put("id", getOperatorId().getId().toString());
+        jop.put("id", String.valueOf(getOperatorId()));
         jop.put("java-class", getClass().getName());
         jop.put("in-arity", getInputArity());
         jop.put("out-arity", getOutputArity());
+        jop.put("display-name", displayName);
         return jop;
     }
 }

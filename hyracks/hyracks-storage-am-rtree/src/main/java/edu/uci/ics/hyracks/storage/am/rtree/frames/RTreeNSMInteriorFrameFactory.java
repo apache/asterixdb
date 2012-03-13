@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -23,19 +25,23 @@ public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private final int keyFieldCount;
+    private final IPrimitiveValueProviderFactory[] keyValueProviderFactories;
 
-    public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int keyFieldCount) {
+    public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, IPrimitiveValueProviderFactory[] keyValueProviderFactories) {
         this.tupleWriterFactory = tupleWriterFactory;
-        if (keyFieldCount % 2 != 0) {
+        if (keyValueProviderFactories.length % 2 != 0) {
             throw new IllegalArgumentException("The key has different number of dimensions.");
         }
-        this.keyFieldCount = keyFieldCount;
+        this.keyValueProviderFactories = keyValueProviderFactories;
     }
 
     @Override
     public IRTreeInteriorFrame createFrame() {
-        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyFieldCount);
+        IPrimitiveValueProvider[] keyValueProviders = new IPrimitiveValueProvider[keyValueProviderFactories.length];
+        for (int i = 0; i < keyValueProviders.length; i++) {
+            keyValueProviders[i] = keyValueProviderFactories[i].createPrimitiveValueProvider();
+        }
+        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders);
     }
 
 	@Override

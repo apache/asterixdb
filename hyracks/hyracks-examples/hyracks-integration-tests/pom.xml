@@ -2,12 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples</groupId>
   <artifactId>hyracks-integration-tests</artifactId>
-  <version>0.1.9-SNAPSHOT</version>
-
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.1.9-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -19,14 +17,6 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkMode>pertest</forkMode>
-          <argLine>-enableassertions</argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -42,51 +32,56 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-invertedindex</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-rtree</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.1.9-SNAPSHOT</version>
+  		<version>0.2.0-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>test</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-data-std</artifactId>
+  		<version>0.2.0-SNAPSHOT</version>
   	</dependency>
   </dependencies>
 </project>

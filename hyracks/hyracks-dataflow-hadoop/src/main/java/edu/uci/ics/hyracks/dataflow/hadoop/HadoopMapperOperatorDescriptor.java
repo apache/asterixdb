@@ -34,13 +34,12 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
@@ -56,7 +55,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         protected OutputCollector<K2, V2> output;
         protected Reporter reporter;
         protected Object mapper;
-        //protected Mapper<K1, V1, K2, V2> mapper;
+        // protected Mapper<K1, V1, K2, V2> mapper;
         protected int partition;
         protected JobConf conf;
         protected IOpenableDataWriter<Object[]> writer;
@@ -96,7 +95,8 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 if (!conf.getUseNewMapper()) {
                     ((org.apache.hadoop.mapred.Mapper) mapper).close();
                 } else {
-                    // do nothing. closing the mapper is handled internally by run method on context. 
+                    // do nothing. closing the mapper is handled internally by
+                    // run method on context.
                 }
             } catch (IOException ioe) {
                 throw new HyracksDataException(ioe);
@@ -115,6 +115,11 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         public void close() throws HyracksDataException {
             super.closeMapper();
             writer.close();
+        }
+
+        @Override
+        public void fail() throws HyracksDataException {
+            writer.fail();
         }
 
         @Override
@@ -172,16 +177,18 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 } else if (splitRead instanceof org.apache.hadoop.mapreduce.lib.input.FileSplit) {
                     conf.set("map.input.file", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getPath()
                             .toString());
-                    conf.setLong("map.input.start", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead)
-                            .getStart());
-                    conf.setLong("map.input.length", ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead)
-                            .getLength());
+                    conf.setLong("map.input.start",
+                            ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getStart());
+                    conf.setLong("map.input.length",
+                            ((org.apache.hadoop.mapreduce.lib.input.FileSplit) splitRead).getLength());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                // we do not throw the exception here as we are setting additional parameters that may not be 
-                // required by the mapper. If they are  indeed required,  the configure method invoked on the mapper
-                // shall report an exception because of the missing parameters. 
+                // we do not throw the exception here as we are setting
+                // additional parameters that may not be
+                // required by the mapper. If they are indeed required, the
+                // configure method invoked on the mapper
+                // shall report an exception because of the missing parameters.
             }
         }
 
@@ -223,7 +230,9 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                             data[1] = value;
                             writer.writeData(data);
                         }
-                    };;;
+                    };
+                    ;
+                    ;
 
                     OutputCommitter outputCommitter = new org.apache.hadoop.mapreduce.lib.output.NullOutputFormat()
                             .getOutputCommitter(new TaskAttemptContext(conf, new TaskAttemptID()));
@@ -245,7 +254,9 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                         public Counter getCounter(Enum<?> arg0) {
                             return null;
                         }
-                    };;;
+                    };
+                    ;
+                    ;
                     context = new org.apache.hadoop.mapreduce.Mapper().new Context(conf, new TaskAttemptID(),
                             newReader, recordWriter, outputCommitter, statusReporter,
                             (org.apache.hadoop.mapreduce.InputSplit) inputSplit);
@@ -315,9 +326,9 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         String mapOutputValueClassName = conf.getMapOutputValueClass().getName();
         try {
             if (hadoopClassFactory == null) {
-                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) Class
-                        .forName(mapOutputKeyClassName), (Class<? extends Writable>) Class
-                        .forName(mapOutputValueClassName));
+                recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
+                        (Class<? extends Writable>) Class.forName(mapOutputKeyClassName),
+                        (Class<? extends Writable>) Class.forName(mapOutputValueClassName));
             } else {
                 recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                         (Class<? extends Writable>) hadoopClassFactory.loadClass(mapOutputKeyClassName),
@@ -361,13 +372,13 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         } else {
             Class inputFormatClass = conf.getInputFormat().getClass();
             InputFormat inputFormat = (InputFormat) ReflectionUtils.newInstance(inputFormatClass, conf);
-            return inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit) inputSplit, conf, super
-                    .createReporter());
+            return inputFormat.getRecordReader((org.apache.hadoop.mapred.InputSplit) inputSplit, conf,
+                    super.createReporter());
         }
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
 
         JobConf conf = getJobConf();
@@ -398,17 +409,17 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                             (Class<? extends Writable>) oldReader.createKey().getClass(),
                             (Class<? extends Writable>) oldReader.createValue().getClass());
                 }
-                return createSelfReadingMapper(ctx, env, recordDescriptor, partition);
+                return createSelfReadingMapper(ctx, recordDescriptor, partition);
             } else {
-                return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition), recordDescProvider
-                        .getInputRecordDescriptor(this.odId, 0));
+                return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition),
+                        recordDescProvider.getInputRecordDescriptor(this.odId, 0));
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }
 
-    private IOperatorNodePushable createSelfReadingMapper(final IHyracksStageletContext ctx, IOperatorEnvironment env,
+    private IOperatorNodePushable createSelfReadingMapper(final IHyracksTaskContext ctx,
             final RecordDescriptor recordDescriptor, final int partition) {
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             @Override
@@ -418,9 +429,11 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 try {
                     readMapOp.mapInput();
                 } catch (Exception e) {
+                    writer.fail();
                     throw new HyracksDataException(e);
+                } finally {
+                    readMapOp.close();
                 }
-                readMapOp.close();
             }
         };
     }

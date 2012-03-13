@@ -19,28 +19,31 @@ import java.io.DataOutput;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.DoubleBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -48,30 +51,26 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStats;
-import edu.uci.ics.hyracks.storage.am.common.utility.TreeIndexStatsGatherer;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
+import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class RTreeTest extends AbstractRTreeTest {
-
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    private IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     // create an R-tree of two dimensions
     // fill the R-tree with random values using insertions
@@ -90,36 +89,34 @@ public class RTreeTest extends AbstractRTreeTest {
         // declare keys
         int keyFieldCount = 4;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
         cmps[1] = cmps[0];
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
 
         // declare tuple fields
         int fieldCount = 7;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = new TypeTrait(8);
-        typeTraits[1] = new TypeTrait(8);
-        typeTraits[2] = new TypeTrait(8);
-        typeTraits[3] = new TypeTrait(8);
-        typeTraits[4] = new TypeTrait(8);
-        typeTraits[5] = new TypeTrait(4);
-        typeTraits[6] = new TypeTrait(8);
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = DoublePointable.TYPE_TRAITS;
+        typeTraits[1] = DoublePointable.TYPE_TRAITS;
+        typeTraits[2] = DoublePointable.TYPE_TRAITS;
+        typeTraits[3] = DoublePointable.TYPE_TRAITS;
+        typeTraits[4] = DoublePointable.TYPE_TRAITS;
+        typeTraits[5] = DoublePointable.TYPE_TRAITS;
+        typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        // declare value providers
-        IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-        valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
-        valueProviders[1] = valueProviders[0];
-        valueProviders[2] = valueProviders[0];
-        valueProviders[3] = valueProviders[0];
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                cmps.length, DoublePointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps, valueProviders);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
+                valueProviderFactories);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -127,13 +124,13 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        rtree.create(fileId, leafFrame, metaFrame);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        rtree.create(fileId);
         rtree.open(fileId);
 
         ByteBuffer hyracksFrame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         @SuppressWarnings("rawtypes")
@@ -146,7 +143,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -185,36 +182,40 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
-                        + " " + Math.max(p1y, p2y) + "\n");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+                }
             }
 
             try {
-                rtree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.err.println();
-
         String rtreeStats = rtree.printStats();
-        print(rtreeStats);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(rtreeStats);
+        }
 
         // disk-order scan
-        print("DISK-ORDER SCAN:\n");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DISK-ORDER SCAN:");
+        }
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
-        RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN, leafFrame, null, null);
-        rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
+        indexAccessor.diskOrderScan(diskOrderCursor);
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -226,7 +227,9 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.err.println(string);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(string);
+        }
 
         rtree.close();
         bufferCache.closeFile(fileId);
@@ -251,36 +254,34 @@ public class RTreeTest extends AbstractRTreeTest {
         // declare keys
         int keyFieldCount = 4;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
         cmps[1] = cmps[0];
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
 
         // declare tuple fields
         int fieldCount = 7;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = new TypeTrait(8);
-        typeTraits[1] = new TypeTrait(8);
-        typeTraits[2] = new TypeTrait(8);
-        typeTraits[3] = new TypeTrait(8);
-        typeTraits[4] = new TypeTrait(8);
-        typeTraits[5] = new TypeTrait(4);
-        typeTraits[6] = new TypeTrait(8);
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = DoublePointable.TYPE_TRAITS;
+        typeTraits[1] = DoublePointable.TYPE_TRAITS;
+        typeTraits[2] = DoublePointable.TYPE_TRAITS;
+        typeTraits[3] = DoublePointable.TYPE_TRAITS;
+        typeTraits[4] = DoublePointable.TYPE_TRAITS;
+        typeTraits[5] = DoublePointable.TYPE_TRAITS;
+        typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        // declare value providers
-        IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-        valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
-        valueProviders[1] = valueProviders[0];
-        valueProviders[2] = valueProviders[0];
-        valueProviders[3] = valueProviders[0];
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                cmps.length, DoublePointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps, valueProviders);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
+                valueProviderFactories);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -288,13 +289,13 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        rtree.create(fileId, leafFrame, metaFrame);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        rtree.create(fileId);
         rtree.open(fileId);
 
         ByteBuffer hyracksFrame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         @SuppressWarnings("rawtypes")
@@ -307,7 +308,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -344,26 +345,26 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
-                        + " " + Math.max(p1y, p2y) + "\n");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+                }
             }
 
             try {
-                rtree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.err.println();
-
         String rtreeStats = rtree.printStats();
-        print(rtreeStats);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(rtreeStats);
+        }
 
-        RTreeOpContext deleteOpCtx = rtree.createOpContext(IndexOp.DELETE, leafFrame, interiorFrame, metaFrame);
         rnd.setSeed(50);
         for (int i = 0; i < 5000; i++) {
 
@@ -397,14 +398,15 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                print("DELETING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
-                        + " " + Math.max(p1y, p2y) + "\n");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("DELETING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+                }
             }
 
             try {
-                rtree.delete(tuple, deleteOpCtx);
-
+                indexAccessor.delete(tuple);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
@@ -415,7 +417,9 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.err.println(string);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(string);
+        }
 
         rtree.close();
         bufferCache.closeFile(fileId);
@@ -440,7 +444,7 @@ public class RTreeTest extends AbstractRTreeTest {
         // declare keys
         int keyFieldCount = 6;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY).createBinaryComparator();
         cmps[1] = cmps[0];
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
@@ -449,33 +453,29 @@ public class RTreeTest extends AbstractRTreeTest {
 
         // declare tuple fields
         int fieldCount = 9;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = new TypeTrait(8);
-        typeTraits[1] = new TypeTrait(8);
-        typeTraits[2] = new TypeTrait(8);
-        typeTraits[3] = new TypeTrait(8);
-        typeTraits[4] = new TypeTrait(8);
-        typeTraits[5] = new TypeTrait(8);
-        typeTraits[6] = new TypeTrait(8);
-        typeTraits[7] = new TypeTrait(4);
-        typeTraits[8] = new TypeTrait(8);
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = DoublePointable.TYPE_TRAITS;
+        typeTraits[1] = DoublePointable.TYPE_TRAITS;
+        typeTraits[2] = DoublePointable.TYPE_TRAITS;
+        typeTraits[3] = DoublePointable.TYPE_TRAITS;
+        typeTraits[4] = DoublePointable.TYPE_TRAITS;
+        typeTraits[5] = DoublePointable.TYPE_TRAITS;
+        typeTraits[6] = DoublePointable.TYPE_TRAITS;
+        typeTraits[7] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[8] = DoublePointable.TYPE_TRAITS;
 
-        // declare value providers
-        IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-        valueProviders[0] = DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
-        valueProviders[1] = valueProviders[0];
-        valueProviders[2] = valueProviders[0];
-        valueProviders[3] = valueProviders[0];
-        valueProviders[4] = valueProviders[0];
-        valueProviders[5] = valueProviders[0];
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                cmps.length, DoublePointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps, valueProviders);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
+                valueProviderFactories);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -483,13 +483,13 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        rtree.create(fileId, leafFrame, metaFrame);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        rtree.create(fileId);
         rtree.open(fileId);
 
         ByteBuffer hyracksFrame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         @SuppressWarnings("rawtypes")
@@ -503,7 +503,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -546,36 +546,41 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.min(p1z, p2z)
-                        + " " + " " + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y) + " " + Math.max(p1z, p2z) + "\n");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                            + Math.min(p1z, p2z) + " " + " " + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y) + " "
+                            + Math.max(p1z, p2z));
+                }
             }
 
             try {
-                rtree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.err.println();
-
         String rtreeStats = rtree.printStats();
-        print(rtreeStats);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(rtreeStats);
+        }
 
         // disk-order scan
-        print("DISK-ORDER SCAN:\n");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DISK-ORDER SCAN:");
+        }
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
-        RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN, leafFrame, null, null);
-        rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
+        indexAccessor.diskOrderScan(diskOrderCursor);
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -587,7 +592,9 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.err.println(string);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(string);
+        }
 
         rtree.close();
         bufferCache.closeFile(fileId);
@@ -612,36 +619,34 @@ public class RTreeTest extends AbstractRTreeTest {
         // declare keys
         int keyFieldCount = 4;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         cmps[1] = cmps[0];
         cmps[2] = cmps[0];
         cmps[3] = cmps[0];
 
         // declare tuple fields
         int fieldCount = 7;
-        ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
-        typeTraits[0] = new TypeTrait(4);
-        typeTraits[1] = new TypeTrait(4);
-        typeTraits[2] = new TypeTrait(4);
-        typeTraits[3] = new TypeTrait(4);
-        typeTraits[4] = new TypeTrait(8);
-        typeTraits[5] = new TypeTrait(4);
-        typeTraits[6] = new TypeTrait(8);
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[3] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[4] = DoublePointable.TYPE_TRAITS;
+        typeTraits[5] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[6] = DoublePointable.TYPE_TRAITS;
 
-        // declare value providers
-        IPrimitiveValueProvider[] valueProviders = new IPrimitiveValueProvider[keyFieldCount];
-        valueProviders[0] = IntegerPrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
-        valueProviders[1] = valueProviders[0];
-        valueProviders[2] = valueProviders[0];
-        valueProviders[3] = valueProviders[0];
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                cmps.length, IntegerPointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps, valueProviders);
+        MultiComparator cmp = new MultiComparator(cmps);
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                keyFieldCount);
-        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory, keyFieldCount);
+                valueProviderFactories);
+        ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
+                valueProviderFactories);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
 
@@ -649,13 +654,13 @@ public class RTreeTest extends AbstractRTreeTest {
         IRTreeFrame leafFrame = (IRTreeFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        rtree.create(fileId, leafFrame, metaFrame);
+        RTree rtree = new RTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        rtree.create(fileId);
         rtree.open(fileId);
 
         ByteBuffer hyracksFrame = ctx.allocateFrame();
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         @SuppressWarnings("rawtypes")
@@ -668,7 +673,7 @@ public class RTreeTest extends AbstractRTreeTest {
         accessor.reset(hyracksFrame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        RTreeOpContext insertOpCtx = rtree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -707,36 +712,40 @@ public class RTreeTest extends AbstractRTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (i % 1000 == 0) {
-                print("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " " + Math.max(p1x, p2x)
-                        + " " + Math.max(p1y, p2y) + "\n");
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("INSERTING " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
+                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y));
+                }
             }
 
             try {
-                rtree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // rtree.printTree(leafFrame, interiorFrame, recDescSers);
-        // System.err.println();
-
         String rtreeStats = rtree.printStats();
-        print(rtreeStats);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(rtreeStats);
+        }
 
         // disk-order scan
-        print("DISK-ORDER SCAN:\n");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("DISK-ORDER SCAN:");
+        }
         TreeDiskOrderScanCursor diskOrderCursor = new TreeDiskOrderScanCursor(leafFrame);
-        RTreeOpContext diskOrderScanOpCtx = rtree.createOpContext(IndexOp.DISKORDERSCAN, leafFrame, null, null);
-        rtree.diskOrderScan(diskOrderCursor, leafFrame, metaFrame, diskOrderScanOpCtx);
+        indexAccessor.diskOrderScan(diskOrderCursor);
         try {
             while (diskOrderCursor.hasNext()) {
                 diskOrderCursor.next();
                 ITupleReference frameTuple = diskOrderCursor.getTuple();
-                String rec = cmp.printTuple(frameTuple, recDescSers);
-                print(rec + "\n");
+                String rec = TupleUtils.printTuple(frameTuple, recDescSers);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(rec);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -748,7 +757,9 @@ public class RTreeTest extends AbstractRTreeTest {
                 rtree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         String string = stats.toString();
-        System.err.println(string);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(string);
+        }
 
         rtree.close();
         bufferCache.closeFile(fileId);

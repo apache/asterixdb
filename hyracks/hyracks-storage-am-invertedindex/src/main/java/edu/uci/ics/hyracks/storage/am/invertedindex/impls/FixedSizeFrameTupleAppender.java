@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class FixedSizeFrameTupleAppender {
 
@@ -29,11 +29,11 @@ public class FixedSizeFrameTupleAppender {
     private int tupleCount;
     private int tupleDataEndOffset;
 
-    public FixedSizeFrameTupleAppender(int frameSize, ITypeTrait[] fields) {
+    public FixedSizeFrameTupleAppender(int frameSize, ITypeTraits[] fields) {
         this.frameSize = frameSize;
         int tmp = 0;
         for (int i = 0; i < fields.length; i++) {
-            tmp += fields[i].getStaticallyKnownDataLength();
+            tmp += fields[i].getFixedLength();
         }
         tupleSize = tmp;
     }

@@ -19,6 +19,7 @@ import java.io.File;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -32,7 +33,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.union.UnionAllOperatorDescriptor;
 
 public class UnionTest extends AbstractIntegrationTest {
@@ -64,7 +65,10 @@ public class UnionTest extends AbstractIntegrationTest {
         UnionAllOperatorDescriptor unionAll = new UnionAllOperatorDescriptor(spec, 2, desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, unionAll, NC2_ID, NC1_ID);
 
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] {
+                new FileSplit(NC2_ID, createTempFile().getAbsolutePath()),
+                new FileSplit(NC1_ID, createTempFile().getAbsolutePath()) });
+        IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), csvScanner01, 0, unionAll, 0);

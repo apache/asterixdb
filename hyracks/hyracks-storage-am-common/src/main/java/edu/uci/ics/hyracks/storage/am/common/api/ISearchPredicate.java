@@ -20,7 +20,7 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface ISearchPredicate extends Serializable {
-    public MultiComparator getLowKeyComparator();
+	public MultiComparator getLowKeyComparator();
 
-    public MultiComparator getHighKeyComparator();
+	public MultiComparator getHighKeyComparator();
 }

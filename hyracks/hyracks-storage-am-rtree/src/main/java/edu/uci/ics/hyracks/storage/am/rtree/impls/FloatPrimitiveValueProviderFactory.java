@@ -18,21 +18,22 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeser
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 
-public class FloatPrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
-    private static final long serialVersionUID = 1L;
+public class FloatPrimitiveValueProviderFactory implements
+		IPrimitiveValueProviderFactory {
+	private static final long serialVersionUID = 1L;
 
-    public static final FloatPrimitiveValueProviderFactory INSTANCE = new FloatPrimitiveValueProviderFactory();
+	public static final FloatPrimitiveValueProviderFactory INSTANCE = new FloatPrimitiveValueProviderFactory();
 
-    private FloatPrimitiveValueProviderFactory() {
-    }
+	private FloatPrimitiveValueProviderFactory() {
+	}
 
-    @Override
-    public IPrimitiveValueProvider createPrimitiveValueProvider() {
-        return new IPrimitiveValueProvider() {
-            @Override
-            public double getValue(byte[] bytes, int offset) {
-                return FloatSerializerDeserializer.getFloat(bytes, offset);
-            }
-        };
-    }
+	@Override
+	public IPrimitiveValueProvider createPrimitiveValueProvider() {
+		return new IPrimitiveValueProvider() {
+			@Override
+			public double getValue(byte[] bytes, int offset) {
+				return FloatSerializerDeserializer.getFloat(bytes, offset);
+			}
+		};
+	}
 }

@@ -18,35 +18,35 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 
 public class TupleEntry implements Comparable<TupleEntry> {
-    private int tupleIndex;
-    private double value;
+	private int tupleIndex;
+	private double value;
 
-    public TupleEntry() {
-    }
+	public TupleEntry() {
+	}
 
-    public int getTupleIndex() {
-        return tupleIndex;
-    }
+	public int getTupleIndex() {
+		return tupleIndex;
+	}
 
-    public void setTupleIndex(int tupleIndex) {
-        this.tupleIndex = tupleIndex;
-    }
+	public void setTupleIndex(int tupleIndex) {
+		this.tupleIndex = tupleIndex;
+	}
 
-    public double getValue() {
-        return value;
-    }
+	public double getValue() {
+		return value;
+	}
 
-    public void setValue(double value) {
-        this.value = value;
-    }
+	public void setValue(double value) {
+		this.value = value;
+	}
 
-    public int compareTo(TupleEntry tupleEntry) {
-        double cmp = this.getValue() - tupleEntry.getValue();
-        if (cmp > RTreeNSMFrame.doubleEpsilon())
-            return 1;
-        cmp = tupleEntry.getValue() - this.getValue();
-        if (cmp > RTreeNSMFrame.doubleEpsilon())
-            return -1;
-        return 0;
-    }
+	public int compareTo(TupleEntry tupleEntry) {
+		double cmp = this.getValue() - tupleEntry.getValue();
+		if (cmp > RTreeNSMFrame.doubleEpsilon())
+			return 1;
+		cmp = tupleEntry.getValue() - this.getValue();
+		if (cmp > RTreeNSMFrame.doubleEpsilon())
+			return -1;
+		return 0;
+	}
 }

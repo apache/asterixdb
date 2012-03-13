@@ -3,7 +3,7 @@ package edu.uci.ics.hyracks.dataflow.std.structures;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * An entry in the table is: #elements, #no-empty elements; fIndex, tIndex;
@@ -17,14 +17,14 @@ public class SerializableHashTable implements ISerializableTable {
     private IntSerDeBuffer[] headers;
     private List<IntSerDeBuffer> contents = new ArrayList<IntSerDeBuffer>();
     private List<Integer> frameCurrentIndex = new ArrayList<Integer>();
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private int frameCapacity = 0;
     private int currentLargestFrameIndex = 0;
     private int tupleCount = 0;
     private int headerFrameCount = 0;
     private TuplePointer tempTuplePointer = new TuplePointer();
 
-    public SerializableHashTable(int tableSize, final IHyracksStageletContext ctx) {
+    public SerializableHashTable(int tableSize, final IHyracksTaskContext ctx) {
         this.ctx = ctx;
         int frameSize = ctx.getFrameSize();
 

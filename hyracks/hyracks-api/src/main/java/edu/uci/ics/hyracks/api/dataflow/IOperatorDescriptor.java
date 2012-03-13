@@ -20,9 +20,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.constraints.IConstraintExpressionAcceptor;
+import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobPlan;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 
 /**
  * Descriptor for operators in Hyracks.
@@ -59,12 +59,13 @@ public interface IOperatorDescriptor extends Serializable {
     public RecordDescriptor[] getOutputRecordDescriptors();
 
     /**
-     * Contributes the activity graph that describes the behavior of this operator.
+     * Contributes the activity graph that describes the behavior of this
+     * operator.
      * 
      * @param builder
      *            - graph builder
      */
-    public void contributeTaskGraph(IActivityGraphBuilder builder);
+    public void contributeActivities(IActivityGraphBuilder builder);
 
     /**
      * Contributes any scheduling constraints imposed by this operator.
@@ -74,8 +75,18 @@ public interface IOperatorDescriptor extends Serializable {
      * @param plan
      *            - Job Plan
      */
-    public void contributeSchedulingConstraints(IConstraintExpressionAcceptor constraintAcceptor, JobPlan plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
             ICCApplicationContext appCtx);
+
+    /**
+     * Gets the display name.
+     */
+    public String getDisplayName();
+
+    /**
+     * Sets the display name.
+     */
+    public void setDisplayName(String displayName);
 
     /**
      * Translates this operator descriptor to JSON.

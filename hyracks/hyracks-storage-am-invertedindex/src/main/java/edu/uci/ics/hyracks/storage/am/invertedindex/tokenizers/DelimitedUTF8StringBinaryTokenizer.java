@@ -19,7 +19,7 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
 
@@ -31,8 +31,8 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
     @Override
     public boolean hasNext() {
         // skip delimiters
-        while (index < length && isSeparator(StringUtils.charAt(data, index))) {
-            index += StringUtils.charSize(data, index);
+        while (index < length && isSeparator(UTF8StringPointable.charAt(data, index))) {
+            index += UTF8StringPointable.charSize(data, index);
         }
         return index < length;
     }
@@ -45,8 +45,8 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
     public void next() {
         tokenLength = 0;
         int currentTokenStart = index;
-        while (index < length && !isSeparator(StringUtils.charAt(data, index))) {
-            index += StringUtils.charSize(data, index);
+        while (index < length && !isSeparator(UTF8StringPointable.charAt(data, index))) {
+            index += UTF8StringPointable.charSize(data, index);
             tokenLength++;
         }
         int tokenCount = 1;
@@ -60,11 +60,12 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
                     int currLength = 0;
                     while (currLength < tokenLength) {
                         // case insensitive comparison
-                        if (Character.toLowerCase(StringUtils.charAt(data, currentTokenStart + offset)) != Character.toLowerCase(StringUtils.charAt(data, tokenStart + offset))) {
+                        if (Character.toLowerCase(UTF8StringPointable.charAt(data, currentTokenStart + offset)) != Character
+                                .toLowerCase(UTF8StringPointable.charAt(data, tokenStart + offset))) {
                             tokenCount--;
                             break;
                         }
-                        offset += StringUtils.charSize(data, currentTokenStart + offset);
+                        offset += UTF8StringPointable.charSize(data, currentTokenStart + offset);
                         currLength++;
                     }
                 }

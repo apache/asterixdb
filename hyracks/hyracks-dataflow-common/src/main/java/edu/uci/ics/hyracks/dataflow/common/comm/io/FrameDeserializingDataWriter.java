@@ -52,6 +52,6 @@ public class FrameDeserializingDataWriter implements IFrameWriter {
     }
 
     @Override
-    public void flush() {
+    public void fail() {
     }
 }

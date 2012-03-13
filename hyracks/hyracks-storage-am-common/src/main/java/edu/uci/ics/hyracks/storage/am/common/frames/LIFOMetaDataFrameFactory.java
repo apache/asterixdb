@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 
 public class LIFOMetaDataFrameFactory implements ITreeIndexMetaDataFrameFactory {
-    @Override
-    public ITreeIndexMetaDataFrame createFrame() {
-        return new LIFOMetaDataFrame();
-    }
+	@Override
+	public ITreeIndexMetaDataFrame createFrame() {
+		return new LIFOMetaDataFrame();
+	}
 }

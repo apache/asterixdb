@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 public interface IIndexRegistryProvider<IndexType> extends Serializable {
-    public IndexRegistry<IndexType> getRegistry(IHyracksStageletContext ctx);
+	public IndexRegistry<IndexType> getRegistry(IHyracksTaskContext ctx);
 }

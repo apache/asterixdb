@@ -20,32 +20,32 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class RTreeCursorInitialState implements ICursorInitialState {
 
-    private PathList pathList;
-    private int rootPage;
-    private ICachedPage page; // for disk order scan
+	private PathList pathList;
+	private int rootPage;
+	private ICachedPage page; // for disk order scan
 
-    public RTreeCursorInitialState(PathList pathList, int rootPage) {
-        this.pathList = pathList;
-        this.rootPage = rootPage;
-    }
+	public RTreeCursorInitialState(PathList pathList, int rootPage) {
+		this.pathList = pathList;
+		this.rootPage = rootPage;
+	}
 
-    public PathList getPathList() {
-        return pathList;
-    }
+	public PathList getPathList() {
+		return pathList;
+	}
 
-    public int getRootPage() {
-        return rootPage;
-    }
+	public int getRootPage() {
+		return rootPage;
+	}
 
-    public void setRootPage(int rootPage) {
-        this.rootPage = rootPage;
-    }
+	public void setRootPage(int rootPage) {
+		this.rootPage = rootPage;
+	}
 
-    public ICachedPage getPage() {
-        return page;
-    }
+	public ICachedPage getPage() {
+		return page;
+	}
 
-    public void setPage(ICachedPage page) {
-        this.page = page;
-    }
+	public void setPage(ICachedPage page) {
+		this.page = page;
+	}
 }

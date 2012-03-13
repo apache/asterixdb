@@ -33,7 +33,6 @@ public class SelectionTreeTest {
         int last = Integer.MIN_VALUE;
         while ((e = tree.peek()) != null) {
             MergeEntry me = (MergeEntry) e;
-            System.err.print(me.i + " ");
             if (me.i < last) {
                 Assert.fail();
             }

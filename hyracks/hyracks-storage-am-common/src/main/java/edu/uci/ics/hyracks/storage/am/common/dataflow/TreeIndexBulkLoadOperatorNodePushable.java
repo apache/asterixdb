@@ -16,31 +16,31 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private float fillFactor;
-    private final TreeIndexOpHelper treeIndexOpHelper;
+    private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
     private IIndexBulkLoadContext bulkLoadCtx;
+    private ITreeIndex treeIndex;
 
     private IRecordDescriptorProvider recordDescProvider;
 
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksStageletContext ctx, int partition, int[] fieldPermutation, float fillFactor,
-            IRecordDescriptorProvider recordDescProvider) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.CREATE);
+    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+                opDesc, ctx, partition, true);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -48,19 +48,18 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexOpHelper
+        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
                 .getOperatorDescriptor();
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksStageletContext().getFrameSize(), recDesc);
-        ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
+        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
         try {
-            treeIndexOpHelper.init();
-            treeIndexOpHelper.getTreeIndex().open(treeIndexOpHelper.getIndexFileId());
-            bulkLoadCtx = treeIndexOpHelper.getTreeIndex().beginBulkLoad(fillFactor, treeIndexOpHelper.getLeafFrame(),
-                    treeIndexOpHelper.getInteriorFrame(), metaFrame);
+            treeIndexHelper.init();
+            treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
+            treeIndex.open(treeIndexHelper.getIndexFileId());
+            bulkLoadCtx = treeIndex.beginBulkLoad(fillFactor);
         } catch (Exception e) {
             // cleanup in case of failure
-            treeIndexOpHelper.deinit();
+            treeIndexHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
@@ -71,20 +70,26 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            treeIndexOpHelper.getTreeIndex().bulkLoadAddTuple(bulkLoadCtx, tuple);
+            try {
+                treeIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
+            } catch (PageAllocationException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 
     @Override
     public void close() throws HyracksDataException {
         try {
-            treeIndexOpHelper.getTreeIndex().endBulkLoad(bulkLoadCtx);
+            treeIndex.endBulkLoad(bulkLoadCtx);
+        } catch (PageAllocationException e) {
+            throw new HyracksDataException(e);
         } finally {
-            treeIndexOpHelper.deinit();
+            treeIndexHelper.deinit();
         }
     }
 
     @Override
-    public void flush() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
     }
 }

@@ -14,22 +14,20 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import java.util.UUID;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.IActivity;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
-import edu.uci.ics.hyracks.api.dataflow.IActivityNode;
-
-public abstract class AbstractActivityNode implements IActivityNode {
+public abstract class AbstractActivityNode implements IActivity {
     private static final long serialVersionUID = 1L;
 
-    protected final ActivityNodeId id;
+    protected final ActivityId id;
 
-    public AbstractActivityNode() {
-        this.id = new ActivityNodeId(getOwner().getOperatorId(), UUID.randomUUID());
+    public AbstractActivityNode(ActivityId id) {
+        this.id = id;
     }
 
     @Override
-    public ActivityNodeId getActivityNodeId() {
+    public ActivityId getActivityId() {
         return id;
     }
 }

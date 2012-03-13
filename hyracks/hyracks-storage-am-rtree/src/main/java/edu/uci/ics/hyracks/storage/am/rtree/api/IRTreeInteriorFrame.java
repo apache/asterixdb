@@ -21,19 +21,23 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.PathList;
 
 public interface IRTreeInteriorFrame extends IRTreeFrame {
 
-    public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
+	public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
 
-    public int getBestChildPageId(MultiComparator cmp);
+	public int getBestChildPageId();
 
-    public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+	public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex,
+			MultiComparator cmp);
 
-    public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp);
+	public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp);
 
-    public int findTupleByPointer(ITupleReference tuple, PathList traverseList, int parentId, MultiComparator cmp);
+	public int findTupleByPointer(ITupleReference tuple, PathList traverseList,
+			int parentId, MultiComparator cmp);
 
-    public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+	public void adjustKey(ITupleReference tuple, int tupleIndex,
+			MultiComparator cmp);
 
-    public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+	public boolean recomputeMBR(ITupleReference tuple, int tupleIndex,
+			MultiComparator cmp);
 
-    public void enlarge(ITupleReference tuple, MultiComparator cmp);
+	public void enlarge(ITupleReference tuple, MultiComparator cmp);
 }

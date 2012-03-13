@@ -15,36 +15,38 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class TreeIndexDropOperatorDescriptor extends
+		AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private IStorageManagerInterface storageManager;
-    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
-    private IFileSplitProvider fileSplitProvider;
+	private IStorageManagerInterface storageManager;
+	private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
+	private IFileSplitProvider fileSplitProvider;
 
-    public TreeIndexDropOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider) {
-        super(spec, 0, 0);
-        this.storageManager = storageManager;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
-        this.fileSplitProvider = fileSplitProvider;
-    }
+	public TreeIndexDropOperatorDescriptor(JobSpecification spec,
+			IStorageManagerInterface storageManager,
+			IIndexRegistryProvider<IIndex> treeIndexRegistryProvider,
+			IFileSplitProvider fileSplitProvider) {
+		super(spec, 0, 0);
+		this.storageManager = storageManager;
+		this.treeIndexRegistryProvider = treeIndexRegistryProvider;
+		this.fileSplitProvider = fileSplitProvider;
+	}
 
-    @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexDropOperatorNodePushable(ctx, storageManager, treeIndexRegistryProvider, fileSplitProvider,
-                partition);
-    }
+	@Override
+	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+			IRecordDescriptorProvider recordDescProvider,
+			int partition, int nPartitions) {
+		return new TreeIndexDropOperatorNodePushable(ctx, storageManager,
+				treeIndexRegistryProvider, fileSplitProvider, partition);
+	}
 }

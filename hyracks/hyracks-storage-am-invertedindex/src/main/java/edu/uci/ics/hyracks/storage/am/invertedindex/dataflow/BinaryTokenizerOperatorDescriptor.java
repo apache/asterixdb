@@ -15,12 +15,11 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -30,26 +29,26 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     private static final long serialVersionUID = 1L;
 
     private final IBinaryTokenizerFactory tokenizerFactory;
-    // fields that will be tokenized
+    // Fields that will be tokenized
     private final int[] tokenFields;
-    // operator will emit these projected fields for each token, e.g., as
+    // operator will append these key fields to each token, e.g., as
     // payload for an inverted list
-    // WARNING: too many projected fields can cause significant data blowup
-    private final int[] projFields;
+    // WARNING: too many key fields can cause significant data blowup.
+    private final int[] keyFields;
 
     public BinaryTokenizerOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
-            IBinaryTokenizerFactory tokenizerFactory, int[] tokenFields, int[] projFields) {
+            IBinaryTokenizerFactory tokenizerFactory, int[] tokenFields, int[] keyFields) {
         super(spec, 1, 1);
         this.tokenizerFactory = tokenizerFactory;
         this.tokenFields = tokenFields;
-        this.projFields = projFields;
+        this.keyFields = keyFields;
         recordDescriptors[0] = recDesc;
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, IOperatorEnvironment env,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
+            int partition, int nPartitions) throws HyracksDataException {
         return new BinaryTokenizerOperatorNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(odId, 0),
-                recordDescriptors[0], tokenizerFactory.createTokenizer(), tokenFields, projFields);
+                recordDescriptors[0], tokenizerFactory.createTokenizer(), tokenFields, keyFields);
     }
 }

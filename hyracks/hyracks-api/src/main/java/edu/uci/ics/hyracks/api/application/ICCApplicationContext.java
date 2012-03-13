@@ -19,13 +19,51 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
+import edu.uci.ics.hyracks.api.job.JobSpecification;
 
+/**
+ * Application Context at the Cluster Controller for an application.
+ * 
+ * @author vinayakb
+ * 
+ */
 public interface ICCApplicationContext extends IApplicationContext {
+    /**
+     * Sets the state that must be distributed by the infrastructure to all the
+     * NC application contects. Any state set by calling thsi method in the
+     * {@link ICCBootstrap#start()} call is made available to all the
+     * {@link INCApplicationContext} objects at each Node Controller. The state
+     * is then available to be inspected by the application at the NC during or
+     * after the {@link INCBootstrap#start()} call.
+     * 
+     * @param state
+     *            The distributed state
+     */
     public void setDistributedState(Serializable state);
 
+    /**
+     * A factory class specific to this application that may accept incoming
+     * {@link JobSpecification} and produce modified {@link JobSpecification}
+     * that is executed on the cluster. If a {@link IJobSpecificationFactory} is
+     * not set, the incoming {@link JobSpecification} is executed unmodified.
+     * 
+     * @param jobSpecFactory
+     *            - The Job Specification Factory.
+     */
     public void setJobSpecificationFactory(IJobSpecificationFactory jobSpecFactory);
 
+    /**
+     * A listener that listens to Job Lifecycle events at the Cluster
+     * Controller.
+     * 
+     * @param jobLifecycleListener
+     */
     public void addJobLifecycleListener(IJobLifecycleListener jobLifecycleListener);
-    
+
+    /**
+     * Get the Cluster Controller Context.
+     * 
+     * @return The Cluster Controller Context.
+     */
     public ICCContext getCCContext();
 }

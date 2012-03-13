@@ -14,18 +14,43 @@
  */
 package edu.uci.ics.hyracks.api.application;
 
-import java.io.Serializable;
-
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 
+/**
+ * Application Context at the Node Controller for an application.
+ * 
+ * @author vinayakb
+ * 
+ */
 public interface INCApplicationContext extends IApplicationContext {
+    /**
+     * Gets the node Id of the Node Congtroller.
+     * 
+     * @return the Node Id.
+     */
     public String getNodeId();
 
+    /**
+     * Get the Hyracks Root Context.
+     * 
+     * @return The Hyracks Root Context
+     */
     public IHyracksRootContext getRootContext();
 
-    public void setDistributedState(Serializable state);
-
+    /**
+     * Set an object that can be later retrieved by the
+     * {@link #getApplicationObject()} call.
+     * 
+     * @param object
+     *            Application Object
+     */
     public void setApplicationObject(Object object);
 
+    /**
+     * Get the application object previously set by the
+     * {@link #setApplicationObject(Object)} call.
+     * 
+     * @return Application Object
+     */
     public Object getApplicationObject();
 }

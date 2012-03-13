@@ -14,44 +14,68 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.misc;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.api.dataflow.ActivityNodeId;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
+    private static final int COLLECT_ACTIVITY_ID = 0;
+    private static final int SPLIT_ACTIVITY_ID = 1;
+
+    public static class CollectTaskState extends AbstractTaskState {
+        private ArrayList<Object[]> buffer;
+
+        public CollectTaskState() {
+        }
+
+        private CollectTaskState(JobId jobId, TaskId taskId) {
+            super(jobId, taskId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+        }
+    }
+
     private class CollectActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public CollectActivity(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public ActivityNodeId getActivityNodeId() {
+        public ActivityId getActivityId() {
             return id;
         }
 
         @Override
-        public IOperatorDescriptor getOwner() {
-            return SplitVectorOperatorDescriptor.this;
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
-                private ArrayList<Object[]> buffer;
+                private CollectTaskState state;
 
                 @Override
                 public void setDataWriter(int index, IOpenableDataWriter<Object[]> writer) {
@@ -60,18 +84,24 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    buffer = new ArrayList<Object[]>();
-                    env.set(BUFFER, buffer);
+                    state = new CollectTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
+                    state.buffer = new ArrayList<Object[]>();
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-
+                    ctx.setTaskState(state);
                 }
 
                 @Override
                 public void writeData(Object[] data) throws HyracksDataException {
-                    buffer.add(data);
+                    state.buffer.add(data);
+                }
+
+                @Override
+                public void fail() throws HyracksDataException {
+
                 }
             };
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
@@ -82,16 +112,17 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
     private class SplitActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return SplitVectorOperatorDescriptor.this;
+        public SplitActivity(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(IHyracksStageletContext ctx, final IOperatorEnvironment env,
-                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             IOpenableDataWriterOperator op = new IOpenableDataWriterOperator() {
                 private IOpenableDataWriter<Object[]> writer;
+
+                private CollectTaskState state;
 
                 @Override
                 public void setDataWriter(int index, IOpenableDataWriter<Object[]> writer) {
@@ -103,6 +134,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
+                    state = (CollectTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                            COLLECT_ACTIVITY_ID), partition));
                 }
 
                 @Override
@@ -111,22 +144,24 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void writeData(Object[] data) throws HyracksDataException {
-                    List<Object[]> buffer = (List<Object[]>) env.get(BUFFER);
-                    int n = buffer.size();
+                    int n = state.buffer.size();
                     int step = (int) Math.floor(n / (float) splits);
                     writer.open();
                     for (int i = 0; i < splits; ++i) {
-                        writer.writeData(buffer.get(step * (i + 1) - 1));
+                        writer.writeData(state.buffer.get(step * (i + 1) - 1));
                     }
                     writer.close();
+                }
+
+                @Override
+                public void fail() throws HyracksDataException {
+                    writer.fail();
                 }
             };
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
                     getOperatorId(), 0));
         }
     }
-
-    private static final String BUFFER = "buffer";
 
     private static final long serialVersionUID = 1L;
 
@@ -139,14 +174,14 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        CollectActivity ca = new CollectActivity();
-        SplitActivity sa = new SplitActivity();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        CollectActivity ca = new CollectActivity(new ActivityId(odId, COLLECT_ACTIVITY_ID));
+        SplitActivity sa = new SplitActivity(new ActivityId(odId, SPLIT_ACTIVITY_ID));
 
-        builder.addTask(ca);
+        builder.addActivity(ca);
         builder.addSourceEdge(0, ca, 0);
 
-        builder.addTask(sa);
+        builder.addActivity(sa);
         builder.addTargetEdge(0, sa, 0);
 
         builder.addBlockingEdge(ca, sa);

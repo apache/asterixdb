@@ -20,17 +20,17 @@
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
 public abstract class AbstractUTF8TokenFactory implements ITokenFactory {
-    private static final long serialVersionUID = 1L;
-    protected final byte tokenTypeTag;
-    protected final byte countTypeTag;
+	private static final long serialVersionUID = 1L;
+	protected final byte tokenTypeTag;
+	protected final byte countTypeTag;
 
-    public AbstractUTF8TokenFactory() {
-        tokenTypeTag = -1;
-        countTypeTag = -1;
-    }
+	public AbstractUTF8TokenFactory() {
+		tokenTypeTag = -1;
+		countTypeTag = -1;
+	}
 
-    public AbstractUTF8TokenFactory(byte tokenTypeTag, byte countTypeTag) {
-        this.tokenTypeTag = tokenTypeTag;
-        this.countTypeTag = countTypeTag;
-    }
+	public AbstractUTF8TokenFactory(byte tokenTypeTag, byte countTypeTag) {
+		this.tokenTypeTag = tokenTypeTag;
+		this.countTypeTag = countTypeTag;
+	}
 }

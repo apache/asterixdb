@@ -14,19 +14,16 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
-import java.util.UUID;
-
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
 
 public interface IHyracksJobletContext extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry {
     public INCApplicationContext getApplicationContext();
 
-    public UUID getJobId();
-
-    public int getAttempt();
+    public JobId getJobId();
 
     public ICounterContext getCounterContext();
 }

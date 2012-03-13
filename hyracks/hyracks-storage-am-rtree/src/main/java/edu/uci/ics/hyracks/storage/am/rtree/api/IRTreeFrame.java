@@ -15,32 +15,25 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.api;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 
-    public ITreeIndexTupleReference createTupleReference();
+	public void computeMBR(ISplitKey splitKey);
 
-    public void computeMBR(ISplitKey splitKey, MultiComparator cmp);
+	public void delete(int tupleIndex, MultiComparator cmp);
 
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
+	public long getPageNsn();
 
-    public void delete(int tupleIndex, MultiComparator cmp) throws Exception;
+	public void setPageNsn(long pageNsn);
 
-    public int getPageNsn();
+	public int getRightPage();
 
-    public void setPageNsn(int pageNsn);
+	public void setRightPage(int rightPage);
 
-    public int getRightPage();
-
-    public void setRightPage(int rightPage);
-
-    public void adjustMBR(ITreeIndexTupleReference[] tuples, MultiComparator cmp);
+	public void adjustMBR(ITreeIndexTupleReference[] tuples);
 
 }

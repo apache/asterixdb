@@ -16,14 +16,13 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -33,12 +32,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private final int[] groupFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
-    private final IAccumulatingAggregatorFactory aggregatorFactory;
+    private final IAggregatorDescriptorFactory aggregatorFactory;
 
     private static final long serialVersionUID = 1L;
 
     public PreclusteredGroupOperatorDescriptor(JobSpecification spec, int[] groupFields,
-            IBinaryComparatorFactory[] comparatorFactories, IAccumulatingAggregatorFactory aggregatorFactory,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.groupFields = groupFields;
@@ -48,15 +47,15 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx, IOperatorEnvironment env,
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         final RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-        final IAccumulatingAggregator aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
-                recordDescriptors[0]);
+        final IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
+                recordDescriptors[0], groupFields, groupFields);
         final ByteBuffer copyFrame = ctx.allocateFrame();
         final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
         copyFrameAccessor.reset(copyFrame);
@@ -68,7 +67,8 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
 
             @Override
             public void open() throws HyracksDataException {
-                pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc, writer);
+                pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
+                        recordDescriptors[0], writer);
                 pgw.open();
             }
 
@@ -78,8 +78,8 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             }
 
             @Override
-            public void flush() throws HyracksDataException {
-                pgw.flush();
+            public void fail() throws HyracksDataException {
+                pgw.fail();
             }
 
             @Override

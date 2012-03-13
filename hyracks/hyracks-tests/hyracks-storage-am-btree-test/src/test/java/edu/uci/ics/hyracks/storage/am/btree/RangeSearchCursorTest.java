@@ -18,126 +18,94 @@ package edu.uci.ics.hyracks.storage.am.btree;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.IntegerBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.test.support.TestUtils;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 
 public class RangeSearchCursorTest extends AbstractBTreeTest {
-    private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-    private static final int MAX_OPEN_FILES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 128;
-
-    // declare fields
+    // Declare fields
     int fieldCount = 2;
-    ITypeTrait[] typeTraits = new ITypeTrait[fieldCount];
+    ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
 
     TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-    ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-    ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
     ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-    IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
-    IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
     ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
-
-    IHyracksStageletContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-    ByteBuffer frame = ctx.allocateFrame();
-    FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-
-    ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
-            IntegerSerializerDeserializer.INSTANCE };
-    RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-    IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
-    FrameTupleReference tuple = new FrameTupleReference();
 
     Random rnd = new Random(50);
 
     @Before
-    public void setUp() {
-        typeTraits[0] = new TypeTrait(4);
-        typeTraits[1] = new TypeTrait(4);
-        accessor.reset(frame);
+    public void setUp() throws HyracksDataException {
+        super.setUp();
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
     }
 
     @Test
     public void uniqueIndexTest() throws Exception {
-
-        LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
-
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON UNIQUE INDEX");
+        }
 
         // declare keys
         int keyFieldCount = 1;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        btree.create(fileId, leafFrame, metaFrame);
-        btree.open(fileId);
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
-        DataOutput dos = tb.getDataOutput();
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
         // generate keys
         int numKeys = 50;
@@ -155,19 +123,11 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         // insert keys into btree
         for (int i = 0; i < keys.size(); i++) {
 
-            tb.reset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(keys.get(i).intValue(), dos);
-            tb.addFieldEndOffset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(i, dos);
-            tb.addFieldEndOffset();
-
-            appender.reset(frame, true);
-            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-
-            tuple.reset(accessor, 0);
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
             try {
-                btree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
@@ -192,41 +152,38 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
 
         btree.close();
-        bufferCache.closeFile(fileId);
-        bufferCache.close();
     }
 
     @Test
     public void nonUniqueIndexTest() throws Exception {
-
-        LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
-
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE INDEX");
+        }
 
         // declare keys
         int keyFieldCount = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        btree.create(fileId, leafFrame, metaFrame);
-        btree.open(fileId);
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
-        DataOutput dos = tb.getDataOutput();
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
         // generate keys
         int numKeys = 50;
@@ -241,19 +198,11 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         // insert keys into btree
         for (int i = 0; i < keys.size(); i++) {
 
-            tb.reset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(keys.get(i).intValue(), dos);
-            tb.addFieldEndOffset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(i, dos);
-            tb.addFieldEndOffset();
-
-            appender.reset(frame, true);
-            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-
-            tuple.reset(accessor, 0);
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
             try {
-                btree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
@@ -278,44 +227,38 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
 
         btree.close();
-        bufferCache.closeFile(fileId);
-        bufferCache.close();
     }
 
     @Test
     public void nonUniqueFieldPrefixIndexTest() throws Exception {
-
-        LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
-
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
-        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
-
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("TESTING RANGE SEARCH CURSOR ON NONUNIQUE FIELD-PREFIX COMPRESSED INDEX");
+        }
 
         // declare keys
         int keyFieldCount = 2;
-        IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        MultiComparator cmp = new MultiComparator(typeTraits, cmps);
+        MultiComparator cmp = IndexUtils.createMultiComparator(cmpFactories);
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, fileId, 0, metaFrameFactory);
+        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmp);
-        btree.create(fileId, leafFrame, metaFrame);
-        btree.open(fileId);
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
 
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(cmp.getFieldCount());
-        DataOutput dos = tb.getDataOutput();
+        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, btreeFileId, 0, metaFrameFactory);
 
-        BTreeOpContext insertOpCtx = btree.createOpContext(IndexOp.INSERT, leafFrame, interiorFrame, metaFrame);
+        BTree btree = new BTree(bufferCache, fieldCount, cmp, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree.create(btreeFileId);
+        btree.open(btreeFileId);
+
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+
+        ITreeIndexAccessor indexAccessor = btree.createAccessor();
 
         // generate keys
         int numKeys = 50;
@@ -330,19 +273,11 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         // insert keys into btree
         for (int i = 0; i < keys.size(); i++) {
 
-            tb.reset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(keys.get(i).intValue(), dos);
-            tb.addFieldEndOffset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(i, dos);
-            tb.addFieldEndOffset();
-
-            appender.reset(frame, true);
-            appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-
-            tuple.reset(accessor, 0);
+            TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
             try {
-                btree.insert(tuple, insertOpCtx);
+                indexAccessor.insert(tuple);
             } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
@@ -367,45 +302,18 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, true, false);
 
         btree.close();
-        bufferCache.closeFile(fileId);
-        bufferCache.close();
     }
 
     public RangePredicate createRangePredicate(int lk, int hk, boolean isForward, boolean lowKeyInclusive,
-            boolean highKeyInclusive, MultiComparator cmp, ITypeTrait[] typeTraits) throws HyracksDataException {
-        // build low and high keys
-        ArrayTupleBuilder ktb = new ArrayTupleBuilder(1);
-        DataOutput kdos = ktb.getDataOutput();
-
-        ISerializerDeserializer[] keyDescSers = { IntegerSerializerDeserializer.INSTANCE };
-        RecordDescriptor keyDesc = new RecordDescriptor(keyDescSers);
-        IFrameTupleAccessor keyAccessor = new FrameTupleAccessor(ctx.getFrameSize(), keyDesc);
-        keyAccessor.reset(frame);
-
-        appender.reset(frame, true);
-
-        // build and append low key
-        ktb.reset();
-        IntegerSerializerDeserializer.INSTANCE.serialize(lk, kdos);
-        ktb.addFieldEndOffset();
-        appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
-
-        // build and append high key
-        ktb.reset();
-        IntegerSerializerDeserializer.INSTANCE.serialize(hk, kdos);
-        ktb.addFieldEndOffset();
-        appender.append(ktb.getFieldEndOffsets(), ktb.getByteArray(), 0, ktb.getSize());
+            boolean highKeyInclusive, MultiComparator cmp) throws HyracksDataException {
 
         // create tuplereferences for search keys
-        FrameTupleReference lowKey = new FrameTupleReference();
-        lowKey.reset(keyAccessor, 0);
-
-        FrameTupleReference highKey = new FrameTupleReference();
-        highKey.reset(keyAccessor, 1);
+        ITupleReference lowKey = TupleUtils.createIntegerTuple(lk);
+        ITupleReference highKey = TupleUtils.createIntegerTuple(hk);
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
-        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-        MultiComparator searchCmp = new MultiComparator(typeTraits, searchCmps);
+        searchCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         RangePredicate rangePred = new RangePredicate(isForward, lowKey, highKey, lowKeyInclusive, highKeyInclusive,
                 searchCmp, searchCmp);
@@ -464,11 +372,11 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
                 int lowKey = i;
                 int highKey = j;
 
-                ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame);
+                ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
                 RangePredicate rangePred = createRangePredicate(lowKey, highKey, isForward, lowKeyInclusive,
-                        highKeyInclusive, btree.getMultiComparator(), btree.getMultiComparator().getTypeTraits());
-                BTreeOpContext searchOpCtx = btree.createOpContext(IndexOp.SEARCH, leafFrame, interiorFrame, null);
-                btree.search(rangeCursor, rangePred, searchOpCtx);
+                        highKeyInclusive, btree.getMultiComparator());
+                ITreeIndexAccessor indexAccessor = btree.createAccessor();
+                indexAccessor.search(rangeCursor, rangePred);
 
                 try {
                     while (rangeCursor.hasNext()) {
@@ -502,27 +410,35 @@ public class RangeSearchCursorTest extends AbstractBTreeTest {
                         else
                             u = ')';
 
-                        LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);
+                        }
                         StringBuilder strBuilder = new StringBuilder();
                         for (Integer r : expectedResults) {
                             strBuilder.append(r + " ");
                         }
-                        LOGGER.info(strBuilder.toString());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info(strBuilder.toString());
+                        }
                     }
                 }
 
                 if (results.size() == expectedResults.size()) {
                     for (int k = 0; k < results.size(); k++) {
                         if (!results.get(k).equals(expectedResults.get(k))) {
-                            LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " j=" + j + " k=" + k);
-                            LOGGER.info(results.get(k) + " " + expectedResults.get(k));
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " j=" + j + " k=" + k);
+                                LOGGER.info(results.get(k) + " " + expectedResults.get(k));
+                            }
                             return false;
                         }
                     }
                 } else {
-                    LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i + " j=" + j);
-                    LOGGER.info("RESULTS: " + results.size());
-                    LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i + " j=" + j);
+                        LOGGER.info("RESULTS: " + results.size());
+                        LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
+                    }
                     return false;
                 }
             }

@@ -16,5 +16,5 @@
 package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 public enum FindTupleNoExactMatchPolicy {
-    FTP_LOWER_KEY, FTP_HIGHER_KEY
+	LOWER_KEY, HIGHER_KEY, NONE
 }

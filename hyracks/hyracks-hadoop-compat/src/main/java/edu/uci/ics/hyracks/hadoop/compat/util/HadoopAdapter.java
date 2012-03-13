@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.dataflow.hadoop.data.WritableComparingBinaryComparato
 import edu.uci.ics.hyracks.dataflow.hadoop.util.ClasspathBasedHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNHashPartitioningConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
@@ -370,13 +370,13 @@ public class HadoopAdapter {
 		return externalSortOp;
 	}
 
-	public static MToNHashPartitioningConnectorDescriptor getMtoNHashPartitioningConnector(
+	public static MToNPartitioningConnectorDescriptor getMtoNHashPartitioningConnector(
 			JobConf conf, JobSpecification spec) {
 
 		Class mapOutputKeyClass = conf.getMapOutputKeyClass();
 		Class mapOutputValueClass = conf.getMapOutputValueClass();
 
-		MToNHashPartitioningConnectorDescriptor connectorDescriptor = null;
+		MToNPartitioningConnectorDescriptor connectorDescriptor = null;
 		ITuplePartitionComputerFactory factory = null;
 		conf.getMapOutputKeyClass();
 		if (conf.getPartitionerClass() != null
@@ -398,7 +398,7 @@ public class HadoopAdapter {
 			factory = new HadoopHashTuplePartitionComputerFactory(
 					mapOutputKeySerializerDerserializer);
 		}
-		connectorDescriptor = new MToNHashPartitioningConnectorDescriptor(spec,
+		connectorDescriptor = new MToNPartitioningConnectorDescriptor(spec,
 				factory);
 		return connectorDescriptor;
 	}

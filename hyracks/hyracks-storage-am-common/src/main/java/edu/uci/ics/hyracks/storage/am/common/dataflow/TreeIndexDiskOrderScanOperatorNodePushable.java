@@ -17,48 +17,44 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOpContext;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private final TreeIndexOpHelper treeIndexOpHelper;
+    private final TreeIndexDataflowHelper treeIndexHelper;
+    private final ITreeIndexOperatorDescriptor opDesc;
+    private ITreeIndex treeIndex;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksStageletContext ctx, int partition) {
-        treeIndexOpHelper = opDesc.getTreeIndexOpHelperFactory().createTreeIndexOpHelper(opDesc, ctx, partition,
-                IndexHelperOpenMode.OPEN);
+            IHyracksTaskContext ctx, int partition) {
+        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+                opDesc, ctx, partition, false);
+        this.opDesc = opDesc;
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-
-        ITreeIndexFrame cursorFrame = treeIndexOpHelper.getOperatorDescriptor().getTreeIndexLeafFactory().createFrame();
-        ITreeIndexCursor cursor = treeIndexOpHelper.createDiskOrderScanCursor(cursorFrame);
-        ITreeIndexMetaDataFrame metaFrame = new LIFOMetaDataFrame();
-
-        IndexOpContext diskOrderScanOpCtx = treeIndexOpHelper.getTreeIndex().createOpContext(IndexOp.DISKORDERSCAN,
-                cursorFrame, null, null);
+        ITreeIndexFrame cursorFrame = opDesc.getTreeIndexLeafFactory().createFrame();
+        ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
         try {
-
-            treeIndexOpHelper.init();
-
+            treeIndexHelper.init();
+            treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
+            ITreeIndexAccessor indexAccessor = treeIndex.createAccessor();
+            writer.open();
             try {
-                treeIndexOpHelper.getTreeIndex().diskOrderScan(cursor, cursorFrame, metaFrame, diskOrderScanOpCtx);
-
-                int fieldCount = treeIndexOpHelper.getTreeIndex().getFieldCount();
-                ByteBuffer frame = treeIndexOpHelper.getHyracksStageletContext().allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksStageletContext()
+                indexAccessor.diskOrderScan(cursor);
+                int fieldCount = treeIndex.getFieldCount();
+                ByteBuffer frame = treeIndexHelper.getHyracksTaskContext().allocateFrame();
+                FrameTupleAppender appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext()
                         .getFrameSize());
                 appender.reset(frame, true);
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
@@ -82,15 +78,16 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                         }
                     }
                 }
-
                 if (appender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(frame, writer);
                 }
+            } catch (Exception e) {
+                writer.fail();
+                throw new HyracksDataException(e);
             } finally {
                 cursor.close();
                 writer.close();
             }
-
         } catch (Exception e) {
             deinitialize();
             throw new HyracksDataException(e);
@@ -99,6 +96,6 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        treeIndexOpHelper.deinit();
+        treeIndexHelper.deinit();
     }
 }

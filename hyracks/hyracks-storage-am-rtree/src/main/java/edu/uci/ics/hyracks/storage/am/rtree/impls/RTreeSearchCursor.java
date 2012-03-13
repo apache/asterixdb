@@ -81,49 +81,60 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     public boolean fetchNextLeafPage() throws HyracksDataException {
+        boolean succeed = false;
         if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
             unpin++;
             readLatched = false;
         }
+
         while (!pathList.isEmpty()) {
             int pageId = pathList.getLastPageId();
-            int parentLsn = pathList.getLastPageLsn();
+            long parentLsn = pathList.getLastPageLsn();
             pathList.moveLast();
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             pin++;
             node.acquireReadLatch();
             readLatched = true;
-            interiorFrame.setPage(node);
-            boolean isLeaf = interiorFrame.isLeaf();
-            int pageLsn = interiorFrame.getPageLsn();
+            try {
+                interiorFrame.setPage(node);
+                boolean isLeaf = interiorFrame.isLeaf();
+                long pageLsn = interiorFrame.getPageLsn();
 
-            if (pageId != rootPage && parentLsn < interiorFrame.getPageNsn()) {
-                // Concurrent split detected, we need to visit the right page
-                int rightPage = interiorFrame.getRightPage();
-                if (rightPage != -1) {
-                    pathList.add(rightPage, parentLsn, -1);
-                }
-            }
-
-            if (!isLeaf) {
-                for (int i = 0; i < interiorFrame.getTupleCount(); i++) {
-                    int childPageId = interiorFrame.getChildPageIdIfIntersect(searchKey, i, cmp);
-                    if (childPageId != -1) {
-                        pathList.add(childPageId, pageLsn, -1);
+                if (pageId != rootPage && parentLsn < interiorFrame.getPageNsn()) {
+                    // Concurrent split detected, we need to visit the right
+                    // page
+                    int rightPage = interiorFrame.getRightPage();
+                    if (rightPage != -1) {
+                        pathList.add(rightPage, parentLsn, -1);
                     }
                 }
-            } else {
-                page = node;
-                leafFrame.setPage(page);
-                tupleIndex = 0;
-                return true;
+
+                if (!isLeaf) {
+                    for (int i = 0; i < interiorFrame.getTupleCount(); i++) {
+                        int childPageId = interiorFrame.getChildPageIdIfIntersect(searchKey, i, cmp);
+                        if (childPageId != -1) {
+                            pathList.add(childPageId, pageLsn, -1);
+                        }
+                    }
+                } else {
+                    page = node;
+                    leafFrame.setPage(page);
+                    tupleIndex = 0;
+                    succeed = true;
+                    return true;
+                }
+            } finally {
+                if (!succeed) {
+                    if (readLatched) {
+                        node.releaseReadLatch();
+                        readLatched = false;
+                        bufferCache.unpin(node);
+                        unpin++;
+                    }
+                }
             }
-            node.releaseReadLatch();
-            readLatched = false;
-            bufferCache.unpin(node);
-            unpin++;
         }
         return false;
     }
@@ -158,7 +169,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws Exception {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         // in case open is called multiple times without closing
         if (this.page != null) {
             this.page.releaseReadLatch();
@@ -186,7 +197,6 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         }
 
         pathList.add(this.rootPage, -1, -1);
-        frameTuple.setFieldCount(cmp.getFieldCount());
         tupleIndex = 0;
         fetchNextLeafPage();
     }
@@ -209,4 +219,9 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     public void setFileId(int fileId) {
         this.fileId = fileId;
     }
+
+	@Override
+	public boolean exclusiveLatchNodes() {
+		return false;
+	}
 }

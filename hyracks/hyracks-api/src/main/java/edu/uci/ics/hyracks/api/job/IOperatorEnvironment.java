@@ -14,8 +14,11 @@
  */
 package edu.uci.ics.hyracks.api.job;
 
-public interface IOperatorEnvironment {
-    public void set(String name, Object value);
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
 
-    public Object get(String name);
+public interface IOperatorEnvironment {
+    public void setTaskState(ITaskState taskState);
+
+    public ITaskState getTaskState(TaskId taskId);
 }

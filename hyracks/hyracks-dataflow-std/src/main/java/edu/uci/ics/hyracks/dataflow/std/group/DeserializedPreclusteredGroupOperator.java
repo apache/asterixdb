@@ -116,4 +116,10 @@ public class DeserializedPreclusteredGroupOperator implements IOpenableDataWrite
         }
         return 0;
     }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        // TODO Auto-generated method stub
+
+    }
 }

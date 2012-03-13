@@ -27,4 +27,6 @@ public interface ITreeIndexTupleReference extends ITupleReference {
     public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset);
 
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
+    
+    public int getTupleSize();
 }

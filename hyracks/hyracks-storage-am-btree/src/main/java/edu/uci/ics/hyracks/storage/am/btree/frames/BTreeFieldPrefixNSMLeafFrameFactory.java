@@ -23,7 +23,7 @@ public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFacto
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-
+    
     public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }

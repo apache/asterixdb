@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface IConnectionDemultiplexer {
     public int getSenderCount();
 
-    public IConnectionEntry findNextReadyEntry(int lastReadSender) throws HyracksDataException;
+    public IConnectionEntry findNextReadyEntry(int lastReadSender);
 
     public void unreadyEntry(int index);
 

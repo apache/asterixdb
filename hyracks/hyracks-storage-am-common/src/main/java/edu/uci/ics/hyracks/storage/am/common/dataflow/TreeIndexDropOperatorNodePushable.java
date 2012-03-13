@@ -19,13 +19,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -33,14 +32,14 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
     private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
 
-    private final IHyracksStageletContext ctx;
-    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+    private final IHyracksTaskContext ctx;
+    private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
     private IStorageManagerInterface storageManager;
     private IFileSplitProvider fileSplitProvider;
     private int partition;
 
-    public TreeIndexDropOperatorNodePushable(IHyracksStageletContext ctx, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+    public TreeIndexDropOperatorNodePushable(IHyracksTaskContext ctx, IStorageManagerInterface storageManager,
+            IIndexRegistryProvider<IIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
             int partition) {
         this.ctx = ctx;
         this.storageManager = storageManager;
@@ -66,31 +65,27 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
     @Override
     public void initialize() throws HyracksDataException {
         try {
-
-            IndexRegistry<ITreeIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
+            IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
             IBufferCache bufferCache = storageManager.getBufferCache(ctx);
             IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
-
+            
             FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-
-            boolean fileIsMapped = fileMapProvider.isMapped(f);
-            if (!fileIsMapped) {
-                throw new HyracksDataException("Cannot drop Tree with name " + f.toString()
-                        + ". No file mapping exists.");
+            int indexFileId = -1;
+            synchronized (fileMapProvider) {
+                boolean fileIsMapped = fileMapProvider.isMapped(f);
+                if (!fileIsMapped) {
+                    throw new HyracksDataException("Cannot drop Tree with name " + f.toString()
+                            + ". No file mapping exists.");
+                }
+                indexFileId = fileMapProvider.lookupFileId(f);
             }
-
-            int indexFileId = fileMapProvider.lookupFileId(f);
-
-            // unregister tree instance
-            treeIndexRegistry.lock();
-            try {
+            // Unregister tree instance.
+            synchronized (treeIndexRegistry) {
                 treeIndexRegistry.unregister(indexFileId);
-            } finally {
-                treeIndexRegistry.unlock();
             }
 
             // remove name to id mapping
-            bufferCache.deleteFile(indexFileId);
+            bufferCache.deleteFile(indexFileId, false);
         }
         // TODO: for the time being we don't throw,
         // with proper exception handling (no hanging job problem) we should

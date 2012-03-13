@@ -15,19 +15,21 @@
 package edu.uci.ics.hyracks.dataflow.std.connectors;
 
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
-import edu.uci.ics.hyracks.api.comm.IConnectionDemultiplexer;
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
-import edu.uci.ics.hyracks.api.dataflow.IEndpointDataWriterFactory;
+import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
+import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.comm.NonDeterministicFrameReader;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 
-public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescriptor {
+public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     public MToNReplicatingConnectorDescriptor(JobSpecification spec) {
         super(spec);
     }
@@ -35,8 +37,8 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IFrameWriter createSendSideWriter(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
-            IEndpointDataWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
+    public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
+            IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
         for (int i = 0; i < nConsumerPartitions; ++i) {
@@ -55,6 +57,13 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
             }
 
             @Override
+            public void fail() throws HyracksDataException {
+                for (int i = 0; i < epWriters.length; ++i) {
+                    epWriters[i].fail();
+                }
+            }
+
+            @Override
             public void close() throws HyracksDataException {
                 for (int i = 0; i < epWriters.length; ++i) {
                     epWriters[i].close();
@@ -67,20 +76,17 @@ public class MToNReplicatingConnectorDescriptor extends AbstractConnectorDescrip
                     epWriters[i].open();
                 }
             }
-
-            @Override
-            public void flush() throws HyracksDataException {
-                for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].flush();
-                }
-            }
         };
     }
 
     @Override
-    public IFrameReader createReceiveSideReader(IHyracksStageletContext ctx, RecordDescriptor recordDesc,
-            IConnectionDemultiplexer demux, int index, int nProducerPartitions, int nConsumerPartitions)
-            throws HyracksDataException {
-        return new NonDeterministicFrameReader(ctx, demux);
+    public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
+            int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
+        BitSet expectedPartitions = new BitSet(nProducerPartitions);
+        expectedPartitions.set(0, nProducerPartitions);
+        NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
+                expectedPartitions);
+        NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
+        return new PartitionCollector(ctx, getConnectorId(), index, expectedPartitions, frameReader, channelReader);
     }
 }

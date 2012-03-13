@@ -19,16 +19,27 @@ import java.io.Serializable;
 public class ClusterControllerInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int webPort;
+    private final String clientNetAddress;
 
-    public ClusterControllerInfo() {
-    }
+    private final int clientNetPort;
 
-    public void setWebPort(int webPort) {
+    private final int webPort;
+
+    public ClusterControllerInfo(String clientNetAddress, int clientNetPort, int webPort) {
+        this.clientNetAddress = clientNetAddress;
+        this.clientNetPort = clientNetPort;
         this.webPort = webPort;
     }
 
     public int getWebPort() {
         return webPort;
+    }
+
+    public String getClientNetAddress() {
+        return clientNetAddress;
+    }
+
+    public int getClientNetPort() {
+        return clientNetPort;
     }
 }

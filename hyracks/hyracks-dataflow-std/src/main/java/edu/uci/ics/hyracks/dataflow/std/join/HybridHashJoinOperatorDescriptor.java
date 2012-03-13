@@ -14,12 +14,16 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -31,7 +35,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -43,15 +47,16 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
+import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String JOINER0 = "joiner0";
-    private static final String BUILDRELATION = "BuildRel";
-    private static final String PROBERELATION = "ProbeRel";
-    private static final String MEM_HASHTABLE = "MEMORY_HASHTABLE";
-    private static final String NUM_PARTITION = "NUMBER_B_PARTITIONS"; // B
+    private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
+    private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
+
     private final int memsize;
     private static final long serialVersionUID = 1L;
     private final int inputsize0;
@@ -116,14 +121,16 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(BUILDRELATION);
-        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(PROBERELATION);
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        BuildAndPartitionActivityNode phase1 = new BuildAndPartitionActivityNode(new ActivityId(odId,
+                BUILD_AND_PARTITION_ACTIVITY_ID));
+        PartitionAndJoinActivityNode phase2 = new PartitionAndJoinActivityNode(new ActivityId(odId,
+                PARTITION_AND_JOIN_ACTIVITY_ID));
 
-        builder.addTask(phase1);
+        builder.addActivity(phase1);
         builder.addSourceEdge(1, phase1, 0);
 
-        builder.addTask(phase2);
+        builder.addActivity(phase2);
         builder.addSourceEdge(0, phase2, 0);
 
         builder.addBlockingEdge(phase1, phase2);
@@ -131,20 +138,41 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         builder.addTargetEdge(0, phase2, 0);
     }
 
-    private class BuildAndPartitionActivityNode extends AbstractActivityNode {
-        private static final long serialVersionUID = 1L;
-        private String relationName;
+    public static class BuildAndPartitionTaskState extends AbstractTaskState {
+        private RunFileWriter[] fWriters;
+        private InMemoryHashJoin joiner;
+        private int nPartitions;
+        private int memoryForHashtable;
 
-        public BuildAndPartitionActivityNode(String relationName) {
-            super();
-            this.relationName = relationName;
+        public BuildAndPartitionTaskState() {
+        }
+
+        private BuildAndPartitionTaskState(JobId jobId, TaskId taskId) {
+            super(jobId, taskId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
 
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public void fromBytes(DataInput in) throws IOException {
+
+        }
+
+    }
+
+    private class BuildAndPartitionActivityNode extends AbstractActivityNode {
+        private static final long serialVersionUID = 1L;
+
+        public BuildAndPartitionActivityNode(ActivityId id) {
+            super(id);
+        }
+
+        @Override
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -159,7 +187,8 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             }
 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
-                private InMemoryHashJoin joiner0;
+                private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(ctx.getJobletContext()
+                        .getJobId(), new TaskId(getActivityId(), partition));
                 private final FrameTupleAccessor accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), rd1);
                 private final ITuplePartitionComputer hpcBuild = new FieldHashPartitionComputerFactory(keys1,
                         hashFunctionFactories).createPartitioner();
@@ -167,16 +196,13 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private final FrameTupleAppender ftappender = new FrameTupleAppender(ctx.getFrameSize());
                 private ByteBuffer[] bufferForPartitions;
                 private final ByteBuffer inBuffer = ctx.allocateFrame();
-                private RunFileWriter[] fWriters;
-                private int memoryForHashtable;
-                private int B;
 
                 @Override
                 public void close() throws HyracksDataException {
-                    if (memoryForHashtable != 0)
+                    if (state.memoryForHashtable != 0)
                         build(inBuffer);
 
-                    for (int i = 0; i < B; i++) {
+                    for (int i = 0; i < state.nPartitions; i++) {
                         ByteBuffer buf = bufferForPartitions[i];
                         accessorBuild.reset(buf);
                         if (accessorBuild.getTupleCount() > 0) {
@@ -185,22 +211,19 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         closeWriter(i);
                     }
 
-                    env.set(relationName, fWriters);
-                    env.set(JOINER0, joiner0);
-                    env.set(NUM_PARTITION, B);
-                    env.set(MEM_HASHTABLE, memoryForHashtable);
+                    ctx.setTaskState(state);
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
 
-                    if (memoryForHashtable != memsize - 2) {
+                    if (state.memoryForHashtable != memsize - 2) {
                         accessorBuild.reset(buffer);
                         int tCount = accessorBuild.getTupleCount();
                         for (int i = 0; i < tCount; ++i) {
                             int entry = -1;
-                            if (memoryForHashtable == 0) {
-                                entry = hpcBuild.partition(accessorBuild, i, B);
+                            if (state.memoryForHashtable == 0) {
+                                entry = hpcBuild.partition(accessorBuild, i, state.nPartitions);
                                 boolean newBuffer = false;
                                 ByteBuffer bufBi = bufferForPartitions[entry];
                                 while (true) {
@@ -215,7 +238,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                 }
                             } else {
                                 entry = hpcBuild.partition(accessorBuild, i, (int) (inputsize0 * factor / nPartitions));
-                                if (entry < memoryForHashtable) {
+                                if (entry < state.memoryForHashtable) {
                                     while (true) {
                                         if (!ftappender.append(accessorBuild, i)) {
                                             build(inBuffer);
@@ -226,7 +249,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                         }
                                     }
                                 } else {
-                                    entry %= B;
+                                    entry %= state.nPartitions;
                                     boolean newBuffer = false;
                                     ByteBuffer bufBi = bufferForPartitions[entry];
                                     while (true) {
@@ -252,27 +275,27 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private void build(ByteBuffer inBuffer) throws HyracksDataException {
                     ByteBuffer copyBuffer = ctx.allocateFrame();
                     FrameUtils.copy(inBuffer, copyBuffer);
-                    joiner0.build(copyBuffer);
+                    state.joiner.build(copyBuffer);
                 }
 
                 @Override
                 public void open() throws HyracksDataException {
                     if (memsize > 1) {
                         if (memsize > inputsize0) {
-                            B = 0;
+                            state.nPartitions = 0;
                         } else {
-                            B = (int) (Math.ceil((double) (inputsize0 * factor / nPartitions - memsize)
+                            state.nPartitions = (int) (Math.ceil((double) (inputsize0 * factor / nPartitions - memsize)
                                     / (double) (memsize - 1)));
                         }
-                        if (B <= 0) {
+                        if (state.nPartitions <= 0) {
                             // becomes in-memory HJ
-                            memoryForHashtable = memsize - 2;
-                            B = 0;
+                            state.memoryForHashtable = memsize - 2;
+                            state.nPartitions = 0;
                         } else {
-                            memoryForHashtable = memsize - B - 2;
-                            if (memoryForHashtable < 0) {
-                                memoryForHashtable = 0;
-                                B = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
+                            state.memoryForHashtable = memsize - state.nPartitions - 2;
+                            if (state.memoryForHashtable < 0) {
+                                state.memoryForHashtable = 0;
+                                state.nPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
                             }
                         }
                     } else {
@@ -283,13 +306,15 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                             .createPartitioner();
                     ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)
                             .createPartitioner();
-                    int tableSize = (int) (memoryForHashtable * recordsPerFrame * factor);
-                    joiner0 = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(), rd0),
-                            hpc0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpc1, new FrameTuplePairComparator(
-                                    keys0, keys1, comparators), isLeftOuter, nullWriters1);
-                    bufferForPartitions = new ByteBuffer[B];
-                    fWriters = new RunFileWriter[B];
-                    for (int i = 0; i < B; i++) {
+                    int tableSize = (int) (state.memoryForHashtable * recordsPerFrame * factor);
+                    ISerializableTable table = new SerializableHashTable(tableSize, ctx);
+                    state.joiner = new InMemoryHashJoin(ctx, tableSize,
+                            new FrameTupleAccessor(ctx.getFrameSize(), rd0), hpc0, new FrameTupleAccessor(
+                                    ctx.getFrameSize(), rd1), hpc1, new FrameTuplePairComparator(keys0, keys1,
+                                    comparators), isLeftOuter, nullWriters1, table);
+                    bufferForPartitions = new ByteBuffer[state.nPartitions];
+                    state.fWriters = new RunFileWriter[state.nPartitions];
+                    for (int i = 0; i < state.nPartitions; i++) {
                         bufferForPartitions[i] = ctx.allocateFrame();
                     }
 
@@ -297,49 +322,42 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
 
                 private void closeWriter(int i) throws HyracksDataException {
-                    RunFileWriter writer = fWriters[i];
+                    RunFileWriter writer = state.fWriters[i];
                     if (writer != null) {
                         writer.close();
                     }
                 }
 
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
-                    RunFileWriter writer = fWriters[i];
+                    RunFileWriter writer = state.fWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.getJobletContext().createWorkspaceFile(relationName);
+                        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
+                                BuildAndPartitionActivityNode.class.getSimpleName());
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
-                        fWriters[i] = writer;
+                        state.fWriters[i] = writer;
                     }
                     writer.nextFrame(head);
                 }
             };
             return op;
         }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
-        }
     }
 
     private class PartitionAndJoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
-        private String relationName;
 
-        public PartitionAndJoinActivityNode(String relationName) {
-            super();
-            this.relationName = relationName;
+        public PartitionAndJoinActivityNode(ActivityId id) {
+            super(id);
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -354,7 +372,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             }
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
-                private InMemoryHashJoin joiner0;
+                private BuildAndPartitionTaskState state;
                 private final FrameTupleAccessor accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), rd0);
                 private final ITuplePartitionComputerFactory hpcf0 = new FieldHashPartitionComputerFactory(keys0,
                         hashFunctionFactories);
@@ -369,19 +387,16 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private RunFileWriter[] buildWriters;
                 private RunFileWriter[] probeWriters;
                 private ByteBuffer[] bufferForPartitions;
-                private int B;
-                private int memoryForHashtable;
 
                 @Override
                 public void open() throws HyracksDataException {
-                    joiner0 = (InMemoryHashJoin) env.get(JOINER0);
+                    state = (BuildAndPartitionTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                            BUILD_AND_PARTITION_ACTIVITY_ID), partition));
                     writer.open();
-                    buildWriters = (RunFileWriter[]) env.get(BUILDRELATION);
-                    B = (Integer) env.get(NUM_PARTITION);
-                    memoryForHashtable = (Integer) env.get(MEM_HASHTABLE);
-                    probeWriters = new RunFileWriter[B];
-                    bufferForPartitions = new ByteBuffer[B];
-                    for (int i = 0; i < B; i++) {
+                    buildWriters = state.fWriters;
+                    probeWriters = new RunFileWriter[state.nPartitions];
+                    bufferForPartitions = new ByteBuffer[state.nPartitions];
+                    for (int i = 0; i < state.nPartitions; i++) {
                         bufferForPartitions[i] = ctx.allocateFrame();
                     }
                     appender.reset(outBuffer, true);
@@ -390,14 +405,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    if (memoryForHashtable != memsize - 2) {
+                    if (state.memoryForHashtable != memsize - 2) {
                         accessorProbe.reset(buffer);
                         int tupleCount0 = accessorProbe.getTupleCount();
                         for (int i = 0; i < tupleCount0; ++i) {
 
                             int entry = -1;
-                            if (memoryForHashtable == 0) {
-                                entry = hpcProbe.partition(accessorProbe, i, B);
+                            if (state.memoryForHashtable == 0) {
+                                entry = hpcProbe.partition(accessorProbe, i, state.nPartitions);
                                 boolean newBuffer = false;
                                 ByteBuffer outbuf = bufferForPartitions[entry];
                                 while (true) {
@@ -412,17 +427,17 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                 }
                             } else {
                                 entry = hpcProbe.partition(accessorProbe, i, (int) (inputsize0 * factor / nPartitions));
-                                if (entry < memoryForHashtable) {
+                                if (entry < state.memoryForHashtable) {
                                     while (true) {
                                         if (!ftap.append(accessorProbe, i)) {
-                                            joiner0.join(inBuffer, writer);
+                                            state.joiner.join(inBuffer, writer);
                                             ftap.reset(inBuffer, true);
                                         } else
                                             break;
                                     }
 
                                 } else {
-                                    entry %= B;
+                                    entry %= state.nPartitions;
                                     boolean newBuffer = false;
                                     ByteBuffer outbuf = bufferForPartitions[entry];
                                     while (true) {
@@ -439,18 +454,20 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                             }
                         }
                     } else {
-                        joiner0.join(buffer, writer);
+                        state.joiner.join(buffer, writer);
                     }
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    joiner0.join(inBuffer, writer);
-                    joiner0.closeJoin(writer);
-                    ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(B, hpcf0).createPartitioner();
-                    ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(B, hpcf1).createPartitioner();
-                    if (memoryForHashtable != memsize - 2) {
-                        for (int i = 0; i < B; i++) {
+                    state.joiner.join(inBuffer, writer);
+                    state.joiner.closeJoin(writer);
+                    ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(state.nPartitions, hpcf0)
+                            .createPartitioner();
+                    ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(state.nPartitions, hpcf1)
+                            .createPartitioner();
+                    if (state.memoryForHashtable != memsize - 2) {
+                        for (int i = 0; i < state.nPartitions; i++) {
                             ByteBuffer buf = bufferForPartitions[i];
                             accessorProbe.reset(buf);
                             if (accessorProbe.getTupleCount() > 0) {
@@ -461,22 +478,22 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                         inBuffer.clear();
                         int tableSize = -1;
-                        if (memoryForHashtable == 0) {
-                            tableSize = (int) (B * recordsPerFrame * factor);
+                        if (state.memoryForHashtable == 0) {
+                            tableSize = (int) (state.nPartitions * recordsPerFrame * factor);
                         } else {
                             tableSize = (int) (memsize * recordsPerFrame * factor);
                         }
-                        for (int partitionid = 0; partitionid < B; partitionid++) {
+                        for (int partitionid = 0; partitionid < state.nPartitions; partitionid++) {
                             RunFileWriter buildWriter = buildWriters[partitionid];
                             RunFileWriter probeWriter = probeWriters[partitionid];
                             if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
                                 continue;
                             }
-
+                            ISerializableTable table = new SerializableHashTable(tableSize, ctx);
                             InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
                                     ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1),
                                     hpcRep1, new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
-                                    nullWriters1);
+                                    nullWriters1, table);
 
                             if (buildWriter != null) {
                                 RunFileReader buildReader = buildWriter.createReader();
@@ -502,16 +519,6 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         }
                     }
                     writer.close();
-                    env.set(PROBERELATION, null);
-                    env.set(BUILDRELATION, null);
-                    env.set(JOINER0, null);
-                    env.set(MEM_HASHTABLE, null);
-                    env.set(NUM_PARTITION, null);
-                }
-
-                @Override
-                public void flush() throws HyracksDataException {
-                    writer.flush();
                 }
 
                 private void closeWriter(int i) throws HyracksDataException {
@@ -524,20 +531,21 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
                     RunFileWriter writer = probeWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.createWorkspaceFile(relationName);
+                        FileReference file = ctx.createManagedWorkspaceFile(PartitionAndJoinActivityNode.class
+                                .getSimpleName());
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
                         probeWriters[i] = writer;
                     }
                     writer.nextFrame(head);
                 }
+
+                @Override
+                public void fail() throws HyracksDataException {
+                    writer.fail();
+                }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return HybridHashJoinOperatorDescriptor.this;
         }
     }
 }

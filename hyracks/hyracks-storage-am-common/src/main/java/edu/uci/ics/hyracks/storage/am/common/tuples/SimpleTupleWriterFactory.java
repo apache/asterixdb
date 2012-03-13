@@ -20,11 +20,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
 public class SimpleTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
-        return new SimpleTupleWriter();
-    }
+	@Override
+	public ITreeIndexTupleWriter createTupleWriter() {
+		return new SimpleTupleWriter();
+	}
 
 }

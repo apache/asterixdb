@@ -23,17 +23,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 public interface IToken {
-    public byte[] getData();
+	public byte[] getData();
 
-    public int getLength();
+	public int getLength();
 
-    public int getStart();
+	public int getStart();
 
-    public int getTokenLength();
+	public int getTokenLength();
 
-    public void reset(byte[] data, int start, int length, int tokenLength, int tokenCount);
+	public void reset(byte[] data, int start, int length, int tokenLength,
+			int tokenCount);
 
-    public void serializeToken(DataOutput dos) throws IOException;
+	public void serializeToken(DataOutput dos) throws IOException;
 
-    public void serializeTokenCount(DataOutput dos) throws IOException;
+	public void serializeTokenCount(DataOutput dos) throws IOException;
 }

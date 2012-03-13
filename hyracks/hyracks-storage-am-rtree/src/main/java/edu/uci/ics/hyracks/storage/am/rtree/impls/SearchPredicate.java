@@ -21,29 +21,29 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class SearchPredicate implements ISearchPredicate {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    protected ITupleReference searchKey;
-    protected MultiComparator cmp;
+	protected ITupleReference searchKey;
+	protected MultiComparator cmp;
 
-    public SearchPredicate(ITupleReference searchKey, MultiComparator cmp) {
-        this.searchKey = searchKey;
-        this.cmp = cmp;
-    }
+	public SearchPredicate(ITupleReference searchKey, MultiComparator cmp) {
+		this.searchKey = searchKey;
+		this.cmp = cmp;
+	}
 
-    public ITupleReference getSearchKey() {
-        return searchKey;
-    }
+	public ITupleReference getSearchKey() {
+		return searchKey;
+	}
 
-    public void setSearchKey(ITupleReference searchKey) {
-        this.searchKey = searchKey;
-    }
+	public void setSearchKey(ITupleReference searchKey) {
+		this.searchKey = searchKey;
+	}
 
-    public MultiComparator getLowKeyComparator() {
-        return cmp;
-    }
+	public MultiComparator getLowKeyComparator() {
+		return cmp;
+	}
 
-    public MultiComparator getHighKeyComparator() {
-        return cmp;
-    }
+	public MultiComparator getHighKeyComparator() {
+		return cmp;
+	}
 }

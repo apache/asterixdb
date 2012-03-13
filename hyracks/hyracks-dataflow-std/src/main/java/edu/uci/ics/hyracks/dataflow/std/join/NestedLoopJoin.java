@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -38,12 +38,12 @@ public class NestedLoopJoin {
     private final ByteBuffer innerBuffer;
     private final List<ByteBuffer> outBuffers;
     private final int memSize;
-    private final IHyracksStageletContext ctx;
+    private final IHyracksTaskContext ctx;
     private RunFileReader runFileReader;
     private int currentMemSize = 0;
     private final RunFileWriter runFileWriter;
 
-    public NestedLoopJoin(IHyracksStageletContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
+    public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
             ITuplePairComparator comparators, int memSize) throws HyracksDataException {
         this.accessorInner = accessor1;
         this.accessorOuter = accessor0;
@@ -56,7 +56,7 @@ public class NestedLoopJoin {
         this.memSize = memSize;
         this.ctx = ctx;
 
-        FileReference file = ctx.getJobletContext().createWorkspaceFile(
+        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                 this.getClass().getSimpleName() + this.toString());
         runFileWriter = new RunFileWriter(file, ctx.getIOManager());
         runFileWriter.open();

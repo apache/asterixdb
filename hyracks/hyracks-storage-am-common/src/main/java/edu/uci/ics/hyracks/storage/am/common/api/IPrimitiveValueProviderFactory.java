@@ -18,5 +18,5 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 public interface IPrimitiveValueProviderFactory extends Serializable {
-    public IPrimitiveValueProvider createPrimitiveValueProvider();
+	public IPrimitiveValueProvider createPrimitiveValueProvider();
 }

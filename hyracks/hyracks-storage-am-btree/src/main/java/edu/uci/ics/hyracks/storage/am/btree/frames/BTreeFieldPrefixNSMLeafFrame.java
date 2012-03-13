@@ -15,31 +15,28 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.frames;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.api.IFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
@@ -53,32 +50,34 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected static final int pageLsnOff = 0; // 0
-    protected static final int tupleCountOff = pageLsnOff + 4; // 4
-    protected static final int freeSpaceOff = tupleCountOff + 4; // 8
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 12
-    protected static final int levelOff = totalFreeSpaceOff + 4; // 16
-    protected static final int smFlagOff = levelOff + 1; // 17
-    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 18
-    protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 21
+    protected static final int tupleCountOff = pageLsnOff + 8; // 8
+    protected static final int freeSpaceOff = tupleCountOff + 4; // 12
+    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
+    protected static final int levelOff = totalFreeSpaceOff + 4; // 20
+    protected static final int smFlagOff = levelOff + 1; // 21
+    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 22
+    protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 26
 
-    protected static final int prevLeafOff = prefixTupleCountOff + 4; // 22
-    protected static final int nextLeafOff = prevLeafOff + 4; // 26
+    protected static final int prevLeafOff = prefixTupleCountOff + 4; // 30
+    protected static final int nextLeafOff = prevLeafOff + 4; // 34
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
-    public IFrameCompressor compressor;
-    public IPrefixSlotManager slotManager; // TODO: should be protected, but
-    // will trigger some refactoring
 
-    private ITreeIndexTupleWriter tupleWriter;
+    public final ITreeIndexFrameCompressor compressor;
+    // TODO: Should be protected, but will trigger some refactoring.
+    public final IPrefixSlotManager slotManager;
 
-    private FieldPrefixTupleReference frameTuple;
-    private FieldPrefixPrefixTupleReference framePrefixTuple;
+    private final ITreeIndexTupleWriter tupleWriter;
+    private MultiComparator cmp;
+    
+    private final FieldPrefixTupleReference frameTuple;
+    private final FieldPrefixPrefixTupleReference framePrefixTuple;
 
     public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
-        ITypeTrait[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
+        ITypeTraits[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
         this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
         this.slotManager = new FieldPrefixSlotManager();
         this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
@@ -102,7 +101,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public boolean compress(MultiComparator cmp) throws HyracksDataException {
+    public boolean compress() throws HyracksDataException {
         try {
             return compressor.compress(this, cmp);
         } catch (Exception e) {
@@ -116,10 +115,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     // 3. prefix tuple are sorted (last prefix tuple is at highest offset)
     // this procedure will not move prefix tuples
     @Override
-    public boolean compact(MultiComparator cmp) {
+    public boolean compact() {
         resetSpaceParams();
-
-        frameTuple.setFieldCount(cmp.getFieldCount());
 
         int tupleCount = buf.getInt(tupleCountOff);
 
@@ -179,71 +176,53 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_EXACT,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    public void delete(ITupleReference tuple, int slot) {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT) {
-            throw new BTreeException("Key to be deleted does not exist.");
+        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
+        int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
+
+        // perform deletion (we just do a memcpy to overwrite the slot)
+        int slotEndOff = slotManager.getTupleSlotEndOff();
+        int length = tupleSlotOff - slotEndOff;
+        System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
+
+        // maintain space information, get size of tuple suffix (suffix
+        // could be entire tuple)
+        int tupleSize = 0;
+        int suffixFieldStart = 0;
+        if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+            suffixFieldStart = 0;
+            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
         } else {
-            int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
-            int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
-
-            if (exactDelete) {
-                frameTuple.setFieldCount(cmp.getFieldCount());
-                frameTuple.resetByTupleIndex(this, tupleIndex);
-
-                int comparison = cmp.fieldRangeCompare(tuple, frameTuple, cmp.getKeyFieldCount() - 1,
-                        cmp.getFieldCount() - cmp.getKeyFieldCount());
-                if (comparison != 0) {
-                    throw new BTreeException("Cannot delete tuple. Byte-by-byte comparison failed to prove equality.");
-                }
-            }
-
-            // perform deletion (we just do a memcpy to overwrite the slot)
-            int slotEndOff = slotManager.getTupleSlotEndOff();
-            int length = tupleSlotOff - slotEndOff;
-            System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
-
-            // maintain space information, get size of tuple suffix (suffix
-            // could be entire tuple)
-            int tupleSize = 0;
-            int suffixFieldStart = 0;
-            if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
-                suffixFieldStart = 0;
-                buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
-            } else {
-                int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
-                suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot);
-            }
-
-            frameTuple.resetByTupleIndex(this, tupleIndex);
-            tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount()
-                    - suffixFieldStart);
-
-            buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-            buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
+            int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
+            suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot);
         }
+
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount()
+                - suffixFieldStart);
+
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
 
         int bytesRequired = tupleWriter.bytesRequired(tuple);
 
-        // see if the tuple would fit uncompressed
+        // See if the tuple would fit uncompressed.
         if (bytesRequired + slotManager.getSlotSize() <= freeContiguous)
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
 
-        // see if tuple would fit into remaining space after compaction
+        // See if tuple would fit into remaining space after compaction.
         if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
 
-        // see if the tuple matches a prefix and will fit after truncating the
-        // prefix
-        int prefixSlotNum = slotManager.findPrefix(tuple, framePrefixTuple, cmp);
+        // See if the tuple matches a prefix and will fit after truncating the prefix.
+        int prefixSlotNum = slotManager.findPrefix(tuple, framePrefixTuple);
         if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
             int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
             int prefixSlot = buf.getInt(prefixSlotOff);
@@ -259,11 +238,96 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp) {
-        // TODO Auto-generated method stub
+    public void insert(ITupleReference tuple, int tupleIndex) {
+        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
+        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
+        int numPrefixFields = 0;
+        if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
+            int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
+            int prefixSlot = buf.getInt(prefixSlotOff);
+            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
+        } else {
+            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
+        }
+
+        int freeSpace = buf.getInt(freeSpaceOff);
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields,
+                tuple.getFieldCount() - numPrefixFields, buf, freeSpace);
+
+        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
+        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+    }
+    
+    @Override
+    public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex) {
+        int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        
+        int oldTupleBytes = 0;
+        int newTupleBytes = 0;
+        
+        int numPrefixFields = frameTuple.getNumPrefixFields();
+        int fieldCount = frameTuple.getFieldCount();
+        if (numPrefixFields != 0) {
+            // Check the space requirements for updating the suffix of the original tuple.            
+            oldTupleBytes = frameTuple.getSuffixTupleSize();
+            newTupleBytes = tupleWriter.bytesRequired(newTuple, numPrefixFields, fieldCount - numPrefixFields); 
+        } else {
+            // The original tuple is uncompressed.
+            oldTupleBytes = frameTuple.getTupleSize();
+            newTupleBytes = tupleWriter.bytesRequired(newTuple);
+        }
+        
+        int additionalBytesRequired = newTupleBytes - oldTupleBytes;
+        // Enough space for an in-place update?
+        if (additionalBytesRequired <= 0) {
+            return FrameOpSpaceStatus.SUFFICIENT_INPLACE_SPACE;
+        }
+        
+        int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
+                - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
+        
+        // Enough space if we delete the old tuple and insert the new one without compaction? 
+        if (newTupleBytes <= freeContiguous) {
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        }
+        // Enough space if we delete the old tuple and compact?
+        if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
+        }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
+    @Override
+    public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) {
+        int tupleIndex = slotManager.decodeSecondSlotField(oldTupleIndex);
+        int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
+        int tupleSlot = buf.getInt(tupleSlotOff);
+        int prefixSlotNum = slotManager.decodeFirstSlotField(tupleSlot);
+        int suffixTupleStartOff = slotManager.decodeSecondSlotField(tupleSlot);                
+        
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        int fieldCount = frameTuple.getFieldCount();
+        int numPrefixFields = frameTuple.getNumPrefixFields();
+        int oldTupleBytes = frameTuple.getSuffixTupleSize();
+        int bytesWritten = 0;        
+        
+        if (inPlace) {
+            // Overwrite the old tuple suffix in place.
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields, buf, suffixTupleStartOff);
+        } else {
+            // Insert the new tuple suffix at the end of the free space, and change the slot value (effectively "deleting" the old tuple).
+            int newSuffixTupleStartOff = buf.getInt(freeSpaceOff);
+            bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields, buf, newSuffixTupleStartOff);
+            // Update slot value using the same prefix slot num.
+            slotManager.setSlot(tupleSlotOff, slotManager.encodeSlotFields(prefixSlotNum, newSuffixTupleStartOff));
+            // Update contiguous free space pointer.
+            buf.putInt(freeSpaceOff, newSuffixTupleStartOff + bytesWritten);
+        }
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
+    }
+    
     protected void resetSpaceParams() {
         buf.putInt(freeSpaceOff, getOrigFreeSpaceOff());
         buf.putInt(totalFreeSpaceOff, getOrigTotalFreeSpace());
@@ -271,7 +335,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public void initBuffer(byte level) {
-        buf.putInt(pageLsnOff, 0); // TODO: might to set to a different lsn
+        buf.putLong(pageLsnOff, 0);
         // during creation
         buf.putInt(tupleCountOff, 0);
         resetSpaceParams();
@@ -292,53 +356,55 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.FTM_INCLUSIVE,
-                FindTupleNoExactMatchPolicy.FTP_HIGHER_KEY);
+    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
+    	int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex != FieldPrefixSlotManager.GREATEST_SLOT) {
-            frameTuple.setFieldCount(cmp.getFieldCount());
-            frameTuple.resetByTupleIndex(this, tupleIndex);
-            int comparison = cmp.fieldRangeCompare(tuple, frameTuple, 0, cmp.getKeyFieldCount());
-            if (comparison == 0) {
-                throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
-            }
+        // Error indicator is set if there is an exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
+            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
         }
         return slot;
     }
-
+    
     @Override
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception {
-        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
-        int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
-        int numPrefixFields = 0;
-        if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
-            int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
-            int prefixSlot = buf.getInt(prefixSlotOff);
-            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
-        } else {
-            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
-        }
-
-        int freeSpace = buf.getInt(freeSpaceOff);
-        int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields,
-                tuple.getFieldCount() - numPrefixFields, buf, freeSpace);
-
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        // Error indicator is set if there is no exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
+            throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
+        }    
+        return slot;
     }
-
+    
     @Override
-    public void update(int rid, ITupleReference tuple) throws Exception {
-        // TODO Auto-generated method stub
-
+    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        // Error indicator is set if there is no exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
+            throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+        }    
+        return slot;
     }
-
+    
     @Override
-    public void printHeader() {
-        // TODO Auto-generated method stub
-
+    public String printHeader() {
+        StringBuilder strBuilder = new StringBuilder();
+        strBuilder.append("pageLsnOff:                " + pageLsnOff + "\n");
+        strBuilder.append("tupleCountOff:             " + tupleCountOff + "\n");
+        strBuilder.append("freeSpaceOff:              " + freeSpaceOff + "\n");
+        strBuilder.append("totalFreeSpaceOff:         " + totalFreeSpaceOff + "\n");
+        strBuilder.append("levelOff:                  " + levelOff + "\n");
+        strBuilder.append("smFlagOff:                 " + smFlagOff + "\n");
+        strBuilder.append("uncompressedTupleCountOff: " + uncompressedTupleCountOff + "\n");
+        strBuilder.append("prefixTupleCountOff:       " + prefixTupleCountOff + "\n");
+        strBuilder.append("prevLeafOff:               " + prevLeafOff + "\n");
+        strBuilder.append("nextLeafOff:               " + nextLeafOff + "\n");
+        return strBuilder.toString();
     }
 
     @Override
@@ -351,26 +417,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException {
-        StringBuilder strBuilder = new StringBuilder();
-        int tupleCount = buf.getInt(tupleCountOff);
-        frameTuple.setFieldCount(fields.length);
-        for (int i = 0; i < tupleCount; i++) {
-            frameTuple.resetByTupleIndex(this, i);
-            for (int j = 0; j < cmp.getKeyFieldCount(); j++) {
-                ByteArrayInputStream inStream = new ByteArrayInputStream(frameTuple.getFieldData(j),
-                        frameTuple.getFieldStart(j), frameTuple.getFieldLength(j));
-                DataInput dataIn = new DataInputStream(inStream);
-                Object o = fields[j].deserialize(dataIn);
-                strBuilder.append(o.toString() + " ");
-            }
-            strBuilder.append(" | ");
-        }
-        strBuilder.append("\n");
-        return strBuilder.toString();
-    }
-
-    @Override
     public int getTupleOffset(int slotNum) {
         int tupleSlotOff = slotManager.getTupleSlotOff(slotNum);
         int tupleSlot = buf.getInt(tupleSlotOff);
@@ -378,13 +424,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int getPageLsn() {
-        return buf.getInt(pageLsnOff);
+    public long getPageLsn() {
+        return buf.getLong(pageLsnOff);
     }
 
     @Override
-    public void setPageLsn(int pageLsn) {
-        buf.putInt(pageLsnOff, pageLsn);
+    public void setPageLsn(long pageLsn) {
+        buf.putLong(pageLsnOff, pageLsn);
     }
 
     @Override
@@ -434,7 +480,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insertSorted(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
+    public void insertSorted(ITupleReference tuple) {
         int freeSpace = buf.getInt(freeSpaceOff);
         int fieldsToTruncate = 0;
 
@@ -455,7 +501,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             prefixSlotNum = buf.getInt(prefixTupleCountOff) - 1;
         else
             buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
-        int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_SLOT);
+        int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_KEY_INDICATOR);
         slotManager.insertSlot(insSlot, freeSpace);
 
         // update page metadata
@@ -465,17 +511,16 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
+    		throws TreeIndexException {
 
-        BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
-
-        frameTuple.setFieldCount(cmp.getFieldCount());
+        BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame)rightFrame;
 
         ByteBuffer right = rf.getBuffer();
         int tupleCount = getTupleCount();
         int prefixTupleCount = getPrefixTupleCount();
 
+        // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft;
         int midSlotNum = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
@@ -577,12 +622,12 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         buf.putInt(prefixTupleCountOff, prefixesToLeft);
 
         // compact both pages
-        compact(cmp);
-        rightFrame.compact(cmp);
+        compact();
+        rightFrame.compact();
 
         // insert last key
-        int targetTupleIndex = targetFrame.findTupleIndex(tuple, cmp);
-        targetFrame.insert(tuple, cmp, targetTupleIndex);
+        int targetTupleIndex = ((IBTreeLeafFrame)targetFrame).findInsertTupleIndex(tuple);
+        targetFrame.insert(tuple, targetTupleIndex);
 
         // set split key to be highest value in left page
         frameTuple.resetByTupleIndex(this, getTupleCount() - 1);
@@ -591,8 +636,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-
-        return 0;
     }
 
     @Override
@@ -642,11 +685,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return slotManager.getSlotSize();
     }
 
-    @Override
-    public void setPageTupleFieldCount(int fieldCount) {
-        frameTuple.setFieldCount(fieldCount);
-    }
-
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
@@ -661,7 +699,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
         int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        if (tupleIndex == FieldPrefixSlotManager.GREATEST_SLOT)
+        // TODO: Revisit this one. Maybe there is a cleaner way to solve this in the RangeSearchCursor.
+        if (tupleIndex == FieldPrefixSlotManager.GREATEST_KEY_INDICATOR || tupleIndex == FieldPrefixSlotManager.ERROR_INDICATOR)
             return -1;
         else
             return tupleIndex;
@@ -671,4 +710,10 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public int getPageHeaderSize() {
         return nextLeafOff;
     }
+
+	@Override
+	public void setMultiComparator(MultiComparator cmp) {
+		this.cmp = cmp;
+		this.slotManager.setMultiComparator(cmp);
+	}
 }

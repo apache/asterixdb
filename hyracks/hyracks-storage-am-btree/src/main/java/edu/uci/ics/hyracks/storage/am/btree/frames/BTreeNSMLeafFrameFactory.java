@@ -23,7 +23,7 @@ public class BTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-
+    
     public BTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }

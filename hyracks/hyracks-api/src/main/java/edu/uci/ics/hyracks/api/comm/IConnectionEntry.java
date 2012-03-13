@@ -19,14 +19,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
 public interface IConnectionEntry {
     ByteBuffer getReadBuffer();
 
     SelectionKey getSelectionKey();
-
-    void setDataReceiveListener(IDataReceiveListener listener);
 
     void attach(Object attachment);
 
@@ -34,17 +30,11 @@ public interface IConnectionEntry {
 
     void close() throws IOException;
 
-    void write(ByteBuffer buffer) throws HyracksDataException;
+    void write(ByteBuffer buffer);
 
     UUID getJobId();
 
     UUID getStageId();
 
-    void setJobId(UUID jobId);
-
-    void setStageId(UUID stageId);
-
     boolean aborted();
-
-    void abort();
 }

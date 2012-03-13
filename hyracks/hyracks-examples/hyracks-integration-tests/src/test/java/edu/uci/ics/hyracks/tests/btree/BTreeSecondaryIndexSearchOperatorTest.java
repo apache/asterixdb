@@ -25,15 +25,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.comparators.UTF8StringBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
@@ -43,23 +44,23 @@ import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeOpHelperFactory;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOpHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.test.support.TestIndexRegistryProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestTreeIndexRegistryProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTest {
@@ -68,15 +69,15 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
     }
 
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
-    private IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider = new TestTreeIndexRegistryProvider();
-    private ITreeIndexOpHelperFactory opHelperFactory = new BTreeOpHelperFactory();
+    private IIndexRegistryProvider<IIndex> indexRegistryProvider = new TestIndexRegistryProvider();
+    private IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
 
     // field, type and key declarations for primary index
     private int primaryFieldCount = 6;
-    private ITypeTrait[] primaryTypeTraits = new ITypeTrait[primaryFieldCount];
+    private ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
     private int primaryKeyFieldCount = 1;
     private IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
     private TypeAwareTupleWriterFactory primaryTupleWriterFactory = new TypeAwareTupleWriterFactory(primaryTypeTraits);
@@ -97,7 +98,7 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
     // field, type and key declarations for secondary indexes
     private int secondaryFieldCount = 2;
-    private ITypeTrait[] secondaryTypeTraits = new ITypeTrait[secondaryFieldCount];
+    private ITypeTraits[] secondaryTypeTraits = new ITypeTraits[secondaryFieldCount];
     private int secondaryKeyFieldCount = 2;
     private IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyFieldCount];
     private TypeAwareTupleWriterFactory secondaryTupleWriterFactory = new TypeAwareTupleWriterFactory(
@@ -118,19 +119,19 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
     @Before
     public void setup() throws Exception {
         // field, type and key declarations for primary index
-        primaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[2] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[3] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[4] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryTypeTraits[5] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        primaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[2] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
+        primaryTypeTraits[5] = UTF8StringPointable.TYPE_TRAITS;
+        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         // field, type and key declarations for secondary indexes
-        secondaryTypeTraits[0] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        secondaryTypeTraits[1] = new TypeTrait(ITypeTrait.VARIABLE_LENGTH);
-        secondaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
-        secondaryComparatorFactories[1] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        secondaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        secondaryTypeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        secondaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        secondaryComparatorFactories[1] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         loadPrimaryIndexTest();
         loadSecondaryIndexTest();
@@ -158,14 +159,15 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, 1000, new int[] { 0 },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeIndexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, null, fieldPermutation, 0.7f,
-                opHelperFactory);
+                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
+                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
+                dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -200,22 +202,23 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
         // scan primary index
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeIndexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
+                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
-                highKeyFields, true, true, opHelperFactory);
+                highKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         // sort based on secondary keys
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, 1000, new int[] { 3, 0 },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, primaryRecDesc);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                primaryRecDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         // load secondary index
         int[] fieldPermutation = { 3, 0 };
         TreeIndexBulkLoadOperatorDescriptor secondaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeIndexRegistryProvider, secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
-                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, null, fieldPermutation,
-                0.7f, opHelperFactory);
+                storageManager, indexRegistryProvider, secondaryBtreeSplitProvider, secondaryInteriorFrameFactory,
+                secondaryLeafFrameFactory, secondaryTypeTraits, secondaryComparatorFactories, fieldPermutation, 0.7f,
+                dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryBtreeSearchOp, 0);
@@ -256,10 +259,10 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
         // search secondary index
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                secondaryRecDesc, storageManager, treeIndexRegistryProvider, secondaryBtreeSplitProvider,
+                secondaryRecDesc, storageManager, indexRegistryProvider, secondaryBtreeSplitProvider,
                 secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
                 secondaryComparatorFactories, true, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                opHelperFactory);
+                dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
         int[] primaryLowKeyFields = { 1 }; // second field from the tuples
@@ -269,12 +272,14 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
 
         // search primary index
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeIndexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
+                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryInteriorFrameFactory,
                 primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, primaryLowKeyFields,
-                primaryHighKeyFields, true, true, opHelperFactory);
+                primaryHighKeyFields, true, true, dataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
+                createTempFile().getAbsolutePath()) });
+        IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondaryBtreeSearchOp, 0);
@@ -289,7 +294,6 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractIntegrationTe
     public static void cleanup() throws Exception {
         File primary = new File(primaryFileName);
         primary.deleteOnExit();
-
         File secondary = new File(secondaryFileName);
         secondary.deleteOnExit();
     }

@@ -16,103 +16,98 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor implements
-        ITreeIndexOperatorDescriptorHelper {
+public abstract class AbstractTreeIndexOperatorDescriptor extends
+		AbstractSingleActivityOperatorDescriptor implements
+		ITreeIndexOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    protected final IFileSplitProvider fileSplitProvider;
+	protected final IFileSplitProvider fileSplitProvider;
 
-    protected final IBinaryComparatorFactory[] comparatorFactories;
-    protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
+	protected final IBinaryComparatorFactory[] comparatorFactories;
 
-    protected final ITreeIndexFrameFactory interiorFrameFactory;
-    protected final ITreeIndexFrameFactory leafFrameFactory;
+	protected final ITreeIndexFrameFactory interiorFrameFactory;
+	protected final ITreeIndexFrameFactory leafFrameFactory;
 
-    protected final IStorageManagerInterface storageManager;
-    protected final IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider;
+	protected final IStorageManagerInterface storageManager;
+	protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
 
-    protected final ITypeTrait[] typeTraits;
+	protected final ITypeTraits[] typeTraits;
+	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
 
-    protected final ITreeIndexOpHelperFactory opHelperFactory;
+	public AbstractTreeIndexOperatorDescriptor(JobSpecification spec,
+			int inputArity, int outputArity, RecordDescriptor recDesc,
+			IStorageManagerInterface storageManager,
+			IIndexRegistryProvider<IIndex> indexRegistryProvider,
+			IFileSplitProvider fileSplitProvider,
+			ITreeIndexFrameFactory interiorFrameFactory,
+			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
+			IBinaryComparatorFactory[] comparatorFactories,
+			IIndexDataflowHelperFactory dataflowHelperFactory) {
+		super(spec, inputArity, outputArity);
+		this.fileSplitProvider = fileSplitProvider;
+		this.storageManager = storageManager;
+		this.indexRegistryProvider = indexRegistryProvider;
+		this.interiorFrameFactory = interiorFrameFactory;
+		this.leafFrameFactory = leafFrameFactory;
+		this.typeTraits = typeTraits;
+		this.comparatorFactories = comparatorFactories;
+		this.dataflowHelperFactory = dataflowHelperFactory;
+		if (outputArity > 0) {
+			recordDescriptors[0] = recDesc;
+		}
+	}
 
-    public AbstractTreeIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
-            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<ITreeIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
-            ITypeTrait[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, ITreeIndexOpHelperFactory opHelperFactory) {
-        super(spec, inputArity, outputArity);
-        this.fileSplitProvider = fileSplitProvider;
-        this.storageManager = storageManager;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
-        this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
-        this.typeTraits = typeTraits;
-        this.comparatorFactories = comparatorFactories;
-        this.valueProviderFactories = valueProviderFactories;
-        this.opHelperFactory = opHelperFactory;
-        if (outputArity > 0)
-            recordDescriptors[0] = recDesc;
-    }
+	@Override
+	public IFileSplitProvider getFileSplitProvider() {
+		return fileSplitProvider;
+	}
 
-    @Override
-    public IFileSplitProvider getTreeIndexFileSplitProvider() {
-        return fileSplitProvider;
-    }
+	@Override
+	public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
+		return comparatorFactories;
+	}
 
-    @Override
-    public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
-        return comparatorFactories;
-    }
+	@Override
+	public ITypeTraits[] getTreeIndexTypeTraits() {
+		return typeTraits;
+	}
 
-    @Override
-    public ITypeTrait[] getTreeIndexTypeTraits() {
-        return typeTraits;
-    }
+	@Override
+	public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
+		return interiorFrameFactory;
+	}
 
-    @Override
-    public IPrimitiveValueProviderFactory[] getTreeIndexValueProviderFactories() {
-        return valueProviderFactories;
-    }
+	@Override
+	public ITreeIndexFrameFactory getTreeIndexLeafFactory() {
+		return leafFrameFactory;
+	}
 
-    @Override
-    public ITreeIndexFrameFactory getTreeIndexInteriorFactory() {
-        return interiorFrameFactory;
-    }
+	@Override
+	public IStorageManagerInterface getStorageManager() {
+		return storageManager;
+	}
 
-    @Override
-    public ITreeIndexFrameFactory getTreeIndexLeafFactory() {
-        return leafFrameFactory;
-    }
+	@Override
+	public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
+		return indexRegistryProvider;
+	}
 
-    @Override
-    public IStorageManagerInterface getStorageManager() {
-        return storageManager;
-    }
+	@Override
+	public RecordDescriptor getRecordDescriptor() {
+		return recordDescriptors[0];
+	}
 
-    @Override
-    public IIndexRegistryProvider<ITreeIndex> getTreeIndexRegistryProvider() {
-        return treeIndexRegistryProvider;
-    }
-
-    @Override
-    public RecordDescriptor getRecordDescriptor() {
-        return recordDescriptors[0];
-    }
-
-    @Override
-    public ITreeIndexOpHelperFactory getTreeIndexOpHelperFactory() {
-        return opHelperFactory;
-    }
+	@Override
+	public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
+		return dataflowHelperFactory;
+	}
 }

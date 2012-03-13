@@ -14,12 +14,16 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksStageletContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -30,7 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -42,12 +46,16 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
+import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final String RELATION0 = "Rel0";
-    private static final String RELATION1 = "Rel1";
+    private static final int RPARTITION_ACTIVITY_ID = 0;
+    private static final int SPARTITION_ACTIVITY_ID = 1;
+    private static final int JOIN_ACTIVITY_ID = 2;
 
     private static final long serialVersionUID = 1L;
     private final int[] keys0;
@@ -97,20 +105,22 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     }
 
     @Override
-    public void contributeTaskGraph(IActivityGraphBuilder builder) {
-        HashPartitionActivityNode part0 = new HashPartitionActivityNode(RELATION0, keys0, 0);
-        HashPartitionActivityNode part1 = new HashPartitionActivityNode(RELATION1, keys1, 1);
-        JoinActivityNode join = new JoinActivityNode();
+    public void contributeActivities(IActivityGraphBuilder builder) {
+        HashPartitionActivityNode rpart = new HashPartitionActivityNode(new ActivityId(odId, RPARTITION_ACTIVITY_ID),
+                keys0, 0);
+        HashPartitionActivityNode spart = new HashPartitionActivityNode(new ActivityId(odId, SPARTITION_ACTIVITY_ID),
+                keys1, 1);
+        JoinActivityNode join = new JoinActivityNode(new ActivityId(odId, JOIN_ACTIVITY_ID));
 
-        builder.addTask(part0);
-        builder.addSourceEdge(0, part0, 0);
+        builder.addActivity(rpart);
+        builder.addSourceEdge(0, rpart, 0);
 
-        builder.addTask(part1);
-        builder.addSourceEdge(1, part1, 0);
+        builder.addActivity(spart);
+        builder.addSourceEdge(1, spart, 0);
 
-        builder.addTask(join);
-        builder.addBlockingEdge(part0, part1);
-        builder.addBlockingEdge(part1, join);
+        builder.addActivity(join);
+        builder.addBlockingEdge(rpart, spart);
+        builder.addBlockingEdge(spart, join);
 
         builder.addTargetEdge(0, join, 0);
     }
@@ -119,26 +129,43 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         return memsize;
     }
 
+    public static class HashPartitionTaskState extends AbstractTaskState {
+        private RunFileWriter[] fWriters;
+
+        public HashPartitionTaskState(JobId jobId, TaskId taskId) {
+            super(jobId, taskId);
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+
+        }
+    }
+
     private class HashPartitionActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
-        private String partitionsKey;
         private int operatorInputIndex;
         private int keys[];
 
-        public HashPartitionActivityNode(String partitionsKey, int keys[], int operatorInputIndex) {
-            this.partitionsKey = partitionsKey;
+        public HashPartitionActivityNode(ActivityId id, int keys[], int operatorInputIndex) {
+            super(id);
             this.keys = keys;
             this.operatorInputIndex = operatorInputIndex;
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
+            final int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private final FrameTupleAccessor accessor0 = new FrameTupleAccessor(ctx.getFrameSize(),
                         recordDescProvider.getInputRecordDescriptor(getOperatorId(), operatorInputIndex));
@@ -147,9 +174,10 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                         hashFunctionFactories).createPartitioner();
 
                 private final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+
                 private ByteBuffer[] outbufs;
-                private RunFileWriter[] fWriters;
-                private final int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
+
+                private HashPartitionTaskState state;
 
                 @Override
                 public void close() throws HyracksDataException {
@@ -162,23 +190,24 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                         closeWriter(i);
                     }
 
-                    env.set(partitionsKey, fWriters);
+                    ctx.setTaskState(state);
                 }
 
                 private void closeWriter(int i) throws HyracksDataException {
-                    RunFileWriter writer = fWriters[i];
+                    RunFileWriter writer = state.fWriters[i];
                     if (writer != null) {
                         writer.close();
                     }
                 }
 
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
-                    RunFileWriter writer = fWriters[i];
+                    RunFileWriter writer = state.fWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx.getJobletContext().createWorkspaceFile(partitionsKey);
+                        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
+                                GraceHashJoinOperatorDescriptor.class.getSimpleName());
                         writer = new RunFileWriter(file, ctx.getIOManager());
                         writer.open();
-                        fWriters[i] = writer;
+                        state.fWriters[i] = writer;
                     }
                     writer.nextFrame(head);
                 }
@@ -191,16 +220,15 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                         int entry = hpc.partition(accessor0, i, numPartitions);
                         ByteBuffer outbuf = outbufs[entry];
-                        appender.reset(outbuf, true);
-                        while (true) {
-                            if (appender.append(accessor0, i)) {
-                                break;
-                            } else {
-                                // buffer is full, ie. we cannot fit the tuple
-                                // into the buffer -- write it to disk
-                                write(entry, outbuf);
-                                outbuf.clear();
-                                appender.reset(outbuf, true);
+                        appender.reset(outbuf, false);
+                        if (!appender.append(accessor0, i)) {
+                            // buffer is full, ie. we cannot fit the tuple
+                            // into the buffer -- write it to disk
+                            write(entry, outbuf);
+                            outbuf.clear();
+                            appender.reset(outbuf, true);
+                            if (!appender.append(accessor0, i)) {
+                                throw new HyracksDataException("Item too big to fit in frame");
                             }
                         }
                     }
@@ -208,33 +236,33 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void open() throws HyracksDataException {
+                    state = new HashPartitionTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
+                            partition));
                     outbufs = new ByteBuffer[numPartitions];
-                    fWriters = new RunFileWriter[numPartitions];
+                    state.fWriters = new RunFileWriter[numPartitions];
                     for (int i = 0; i < numPartitions; i++) {
                         outbufs[i] = ctx.allocateFrame();
                     }
                 }
 
                 @Override
-                public void flush() throws HyracksDataException {
+                public void fail() throws HyracksDataException {
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return GraceHashJoinOperatorDescriptor.this;
         }
     }
 
     private class JoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
+        public JoinActivityNode(ActivityId id) {
+            super(id);
+        }
+
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksStageletContext ctx,
-                final IOperatorEnvironment env, final IRecordDescriptorProvider recordDescProvider, int partition,
-                final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -257,8 +285,12 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void initialize() throws HyracksDataException {
-                    buildWriters = (RunFileWriter[]) env.get(RELATION1);
-                    probeWriters = (RunFileWriter[]) env.get(RELATION0);
+                    HashPartitionTaskState rState = (HashPartitionTaskState) ctx.getTaskState(new TaskId(
+                            new ActivityId(getOperatorId(), RPARTITION_ACTIVITY_ID), partition));
+                    HashPartitionTaskState sState = (HashPartitionTaskState) ctx.getTaskState(new TaskId(
+                            new ActivityId(getOperatorId(), SPARTITION_ACTIVITY_ID), partition));
+                    buildWriters = sState.fWriters;
+                    probeWriters = rState.fWriters;
 
                     ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(numPartitions,
                             new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)).createPartitioner();
@@ -267,57 +299,56 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
                     writer.open();// open for probe
 
-                    ByteBuffer buffer = ctx.allocateFrame();// input
-                    // buffer
-                    int tableSize = (int) (numPartitions * recordsPerFrame * factor);
-                    for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
-                        RunFileWriter buildWriter = buildWriters[partitionid];
-                        RunFileWriter probeWriter = probeWriters[partitionid];
-                        if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
-                            continue;
-                        }
-                        joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(), rd0),
-                                hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                                new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1);
+                    try {
 
-                        // build
-                        if (buildWriter != null) {
-                            RunFileReader buildReader = buildWriter.createReader();
-                            buildReader.open();
-                            while (buildReader.nextFrame(buffer)) {
-                                ByteBuffer copyBuffer = ctx.allocateFrame();
-                                FrameUtils.copy(buffer, copyBuffer);
-                                joiner.build(copyBuffer);
+                        ByteBuffer buffer = ctx.allocateFrame();// input
+                        // buffer
+                        int tableSize = (int) (numPartitions * recordsPerFrame * factor);
+                        ISerializableTable table = new SerializableHashTable(tableSize, ctx);
+                        
+                        for (int partitionid = 0; partitionid < numPartitions; partitionid++) {
+                            RunFileWriter buildWriter = buildWriters[partitionid];
+                            RunFileWriter probeWriter = probeWriters[partitionid];
+                            if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
+                                continue;
+                            }
+                            table.reset();
+                            joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(ctx.getFrameSize(),
+                                    rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
+                                    new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table);
+
+                            // build
+                            if (buildWriter != null) {
+                                RunFileReader buildReader = buildWriter.createReader();
+                                buildReader.open();
+                                while (buildReader.nextFrame(buffer)) {
+                                    ByteBuffer copyBuffer = ctx.allocateFrame();
+                                    FrameUtils.copy(buffer, copyBuffer);
+                                    joiner.build(copyBuffer);
+                                    buffer.clear();
+                                }
+                                buildReader.close();
+                            }
+
+                            // probe
+                            RunFileReader probeReader = probeWriter.createReader();
+                            probeReader.open();
+                            while (probeReader.nextFrame(buffer)) {
+                                joiner.join(buffer, writer);
                                 buffer.clear();
                             }
-                            buildReader.close();
+                            probeReader.close();
+                            joiner.closeJoin(writer);
                         }
-
-                        // probe
-                        RunFileReader probeReader = probeWriter.createReader();
-                        probeReader.open();
-                        while (probeReader.nextFrame(buffer)) {
-                            joiner.join(buffer, writer);
-                            buffer.clear();
-                        }
-                        probeReader.close();
-                        joiner.closeJoin(writer);
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw new HyracksDataException(e);
+                    } finally {
+                        writer.close();
                     }
-                    writer.close();
-                }
-
-                @Override
-                public void deinitialize() throws HyracksDataException {
-                    env.set(RELATION1, null);
-                    env.set(RELATION0, null);
                 }
             };
             return op;
-        }
-
-        @Override
-        public IOperatorDescriptor getOwner() {
-            return GraceHashJoinOperatorDescriptor.this;
         }
     }
 }

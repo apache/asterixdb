@@ -16,5 +16,5 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
 public interface ITreeIndexMetaDataFrameFactory {
-    public ITreeIndexMetaDataFrame createFrame();
+	public ITreeIndexMetaDataFrame createFrame();
 }

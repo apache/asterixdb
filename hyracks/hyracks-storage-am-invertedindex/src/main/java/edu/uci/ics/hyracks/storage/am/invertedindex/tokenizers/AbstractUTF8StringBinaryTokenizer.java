@@ -19,7 +19,7 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokenizer {
 
@@ -63,7 +63,7 @@ public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokeni
         if (sourceHasTypeTag) {
             index++; // skip type tag
         }
-        utf8Length = StringUtils.getUTFLen(data, index);
+        utf8Length = UTF8StringPointable.getUTFLen(data, index);
         index += 2; // skip utf8 length indicator
         this.data = data;
         this.length = length + start;

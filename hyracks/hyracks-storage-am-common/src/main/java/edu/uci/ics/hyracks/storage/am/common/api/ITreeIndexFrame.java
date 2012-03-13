@@ -17,58 +17,51 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
-    public void setPage(ICachedPage page);
 
-    public ICachedPage getPage();
-
-    public ByteBuffer getBuffer();
-
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws Exception;
-
-    public void insert(ITupleReference tuple, MultiComparator cmp, int tupleIndex) throws Exception;
-
-    public void update(int rid, ITupleReference tuple) throws Exception;
-
-    public void delete(ITupleReference tuple, MultiComparator cmp, boolean exactDelete) throws Exception;
+	public void initBuffer(byte level);
+	
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple);
+	
+	public void insert(ITupleReference tuple, int tupleIndex);    
+    
+	public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex);
+	
+	public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace);    
+    
+    public void delete(ITupleReference tuple, int tupleIndex);
 
     // returns true if slots were modified, false otherwise
-    public boolean compact(MultiComparator cmp);
+    public boolean compact();
 
-    public boolean compress(MultiComparator cmp) throws HyracksDataException;
-
-    public void initBuffer(byte level);
+    // returns true if compressed.
+    public boolean compress() throws HyracksDataException;
 
     public int getTupleCount();
-
-    // assumption: page must be write-latched at this point
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple, MultiComparator cmp);
-
-    public FrameOpSpaceStatus hasSpaceUpdate(int rid, ITupleReference tuple, MultiComparator cmp);
 
     public int getTupleOffset(int slotNum);
 
     public int getTotalFreeSpace();
 
-    public void setPageLsn(int pageLsn);
+    public void setPageLsn(long pageLsn);
 
-    public int getPageLsn();
+    public long getPageLsn();
 
+    public void setPage(ICachedPage page);
+
+    public ICachedPage getPage();
+
+    public ByteBuffer getBuffer();
+    
     // for debugging
-    public void printHeader();
+    public String printHeader();
 
-    public String printKeys(MultiComparator cmp, ISerializerDeserializer[] fields) throws HyracksDataException;
-
-    // TODO; what if tuples more than half-page size?
-    public int split(ITreeIndexFrame rightFrame, ITupleReference tuple, MultiComparator cmp, ISplitKey splitKey)
-            throws Exception;
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException;
 
     public ISlotManager getSlotManager();
 
@@ -84,14 +77,7 @@ public interface ITreeIndexFrame {
 
     public void setLevel(byte level);
 
-    public boolean getSmFlag(); // structure modification flag
-
-    public void setSmFlag(boolean smFlag);
-
     public int getSlotSize();
-
-    // TODO: should be removed after new tuple format
-    public void setPageTupleFieldCount(int fieldCount);
 
     // for debugging
     public int getFreeSpaceOff();
@@ -101,4 +87,6 @@ public interface ITreeIndexFrame {
     public ITreeIndexTupleWriter getTupleWriter();
 
     public int getPageHeaderSize();
+    
+    public ITreeIndexTupleReference createTupleReference();
 }

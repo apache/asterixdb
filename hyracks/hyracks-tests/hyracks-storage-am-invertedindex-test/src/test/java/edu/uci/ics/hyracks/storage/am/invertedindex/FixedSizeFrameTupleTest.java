@@ -23,8 +23,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTrait;
-import edu.uci.ics.hyracks.api.dataflow.value.TypeTrait;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeFrameTupleAccessor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeFrameTupleAppender;
@@ -46,8 +46,8 @@ public class FixedSizeFrameTupleTest {
     public void singleFieldTest() throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(FRAME_SIZE);
 
-        ITypeTrait[] fields = new TypeTrait[1];
-        fields[0] = new TypeTrait(4);
+        ITypeTraits[] fields = new ITypeTraits[1];
+        fields[0] = IntegerPointable.TYPE_TRAITS;
 
         FixedSizeFrameTupleAppender ftapp = new FixedSizeFrameTupleAppender(FRAME_SIZE, fields);
         FixedSizeFrameTupleAccessor ftacc = new FixedSizeFrameTupleAccessor(FRAME_SIZE, fields);

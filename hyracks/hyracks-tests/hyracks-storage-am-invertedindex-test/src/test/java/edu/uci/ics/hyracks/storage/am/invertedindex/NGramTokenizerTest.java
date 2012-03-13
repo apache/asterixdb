@@ -41,199 +41,207 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8NGramTokenFac
 
 public class NGramTokenizerTest {
 
-    private char PRECHAR = '#';
-    private char POSTCHAR = '$';
+	private char PRECHAR = '#';
+	private char POSTCHAR = '$';
 
-    private String str = "Jürgen S. Generic's Car";
-    private byte[] inputBuffer;
+	private String str = "Jürgen S. Generic's Car";
+	private byte[] inputBuffer;
 
-    private int gramLength = 3;
+	private int gramLength = 3;
 
-    private void getExpectedGrams(String s, int gramLength, ArrayList<String> grams, boolean prePost) {
+	private void getExpectedGrams(String s, int gramLength,
+			ArrayList<String> grams, boolean prePost) {
 
-        String tmp = s.toLowerCase();
-        if (prePost) {
-            StringBuilder preBuilder = new StringBuilder();
-            for (int i = 0; i < gramLength - 1; i++) {
-                preBuilder.append(PRECHAR);
-            }
-            String pre = preBuilder.toString();
+		String tmp = s.toLowerCase();
+		if (prePost) {
+			StringBuilder preBuilder = new StringBuilder();
+			for (int i = 0; i < gramLength - 1; i++) {
+				preBuilder.append(PRECHAR);
+			}
+			String pre = preBuilder.toString();
 
-            StringBuilder postBuilder = new StringBuilder();
-            for (int i = 0; i < gramLength - 1; i++) {
-                postBuilder.append(POSTCHAR);
-            }
-            String post = postBuilder.toString();
+			StringBuilder postBuilder = new StringBuilder();
+			for (int i = 0; i < gramLength - 1; i++) {
+				postBuilder.append(POSTCHAR);
+			}
+			String post = postBuilder.toString();
 
-            tmp = pre + s.toLowerCase() + post;
-        }
+			tmp = pre + s.toLowerCase() + post;
+		}
 
-        for (int i = 0; i < tmp.length() - gramLength + 1; i++) {
-            String gram = tmp.substring(i, i + gramLength);
-            grams.add(gram);
-        }
-    }
+		for (int i = 0; i < tmp.length() - gramLength + 1; i++) {
+			String gram = tmp.substring(i, i + gramLength);
+			grams.add(gram);
+		}
+	}
 
-    @Before
-    public void init() throws Exception {
-        // serialize string into bytes
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutput dos = new DataOutputStream(baos);
-        dos.writeUTF(str);
-        inputBuffer = baos.toByteArray();
-    }
+	@Before
+	public void init() throws Exception {
+		// serialize string into bytes
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutput dos = new DataOutputStream(baos);
+		dos.writeUTF(str);
+		inputBuffer = baos.toByteArray();
+	}
 
-    void runTestNGramTokenizerWithCountedHashedUTF8Tokens(boolean prePost) throws IOException {
-        HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, false,
-                false, tokenFactory);
-        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+	void runTestNGramTokenizerWithCountedHashedUTF8Tokens(boolean prePost)
+			throws IOException {
+		HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
+		NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(
+				gramLength, prePost, false, false, tokenFactory);
+		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-        ArrayList<String> expectedGrams = new ArrayList<String>();
-        getExpectedGrams(str, gramLength, expectedGrams, prePost);
-        ArrayList<Integer> expectedHashedGrams = new ArrayList<Integer>();
-        HashMap<String, Integer> gramCounts = new HashMap<String, Integer>();
-        for (String s : expectedGrams) {
-            Integer count = gramCounts.get(s);
-            if (count == null) {
-                count = 1;
-                gramCounts.put(s, count);
-            } else {
-                count++;
-            }
+		ArrayList<String> expectedGrams = new ArrayList<String>();
+		getExpectedGrams(str, gramLength, expectedGrams, prePost);
+		ArrayList<Integer> expectedHashedGrams = new ArrayList<Integer>();
+		HashMap<String, Integer> gramCounts = new HashMap<String, Integer>();
+		for (String s : expectedGrams) {
+			Integer count = gramCounts.get(s);
+			if (count == null) {
+				count = 1;
+				gramCounts.put(s, count);
+			} else {
+				count++;
+			}
 
-            int hash = tokenHash(s, count);
-            expectedHashedGrams.add(hash);
-        }
+			int hash = tokenHash(s, count);
+			expectedHashedGrams.add(hash);
+		}
 
-        int tokenCount = 0;
+		int tokenCount = 0;
 
-        while (tokenizer.hasNext()) {
-            tokenizer.next();
+		while (tokenizer.hasNext()) {
+			tokenizer.next();
 
-            // serialize hashed token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+			// serialize hashed token
+			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+			DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-            IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+			IToken token = tokenizer.getToken();
+			token.serializeToken(tokenDos);
 
-            // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
-            DataInput in = new DataInputStream(bais);
+			// deserialize token
+			ByteArrayInputStream bais = new ByteArrayInputStream(
+					tokenBaos.toByteArray());
+			DataInput in = new DataInputStream(bais);
 
-            Integer hashedGram = in.readInt();
+			Integer hashedGram = in.readInt();
 
-            // System.out.println(hashedGram);
+			// System.out.println(hashedGram);
 
-            Assert.assertEquals(expectedHashedGrams.get(tokenCount), hashedGram);
+			Assert.assertEquals(expectedHashedGrams.get(tokenCount), hashedGram);
 
-            tokenCount++;
-        }
-        // System.out.println("---------");
-    }
+			tokenCount++;
+		}
+		// System.out.println("---------");
+	}
 
-    void runTestNGramTokenizerWithHashedUTF8Tokens(boolean prePost) throws IOException {
-        HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false,
-                tokenFactory);
-        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+	void runTestNGramTokenizerWithHashedUTF8Tokens(boolean prePost)
+			throws IOException {
+		HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
+		NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(
+				gramLength, prePost, true, false, tokenFactory);
+		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-        ArrayList<String> expectedGrams = new ArrayList<String>();
-        getExpectedGrams(str, gramLength, expectedGrams, prePost);
-        ArrayList<Integer> expectedHashedGrams = new ArrayList<Integer>();
-        for (String s : expectedGrams) {
-            int hash = tokenHash(s, 1);
-            expectedHashedGrams.add(hash);
-        }
+		ArrayList<String> expectedGrams = new ArrayList<String>();
+		getExpectedGrams(str, gramLength, expectedGrams, prePost);
+		ArrayList<Integer> expectedHashedGrams = new ArrayList<Integer>();
+		for (String s : expectedGrams) {
+			int hash = tokenHash(s, 1);
+			expectedHashedGrams.add(hash);
+		}
 
-        int tokenCount = 0;
+		int tokenCount = 0;
 
-        while (tokenizer.hasNext()) {
-            tokenizer.next();
+		while (tokenizer.hasNext()) {
+			tokenizer.next();
 
-            // serialize hashed token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+			// serialize hashed token
+			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+			DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-            IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+			IToken token = tokenizer.getToken();
+			token.serializeToken(tokenDos);
 
-            // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
-            DataInput in = new DataInputStream(bais);
+			// deserialize token
+			ByteArrayInputStream bais = new ByteArrayInputStream(
+					tokenBaos.toByteArray());
+			DataInput in = new DataInputStream(bais);
 
-            Integer hashedGram = in.readInt();
+			Integer hashedGram = in.readInt();
 
-            // System.out.println(hashedGram);
+			// System.out.println(hashedGram);
 
-            Assert.assertEquals(expectedHashedGrams.get(tokenCount), hashedGram);
+			Assert.assertEquals(expectedHashedGrams.get(tokenCount), hashedGram);
 
-            tokenCount++;
-        }
-        // System.out.println("---------");
-    }
+			tokenCount++;
+		}
+		// System.out.println("---------");
+	}
 
-    void runTestNGramTokenizerWithUTF8Tokens(boolean prePost) throws IOException {
-        UTF8NGramTokenFactory tokenFactory = new UTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false,
-                tokenFactory);
-        tokenizer.reset(inputBuffer, 0, inputBuffer.length);
+	void runTestNGramTokenizerWithUTF8Tokens(boolean prePost)
+			throws IOException {
+		UTF8NGramTokenFactory tokenFactory = new UTF8NGramTokenFactory();
+		NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(
+				gramLength, prePost, true, false, tokenFactory);
+		tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
-        ArrayList<String> expectedGrams = new ArrayList<String>();
-        getExpectedGrams(str, gramLength, expectedGrams, prePost);
+		ArrayList<String> expectedGrams = new ArrayList<String>();
+		getExpectedGrams(str, gramLength, expectedGrams, prePost);
 
-        int tokenCount = 0;
+		int tokenCount = 0;
 
-        while (tokenizer.hasNext()) {
-            tokenizer.next();
+		while (tokenizer.hasNext()) {
+			tokenizer.next();
 
-            // serialize hashed token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+			// serialize hashed token
+			ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
+			DataOutput tokenDos = new DataOutputStream(tokenBaos);
 
-            IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+			IToken token = tokenizer.getToken();
+			token.serializeToken(tokenDos);
 
-            // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
-            DataInput in = new DataInputStream(bais);
+			// deserialize token
+			ByteArrayInputStream bais = new ByteArrayInputStream(
+					tokenBaos.toByteArray());
+			DataInput in = new DataInputStream(bais);
 
-            String strGram = in.readUTF();
+			String strGram = in.readUTF();
 
-            // System.out.println("\"" + strGram + "\"");
+			// System.out.println("\"" + strGram + "\"");
 
-            Assert.assertEquals(expectedGrams.get(tokenCount), strGram);
+			Assert.assertEquals(expectedGrams.get(tokenCount), strGram);
 
-            tokenCount++;
-        }
-        // System.out.println("---------");
-    }
+			tokenCount++;
+		}
+		// System.out.println("---------");
+	}
 
-    @Test
-    public void testNGramTokenizerWithCountedHashedUTF8Tokens() throws Exception {
-        runTestNGramTokenizerWithCountedHashedUTF8Tokens(false);
-        runTestNGramTokenizerWithCountedHashedUTF8Tokens(true);
-    }
+	@Test
+	public void testNGramTokenizerWithCountedHashedUTF8Tokens()
+			throws Exception {
+		runTestNGramTokenizerWithCountedHashedUTF8Tokens(false);
+		runTestNGramTokenizerWithCountedHashedUTF8Tokens(true);
+	}
 
-    @Test
-    public void testNGramTokenizerWithHashedUTF8Tokens() throws Exception {
-        runTestNGramTokenizerWithHashedUTF8Tokens(false);
-        runTestNGramTokenizerWithHashedUTF8Tokens(true);
-    }
+	@Test
+	public void testNGramTokenizerWithHashedUTF8Tokens() throws Exception {
+		runTestNGramTokenizerWithHashedUTF8Tokens(false);
+		runTestNGramTokenizerWithHashedUTF8Tokens(true);
+	}
 
-    @Test
-    public void testNGramTokenizerWithUTF8Tokens() throws IOException {
-        runTestNGramTokenizerWithUTF8Tokens(false);
-        runTestNGramTokenizerWithUTF8Tokens(true);
-    }
+	@Test
+	public void testNGramTokenizerWithUTF8Tokens() throws IOException {
+		runTestNGramTokenizerWithUTF8Tokens(false);
+		runTestNGramTokenizerWithUTF8Tokens(true);
+	}
 
-    public int tokenHash(String token, int tokenCount) {
-        int h = AbstractUTF8Token.GOLDEN_RATIO_32;
-        for (int i = 0; i < token.length(); i++) {
-            h ^= token.charAt(i);
-            h *= AbstractUTF8Token.GOLDEN_RATIO_32;
-        }
-        return h + tokenCount;
-    }
+	public int tokenHash(String token, int tokenCount) {
+		int h = AbstractUTF8Token.GOLDEN_RATIO_32;
+		for (int i = 0; i < token.length(); i++) {
+			h ^= token.charAt(i);
+			h *= AbstractUTF8Token.GOLDEN_RATIO_32;
+		}
+		return h + tokenCount;
+	}
 }

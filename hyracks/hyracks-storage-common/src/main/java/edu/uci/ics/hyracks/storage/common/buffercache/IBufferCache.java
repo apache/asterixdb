@@ -24,14 +24,18 @@ public interface IBufferCache {
 
     public void closeFile(int fileId) throws HyracksDataException;
 
-    public void deleteFile(int fileId) throws HyracksDataException;
-
+    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
+    
     public ICachedPage tryPin(long dpid) throws HyracksDataException;
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
     public void unpin(ICachedPage page) throws HyracksDataException;
 
+    public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
+    
+    public void force(int fileId, boolean metadata) throws HyracksDataException;
+    
     public int getPageSize();
 
     public int getNumPages();

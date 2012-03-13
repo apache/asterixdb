@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.common.data.normalizers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class UTF8StringNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
@@ -26,14 +26,14 @@ public class UTF8StringNormalizedKeyComputerFactory implements INormalizedKeyCom
         return new INormalizedKeyComputer() {
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                int len = StringUtils.getUTFLen(bytes, start);
+                int len = UTF8StringPointable.getUTFLen(bytes, start);
                 int nk = 0;
                 int offset = start + 2;
                 for (int i = 0; i < 2; ++i) {
                     nk <<= 16;
                     if (i < len) {
-                        nk += ((int) StringUtils.charAt(bytes, offset)) & 0xffff;
-                        offset += StringUtils.charSize(bytes, offset);
+                        nk += ((int) UTF8StringPointable.charAt(bytes, offset)) & 0xffff;
+                        offset += UTF8StringPointable.charSize(bytes, offset);
                     }
                 }
                 return nk;
