@@ -123,7 +123,7 @@ public class OptimizerTest {
 
             Reader query = new BufferedReader(new FileReader(queryFile));
             PrintWriter plan = new PrintWriter(actualFile);
-            AsterixJavaClient asterix = new AsterixJavaClient(query, plan);
+            AsterixJavaClient asterix = new AsterixJavaClient(null, query, plan);
             try {
                 asterix.compile(true, false, false, false, true, true, false);
             } catch (AsterixException e) {

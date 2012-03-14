@@ -6,6 +6,8 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.asterix.api.common.AsterixClientConfig;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class AsterixClientDriver {
 
@@ -29,17 +31,18 @@ public class AsterixClientDriver {
             return;
         }
         boolean exec = new Boolean(acc.execute);
-        AsterixJavaClient q = compileQuery(acc.getArguments().get(0), new Boolean(acc.optimize), new Boolean(
+        IHyracksClientConnection hcc = exec ? new HyracksConnection("localhost", acc.hyracksPort) : null;
+        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize), new Boolean(
                 acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
         if (exec) {
-            q.execute(acc.hyracksPort);
+            q.execute();
         }
     }
 
-    private static AsterixJavaClient compileQuery(String filename, boolean optimize, boolean onlyPhysical,
-            boolean createBinaryRuntime) throws Exception {
+    private static AsterixJavaClient compileQuery(IHyracksClientConnection hcc, String filename, boolean optimize,
+            boolean onlyPhysical, boolean createBinaryRuntime) throws Exception {
         FileReader reader = new FileReader(filename);
-        AsterixJavaClient q = new AsterixJavaClient(reader);
+        AsterixJavaClient q = new AsterixJavaClient(hcc, reader);
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

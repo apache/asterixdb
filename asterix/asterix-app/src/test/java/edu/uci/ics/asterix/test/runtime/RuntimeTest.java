@@ -44,6 +44,7 @@ public class RuntimeTest {
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeTest.class.getName());
+
     // private static NCBootstrapImpl _bootstrap = new NCBootstrapImpl();
 
     private static ArrayList<String> readFile(String fileName) {
@@ -83,12 +84,10 @@ public class RuntimeTest {
         lsn.deleteOnExit();
 
         AsterixHyracksIntegrationUtil.init();
-        // _bootstrap.start();
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        // _bootstrap.stop();
         AsterixHyracksIntegrationUtil.deinit();
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
@@ -151,7 +150,8 @@ public class RuntimeTest {
             }
             Assume.assumeTrue(!TestHelper.isInPrefixList(ignore, queryFileShort));
             LOGGER.severe("RUNNING TEST: " + queryFile + " \n");
-            TestsUtils.runScriptAndCompareWithResult(queryFile, ERR, expectedFile, actualFile);
+            TestsUtils.runScriptAndCompareWithResult(AsterixHyracksIntegrationUtil.getHyracksClientConnection(),
+                    queryFile, ERR, expectedFile, actualFile);
         } catch (Exception e) {
             if (!(e instanceof AssumptionViolatedException)) {
                 LOGGER.severe("Test \"" + queryFile.getPath() + "\" FAILED!");

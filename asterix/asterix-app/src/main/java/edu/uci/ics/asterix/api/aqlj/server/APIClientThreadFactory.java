@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 /**
  * This class is a factory for client handler threads of type {@link APIClientThread} and is used in conjunction with {@link ThreadedServer}.
@@ -27,12 +29,16 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 public class APIClientThreadFactory implements IClientThreadFactory {
     private final ICCApplicationContext appContext;
 
-    public APIClientThreadFactory(ICCApplicationContext appContext) {
+    private IHyracksClientConnection hcc;
+
+    public APIClientThreadFactory(ICCApplicationContext appContext) throws Exception {
         this.appContext = appContext;
+        hcc = new HyracksConnection("localhost", appContext.getCCContext().getClusterControllerInfo()
+                .getClientNetPort());
     }
 
     @Override
     public Thread createThread(Socket socket) throws IOException {
-        return new APIClientThread(socket, appContext);
+        return new APIClientThread(hcc, socket, appContext);
     }
 }

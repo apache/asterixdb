@@ -20,24 +20,25 @@ import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class AsterixJavaClient {
-
+    private IHyracksClientConnection hcc;
     private Reader queryText;
     private PrintWriter writer;
 
     private Job[] dmlJobs;
     private JobSpecification queryJobSpec;
 
-    public AsterixJavaClient(Reader queryText, PrintWriter writer) {
+    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText, PrintWriter writer) {
+        this.hcc = hcc;
         this.queryText = queryText;
         this.writer = writer;
     }
 
-    public AsterixJavaClient(Reader queryText) {
-        this.queryText = queryText;
-        this.writer = new PrintWriter(System.out, true);
+    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText) {
+        this(hcc, queryText, new PrintWriter(System.out, true));
     }
 
     public void compile() throws Exception {
@@ -62,13 +63,13 @@ public class AsterixJavaClient {
         }
         MetadataManager.INSTANCE.init();
 
-        SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, optimize, false,
-                printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly, printJob);
+        SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, optimize,
+                false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly, printJob);
         pc.setGenerateJobSpec(generateBinaryRuntime);
 
         String dataverseName = null;
         if (q != null) {
-            dataverseName =  APIFramework.compileDdlStatements(q, writer, pc, DisplayFormat.TEXT);
+            dataverseName = APIFramework.compileDdlStatements(q, writer, pc, DisplayFormat.TEXT);
             dmlJobs = APIFramework.compileDmlStatements(dataverseName, q, writer, pc, DisplayFormat.TEXT);
         }
 
@@ -76,20 +77,20 @@ public class AsterixJavaClient {
             return;
         }
 
-        Pair<AqlCompiledMetadataDeclarations, JobSpecification> metadataAndSpec = APIFramework.compileQuery(dataverseName, q,
-                parser.getVarCounter(), null, null, pc, writer, DisplayFormat.TEXT, null);
+        Pair<AqlCompiledMetadataDeclarations, JobSpecification> metadataAndSpec = APIFramework.compileQuery(
+                dataverseName, q, parser.getVarCounter(), null, null, pc, writer, DisplayFormat.TEXT, null);
         if (metadataAndSpec != null) {
             queryJobSpec = metadataAndSpec.second;
         }
         writer.flush();
     }
 
-    public void execute(int port) throws Exception {
+    public void execute() throws Exception {
         if (dmlJobs != null) {
-            APIFramework.executeJobArray(dmlJobs, port, writer, DisplayFormat.TEXT);
+            APIFramework.executeJobArray(hcc, dmlJobs, writer, DisplayFormat.TEXT);
         }
         if (queryJobSpec != null) {
-            APIFramework.executeJobArray(new JobSpecification[] { queryJobSpec }, port, writer, DisplayFormat.TEXT);
+            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer, DisplayFormat.TEXT);
         }
     }
 

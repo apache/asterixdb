@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,10 +23,14 @@ import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class APIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+
+    private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -42,7 +47,16 @@ public class APIServlet extends HttpServlet {
         response.setContentType("text/html");
         out.println("<H1>Input statements:</H1>");
         printInHtml(out, query);
+        ServletContext context = getServletContext();
+        IHyracksClientConnection hcc;
         try {
+            synchronized (context) {
+                hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
+                if (hcc == null) {
+                    hcc = new HyracksConnection("localhost", port);
+                    context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+                }
+            }
             AQLParser parser = new AQLParser(new StringReader(query));
             Query q = (Query) parser.Statement();
             SessionConfig pc = new SessionConfig(port, true, isSet(printExprParam), isSet(printRewrittenExprParam),
@@ -50,10 +64,10 @@ public class APIServlet extends HttpServlet {
             pc.setGenerateJobSpec(true);
 
             MetadataManager.INSTANCE.init();
-            String  dataverseName = null;
+            String dataverseName = null;
 
             if (q != null) {
-                dataverseName = postDmlStatement(q, out, pc);
+                dataverseName = postDmlStatement(hcc, q, out, pc);
             }
 
             if (q.isDummyQuery()) {
@@ -66,7 +80,7 @@ public class APIServlet extends HttpServlet {
             GlobalConfig.ASTERIX_LOGGER.info(spec.toJSON().toString(1));
             AqlCompiledMetadataDeclarations metadata = metadataAndSpec.first;
             long startTime = System.currentTimeMillis();
-            APIFramework.executeJobArray(new JobSpecification[] { spec }, port, out, DisplayFormat.HTML);
+            APIFramework.executeJobArray(hcc, new JobSpecification[] { spec }, out, DisplayFormat.HTML);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
             out.println("<H1>Result:</H1>");
@@ -119,13 +133,14 @@ public class APIServlet extends HttpServlet {
         out.println(form);
     }
 
-    private String postDmlStatement(Query dummyQ, PrintWriter out, SessionConfig pc) throws Exception {
+    private String postDmlStatement(IHyracksClientConnection hcc, Query dummyQ, PrintWriter out, SessionConfig pc)
+            throws Exception {
 
         String dataverseName = APIFramework.compileDdlStatements(dummyQ, out, pc, DisplayFormat.TEXT);
         Job[] dmlJobSpecs = APIFramework.compileDmlStatements(dataverseName, dummyQ, out, pc, DisplayFormat.HTML);
 
         long startTime = System.currentTimeMillis();
-        APIFramework.executeJobArray(dmlJobSpecs, pc.getPort(), out, DisplayFormat.HTML);
+        APIFramework.executeJobArray(hcc, dmlJobSpecs, out, DisplayFormat.HTML);
         long endTime = System.currentTimeMillis();
         double duration = (endTime - startTime) / 1000.00;
         out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
