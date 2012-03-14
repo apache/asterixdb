@@ -69,7 +69,7 @@ public class AsterixJavaClient {
 
         String dataverseName = null;
         if (q != null) {
-            dataverseName = APIFramework.compileDdlStatements(q, writer, pc, DisplayFormat.TEXT);
+            dataverseName = APIFramework.compileDdlStatements(hcc, q, writer, pc, DisplayFormat.TEXT);
             dmlJobs = APIFramework.compileDmlStatements(dataverseName, q, writer, pc, DisplayFormat.TEXT);
         }
 
