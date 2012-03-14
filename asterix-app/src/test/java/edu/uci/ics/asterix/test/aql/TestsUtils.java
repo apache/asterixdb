@@ -20,13 +20,13 @@ import edu.uci.ics.asterix.api.aqlj.client.IADMCursor;
 import edu.uci.ics.asterix.api.aqlj.client.IAQLJConnection;
 import edu.uci.ics.asterix.api.aqlj.client.IAQLJResult;
 import edu.uci.ics.asterix.api.aqlj.common.AQLJException;
-import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class TestsUtils {
 
@@ -46,16 +46,16 @@ public class TestsUtils {
         return path.delete();
     }
 
-    public static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
-            File actualFile) throws Exception {
+    public static void runScriptAndCompareWithResult(IHyracksClientConnection hcc, File scriptFile, PrintWriter print,
+            File expectedFile, File actualFile) throws Exception {
         Reader query = new BufferedReader(new FileReader(scriptFile));
-        AsterixJavaClient asterix = new AsterixJavaClient(query, print);
+        AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, print);
         try {
             asterix.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + scriptFile + ": " + e.getMessage(), e);
         }
-        asterix.execute(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT);
+        asterix.execute();
         query.close();
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));

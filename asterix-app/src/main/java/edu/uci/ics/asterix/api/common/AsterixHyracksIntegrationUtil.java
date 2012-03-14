@@ -31,8 +31,8 @@ public class AsterixHyracksIntegrationUtil {
 
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
-        ccConfig.clusterNetIpAddress="127.0.0.1";
-        ccConfig.clientNetIpAddress="127.0.0.1";
+        ccConfig.clusterNetIpAddress = "127.0.0.1";
+        ccConfig.clientNetIpAddress = "127.0.0.1";
         ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
         ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
@@ -43,7 +43,7 @@ public class AsterixHyracksIntegrationUtil {
         NCConfig ncConfig1 = new NCConfig();
         ncConfig1.ccHost = "localhost";
         ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-        ncConfig1.clusterNetIPAddress="127.0.0.1";
+        ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         ncConfig1.frameSize = FRAME_SIZE;
@@ -53,7 +53,7 @@ public class AsterixHyracksIntegrationUtil {
         NCConfig ncConfig2 = new NCConfig();
         ncConfig2.ccHost = "localhost";
         ncConfig2.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-        ncConfig2.clusterNetIPAddress="127.0.0.1";
+        ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         ncConfig2.frameSize = FRAME_SIZE;
@@ -63,6 +63,10 @@ public class AsterixHyracksIntegrationUtil {
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
         hcc.createApplication(GlobalConfig.HYRACKS_APP_NAME, null);
 
+    }
+
+    public static IHyracksClientConnection getHyracksClientConnection() {
+        return hcc;
     }
 
     public static void destroyApp() throws Exception {

@@ -548,10 +548,8 @@ public class APIFramework {
         return new Pair<AqlCompiledMetadataDeclarations, JobSpecification>(metadataDecls, spec);
     }
 
-    public static void executeJobArray(JobSpecification[] specs, int port, PrintWriter out, DisplayFormat pdf)
+    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out, DisplayFormat pdf)
             throws Exception {
-        IHyracksClientConnection hcc = new HyracksConnection("localhost", port);
-
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
             JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, specs[i]);
@@ -565,9 +563,8 @@ public class APIFramework {
 
     }
 
-    public static void executeJobArray(Job[] jobs, int port, PrintWriter out, DisplayFormat pdf) throws Exception {
-        IHyracksClientConnection hcc = new HyracksConnection("localhost", port);
-
+    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf)
+            throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);
             JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, jobs[i].getJobSpec());

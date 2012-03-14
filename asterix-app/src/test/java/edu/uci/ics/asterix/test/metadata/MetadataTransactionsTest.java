@@ -81,13 +81,14 @@ public class MetadataTransactionsTest {
         String actualFileName = (String) queryTuple[2];
         try {
             Reader query = new BufferedReader(new FileReader(queryFileName));
-            AsterixJavaClient asterix = new AsterixJavaClient(query, ERR);
+            AsterixJavaClient asterix = new AsterixJavaClient(
+                    AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, ERR);
             LOGGER.info("Query is: " + queryFileName);
             asterix.compile(true, false, false, false, false, executeQuery, false);
             // We don't want to execute a query if we expect only DDL
             // modifications.
             if (executeQuery) {
-                asterix.execute(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT);
+                asterix.execute();
             }
             query.close();
         } catch (Exception e) {
