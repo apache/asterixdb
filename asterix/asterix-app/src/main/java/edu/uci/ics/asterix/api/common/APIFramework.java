@@ -65,7 +65,6 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -142,15 +141,16 @@ public class APIFramework {
         HTML
     }
 
-    public static String compileDdlStatements(Query query, PrintWriter out, SessionConfig pc, DisplayFormat pdf)
-            throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
+    public static String compileDdlStatements(IHyracksClientConnection hcc, Query query, PrintWriter out,
+            SessionConfig pc, DisplayFormat pdf) throws AsterixException, AlgebricksException, JSONException,
+            RemoteException, ACIDException {
         // Begin a transaction against the metadata.
         // Lock the metadata in X mode to protect against other DDL and DML.
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.EXCLUSIVE);
         try {
             DdlTranslator ddlt = new DdlTranslator(mdTxnCtx, query.getPrologDeclList(), out, pc, pdf);
-            ddlt.translate(false);
+            ddlt.translate(hcc, false);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return ddlt.getCompiledDeclarations().getDataverseName();
         } catch (Exception e) {
@@ -548,8 +548,8 @@ public class APIFramework {
         return new Pair<AqlCompiledMetadataDeclarations, JobSpecification>(metadataDecls, spec);
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out, DisplayFormat pdf)
-            throws Exception {
+    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out,
+            DisplayFormat pdf) throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
             JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, specs[i]);

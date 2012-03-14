@@ -136,7 +136,7 @@ public class APIServlet extends HttpServlet {
     private String postDmlStatement(IHyracksClientConnection hcc, Query dummyQ, PrintWriter out, SessionConfig pc)
             throws Exception {
 
-        String dataverseName = APIFramework.compileDdlStatements(dummyQ, out, pc, DisplayFormat.TEXT);
+        String dataverseName = APIFramework.compileDdlStatements(hcc, dummyQ, out, pc, DisplayFormat.TEXT);
         Job[] dmlJobSpecs = APIFramework.compileDmlStatements(dataverseName, dummyQ, out, pc, DisplayFormat.HTML);
 
         long startTime = System.currentTimeMillis();
