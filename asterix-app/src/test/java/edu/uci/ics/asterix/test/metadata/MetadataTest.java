@@ -153,6 +153,8 @@ public class MetadataTest {
             asterix.compile();
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
+        } finally {
+            query.close();
         }
         asterix.execute();
         query.close();

@@ -36,6 +36,10 @@
 									<mainClass>edu.uci.ics.asterix.drivers.AsterixClientDriver</mainClass>
 									<name>asterix-cmd</name>
 								</program>
+								<program>
+									<mainClass>edu.uci.ics.asterix.drivers.AsterixCLI</mainClass>
+									<name>asterix-cli</name>
+								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
 							<repositoryName>lib</repositoryName>

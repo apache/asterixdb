@@ -54,9 +54,10 @@ public class TestsUtils {
             asterix.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + scriptFile + ": " + e.getMessage(), e);
+        } finally {
+            query.close();
         }
         asterix.execute();
-        query.close();
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         String lineExpected, lineActual;

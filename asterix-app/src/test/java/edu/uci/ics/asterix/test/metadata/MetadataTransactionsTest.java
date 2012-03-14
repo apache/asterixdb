@@ -84,7 +84,11 @@ public class MetadataTransactionsTest {
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, ERR);
             LOGGER.info("Query is: " + queryFileName);
-            asterix.compile(true, false, false, false, false, executeQuery, false);
+            try {
+                asterix.compile(true, false, false, false, false, executeQuery, false);
+            } finally {
+                query.close();
+            }
             // We don't want to execute a query if we expect only DDL
             // modifications.
             if (executeQuery) {
