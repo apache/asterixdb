@@ -41,6 +41,8 @@ public class DmlTest {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + LOAD_FOR_ENLIST_FILE + ": " + e.getMessage(), e);
+        } finally {
+            loadReader.close();
         }
         asterixLoad.execute();
         AsterixHyracksIntegrationUtil.destroyApp();
