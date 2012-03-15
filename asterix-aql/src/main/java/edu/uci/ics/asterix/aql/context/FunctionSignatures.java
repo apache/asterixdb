@@ -3,7 +3,7 @@ package edu.uci.ics.asterix.aql.context;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 public class FunctionSignatures {
     private final Map<String, FunctionExpressionMap> functionMap;
@@ -12,7 +12,7 @@ public class FunctionSignatures {
         functionMap = new HashMap<String, FunctionExpressionMap>();
     }
 
-    public FunIdentifier get(String name, int arity) {
+    public AsterixFunction get(String name, int arity) {
         FunctionExpressionMap possibleFD = functionMap.get(name);
         if (possibleFD == null) {
             return null;
@@ -21,8 +21,8 @@ public class FunctionSignatures {
         }
     }
 
-    public void put(FunIdentifier fd, boolean varargs) {
-        String name = fd.getValue();
+    public void put(AsterixFunction fd, boolean varargs) {
+        String name = fd.getFunctionName();
         FunctionExpressionMap func = functionMap.get(name);
         if (func == null) {
             func = new FunctionExpressionMap(varargs);

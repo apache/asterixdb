@@ -185,8 +185,8 @@ public class AsterixInlineVariablesRule implements IAlgebraicRewriteRule {
                     ILogicalExpression expr = exprRef.getValue();
                     if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         ScalarFunctionCallExpression funExpr = (ScalarFunctionCallExpression) expr;
-                        if (funExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
-                                || funExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
+                        if (funExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                                || funExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
                             assignRecord = true;
                             break;
                         }

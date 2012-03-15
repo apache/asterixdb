@@ -51,7 +51,7 @@ public class TestsUtils {
         Reader query = new BufferedReader(new FileReader(scriptFile));
         AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, print);
         try {
-            asterix.compile(true, false, false, false, false, true, false);
+            asterix.compile(true, false, true, true, false, true, false);
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + scriptFile + ": " + e.getMessage(), e);
         } finally {

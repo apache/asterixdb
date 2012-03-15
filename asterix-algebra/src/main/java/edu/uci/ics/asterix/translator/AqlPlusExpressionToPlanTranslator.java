@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
 import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.FunctionDropStatement;
 import edu.uci.ics.asterix.aql.expression.GbyVariableExpressionPair;
@@ -43,7 +42,6 @@ import edu.uci.ics.asterix.aql.expression.JoinClause;
 import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
-import edu.uci.ics.asterix.aql.expression.ListConstructor.Type;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
 import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
 import edu.uci.ics.asterix.aql.expression.MetaVariableClause;
@@ -53,10 +51,8 @@ import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
 import edu.uci.ics.asterix.aql.expression.OperatorType;
 import edu.uci.ics.asterix.aql.expression.OrderbyClause;
-import edu.uci.ics.asterix.aql.expression.OrderbyClause.OrderModifier;
 import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
 import edu.uci.ics.asterix.aql.expression.QuantifiedExpression;
-import edu.uci.ics.asterix.aql.expression.QuantifiedExpression.Quantifier;
 import edu.uci.ics.asterix.aql.expression.QuantifiedPair;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.RecordConstructor;
@@ -66,7 +62,6 @@ import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
 import edu.uci.ics.asterix.aql.expression.TypeReferenceExpression;
 import edu.uci.ics.asterix.aql.expression.UnaryExpr;
-import edu.uci.ics.asterix.aql.expression.UnaryExpr.Sign;
 import edu.uci.ics.asterix.aql.expression.UnionExpr;
 import edu.uci.ics.asterix.aql.expression.UnorderedListTypeDefinition;
 import edu.uci.ics.asterix.aql.expression.UpdateClause;
@@ -75,11 +70,15 @@ import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
+import edu.uci.ics.asterix.aql.expression.ListConstructor.Type;
+import edu.uci.ics.asterix.aql.expression.OrderbyClause.OrderModifier;
+import edu.uci.ics.asterix.aql.expression.QuantifiedExpression.Quantifier;
+import edu.uci.ics.asterix.aql.expression.UnaryExpr.Sign;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlPlusExpressionVisitor;
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
-import edu.uci.ics.asterix.common.functions.FunctionUtils;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
@@ -93,6 +92,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
@@ -104,14 +104,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -128,13 +128,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -439,7 +439,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
     public Pair<ILogicalOperator, LogicalVariable> visitCallExpr(CallExpr fcall,  Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         LogicalVariable v = context.newVar();
-        FunIdentifier fid = fcall.getIdent();
+        AsterixFunction fid = fcall.getIdent();
         List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
         Mutable<ILogicalOperator> topOp = tupSource;
 
@@ -468,13 +468,13 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
             }
         }
 
-        FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, fid.getValue(), false);
+        FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, fid.getFunctionName(), false);
         FunctionIdentifier builtinAquafi = AlgebricksBuiltinFunctions.getBuiltinFunctionIdentifier(fi);
 
         if (builtinAquafi != null) {
             fi = builtinAquafi;
         } else {
-            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, fid.getValue(), false);
+            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, fid.getFunctionName(), false);
             FunctionIdentifier builtinAsterixFi = AsterixBuiltinFunctions.getBuiltinFunctionIdentifier(fi);
             if (builtinAsterixFi != null) {
                 fi = builtinAsterixFi;

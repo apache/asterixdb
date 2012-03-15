@@ -11,7 +11,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
-import edu.uci.ics.asterix.common.functions.FunctionUtils;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
@@ -363,8 +362,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(),
-                        abvs.getLength()));
+                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(), abvs
+                        .getLength()));
                 IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
                 return evalFactory;
@@ -389,8 +388,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
-        IEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getBytes(),
-                abvs1.getLength()));
+        IEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getBytes(), abvs1
+                .getLength()));
 
         for (int i = 0; i < numOfFields; i++) {
             ArrayBackedValueStorage abvs2 = new ArrayBackedValueStorage();
@@ -401,8 +400,8 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getBytes(),
-                    abvs2.getLength()));
+            IEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getBytes(), abvs2
+                    .getLength()));
 
             evalFactories[i] = new CreateMBREvalFactory(evalFactory, dimensionEvalFactory, coordinateEvalFactory);
         }
@@ -428,15 +427,17 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(),
-                        abvs.getLength()));
+                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(), abvs
+                        .getLength()));
                 IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
-                IFunctionInfo finfoAccess = FunctionUtils
-                        .getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                IFunctionInfo finfoAccess = AsterixBuiltinFunctions
+                        .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+
                 ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
-                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(i)))));
+                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                                new AInt32(i)))));
                 return new Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
                         recType.getFieldTypes()[i]);
             }
@@ -470,8 +471,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
             ARecordType rt = (ARecordType) context.getType(expr);
-            ((OpenRecordConstructorDescriptor) fd).reset(rt,
-                    computeOpenFields((AbstractFunctionCallExpression) expr, rt));
+            ((OpenRecordConstructorDescriptor) fd).reset(rt, computeOpenFields((AbstractFunctionCallExpression) expr,
+                    rt));
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             ((ClosedRecordConstructorDescriptor) fd).reset((ARecordType) context.getType(expr));

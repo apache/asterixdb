@@ -294,7 +294,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(FunctionDecl fd, Integer step) throws AsterixException {
-        out.println(skip(step) + "FunctionDecl " + fd.getIdent().getValue() + "(" + fd.getParamList().toString()
+        out.println(skip(step) + "FunctionDecl " + fd.getIdent().getFunctionName() + "(" + fd.getParamList().toString()
                 + ") {");
         fd.getFuncBody().accept(this, step + 1);
         out.println(skip(step) + "}");

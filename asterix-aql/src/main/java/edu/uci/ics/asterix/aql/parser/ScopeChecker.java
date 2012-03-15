@@ -3,8 +3,8 @@ package edu.uci.ics.asterix.aql.parser;
 import java.util.Stack;
 
 import edu.uci.ics.asterix.aql.context.Scope;
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
 import edu.uci.ics.asterix.aql.expression.Identifier;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
 
 public abstract class ScopeChecker {
@@ -95,7 +95,7 @@ public abstract class ScopeChecker {
      * 
      * @return functionDescriptor
      */
-    public final FunIdentifier lookupFunctionSignature(String name, int arity) {
+    public final AsterixFunction lookupFunctionSignature(String name, int arity) {
         if (name != null) {
             return getCurrentScope().findFunctionSignature(name, arity);
         } else {

@@ -57,7 +57,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
             FunctionIdentifier fid = f.getFunctionIdentifier();
 
-            if (fid == AsterixBuiltinFunctions.DATASET) {
+            if (fid.equals(AsterixBuiltinFunctions.DATASET)) {
                 if (unnest.getPositionalVariable() != null) {
                     throw new AlgebricksException("No positional variables are allowed over datasets.");
                 }
@@ -106,7 +106,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 return true;
             }
             
-            if (fid == AsterixBuiltinFunctions.FEED_INGEST) {
+            if (fid.equals(AsterixBuiltinFunctions.FEED_INGEST)) {
                 if (unnest.getPositionalVariable() != null) {
                     throw new AlgebricksException("No positional variables are allowed over datasets.");
                 }

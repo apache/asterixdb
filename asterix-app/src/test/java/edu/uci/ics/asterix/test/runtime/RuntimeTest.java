@@ -149,6 +149,7 @@ public class RuntimeTest {
                 Assume.assumeTrue(TestHelper.isInPrefixList(only, queryFileShort));
             }
             Assume.assumeTrue(!TestHelper.isInPrefixList(ignore, queryFileShort));
+            System.out.println("RUNNING TEST: " + queryFile + " \n");
             LOGGER.severe("RUNNING TEST: " + queryFile + " \n");
             TestsUtils.runScriptAndCompareWithResult(AsterixHyracksIntegrationUtil.getHyracksClientConnection(),
                     queryFile, ERR, expectedFile, actualFile);

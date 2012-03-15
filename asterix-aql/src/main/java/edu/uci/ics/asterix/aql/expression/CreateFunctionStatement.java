@@ -3,26 +3,25 @@ package edu.uci.ics.asterix.aql.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.aql.util.FunctionUtil;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 public class CreateFunctionStatement implements Statement {
 
-    private FunIdentifier funIdentifier;
+    private AsterixFunction asterixFunction;
     private String functionBody;
     private boolean ifNotExists;
     private List<String> paramList;
 
-    public FunIdentifier getFunctionIdentifier() {
-        return funIdentifier;
+    public AsterixFunction getFunctionIdentifier() {
+        return asterixFunction;
     }
 
-    public void setFunctionIdentifier(FunIdentifier funIdentifier) {
-        this.funIdentifier = funIdentifier;
+    public void setFunctionIdentifier(AsterixFunction AsterixFunction) {
+        this.asterixFunction = AsterixFunction;
     }
 
     public String getFunctionBody() {
@@ -37,10 +36,10 @@ public class CreateFunctionStatement implements Statement {
         this.ifNotExists = ifNotExists;
     }
 
-    public CreateFunctionStatement(FunIdentifier funIdentifier, List<VarIdentifier> parameterList, String functionBody,
+    public CreateFunctionStatement(AsterixFunction AsterixFunction, List<VarIdentifier> parameterList, String functionBody,
             boolean ifNotExists) {
         
-        this.funIdentifier = funIdentifier;
+        this.asterixFunction = AsterixFunction;
         this.functionBody = functionBody;
         this.ifNotExists = ifNotExists;
         this.paramList = new ArrayList<String>();

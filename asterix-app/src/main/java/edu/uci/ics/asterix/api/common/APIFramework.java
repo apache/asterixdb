@@ -468,7 +468,7 @@ public class APIFramework {
                 planAndMetadata.getMetadataProvider(), t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
-            if (pc.isPrintPhysicalOpsOnly()) {
+            if (true) {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPhysicalOps(planAndMetadata.getPlan(), buffer, 0);
                 out.print(buffer);

@@ -1,7 +1,5 @@
 package edu.uci.ics.asterix.translator;
 
-import java.io.FileReader;
-import java.io.Reader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +12,12 @@ import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement.OperationType;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.expression.InsertStatement;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
@@ -31,8 +27,8 @@ import edu.uci.ics.asterix.aql.expression.RecordConstructor;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
+import edu.uci.ics.asterix.aql.expression.ControlFeedStatement.OperationType;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
@@ -43,10 +39,10 @@ import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class DmlTranslator extends AbstractAqlTranslator {
@@ -104,15 +100,15 @@ public class DmlTranslator extends AbstractAqlTranslator {
                 }
                 case INSERT: {
                     InsertStatement is = (InsertStatement) stmt;
-                    CompiledInsertStatement clfrqs = new CompiledInsertStatement(is.getDatasetName().getValue(),
-                            is.getQuery(), is.getVarCounter());
+                    CompiledInsertStatement clfrqs = new CompiledInsertStatement(is.getDatasetName().getValue(), is
+                            .getQuery(), is.getVarCounter());
                     dmlStatements.add(clfrqs);
                     break;
                 }
                 case DELETE: {
                     DeleteStatement ds = (DeleteStatement) stmt;
-                    CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(ds.getVariableExpr(),
-                            ds.getDatasetName(), ds.getCondition(), ds.getDieClause(), ds.getVarCounter(),
+                    CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(ds.getVariableExpr(), ds
+                            .getDatasetName(), ds.getCondition(), ds.getDieClause(), ds.getVarCounter(),
                             compiledDeclarations);
                     dmlStatements.add(clfrqs);
                     break;
@@ -120,8 +116,8 @@ public class DmlTranslator extends AbstractAqlTranslator {
 
                 case BEGIN_FEED: {
                     BeginFeedStatement bfs = (BeginFeedStatement) stmt;
-                    CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(bfs.getDatasetName(),
-                            bfs.getQuery(), bfs.getVarCounter());
+                    CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(bfs.getDatasetName(), bfs
+                            .getQuery(), bfs.getVarCounter());
                     dmlStatements.add(cbfs);
                     Dataset dataset;
                     try {
@@ -142,8 +138,8 @@ public class DmlTranslator extends AbstractAqlTranslator {
 
                 case CONTROL_FEED: {
                     ControlFeedStatement cfs = (ControlFeedStatement) stmt;
-                    CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(),
-                            cfs.getDatasetName(), cfs.getAlterAdapterConfParams());
+                    CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(), cfs
+                            .getDatasetName(), cfs.getAlterAdapterConfParams());
                     dmlStatements.add(clcfs);
                     break;
 
@@ -412,7 +408,7 @@ public class DmlTranslator extends AbstractAqlTranslator {
             LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(datasetName));
             arguments.add(argumentLiteral);
 
-            CallExpr callExpression = new CallExpr(new FunIdentifier("dataset", 1), arguments);
+            CallExpr callExpression = new CallExpr(new AsterixFunction("dataset", 1), arguments);
             List<Clause> clauseList = new ArrayList<Clause>();
             Clause forClause = new ForClause(var, callExpression);
             clauseList.add(forClause);
@@ -454,25 +450,4 @@ public class DmlTranslator extends AbstractAqlTranslator {
 
     }
 
-    public static void main(String args[]) throws Exception {
-        Reader reader = new FileReader(args[0]);
-        AQLParser parser = new AQLParser(reader);
-        Query q = (Query) parser.Statement();
-
-        // Begin a transaction against the metadata.
-        // Lock the metadata in X mode to protect against other DDL and DML.
-        // TODO: Is there a way to know whether we can get away with locking in
-        // S mode?
-        MetadataTransactionContext ctx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataManager.INSTANCE.lock(ctx, LockMode.EXCLUSIVE);
-        try {
-            DmlTranslator dmlt = new DmlTranslator(ctx, q.getPrologDeclList());
-            dmlt.translate();
-            // dmlt.execute();
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
-            MetadataManager.INSTANCE.abortTransaction(ctx);
-            throw e;
-        }
-    }
 }

@@ -146,7 +146,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (!checkArgs(expr)) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
             }
-            if (expr.getFunctionIdentifier() == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                 String str = ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1)
                         .getValue()).getValue()).getObject()).getStringValue();
