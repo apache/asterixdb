@@ -7,9 +7,9 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.functions.FunctionArgumentsConstants;
-import edu.uci.ics.asterix.common.functions.FunctionUtils;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
@@ -37,17 +37,17 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -178,14 +178,14 @@ public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
                 FunctionIdentifier fi = fce.getFunctionIdentifier();
 
                 int fieldIndex = -1;
-                if (fi == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+                if (fi.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                     ILogicalExpression nameArg = fce.getArguments().get(1).getValue();
                     if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                         return false;
                     }
                     ConstantExpression cNameExpr = (ConstantExpression) nameArg;
                     fieldName = ((AString) ((AsterixConstantValue) cNameExpr.getValue()).getObject()).getStringValue();
-                } else if (fi == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+                } else if (fi.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
                     ILogicalExpression idxArg = fce.getArguments().get(1).getValue();
                     if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                         return false;

@@ -350,10 +350,10 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         ILogicalExpression exp = expRef.getValue();
         if (exp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) exp;
-            if (funcExp.getFunctionIdentifier() == AsterixBuiltinFunctions.FUZZY_EQ) {
+            if (funcExp.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FUZZY_EQ)) {
                 return expRef;
-            } else if (funcExp.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND
-                    || funcExp.getFunctionIdentifier() == AlgebricksBuiltinFunctions.OR) {
+            } else if (funcExp.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)
+                    || funcExp.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
                 for (int i = 0; i < 2; i++) {
                     Mutable<ILogicalExpression> expRefRet = getSimilarityExpression(funcExp.getArguments().get(i));
                     if (expRefRet != null) {

@@ -111,7 +111,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     boolean b2 = pushFieldLoads(f.getArguments().get(1), topOp, context);
                     return b1 || b2;
                 }
-                if (fi == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+                if (fi.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                     if (AnalysisUtil.numberOfVarsInExpr(f) == 0) {
                         return false;
                     }
@@ -247,7 +247,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             return false;
         }
         ConstantExpression ce = (ConstantExpression) arg1;
-        if (f.getFunctionIdentifier() == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+        if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             String fldName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
             ILogicalExpression fldExpr = findFieldExpression(assign, recordVar, fldName);
             if (fldExpr != null) {
@@ -256,7 +256,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             } else {
                 return false;
             }
-        } else if (f.getFunctionIdentifier() == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
             // int fldIdx = ((IntegerLiteral) ce.getValue()).getValue();
             // TODO
             return false;

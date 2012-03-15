@@ -36,6 +36,8 @@ import edu.uci.ics.asterix.aql.context.Scope;
 import edu.uci.ics.asterix.aql.context.RootScopeFactory;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
+
 public class AQLPlusParser extends ScopeChecker {
 
 /*
@@ -391,7 +393,8 @@ UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
 FunctionDecl FunctionDeclaration() throws ParseException:
 {
   FunctionDecl func = new FunctionDecl();
-  FunIdentifier ident = new FunIdentifier();
+  AsterixFunction ident;
+  String functionName;
   int arity = 0;
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
   Expression funcBody;
@@ -403,7 +406,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     <IDENTIFIER>
 	{
 	  Token t = getToken(0);
-	  ident.setValue(t.toString());
+	  functionName = t.toString();
 	}
     <LEFTPAREN> (<VARIABLE>
     {
@@ -423,7 +426,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     })*)? <RIGHTPAREN> "{" funcBody = Expression() "}"
 
     {
-      ident.setArity(arity);
+      ident = new AsterixFunction(functionName, arity);
       getCurrentScope().addFunctionDescriptor(ident, false);
       func.setIdent(ident);
       func.setFuncBody(funcBody);
@@ -1053,10 +1056,10 @@ Expression FunctionCallExpr() throws ParseException:
      } ("," tmp = Expression() { argList.add(tmp); arity++; })*)? <RIGHTPAREN>
 
      {
-       FunIdentifier fd = lookupFunctionSignature(funcName.toString(), arity);
+       AsterixFunction fd = lookupFunctionSignature(funcName.toString(), arity);
 	     if(fd == null)
 	     {
-	        fd = new FunIdentifier(funcName.toString(), arity);
+	        fd = new AsterixFunction(funcName.toString(), arity);
 //	     	notFoundFunctionList.add(fd);
 	     }
 //	     	throw new ParseException("can't find function "+ funcName.toString() + "@" + arity);

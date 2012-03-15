@@ -7,26 +7,27 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 public class FunctionDecl implements Statement {
-    private FunIdentifier ident;
+    private AsterixFunction ident;
     private List<VarIdentifier> paramList;
     private Expression funcBody;
 
     public FunctionDecl() {
     }
 
-    public FunctionDecl(FunIdentifier ident, List<VarIdentifier> paramList, Expression funcBody) {
+    public FunctionDecl(AsterixFunction ident, List<VarIdentifier> paramList, Expression funcBody) {
         this.ident = ident;
         this.paramList = paramList;
         this.funcBody = funcBody;
     }
 
-    public FunIdentifier getIdent() {
+    public AsterixFunction getIdent() {
         return ident;
     }
 
-    public void setIdent(FunIdentifier ident) {
+    public void setIdent(AsterixFunction ident) {
         this.ident = ident;
     }
 

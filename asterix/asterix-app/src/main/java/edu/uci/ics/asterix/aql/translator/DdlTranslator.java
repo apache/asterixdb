@@ -21,8 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
@@ -43,15 +43,15 @@ import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition;
-import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition.RecordKind;
 import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
 import edu.uci.ics.asterix.aql.expression.TypeExpression;
 import edu.uci.ics.asterix.aql.expression.TypeReferenceExpression;
 import edu.uci.ics.asterix.aql.expression.UnorderedListTypeDefinition;
-import edu.uci.ics.asterix.aql.util.FunctionUtil;
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition.RecordKind;
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
@@ -63,7 +63,6 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinArtifactMap;
-import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinArtifactMap.ARTIFACT_KIND;
 import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -74,6 +73,7 @@ import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinArtifactMap.ARTIFACT_KIND;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -416,16 +416,17 @@ public class DdlTranslator extends AbstractAqlTranslator {
 
                 case CREATE_FUNCTION: {
                     CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-                    Function function = new Function(compiledDeclarations.getDataverseName(), cfs
-                            .getFunctionIdentifier().getValue(), cfs.getFunctionIdentifier().getArity(),
-                            cfs.getParamList(), cfs.getFunctionBody());
+                    Function function = new Function(compiledDeclarations.getDataverseName(), cfs.getFunctionIdentifier().getFunctionName(),
+                            cfs.getFunctionIdentifier().getArity(), cfs.getParamList(), cfs.getFunctionBody());
+                    
+                    
                     try {
-                        FunctionUtil.getFunctionDecl(function);
+                        FunctionUtils.getFunctionDecl(function);
                     } catch (Exception e) {
                         throw new AsterixException("unable to compile function definition", e);
                     }
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, new Function(
-                            compiledDeclarations.getDataverseName(), cfs.getFunctionIdentifier().getValue(), cfs
+                            compiledDeclarations.getDataverseName(), cfs.getFunctionIdentifier().getFunctionName(), cfs
                                     .getFunctionIdentifier().getArity(), cfs.getParamList(), cfs.getFunctionBody()));
                     break;
                 }

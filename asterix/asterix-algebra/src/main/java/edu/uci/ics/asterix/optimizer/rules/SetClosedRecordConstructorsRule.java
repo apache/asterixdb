@@ -2,8 +2,8 @@ package edu.uci.ics.asterix.optimizer.rules;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.functions.FunctionUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -89,7 +89,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throws AlgebricksException {
             boolean allClosed = true;
             boolean changed = false;
-            if (expr.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
+            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
                 int n = expr.getArguments().size();
                 if (n % 2 > 0) {
                     throw new AlgebricksException("Record constructor expected to have an even number of arguments: "

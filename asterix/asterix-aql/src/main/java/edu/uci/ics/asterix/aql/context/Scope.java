@@ -2,10 +2,10 @@ package edu.uci.ics.asterix.aql.context;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.parser.ScopeChecker;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 public final class Scope {
     private Scope parent;
@@ -78,7 +78,7 @@ public final class Scope {
      * @param varargs
      *            whether this function has varargs
      */
-    public void addFunctionDescriptor(FunIdentifier fd, boolean varargs) {
+    public void addFunctionDescriptor(AsterixFunction fd, boolean varargs) {
         if (functionSignatures == null) {
             functionSignatures = new FunctionSignatures();
         }
@@ -94,8 +94,8 @@ public final class Scope {
      *            # of arguments
      * @return FunctionDescriptor of the function found; otherwise null
      */
-    public FunIdentifier findFunctionSignature(String name, int arity) {
-        FunIdentifier fd = null;
+    public AsterixFunction findFunctionSignature(String name, int arity) {
+        AsterixFunction fd = null;
         if (functionSignatures != null) {
             fd = functionSignatures.get(name, arity);
         }

@@ -144,7 +144,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                         FunctionIdentifier fid = f.getFunctionIdentifier();
-                        if (fid == AsterixBuiltinFunctions.INDEX_SEARCH) {
+                        if (fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
                             notSet = false;
                             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
                             ConstantExpression ce0 = (ConstantExpression) f.getArguments().get(0).getValue();

@@ -6,25 +6,26 @@ import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 public class CallExpr implements Expression {
-    private FunIdentifier ident;
+    private AsterixFunction ident;
     private List<Expression> exprList;
     private boolean isBuiltin;
 
     public CallExpr() {
     }
 
-    public CallExpr(FunIdentifier ident, List<Expression> exprList) {
+    public CallExpr(AsterixFunction ident, List<Expression> exprList) {
         this.ident = ident;
         this.exprList = exprList;
     }
 
-    public FunIdentifier getIdent() {
+    public AsterixFunction getIdent() {
         return ident;
     }
 
-    public void setIdent(FunIdentifier ident) {
+    public void setIdent(AsterixFunction ident) {
         this.ident = ident;
     }
 

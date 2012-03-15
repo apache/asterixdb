@@ -7,8 +7,8 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.base.Expression.Kind;
 import edu.uci.ics.asterix.aql.base.Statement;
+import edu.uci.ics.asterix.aql.base.Expression.Kind;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
@@ -26,7 +26,6 @@ import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
-import edu.uci.ics.asterix.aql.expression.FunIdentifier;
 import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.FunctionDropStatement;
 import edu.uci.ics.asterix.aql.expression.GbyVariableExpressionPair;
@@ -65,13 +64,14 @@ import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.util.FunctionUtil;
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -130,7 +130,7 @@ public final class AqlRewriter {
             return;
         }
         List<FunctionDecl> fdecls = buildFunctionDeclList(topExpr);
-        List<FunIdentifier> funIds = new ArrayList<FunIdentifier>();
+        List<AsterixFunction> funIds = new ArrayList<AsterixFunction>();
         for (FunctionDecl fdecl : fdecls) {
             funIds.add(fdecl.getIdent());
         }
@@ -148,20 +148,20 @@ public final class AqlRewriter {
     }
 
     private void buildOtherUdfs(Expression expression, List<FunctionDecl> functionDecls,
-            List<FunIdentifier> declaredFunctions) throws AsterixException {
+            List<AsterixFunction> declaredFunctions) throws AsterixException {
         if (expression == null) {
             return;
         }
 
-        List<FunIdentifier> functionCalls = getFunctionCalls(expression);
-        for (FunIdentifier funId : functionCalls) {
+        List<AsterixFunction> functionCalls = getFunctionCalls(expression);
+        for (AsterixFunction funId : functionCalls) {
             if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                    funId.getValue(), false))) {
+                    funId.getFunctionName(), false))) {
                 continue;
             }
 
             if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-                    funId.getValue(), false))) {
+                    funId.getFunctionName(), false))) {
                 continue;
             }
             
@@ -178,48 +178,48 @@ public final class AqlRewriter {
         }
     }
 
-    private FunctionDecl getFunctionDecl(FunIdentifier funId) throws AsterixException {
-        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, funId.getValue(), funId
+    private FunctionDecl getFunctionDecl(AsterixFunction funId) throws AsterixException {
+        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, funId.getFunctionName(), funId
                 .getArity());
         if (function == null) {
             throw new AsterixException(" unknown function " + funId);
         }
-        return FunctionUtil.getFunctionDecl(function);
+        return FunctionUtils.getFunctionDecl(function);
 
     }
 
-    private List<FunIdentifier> getFunctionCalls(Expression expression) throws AsterixException {
-        Map<FunIdentifier, DfsColor> color = new HashMap<FunIdentifier, DfsColor>();
-        Map<FunIdentifier, List<FunIdentifier>> arcs = new HashMap<FunIdentifier, List<FunIdentifier>>();
+    private List<AsterixFunction> getFunctionCalls(Expression expression) throws AsterixException {
+        Map<AsterixFunction, DfsColor> color = new HashMap<AsterixFunction, DfsColor>();
+        Map<AsterixFunction, List<AsterixFunction>> arcs = new HashMap<AsterixFunction, List<AsterixFunction>>();
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
-        List<FunIdentifier> calls = gfc.getCalls();
+        List<AsterixFunction> calls = gfc.getCalls();
         return calls;
     }
 
     private void checkRecursivity(List<FunctionDecl> fdecls) throws AsterixException {
-        Map<FunIdentifier, DfsColor> color = new HashMap<FunIdentifier, DfsColor>();
-        Map<FunIdentifier, List<FunIdentifier>> arcs = new HashMap<FunIdentifier, List<FunIdentifier>>();
+        Map<AsterixFunction, DfsColor> color = new HashMap<AsterixFunction, DfsColor>();
+        Map<AsterixFunction, List<AsterixFunction>> arcs = new HashMap<AsterixFunction, List<AsterixFunction>>();
         for (FunctionDecl fd : fdecls) {
             GatherFunctionCalls gfc = new GatherFunctionCalls();
             fd.getFuncBody().accept(gfc, null);
-            List<FunIdentifier> calls = gfc.getCalls();
+            List<AsterixFunction> calls = gfc.getCalls();
             arcs.put(fd.getIdent(), calls);
             color.put(fd.getIdent(), DfsColor.WHITE);
         }
-        for (FunIdentifier a : arcs.keySet()) {
+        for (AsterixFunction a : arcs.keySet()) {
             if (color.get(a) == DfsColor.WHITE) {
                 checkRecursivityDfs(a, arcs, color);
             }
         }
     }
 
-    private void checkRecursivityDfs(FunIdentifier a, Map<FunIdentifier, List<FunIdentifier>> arcs,
-            Map<FunIdentifier, DfsColor> color) throws AsterixException {
+    private void checkRecursivityDfs(AsterixFunction a, Map<AsterixFunction, List<AsterixFunction>> arcs,
+            Map<AsterixFunction, DfsColor> color) throws AsterixException {
         color.put(a, DfsColor.GRAY);
-        List<FunIdentifier> next = arcs.get(a);
+        List<AsterixFunction> next = arcs.get(a);
         if (next != null) {
-            for (FunIdentifier f : next) {
+            for (AsterixFunction f : next) {
                 DfsColor dc = color.get(f);
                 if (dc == DfsColor.GRAY) {
                     throw new AsterixException("Recursive function calls, created by calling " + f + " starting from "
@@ -245,7 +245,7 @@ public final class AqlRewriter {
 
     private static class GatherFunctionCalls implements IAqlExpressionVisitor<Void, Void> {
 
-        private final List<FunIdentifier> calls = new ArrayList<FunIdentifier>();
+        private final List<AsterixFunction> calls = new ArrayList<AsterixFunction>();
 
         public GatherFunctionCalls() {
         }
@@ -530,7 +530,7 @@ public final class AqlRewriter {
             return null;
         }
 
-        public List<FunIdentifier> getCalls() {
+        public List<AsterixFunction> getCalls() {
             return calls;
         }
 
