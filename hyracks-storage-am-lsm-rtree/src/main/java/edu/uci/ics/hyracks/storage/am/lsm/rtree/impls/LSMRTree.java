@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -119,8 +120,9 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
             IBinaryComparatorFactory[] btreeCmpFactories) {
         RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory);
+        // TODO: Do we need another operation callback here?
+        BTree memBTree = new BTree(memBufferCache, NoOpOperationCallback.INSTANCE, fieldCount, btreeCmpFactories,
+                memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBTreeFactory.getBufferCache();

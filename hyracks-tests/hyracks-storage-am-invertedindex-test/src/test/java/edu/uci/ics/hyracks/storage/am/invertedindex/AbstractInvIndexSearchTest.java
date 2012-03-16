@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
@@ -157,8 +158,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmpFactories, freePageManager, interiorFrameFactory,
-                leafFrameFactory);
+        btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, btreeTypeTraits.length, btreeCmpFactories,
+                freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 

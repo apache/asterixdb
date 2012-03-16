@@ -15,20 +15,34 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.util.Random;
+
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexExamplesTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
-public class BTreeExamplesTest extends OrderedIndexExamplesTest {
+/**
+ * Tests the BTree insert operation with strings and integer fields using
+ * various numbers of key and payload fields.
+ * 
+ * Each tests first fills a BTree with randomly generated tuples. We compare the
+ * following operations against expected results: 1. Point searches for all
+ * tuples. 2. Ordered scan. 3. Disk-order scan. 4. Range search (and prefix
+ * search for composite keys).
+ * 
+ */
+@SuppressWarnings("rawtypes")
+public class BTreeUpsertTest extends OrderedIndexUpsertTest {
+
+    public BTreeUpsertTest() {
+        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
+    }
+
     private final BTreeTestHarness harness = new BTreeTestHarness();
 
     @Before
@@ -40,13 +54,16 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
     }
-    
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getOpCallback(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM);
+
+    @Override
+    protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
+            BTreeLeafFrameType leafType) throws Exception {
+        return BTreeTestContext.create(harness.getBufferCache(), harness.getBTreeFileId(), fieldSerdes, numKeys,
+                leafType);
     }
-    
-    protected int getIndexFileId() {
-        return harness.getBTreeFileId();
+
+    @Override
+    protected Random getRandom() {
+        return harness.getRandom();
     }
 }

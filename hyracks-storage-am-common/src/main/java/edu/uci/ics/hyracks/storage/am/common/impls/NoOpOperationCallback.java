@@ -13,8 +13,26 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.ophelpers;
+package edu.uci.ics.hyracks.storage.am.common.impls;
 
-public enum IndexOp {
-	INSERT, DELETE, UPDATE, UPSERT, SEARCH, DISKORDERSCAN
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
+
+/**
+ * Dummy operation callback that simply does nothing. Mainly, intended to be
+ * used in non-transaction access method testing.
+ * 
+ */
+public class NoOpOperationCallback implements IOperationCallback {
+
+    public static IOperationCallback INSTANCE = new NoOpOperationCallback();
+    
+    @Override
+    public void pre(ITupleReference tuple) {
+        
+    }
+
+    @Override
+    public void post(ITupleReference tuple) {
+    }
 }

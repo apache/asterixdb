@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -62,6 +63,7 @@ public class BTree implements ITreeIndex {
         
     private final IFreePageManager freePageManager;
     private final IBufferCache bufferCache;    
+    private final IOperationCallback opCallback;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
     private final int fieldCount;
@@ -69,9 +71,10 @@ public class BTree implements ITreeIndex {
     private final ReadWriteLock treeLatch;
     private int fileId;
 
-    public BTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
+    public BTree(IBufferCache bufferCache, IOperationCallback opCallback, int fieldCount, IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
+        this.opCallback = opCallback;
         this.fieldCount = fieldCount;
         this.cmpFactories = cmpFactories;
         this.interiorFrameFactory = interiorFrameFactory;
@@ -255,6 +258,10 @@ public class BTree implements ITreeIndex {
     private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         insertUpdateOrDelete(tuple, ctx);
     }
+    
+    private void upsert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        insertUpdateOrDelete(tuple, ctx);
+    }
 
     private void update(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         // This call only allows updating of non-key fields.
@@ -270,10 +277,8 @@ public class BTree implements ITreeIndex {
         insertUpdateOrDelete(tuple, ctx);
     }
     
-    private boolean insertLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
-        ctx.leafFrame.setPage(node);
+    private boolean insertLeaf(ITupleReference tuple, int targetTupleIndex, int pageId, BTreeOpContext ctx) throws Exception {
         boolean restartOp = false;
-        int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
@@ -306,9 +311,7 @@ public class BTree implements ITreeIndex {
                 }
                 break;
             }
-        }
-        node.releaseWriteLatch();
-        bufferCache.unpin(node);
+        }        
         return restartOp;
     }
     
@@ -358,9 +361,7 @@ public class BTree implements ITreeIndex {
         return false;
     }
     
-    private boolean updateLeaf(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx) throws Exception {
-        ctx.leafFrame.setPage(node);
-        int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(tuple);
+    private boolean updateLeaf(ITupleReference tuple, int oldTupleIndex, int pageId, BTreeOpContext ctx) throws Exception {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex);
         boolean restartOp = false;
         switch (spaceStatus) {
@@ -399,11 +400,23 @@ public class BTree implements ITreeIndex {
                 break;
             }
         }
-        node.releaseWriteLatch();
-        bufferCache.unpin(node);
         return restartOp;
     }
 
+    private boolean upsertLeaf(ITupleReference tuple, int targetTupleIndex, int pageId, BTreeOpContext ctx) throws Exception {
+        boolean restartOp = false;
+        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, targetTupleIndex);
+        if (beforeTuple == null) {
+            opCallback.pre(null);
+            restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
+        } else {
+            opCallback.pre(beforeTuple);
+            restartOp = updateLeaf(tuple, targetTupleIndex, pageId, ctx);
+        }
+        opCallback.post(tuple);
+        return restartOp;
+    }
+    
     private void insertInterior(ICachedPage node, int pageId, ITupleReference tuple, BTreeOpContext ctx)
             throws Exception {
         ctx.interiorFrame.setPage(node);
@@ -462,14 +475,11 @@ public class BTree implements ITreeIndex {
         // Simply delete the tuple, and don't do any rebalancing.
         // This means that there could be underflow, even an empty page that is
         // pointed to by an interior node.
-        ctx.leafFrame.setPage(node);
         if (ctx.leafFrame.getTupleCount() == 0) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
         ctx.leafFrame.delete(tuple, tupleIndex);
-        node.releaseWriteLatch();
-        bufferCache.unpin(node);
         return false;
     }
 
@@ -554,6 +564,7 @@ public class BTree implements ITreeIndex {
                         
                         switch (ctx.op) {
                             case INSERT:
+                            case UPSERT:
                             case UPDATE: {
                                 // Is there a propagated split key?
                                 if (ctx.splitKey.getBuffer() != null) {
@@ -614,13 +625,21 @@ public class BTree implements ITreeIndex {
             } else { // isLeaf and !smFlag
                 // We may have to restart an op to avoid latch deadlock.
             	boolean restartOp = false;
+            	ctx.leafFrame.setPage(node);
             	switch (ctx.op) {
-                    case INSERT: {
-                        restartOp = insertLeaf(node, pageId, ctx.pred.getLowKey(), ctx);
+                    case INSERT: {                        
+                        int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(ctx.pred.getLowKey());
+                        restartOp = insertLeaf(ctx.pred.getLowKey(), targetTupleIndex, pageId, ctx);
+                        break;
+                    }
+                    case UPSERT: {
+                        int targetTupleIndex = ctx.leafFrame.findUpsertTupleIndex(ctx.pred.getLowKey());
+                        restartOp = upsertLeaf(ctx.pred.getLowKey(), targetTupleIndex, pageId, ctx);
                         break;
                     }
                     case UPDATE: {
-                    	restartOp = updateLeaf(node, pageId, ctx.pred.getLowKey(), ctx);
+                        int oldTupleIndex = ctx.leafFrame.findUpdateTupleIndex(ctx.pred.getLowKey());
+                    	restartOp = updateLeaf(ctx.pred.getLowKey(), oldTupleIndex, pageId, ctx);
                         break;
                     }
                     case DELETE: {
@@ -633,6 +652,10 @@ public class BTree implements ITreeIndex {
                         break;
                     }
                 }
+            	if (ctx.op != IndexOp.SEARCH) {
+            	    node.releaseWriteLatch();
+                    bufferCache.unpin(node);
+            	}
             	if (restartOp) {
             		ctx.pageLsns.removeLast();
                     ctx.pageLsns.add(RESTART_OP);
@@ -1016,7 +1039,13 @@ public class BTree implements ITreeIndex {
             ctx.reset(IndexOp.DELETE);
             btree.delete(tuple, ctx);
         }
-
+        
+        @Override
+        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            ctx.reset(IndexOp.UPSERT);
+            btree.upsert(tuple, ctx);
+        }
+        
         @Override
 		public ITreeIndexCursor createSearchCursor() {
 			IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();

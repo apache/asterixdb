@@ -986,5 +986,11 @@ public class RTree implements ITreeIndex {
         public RTreeOpContext getOpContext() {
             return ctx;
         }
+
+        @Override
+        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            throw new UnsupportedOperationException(
+                    "The RTree does not suypport the notion of keys, therefore upsert does not make sense.");
+        }
     }
 }

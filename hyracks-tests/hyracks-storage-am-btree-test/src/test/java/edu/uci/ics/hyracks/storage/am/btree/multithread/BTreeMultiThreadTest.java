@@ -48,7 +48,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getOpCallback(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
     }
 
     @Override
@@ -68,12 +68,12 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
         
-        // Inserts, updates, and deletes.        
-        TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, getUniformOpProbs(insertDeleteUpdateOps)));
+        // Inserts, updates, deletes, and upserts.        
+        TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.UPSERT };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, getUniformOpProbs(insertDeleteUpdateUpsertOps)));
         
         // All operations mixed.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
         
         return workloadConfs;

@@ -49,7 +49,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
+                harness.getMemOpCallback(), harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 typeTraits, cmpFactories);
     }

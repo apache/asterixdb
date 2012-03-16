@@ -81,7 +81,7 @@ public class BTreeOpContext implements IIndexOpContext {
                 cursorInitialState = new BTreeCursorInitialState(null);
             }
         } else {
-            // Insert, update or delete operation.
+            // Insert, delete, update or upsert operation.
             if (smPages == null) {
                 smPages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
             }

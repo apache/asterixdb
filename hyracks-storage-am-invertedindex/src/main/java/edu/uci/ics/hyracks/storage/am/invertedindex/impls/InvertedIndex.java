@@ -319,6 +319,11 @@ public class InvertedIndex implements IIndex {
         }
 
         @Override
+        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        	// TODO Auto-generated method stub
+        }
+        
+        @Override
         public IIndexCursor createSearchCursor() {
             return new InvertedIndexSearchCursor(searcher);
         }

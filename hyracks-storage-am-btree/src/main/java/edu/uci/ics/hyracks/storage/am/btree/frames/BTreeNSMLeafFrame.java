@@ -78,6 +78,30 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
     
     @Override
+    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
+        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        // Just return the found tupleIndex. The caller will make the final decision whether to insert or update.
+        return tupleIndex;
+    }
+    
+    @Override
+    public ITupleReference getUpsertBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
+        // Examine the tuple index to determine whether it is valid or not.
+        if (targetTupleIndex != slotManager.getGreatestKeyIndicator()) {
+            // We need to check the key to determine whether it's an insert or an update.
+            frameTuple.resetByTupleIndex(this, targetTupleIndex);
+            if (cmp.compare(tuple, frameTuple) == 0) {
+                // The keys match, it's an update.
+                return frameTuple;
+            }
+        }
+        // Either the tuple index is a special indicator, or the keys don't match.
+        // In those cases, we are definitely dealing with an insert.
+        return null;
+    }
+    
+    @Override
     public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);

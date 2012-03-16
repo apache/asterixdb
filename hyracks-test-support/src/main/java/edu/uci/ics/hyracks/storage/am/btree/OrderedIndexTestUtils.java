@@ -207,6 +207,32 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             }
         }
     }
+    
+    public void upsertStringTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    	OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
+    	int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        String[] fieldValues = new String[fieldCount];
+        for (int i = 0; i < numTuples; i++) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
+            }
+            // Set keys.
+            for (int j = 0; j < numKeyFields; j++) {
+                int length = (Math.abs(rnd.nextInt()) % 10) + 1;
+                fieldValues[j] = getRandomString(length, rnd);
+            }
+            // Set values.
+            for (int j = numKeyFields; j < fieldCount; j++) {
+                fieldValues[j] = getRandomString(5, rnd);
+            }
+            TupleUtils.createTuple(ctx.getTupleBuilder(), ctx.getTuple(), ctx.getFieldSerdes(), (Object[]) fieldValues);
+            ctx.getIndexAccessor().upsert(ctx.getTuple());
+            ctx.upsertCheckTuple(createStringCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public void bulkLoadStringTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
@@ -236,6 +262,31 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
 
+    public void upsertIntTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+        OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
+    	int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] fieldValues = new int[ctx.getFieldCount()];
+        // Scale range of values according to number of keys.
+        // For example, for 2 keys we want the square root of numTuples, for 3
+        // keys the cube root of numTuples, etc.
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            // Set values.
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
+            TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
+            }
+            ctx.getIndexAccessor().upsert(ctx.getTuple());
+            ctx.upsertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public void updateTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;

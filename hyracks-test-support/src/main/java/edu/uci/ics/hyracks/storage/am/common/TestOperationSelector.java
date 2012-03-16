@@ -23,6 +23,7 @@ public class TestOperationSelector {
         INSERT,
         DELETE,
         UPDATE,
+        UPSERT,
         POINT_SEARCH,
         RANGE_SEARCH,
         SCAN,

@@ -78,7 +78,7 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
                 }
                 break;
                 
-            case UPDATE: 
+            case UPDATE:
                 try {
                     accessor.update(tuple);
                 } catch (BTreeNonExistentKeyException e) {
@@ -86,6 +86,12 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
                 } catch (BTreeNotUpdateableException e) {
                     // Ignore not updateable exception due to numKeys == numFields.
                 }
+                break;
+                
+            case UPSERT:
+                accessor.upsert(tuple);
+                // Upsert should not throw. If it does, there's 
+                // a bigger problem and the test should fail.
                 break;
                 
             case POINT_SEARCH: 

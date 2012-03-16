@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -58,8 +59,9 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         init(pageSize, numPages, typeTraits, cmpFactories);
     }
     
-    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
-    	ICacheMemoryAllocator allocator = new HeapBufferAllocator();
+    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
+            throws HyracksDataException, BTreeException {
+        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         bufferCache = new InMemoryBufferCache(allocator, pageSize, numPages);
         // Chose an aribtrary file id.
         btreeFileId = 0;
@@ -68,7 +70,8 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
-        btree = new BTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, typeTraits.length, cmpFactories,
+                freePageManager, interiorFrameFactory, leafFrameFactory);
     }
 
     @Override

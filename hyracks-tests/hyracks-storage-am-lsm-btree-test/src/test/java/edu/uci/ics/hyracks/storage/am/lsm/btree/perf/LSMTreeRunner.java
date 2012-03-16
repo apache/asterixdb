@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
@@ -77,7 +78,8 @@ public class LSMTreeRunner implements IExperimentRunner {
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize, inMemNumPages);
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages, new LIFOMetaDataFrameFactory());
         
-        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories);
+        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager,
+                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories);
     }
 	@Override
 	public void init() throws Exception {

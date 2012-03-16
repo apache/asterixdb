@@ -366,6 +366,35 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
     
     @Override
+    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
+        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int tupleIndex = slotManager.decodeSecondSlotField(slot);
+        // Error indicator is set if there is an exact match.
+        if (tupleIndex == slotManager.getErrorIndicator()) {
+            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
+        }
+        return slot;
+    }
+    
+    @Override
+    public ITupleReference getUpsertBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
+        int tupleIndex = slotManager.decodeSecondSlotField(targetTupleIndex);
+        // Examine the tuple index to determine whether it is valid or not.
+        if (tupleIndex != slotManager.getGreatestKeyIndicator()) {
+            // We need to check the key to determine whether it's an insert or an update.
+            frameTuple.resetByTupleIndex(this, tupleIndex);
+            if (cmp.compare(tuple, frameTuple) == 0) {
+                // The keys match, it's an update.
+                return frameTuple;
+            }
+        }
+        // Either the tuple index is a special indicator, or the keys don't match.
+        // In those cases, we are definitely dealing with an insert.
+        return null;
+    }
+    
+    @Override
     public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);

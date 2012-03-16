@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import java.util.Collection;
 import java.util.TreeSet;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -31,6 +32,13 @@ public abstract class OrderedIndexTestContext extends TreeIndexTestContext<Check
         super(fieldSerdes, treeIndex);
     }
 
+    public void upsertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
+    	if (checkTuples.contains(checkTuple)) {
+            checkTuples.remove(checkTuple);
+        }
+        checkTuples.add(checkTuple);
+    }
+    
     @Override
     public TreeSet<CheckTuple> getCheckTuples() {
         return checkTuples;

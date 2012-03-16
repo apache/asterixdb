@@ -65,6 +65,21 @@ public interface IIndexAccessor {
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
+     * This operation is only supported by indexes with the notion of a unique key.
+     * If tuple's key already exists, then this operation performs an update.
+     * Otherwise, it performs an insert.
+     * 
+     * @param tuple
+     *            Tuple to be deleted.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     * @throws IndexException
+     *             If there is no matching tuple in the index.
+     * 
+     */
+    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    
+    /**
      * Creates a cursor appropriate for passing into search().
      * 
      */

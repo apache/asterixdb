@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -38,16 +39,17 @@ public class BTreeRunner extends InMemoryBTreeRunner {
     }
     
     @Override
-    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
-    	IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-    	TestStorageManagerComponentHolder.init(pageSize, numPages, MAX_OPEN_FILES);
+    protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
+            throws HyracksDataException, BTreeException {
+        IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+        TestStorageManagerComponentHolder.init(pageSize, numPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         FileReference file = new FileReference(new File(fileName));
         bufferCache.createFile(file);
         btreeFileId = fmp.lookupFileId(file);
         bufferCache.openFile(btreeFileId);
-        btree = BTreeUtils
-                .createBTree(bufferCache, typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+        btree = BTreeUtils.createBTree(bufferCache, NoOpOperationCallback.INSTANCE, typeTraits, cmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM);
     }
 }

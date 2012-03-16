@@ -165,6 +165,36 @@ public abstract class TreeIndexTestUtils {
             }
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    public void upsertIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+        int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] fieldValues = new int[ctx.getFieldCount()];
+        // Scale range of values according to number of keys.
+        // For example, for 2 keys we want the square root of numTuples, for 3
+        // keys the cube root of numTuples, etc.
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            // Set values.
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
+            TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
+                    LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
+                }
+            }
+            try {
+                ctx.getIndexAccessor().upsert(ctx.getTuple());
+                ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
+            } catch (TreeIndexException e) {
+                // We set expected values only after insertion succeeds because
+                // we ignore duplicate keys.
+            }
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public void bulkLoadIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {

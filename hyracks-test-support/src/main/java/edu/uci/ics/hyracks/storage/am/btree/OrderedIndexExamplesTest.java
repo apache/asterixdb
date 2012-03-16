@@ -54,7 +54,7 @@ public abstract class OrderedIndexExamplesTest {
             throws TreeIndexException;
 
     protected abstract int getIndexFileId();
-	
+    
     /**
      * Fixed-Length Key,Value Example.
      * 

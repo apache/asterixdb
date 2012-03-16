@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -61,8 +62,10 @@ public class LSMRTreeUtils {
 
         RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, freePageManagerFactory, rtreeCmpFactories,
                 typeTraits.length, rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory, btreeCmpFactories,
-                typeTraits.length, btreeInteriorFrameFactory, btreeLeafFrameFactory);
+        // TODO: Do we need another operation callback here?
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, NoOpOperationCallback.INSTANCE,
+                freePageManagerFactory, btreeCmpFactories, typeTraits.length, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory);
 
         ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, onDiskDir);
         LSMRTree lsmTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,

@@ -51,6 +51,12 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
         ctx.reset(IndexOp.DELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
+    
+    @Override
+    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.reset(IndexOp.UPSERT);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+    }
 
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
