@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
@@ -45,11 +46,11 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
     private FrameTupleReference tuple;
     private IRecordDescriptorProvider recordDescProvider;
     private InvertedIndex invIndex;
-    
+
     private final InvertedIndexSearchPredicate searchPred;
     private IIndexAccessor indexAccessor;
-    private IIndexCursor resultCursor;        
-    
+    private IIndexCursor resultCursor;
+
     private ByteBuffer writeBuffer;
     private FrameTupleAppender appender;
     private ArrayTupleBuilder tb;
@@ -62,7 +63,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         btreeDataflowHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition, false);
+                .createIndexDataflowHelper(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, partition, false);
         invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition, false);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(searchModifier);

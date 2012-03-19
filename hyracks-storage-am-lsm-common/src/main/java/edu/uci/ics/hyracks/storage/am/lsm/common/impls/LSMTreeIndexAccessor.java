@@ -73,4 +73,10 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     public void merge() throws HyracksDataException, IndexException {
         lsmHarness.merge();
     }
+    
+    @Override
+    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.reset(IndexOp.PHYSICALDELETE);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+    }
 }

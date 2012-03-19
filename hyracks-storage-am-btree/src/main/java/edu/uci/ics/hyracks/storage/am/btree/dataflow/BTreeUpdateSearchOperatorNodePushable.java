@@ -21,31 +21,30 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleUpdater;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 
 public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNodePushable {
     private final ITupleUpdater tupleUpdater;
-    
-	public BTreeUpdateSearchOperatorNodePushable(
-			AbstractTreeIndexOperatorDescriptor opDesc,
-			IHyracksTaskContext ctx, int partition,
-			IRecordDescriptorProvider recordDescProvider,
-			int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive,
-			boolean highKeyInclusive, ITupleUpdater tupleUpdater) {
-		super(opDesc, ctx, partition, recordDescProvider, lowKeyFields,
-				highKeyFields, lowKeyInclusive, highKeyInclusive);
-		this.tupleUpdater = tupleUpdater;
-	}
 
-	@Override
-	protected ITreeIndexCursor createCursor() {
+    public BTreeUpdateSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider,
+            int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            ITupleUpdater tupleUpdater) {
+        super(opDesc, ctx, opCallbackProvider, partition, recordDescProvider, lowKeyFields, highKeyFields,
+                lowKeyInclusive, highKeyInclusive);
+        this.tupleUpdater = tupleUpdater;
+    }
+
+    @Override
+    protected ITreeIndexCursor createCursor() {
         return new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, true);
     }
-	
-	@Override
-	protected void writeSearchResults() throws Exception {
+
+    @Override
+    protected void writeSearchResults() throws Exception {
         while (cursor.hasNext()) {
             tb.reset();
             cursor.next();

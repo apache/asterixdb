@@ -35,9 +35,10 @@ import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 
 public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTest {
-    
+
     @Before
     public void setup() throws Exception {
         super.setup();
@@ -73,9 +74,9 @@ public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTe
         int[] highKeyFields = { 1 };
 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, indexRegistryProvider, primarySplitProvider, 
-                primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
-                highKeyFields, true, true, dataflowHelperFactory);
+                storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, dataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
@@ -89,7 +90,7 @@ public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTe
         spec.addRoot(printer);
         runTest(spec);
     }
-    
+
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();

@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
@@ -37,12 +38,12 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private IIndexAccessor indexAccessor;
 
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+            IHyracksTaskContext ctx, IOperationCallbackProvider opCallbackProvider, int partition,
+            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         // Only create the if insert operation is an insert.
         boolean createIfNotExists = (op == IndexOp.INSERT);
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition, createIfNotExists);
+                opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -81,6 +82,10 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                     }
                     case UPDATE: {
                         indexAccessor.update(tuple);
+                        break;
+                    }
+                    case UPSERT: {
+                        indexAccessor.upsert(tuple);
                         break;
                     }
                     case DELETE: {

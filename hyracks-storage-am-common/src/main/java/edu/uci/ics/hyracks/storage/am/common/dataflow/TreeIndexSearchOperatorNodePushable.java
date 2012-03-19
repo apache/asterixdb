@@ -29,42 +29,43 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-	protected TreeIndexDataflowHelper treeIndexHelper;
-	protected FrameTupleAccessor accessor;
+    protected TreeIndexDataflowHelper treeIndexHelper;
+    protected FrameTupleAccessor accessor;
 
-	protected ByteBuffer writeBuffer;
-	protected FrameTupleAppender appender;
-	protected ArrayTupleBuilder tb;
-	protected DataOutput dos;
+    protected ByteBuffer writeBuffer;
+    protected FrameTupleAppender appender;
+    protected ArrayTupleBuilder tb;
+    protected DataOutput dos;
 
-	protected ITreeIndex treeIndex;
-	protected ISearchPredicate searchPred;
-	protected IIndexCursor cursor;
-	protected ITreeIndexFrame cursorFrame;
-	protected IIndexAccessor indexAccessor;
+    protected ITreeIndex treeIndex;
+    protected ISearchPredicate searchPred;
+    protected IIndexCursor cursor;
+    protected ITreeIndexFrame cursorFrame;
+    protected IIndexAccessor indexAccessor;
 
-	protected RecordDescriptor recDesc;
+    protected RecordDescriptor recDesc;
 
     public TreeIndexSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider) {
+            IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition, false);
+                opDesc, ctx, opCallbackProvider, partition, false);
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
     }
-    
+
     protected abstract ISearchPredicate createSearchPredicate();
-    
+
     protected abstract void resetSearchPredicate(int tupleIndex);
-    
+
     protected IIndexCursor createCursor() {
         return indexAccessor.createSearchCursor();
     }
-    
+
     @Override
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);

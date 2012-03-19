@@ -288,6 +288,10 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             TreeIndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
+        if (ctx.getIndexOp() == IndexOp.PHYSICALDELETE) {
+            throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");
+        }
+        
         if (ctx.getIndexOp() == IndexOp.INSERT) {
             // Before each insert, we must check whether there exist a killer
             // tuple in the memBTree. If we find a killer tuple, we must truly
@@ -342,9 +346,8 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         return true;
     }
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
-            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+            boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         int numDiskTrees = diskComponents.size();
         int numTrees = (includeMemComponent) ? numDiskTrees + 1 : numDiskTrees;

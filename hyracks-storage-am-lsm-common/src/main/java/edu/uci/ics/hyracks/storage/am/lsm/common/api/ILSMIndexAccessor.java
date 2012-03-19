@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -43,4 +44,12 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws TreeIndexException
      */
     public void merge() throws HyracksDataException, IndexException;
+
+    /**
+     * Deletes the tuple from the memory component only.
+     * 
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
+    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 }

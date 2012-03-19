@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -26,22 +27,24 @@ public abstract class IndexDataflowHelper {
     protected IIndex index;
     protected int indexFileId = -1;
     protected int partition;
-    
+
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
+    protected final IOperationCallbackProvider opCallbackProvider;
     protected final boolean createIfNotExists;
-    
+
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx,
-            int partition, boolean createIfNotExists) {
+            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
+        this.opCallbackProvider = opCallbackProvider;
         this.opDesc = opDesc;
-        this.ctx = ctx;        
+        this.ctx = ctx;
         this.partition = partition;
         this.createIfNotExists = createIfNotExists;
     }
 
     public void init() throws HyracksDataException {
         IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);        
+        IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
 
         FileReference f = getFilereference();
         int fileId = -1;
@@ -75,7 +78,7 @@ public abstract class IndexDataflowHelper {
             }
             index = createIndexInstance();
             if (createIfNotExists) {
-                index.create(indexFileId);                
+                index.create(indexFileId);
             }
             index.open(indexFileId);
             indexRegistry.register(indexFileId, index);
@@ -88,7 +91,7 @@ public abstract class IndexDataflowHelper {
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
         return fileSplitProvider.getFileSplits()[partition].getLocalFile();
     }
-    
+
     public void deinit() throws HyracksDataException {
         if (indexFileId != -1) {
             IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
@@ -110,5 +113,9 @@ public abstract class IndexDataflowHelper {
 
     public int getIndexFileId() {
         return indexFileId;
+    }
+
+    public IOperationCallbackProvider getOpCallbackProvider() {
+        return opCallbackProvider;
     }
 }

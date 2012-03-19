@@ -20,12 +20,12 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -33,25 +33,26 @@ import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 
 public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private static int DEFAULT_MEM_PAGE_SIZE = 32768;
-    private static int DEFAULT_MEM_NUM_PAGES = 1000;    
-    
+    private static int DEFAULT_MEM_NUM_PAGES = 1000;
+
     private final int memPageSize;
-    private final int memNumPages;    
-    
-    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean createIfNotExists) {
-        super(opDesc, ctx, partition, createIfNotExists);
+    private final int memNumPages;
+
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
+        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
-        memNumPages = DEFAULT_MEM_NUM_PAGES;        
+        memNumPages = DEFAULT_MEM_NUM_PAGES;
     }
-    
-    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean createIfNotExists, int memPageSize, int memNumPages) {
-        super(opDesc, ctx, partition, createIfNotExists);
+
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
+            int memNumPages) {
+        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
     }
-    
+
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
@@ -63,10 +64,9 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
             file.delete();
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        // TODO: Figure out where to get the proper operation callback from.
-        return LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager, (IOManager) ctx.getIOManager(), file
-                .getFile().getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc
-                .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                .getTreeIndexComparatorFactories());
+        return LSMBTreeUtils.createLSMTree(memBufferCache, opCallbackProvider.getOperationCallback(),
+                memFreePageManager, (IOManager) ctx.getIOManager(), file.getFile().getPath(), opDesc
+                        .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
+                treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories());
     }
 }

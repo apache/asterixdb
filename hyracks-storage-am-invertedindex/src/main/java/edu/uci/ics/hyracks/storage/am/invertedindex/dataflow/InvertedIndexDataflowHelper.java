@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
@@ -33,7 +34,7 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
 
     public InvertedIndexDataflowHelper(TreeIndexDataflowHelper btreeDataflowHelper, IIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, boolean createIfNotExists) {
-        super(opDesc, ctx, partition, createIfNotExists);
+        super(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, partition, createIfNotExists);
         this.btreeDataflowHelper = btreeDataflowHelper;
     }
 

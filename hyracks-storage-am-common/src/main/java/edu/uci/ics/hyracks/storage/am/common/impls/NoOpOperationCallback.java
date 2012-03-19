@@ -21,18 +21,21 @@ import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
 /**
  * Dummy operation callback that simply does nothing. Mainly, intended to be
  * used in non-transaction access method testing.
- * 
  */
 public class NoOpOperationCallback implements IOperationCallback {
 
     public static IOperationCallback INSTANCE = new NoOpOperationCallback();
     
+    private NoOpOperationCallback() {
+    }
+    
     @Override
     public void pre(ITupleReference tuple) {
-        
+        // Do nothing.
     }
 
     @Override
     public void post(ITupleReference tuple) {
+        // Do nothing.
     }
 }

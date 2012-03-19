@@ -18,6 +18,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
@@ -25,17 +26,17 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexSearchOperatorNod
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNodePushable {
-	protected PermutingFrameTupleReference lowKey;
-	protected PermutingFrameTupleReference highKey;
-	protected boolean lowKeyInclusive;
-	protected boolean highKeyInclusive;
-	protected MultiComparator lowKeySearchCmp;
-	protected MultiComparator highKeySearchCmp;
+    protected PermutingFrameTupleReference lowKey;
+    protected PermutingFrameTupleReference highKey;
+    protected boolean lowKeyInclusive;
+    protected boolean highKeyInclusive;
+    protected MultiComparator lowKeySearchCmp;
+    protected MultiComparator highKeySearchCmp;
 
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
-        super(opDesc, ctx, partition, recordDescProvider);
+            IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider,
+            int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
+        super(opDesc, ctx, opCallbackProvider, partition, recordDescProvider);
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
@@ -58,13 +59,11 @@ public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
             highKey.reset(accessor, tupleIndex);
         }
     }
-    
+
     @Override
     protected ISearchPredicate createSearchPredicate() {
         lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), lowKey);
-        highKeySearchCmp = BTreeUtils
-                .getSearchMultiComparator(treeIndex.getComparatorFactories(), highKey);
-        return new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
-                highKeySearchCmp);
+        highKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), highKey);
+        return new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp, highKeySearchCmp);
     }
 }
