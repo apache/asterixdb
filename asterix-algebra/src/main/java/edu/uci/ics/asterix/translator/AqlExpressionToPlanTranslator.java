@@ -94,6 +94,7 @@ import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
@@ -469,7 +470,8 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         }
 
         FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, fid.getFunctionName(), false);
-        FunctionIdentifier builtinAquafi = AlgebricksBuiltinFunctions.getBuiltinFunctionIdentifier(fi);
+        AsterixFunctionInfo afi = AsterixBuiltinFunctions.lookupFunction(fi);
+        FunctionIdentifier builtinAquafi = afi == null ? null : afi.getFunctionIdentifier();
 
         if (builtinAquafi != null) {
             fi = builtinAquafi;

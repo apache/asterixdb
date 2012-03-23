@@ -37,12 +37,6 @@ public class AsterixFunctionInfo implements IFunctionInfo {
         return functionIdentifier;
     }
 
-    
-    @Override
-    public Object getInfo() {
-        throw new IllegalStateException();
-    }
-
     @Override
     public int hashCode() {
         return toString().hashCode();

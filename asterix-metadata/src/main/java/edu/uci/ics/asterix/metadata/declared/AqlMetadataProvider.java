@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -43,6 +44,8 @@ import edu.uci.ics.asterix.runtime.transaction.TreeIndexInsertUpdateDeleteOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
@@ -919,6 +922,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public static ITreeIndexFrameFactory createBTreeNSMLeafFrameFactory(ITypeTraits[] typeTraits) {
         return new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
+    }
+
+    @Override
+    public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
+        return AsterixBuiltinFunctions.lookupFunction(fid);
     }
 
 }

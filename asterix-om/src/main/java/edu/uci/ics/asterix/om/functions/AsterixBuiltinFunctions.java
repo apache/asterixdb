@@ -357,6 +357,10 @@ public class AsterixBuiltinFunctions {
         }
         return finfo;
     }
+    
+    public static AsterixFunctionInfo lookupFunction(FunctionIdentifier fid) {
+        return (AsterixFunctionInfo) asterixFunctionIdToInfo.get(fid);
+    }
 
     static {
 

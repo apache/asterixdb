@@ -578,7 +578,7 @@ public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
 
         validateRemainingPreds(outRest);
         if (!outRest.isEmpty()) {
-            ILogicalExpression pulledCond = makeCondition(outRest);
+            ILogicalExpression pulledCond = makeCondition(outRest, context);
             SelectOperator selectRest = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
             if (assignFieldAccess != null) {
                 opRef3.setValue(primIdxUnnestMap);
@@ -611,9 +611,9 @@ public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
         }
     }
 
-    private ILogicalExpression makeCondition(List<Mutable<ILogicalExpression>> predList) {
+    private ILogicalExpression makeCondition(List<Mutable<ILogicalExpression>> predList, IOptimizationContext context) {
         if (predList.size() > 1) {
-            IFunctionInfo finfo = AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND);
+            IFunctionInfo finfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
             return new ScalarFunctionCallExpression(finfo, predList);
         } else {
             return predList.get(0).getValue();

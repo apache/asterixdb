@@ -85,18 +85,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.0</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.0</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
