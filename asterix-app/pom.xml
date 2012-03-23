@@ -81,7 +81,8 @@
 					-->
 					<forkMode>pertest</forkMode>
 					<argLine>-enableassertions -Xmx${test.heap.size}m -Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+						-Djava.util.logging.config.file=src/test/resources/logging.properties
+                        -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>
 						<include>**/*Test.java</include>
