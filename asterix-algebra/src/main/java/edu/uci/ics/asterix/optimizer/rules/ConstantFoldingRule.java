@@ -100,7 +100,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
@@ -138,13 +139,16 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             return new Pair<Boolean, ILogicalExpression>(false, expr);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Pair<Boolean, ILogicalExpression> visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr,
                 Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
             if (!checkArgs(expr)) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
+            }
+            // TODO: currently ARecord is always a closed record
+            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
+                return new Pair<Boolean, ILogicalExpression>(false, null);
             }
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());

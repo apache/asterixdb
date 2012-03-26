@@ -3,6 +3,7 @@ package edu.uci.ics.asterix.om.typecomputer.impl;
 import java.util.ArrayList;
 
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -23,8 +24,9 @@ public class OrderedListConstructorResultType implements IResultTypeComputer {
     public AOrderedListType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
+        boolean openType = TypeComputerUtilities.isOpenType(f);
         int n = f.getArguments().size();
-        if (n == 0) {
+        if (n == 0 || openType) {
             return new AOrderedListType(BuiltinType.ANY, null);
         } else {
             ArrayList<IAType> types = new ArrayList<IAType>();

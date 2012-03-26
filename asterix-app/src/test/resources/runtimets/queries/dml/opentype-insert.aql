@@ -1,0 +1,21 @@
+create dataverse testdv2;
+use dataverse testdv2;
+
+
+create type testtype as open {
+  id: string,
+  name: string
+}
+
+create nodegroup grouptest on nc1;
+
+create dataset testds(testtype) partitioned by key id on grouptest;
+ 
+ insert into dataset testds (
+ { "id": "001", "name": "Person Three", "hobbies": {{"scuba", "music"}}}
+ );
+
+write output to nc1:"rttest/dml_opentype-insert.adm";
+
+for $d in dataset("testds") 
+return $d
