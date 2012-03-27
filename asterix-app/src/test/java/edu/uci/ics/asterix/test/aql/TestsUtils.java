@@ -71,7 +71,7 @@ public class TestsUtils {
                             + "\n> ");
                 }
 
-                if (!lineExpected.split("Timestamp")[0].equals(lineActual.split("Timestamp")[0])) {
+                if (!equalStrings(lineExpected.split("Timestamp")[0], lineActual.split("Timestamp")[0])) {
                     fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }
@@ -204,9 +204,6 @@ public class TestsUtils {
         String[] rowsOne = s1.split("\n");
         String[] rowsTwo = s2.split("\n");
 
-        if (rowsOne.length != rowsTwo.length)
-            return false;
-
         for (int i = 0; i < rowsOne.length; i++) {
             String row1 = rowsOne[i];
             String row2 = rowsTwo[i];
@@ -216,6 +213,7 @@ public class TestsUtils {
 
             String[] fields1 = row1.split(" ");
             String[] fields2 = row2.split(" ");
+            double delta = 0.000000001;
 
             for (int j = 0; j < fields1.length; j++) {
                 if (fields1[j].equals(fields2[j])) {
@@ -227,10 +225,8 @@ public class TestsUtils {
                     fields2[j] = fields2[j].split(",")[0];
                     Double double1 = Double.parseDouble(fields1[j]);
                     Double double2 = Double.parseDouble(fields2[j]);
-                    float float1 = (float) double1.doubleValue();
-                    float float2 = (float) double2.doubleValue();
 
-                    if (Math.abs(float1 - float2) == 0)
+                    if (Math.abs(double1 - double2) <= delta)
                         continue;
                     else {
                         return false;

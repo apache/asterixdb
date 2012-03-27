@@ -12,6 +12,8 @@ custord/co.aql
 comparison/numeric-comparison_01.aql
 dapd/q3.aql
 fuzzyjoin/events-users-aqlplus_1.aql
-tpch
 fuzzyjoin
 failure/q1_pricing_summary_report_failure.aql
+tpch/q1
+tpch/q3
+tpch/q5
