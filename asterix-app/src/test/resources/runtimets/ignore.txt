@@ -14,6 +14,3 @@ dapd/q3.aql
 fuzzyjoin/events-users-aqlplus_1.aql
 fuzzyjoin
 failure/q1_pricing_summary_report_failure.aql
-tpch/q1
-tpch/q3
-tpch/q5
