@@ -12,7 +12,7 @@
                             -- AGGREGATE  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
-                    -- HASH_PARTITION_EXCHANGE [$$55, $$57, $$56]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$55, $$56, $$57]  |PARTITIONED|
                       -- EXTERNAL_GROUP_BY[$$42, $$46, $$39]  |LOCAL|
                               {
                                 -- AGGREGATE  |LOCAL|
