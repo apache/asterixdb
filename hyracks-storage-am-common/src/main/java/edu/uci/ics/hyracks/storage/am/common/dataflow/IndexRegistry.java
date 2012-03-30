@@ -19,24 +19,21 @@ import java.util.HashMap;
 
 public class IndexRegistry<IndexType> {
 
-	private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
+    private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
 
-	public IndexType get(int fileId) {
-		return map.get(fileId);
-	}
+    public IndexType get(int indexId) {
+        return map.get(indexId);
+    }
 
-	public void register(int fileId, IndexType index) {
-		map.put(fileId, index);
-	}
+    public void register(int indexId, IndexType index) {
+        map.put(indexId, index);
+    }
 
-	public void unregister(int fileId) {
-		try {
-			map.remove(fileId);
-		} catch (Exception e) {
-		}
-	}
+    public void unregister(int indexId) {
+        map.remove(indexId);
+    }
 
-	public int size() {
-		return map.size();
-	}
+    public int size() {
+        return map.size();
+    }
 }
