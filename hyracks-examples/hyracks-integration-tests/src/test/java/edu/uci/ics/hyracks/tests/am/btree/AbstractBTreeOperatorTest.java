@@ -223,7 +223,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     }
 
     protected void insertPipeline(boolean useUpsert) throws Exception {
-        IndexOp pipelineOperation = useUpsert ? IndexOp.INSERT : IndexOp.UPSERT;
+        IndexOp pipelineOperation = useUpsert ? IndexOp.UPSERT : IndexOp.INSERT;
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
