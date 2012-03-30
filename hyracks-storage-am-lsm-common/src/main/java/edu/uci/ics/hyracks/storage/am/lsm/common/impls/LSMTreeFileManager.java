@@ -64,7 +64,6 @@ public class LSMTreeFileManager implements ILSMFileManager {
         this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
         this.baseDir = baseDir;
-        createDirs();
     }
 
     @Override
@@ -72,6 +71,22 @@ public class LSMTreeFileManager implements ILSMFileManager {
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File f = new File(dev.getPath(), baseDir);
             f.mkdirs();
+        }
+    }
+
+    @Override
+    public void removeDirs() {
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
+            File f = new File(dev.getPath(), baseDir);
+            if (f.exists() && f.isDirectory()) {
+                // Delete the files in the directory first
+                for (File fileInDir : f.listFiles()) {
+                    fileInDir.delete();
+                }
+            }
+
+            // Delete the directory
+            f.delete();
         }
     }
 

@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
  */
 public interface ILSMFileManager {
     public void createDirs();
+    
+    public void removeDirs();
 
     public FileReference createFlushFile(String relFlushFileName);
 

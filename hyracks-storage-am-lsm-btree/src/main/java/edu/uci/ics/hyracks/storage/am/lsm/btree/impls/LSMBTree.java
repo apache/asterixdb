@@ -109,6 +109,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     @Override
     public void create(int indexFileId) throws HyracksDataException {
         memBTree.create(indexFileId);
+        fileManager.removeDirs();
         fileManager.createDirs();
     }
 
