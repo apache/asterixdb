@@ -34,8 +34,11 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.IndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.util.DummyIndexIdGenerator;
 
 public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperatorTest {
 
@@ -75,10 +78,11 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
         int[] secondaryHighKeyFields = { 1 };
 
         // search secondary index
+        IIndexIdProvider indexIdProvider = new IndexIdProvider(DummyIndexIdGenerator.generateIndexId());
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 secondaryRecDesc, storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
         int[] primaryLowKeyFields = { 1 }; // second field from the tuples
@@ -87,10 +91,11 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
         // coming from secondary index
 
         // search primary index
+        indexIdProvider = new IndexIdProvider(DummyIndexIdGenerator.generateIndexId());
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,

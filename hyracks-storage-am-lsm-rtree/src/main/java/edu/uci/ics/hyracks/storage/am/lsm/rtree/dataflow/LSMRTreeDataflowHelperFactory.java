@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -38,8 +39,9 @@ public class LSMRTreeDataflowHelperFactory implements IIndexDataflowHelperFactor
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
-        return new LSMRTreeDataflowHelper(opDesc, ctx, opCallbackProvider, partition, createIfNotExists,
-                btreeComparatorFactories, valueProviderFactories);
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
+            boolean createIfNotExists) {
+        return new LSMRTreeDataflowHelper(opDesc, ctx, opCallbackProvider, indexIdProvider, partition,
+                createIfNotExists, btreeComparatorFactories, valueProviderFactories);
     }
 }

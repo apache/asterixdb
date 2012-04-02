@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -46,9 +47,10 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists,
-            IBinaryComparatorFactory[] btreeComparatorFactories, IPrimitiveValueProviderFactory[] valueProviderFactories) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
+            boolean createIfNotExists, IBinaryComparatorFactory[] btreeComparatorFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories) {
+        super(opDesc, ctx, opCallbackProvider, indexIdProvider, partition, createIfNotExists);
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
         memNumPages = DEFAULT_MEM_NUM_PAGES;
         this.btreeComparatorFactories = btreeComparatorFactories;
@@ -56,10 +58,10 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
     }
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
-            int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
+            boolean createIfNotExists, int memPageSize, int memNumPages,
+            IBinaryComparatorFactory[] btreeComparatorFactories, IPrimitiveValueProviderFactory[] valueProviderFactories) {
+        super(opDesc, ctx, opCallbackProvider, indexIdProvider, partition, createIfNotExists);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.btreeComparatorFactories = btreeComparatorFactories;

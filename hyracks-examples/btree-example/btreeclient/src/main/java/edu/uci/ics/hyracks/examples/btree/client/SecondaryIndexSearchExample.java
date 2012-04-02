@@ -42,10 +42,13 @@ import edu.uci.ics.hyracks.examples.btree.helper.IndexRegistryProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.IndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.util.DummyIndexIdGenerator;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will perform range search on the secondary index
@@ -168,10 +171,11 @@ public class SecondaryIndexSearchExample {
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
                 options.secondaryBTreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
+        IIndexIdProvider indexIdProvider = new IndexIdProvider(DummyIndexIdGenerator.generateIndexId());
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
                 searchComparatorFactories, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider);
         JobHelper.createPartitionConstraint(spec, secondarySearchOp, splitNCs);
 
         // secondary index will output tuples with [UTF8String, Integer]
@@ -184,10 +188,11 @@ public class SecondaryIndexSearchExample {
                                             // op
 
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
+        indexIdProvider = new IndexIdProvider(DummyIndexIdGenerator.generateIndexId());
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider);
         JobHelper.createPartitionConstraint(spec, primarySearchOp, splitNCs);
 
         // have each node print the results of its respective B-Tree

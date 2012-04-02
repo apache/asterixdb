@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
@@ -59,12 +60,14 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
     private final AbstractInvertedIndexOperatorDescriptor opDesc;
 
     public InvertedIndexSearchOperatorNodePushable(AbstractInvertedIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, int queryField, IInvertedIndexSearchModifier searchModifier,
-            IRecordDescriptorProvider recordDescProvider) {
+            IHyracksTaskContext ctx, IIndexIdProvider indexIdProvider, int partition, int queryField,
+            IInvertedIndexSearchModifier searchModifier, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         btreeDataflowHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, partition, false);
-        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition, false);
+                .createIndexDataflowHelper(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider,
+                        partition, false);
+        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, indexIdProvider,
+                partition, false);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(searchModifier);
         this.recordDescProvider = recordDescProvider;

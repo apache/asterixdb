@@ -23,11 +23,13 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.IndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -56,6 +58,8 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IBinaryComparatorFactory[] invListComparatorFactories;
     protected final IBinaryTokenizerFactory tokenizerFactory;
     protected final IFileSplitProvider invListsFileSplitProvider;
+    
+    protected final IIndexIdProvider indexIdProvider;
 
     public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
@@ -63,7 +67,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory) {
+            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IIndexIdProvider indexIdProvider) {
         super(spec, inputArity, outputArity);
 
         // General.
@@ -88,13 +92,16 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
         }
+        
+        //IndexIdProvider
+        this.indexIdProvider = indexIdProvider;
     }
 
     @Override
     public IFileSplitProvider getFileSplitProvider() {
         return btreeFileSplitProvider;
     }
-    
+
     @Override
     public IFileSplitProvider getInvListsFileSplitProvider() {
         return invListsFileSplitProvider;
@@ -129,7 +136,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public IBinaryTokenizerFactory getTokenizerFactory() {
         return tokenizerFactory;
     }
-    
+
     @Override
     public ITypeTraits[] getInvListsTypeTraits() {
         return invListsTypeTraits;
@@ -139,7 +146,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
         return indexRegistryProvider;
     }
-    
+
     @Override
     public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
         return btreeDataflowHelperFactory;

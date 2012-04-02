@@ -19,7 +19,9 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.IndexIdProvider;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -31,11 +33,14 @@ public abstract class IndexDataflowHelper {
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IOperationCallbackProvider opCallbackProvider;
+    protected final IIndexIdProvider indexIdProvider;
     protected final boolean createIfNotExists;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
+            boolean createIfNotExists) {
         this.opCallbackProvider = opCallbackProvider;
+        this.indexIdProvider = indexIdProvider;
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.partition = partition;
@@ -65,6 +70,10 @@ public abstract class IndexDataflowHelper {
             }
         }
 
+        // get indexId
+        // TODO this is temporary code that should be changed if the resourceId is changed to includes indexId and partitionId
+        int indexId = byteArrayToInt(indexIdProvider.getIndexId(), 0);
+
         // Only set indexFileId member when openFile() succeeds,
         // otherwise deinit() will try to close the file that failed to open
         indexFileId = fileId;
@@ -72,7 +81,7 @@ public abstract class IndexDataflowHelper {
         // Create new index instance and register it.
         synchronized (indexRegistry) {
             // Check if the index has already been registered.
-            index = indexRegistry.get(indexFileId);
+            index = indexRegistry.get(indexId);
             if (index != null) {
                 return;
             }
@@ -81,7 +90,7 @@ public abstract class IndexDataflowHelper {
                 index.create(indexFileId);
             }
             index.open(indexFileId);
-            indexRegistry.register(indexFileId, index);
+            indexRegistry.register(indexId, index);
         }
     }
 
@@ -89,7 +98,15 @@ public abstract class IndexDataflowHelper {
 
     public FileReference getFilereference() {
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
-        return fileSplitProvider.getFileSplits()[partition].getLocalFile();
+        /* TODO 
+         * This commented-out code is the correct code to enable multiple index instances in one NC.
+         * This code will become alive when the resourceId(which is indexId) consists of partitionId and indexId.
+         * 
+         * return fileSplitProvider.getFileSplits()[partition].getLocalFile();
+         */
+        // temporary code for the course project
+        return fileSplitProvider.getFileSplits()[0].getLocalFile();
+
     }
 
     public void deinit() throws HyracksDataException {
@@ -117,5 +134,10 @@ public abstract class IndexDataflowHelper {
 
     public IOperationCallbackProvider getOpCallbackProvider() {
         return opCallbackProvider;
+    }
+
+    private int byteArrayToInt(byte[] bytes, int offset) {
+        return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
+                + ((bytes[offset + 3] & 0xff) << 0);
     }
 }

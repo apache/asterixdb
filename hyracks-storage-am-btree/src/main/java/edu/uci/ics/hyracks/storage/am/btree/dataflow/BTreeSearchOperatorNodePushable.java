@@ -18,6 +18,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
@@ -32,11 +33,12 @@ public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
     protected boolean highKeyInclusive;
     protected MultiComparator lowKeySearchCmp;
     protected MultiComparator highKeySearchCmp;
+    protected final IIndexIdProvider indexIdProvider;
 
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider,
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition, IRecordDescriptorProvider recordDescProvider,
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
-        super(opDesc, ctx, opCallbackProvider, partition, recordDescProvider);
+        super(opDesc, ctx, opCallbackProvider, indexIdProvider, partition, recordDescProvider);
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
@@ -48,6 +50,7 @@ public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
             highKey = new PermutingFrameTupleReference();
             highKey.setFieldPermutation(highKeyFields);
         }
+        this.indexIdProvider = indexIdProvider;
     }
 
     @Override

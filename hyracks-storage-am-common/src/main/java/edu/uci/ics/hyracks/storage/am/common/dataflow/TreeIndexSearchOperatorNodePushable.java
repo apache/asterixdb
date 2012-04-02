@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -52,9 +53,10 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
     protected RecordDescriptor recDesc;
 
     public TreeIndexSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider) {
+            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
+            IRecordDescriptorProvider recordDescProvider) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, opCallbackProvider, partition, false);
+                opDesc, ctx, opCallbackProvider, indexIdProvider, partition, false);
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
     }
 
