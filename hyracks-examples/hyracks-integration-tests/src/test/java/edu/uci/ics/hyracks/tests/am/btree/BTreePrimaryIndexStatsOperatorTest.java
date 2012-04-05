@@ -26,12 +26,9 @@ import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.impls.IndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.util.DummyIndexIdGenerator;
 
 public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTest {
 
@@ -45,10 +42,9 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     public void showPrimaryIndexStats() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        IIndexIdProvider indexIdProvider = new IndexIdProvider(DummyIndexIdGenerator.generateIndexId());
         TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
                 indexRegistryProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexIdProvider);
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
                 createTempFile().getAbsolutePath()) });

@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleUpdaterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
@@ -42,19 +41,18 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory dataflowHelperFactory,
-            IOperationCallbackProvider opCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory,
-            IIndexIdProvider indexIdProvider) {
+            IOperationCallbackProvider opCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory) {
         super(spec, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits, comparatorFactories,
                 lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, dataflowHelperFactory,
-                opCallbackProvider, indexIdProvider);
+                opCallbackProvider);
         this.tupleUpdaterFactory = tupleUpdaterFactory;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new BTreeUpdateSearchOperatorNodePushable(this, ctx, opCallbackProvider, indexIdProvider, partition,
-                recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
+        return new BTreeUpdateSearchOperatorNodePushable(this, ctx, opCallbackProvider, partition, recordDescProvider,
+                lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
                 tupleUpdaterFactory.createTupleUpdater());
     }
 }

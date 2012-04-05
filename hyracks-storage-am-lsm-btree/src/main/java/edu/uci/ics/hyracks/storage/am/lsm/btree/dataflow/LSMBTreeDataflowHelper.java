@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -40,17 +39,16 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final int memNumPages;
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
-            boolean createIfNotExists) {
-        super(opDesc, ctx, opCallbackProvider, indexIdProvider, partition, createIfNotExists);
+            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
+        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
         memNumPages = DEFAULT_MEM_NUM_PAGES;
     }
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, IIndexIdProvider indexIdProvider, int partition,
-            boolean createIfNotExists, int memPageSize, int memNumPages) {
-        super(opDesc, ctx, opCallbackProvider, indexIdProvider, partition, createIfNotExists);
+            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
+            int memNumPages) {
+        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
     }

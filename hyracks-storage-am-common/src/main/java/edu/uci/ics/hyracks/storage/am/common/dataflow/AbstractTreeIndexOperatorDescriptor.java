@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexIdProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -42,7 +41,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
 
     protected final IOperationCallbackProvider opCallbackProvider;
-    protected final IIndexIdProvider indexIdProvider;
 
 	public AbstractTreeIndexOperatorDescriptor(JobSpecification spec,
 			int inputArity, int outputArity, RecordDescriptor recDesc,
@@ -52,8 +50,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 			ITypeTraits[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
 			IIndexDataflowHelperFactory dataflowHelperFactory, 
-			IOperationCallbackProvider opCallbackProvider,
-			IIndexIdProvider indexIdProvider) {
+			IOperationCallbackProvider opCallbackProvider) {
 		super(spec, inputArity, outputArity);
 		this.fileSplitProvider = fileSplitProvider;
 		this.storageManager = storageManager;
@@ -65,7 +62,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 		if (outputArity > 0) {
 			recordDescriptors[0] = recDesc;
 		}
-		this.indexIdProvider = indexIdProvider;
 	}
 
 	@Override
