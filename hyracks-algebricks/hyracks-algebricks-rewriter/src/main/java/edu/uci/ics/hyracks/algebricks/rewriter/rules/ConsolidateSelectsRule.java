@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
@@ -51,8 +52,8 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression conj = new ScalarFunctionCallExpression(
-                AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        IFunctionInfo andFn = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
+        AbstractFunctionCallExpression conj = new ScalarFunctionCallExpression(andFn);
         conj.getArguments().add(new MutableObject<ILogicalExpression>(select.getCondition().getValue()));
         conj.getArguments().add(((SelectOperator) op2).getCondition());
 

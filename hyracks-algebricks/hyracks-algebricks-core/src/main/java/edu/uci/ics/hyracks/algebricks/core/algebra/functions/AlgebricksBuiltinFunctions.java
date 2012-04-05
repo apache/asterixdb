@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,10 +26,6 @@ public class AlgebricksBuiltinFunctions {
         GT,
         NEQ
     }
-
-    private static Map<FunctionIdentifier, FunctionIdentifier> algebricksBuiltinFunctions = new HashMap<FunctionIdentifier, FunctionIdentifier>();
-
-    private static Map<FunctionIdentifier, IFunctionInfo> _finfos = new HashMap<FunctionIdentifier, IFunctionInfo>();
 
     public static final String ALGEBRICKS_NS = "algebricks";
 
@@ -55,43 +50,6 @@ public class AlgebricksBuiltinFunctions {
     // nulls
     public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1, true);
 
-    static {
-        // comparisons
-        add(EQ);
-        add(LE);
-        add(GE);
-        add(LT);
-        add(GT);
-        add(NEQ);
-        // booleans
-        add(NOT);
-        add(AND);
-        add(OR);
-        // numerics
-        add(NUMERIC_ADD);
-        // nulls
-        add(IS_NULL);
-        for (FunctionIdentifier fi : algebricksBuiltinFunctions.values()) {
-            _finfos.put(fi, new FunctionInfoImpl(fi));
-        }
-    }
-
-    private static void add(FunctionIdentifier fi) {
-        algebricksBuiltinFunctions.put(fi, fi);
-    }
-
-    public static final boolean isAlgebricksBuiltinFunction(FunctionIdentifier fi) {
-        return algebricksBuiltinFunctions.get(fi) != null;
-    }
-
-    public static final Collection<FunctionIdentifier> getAlgebricksBuiltinFunctions() {
-        return algebricksBuiltinFunctions.values();
-    }
-
-    public static final FunctionIdentifier getBuiltinFunctionIdentifier(FunctionIdentifier fi) {
-        return algebricksBuiltinFunctions.get(fi);
-    }
-
     private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions = new HashMap<FunctionIdentifier, ComparisonKind>();
     static {
         comparisonFunctions.put(AlgebricksBuiltinFunctions.EQ, ComparisonKind.EQ);
@@ -109,9 +67,4 @@ public class AlgebricksBuiltinFunctions {
     public static boolean isComparisonFunction(FunctionIdentifier fi) {
         return comparisonFunctions.get(fi) != null;
     }
-
-    public static IFunctionInfo getBuiltinFunctionInfo(FunctionIdentifier fi) {
-        return _finfos.get(fi);
-    }
-
 }

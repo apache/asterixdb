@@ -24,8 +24,8 @@ import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOFuture;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
@@ -61,7 +61,7 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public FileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
+    public IFileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
             throws HyracksDataException {
         FileHandle fHandle = new FileHandle(fileRef);
         try {
@@ -73,14 +73,15 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public int syncWrite(FileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+    public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         try {
             int n = 0;
             int remaining = data.remaining();
             while (remaining > 0) {
-                int len = fHandle.getFileChannel().write(data, offset);
+                int len = ((FileHandle) fHandle).getFileChannel().write(data, offset);
                 if (len < 0) {
-                    throw new HyracksDataException("Error writing to file: " + fHandle.getFileReference().toString());
+                    throw new HyracksDataException("Error writing to file: "
+                            + ((FileHandle) fHandle).getFileReference().toString());
                 }
                 remaining -= len;
                 offset += len;
@@ -95,12 +96,12 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public int syncRead(FileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+    public int syncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         try {
             int n = 0;
             int remaining = data.remaining();
             while (remaining > 0) {
-                int len = fHandle.getFileChannel().read(data, offset);
+                int len = ((FileHandle) fHandle).getFileChannel().read(data, offset);
                 if (len < 0) {
                     return -1;
                 }
@@ -117,23 +118,23 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public IIOFuture asyncWrite(FileHandle fHandle, long offset, ByteBuffer data) {
-        AsyncWriteRequest req = new AsyncWriteRequest(fHandle, offset, data);
+    public IIOFuture asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) {
+        AsyncWriteRequest req = new AsyncWriteRequest((FileHandle) fHandle, offset, data);
         executor.execute(req);
         return req;
     }
 
     @Override
-    public IIOFuture asyncRead(FileHandle fHandle, long offset, ByteBuffer data) {
-        AsyncReadRequest req = new AsyncReadRequest(fHandle, offset, data);
+    public IIOFuture asyncRead(IFileHandle fHandle, long offset, ByteBuffer data) {
+        AsyncReadRequest req = new AsyncReadRequest((FileHandle) fHandle, offset, data);
         executor.execute(req);
         return req;
     }
 
     @Override
-    public void close(FileHandle fHandle) throws HyracksDataException {
+    public void close(IFileHandle fHandle) throws HyracksDataException {
         try {
-            fHandle.close();
+            ((FileHandle) fHandle).close();
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -223,6 +224,15 @@ public class IOManager implements IIOManager {
         @Override
         protected int performOperation() throws HyracksDataException {
             return syncWrite(fHandle, offset, data);
+        }
+    }
+
+    @Override
+    public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException {
+        try {
+            ((FileHandle) fileHandle).sync(metadata);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
     }
 }

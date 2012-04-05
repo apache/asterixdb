@@ -12,16 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.comm;
+package edu.uci.ics.hyracks.api.io;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
-public interface IConnectionDemultiplexer {
-    public int getSenderCount();
-
-    public IConnectionEntry findNextReadyEntry(int lastReadSender);
-
-    public void unreadyEntry(int index);
-
-    public int closeEntry(int index) throws HyracksDataException;
+/**
+ * IFileHandle is an interface that exists only for Java compilers to perform static typing
+ * when handling file handle objects. Users must not implement this interface.
+ */
+public interface IFileHandle {
 }

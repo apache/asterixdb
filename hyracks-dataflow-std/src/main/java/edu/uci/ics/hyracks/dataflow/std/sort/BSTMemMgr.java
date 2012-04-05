@@ -167,7 +167,6 @@ public class BSTMemMgr implements IMemoryManager {
         //clean up all frames
         for (int i = 0; i < frames.length; i++)
             frames[i] = null;
-        System.gc();
     }
 
     /**

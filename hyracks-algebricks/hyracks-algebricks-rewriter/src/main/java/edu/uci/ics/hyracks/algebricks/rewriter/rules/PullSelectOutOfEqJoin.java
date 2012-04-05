@@ -63,7 +63,7 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         }
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier fi = fexp.getFunctionIdentifier();
-        if (fi != AlgebricksBuiltinFunctions.AND) {
+        if (!fi.equals(AlgebricksBuiltinFunctions.AND)) {
             return false;
         }
         eqVarVarComps.clear();
@@ -79,9 +79,9 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
             return false;
         }
         // pull up
-        ILogicalExpression pulledCond = makeCondition(otherPredicates);
+        ILogicalExpression pulledCond = makeCondition(otherPredicates, context);
         SelectOperator select = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
-        ILogicalExpression newJoinCond = makeCondition(eqVarVarComps);
+        ILogicalExpression newJoinCond = makeCondition(eqVarVarComps, context);
         join.getCondition().setValue(newJoinCond);
         select.getInputs().add(new MutableObject<ILogicalOperator>(join));
         opRef.setValue(select);
@@ -89,9 +89,9 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
         return true;
     }
 
-    private ILogicalExpression makeCondition(List<Mutable<ILogicalExpression>> predList) {
+    private ILogicalExpression makeCondition(List<Mutable<ILogicalExpression>> predList, IOptimizationContext context) {
         if (predList.size() > 1) {
-            IFunctionInfo finfo = AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND);
+            IFunctionInfo finfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
             return new ScalarFunctionCallExpression(finfo, predList);
         } else {
             return predList.get(0).getValue();
@@ -103,7 +103,7 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
-        if (f.getFunctionIdentifier() != AlgebricksBuiltinFunctions.EQ) {
+        if (!f.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)) {
             return false;
         }
         ILogicalExpression e1 = f.getArguments().get(0).getValue();

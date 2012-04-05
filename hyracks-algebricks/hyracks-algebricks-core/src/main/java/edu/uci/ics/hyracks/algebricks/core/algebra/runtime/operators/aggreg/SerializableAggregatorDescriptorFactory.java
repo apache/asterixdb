@@ -81,11 +81,12 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 ftr.reset(accessor, tIndex);
                 int stateTupleStart = stateAccessor.getTupleStartOffset(stateTupleIndex);
+		int fieldSlotLength = stateAccessor.getFieldSlotsLength();
                 for (int i = 0; i < aggs.length; i++) {
                     try {
                         byte[] data = stateAccessor.getBuffer().array();
                         int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length)
-                                + stateTupleStart;
+                                + stateTupleStart + fieldSlotLength;
                         aggs[i].step(ftr, data, start, stateFieldLength[i]);
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);

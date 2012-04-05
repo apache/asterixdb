@@ -12,36 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.things;
+package edu.uci.ics.hyracks.maven.plugin;
 
-import java.io.Serializable;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
-public final class ThingDescriptorId implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private final long id;
-
-    public ThingDescriptorId(long id) {
-        this.id = id;
-    }
-
-    public long getId() {
-        return id;
-    }
-
+/**
+ * @goal stop-services
+ */
+public class HyracksStopServicesMojo extends AbstractHyracksMojo {
     @Override
-    public String toString() {
-        return "ThID: " + id;
-    }
-
-    public int hashCode() {
-        return (int) (id & 0xffffffff);
-    }
-
-    public boolean equals(Object o) {
-        if (!(o instanceof ThingDescriptorId)) {
-            return false;
-        }
-        return id == ((ThingDescriptorId) o).id;
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        getLog().info("Stopping Hyracks Services");
+        HyracksServiceRegistry.INSTANCE.destroyAll();
     }
 }

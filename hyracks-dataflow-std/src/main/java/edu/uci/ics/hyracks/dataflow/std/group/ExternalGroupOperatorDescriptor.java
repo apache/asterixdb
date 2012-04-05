@@ -194,7 +194,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    throw new HyracksDataException("failed");
+                    //do nothing for failures
                 }
 
                 @Override
@@ -318,10 +318,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                             }
                             gTable = null;
                             aggState = null;
-                            System.gc();
                         } else {
                             aggState = null;
-                            System.gc();
                             runs = new LinkedList<RunFileReader>(runs);
                             inFrames = new ArrayList<ByteBuffer>();
                             outFrame = ctx.allocateFrame();

@@ -4,8 +4,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public class RunFileReader implements IFrameReader {
@@ -13,7 +13,7 @@ public class RunFileReader implements IFrameReader {
     private final IIOManager ioManager;
     private final long size;
 
-    private FileHandle handle;
+    private IFileHandle handle;
     private long readPtr;
 
     public RunFileReader(FileReference file, IIOManager ioManager, long size) {
@@ -42,7 +42,7 @@ public class RunFileReader implements IFrameReader {
     public void close() throws HyracksDataException {
         ioManager.close(handle);
     }
-    
+
     public long getFileSize() {
         return size;
     }

@@ -12,24 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
+package edu.uci.ics.hyracks.maven.plugin;
 
-public class FunctionInfoImpl implements IFunctionInfo {
+import java.io.File;
 
-    private final FunctionIdentifier fid;
+/**
+ * @goal deploy-app
+ */
+public class HyracksAppDeploymentMojo extends AbstractHyracksCLIMojo {
+    /**
+     * @parameter
+     * @required
+     */
+    private String appName;
 
-    public FunctionInfoImpl(FunctionIdentifier fid) {
-        this.fid = fid;
-    }
+    /**
+     * @parameter
+     * @required
+     */
+    private File harFile;
 
     @Override
-    public FunctionIdentifier getFunctionIdentifier() {
-        return fid;
+    protected String getCommands() {
+        return "create application " + appName + " \"" + harFile.getAbsolutePath() + "\";";
     }
-
-    @Override
-    public Object getInfo() {
-        throw new IllegalStateException();
-    }
-
 }

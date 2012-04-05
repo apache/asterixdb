@@ -100,12 +100,9 @@ public class ExternalSortRunMerger {
                 }
                 /** recycle sort buffer */
                 frameSorter.close();
-                System.gc();
-
             } else {
                 /** recycle sort buffer */
                 frameSorter.close();
-                System.gc();
 
                 inFrames = new ArrayList<ByteBuffer>();
                 outFrame = ctx.allocateFrame();
@@ -186,7 +183,6 @@ public class ExternalSortRunMerger {
                         FrameUtils.flushFrame(nextFrame, writer);
                         outFrameAppender.reset(nextFrame, true);
                     }
-                    System.gc();
                     return;
                 }
                 // Limit on the output size
@@ -216,11 +212,9 @@ public class ExternalSortRunMerger {
                     FrameUtils.flushFrame(outFrame, writer);
                     outFrameAppender.reset(outFrame, true);
                 }
-                System.gc();
                 return;
             }
             // More than one run, actual merging is needed
-            System.gc();
             inFrames = new ArrayList<ByteBuffer>();
             for (int i = 0; i < framesLimit - 1; ++i) {
                 inFrames.add(ctx.allocateFrame());

@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public class RunFileWriter implements IFrameWriter {
@@ -27,7 +27,7 @@ public class RunFileWriter implements IFrameWriter {
     private final IIOManager ioManager;
     private boolean failed;
 
-    private FileHandle handle;
+    private IFileHandle handle;
     private long size;
 
     public RunFileWriter(FileReference file, IIOManager ioManager) {

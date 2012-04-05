@@ -148,7 +148,7 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 pushOps(pushedOnLeft, joinBranchLeftRef, context);
                 pushOps(pushedOnRight, joinBranchRightRef, context);
             }
-            addCondToJoin(select, join);
+            addCondToJoin(select, join, context);
         } else { // push down
             Iterator<Mutable<ILogicalOperator>> branchIter = join.getInputs().iterator();
 
@@ -202,7 +202,8 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
         joinBranch.setValue(topOp);
     }
 
-    private static void addCondToJoin(SelectOperator select, AbstractBinaryJoinOperator join) {
+    private static void addCondToJoin(SelectOperator select, AbstractBinaryJoinOperator join,
+            IOptimizationContext context) {
         ILogicalExpression cond = join.getCondition().getValue();
         if (OperatorPropertiesUtil.isAlwaysTrueCond(cond)) { // the join was a product
             join.getCondition().setValue(select.getCondition().getValue());
@@ -211,8 +212,8 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             if (cond.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression fcond = (AbstractFunctionCallExpression) cond;
                 if (fcond.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
-                    AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(
-                            AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+                    AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(context
+                            .getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND));
                     newCond.getArguments().add(select.getCondition());
                     newCond.getArguments().addAll(fcond.getArguments());
                     join.getCondition().setValue(newCond);
@@ -220,9 +221,9 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 }
             }
             if (!bAddedToConj) {
-                AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(
-                        AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND),
-                        select.getCondition(), new MutableObject<ILogicalExpression>(join.getCondition().getValue()));
+                AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(context.getMetadataProvider()
+                        .lookupFunction(AlgebricksBuiltinFunctions.AND), select.getCondition(),
+                        new MutableObject<ILogicalExpression>(join.getCondition().getValue()));
                 join.getCondition().setValue(newCond);
             }
         }

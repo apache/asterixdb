@@ -169,15 +169,15 @@ public class OperatorPropertiesUtil {
             return false;
         }
         AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) eu;
-        if (f1.getFunctionIdentifier() != AlgebricksBuiltinFunctions.NOT) {
+        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
             return false;
         }
         ILogicalExpression a1 = f1.getArguments().get(0).getValue();
-        if (a1.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (!a1.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             return false;
         }
         AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-        if (f2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
             return false;
         }
         return true;

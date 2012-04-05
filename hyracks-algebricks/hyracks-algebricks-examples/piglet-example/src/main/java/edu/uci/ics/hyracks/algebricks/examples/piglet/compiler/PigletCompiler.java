@@ -294,22 +294,22 @@ public class PigletCompiler {
     private IFunctionInfo lookupFunction(FunctionTag functionTag, String functionName) throws PigletException {
         switch (functionTag) {
             case EQ:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.EQ);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.EQ);
 
             case NEQ:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NEQ);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.NEQ);
 
             case LT:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.LT);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.LT);
 
             case LTE:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.LE);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.LE);
 
             case GT:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.GT);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.GT);
 
             case GTE:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.GE);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.GE);
         }
         throw new PigletException("Unsupported function: " + functionTag);
     }

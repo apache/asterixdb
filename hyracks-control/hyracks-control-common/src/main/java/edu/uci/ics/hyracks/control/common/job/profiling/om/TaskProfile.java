@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -33,7 +34,7 @@ public class TaskProfile extends AbstractProfile {
 
     public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile) {
         this.taskAttemptId = taskAttemptId;
-        this.partitionSendProfile = partitionSendProfile;
+        this.partitionSendProfile = new HashMap<PartitionId, PartitionProfile>(partitionSendProfile);
     }
 
     public TaskAttemptId getTaskId() {

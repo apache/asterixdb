@@ -259,6 +259,8 @@ public class JobSpecification implements Serializable {
             }
         }
 
+        buffer.append("\n").append("Constraints:\n").append(userConstraints);
+
         return buffer.toString();
     }
 

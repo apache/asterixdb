@@ -85,11 +85,11 @@ public class SelectOperator extends AbstractLogicalOperator {
                 ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
         if (condition.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
-            if (f1.getFunctionIdentifier() == AlgebricksBuiltinFunctions.NOT) {
+            if (f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
                 ILogicalExpression a1 = f1.getArguments().get(0).getValue();
                 if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-                    if (f2.getFunctionIdentifier() == AlgebricksBuiltinFunctions.IS_NULL) {
+                    if (f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
                         ILogicalExpression a2 = f2.getArguments().get(0).getValue();
                         if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                             LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();

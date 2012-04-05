@@ -1,9 +1,9 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHel
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.OperatorSchemaImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.aggreg.SerializableAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -98,7 +99,7 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         List<ILocalStructuralProperty> propsLocal = new LinkedList<ILocalStructuralProperty>();
 
         GroupByOperator gOp = (GroupByOperator) op;
-        HashSet<LogicalVariable> columnSet = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> columnSet = new ListSet<LogicalVariable>();
 
         if (!columnSet.isEmpty()) {
             propsLocal.add(new LocalGroupingProperty(columnSet));
@@ -121,7 +122,7 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(new HashSet<LogicalVariable>(
+            pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(
                     columnSet), null), null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {

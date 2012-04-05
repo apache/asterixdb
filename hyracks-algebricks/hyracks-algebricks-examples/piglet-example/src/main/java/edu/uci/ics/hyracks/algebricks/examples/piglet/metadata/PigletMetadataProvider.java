@@ -1,9 +1,15 @@
 package edu.uci.ics.hyracks.algebricks.examples.piglet.metadata;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
@@ -37,6 +43,16 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class PigletMetadataProvider implements IMetadataProvider<String, String> {
+    private static final Map<FunctionIdentifier, PigletFunction> FN_MAP;
+
+    static {
+        Map<FunctionIdentifier, PigletFunction> map = new HashMap<FunctionIdentifier, PigletFunction>();
+
+        map.put(AlgebricksBuiltinFunctions.EQ, new PigletFunction(AlgebricksBuiltinFunctions.EQ));
+
+        FN_MAP = Collections.unmodifiableMap(map);
+    }
+
     @Override
     public IDataSource<String> findDataSource(String id) throws AlgebricksException {
         return null;
@@ -164,4 +180,8 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         return null;
     }
 
+    @Override
+    public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
+        return FN_MAP.get(fid);
+    }
 }

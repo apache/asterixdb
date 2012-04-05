@@ -2,7 +2,6 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +34,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysicalOperator {
@@ -74,7 +74,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                 switch (lsp.getPropertyType()) {
                     case LOCAL_GROUPING_PROPERTY: {
                         LocalGroupingProperty lgp = (LocalGroupingProperty) lsp;
-                        Set<LogicalVariable> colSet = new HashSet<LogicalVariable>();
+                        Set<LogicalVariable> colSet = new ListSet<LogicalVariable>();
                         for (LogicalVariable v : lgp.getColumnSet()) {
                             LogicalVariable v2 = getLhsGbyVar(gby, v);
                             if (v2 != null) {
@@ -118,7 +118,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         List<ILocalStructuralProperty> localProps = null;
 
         localProps = new ArrayList<ILocalStructuralProperty>(1);
-        Set<LogicalVariable> gbvars = new HashSet<LogicalVariable>(columnList);
+        Set<LogicalVariable> gbvars = new ListSet<LogicalVariable>(columnList);
         LocalGroupingProperty groupProp = new LocalGroupingProperty(gbvars, new ArrayList<LogicalVariable>(columnList));
 
         GroupByOperator gby = (GroupByOperator) op;
@@ -194,7 +194,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         IPartitioningProperty pp = null;
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
-            pp = new UnorderedPartitionedProperty(new HashSet<LogicalVariable>(columnList), null);
+            pp = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(columnList), null);
         }
         pv[0] = new StructuralPropertiesVector(pp, localProps);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);

@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +23,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 /**
@@ -57,9 +57,9 @@ public interface IPartitioningRequirementsCoordinator {
                         UnorderedPartitionedProperty upp1 = (UnorderedPartitionedProperty) firstDeliveredPartitioning;
                         Set<LogicalVariable> set1 = upp1.getColumnSet();
                         UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) rqdpp;
-                        Set<LogicalVariable> modifuppreq = new HashSet<LogicalVariable>();
+                        Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
                         Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                        Set<LogicalVariable> covered = new HashSet<LogicalVariable>();
+                        Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
                         for (LogicalVariable r : uppreq.getColumnSet()) {
                             EquivalenceClass ec = eqmap.get(r);
                             for (LogicalVariable v : set1) {

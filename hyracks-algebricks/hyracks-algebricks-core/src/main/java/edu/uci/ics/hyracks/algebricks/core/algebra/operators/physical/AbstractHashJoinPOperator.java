@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +34,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralProperti
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
@@ -93,8 +93,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
             switch (partitioningType) {
                 case PAIRWISE: {
-                    pp1 = new UnorderedPartitionedProperty(new HashSet<LogicalVariable>(keysLeftBranch), null);
-                    pp2 = new UnorderedPartitionedProperty(new HashSet<LogicalVariable>(keysRightBranch), null);
+                    pp1 = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(keysLeftBranch), null);
+                    pp2 = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(keysRightBranch), null);
                     break;
                 }
                 case BROADCAST: {
@@ -131,9 +131,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     UnorderedPartitionedProperty upp1 = (UnorderedPartitionedProperty) firstDeliveredPartitioning;
                                     Set<LogicalVariable> set1 = upp1.getColumnSet();
                                     UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) requirements;
-                                    Set<LogicalVariable> modifuppreq = new HashSet<LogicalVariable>();
+                                    Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                                    Set<LogicalVariable> covered = new HashSet<LogicalVariable>();
+                                    Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
                                     for (LogicalVariable r : uppreq.getColumnSet()) {
                                         EquivalenceClass ecSnd = eqmap.get(r);
                                         boolean found = false;

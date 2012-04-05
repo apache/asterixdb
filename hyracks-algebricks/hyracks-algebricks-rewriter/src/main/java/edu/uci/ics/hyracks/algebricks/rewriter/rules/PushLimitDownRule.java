@@ -45,7 +45,6 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
     /**
      * When a global Limit over a merge-exchange is found, a local Limit is
      * pushed down.
-     * 
      */
 
     @Override
@@ -101,8 +100,8 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
             clone2 = new LimitOperator(opLim.getMaxObjects().getValue(), false);
         } else {
             // push limit (max+offset)
-            IFunctionInfo finfoAdd = AlgebricksBuiltinFunctions
-                    .getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NUMERIC_ADD);
+            IFunctionInfo finfoAdd = context.getMetadataProvider().lookupFunction(
+                    AlgebricksBuiltinFunctions.NUMERIC_ADD);
             ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd,
                     opLim.getMaxObjects(), opLim.getOffset());
             clone2 = new LimitOperator(maxPlusOffset, false);

@@ -146,11 +146,11 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     public void getConstraintsAndEquivClasses(Collection<FunctionalDependency> fds,
             Map<LogicalVariable, EquivalenceClass> equivClasses) {
         FunctionIdentifier funId = getFunctionIdentifier();
-        if (funId == AlgebricksBuiltinFunctions.AND) {
+        if (funId.equals(AlgebricksBuiltinFunctions.AND)) {
             for (Mutable<ILogicalExpression> a : arguments) {
                 a.getValue().getConstraintsAndEquivClasses(fds, equivClasses);
             }
-        } else if (funId == AlgebricksBuiltinFunctions.EQ) {
+        } else if (funId.equals(AlgebricksBuiltinFunctions.EQ)) {
             ILogicalExpression opLeft = arguments.get(0).getValue();
             ILogicalExpression opRight = arguments.get(1).getValue();
             if (opLeft.getExpressionTag() == LogicalExpressionTag.CONSTANT
@@ -170,11 +170,11 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     @Override
     public void getConstraintsForOuterJoin(Collection<FunctionalDependency> fds, Collection<LogicalVariable> outerVars) {
         FunctionIdentifier funId = getFunctionIdentifier();
-        if (funId == AlgebricksBuiltinFunctions.AND) {
+        if (funId.equals(AlgebricksBuiltinFunctions.AND)) {
             for (Mutable<ILogicalExpression> a : arguments) {
                 a.getValue().getConstraintsForOuterJoin(fds, outerVars);
             }
-        } else if (funId == AlgebricksBuiltinFunctions.EQ) {
+        } else if (funId.equals(AlgebricksBuiltinFunctions.EQ)) {
             ILogicalExpression opLeft = arguments.get(0).getValue();
             ILogicalExpression opRight = arguments.get(1).getValue();
             if (opLeft.getExpressionTag() == LogicalExpressionTag.VARIABLE
@@ -221,7 +221,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     @Override
     public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs) {
-        if (getFunctionIdentifier() != AlgebricksBuiltinFunctions.AND || arguments.size() <= 1) {
+        if (!getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND) || arguments.size() <= 1) {
             return false;
         } else {
             conjs.addAll(arguments);

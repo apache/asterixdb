@@ -12,18 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.things;
+package edu.uci.ics.hyracks.maven.plugin;
 
-import java.nio.ByteBuffer;
+import java.io.File;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+public abstract class AbstractHyracksServerMojo extends AbstractHyracksMojo {
+    /**
+     * @parameter
+     * @required
+     */
+    protected File hyracksServerHome;
 
-public interface ISliver {
-    public void open() throws HyracksDataException;
-
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException;
-
-    public void commit() throws HyracksDataException;
-
-    public void abort();
+    /**
+     * @parameter
+     */
+    protected File workingDir;
 }

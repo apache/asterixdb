@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.text</groupId>
   <artifactId>textapp</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>text-example</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -76,8 +76,8 @@
       </plugin>
       <plugin>
       	<groupId>edu.uci.ics.hyracks</groupId>
-      	<artifactId>hyracks-maven-plugin</artifactId>
-      	<version>0.0.2</version>
+      	<artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
+      	<version>0.2.1-SNAPSHOT</version>
         <configuration>
           <hyracksServerHome>${basedir}/../../../hyracks-server/target/hyracks-server-${project.version}-binary-assembly</hyracksServerHome>
           <hyracksCLIHome>${basedir}/../../../hyracks-cli/target/hyracks-cli-${project.version}-binary-assembly</hyracksCLIHome>
@@ -164,13 +164,13 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
   		<artifactId>texthelper</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.1-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
   		<artifactId>textclient</artifactId>
-  		<version>0.2.0-SNAPSHOT</version>
+  		<version>0.2.1-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>test</scope>
   	</dependency>

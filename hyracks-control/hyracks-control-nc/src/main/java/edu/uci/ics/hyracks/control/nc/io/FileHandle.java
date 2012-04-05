@@ -12,13 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.io;
+package edu.uci.ics.hyracks.control.nc.io;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
-public class FileHandle {
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
+import edu.uci.ics.hyracks.api.io.IIOManager;
+
+public class FileHandle implements IFileHandle {
     private final FileReference fileRef;
 
     private RandomAccessFile raf;
@@ -78,5 +82,9 @@ public class FileHandle {
 
     public FileChannel getFileChannel() {
         return channel;
+    }
+
+    public void sync(boolean metadata) throws IOException {
+        channel.force(metadata);
     }
 }

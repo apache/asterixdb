@@ -14,13 +14,13 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 
 public abstract class AbstractGroupingProperty {
     protected Set<LogicalVariable> columnSet;
@@ -43,7 +43,7 @@ public abstract class AbstractGroupingProperty {
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
             return;
         }
-        HashSet<LogicalVariable> norm = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> norm = new ListSet<LogicalVariable>();
         for (LogicalVariable v : columnSet) {
             EquivalenceClass ec = equivalenceClasses.get(v);
             if (ec == null) {
@@ -65,7 +65,7 @@ public abstract class AbstractGroupingProperty {
         if (fds == null || fds.isEmpty()) {
             return;
         }
-        HashSet<LogicalVariable> norm = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> norm = new ListSet<LogicalVariable>();
         for (LogicalVariable v : columnSet) {
             boolean isImpliedByAnFD = false;
             for (FunctionalDependency fdep : fds) {

@@ -134,7 +134,7 @@ public class JoinUtils {
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fi = fexp.getFunctionIdentifier();
-                if (fi == AlgebricksBuiltinFunctions.AND) {
+                if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
                     for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
                         if (!isHashJoinCondition(a.getValue(), inLeftAll, inRightAll, outLeftFields,
                                 outRightFields)) {
