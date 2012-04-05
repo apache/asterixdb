@@ -45,6 +45,10 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     private int lastChannelWritten;
 
+    private int nConnectionAttempts;
+
+    private boolean connectionFailure;
+
     public MultiplexedConnection(MuxDemux muxDemux) {
         this.muxDemux = muxDemux;
         pendingWriteEventsCounter = new IEventCounter() {
@@ -73,6 +77,15 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         readerState = new ReaderState();
         writerState = new WriterState();
         lastChannelWritten = -1;
+        connectionFailure = false;
+    }
+
+    int getConnectionAttempts() {
+        return nConnectionAttempts;
+    }
+
+    void setConnectionAttempts(int nConnectionAttempts) {
+        this.nConnectionAttempts = nConnectionAttempts;
     }
 
     synchronized void setTCPConnection(TCPConnection tcpConnection) {
@@ -81,9 +94,17 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         notifyAll();
     }
 
-    synchronized void waitUntilConnected() throws InterruptedException {
-        while (tcpConnection == null) {
+    synchronized void setConnectionFailure() {
+        this.connectionFailure = true;
+        notifyAll();
+    }
+
+    synchronized void waitUntilConnected() throws InterruptedException, NetException {
+        while (tcpConnection == null && !connectionFailure) {
             wait();
+        }
+        if (connectionFailure) {
+            throw new NetException("Connection failure");
         }
     }
 

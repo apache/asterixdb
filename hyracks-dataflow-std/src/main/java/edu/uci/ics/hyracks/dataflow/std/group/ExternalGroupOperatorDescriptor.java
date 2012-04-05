@@ -382,7 +382,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          */
                         int[] tupleIndices = new int[runNumber];
 
-                        for (int runIndex = runNumber - 1; runIndex >= 0; runIndex--) {
+                        for (int i = 0; i < runNumber; i++) {
+                            int runIndex = topTuples.peek().getRunid();
                             tupleIndices[runIndex] = 0;
                             // Load the run file
                             runFileReaders[runIndex] = runs.get(runIndex);

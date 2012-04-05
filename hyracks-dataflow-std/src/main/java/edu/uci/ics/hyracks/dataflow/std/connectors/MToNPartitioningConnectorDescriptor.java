@@ -25,7 +25,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicPartitionCollector;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 
 public class MToNPartitioningConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -50,7 +52,9 @@ public class MToNPartitioningConnectorDescriptor extends AbstractMToNConnectorDe
             int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(0, nProducerPartitions);
-        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, nProducerPartitions,
+        NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
                 expectedPartitions);
+        NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
+        return new PartitionCollector(ctx, getConnectorId(), index, expectedPartitions, frameReader, channelReader);
     }
 }

@@ -56,7 +56,7 @@ public class JobSpecification implements Serializable {
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
-    private int maxAttempts;
+    private int maxReattempts;
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
 
@@ -75,7 +75,7 @@ public class JobSpecification implements Serializable {
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
-        maxAttempts = 5;
+        maxReattempts = 2;
     }
 
     public OperatorDescriptorId createOperatorDescriptorId() {
@@ -202,12 +202,12 @@ public class JobSpecification implements Serializable {
         this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
     }
 
-    public void setMaxAttempts(int maxAttempts) {
-        this.maxAttempts = maxAttempts;
+    public void setMaxReattempts(int maxReattempts) {
+        this.maxReattempts = maxReattempts;
     }
 
-    public int getMaxAttempts() {
-        return maxAttempts;
+    public int getMaxReattempts() {
+        return maxReattempts;
     }
 
     public void addUserConstraint(Constraint constraint) {

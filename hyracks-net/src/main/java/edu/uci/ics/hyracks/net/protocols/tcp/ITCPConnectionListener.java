@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.hyracks.net.protocols.tcp;
 
+import java.net.InetSocketAddress;
+
 public interface ITCPConnectionListener {
     public void acceptedConnection(TCPConnection connection);
 
     public void connectionEstablished(TCPConnection connection);
+
+    public void connectionFailure(InetSocketAddress remoteAddress);
 }

@@ -44,6 +44,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
+import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int BUILD_ACTIVITY_ID = 0;
@@ -160,10 +162,11 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                             .createPartitioner();
                     state = new HashBuildTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
+                    ISerializableTable table = new SerializableHashTable(tableSize, ctx);
                     state.joiner = new InMemoryHashJoin(ctx, tableSize,
                             new FrameTupleAccessor(ctx.getFrameSize(), rd0), hpc0, new FrameTupleAccessor(
                                     ctx.getFrameSize(), rd1), hpc1, new FrameTuplePairComparator(keys0, keys1,
-                                    comparators), isLeftOuter, nullWriters1);
+                                    comparators), isLeftOuter, nullWriters1, table);
                 }
 
                 @Override

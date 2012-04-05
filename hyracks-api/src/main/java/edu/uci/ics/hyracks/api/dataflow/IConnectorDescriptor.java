@@ -105,6 +105,12 @@ public interface IConnectorDescriptor extends Serializable {
             BitSet targetBitmap);
 
     /**
+     * Indicate which producer partitions are required for the given receiver.
+     */
+    public void indicateSourcePartitions(int nProducerPartitions, int nConsumerPartitions, int consumerIndex,
+            BitSet sourceBitmap);
+
+    /**
      * Gets the display name.
      */
     public String getDisplayName();

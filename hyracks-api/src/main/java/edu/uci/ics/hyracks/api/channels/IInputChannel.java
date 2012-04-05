@@ -17,10 +17,9 @@ package edu.uci.ics.hyracks.api.channels;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public interface IInputChannel {
-    public void registerMonitor(IInputChannelMonitor monitor) throws HyracksException;
+    public void registerMonitor(IInputChannelMonitor monitor);
 
     public void setAttachment(Object attachment);
 

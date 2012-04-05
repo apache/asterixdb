@@ -40,7 +40,7 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
 
             @Override
             public AggregateState createAggregateStates() {
-                return null;
+                return new AggregateState();
             }
 
             @Override

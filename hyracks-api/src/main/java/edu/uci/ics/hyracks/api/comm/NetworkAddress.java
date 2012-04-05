@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.comm;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public final class NetworkAddress implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -38,12 +39,12 @@ public final class NetworkAddress implements Serializable {
 
     @Override
     public String toString() {
-        return ipAddress + ":" + port;
+        return Arrays.toString(ipAddress) + ":" + port;
     }
 
     @Override
     public int hashCode() {
-        return ipAddress.hashCode() + port;
+        return Arrays.hashCode(ipAddress) + port;
     }
 
     @Override
@@ -52,6 +53,6 @@ public final class NetworkAddress implements Serializable {
             return false;
         }
         NetworkAddress on = (NetworkAddress) o;
-        return on.port == port && on.ipAddress.equals(ipAddress);
+        return on.port == port && Arrays.equals(on.ipAddress, ipAddress);
     }
 }

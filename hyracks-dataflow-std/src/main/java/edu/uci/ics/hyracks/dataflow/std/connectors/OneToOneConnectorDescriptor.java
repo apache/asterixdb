@@ -30,7 +30,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicPartitionCollector;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
+import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 
 public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -51,8 +53,10 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
             int index, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(index);
-        return new NonDeterministicPartitionCollector(ctx, getConnectorId(), index, nProducerPartitions,
+        NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
                 expectedPartitions);
+        NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
+        return new PartitionCollector(ctx, getConnectorId(), index, expectedPartitions, frameReader, channelReader);
     }
 
     @Override
@@ -71,5 +75,12 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
             BitSet targetBitmap) {
         targetBitmap.clear();
         targetBitmap.set(producerIndex);
+    }
+
+    @Override
+    public void indicateSourcePartitions(int nProducerPartitions, int nConsumerPartitions, int consumerIndex,
+            BitSet sourceBitmap) {
+        sourceBitmap.clear();
+        sourceBitmap.set(consumerIndex);
     }
 }
