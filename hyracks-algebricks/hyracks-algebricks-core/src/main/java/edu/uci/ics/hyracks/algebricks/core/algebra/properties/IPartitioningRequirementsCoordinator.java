@@ -60,10 +60,13 @@ public interface IPartitioningRequirementsCoordinator {
                         Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
                         Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
                         Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
-                        for (LogicalVariable r : uppreq.getColumnSet()) {
-                            EquivalenceClass ec = eqmap.get(r);
-                            for (LogicalVariable v : set1) {
-                                EquivalenceClass ecFirst = eqmap.get(v);
+
+                        // coordinate from an existing partition property
+                        // (firstDeliveredPartitioning)
+                        for (LogicalVariable v : set1) {
+                            EquivalenceClass ecFirst = eqmap.get(v);
+                            for (LogicalVariable r : uppreq.getColumnSet()) {
+                                EquivalenceClass ec = eqmap.get(r);
                                 if (ecFirst == ec) {
                                     covered.add(v);
                                     modifuppreq.add(r);
@@ -71,6 +74,7 @@ public interface IPartitioningRequirementsCoordinator {
                                 }
                             }
                         }
+
                         if (!covered.equals(set1)) {
                             throw new AlgebricksException("Could not modify " + rqdpp
                                     + " to agree with partitioning property " + firstDeliveredPartitioning
