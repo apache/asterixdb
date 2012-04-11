@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
@@ -191,6 +192,19 @@ public class APIFramework {
                     case LOAD_FROM_FILE: {
                         CompiledLoadFromFileStatement stmtLoad = (CompiledLoadFromFileStatement) stmt;
                         dmlJobs.addAll(DatasetOperations.createLoadDatasetJobSpec(stmtLoad, metadata));
+                        // Also load the dataset's secondary indexes.
+                        List<Index> datasetIndexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
+                                dataverseName, stmtLoad.getDatasetName());
+                        for (Index index : datasetIndexes) {
+                            if (!index.isSecondaryIndex()) {
+                                continue;
+                            }
+                            // Recreate CompiledCreateIndexStatement from metadata entity 'index'.
+                            CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(),
+                                    index.getDatasetName(), index.getKeyFieldNames(), index.getIndexType());
+                            JobSpecification jobSpec = IndexOperations.buildCreateIndexJobSpec(cis, metadata);
+                            dmlJobs.add(new Job(jobSpec));
+                        }
                         break;
                     }
                     case WRITE_FROM_QUERY_RESULT: {
