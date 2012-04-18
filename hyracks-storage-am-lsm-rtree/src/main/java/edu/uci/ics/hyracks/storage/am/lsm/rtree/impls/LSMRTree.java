@@ -57,6 +57,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager.LSMRTr
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -88,6 +89,11 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
     protected final InMemoryFreePageManager memFreePageManager;
     private final static int MEM_RTREE_FILE_ID = 0;
     private final static int MEM_BTREE_FILE_ID = 1;
+
+    // This is used to estimate number of tuples in the memory RTree for
+    // efficient memory allocation in the sort operation prior to flushing
+    private int memRTreeTuples = 0;
+    private RTreeTupleSorter rTreeTupleSorter = null;
 
     // On-disk components.
     private final ILSMFileManager fileManager;
@@ -291,7 +297,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         if (ctx.getIndexOp() == IndexOp.PHYSICALDELETE) {
             throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");
         }
-        
+
         if (ctx.getIndexOp() == IndexOp.INSERT) {
             // Before each insert, we must check whether there exist a killer
             // tuple in the memBTree. If we find a killer tuple, we must truly
@@ -322,6 +328,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
                 }
             }
             ctx.memRTreeAccessor.insert(tuple);
+            memRTreeTuples++;
 
         } else {
             // For each delete operation, we make sure that we run a true
@@ -386,20 +393,38 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
 
         // scan the memory RTree
         ITreeIndexAccessor memRTreeAccessor = memComponent.getRTree().createAccessor();
-        IIndexCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor();
+        RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
         LSMRTreeFileNameComponent fileNames = (LSMRTreeFileNameComponent) fileManager.getRelFlushFileName();
         FileReference rtreeFile = fileManager.createFlushFile(fileNames.getRTreeFileName());
         RTree diskRTree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, true);
 
+        if (rTreeTupleSorter == null) {
+            // TODO: Pass the Hilbert cmps here
+            rTreeTupleSorter = new RTreeTupleSorter(memRTreeTuples, MEM_RTREE_FILE_ID, rtreeCmpFactories,
+                    rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), memComponent.getRTree()
+                            .getBufferCache());
+        } else {
+            rTreeTupleSorter.reset();
+        }
         // BulkLoad the tuples from the in-memory tree into the new disk RTree.
         IIndexBulkLoadContext rtreeBulkLoadCtx = diskRTree.beginBulkLoad(1.0f);
 
         try {
             while (rtreeScanCursor.hasNext()) {
                 rtreeScanCursor.next();
-                ITupleReference frameTuple = rtreeScanCursor.getTuple();
+                rTreeTupleSorter.insertTupleEntry(rtreeScanCursor.getPageId(), rtreeScanCursor.getTupleOffset());
+            }
+        } finally {
+            rtreeScanCursor.close();
+        }
+        rTreeTupleSorter.sort();
+
+        try {
+            while (rTreeTupleSorter.hasNext()) {
+                rTreeTupleSorter.next();
+                ITupleReference frameTuple = rTreeTupleSorter.getTuple();
                 diskRTree.bulkLoadAddTuple(frameTuple, rtreeBulkLoadCtx);
             }
         } finally {
@@ -515,6 +540,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         memComponent.getRTree().create(MEM_RTREE_FILE_ID);
         memComponent.getBTree().create(MEM_BTREE_FILE_ID);
         memFreePageManager.reset();
+        memRTreeTuples = 0;
     }
 
     @Override
