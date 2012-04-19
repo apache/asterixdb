@@ -43,6 +43,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     private int tupleIndex = 0;
     private int tupleIndexInc = 0;
+    private int currentTupleIndex = 0;
+    private int pageId = -1;
 
     private MultiComparator cmp;
 
@@ -70,6 +72,14 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     public ITupleReference getTuple() {
         return frameTuple;
+    }
+
+    public int getTupleOffset() {
+        return leafFrame.getTupleOffset(currentTupleIndex);
+    }
+
+    public int getPageId() {
+        return pageId;
     }
 
     @Override
@@ -123,6 +133,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
                 } else {
                     page = node;
+                    this.pageId = pageId; // This is only needed for the
+                                          // LSMRTree flush operation
                     leafFrame.setPage(page);
                     tupleIndex = 0;
                     succeeded = true;
@@ -158,11 +170,16 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                 if (searchKey != null) {
                     if (leafFrame.intersect(searchKey, i, cmp)) {
                         frameTuple.resetByTupleIndex(leafFrame, i);
+                        currentTupleIndex = i; // This is only needed for the
+                                               // LSMRTree flush operation
                         tupleIndexInc = i + 1;
                         return true;
                     }
                 } else {
                     frameTuple.resetByTupleIndex(leafFrame, i);
+                    currentTupleIndex = i; // This is only needed for the
+                                           // LSMRTree
+                                           // flush operation
                     tupleIndexInc = i + 1;
                     return true;
                 }
