@@ -33,7 +33,7 @@ public class APIClientThreadFactory implements IClientThreadFactory {
 
     public APIClientThreadFactory(ICCApplicationContext appContext) throws Exception {
         this.appContext = appContext;
-        hcc = new HyracksConnection("localhost", appContext.getCCContext().getClusterControllerInfo()
+        hcc = new HyracksConnection(appContext.getCCContext().getClusterControllerInfo().getClientNetAddress(), appContext.getCCContext().getClusterControllerInfo()
                 .getClientNetPort());
     }
 

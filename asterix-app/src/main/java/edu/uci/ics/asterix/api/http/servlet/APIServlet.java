@@ -40,6 +40,7 @@ public class APIServlet extends HttpServlet {
         String printLogicalPlanParam = request.getParameter("print-logical-plan");
         String printOptimizedLogicalPlanParam = request.getParameter("print-optimized-logical-plan");
         String printJob = request.getParameter("print-job");
+        String strIP = request.getParameter("hyracks-ip");
         String strPort = request.getParameter("hyracks-port");
         String strDisplayResult = request.getParameter("display-result");
         int port = Integer.parseInt(strPort);
@@ -53,7 +54,7 @@ public class APIServlet extends HttpServlet {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
                 if (hcc == null) {
-                    hcc = new HyracksConnection("localhost", port);
+                    hcc = new HyracksConnection(strIP, port);
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
                 }
             }
@@ -109,7 +110,7 @@ public class APIServlet extends HttpServlet {
 
         } catch (Exception e) {
             out.println(e.getMessage());
-        }
+       }
     }
 
     @Override
@@ -118,6 +119,7 @@ public class APIServlet extends HttpServlet {
         response.setContentType("text/html");
         final String form = "<form method=\"post\">"
                 + "<center><textarea cols=\"80\" rows=\"25\" name=\"query\" ></textarea><br/>"
+                + "IP Address: <input type = \"text\" name = \"hyracks-ip\" size=\"15\" maxlength=\"35\" value=\"locahost\" /><br/>"
                 + "Port: <input type = \"text\" name = \"hyracks-port\" size=\"5\" maxlength=\"5\" value=\"1098\" /><br/>"
                 + "<input type = \"checkbox\" name = \"print-expr-tree\" value=\"true\" />print parsed expressions<P>"
                 + "<input type = \"checkbox\" name = \"print-rewritten-expr-tree\" value=\"true\" />print rewritten expressions<P>"
