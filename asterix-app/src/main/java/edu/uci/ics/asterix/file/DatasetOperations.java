@@ -43,6 +43,7 @@ import edu.uci.ics.asterix.translator.DmlTranslator.CompiledLoadFromFileStatemen
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.AssignRuntimeFactory;
@@ -211,7 +212,7 @@ public class DatasetOperations {
                     splitsAndConstraint.second);
 
             spec.connect(new OneToOneConnectorDescriptor(spec), asterixOp, 0, bulkLoad, 0);
-
+            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
             spec.addRoot(bulkLoad);
         } catch (AlgebricksException e) {
             throw new AsterixException(e);
@@ -355,7 +356,8 @@ public class DatasetOperations {
         }
 
         spec.addRoot(btreeBulkLoad);
-
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        
         jobSpecs.add(new Job(spec));
         return jobSpecs;
     }
