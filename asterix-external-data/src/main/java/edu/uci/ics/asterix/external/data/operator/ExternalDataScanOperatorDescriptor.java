@@ -18,64 +18,92 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
+import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
-public class ExternalDataScanOperatorDescriptor extends
-		AbstractSingleActivityOperatorDescriptor {
-	private static final long serialVersionUID = 1L;
+public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+    private static final long serialVersionUID = 1L;
 
-	private final String adapter;
-	private final Map<String, String> adapterConfiguration;
-	private final IAType atype;
+    private final String adapter;
+    private final Map<String, String> adapterConfiguration;
+    private final IAType atype;
 
-	private transient IDatasourceReadAdapter datasourceReadAdapter;
+    private transient IDatasourceReadAdapter datasourceReadAdapter;
 
-	public ExternalDataScanOperatorDescriptor(JobSpecification spec,
-			String adapter, Map<String, String> arguments, IAType atype,
-			RecordDescriptor rDesc) {
-		super(spec, 0, 1);
-		recordDescriptors[0] = rDesc;
-		this.adapter = adapter;
-		this.adapterConfiguration = arguments;
-		this.atype = atype;
-	}
+    public ExternalDataScanOperatorDescriptor(JobSpecification spec, String adapter, Map<String, String> arguments,
+            IAType atype, RecordDescriptor rDesc) {
+        super(spec, 0, 1);
+        recordDescriptors[0] = rDesc;
+        this.adapter = adapter;
+        this.adapterConfiguration = arguments;
+        this.atype = atype;
+    }
 
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider, final int partition,
-			int nPartitions) throws HyracksDataException {
+    @Override
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
+            ICCApplicationContext appCtx) {
+        
+        /*
+        Comment: The following code is commented out. This is because constraints are being set at compile time so that they can 
+        be propagated to upstream Asterix operators. Hyracks has to provide a way to propagate constraints to upstream operators.
+        Once it is there, we will uncomment the following code.  
+        
+        AlgebricksPartitionConstraint constraint = datasourceReadAdapter.getPartitionConstraint();
+        switch (constraint.getPartitionConstraintType()) {
+            case ABSOLUTE:
+                String[] locations = ((AlgebricksAbsolutePartitionConstraint) constraint).getLocations();
+                for (int i = 0; i < locations.length; ++i) {
+                    constraintAcceptor.addConstraint(new Constraint(new PartitionLocationExpression(this.odId, i),
+                            new ConstantExpression(locations[i])));
+                }
+                constraintAcceptor.addConstraint(new Constraint(new PartitionCountExpression(this.odId),
+                        new ConstantExpression(locations.length)));
 
-		try {
-			datasourceReadAdapter = (IDatasourceReadAdapter) Class.forName(
-					adapter).newInstance();
-			datasourceReadAdapter.configure(adapterConfiguration, atype);
-			datasourceReadAdapter.initialize(ctx);
-		} catch (Exception e) {
-			throw new HyracksDataException("initialization of adapter failed",
-					e);
-		}
-		return new AbstractUnaryOutputSourceOperatorNodePushable() {
-			@Override
-			public void initialize() throws HyracksDataException {
-				writer.open();
-				try {
-					datasourceReadAdapter.getDataParser(partition)
-							.parse(writer);
-				} catch (Exception e) {
-					throw new HyracksDataException(
-							"exception during reading from external data source",
-							e);
-				} finally {
-					writer.close();
-				}
-			}
-		};
-	}
+                break;
+            case COUNT:
+                constraintAcceptor.addConstraint(new Constraint(new PartitionCountExpression(this.odId),
+                        new ConstantExpression(((AlgebricksCountPartitionConstraint) constraint).getCount())));
+                break;
+            default:
+                throw new IllegalStateException(" Constraint type :" + constraint.getPartitionConstraintType()
+                        + " not supported");
+
+        }*/
+
+    }
+
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+            throws HyracksDataException {
+
+        try {
+            datasourceReadAdapter = (IDatasourceReadAdapter) Class.forName(adapter).newInstance();
+            datasourceReadAdapter.configure(adapterConfiguration, atype);
+            datasourceReadAdapter.initialize(ctx);
+        } catch (Exception e) {
+            throw new HyracksDataException("initialization of adapter failed", e);
+        }
+        return new AbstractUnaryOutputSourceOperatorNodePushable() {
+            @Override
+            public void initialize() throws HyracksDataException {
+                writer.open();
+                try {
+                    datasourceReadAdapter.getDataParser(partition).parse(writer);
+                } catch (Exception e) {
+                    throw new HyracksDataException("exception during reading from external data source", e);
+                } finally {
+                    writer.close();
+                }
+            }
+        };
+    }
 }

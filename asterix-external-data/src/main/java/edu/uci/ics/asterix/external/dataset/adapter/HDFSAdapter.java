@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedExceptio
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.InputSplitsProxy;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourceReadAdapter {
@@ -54,12 +55,13 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     private String hdfsUrl;
     private List<String> hdfsPaths;
     private String inputFormatClassName;
-    private InputSplit[] inputSplits;
+    private Object[] inputSplits;
     private JobConf conf;
     private IHyracksTaskContext ctx;
     private Reporter reporter;
     private boolean isDelimited;
     private Character delimiter;
+    private InputSplitsProxy inputSplitsProxy;
     private static final Map<String, String> formatClassNames = new HashMap<String, String>();
 
     public static final String KEY_HDFS_URL = "hdfs";
@@ -121,6 +123,7 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
 
     private void configurePartitionConstraint() throws Exception {
         InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
+        inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
         partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
         hdfsPaths = new ArrayList<String>();
         for (String hdfsPath : configuration.get(KEY_HDFS_PATH).split(",")) {
@@ -168,7 +171,7 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     @Override
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
-        inputSplits = conf.getInputFormat().getSplits(conf, 0);
+        inputSplits = inputSplitsProxy.toInputSplits(conf);
         dataParser.initialize((ARecordType) atype, ctx);
         reporter = new Reporter() {
 
@@ -212,7 +215,8 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
         InputStream inputStream;
         if (conf.getInputFormat() instanceof SequenceFileInputFormat) {
             SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
-            RecordReader reader = format.getRecordReader(inputSplits[partition], conf, reporter);
+            RecordReader reader = format.getRecordReader((org.apache.hadoop.mapred.FileSplit) inputSplits[partition],
+                    conf, reporter);
             inputStream = new SequenceToTextStream(reader, ctx);
         } else {
             try {
