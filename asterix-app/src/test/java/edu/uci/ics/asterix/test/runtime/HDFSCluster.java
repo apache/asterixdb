@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.test.runtime;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -41,9 +40,6 @@ public class HDFSCluster {
         Path src = new Path(DATA_PATH);
         Path dest = new Path(HDFS_PATH);
         dfs.copyFromLocalFile(src, dest);
-        
-        FileStatus[] files = dfs.listStatus(dest);
-        System.out.println(files);
     }
 
     private void cleanupLocal() throws IOException {
