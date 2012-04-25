@@ -84,6 +84,7 @@ public class RuntimeTest {
         lsn.deleteOnExit();
 
         AsterixHyracksIntegrationUtil.init();
+        HDFSCluster.getInstance().setup();
     }
 
     @AfterClass
@@ -104,6 +105,8 @@ public class RuntimeTest {
             FileUtils.deleteDirectory(log);
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
+        
+        HDFSCluster.getInstance().cleanup();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
