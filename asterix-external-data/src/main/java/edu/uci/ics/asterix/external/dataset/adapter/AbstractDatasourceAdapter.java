@@ -40,13 +40,13 @@ public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
 
     protected Map<String, String> configuration;
 
-    protected AlgebricksPartitionConstraint partitionConstraint;
+    protected transient AlgebricksPartitionConstraint partitionConstraint;
 
     protected IAType atype;
 
     protected IHyracksTaskContext ctx;
 
-    protected IDataParser dataParser;
+    protected transient IDataParser dataParser;
 
     protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
 

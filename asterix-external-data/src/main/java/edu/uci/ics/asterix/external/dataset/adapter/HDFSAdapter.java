@@ -26,15 +26,14 @@ import java.util.Map;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
-import edu.uci.ics.asterix.external.data.parser.DelimitedDataStreamParser;
 import edu.uci.ics.asterix.external.data.parser.IDataParser;
 import edu.uci.ics.asterix.external.data.parser.IDataStreamParser;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -56,12 +55,13 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     private List<String> hdfsPaths;
     private String inputFormatClassName;
     private Object[] inputSplits;
-    private JobConf conf;
+    private transient JobConf conf;
     private IHyracksTaskContext ctx;
     private Reporter reporter;
     private boolean isDelimited;
     private Character delimiter;
     private InputSplitsProxy inputSplitsProxy;
+    private String parserClass;
     private static final Map<String, String> formatClassNames = new HashMap<String, String>();
 
     public static final String KEY_HDFS_URL = "hdfs";
@@ -108,7 +108,7 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
             throw new Exception("format " + format + " not supported");
         }
 
-        String parserClass = configuration.get(KEY_PARSER);
+        parserClass = configuration.get(KEY_PARSER);
         if (parserClass == null) {
             if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
                 parserClass = formatToParserMap.get(FORMAT_DELIMITED_TEXT);
@@ -116,18 +116,23 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
                 parserClass = formatToParserMap.get(FORMAT_ADM);
             }
         }
+       
+    }
 
+    private void configureParser() throws Exception {
         dataParser = (IDataParser) Class.forName(parserClass).newInstance();
         dataParser.configure(configuration);
     }
 
     private void configurePartitionConstraint() throws Exception {
-        InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
-        inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
-        partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
-        hdfsPaths = new ArrayList<String>();
-        for (String hdfsPath : configuration.get(KEY_HDFS_PATH).split(",")) {
-            hdfsPaths.add(hdfsPath);
+        if (inputSplitsProxy == null) {
+            InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
+            inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
+            partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
+            hdfsPaths = new ArrayList<String>();
+            for (String hdfsPath : configuration.get(KEY_HDFS_PATH).split(",")) {
+                hdfsPaths.add(hdfsPath);
+            }
         }
     }
 
@@ -172,6 +177,7 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
         inputSplits = inputSplitsProxy.toInputSplits(conf);
+        configureParser();
         dataParser.initialize((ARecordType) atype, ctx);
         reporter = new Reporter() {
 

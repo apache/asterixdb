@@ -34,7 +34,8 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements IDatasourceReadAdapter {
 
     private static final long serialVersionUID = -4154256369973615710L;
-    protected FileSplit[] fileSplits;
+    private FileSplit[] fileSplits;
+    private String parserClass;
 
     public class Constants {
         public static final String KEY_SPLITS = "path";
@@ -69,6 +70,7 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
     @Override
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
+        configureDataParser();
         dataParser.initialize((ARecordType) atype, ctx);
     }
 
@@ -101,20 +103,22 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
     }
 
     private void configureFileSplits(String[] splits) {
-        fileSplits = new FileSplit[splits.length];
-        String nodeName;
-        String nodeLocalPath;
-        int count = 0;
-        for (String splitPath : splits) {
-            nodeName = splitPath.split(":")[0];
-            nodeLocalPath = splitPath.split("://")[1];
-            FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
-            fileSplits[count++] = fileSplit;
+        if (fileSplits == null) {
+            fileSplits = new FileSplit[splits.length];
+            String nodeName;
+            String nodeLocalPath;
+            int count = 0;
+            for (String splitPath : splits) {
+                nodeName = splitPath.split(":")[0];
+                nodeLocalPath = splitPath.split("://")[1];
+                FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
+                fileSplits[count++] = fileSplit;
+            }
         }
     }
 
     protected void configureFormat() throws Exception {
-        String parserClass = configuration.get(Constants.KEY_PARSER);
+        parserClass = configuration.get(Constants.KEY_PARSER);
         if (parserClass == null) {
             if (Constants.FORMAT_DELIMITED_TEXT.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
                 parserClass = formatToParserMap.get(FORMAT_DELIMITED_TEXT);
@@ -124,6 +128,10 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
                 throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
             }
         }
+
+    }
+
+    private void configureDataParser() throws Exception {
         dataParser = (IDataParser) Class.forName(parserClass).newInstance();
         dataParser.configure(configuration);
     }

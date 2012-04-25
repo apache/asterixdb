@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.external.data.operator;
 
 import java.util.Map;
 
+import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
@@ -36,8 +37,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     private final String adapter;
     private final Map<String, String> adapterConfiguration;
     private final IAType atype;
-
-    private transient IDatasourceReadAdapter datasourceReadAdapter;
+    private  IDatasourceReadAdapter datasourceReadAdapter;
 
     public ExternalDataScanOperatorDescriptor(JobSpecification spec, String adapter, Map<String, String> arguments,
             IAType atype, RecordDescriptor rDesc) {
@@ -86,7 +86,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
             throws HyracksDataException {
 
         try {
-            datasourceReadAdapter = (IDatasourceReadAdapter) Class.forName(adapter).newInstance();
+            //datasourceReadAdapter = (IDatasourceReadAdapter) Class.forName(adapter).newInstance();
             datasourceReadAdapter.configure(adapterConfiguration, atype);
             datasourceReadAdapter.initialize(ctx);
         } catch (Exception e) {
@@ -105,5 +105,9 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
                 }
             }
         };
+    }
+    
+    public void setDatasourceAdapter(IDatasourceReadAdapter adapterInstance){
+        this.datasourceReadAdapter = adapterInstance;
     }
 }
