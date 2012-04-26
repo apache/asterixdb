@@ -58,7 +58,6 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     private Object[] inputSplits;
     private transient JobConf conf;
     private IHyracksTaskContext ctx;
-    private Reporter reporter;
     private boolean isDelimited;
     private Character delimiter;
     private InputSplitsProxy inputSplitsProxy;
@@ -179,8 +178,10 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
         inputSplits = inputSplitsProxy.toInputSplits(conf);
+    }
 
-        reporter = new Reporter() {
+    private Reporter getReporter() {
+        Reporter reporter = new Reporter() {
 
             @Override
             public Counter getCounter(Enum<?> arg0) {
@@ -213,8 +214,10 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
             public void progress() {
             }
         };
+        
+        return reporter;
     }
-
+    
     @Override
     public IDataParser getDataParser(int partition) throws Exception {
         Path path = new Path(inputSplits[partition].toString());
@@ -223,13 +226,13 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
         if (conf.getInputFormat() instanceof SequenceFileInputFormat) {
             SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
             RecordReader reader = format.getRecordReader((org.apache.hadoop.mapred.FileSplit) inputSplits[partition],
-                    conf, reporter);
+                    conf, getReporter());
             inputStream = new HDFSStream(reader, ctx);
         } else {
             try {
                 TextInputFormat format = (TextInputFormat) conf.getInputFormat();
                 RecordReader reader = format.getRecordReader(
-                        (org.apache.hadoop.mapred.FileSplit) inputSplits[partition], conf, reporter);
+                        (org.apache.hadoop.mapred.FileSplit) inputSplits[partition], conf, getReporter());
                 inputStream = new HDFSStream(reader, ctx);
             } catch (FileNotFoundException e) {
                 throw new HyracksDataException(e);
