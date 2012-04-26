@@ -31,6 +31,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
@@ -116,12 +117,13 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
                 parserClass = formatToParserMap.get(FORMAT_ADM);
             }
         }
-       
+
     }
 
-    private void configureParser() throws Exception {
-        dataParser = (IDataParser) Class.forName(parserClass).newInstance();
+    private IDataParser createDataParser() throws Exception {
+        IDataParser dataParser = (IDataParser) Class.forName(parserClass).newInstance();
         dataParser.configure(configuration);
+        return dataParser;
     }
 
     private void configurePartitionConstraint() throws Exception {
@@ -177,8 +179,7 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
         inputSplits = inputSplitsProxy.toInputSplits(conf);
-        configureParser();
-        dataParser.initialize((ARecordType) atype, ctx);
+
         reporter = new Reporter() {
 
             @Override
@@ -223,27 +224,32 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
             SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
             RecordReader reader = format.getRecordReader((org.apache.hadoop.mapred.FileSplit) inputSplits[partition],
                     conf, reporter);
-            inputStream = new SequenceToTextStream(reader, ctx);
+            inputStream = new HDFSStream(reader, ctx);
         } else {
             try {
-                inputStream = fs.open(((org.apache.hadoop.mapred.FileSplit) inputSplits[partition]).getPath());
+                TextInputFormat format = (TextInputFormat) conf.getInputFormat();
+                RecordReader reader = format.getRecordReader(
+                        (org.apache.hadoop.mapred.FileSplit) inputSplits[partition], conf, reporter);
+                inputStream = new HDFSStream(reader, ctx);
             } catch (FileNotFoundException e) {
                 throw new HyracksDataException(e);
             }
         }
 
+        IDataParser dataParser = createDataParser();
         if (dataParser instanceof IDataStreamParser) {
             ((IDataStreamParser) dataParser).setInputStream(inputStream);
         } else {
             throw new IllegalArgumentException(" parser not compatible");
         }
-
+        dataParser.configure(configuration);
+        dataParser.initialize((ARecordType) atype, ctx);
         return dataParser;
     }
 
 }
 
-class SequenceToTextStream extends InputStream {
+class HDFSStream extends InputStream {
 
     private ByteBuffer buffer;
     private int capacity;
@@ -252,7 +258,7 @@ class SequenceToTextStream extends InputStream {
     private final Object key;
     private final Text value;
 
-    public SequenceToTextStream(RecordReader reader, IHyracksTaskContext ctx) throws Exception {
+    public HDFSStream(RecordReader reader, IHyracksTaskContext ctx) throws Exception {
         capacity = ctx.getFrameSize();
         buffer = ByteBuffer.allocate(capacity);
         this.reader = reader;

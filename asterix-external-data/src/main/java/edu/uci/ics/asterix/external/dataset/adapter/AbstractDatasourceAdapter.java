@@ -46,8 +46,6 @@ public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
 
     protected IHyracksTaskContext ctx;
 
-    protected transient IDataParser dataParser;
-
     protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
 
     protected static final HashMap<String, String> formatToParserMap = new HashMap<String, String>();
@@ -94,14 +92,6 @@ public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
 
     public void setAdapterProperty(String property, String value) {
         configuration.put(property, value);
-    }
-
-    public IDataParser getParser() {
-        return dataParser;
-    }
-
-    public void setParser(IDataParser dataParser) {
-        this.dataParser = dataParser;
     }
 
     public String getAdapterProperty(String attribute) {

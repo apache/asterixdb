@@ -56,14 +56,13 @@ public class RSSFeedAdapter extends AbstractDatasourceAdapter implements IDataso
 
     @Override
     public IDataParser getDataParser(int partition) throws Exception {
-        if (dataParser == null) {
-            dataParser = new ManagedDelimitedDataStreamParser();
-            ((IManagedDataParser) dataParser).setAdapter(this);
-            dataParser.initialize((ARecordType) atype, ctx);
-            IFeedClient feedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
-            FeedStream feedStream = new FeedStream(feedClient, ctx);
-            ((IDataStreamParser) dataParser).setInputStream(feedStream);
-        }
+        IDataParser dataParser = new ManagedDelimitedDataStreamParser();
+        ((IManagedDataParser) dataParser).setAdapter(this);
+        dataParser.configure(configuration);
+        dataParser.initialize((ARecordType) atype, ctx);
+        IFeedClient feedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
+        FeedStream feedStream = new FeedStream(feedClient, ctx);
+        ((IDataStreamParser) dataParser).setInputStream(feedStream);
         return dataParser;
     }
 

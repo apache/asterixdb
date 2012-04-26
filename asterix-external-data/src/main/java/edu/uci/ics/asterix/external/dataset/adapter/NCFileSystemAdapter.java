@@ -70,8 +70,6 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
     @Override
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
-        configureDataParser();
-        dataParser.initialize((ARecordType) atype, ctx);
     }
 
     @Override
@@ -94,11 +92,15 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
         } catch (FileNotFoundException e) {
             throw new HyracksDataException(e);
         }
+
+        IDataParser dataParser = (IDataParser) Class.forName(parserClass).newInstance();
         if (dataParser instanceof IDataStreamParser) {
             ((IDataStreamParser) dataParser).setInputStream(in);
         } else {
             throw new IllegalArgumentException(" parser not compatible");
         }
+        dataParser.configure(configuration);
+        dataParser.initialize((ARecordType) atype, ctx);
         return dataParser;
     }
 
@@ -129,11 +131,6 @@ public class NCFileSystemAdapter extends AbstractDatasourceAdapter implements ID
             }
         }
 
-    }
-
-    private void configureDataParser() throws Exception {
-        dataParser = (IDataParser) Class.forName(parserClass).newInstance();
-        dataParser.configure(configuration);
     }
 
     private void configureInputType() {
