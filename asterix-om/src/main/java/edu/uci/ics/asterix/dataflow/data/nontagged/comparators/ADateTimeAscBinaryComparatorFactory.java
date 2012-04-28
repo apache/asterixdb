@@ -7,9 +7,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 public class ADateTimeAscBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    private AMutableDateTime dt1 = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
-    private AMutableDateTime dt2 = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
-
     public static final ADateTimeAscBinaryComparatorFactory INSTANCE = new ADateTimeAscBinaryComparatorFactory();
 
     private ADateTimeAscBinaryComparatorFactory() {
@@ -18,6 +15,9 @@ public class ADateTimeAscBinaryComparatorFactory implements IBinaryComparatorFac
     @Override
     public IBinaryComparator createBinaryComparator() {
         return new IBinaryComparator() {
+        	
+            private AMutableDateTime dt1 = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            private AMutableDateTime dt2 = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
