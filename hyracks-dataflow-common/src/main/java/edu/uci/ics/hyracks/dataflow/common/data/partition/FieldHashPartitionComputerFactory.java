@@ -55,7 +55,7 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
                     h = h * 31 + fh;
                 }
                 if (h < 0) {
-                    h = -h;
+                    h = -(h + 1);
                 }
                 return h % nParts;
             }

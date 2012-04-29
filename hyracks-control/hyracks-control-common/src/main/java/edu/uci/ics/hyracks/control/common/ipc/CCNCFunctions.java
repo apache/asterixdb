@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
@@ -49,6 +51,8 @@ import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import edu.uci.ics.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
 public class CCNCFunctions {
+    private static final Logger LOGGER = Logger.getLogger(CCNCFunctions.class.getName());
+
     private static final int FID_CODE_SIZE = 1;
 
     public enum FunctionId {
@@ -690,8 +694,12 @@ public class CCNCFunctions {
         private byte[] serialize(Object object, byte fid) throws Exception {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             baos.write(fid);
-            serialize(baos, object, fid);
-            JavaSerializationBasedPayloadSerializerDeserializer.serialize(baos, object);
+            try {
+                serialize(baos, object, fid);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Error serializing " + object, e);
+                throw e;
+            }
             baos.close();
             return baos.toByteArray();
         }

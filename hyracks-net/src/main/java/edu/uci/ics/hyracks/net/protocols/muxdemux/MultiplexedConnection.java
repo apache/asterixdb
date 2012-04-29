@@ -49,6 +49,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     private boolean connectionFailure;
 
+    private Exception error;
+
     public MultiplexedConnection(MuxDemux muxDemux) {
         this.muxDemux = muxDemux;
         pendingWriteEventsCounter = new IEventCounter() {
@@ -119,7 +121,19 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         }
     }
 
+    @Override
+    public synchronized void notifyIOError(Exception e) {
+        connectionFailure = true;
+        error = e;
+        cSet.notifyIOError();
+    }
+
     public ChannelControlBlock openChannel() throws NetException, InterruptedException {
+        synchronized (this) {
+            if (connectionFailure) {
+                throw new NetException(error);
+            }
+        }
         ChannelControlBlock channel = cSet.allocateChannel();
         int channelId = channel.getChannelId();
         cSet.initiateChannelSyn(channelId);

@@ -153,7 +153,13 @@ public class TCPEndpoint {
 
                             if (readable || writable) {
                                 TCPConnection connection = (TCPConnection) key.attachment();
-                                connection.getEventListener().notifyIOReady(connection, readable, writable);
+                                try {
+                                    connection.getEventListener().notifyIOReady(connection, readable, writable);
+                                } catch (Exception e) {
+                                    connection.getEventListener().notifyIOError(e);
+                                    connection.close();
+                                    continue;
+                                }
                             }
                             if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
