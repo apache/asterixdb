@@ -1,0 +1,25 @@
+/*
+ * Test case Name : open-closed-06.aql
+ * Description    : To test non nullable field types in closed type datasets.
+ * Success        : Yes this test should Fail!
+ * Date           : 03/26/2012
+ */
+
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type testType as closed {
+id : int32,
+name : string
+}
+
+create dataset testds(testType) partitioned by key id;
+
+// Missing name field this insert stmt should fail.
+
+insert into dataset testds({"id": 123});
+
+

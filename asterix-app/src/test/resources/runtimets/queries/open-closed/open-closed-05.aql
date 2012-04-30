@@ -1,0 +1,30 @@
+/* 
+ * Test case Name  : open-closed-05.aql
+ * Description     : Create internal dataset and verify if the type is marked as closed in metadata.
+ * Expected Result : Success
+ */
+
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type testType as closed {
+id : int32,
+name : string
+}
+
+create dataset testds(testType) partitioned by key id;
+
+/*
+ * Connect to the Metadata dataverse and run the following commands.
+ * Verify if the type is closed by querying Metadata.
+ */
+
+use dataverse Metadata;
+
+for $l in dataset('Datatype')
+let $x := $l.Derived
+where $l.DatatypeName="TestType"
+return $x.Record

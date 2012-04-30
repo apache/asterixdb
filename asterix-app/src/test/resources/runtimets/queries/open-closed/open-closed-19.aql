@@ -1,0 +1,51 @@
+/*
+ * Test case name :  open-closed-19.aql
+ * Description    :  Insert into open type internal dataset by querying another internal dataset
+ *                :  In this case source dataset has (n+n) fields and the target dataset has only n fields
+ * Success        :  Yes
+ * Date           :  29 April 2012
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id:int32
+}
+
+create dataset dtst01(TestType) partitioned by key id;
+
+insert into dtst01({"id":137});
+insert into dtst01({"id":117});
+insert into dtst01({"id":127});
+insert into dtst01({"id":147});
+
+create type Emp as open {
+id:int32,
+name:string,
+age:int8,
+sex:string,
+dob:date
+}
+
+create dataset employee(Emp) partitioned by key id;
+
+insert into dataset employee({"id":201,"name":"John Doe","age":32,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":202,"name":"John Smith","age":30,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":201,"name":"John Wayne","age":62,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":203,"name":"Roger Sanders","age":48,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":204,"name":"Raj Singh","age":37,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":205,"name":"Mike Tyson","age":44,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":206,"name":"Brett Lee","age":35,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":207,"name":"Chen Li","age":39,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":208,"name":"Mike Carey","age":42,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":209,"name":"Abdullah","age":29,"sex":"M","dob":"1-1-82"});
+insert into dataset employee({"id":221,"name":"Mariam","age":25,"sex":"F","dob":"1-1-82"});
+insert into dataset employee({"id":221,"name":"Mariam","age":25,"sex":"F","dob":"1-1-82","desgination":{{"dsg":"Department Manager"}}});
+
+insert into dataset dtst01({for $l in dataset('employee') return $l});
+
+for $l in dataset('dtst01')
+retunr $l 

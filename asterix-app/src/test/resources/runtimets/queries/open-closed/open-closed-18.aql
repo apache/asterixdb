@@ -1,0 +1,21 @@
+/*
+ * Test case name : open-closed-18.aql
+ * Description    : Test insertion of additional data into an open type internal dataset.
+ * Success        : Yes
+ * Date           : 29 April 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id:int32
+}
+
+create dataset testds(TestType) partitioned by key id;
+
+insert into dataset testds( for $i in range(1,10) return { "id":$i,"name":"John Doe" });
+
+for $l in dataset('testds')
+return $l
