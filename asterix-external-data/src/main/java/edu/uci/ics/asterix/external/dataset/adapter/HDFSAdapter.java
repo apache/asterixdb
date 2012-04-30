@@ -17,11 +17,16 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,6 +47,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
+import edu.uci.ics.asterix.runtime.util.AsterixRuntimeUtil;
+import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -52,8 +59,8 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourceReadAdapter {
 
-    private String hdfsUrl;
-    private List<String> hdfsPaths;
+    private static final Logger LOGGER = Logger.getLogger(HDFSAdapter.class.getName());
+
     private String inputFormatClassName;
     private Object[] inputSplits;
     private transient JobConf conf;
@@ -74,22 +81,6 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     static {
         formatClassNames.put(INPUT_FORMAT_TEXT, "org.apache.hadoop.mapred.TextInputFormat");
         formatClassNames.put(INPUT_FORMAT_SEQUENCE, "org.apache.hadoop.mapred.SequenceFileInputFormat");
-    }
-
-    public String getHdfsUrl() {
-        return hdfsUrl;
-    }
-
-    public void setHdfsUrl(String hdfsUrl) {
-        this.hdfsUrl = hdfsUrl;
-    }
-
-    public List<String> getHdfsPaths() {
-        return hdfsPaths;
-    }
-
-    public void setHdfsPaths(List<String> hdfsPaths) {
-        this.hdfsPaths = hdfsPaths;
     }
 
     @Override
@@ -126,14 +117,52 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     }
 
     private void configurePartitionConstraint() throws Exception {
+        AlgebricksAbsolutePartitionConstraint absPartitionConstraint;
+        List<String> locations = new ArrayList<String>();
+        Random random = new Random();
+        boolean couldConfigureLocationConstraints = true;
         if (inputSplitsProxy == null) {
             InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
-            inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
-            partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
-            hdfsPaths = new ArrayList<String>();
-            for (String hdfsPath : configuration.get(KEY_HDFS_PATH).split(",")) {
-                hdfsPaths.add(hdfsPath);
+            try {
+                for (InputSplit inputSplit : inputSplits) {
+                    String[] dataNodeLocations = inputSplit.getLocations();
+                    for (String datanodeLocation : dataNodeLocations) {
+                        Set<String> nodeControllersAtLocation = AsterixRuntimeUtil
+                                .getNodeControllersOnHostName(datanodeLocation);
+                        if (nodeControllersAtLocation == null || nodeControllersAtLocation.size() == 0) {
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.log(Level.INFO, "No node controller found at " + datanodeLocation
+                                        + " will look at replica location");
+                            }
+                            couldConfigureLocationConstraints = false;
+                        } else {
+                            int locationIndex = random.nextInt(nodeControllersAtLocation.size());
+                            String chosenLocation = (String) nodeControllersAtLocation.toArray()[locationIndex];
+                            locations.add(chosenLocation);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.log(Level.INFO, "split : " + inputSplit + " to be processed by :"
+                                        + chosenLocation);
+                            }
+                            couldConfigureLocationConstraints = true;
+                            break;
+                        }
+                    }
+                    if(!couldConfigureLocationConstraints){
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.log(Level.INFO, "No local node controller found to process split : " + inputSplit + " will use count constraint!");
+                        }
+                        break;
+                    }
+                }
+                if (couldConfigureLocationConstraints) {
+                    partitionConstraint = new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[] {}));
+                } else {
+                    partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
+                }
+            } catch (UnknownHostException e) {
+                partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
             }
+            inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
         }
     }
 
@@ -156,9 +185,8 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     }
 
     private JobConf configureJobConf() throws Exception {
-        hdfsUrl = configuration.get(KEY_HDFS_URL);
         conf = new JobConf();
-        conf.set("fs.default.name", hdfsUrl);
+        conf.set("fs.default.name", configuration.get(KEY_HDFS_URL));
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
         conf.set("mapred.input.dir", configuration.get(KEY_HDFS_PATH));
@@ -214,10 +242,10 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
             public void progress() {
             }
         };
-        
+
         return reporter;
     }
-    
+
     @Override
     public IDataParser getDataParser(int partition) throws Exception {
         Path path = new Path(inputSplits[partition].toString());

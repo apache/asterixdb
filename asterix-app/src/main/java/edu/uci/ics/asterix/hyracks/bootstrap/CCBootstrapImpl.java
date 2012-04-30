@@ -28,6 +28,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import edu.uci.ics.asterix.api.aqlj.server.APIClientThreadFactory;
 import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -74,6 +75,7 @@ public class CCBootstrapImpl implements ICCBootstrap {
         } catch (Exception e) {
             throw new IOException(" unable to obtain IP address node map", e);
         }
+        AsterixAppContextInfoImpl.setNodeControllerInfo(nodeNameMap);
         for (Map.Entry<String, Set<String>> entry : nodeNameMap.entrySet()) {
             Set<String> nodeNames = entry.getValue();
             Iterator<String> it = nodeNames.iterator();

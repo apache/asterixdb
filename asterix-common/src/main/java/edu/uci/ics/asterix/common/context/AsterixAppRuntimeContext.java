@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.context;
+package edu.uci.ics.asterix.common.context;
 
 import java.io.IOException;
 import java.io.PrintWriter;

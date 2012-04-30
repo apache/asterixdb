@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.context;
+package edu.uci.ics.asterix.common.context;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;

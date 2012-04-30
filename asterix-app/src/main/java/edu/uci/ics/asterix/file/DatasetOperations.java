@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.aql.translator.DdlTranslator.CompiledDatasetDropStatement;
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
+import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
+import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.context.AsterixStorageManagerInterface;
-import edu.uci.ics.asterix.context.AsterixTreeRegistryProvider;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
@@ -44,7 +44,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;

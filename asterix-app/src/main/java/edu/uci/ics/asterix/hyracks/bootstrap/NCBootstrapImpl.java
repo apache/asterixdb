@@ -19,9 +19,9 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.api.aqlj.server.NodeDataClientThreadFactory;
 import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
-import edu.uci.ics.asterix.api.common.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.context.AsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;

@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 
@@ -13,6 +14,7 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
 import edu.uci.ics.asterix.aql.translator.DdlTranslator;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -67,6 +69,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFac
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 

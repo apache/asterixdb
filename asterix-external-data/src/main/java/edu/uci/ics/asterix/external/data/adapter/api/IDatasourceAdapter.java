@@ -19,6 +19,7 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -143,7 +144,8 @@ public interface IDatasourceAdapter extends Serializable {
      *            providing all arguments as a set of (key,value) pairs. These
      *            arguments are put into the metadata.
      */
-    public void configure(Map<String, String> arguments, IAType atype) throws Exception;
+    public void configure(Map<String, String> arguments, IAType atype)
+            throws Exception;
 
     /**
      * Returns a list of partition constraints. A partition constraint can be a

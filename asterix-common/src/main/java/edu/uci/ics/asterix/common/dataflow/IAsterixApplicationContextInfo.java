@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.dataflow.base;
+package edu.uci.ics.asterix.common.dataflow;
 
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;

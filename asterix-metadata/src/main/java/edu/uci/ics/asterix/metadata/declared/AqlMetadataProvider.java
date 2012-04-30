@@ -17,11 +17,12 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
-import edu.uci.ics.asterix.dataflow.base.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
@@ -62,6 +63,7 @@ import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionCo
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.utils.Triple;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -217,9 +219,10 @@ public class AqlMetadataProvider implements
 				.getAdapterType().equals(
 						IDatasourceAdapter.AdapterType.READ_WRITE))) {
 			throw new AlgebricksException(
-					"external dataset does not support read");
+					"external dataset adapter does not support read operation");
 		}
 		ARecordType rt = (ARecordType) itemType;
+
 		try {
 			adapter.configure(decl.getProperties(), itemType);
 		} catch (Exception e) {
@@ -291,6 +294,7 @@ public class AqlMetadataProvider implements
 		}
 
 		ARecordType rt = (ARecordType) itemType;
+		Map<String, NodeControllerInfo> ncInfo = null;
 		try {
 			adapter.configure(decl.getProperties(), itemType);
 		} catch (Exception e) {
