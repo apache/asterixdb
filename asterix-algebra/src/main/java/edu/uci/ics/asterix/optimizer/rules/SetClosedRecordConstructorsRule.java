@@ -5,6 +5,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -32,65 +33,78 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
 
-    private SettingClosedRecordVisitor recordVisitor;
+	private SettingClosedRecordVisitor recordVisitor;
 
-    public SetClosedRecordConstructorsRule() {
-        this.recordVisitor = new SettingClosedRecordVisitor();
-    }
+	public SetClosedRecordConstructorsRule() {
+		this.recordVisitor = new SettingClosedRecordVisitor();
+	}
 
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
-        return false;
-    }
+	@Override
+	public boolean rewritePre(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext context) {
+		return false;
+	}
 
-    @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext ctx) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (ctx.checkIfInDontApplySet(this, op)) {
-            return false;
-        }
-        ctx.addToDontApplySet(this, op);
-        this.recordVisitor.setOptimizationContext(ctx, op.computeInputTypeEnvironment(ctx));
-        boolean res = op.acceptExpressionTransform(recordVisitor);
-        if (res) {
-            ctx.computeAndSetTypeEnvironmentForOperator(op);
-        }
-        return res;
-    }
+	@Override
+	public boolean rewritePost(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext ctx) throws AlgebricksException {
+		AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+		if (ctx.checkIfInDontApplySet(this, op)) {
+			return false;
+		}
+		ctx.addToDontApplySet(this, op);
+		this.recordVisitor.setOptimizationContext(ctx,
+				op.computeInputTypeEnvironment(ctx));
+		boolean res = op.acceptExpressionTransform(recordVisitor);
+		if (res) {
+			ctx.computeAndSetTypeEnvironmentForOperator(op);
+		}
+		return res;
+	}
 
-    private static class SettingClosedRecordVisitor extends AbstractConstVarFunVisitor<ClosedDataInfo, Void> implements
-            ILogicalExpressionReferenceTransform {
+	private static class SettingClosedRecordVisitor extends
+			AbstractConstVarFunVisitor<ClosedDataInfo, Void> implements
+			ILogicalExpressionReferenceTransform {
 
-        private IOptimizationContext context;
-        private IVariableTypeEnvironment env;
+		private IOptimizationContext context;
+		private IVariableTypeEnvironment env;
 
-        public void setOptimizationContext(IOptimizationContext context, IVariableTypeEnvironment env) {
-            this.context = context;
-            this.env = env;
-        }
+		public void setOptimizationContext(IOptimizationContext context,
+				IVariableTypeEnvironment env) {
+			this.context = context;
+			this.env = env;
+		}
 
-        @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
-            AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
-            ClosedDataInfo cdi = expr.accept(this, null);
-            if (cdi.expressionChanged) {
-                exprRef.setValue(cdi.expression);
-            }
-            return cdi.expressionChanged;
-        }
+		@Override
+		public boolean transform(Mutable<ILogicalExpression> exprRef)
+				throws AlgebricksException {
+			AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef
+					.getValue();
+			ClosedDataInfo cdi = expr.accept(this, null);
+			if (cdi.expressionChanged) {
+				exprRef.setValue(cdi.expression);
+			}
+			return cdi.expressionChanged;
+		}
 
-        @Override
-        public ClosedDataInfo visitConstantExpression(ConstantExpression expr, Void arg) throws AlgebricksException {
-            return new ClosedDataInfo(false, hasClosedType(expr), expr);
-        }
+		@Override
+		public ClosedDataInfo visitConstantExpression(ConstantExpression expr,
+				Void arg) throws AlgebricksException {
+			return new ClosedDataInfo(false, hasClosedType(expr), expr);
+		}
 
-        @Override
+		@Override
         public ClosedDataInfo visitFunctionCallExpression(AbstractFunctionCallExpression expr, Void arg)
                 throws AlgebricksException {
             boolean allClosed = true;
             boolean changed = false;
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
-                int n = expr.getArguments().size();
+                ARecordType reqType = (ARecordType) TypeComputerUtilities.getRequiredType(expr);
+                if(reqType!=null){
+                	if(reqType.isOpen())
+                		allClosed = false;
+                }
+            	int n = expr.getArguments().size();
                 if (n % 2 > 0) {
                     throw new AlgebricksException("Record constructor expected to have an even number of arguments: "
                             + expr);
@@ -133,82 +147,88 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
             return new ClosedDataInfo(changed, hasClosedType(expr), expr);
         }
 
-        @Override
-        public ClosedDataInfo visitVariableReferenceExpression(VariableReferenceExpression expr, Void arg)
-                throws AlgebricksException {
-            boolean dataIsClosed = isClosedRec((IAType) env.getVarType(expr.getVariableReference()));
-            return new ClosedDataInfo(false, dataIsClosed, expr);
-        }
+		@Override
+		public ClosedDataInfo visitVariableReferenceExpression(
+				VariableReferenceExpression expr, Void arg)
+				throws AlgebricksException {
+			boolean dataIsClosed = isClosedRec((IAType) env.getVarType(expr
+					.getVariableReference()));
+			return new ClosedDataInfo(false, dataIsClosed, expr);
+		}
 
-        private boolean hasClosedType(ILogicalExpression expr) throws AlgebricksException {
-            IAType t = (IAType) context.getExpressionTypeComputer().getType(expr, context.getMetadataProvider(), env);
-            return isClosedRec(t);
-        }
+		private boolean hasClosedType(ILogicalExpression expr)
+				throws AlgebricksException {
+			IAType t = (IAType) context.getExpressionTypeComputer().getType(
+					expr, context.getMetadataProvider(), env);
+			return isClosedRec(t);
+		}
 
-        private static boolean isClosedRec(IAType t) throws AlgebricksException {
-            switch (t.getTypeTag()) {
-                case ANY: {
-                    return false;
-                }
-                case CIRCLE:
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
-                case BINARY:
-                case BITARRAY:
-                case FLOAT:
-                case DOUBLE:
-                case STRING:
-                case LINE:
-                case NULL:
-                case BOOLEAN:
-                case DATETIME:
-                case DATE:
-                case TIME:
-                case DURATION:
-                case POINT:
-                case POINT3D:
-                case POLYGON:
-                case RECTANGLE: {
-                    return true;
-                }
-                case RECORD: {
-                    return !((ARecordType) t).isOpen();
-                }
-                case UNION: {
-                    AUnionType ut = (AUnionType) t;
-                    for (IAType t2 : ut.getUnionList()) {
-                        if (!isClosedRec(t2)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-                case ORDEREDLIST: {
-                    AOrderedListType ol = (AOrderedListType) t;
-                    return isClosedRec(ol.getItemType());
-                }
-                case UNORDEREDLIST: {
-                    AUnorderedListType ul = (AUnorderedListType) t;
-                    return isClosedRec(ul.getItemType());
-                }
-                default: {
-                    throw new IllegalStateException("Closed type analysis not implemented for type " + t);
-                }
-            }
-        }
-    }
+		private static boolean isClosedRec(IAType t) throws AlgebricksException {
+			switch (t.getTypeTag()) {
+			case ANY: {
+				return false;
+			}
+			case CIRCLE:
+			case INT8:
+			case INT16:
+			case INT32:
+			case INT64:
+			case BINARY:
+			case BITARRAY:
+			case FLOAT:
+			case DOUBLE:
+			case STRING:
+			case LINE:
+			case NULL:
+			case BOOLEAN:
+			case DATETIME:
+			case DATE:
+			case TIME:
+			case DURATION:
+			case POINT:
+			case POINT3D:
+			case POLYGON:
+			case RECTANGLE: {
+				return true;
+			}
+			case RECORD: {
+				return !((ARecordType) t).isOpen();
+			}
+			case UNION: {
+				AUnionType ut = (AUnionType) t;
+				for (IAType t2 : ut.getUnionList()) {
+					if (!isClosedRec(t2)) {
+						return false;
+					}
+				}
+				return true;
+			}
+			case ORDEREDLIST: {
+				AOrderedListType ol = (AOrderedListType) t;
+				return isClosedRec(ol.getItemType());
+			}
+			case UNORDEREDLIST: {
+				AUnorderedListType ul = (AUnorderedListType) t;
+				return isClosedRec(ul.getItemType());
+			}
+			default: {
+				throw new IllegalStateException(
+						"Closed type analysis not implemented for type " + t);
+			}
+			}
+		}
+	}
 
-    private static class ClosedDataInfo {
-        boolean expressionChanged;
-        boolean dataIsClosed;
-        ILogicalExpression expression;
+	private static class ClosedDataInfo {
+		boolean expressionChanged;
+		boolean dataIsClosed;
+		ILogicalExpression expression;
 
-        public ClosedDataInfo(boolean expressionChanged, boolean dataIsClosed, ILogicalExpression expression) {
-            this.expressionChanged = expressionChanged;
-            this.dataIsClosed = dataIsClosed;
-            this.expression = expression;
-        }
-    }
+		public ClosedDataInfo(boolean expressionChanged, boolean dataIsClosed,
+				ILogicalExpression expression) {
+			this.expressionChanged = expressionChanged;
+			this.dataIsClosed = dataIsClosed;
+			this.expression = expression;
+		}
+	}
 }
