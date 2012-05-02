@@ -11,10 +11,8 @@ create type SpatialType as open {
   circle: circle
 }
 
-create nodegroup group1 on nc1;
-
 create dataset Spatial2(SpatialType) 
-	partitioned by key id on group1;
+	partitioned by key id;
 
 load dataset Spatial2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
