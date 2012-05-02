@@ -2,7 +2,6 @@ drop dataverse tpch if exists;
 create dataverse tpch;
 use dataverse tpch;
 
-
 create type OrderType as closed {
   o_orderkey: int32, 
   o_custkey: int32, 
@@ -15,11 +14,8 @@ create type OrderType as closed {
   o_comment: string
 }
 
-
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  partitioned by key o_orderkey;
 
 load dataset Orders 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 

@@ -10,10 +10,8 @@ create type Tweet as closed {
         text: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset TwitterData(Tweet)
-  partitioned by key id on group1;
+  partitioned by key id;
 
 load dataset TwitterData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

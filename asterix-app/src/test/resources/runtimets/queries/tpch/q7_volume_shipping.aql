@@ -89,24 +89,22 @@ create type PartSuppType as closed {
   ps_comment: string 
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  partitioned by key o_orderkey;
 create dataset Supplier(SupplierType)
-  partitioned by key s_suppkey on group1;
+  partitioned by key s_suppkey;
 create dataset Region(RegionType) 
-  partitioned by key r_regionkey on group1;
+  partitioned by key r_regionkey;
 create dataset Nation(NationType) 
-  partitioned by key n_nationkey on group1;
+  partitioned by key n_nationkey;
 create dataset Part(PartType)
-  partitioned by key p_partkey on group1;
+  partitioned by key p_partkey;
 create dataset Partsupp(PartSuppType)
-  partitioned by key ps_partkey, ps_suppkey on group1;  
+  partitioned by key ps_partkey, ps_suppkey;  
 create dataset Customer(CustomerType) 
-  partitioned by key c_custkey on group1;
+  partitioned by key c_custkey;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

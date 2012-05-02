@@ -11,16 +11,12 @@ create type MyRecord as closed {
 	text: string
 }
 
-
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset MyData(MyRecord)
-  partitioned by key id on group1;
+  partitioned by key id;
 
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
-
 
 delete $l from dataset MyData where $l.id>=50 die after 1500;
 

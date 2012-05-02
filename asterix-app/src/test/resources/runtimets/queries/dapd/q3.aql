@@ -23,16 +23,12 @@ create type UserType as open{
 }}
 }
 
-
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset User(UserType)
- partitioned by key name on group1;
+ partitioned by key name;
 
 load dataset User 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/events/tiny/user.adm"),("format"="json")) pre-sorted;
-
 
 write output to nc1:'rttest/dapd_q3.adm';
 

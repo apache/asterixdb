@@ -12,7 +12,6 @@ create type NumericType as open {
   doubleField: double?
 }
 
-
 create external dataset Numeric(NumericType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/numericData.adm"),("format"="adm"));
