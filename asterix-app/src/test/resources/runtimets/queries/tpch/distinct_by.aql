@@ -23,10 +23,8 @@ create type LineItemType as closed {
   l_comment: string
 }
 
-create nodegroup group1  if not exists on nc1;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
