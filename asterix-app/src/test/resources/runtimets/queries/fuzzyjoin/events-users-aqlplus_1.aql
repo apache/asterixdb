@@ -24,10 +24,8 @@ create type UserType as open{
 }
 
 
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset User(UserType)
- partitioned by key name on group1;
+ partitioned by key name;
 load dataset User from nc1:'data/events/tiny/user.adm';
 
 write output to nc1:'rttest/fuzzyjoin_events-users-aqlplus_1.adm';

@@ -21,7 +21,6 @@ create type CustomerType as open {
   }
 }
 
-
 create type OrderType as open {
   oid: int32,
   cid: int32,
@@ -37,15 +36,12 @@ create type CustomerOrdersType as open {
   orders: [OrderType]
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset Customers3(CustomerType) 
-  partitioned by key cid on group1;
+  partitioned by key cid;
 create dataset Orders3(OrderType)
-  partitioned by key oid on group1;
+  partitioned by key oid;
 create dataset CustomerOrders3(CustomerOrdersType)
-  partitioned by key cid on group1;
-
+  partitioned by key cid;
 
 write output to nc1:"rttest/custord_co.adm";
 

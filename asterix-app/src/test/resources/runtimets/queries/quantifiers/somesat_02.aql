@@ -29,12 +29,10 @@ create type OrderType as open {
   total: float
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset CustomerSomeSat02(CustomerType)
-  partitioned by key cid on group1;
+  partitioned by key cid;
 create dataset OrdersSomeSat02(OrderType)
-  partitioned by key oid on group1;
+  partitioned by key oid;
 
 load dataset CustomerSomeSat02 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 

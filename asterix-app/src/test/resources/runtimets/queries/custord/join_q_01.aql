@@ -22,8 +22,6 @@ create type CustomerType as closed {
   }
 }
 
-
-
 create type OrderType as open {
   oid: int32,
   cid: int32,

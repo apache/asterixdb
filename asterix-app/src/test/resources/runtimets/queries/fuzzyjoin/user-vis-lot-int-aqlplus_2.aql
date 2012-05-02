@@ -18,11 +18,8 @@ create type VisitorType as open {
   interests: <string>
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
-create dataset Users(UserType) partitioned by key uid on group1;
-create dataset Visitors(VisitorType) partitioned by key vid on group1;
-
+create dataset Users(UserType) partitioned by key uid;
+create dataset Visitors(VisitorType) partitioned by key vid;
 
 load dataset Users from nc1:'data/users-visitors-small/users.json';
 load dataset Visitors from nc1:'data/users-visitors-small/visitors.json';
