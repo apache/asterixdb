@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -46,24 +46,18 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
 
 	private final long transactionId;
 
-	public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec,
-			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<IIndex> treeIndexRegistryProvider,
-			IFileSplitProvider fileSplitProvider,
-			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
-			IBinaryComparatorFactory[] comparatorFactories,
-			IIndexDataflowHelperFactory dataflowHelperFactory,
-			int[] fieldPermutation, IndexOp op, long transactionId) {
-		super(spec, 1, 1, recDesc, storageManager, treeIndexRegistryProvider,
-				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, comparatorFactories, dataflowHelperFactory);
 
-		this.fieldPermutation = fieldPermutation;
-		this.op = op;
-		this.transactionId = transactionId; // would obtain it from query
-		// context
-	}
+    public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
+            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider, long transactionId) {
+        super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, dataflowHelperFactory, opCallbackProvider);
+        this.fieldPermutation = fieldPermutation;
+        this.op = op;
+        this.transactionId = transactionId;
+    }
 
 	@Override
 	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
@@ -81,8 +75,8 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
 					" could not obtain context for invalid transaction id "
 							+ transactionId);
 		}
-		return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext,
-				this, ctx, partition, fieldPermutation, recordDescProvider, op);
+		return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext, this, ctx, opCallbackProvider, partition,
+                fieldPermutation, recordDescProvider, op);
 	}
 
 }

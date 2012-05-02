@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
@@ -60,12 +59,10 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class IndexOperations {
@@ -202,11 +199,6 @@ public class IndexOperations {
         primaryRecFields[numPrimaryKeys] = payloadSerde;
         primaryTypeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
 
-        ITreeIndexFrameFactory primaryInteriorFrameFactory = AqlMetadataProvider
-                .createBTreeNSMInteriorFrameFactory(primaryTypeTraits);
-        ITreeIndexFrameFactory primaryLeafFrameFactory = AqlMetadataProvider
-                .createBTreeNSMLeafFrameFactory(primaryTypeTraits);
-
         int[] lowKeyFields = null; // -infinity
         int[] highKeyFields = null; // +infinity
         RecordDescriptor primaryRecDesc = new RecordDescriptor(primaryRecFields);
@@ -214,10 +206,12 @@ public class IndexOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
 
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeRegistryProvider, primarySplitsAndConstraint.first, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
-                highKeyFields, true, true, new BTreeDataflowHelperFactory());
+		BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(
+				spec, primaryRecDesc, storageManager, treeRegistryProvider,
+				primarySplitsAndConstraint.first, primaryTypeTraits,
+				primaryComparatorFactories, lowKeyFields, highKeyFields, true,
+				true, new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE);
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primarySplitsAndConstraint.second);
@@ -296,11 +290,6 @@ public class IndexOperations {
 
         // ---------- START SECONDARY INDEX BULK LOAD
 
-        ITreeIndexFrameFactory secondaryInteriorFrameFactory = AqlMetadataProvider
-                .createBTreeNSMInteriorFrameFactory(secondaryTypeTraits);
-        ITreeIndexFrameFactory secondaryLeafFrameFactory = AqlMetadataProvider
-                .createBTreeNSMLeafFrameFactory(secondaryTypeTraits);
-
         int[] fieldPermutation = new int[numSecondaryKeys + numPrimaryKeys];
         for (i = 0; i < numSecondaryKeys + numPrimaryKeys; i++)
             fieldPermutation[i] = i;
@@ -309,10 +298,12 @@ public class IndexOperations {
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, secondaryIndexName);
 
         // GlobalConfig.DEFAULT_BTREE_FILL_FACTOR
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeRegistryProvider, secondarySplitsAndConstraint.first,
-                secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, fieldPermutation, 0.7f, new BTreeDataflowHelperFactory());
+		TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(
+				spec, storageManager, treeRegistryProvider,
+				secondarySplitsAndConstraint.first, secondaryTypeTraits,
+				secondaryComparatorFactories, fieldPermutation, 0.7f,
+				new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryBulkLoadOp,
                 secondarySplitsAndConstraint.second);
 
@@ -425,10 +416,12 @@ public class IndexOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
 
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeRegistryProvider, primarySplitsAndConstraint.first, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
-                highKeyFields, true, true, new BTreeDataflowHelperFactory());
+		BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(
+				spec, primaryRecDesc, storageManager, treeRegistryProvider,
+				primarySplitsAndConstraint.first, primaryTypeTraits,
+				primaryComparatorFactories, lowKeyFields, highKeyFields, true,
+				true, new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE);
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primarySplitsAndConstraint.second);
@@ -510,18 +503,6 @@ public class IndexOperations {
 
         // ---------- START SECONDARY INDEX BULK LOAD
 
-        /*
-        ITreeIndexFrameFactory secondaryInteriorFrameFactory = JobGenHelper.createRTreeNSMInteriorFrameFactory(
-                secondaryTypeTraits, numNestedSecondaryKeyFields);
-        ITreeIndexFrameFactory secondaryLeafFrameFactory = JobGenHelper.createRTreeNSMLeafFrameFactory(
-                secondaryTypeTraits, numNestedSecondaryKeyFields);
-        */
-
-        ITreeIndexFrameFactory secondaryInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-                new RTreeTypeAwareTupleWriterFactory(secondaryTypeTraits), valueProviderFactories);
-        ITreeIndexFrameFactory secondaryLeafFrameFactory = new RTreeNSMLeafFrameFactory(
-                new RTreeTypeAwareTupleWriterFactory(secondaryTypeTraits), valueProviderFactories);
-
         int[] fieldPermutation = new int[numNestedSecondaryKeyFields + numPrimaryKeys];
         for (i = 0; i < numNestedSecondaryKeyFields + numPrimaryKeys; i++)
             fieldPermutation[i] = i;
@@ -529,11 +510,12 @@ public class IndexOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, secondaryIndexName);
 
-        // GlobalConfig.DEFAULT_BTREE_FILL_FACTOR
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeRegistryProvider, secondarySplitsAndConstraint.first,
-                secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                secondaryComparatorFactories, fieldPermutation, 0.7f, new RTreeDataflowHelperFactory());
+		TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(
+				spec, storageManager, treeRegistryProvider,
+				secondarySplitsAndConstraint.first, secondaryTypeTraits,
+				secondaryComparatorFactories, fieldPermutation, 0.7f,
+				new RTreeDataflowHelperFactory(valueProviderFactories),
+				NoOpOperationCallbackProvider.INSTANCE);
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryBulkLoadOp,
                 secondarySplitsAndConstraint.second);
@@ -662,9 +644,8 @@ public class IndexOperations {
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
 
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeRegistryProvider, primarySplitsAndConstraint.first, primaryInteriorFrameFactory,
-                primaryLeafFrameFactory, primaryTypeTraits, primaryComparatorFactories, true, lowKeyFields,
-                highKeyFields, true, true, new BTreeDataflowHelperFactory());
+                storageManager, treeRegistryProvider, primarySplitsAndConstraint.first, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
+                highKeyFields, true, true, new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primarySplitsAndConstraint.second);
 
@@ -774,19 +755,16 @@ public class IndexOperations {
         for (i = 0; i < numPrimaryKeys; i++)
             secondaryTypeTraits[i + 1] = primaryTypeTraits[i];
 
-        ITreeIndexFrameFactory secondaryInteriorFrameFactory = AqlMetadataProvider
-                .createBTreeNSMInteriorFrameFactory(secondaryTypeTraits);
-        ITreeIndexFrameFactory secondaryLeafFrameFactory = AqlMetadataProvider
-                .createBTreeNSMLeafFrameFactory(secondaryTypeTraits);
-
         int[] fieldPermutation = new int[numSecondaryKeys + numPrimaryKeys];
         for (i = 0; i < numTokenKeyPairFields; i++)
             fieldPermutation[i] = i;
 
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, treeRegistryProvider, secondarySplitsAndConstraint.first,
-                secondaryInteriorFrameFactory, secondaryLeafFrameFactory, secondaryTypeTraits,
-                tokenKeyPairComparatorFactories, fieldPermutation, 0.7f, new BTreeDataflowHelperFactory());
+		TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(
+				spec, storageManager, treeRegistryProvider,
+				secondarySplitsAndConstraint.first, secondaryTypeTraits,
+				tokenKeyPairComparatorFactories, fieldPermutation, 0.7f,
+				new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryBulkLoadOp,
                 secondarySplitsAndConstraint.second);
 
