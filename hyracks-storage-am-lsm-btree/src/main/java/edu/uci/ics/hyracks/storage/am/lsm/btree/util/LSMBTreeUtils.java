@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
@@ -39,7 +39,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeUtils {
     public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache, IOperationCallback memOpCallback,
-            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
+            InMemoryFreePageManager memFreePageManager, IIOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);

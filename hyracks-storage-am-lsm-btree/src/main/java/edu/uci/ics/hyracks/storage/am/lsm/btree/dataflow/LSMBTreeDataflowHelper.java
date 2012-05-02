@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -65,7 +64,7 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
         return LSMBTreeUtils.createLSMTree(memBufferCache, opCallbackProvider.getOperationCallback(),
-                memFreePageManager, (IOManager) ctx.getIOManager(), file.getFile().getPath(), opDesc
+                memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc
                         .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories());
     }

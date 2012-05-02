@@ -49,7 +49,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     protected final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
     // Excessive number of threads for testing.
     protected final int EXCESSIVE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 4;
-    protected final int NUM_OPERATIONS = 10000;
+    protected final int NUM_OPERATIONS = 5000;
 
     protected ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
 

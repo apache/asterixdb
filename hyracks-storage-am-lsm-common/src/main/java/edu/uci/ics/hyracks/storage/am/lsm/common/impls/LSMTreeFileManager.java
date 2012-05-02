@@ -27,8 +27,8 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -39,7 +39,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
 
     // Use all IODevices registered in ioManager in a round-robin fashion to choose
     // where to flush and merge
-    protected final IOManager ioManager;
+    protected final IIOManager ioManager;
     protected final IFileMapProvider fileMapProvider;
 
     // baseDir should reflect dataset name and partition name.
@@ -57,7 +57,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     };
 
-    public LSMTreeFileManager(IOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
+    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
@@ -237,7 +237,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     @Override
-    public IOManager getIOManager() {
+    public IIOManager getIOManager() {
         return ioManager;
     }
 }

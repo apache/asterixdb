@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.utils;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -41,7 +41,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeUtils {
     public static LSMRTree createLSMTree(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
+            InMemoryFreePageManager memFreePageManager, IIOManager ioManager, String onDiskDir,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories) {

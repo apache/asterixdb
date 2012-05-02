@@ -20,7 +20,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 
 /**
  * Provides file names for LSM on-disk components. Also cleans up invalid files.
@@ -50,5 +50,5 @@ public interface ILSMFileManager {
 
     public Comparator<String> getFileNameComparator();
 
-    public IOManager getIOManager();
+    public IIOManager getIOManager();
 }

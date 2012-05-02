@@ -24,8 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree.LSMRTreeComponent;
@@ -47,7 +47,7 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
         }
     };
     
-    public LSMRTreeFileManager(IOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
+    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
         super(ioManager, fileMapProvider, baseDir);
     }
 
