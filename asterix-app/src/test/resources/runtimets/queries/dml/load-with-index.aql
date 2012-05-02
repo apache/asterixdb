@@ -21,10 +21,8 @@ create type LineItemType as closed {
   l_comment: string
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 
 create index idx_partkey on LineItem(l_partkey);
 

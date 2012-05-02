@@ -16,10 +16,8 @@ create type MyMiniRecord as closed {
   loc: point
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset MyData(MyRecord)
-  partitioned by key id on group1;
+  partitioned by key id;
 
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
@@ -27,7 +25,7 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 
 
 create dataset MyMiniData(MyMiniRecord)
-  partitioned by key id on group1;
+  partitioned by key id;
 
 load dataset MyMiniData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

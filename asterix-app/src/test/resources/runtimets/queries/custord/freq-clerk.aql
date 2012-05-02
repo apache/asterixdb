@@ -27,10 +27,8 @@ create type OrderType as open {
   total: float
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset CustomerOrders(CustomerOrderType) 
-  partitioned by key cid on group1;
+  partitioned by key cid;
 
 
 load dataset CustomerOrders

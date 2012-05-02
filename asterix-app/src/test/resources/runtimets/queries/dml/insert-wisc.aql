@@ -4,8 +4,6 @@ create dataverse test;
 
 use dataverse test;
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create type Schema as closed {
 unique1:  int32,
 unique2:  int32,
@@ -25,9 +23,9 @@ stringu2:  string,
 string4:  string
 }
 
-create dataset onektup(Schema) partitioned by key unique2 on group1;
+create dataset onektup(Schema) partitioned by key unique2;
 
-create dataset tenktup1(Schema) partitioned by key unique2 on group1;
+create dataset tenktup1(Schema) partitioned by key unique2;
 
 load dataset onektup 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
@@ -37,7 +35,7 @@ load dataset tenktup1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/wisc/tenktup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-create dataset tmp(Schema) partitioned by key unique2 on group1;
+create dataset tmp(Schema) partitioned by key unique2;
 
 load dataset tmp 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

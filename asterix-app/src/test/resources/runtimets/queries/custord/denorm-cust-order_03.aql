@@ -4,8 +4,6 @@ create dataverse test;
 
 use dataverse test;
 
-
-
 create type AddressType as open {
   number: int32, 
   street: string,
@@ -38,14 +36,12 @@ create type CustomerOrdersType as open {
   orders: [OrderType]
 }
 
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset Customers3(CustomerType) 
-  partitioned by key cid on group1;
+  partitioned by key cid;
 create dataset Orders3(OrderType)
-  partitioned by key oid on group1;
+  partitioned by key oid;
 create dataset CustomerOrders3(CustomerOrdersType)
-  partitioned by key cid on group1;
+  partitioned by key cid;
 
 load dataset Customers3 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
