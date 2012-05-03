@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -22,22 +21,16 @@ create type LineItemType as closed {
   l_comment: string
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
+delete $l from dataset LineItem where $l.l_orderkey>=10;
 
-create index idx_LineItem_partkey on LineItem(l_linenumber);
-create index idx_LineItem_suppkey on LineItem(l_suppkey);
-
-delete $l from dataset LineItem where $l.l_suppkey>=2 or $l.l_linenumber>1;
-
-write output to nc1:"rttest/dml_delete-with-index.adm";      
+write output to nc1:"rttest/dml_delete-from-loaded-dataset.adm";      
 for $c in dataset('LineItem')
-where $c.l_suppkey<150
 order by $c.l_orderkey, $c.l_linenumber
-return $c
+return $c 

@@ -22,8 +22,6 @@ create type CustomerType as closed {
   }
 }
 
-
-
 create external dataset Customers(CustomerType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));

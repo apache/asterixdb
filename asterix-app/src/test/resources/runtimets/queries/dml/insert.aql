@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -28,13 +27,11 @@ create type LineIDType as closed {
   l_suppkey: int32
 }
 
-create nodegroup group1  if not exists on nc1;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  partitioned by key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

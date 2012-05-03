@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -28,13 +27,11 @@ create type LineIDType as closed {
   l_suppkey: int32
 }
 
-create nodegroup group1nc2 if not exists on nc2;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1nc2;
+  partitioned by key l_orderkey, l_linenumber;
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey, l_linenumber on group1nc2;
+  partitioned by key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
@@ -43,7 +40,6 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 load dataset LineID 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
-
 
 insert into dataset LineID (
 for $l in dataset('LineItem')

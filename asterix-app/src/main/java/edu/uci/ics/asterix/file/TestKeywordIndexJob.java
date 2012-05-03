@@ -11,11 +11,9 @@ import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
@@ -42,9 +40,9 @@ import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescript
 import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class TestKeywordIndexJob {
@@ -131,10 +129,6 @@ public class TestKeywordIndexJob {
             }
         };
 
-        ITreeIndexFrameFactory interiorFrameFactory = AqlMetadataProvider
-                .createBTreeNSMInteriorFrameFactory(secondaryTypeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = AqlMetadataProvider.createBTreeNSMLeafFrameFactory(secondaryTypeTraits);
-
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[2];
         secondaryRecFields[0] = AObjectSerializerDeserializer.INSTANCE;
         secondaryRecFields[1] = AObjectSerializerDeserializer.INSTANCE;
@@ -150,9 +144,9 @@ public class TestKeywordIndexJob {
                 new FileSplit("nc1", new FileReference(new File("/tmp/nc1/demo1112/Customers_idx_NameInvIndex"))),
                 new FileSplit("nc2", new FileReference(new File("/tmp/nc2/demo1112/Customers_idx_NameInvIndex"))) });
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
-                storageManager, btreeRegistryProvider, secondarySplitProvider, interiorFrameFactory, leafFrameFactory,
-                secondaryTypeTraits, secondaryComparatorFactories, true, lowKeyFields, highKeyFields, true, true,
-                new BTreeDataflowHelperFactory());
+                storageManager, btreeRegistryProvider, secondarySplitProvider, 
+                secondaryTypeTraits, secondaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
+                new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
         String[] secondarySearchOpLocationConstraint = new String[nodeGroup.size()];
         for (int p = 0; p < nodeGroup.size(); p++) {
             secondarySearchOpLocationConstraint[p] = nodeGroup.get(p);

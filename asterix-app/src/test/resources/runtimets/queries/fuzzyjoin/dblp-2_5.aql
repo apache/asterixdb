@@ -12,9 +12,7 @@ create type DBLPType as open {
   misc: string
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
-
-create dataset DBLP(DBLPType) partitioned by key id on group1;
+create dataset DBLP(DBLPType) partitioned by key id;
 
 load dataset DBLP 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

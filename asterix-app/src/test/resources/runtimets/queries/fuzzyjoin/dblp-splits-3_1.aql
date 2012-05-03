@@ -12,8 +12,6 @@ create type DBLPType as open {
   misc: string
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
-
 create external dataset DBLP(DBLPType) 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));

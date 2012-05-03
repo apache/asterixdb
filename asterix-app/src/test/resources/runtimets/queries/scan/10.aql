@@ -11,17 +11,13 @@ create type DBLPType as open {
   misc: string
 }
 
-
-create nodegroup group1 if not exists on nc1;
-
 create dataset DBLP1(DBLPType) 
-  partitioned by key id on group1;
+  partitioned by key id;
 
 // drop dataset DBLP1;
 load dataset DBLP1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
 
 write output to nc1:"rttest/scan_10.adm";
 

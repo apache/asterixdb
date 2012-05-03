@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -22,15 +21,8 @@ create type LineItemType as closed {
   l_comment: string
 }
 
-
-create nodegroup group1 if not exists on nc1, nc2;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
-
-//load dataset LineItem 
-//using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-//(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+  partitioned by key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter"

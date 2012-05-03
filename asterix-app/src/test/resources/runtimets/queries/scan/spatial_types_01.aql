@@ -2,7 +2,6 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-
 create type SpatialType as open {
   id: int32,
   point: point,

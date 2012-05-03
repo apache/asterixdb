@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.json.JSONException;
 
@@ -31,7 +30,6 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
@@ -69,7 +67,6 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFac
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
@@ -194,20 +191,7 @@ public class APIFramework {
                 switch (stmt.getKind()) {
                     case LOAD_FROM_FILE: {
                         CompiledLoadFromFileStatement stmtLoad = (CompiledLoadFromFileStatement) stmt;
-                        dmlJobs.addAll(DatasetOperations.createLoadDatasetJobSpec(stmtLoad, metadata));
-                        // Also load the dataset's secondary indexes.
-                        List<Index> datasetIndexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
-                                dataverseName, stmtLoad.getDatasetName());
-                        for (Index index : datasetIndexes) {
-                            if (!index.isSecondaryIndex()) {
-                                continue;
-                            }
-                            // Recreate CompiledCreateIndexStatement from metadata entity 'index'.
-                            CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(),
-                                    index.getDatasetName(), index.getKeyFieldNames(), index.getIndexType());
-                            JobSpecification jobSpec = IndexOperations.buildCreateIndexJobSpec(cis, metadata);
-                            dmlJobs.add(new Job(jobSpec));
-                        }
+                        dmlJobs.add(DatasetOperations.createLoadDatasetJobSpec(stmtLoad, metadata));
                         break;
                     }
                     case WRITE_FROM_QUERY_RESULT: {

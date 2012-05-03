@@ -521,6 +521,11 @@ public abstract class BuiltinType implements IAType {
     }
 
     @Override
+    public boolean equals(Object object) {
+        return this.deepEqual((IAObject) object);
+    }
+
+    @Override
     public int hash() {
         return getType().getTypeTag().serialize();
     }

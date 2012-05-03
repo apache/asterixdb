@@ -2,13 +2,11 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-
 create type AddressType as open {
   number: int32, 
   street: string,
   city: string
 }
-
 
 create type AllType as open {
   id: int32,
@@ -32,7 +30,6 @@ create type AllType as open {
   // binary
   // union
 }
-
 
 create external dataset All(AllType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
