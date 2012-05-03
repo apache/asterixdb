@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -31,7 +30,7 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 
 delete $l from dataset LineItem where $l.l_orderkey>=10;
 
-write output to nc1:"rttest/dml_delete.adm";      
+write output to nc1:"rttest/dml_delete-from-loaded-dataset.adm";      
 for $c in dataset('LineItem')
 order by $c.l_orderkey, $c.l_linenumber
 return $c 

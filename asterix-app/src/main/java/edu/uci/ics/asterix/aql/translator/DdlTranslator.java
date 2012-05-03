@@ -125,7 +125,6 @@ public class DdlTranslator extends AbstractAqlTranslator {
         for (Statement stmt : aqlStatements) {
             validateOperation(compiledDeclarations, stmt);
             switch (stmt.getKind()) {
-            // connect statement
                 case DATAVERSE_DECL: {
                     checkForDataverseConnection(false);
                     DataverseDecl dvd = (DataverseDecl) stmt;
@@ -133,7 +132,6 @@ public class DdlTranslator extends AbstractAqlTranslator {
                     compiledDeclarations.connectToDataverse(dataverseName);
                     break;
                 }
-                // create statements
                 case CREATE_DATAVERSE: {
                     checkForDataverseConnection(false);
                     CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
