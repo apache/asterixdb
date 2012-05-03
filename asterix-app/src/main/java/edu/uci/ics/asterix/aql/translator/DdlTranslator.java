@@ -155,10 +155,14 @@ public class DdlTranslator extends AbstractAqlTranslator {
                     IDatasetDetails datasetDetails = null;
                     Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, compiledDeclarations.getDataverseName(),
                             datasetName);
-                    if (ds != null && !dd.getIfNotExists()) {
-                        throw new AlgebricksException("A dataset with this name " + datasetName
-                                + " already exists.");
-                    } 
+                    if (ds != null) {
+                        if (dd.getIfNotExists()) {
+                            continue;                            
+                        } else {
+                            throw new AlgebricksException("A dataset with this name " + datasetName
+                                    + " already exists.");
+                        }
+                    }
                     itemTypeName = dd.getItemTypeName().getValue();
                     Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
                             compiledDeclarations.getDataverseName(), itemTypeName);
