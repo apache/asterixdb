@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -63,7 +62,6 @@ import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionCo
 import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.utils.Triple;
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -82,13 +80,11 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
 public class AqlMetadataProvider implements
 		IMetadataProvider<AqlSourceId, String> {
@@ -294,7 +290,6 @@ public class AqlMetadataProvider implements
 		}
 
 		ARecordType rt = (ARecordType) itemType;
-		Map<String, NodeControllerInfo> ncInfo = null;
 		try {
 			adapter.configure(decl.getProperties(), itemType);
 		} catch (Exception e) {
@@ -427,9 +422,6 @@ public class AqlMetadataProvider implements
 			++i;
 		}
 
-		ITreeIndexFrameFactory interiorFrameFactory = createBTreeNSMInteriorFrameFactory(typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = createBTreeNSMLeafFrameFactory(typeTraits);
-
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 		RecordDescriptor recDesc = new RecordDescriptor(recordFields);
@@ -446,11 +438,10 @@ public class AqlMetadataProvider implements
 		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(
 				jobSpec, recDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(), spPc.first,
-				interiorFrameFactory, leafFrameFactory, typeTraits,
-				comparatorFactories, true, lowKeyFields, highKeyFields,
+				typeTraits,
+				comparatorFactories, lowKeyFields, highKeyFields,
 				lowKeyInclusive, highKeyInclusive,
-				new BTreeDataflowHelperFactory());
-
+				new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeSearchOp, spPc.second);
 	}
@@ -553,19 +544,6 @@ public class AqlMetadataProvider implements
 			++i;
 		}
 
-		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				new RTreeTypeAwareTupleWriterFactory(typeTraits),
-				valueProviderFactories);
-		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				new RTreeTypeAwareTupleWriterFactory(typeTraits),
-				valueProviderFactories);
-		/*
-		 * ITreeIndexFrameFactory interiorFrameFactory =
-		 * JobGenHelper.createRTreeNSMInteriorFrameFactory(typeTraits,
-		 * numNestedSecondaryKeyFields); ITreeIndexFrameFactory leafFrameFactory
-		 * = JobGenHelper.createRTreeNSMLeafFrameFactory(typeTraits,
-		 * numNestedSecondaryKeyFields);
-		 */
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 		RecordDescriptor recDesc = new RecordDescriptor(recordFields);
@@ -582,9 +560,9 @@ public class AqlMetadataProvider implements
 		RTreeSearchOperatorDescriptor rtreeSearchOp = new RTreeSearchOperatorDescriptor(
 				jobSpec, recDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(), spPc.first,
-				interiorFrameFactory, leafFrameFactory, typeTraits,
+				typeTraits,
 				comparatorFactories, keyFields,
-				new RTreeDataflowHelperFactory());
+				new RTreeDataflowHelperFactory(valueProviderFactories), NoOpOperationCallbackProvider.INSTANCE);
 
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				rtreeSearchOp, spPc.second);
@@ -699,8 +677,6 @@ public class AqlMetadataProvider implements
 		ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(
 				compiledDatasetDecl, metadata);
 
-		ITreeIndexFrameFactory interiorFrameFactory = createBTreeNSMInteriorFrameFactory(typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = createBTreeNSMLeafFrameFactory(typeTraits);
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 
@@ -718,12 +694,12 @@ public class AqlMetadataProvider implements
 		}
 
 		TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(
-				spec, appContext.getStorageManagerInterface(), appContext
-						.getTreeRegisterProvider(), splitsAndConstraint.first,
-				interiorFrameFactory, leafFrameFactory, typeTraits,
-				comparatorFactories, fieldPermutation,
-				GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
-				new BTreeDataflowHelperFactory());
+				spec, appContext.getStorageManagerInterface(),
+				appContext.getTreeRegisterProvider(),
+				splitsAndConstraint.first, typeTraits, comparatorFactories,
+				fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
+				new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -759,8 +735,6 @@ public class AqlMetadataProvider implements
 		ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(
 				compiledDatasetDecl, metadata);
 
-		ITreeIndexFrameFactory interiorFrameFactory = createBTreeNSMInteriorFrameFactory(typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = createBTreeNSMLeafFrameFactory(typeTraits);
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 
@@ -780,10 +754,10 @@ public class AqlMetadataProvider implements
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(),
-				splitsAndConstraint.first, interiorFrameFactory,
-				leafFrameFactory, typeTraits, comparatorFactories,
-				new BTreeDataflowHelperFactory(), fieldPermutation,
-				IndexOp.INSERT, txnId);
+				splitsAndConstraint.first, typeTraits, comparatorFactories,
+				fieldPermutation, IndexOp.INSERT,
+				new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -819,8 +793,6 @@ public class AqlMetadataProvider implements
 		ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(
 				compiledDatasetDecl, metadata);
 
-		ITreeIndexFrameFactory interiorFrameFactory = createBTreeNSMInteriorFrameFactory(typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = createBTreeNSMLeafFrameFactory(typeTraits);
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 
@@ -840,10 +812,10 @@ public class AqlMetadataProvider implements
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(),
-				splitsAndConstraint.first, interiorFrameFactory,
-				leafFrameFactory, typeTraits, comparatorFactories,
-				new BTreeDataflowHelperFactory(), fieldPermutation,
-				IndexOp.DELETE, txnId);
+				splitsAndConstraint.first, typeTraits, comparatorFactories,
+				fieldPermutation, IndexOp.DELETE,
+				new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -967,8 +939,6 @@ public class AqlMetadataProvider implements
 			++i;
 		}
 
-		ITreeIndexFrameFactory interiorFrameFactory = createBTreeNSMInteriorFrameFactory(typeTraits);
-		ITreeIndexFrameFactory leafFrameFactory = createBTreeNSMLeafFrameFactory(typeTraits);
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 		Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
@@ -982,10 +952,9 @@ public class AqlMetadataProvider implements
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(),
-				splitsAndConstraint.first, interiorFrameFactory,
-				leafFrameFactory, typeTraits, comparatorFactories,
-				new BTreeDataflowHelperFactory(), fieldPermutation, indexOp,
-				txnId);
+				splitsAndConstraint.first, typeTraits, comparatorFactories,
+				fieldPermutation, indexOp, new BTreeDataflowHelperFactory(),
+				NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -1056,21 +1025,6 @@ public class AqlMetadataProvider implements
 			++i;
 		}
 
-		ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(
-				new RTreeTypeAwareTupleWriterFactory(typeTraits),
-				valueProviderFactories);
-		ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(
-				new RTreeTypeAwareTupleWriterFactory(typeTraits),
-				valueProviderFactories);
-
-		/*
-		 * ITreeIndexFrameFactory interiorFrameFactory =
-		 * JobGenHelper.createRTreeNSMInteriorFrameFactory(typeTraits,
-		 * numSecondaryKeys); ITreeIndexFrameFactory leafFrameFactory =
-		 * JobGenHelper.createRTreeNSMLeafFrameFactory(typeTraits,
-		 * numSecondaryKeys);
-		 */
-
 		IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context
 				.getAppContext();
 		Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
@@ -1084,10 +1038,10 @@ public class AqlMetadataProvider implements
 		TreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
 				appContext.getTreeRegisterProvider(),
-				splitsAndConstraint.first, interiorFrameFactory,
-				leafFrameFactory, typeTraits, comparatorFactories,
-				new RTreeDataflowHelperFactory(), fieldPermutation, indexOp,
-				txnId);
+				splitsAndConstraint.first, typeTraits, comparatorFactories,
+				fieldPermutation, indexOp, new RTreeDataflowHelperFactory(
+						valueProviderFactories),
+				NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				rtreeUpdate, splitsAndConstraint.second);
 	}

@@ -796,7 +796,7 @@ public class MetadataNode implements IMetadataNode {
             searchCmps[i] = comparatorFactories[i].createBinaryComparator();
         }
         MultiComparator searchCmp = new MultiComparator(searchCmps);
-        RangePredicate rangePred = new RangePredicate(true, searchKey, searchKey, true, true, searchCmp, searchCmp);
+        RangePredicate rangePred = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
         indexAccessor.search(rangeCursor, rangePred);
 
         try {

@@ -20,8 +20,8 @@ import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class TreeResourceManager implements IResourceManager {
@@ -63,7 +63,7 @@ public class TreeResourceManager implements IResourceManager {
         tupleReference.setFieldCount(tupleReference.getFieldCount());
         tupleReference.resetByTupleOffset(logLocator.getBuffer().getByteBuffer(), tupleBeginPos);
         byte operation = logBufferContent[operationOffset];
-        ITreeIndexAccessor treeIndexAccessor = treeIndex.createAccessor();
+        IIndexAccessor treeIndexAccessor = treeIndex.createAccessor();
         try {
             switch (operation) {
                 case TreeLogger.BTreeOperationCodes.INSERT:
