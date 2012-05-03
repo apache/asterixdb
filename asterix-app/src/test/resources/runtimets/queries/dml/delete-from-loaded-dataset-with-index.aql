@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -34,7 +33,7 @@ create index idx_LineItem_suppkey on LineItem(l_suppkey);
 
 delete $l from dataset LineItem where $l.l_suppkey>=2 or $l.l_linenumber>1;
 
-write output to nc1:"rttest/dml_delete-with-index.adm";      
+write output to nc1:"rttest/dml_delete-from-loaded-dataset-with-index.adm";      
 for $c in dataset('LineItem')
 where $c.l_suppkey<150
 order by $c.l_orderkey, $c.l_linenumber

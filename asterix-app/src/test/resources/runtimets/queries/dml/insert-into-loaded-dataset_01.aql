@@ -1,5 +1,4 @@
 drop dataverse test if exists;
-  
 create dataverse test;
 use dataverse test;
 
@@ -38,8 +37,7 @@ return {
 }
 );
 
-
-write output to nc1:"rttest/dml_insert-tuple.adm";      
+write output to nc1:"rttest/dml_insert-into-loaded-dataset_01.adm";      
 for $c in dataset('LineID')
 where $c.l_suppkey < 100 and $c.l_linenumber<5
 order by $c.l_orderkey, $c.l_linenumber
