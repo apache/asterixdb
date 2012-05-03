@@ -1,0 +1,33 @@
+/* 
+ * Test case Name  : empty-load.aql
+ * Description     : Check that an empty load doesn't preclude a future non-empty load on a primary index
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineIDType as closed {
+  l_orderkey: int32, 
+  l_linenumber: int32, 
+  l_suppkey: int32
+}
+
+create dataset LineID(LineIDType)
+  partitioned by key l_orderkey, l_linenumber;
+
+load dataset LineID 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/empty.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset LineID 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+write output to nc1:"rttest/dml_empty-load.adm";      
+for $c in dataset('LineID')
+order by $c.l_orderkey, $c.l_linenumber
+limit 1
+return $c 

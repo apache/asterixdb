@@ -1,6 +1,6 @@
 /* 
- * Test case Name  : insert-into-empty-dataset.aql
- * Description     : Check that we can insert into an empty dataset 
+ * Test case Name  : insert-into-empty-dataset-with-index.aql
+ * Description     : Check that we can insert into an empty dataset and its empty secondary indexes 
  * Expected Result : Success
  * Date            : May 2 2012
  */
@@ -17,6 +17,9 @@ create type LineIDType as closed {
 
 create dataset LineID(LineIDType)
   partitioned by key l_orderkey, l_linenumber;
+
+create index idx_LineID_partkey on LineID(l_linenumber);
+create index idx_LineID_suppkey on LineID(l_suppkey);
 
 insert into dataset LineID (
 let $x:=1
@@ -40,7 +43,7 @@ return {
 }
 );
 
-write output to nc1:"rttest/dml_insert-into-empty-dataset.adm";      
+write output to nc1:"rttest/dml_insert-into-empty-dataset-with-index.adm";      
 for $c in dataset('LineID')
 where $c.l_suppkey < 100 and $c.l_linenumber<5
 order by $c.l_orderkey, $c.l_linenumber
