@@ -40,7 +40,7 @@ return {
 }
 );
 
-write output to nc1:"rttest/dml_insert-into-empty-dataset_01.adm";      
+write output to nc1:"rttest/dml_insert-into-empty-dataset.adm";      
 for $c in dataset('LineID')
 where $c.l_suppkey < 100 and $c.l_linenumber<5
 order by $c.l_orderkey, $c.l_linenumber
