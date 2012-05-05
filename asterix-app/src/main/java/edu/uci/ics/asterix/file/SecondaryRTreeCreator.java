@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -10,11 +9,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveVa
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
-import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
@@ -53,35 +49,14 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     @Override
     public JobSpecification createJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+        init(createIndexStmt, metadata);
         JobSpecification spec = new JobSpecification();
-        String datasetName = createIndexStmt.getDatasetName();
-        String secondaryIndexName = createIndexStmt.getIndexName();
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName);
-        }
-        if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AsterixException("Cannot index an external dataset (" + datasetName + ").");
-        }
-        ARecordType itemType = (ARecordType) metadata.findType(compiledDatasetDecl.getItemTypeName());        
-        ISerializerDeserializer payloadSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(itemType);
-        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(compiledDatasetDecl).size();
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
         
         // Create dummy key provider for feeding the primary index scan. 
         AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(
-                spec, keyProviderOp, splitProviderAndConstraint.second);
         
         // Create primary index scan op.
-        BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(
-                spec, metadata, compiledDatasetDecl, itemType, payloadSerde,
-                splitProviderAndConstraint.first);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(
-                spec, keyProviderOp, splitProviderAndConstraint.second);
+        BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
         // ---------- START ASSIGN OP
 
@@ -148,9 +123,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, evalFactories, projectionList);
         AlgebricksMetaOperatorDescriptor asterixAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { assign }, new RecordDescriptor[] { secondaryRecDesc });
-
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
-                splitProviderAndConstraint.second);
+                primaryPartitionConstrant);
 
         // ---------- END ASSIGN OP
 

@@ -244,14 +244,15 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         IBinaryComparatorFactory[] tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
         tokenKeyPairComparatorFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
                 fieldsToTokenizeType, OrderKind.ASC);
-        for (i = 0; i < numPrimaryKeys; i++)
+        for (i = 0; i < numPrimaryKeys; i++) {
             tokenKeyPairComparatorFactories[i + 1] = primaryComparatorFactories[i];
+        }
 
-        int[] sortFields = new int[numTokenKeyPairFields]; // <token, primary
-        // key a, primary
-        // key b, etc.>
-        for (i = 0; i < numTokenKeyPairFields; i++)
+        // <token, primarykey a, primarykey b, etc.>
+        int[] sortFields = new int[numTokenKeyPairFields]; 
+        for (i = 0; i < numTokenKeyPairFields; i++) {
             sortFields[i] = i;
+        }
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> sorterSplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
