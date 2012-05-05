@@ -64,7 +64,6 @@ public class LSMTreeFileManager implements ILSMFileManager {
         this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
         this.baseDir = baseDir;
-        createDirs();
     }
 
     @Override
