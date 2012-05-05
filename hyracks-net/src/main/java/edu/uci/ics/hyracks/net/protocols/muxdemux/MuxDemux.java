@@ -24,6 +24,13 @@ import edu.uci.ics.hyracks.net.protocols.tcp.ITCPConnectionListener;
 import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
 import edu.uci.ics.hyracks.net.protocols.tcp.TCPEndpoint;
 
+/**
+ * Multiplexed Connection Manager.
+ * Every participant that wants to use the multiplexed connections must create and instance
+ * of this class.
+ * 
+ * @author vinayakb
+ */
 public class MuxDemux {
     private final InetSocketAddress localAddress;
 
@@ -35,6 +42,16 @@ public class MuxDemux {
 
     private final MuxDemuxPerformanceCounters perfCounters;
 
+    /**
+     * Constructor.
+     * 
+     * @param localAddress
+     *            - TCP/IP socket address to listen on
+     * @param listener
+     *            - Callback interface to report channel events
+     * @param nThreads
+     *            - Number of threads to use for data transfer
+     */
     public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
@@ -80,10 +97,27 @@ public class MuxDemux {
         perfCounters = new MuxDemuxPerformanceCounters();
     }
 
+    /**
+     * Starts listening for remote connections and is capable of initiating connections.
+     * 
+     * @throws IOException
+     */
     public void start() throws IOException {
         tcpEndpoint.start(localAddress);
     }
 
+    /**
+     * Create a {@link MultiplexedConnection} that can create channels to the specified remote address.
+     * The remote address must have a {@link MuxDemux} listening for connections.
+     * 
+     * @param remoteAddress
+     *            - Address of the remote {@link MuxDemux}
+     * @return a {@link MultiplexedConnection} connected to the remote address.
+     * @throws InterruptedException
+     *             - This call was interrupted while waiting for connection setup.
+     *             In such an event, it is safe to retry the {@link #connect(InetSocketAddress)} call.
+     * @throws NetException
+     */
     public MultiplexedConnection connect(InetSocketAddress remoteAddress) throws InterruptedException, NetException {
         MultiplexedConnection mConn = null;
         synchronized (this) {
@@ -102,10 +136,20 @@ public class MuxDemux {
         return channelOpenListener;
     }
 
+    /**
+     * Get the local address that this {@link MuxDemux} is listening for connections.
+     * 
+     * @return local TCP/IP socket address.
+     */
     public InetSocketAddress getLocalAddress() {
         return tcpEndpoint.getLocalAddress();
     }
 
+    /**
+     * Gets performance counters useful for collecting efficiency metrics.
+     * 
+     * @return
+     */
     public MuxDemuxPerformanceCounters getPerformanceCounters() {
         return perfCounters;
     }

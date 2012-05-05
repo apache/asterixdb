@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -76,7 +76,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         builder.addBlockingEdge(sa, ma);
     }
 
-    public static class SortTaskState extends AbstractTaskState {
+    public static class SortTaskState extends AbstractStateObject {
         private FrameSorter frameSorter;
 
         public SortTaskState() {
@@ -124,7 +124,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void close() throws HyracksDataException {
                     state.frameSorter.sortFrames();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -150,7 +150,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void initialize() throws HyracksDataException {
                     writer.open();
                     try {
-                        SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(
+                        SortTaskState state = (SortTaskState) ctx.getStateObject(new TaskId(new ActivityId(
                                 getOperatorId(), SORT_ACTIVITY_ID), partition));
                         state.frameSorter.flushFrames(writer);
                     } catch (Exception e) {

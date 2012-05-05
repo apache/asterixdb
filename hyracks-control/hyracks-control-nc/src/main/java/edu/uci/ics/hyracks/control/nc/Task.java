@@ -33,8 +33,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -333,12 +332,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void setTaskState(ITaskState taskState) {
-        opEnv.setTaskState(taskState);
+    public void setStateObject(IStateObject taskState) {
+        opEnv.setStateObject(taskState);
     }
 
     @Override
-    public ITaskState getTaskState(TaskId taskId) {
-        return opEnv.getTaskState(taskId);
+    public IStateObject getStateObject(Object id) {
+        return opEnv.getStateObject(id);
     }
 }

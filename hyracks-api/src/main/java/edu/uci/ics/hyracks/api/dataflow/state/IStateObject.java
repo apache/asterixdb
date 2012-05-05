@@ -12,20 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.buffers;
+package edu.uci.ics.hyracks.api.dataflow.state;
 
-import java.nio.ByteBuffer;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-/**
- * Accepts buffers.
- * 
- * @author vinayakb
- */
-public interface IBufferAcceptor {
-    /**
-     * Accept a buffer.
-     * 
-     * @param buffer
-     */
-    public void accept(ByteBuffer buffer);
+import edu.uci.ics.hyracks.api.job.JobId;
+
+public interface IStateObject {
+    public JobId getJobId();
+
+    public Object getId();
+
+    public long getMemoryOccupancy();
+
+    public void toBytes(DataOutput out) throws IOException;
+
+    public void fromBytes(DataInput in) throws IOException;
 }

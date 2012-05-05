@@ -1,22 +1,21 @@
 package edu.uci.ics.hyracks.dataflow.std.base;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.job.JobId;
 
-public abstract class AbstractTaskState implements ITaskState {
+public abstract class AbstractStateObject implements IStateObject {
     protected JobId jobId;
 
-    protected TaskId taId;
+    protected Object id;
 
     protected long memoryOccupancy;
 
-    protected AbstractTaskState() {
+    protected AbstractStateObject() {
     }
 
-    protected AbstractTaskState(JobId jobId, TaskId taId) {
+    protected AbstractStateObject(JobId jobId, Object id) {
         this.jobId = jobId;
-        this.taId = taId;
+        this.id = id;
     }
 
     @Override
@@ -29,12 +28,12 @@ public abstract class AbstractTaskState implements ITaskState {
     }
 
     @Override
-    public final TaskId getTaskId() {
-        return taId;
+    public final Object getId() {
+        return id;
     }
 
-    public final void setTaskId(TaskId tId) {
-        this.taId = tId;
+    public final void setId(Object id) {
+        this.id = id;
     }
 
     @Override

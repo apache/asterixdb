@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
@@ -72,7 +72,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
         builder.addBlockingEdge(jc, nlj);
     }
 
-    public static class JoinCacheTaskState extends AbstractTaskState {
+    public static class JoinCacheTaskState extends AbstractStateObject {
         private NestedLoopJoin joiner;
 
         public JoinCacheTaskState() {
@@ -129,7 +129,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 @Override
                 public void close() throws HyracksDataException {
                     state.joiner.closeCache();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -156,7 +156,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (JoinCacheTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    state = (JoinCacheTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
                             JOIN_CACHE_ACTIVITY_ID), partition));
                     writer.open();
                 }

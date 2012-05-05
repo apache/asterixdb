@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -63,7 +63,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         builder.addBlockingEdge(ma, ra);
     }
 
-    public static class MaterializerTaskState extends AbstractTaskState {
+    public static class MaterializerTaskState extends AbstractStateObject {
         private RunFileWriter out;
 
         public MaterializerTaskState() {
@@ -115,7 +115,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 @Override
                 public void close() throws HyracksDataException {
                     state.out.close();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -139,7 +139,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 @Override
                 public void initialize() throws HyracksDataException {
                     ByteBuffer frame = ctx.allocateFrame();
-                    MaterializerTaskState state = (MaterializerTaskState) ctx.getTaskState(new TaskId(new ActivityId(
+                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(new TaskId(new ActivityId(
                             getOperatorId(), MATERIALIZER_ACTIVITY_ID), partition));
                     RunFileReader in = state.out.createReader();
                     writer.open();

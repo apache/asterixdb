@@ -12,23 +12,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow.state;
+package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 
-public interface ITaskState {
-    public JobId getJobId();
+public class GraceHashJoinPartitionState extends AbstractStateObject {
+    private RunFileWriter[] fWriters;
 
-    public TaskId getTaskId();
+    public GraceHashJoinPartitionState(JobId jobId, Object id) {
+        super(jobId, id);
+    }
 
-    public long getMemoryOccupancy();
+    public RunFileWriter[] getRunWriters() {
+        return fWriters;
+    }
 
-    public void toBytes(DataOutput out) throws IOException;
+    public void setRunWriters(RunFileWriter[] fWriters) {
+        this.fWriters = fWriters;
+    }
 
-    public void fromBytes(DataInput in) throws IOException;
+    @Override
+    public void toBytes(DataOutput out) throws IOException {
+
+    }
+
+    @Override
+    public void fromBytes(DataInput in) throws IOException {
+
+    }
 }

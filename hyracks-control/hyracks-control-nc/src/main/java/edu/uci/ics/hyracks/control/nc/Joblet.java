@@ -26,8 +26,7 @@ import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -65,7 +64,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IOperatorEnvironment env;
 
-    private final Map<TaskId, ITaskState> taskStateMap;
+    private final Map<Object, IStateObject> stateObjectMap;
 
     private final Map<TaskAttemptId, Task> taskMap;
 
@@ -88,7 +87,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jag = jag;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
-        taskStateMap = new HashMap<TaskId, ITaskState>();
+        stateObjectMap = new HashMap<Object, IStateObject>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
@@ -136,13 +135,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
 
         @Override
-        public void setTaskState(ITaskState taskState) {
-            taskStateMap.put(taskState.getTaskId(), taskState);
+        public void setStateObject(IStateObject taskState) {
+            stateObjectMap.put(taskState.getId(), taskState);
         }
 
         @Override
-        public ITaskState getTaskState(TaskId taskId) {
-            return taskStateMap.get(taskId);
+        public IStateObject getStateObject(Object id) {
+            return stateObjectMap.get(id);
         }
     }
 
