@@ -4,7 +4,7 @@ use dataverse test;
 
 create type MyRecord as closed {
   id: int32,
-  point: point,
+  point: point?,
   kwds: string,
   line1: line,
   line2: line,
@@ -18,11 +18,11 @@ create dataset MyData(MyRecord)
 
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+(("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
 
 create index rtree_index_point on MyData(point) type rtree;
 
-write output to nc1:"rttest/index_rtree-secondary-index.adm";
+write output to nc1:"rttest/index_rtree-secondary-index-nullable.adm";
 
 for $o in dataset('MyData')
 where spatial-intersect($o.point, create-polygon(create-point(4.0,1.0), create-point(4.0,4.0), create-point(12.0,4.0), create-point(12.0,1.0)))
