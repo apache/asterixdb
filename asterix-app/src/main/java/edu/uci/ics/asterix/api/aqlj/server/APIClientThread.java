@@ -38,7 +38,7 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.hyracks.bootstrap.AsterixNodeState;
+import edu.uci.ics.asterix.hyracks.bootstrap.APINodeState;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
@@ -93,7 +93,7 @@ public class APIClientThread extends Thread {
 
         // get the port of the node data server that is running on the first nc
         IAsterixStateProxy proxy = (IAsterixStateProxy) appCtx.getDistributedState();
-        nodeDataServerPort = ((AsterixNodeState) proxy.getAsterixNodeState(outputNodeName)).getAPINodeDataServerPort();
+        nodeDataServerPort = ((APINodeState) proxy.getAsterixNodeState(outputNodeName)).getAPINodeDataServerPort();
         nodeDataServerStream = null;
 
         // write the data into the output stores directory of the nc

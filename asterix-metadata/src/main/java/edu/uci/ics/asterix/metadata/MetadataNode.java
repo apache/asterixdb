@@ -19,15 +19,14 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataSecondaryIndexes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -74,29 +73,25 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class MetadataNode implements IMetadataNode {
-
     private static final long serialVersionUID = 1L;
-    private static IIndexRegistryProvider<IIndex> btreeRegistryProvider;
-    public static MetadataNode INSTANCE;
+
     // TODO: Temporary transactional resource id for metadata.
-    private static byte[] metadataResourceId = MetadataNode.class.toString().getBytes();
+    private static final byte[] metadataResourceId = MetadataNode.class.toString().getBytes();
 
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+    private final IndexRegistry<IIndex> indexRegistry;
+    private final TransactionProvider transactionProvider;
 
-    private TransactionProvider transactionProvider;
+    public static MetadataNode INSTANCE;
 
-    public MetadataNode(AsterixProperties asterixProperity, IAsterixApplicationContextInfo appContext,
-            TransactionProvider transactionProvider) {
+    public MetadataNode(INodeApplicationState applicationState) {
         super();
-        this.transactionProvider = transactionProvider;
-        btreeRegistryProvider = appContext.getTreeRegisterProvider();
+        this.transactionProvider = applicationState.getTransactionProvider();
+        this.indexRegistry = applicationState.getApplicationRuntimeContext().getIndexRegistry();
     }
 
     @Override
@@ -230,28 +225,22 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-	public void addFunction(long txnId, Function function)
-			throws MetadataException, RemoteException {
-		try {
-			// Insert into the 'function' dataset.
-			FunctionTupleTranslator tupleReaderWriter = new FunctionTupleTranslator(
-					true);
-			ITupleReference functionTuple = tupleReaderWriter
-					.getTupleFromMetadataEntity(function);
-			insertTupleIntoIndex(txnId,
-					MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
+    public void addFunction(long txnId, Function function) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'function' dataset.
+            FunctionTupleTranslator tupleReaderWriter = new FunctionTupleTranslator(true);
+            ITupleReference functionTuple = tupleReaderWriter.getTupleFromMetadataEntity(function);
+            insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
 
-		} catch (BTreeDuplicateKeyException e) {
-			throw new MetadataException("A dataset with this name "
-					+ function.getFunctionName() + " and arity "
-					+ function.getFunctionArity()
-					+ " already exists in dataverse '"
-					+ function.getDataverseName() + "'.", e);
-		} catch (Exception e) {
-			throw new MetadataException(e);
-		}
-	}
-    
+        } catch (BTreeDuplicateKeyException e) {
+            throw new MetadataException("A dataset with this name " + function.getFunctionName() + " and arity "
+                    + function.getFunctionArity() + " already exists in dataverse '" + function.getDataverseName()
+                    + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
     public void insertIntoDatatypeSecondaryIndex(long txnId, String dataverseName, String nestedTypeName,
             String topTypeName) throws Exception {
         ITupleReference tuple = createTuple(dataverseName, nestedTypeName, topTypeName);
@@ -260,7 +249,7 @@ public class MetadataNode implements IMetadataNode {
 
     private void insertTupleIntoIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
         int fileId = index.getFileId();
-        BTree btree = (BTree) btreeRegistryProvider.getRegistry(null).get(fileId);
+        BTree btree = (BTree) indexRegistry.get(fileId);
         btree.open(fileId);
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
@@ -505,7 +494,7 @@ public class MetadataNode implements IMetadataNode {
 
     private void deleteTupleFromIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
         int fileId = index.getFileId();
-        BTree btree = (BTree) btreeRegistryProvider.getRegistry(null).get(fileId);
+        BTree btree = (BTree) indexRegistry.get(fileId);
         btree.open(fileId);
 
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
@@ -707,65 +696,57 @@ public class MetadataNode implements IMetadataNode {
             throw new MetadataException(e);
         }
     }
-    
-    @Override
-	public Function getFunction(long txnId, String dataverseName,
-			String functionName, int arity) throws MetadataException,
-			RemoteException {
-		try {
-			ITupleReference searchKey = createTuple(dataverseName,
-					functionName, "" + arity);
-			FunctionTupleTranslator tupleReaderWriter = new FunctionTupleTranslator(
-					false);
-			List<Function> results = new ArrayList<Function>();
-			IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<Function>(
-					tupleReaderWriter);
-			searchIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET,
-					searchKey, valueExtractor, results);
-			if (results.isEmpty()) {
-				return null;
-			}
-			return results.get(0);
-		} catch (Exception e) {
-			throw new MetadataException(e);
-		}
-	}
 
     @Override
-	public void dropFunction(long txnId, String dataverseName,
-			String functionName, int arity) throws MetadataException,
-			RemoteException {
-		Function function;
-		try {
-			function = getFunction(txnId, dataverseName, functionName, arity);
-		} catch (Exception e) {
-			throw new MetadataException(e);
-		}
-		if (function == null) {
-			throw new MetadataException("Cannot drop function '" + functionName
-					+ " and arity " + arity + "' because it doesn't exist.");
-		}
-		try {
-			// Delete entry from the 'function' dataset.
-			ITupleReference searchKey = createTuple(dataverseName,
-					functionName, "" + arity);
-			// Searches the index for the tuple to be deleted. Acquires an S
-			// lock on the 'function' dataset.
-			ITupleReference datasetTuple = getTupleToBeDeleted(txnId,
-					MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey);
-			deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET,
-					datasetTuple);
+    public Function getFunction(long txnId, String dataverseName, String functionName, int arity)
+            throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, functionName, "" + arity);
+            FunctionTupleTranslator tupleReaderWriter = new FunctionTupleTranslator(false);
+            List<Function> results = new ArrayList<Function>();
+            IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<Function>(tupleReaderWriter);
+            searchIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
 
-			// TODO: Change this to be a BTree specific exception, e.g.,
-			// BTreeKeyDoesNotExistException.
-		} catch (TreeIndexException e) {
-			throw new MetadataException("Cannot drop function '" + functionName
-					+ " and arity " + arity + "' because it doesn't exist.", e);
-		} catch (Exception e) {
-			throw new MetadataException(e);
-		}
-	}
-    
+    @Override
+    public void dropFunction(long txnId, String dataverseName, String functionName, int arity)
+            throws MetadataException, RemoteException {
+        Function function;
+        try {
+            function = getFunction(txnId, dataverseName, functionName, arity);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+        if (function == null) {
+            throw new MetadataException("Cannot drop function '" + functionName + " and arity " + arity
+                    + "' because it doesn't exist.");
+        }
+        try {
+            // Delete entry from the 'function' dataset.
+            ITupleReference searchKey = createTuple(dataverseName, functionName, "" + arity);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'function' dataset.
+            ITupleReference datasetTuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET,
+                    searchKey);
+            deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, datasetTuple);
+
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop function '" + functionName + " and arity " + arity
+                    + "' because it doesn't exist.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
     private ITupleReference getTupleToBeDeleted(long txnId, IMetadataIndex metadataIndex, ITupleReference searchKey)
             throws Exception {
         IValueExtractor<ITupleReference> valueExtractor = new TupleCopyValueExtractor(metadataIndex.getTypeTraits());
@@ -786,7 +767,7 @@ public class MetadataNode implements IMetadataNode {
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.SHARED);
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int fileId = index.getFileId();
-        BTree btree = (BTree) btreeRegistryProvider.getRegistry(null).get(fileId);
+        BTree btree = (BTree) indexRegistry.get(fileId);
         btree.open(fileId);
         ITreeIndexFrame leafFrame = btree.getLeafFrameFactory().createFrame();
         ITreeIndexAccessor indexAccessor = btree.createAccessor();
@@ -815,6 +796,8 @@ public class MetadataNode implements IMetadataNode {
     // TODO: Can use Hyrack's TupleUtils for this, once we switch to a newer
     // Hyracks version.
     public ITupleReference createTuple(String... fields) throws HyracksDataException {
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
         AMutableString aString = new AMutableString("");
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fields.length);
         for (String s : fields) {

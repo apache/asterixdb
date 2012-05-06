@@ -1,5 +1,6 @@
 package edu.uci.ics.asterix.common.context;
 
+import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
@@ -16,7 +17,9 @@ public class AsterixTreeRegistryProvider implements IIndexRegistryProvider<IInde
 
     @Override
     public IndexRegistry<IIndex> getRegistry(IHyracksTaskContext ctx) {
-        return AsterixAppRuntimeContext.getInstance().getTreeRegistry();
+        INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext().getApplicationContext()
+                .getApplicationObject();
+        return applicationState.getApplicationRuntimeContext().getIndexRegistry();
     }
 
 }

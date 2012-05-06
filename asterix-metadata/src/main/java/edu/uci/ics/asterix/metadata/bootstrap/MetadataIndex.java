@@ -27,15 +27,16 @@ import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.transaction.TreeLogger;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
+import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 /**
  * Descriptor for a primary or secondary index on metadata datasets.
@@ -201,8 +202,8 @@ public final class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public void initTreeLogger() throws ACIDException {
-        this.treeLogger = new TreeLogger(indexResourceId);
+    public void initTreeLogger(ITreeIndex treeIndex) throws ACIDException {
+        this.treeLogger = new TreeLogger(indexResourceId, treeIndex);
     }
 
     @Override

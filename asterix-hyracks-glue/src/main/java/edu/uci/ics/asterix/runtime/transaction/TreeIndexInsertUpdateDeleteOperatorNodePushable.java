@@ -16,11 +16,15 @@ package edu.uci.ics.asterix.runtime.transaction;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
+import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.TreeResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
@@ -53,9 +57,10 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private TreeLogger bTreeLogger;
     private final TransactionProvider transactionProvider;
 
-    public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext, AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, IOperationCallbackProvider opCallbackProvider, int partition,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+    public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
+            AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            IOperationCallbackProvider opCallbackProvider, int partition, int[] fieldPermutation,
+            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         boolean createIfNotExists = (op == IndexOp.INSERT);
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
@@ -63,21 +68,26 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
         this.txnContext = txnContext;
-        transactionProvider = (TransactionProvider) ctx.getJobletContext().getApplicationContext()
+        INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject();
-    }
-    
-    public void initializeTransactionSupport() {
-        TransactionalResourceRepository.registerTransactionalResourceManager(TreeResourceManager.ID,
-                TreeResourceManager.getInstance());
-        int fileId = treeIndexHelper.getIndexFileId();
-        byte[] resourceId = DataUtil.intToByteArray(fileId);
-        TransactionalResourceRepository.registerTransactionalResource(resourceId, treeIndexHelper.getIndex());
-        lockManager = transactionProvider.getLockManager();
-        bTreeLogger = TreeLoggerRepository.getTreeLogger(resourceId);
+        transactionProvider = applicationState.getTransactionProvider();
     }
 
-    
+    public void initializeTransactionSupport() {
+        TransactionalResourceRepository resourceRepository = transactionProvider.getTransactionalResourceRepository();
+        IResourceManager resourceMgr = resourceRepository.getTransactionalResourceMgr(TreeResourceManager.ID);
+        if (resourceMgr == null) {
+            resourceRepository.registerTransactionalResourceManager(TreeResourceManager.ID, new TreeResourceManager(
+                    transactionProvider));
+        }
+        int fileId = treeIndexHelper.getIndexFileId();
+        byte[] resourceId = DataUtil.intToByteArray(fileId);
+        transactionProvider.getTransactionalResourceRepository().registerTransactionalResource(resourceId,
+                treeIndexHelper.getIndex());
+        lockManager = transactionProvider.getLockManager();
+        bTreeLogger = transactionProvider.getTreeLoggerRepository().getTreeLogger(resourceId);
+    }
+
     @Override
     public void open() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
@@ -97,7 +107,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
             throw new HyracksDataException(e);
         }
     }
-    
+
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         final IIndex treeIndex = treeIndexHelper.getIndex();
@@ -123,7 +133,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                         indexAccessor.delete(tuple);
                         bTreeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
                         break;
-                    }                        
+                    }
 
                     default: {
                         throw new HyracksDataException("Unsupported operation " + op

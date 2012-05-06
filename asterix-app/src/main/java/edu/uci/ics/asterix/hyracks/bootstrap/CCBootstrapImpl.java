@@ -80,7 +80,7 @@ public class CCBootstrapImpl implements ICCBootstrap {
             Set<String> nodeNames = entry.getValue();
             Iterator<String> it = nodeNames.iterator();
             while (it.hasNext()) {
-                AsterixNodeState ns = new AsterixNodeState();
+                APINodeState ns = new APINodeState();
                 ns.setAPINodeDataServerPort(startPort);
                 proxy.setAsterixNodeState(it.next(), ns);
                 startPort++;

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.runtime.transaction;
 
+import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
@@ -35,23 +36,22 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
-		AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final int[] fieldPermutation;
+    private final int[] fieldPermutation;
 
-	private final IndexOp op;
+    private final IndexOp op;
 
-	private final long transactionId;
-
+    private final long transactionId;
 
     public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
-            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider, long transactionId) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider,
+            long transactionId) {
         super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, dataflowHelperFactory, opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
@@ -59,24 +59,19 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
         this.transactionId = transactionId;
     }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
-		TransactionContext txnContext;
-		try {
-			ITransactionManager transactionManager = ((TransactionProvider) (ctx
-					.getJobletContext().getApplicationContext()
-					.getApplicationObject())).getTransactionManager();
-			txnContext = transactionManager
-					.getTransactionContext(transactionId);
-		} catch (ACIDException ae) {
-			throw new RuntimeException(
-					" could not obtain context for invalid transaction id "
-							+ transactionId);
-		}
-		return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext, this, ctx, opCallbackProvider, partition,
-                fieldPermutation, recordDescProvider, op);
-	}
-
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        TransactionContext txnContext;
+        try {
+            INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext()
+                    .getApplicationContext().getApplicationObject();
+            ITransactionManager transactionManager = applicationState.getTransactionProvider().getTransactionManager();
+            txnContext = transactionManager.getTransactionContext(transactionId);
+        } catch (ACIDException ae) {
+            throw new RuntimeException(" could not obtain context for invalid transaction id " + transactionId);
+        }
+        return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext, this, ctx, opCallbackProvider,
+                partition, fieldPermutation, recordDescProvider, op);
+    }
 }

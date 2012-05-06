@@ -15,10 +15,12 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
+import edu.uci.ics.asterix.transaction.management.service.logging.TreeLoggerRepository;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
 
@@ -32,13 +34,17 @@ public class TransactionProvider {
     private final ILockManager lockManager;
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
+    private final TransactionalResourceRepository resourceRepository;
+    private final TreeLoggerRepository loggerRepository;
 
     public TransactionProvider(String id) throws ACIDException {
         this.id = id;
-        transactionManager = new TransactionManager(this);
-        logManager = new LogManager(this);
-        lockManager = new LockManager(this);
-        recoveryManager = new RecoveryManager(this);
+        this.transactionManager = new TransactionManager(this);
+        this.logManager = new LogManager(this);
+        this.lockManager = new LockManager(this);
+        this.recoveryManager = new RecoveryManager(this);
+        this.loggerRepository = new TreeLoggerRepository(this);
+        this.resourceRepository = new TransactionalResourceRepository();
     }
 
     public ILogManager getLogManager() {
@@ -55,6 +61,14 @@ public class TransactionProvider {
 
     public IRecoveryManager getRecoveryManager() {
         return recoveryManager;
+    }
+    
+    public TransactionalResourceRepository getTransactionalResourceRepository() {
+        return resourceRepository;
+    }
+    
+    public TreeLoggerRepository getTreeLoggerRepository() {
+        return loggerRepository;
     }
 
     public String getId() {
