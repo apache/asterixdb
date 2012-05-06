@@ -1,11 +1,8 @@
 package edu.uci.ics.asterix.test.metadata;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -52,26 +49,6 @@ public class MetadataTest {
         return fname.substring(0, dot + 1) + EXTENSION_RESULT;
     }
 
-    public static ArrayList<String> readFile(String fileName) {
-        ArrayList<String> list = new ArrayList<String>();
-        BufferedReader result;
-        try {
-            result = new BufferedReader(new FileReader(PATH_BASE + fileName));
-            while (true) {
-                String line = result.readLine();
-                if (line == null) {
-                    break;
-                } else {
-                    list.add(line);
-                }
-            }
-            result.close();
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-        return list;
-    }
-
     @BeforeClass
     public static void setUp() throws Exception {
         _oldConfigFileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
@@ -99,11 +76,10 @@ public class MetadataTest {
         }
     }
 
-    private static void suiteBuild(File f, Collection<Object[]> testArgs, String path) {
+    private static void suiteBuild(File f, Collection<Object[]> testArgs, String path) throws IOException {
+        BufferedReader br = null;
         try {
-            FileInputStream fstream = new FileInputStream(f);
-            DataInputStream in = new DataInputStream(fstream);
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
             String strLine;
             File file;
             while ((strLine = br.readLine()) != null) {
@@ -119,14 +95,18 @@ public class MetadataTest {
                     testArgs.add(new Object[] { file, expectedFile, actualFile });
                 }
             }
-            in.close();
+
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (br != null) {
+                br.close();
+            }
         }
     }
 
     @Parameters
-    public static Collection<Object[]> tests() {
+    public static Collection<Object[]> tests() throws IOException {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         suiteBuild(new File(QUERIES_FILE), testArgs, "");
         return testArgs;
@@ -144,7 +124,7 @@ public class MetadataTest {
 
     @Test
     public void test() throws Exception {
-        Reader query = new BufferedReader(new FileReader(queryFile));
+        Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
         AsterixJavaClient asterix = new AsterixJavaClient(AsterixHyracksIntegrationUtil.getHyracksClientConnection(),
                 query, ERR);
         try {
@@ -160,8 +140,10 @@ public class MetadataTest {
         query.close();
 
         if (actualFile.exists()) {
-            BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-            BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+            BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
+                    "UTF-8"));
+            BufferedReader readerActual = new BufferedReader(new InputStreamReader(new FileInputStream(actualFile),
+                    "UTF-8"));
             String lineExpected, lineActual;
             int num = 1;
             try {

@@ -2,9 +2,10 @@ package edu.uci.ics.asterix.test.runtime;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +52,7 @@ public class RuntimeTest {
         ArrayList<String> list = new ArrayList<String>();
         BufferedReader result;
         try {
-            result = new BufferedReader(new FileReader(PATH_BASE + fileName));
+            result = new BufferedReader(new InputStreamReader(new FileInputStream(PATH_BASE + fileName), "UTF-8"));
             while (true) {
                 String line = result.readLine();
                 if (line == null) {

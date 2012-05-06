@@ -3,11 +3,8 @@ package edu.uci.ics.asterix.test.metadata;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -55,32 +52,12 @@ public class MetadataTransactionsTest {
         return fname.substring(0, dot + 1) + EXTENSION_RESULT;
     }
 
-    public static ArrayList<String> readFile(String fileName) {
-        ArrayList<String> list = new ArrayList<String>();
-        BufferedReader result;
-        try {
-            result = new BufferedReader(new FileReader(PATH_BASE + fileName));
-            while (true) {
-                String line = result.readLine();
-                if (line == null) {
-                    break;
-                } else {
-                    list.add(line);
-                }
-            }
-            result.close();
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-        return list;
-    }
-
     private static void executeQueryTuple(Object[] queryTuple, boolean expectFailure, boolean executeQuery) {
         String queryFileName = (String) queryTuple[0];
         String expectedFileName = (String) queryTuple[1];
         String actualFileName = (String) queryTuple[2];
         try {
-            Reader query = new BufferedReader(new FileReader(queryFileName));
+            Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFileName), "UTF-8"));
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, ERR);
             LOGGER.info("Query is: " + queryFileName);
@@ -115,8 +92,10 @@ public class MetadataTransactionsTest {
             File actualFile = new File(actualFileName);
             File expectedFile = new File(expectedFileName);
             if (actualFile.exists()) {
-                BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-                BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+                BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(
+                        expectedFile), "UTF-8"));
+                BufferedReader readerActual = new BufferedReader(new InputStreamReader(new FileInputStream(actualFile),
+                        "UTF-8"));
                 String lineExpected, lineActual;
                 int num = 1;
                 try {
@@ -204,12 +183,11 @@ public class MetadataTransactionsTest {
     }
 
     private static void prepareQuerySuite(String queryListPath, String queryPath, String expectedPath,
-            String actualPath, Collection<Object[]> output) {
+            String actualPath, Collection<Object[]> output) throws IOException {
+        BufferedReader br = null;
         try {
             File queryListFile = new File(queryListPath);
-            FileInputStream fstream = new FileInputStream(queryListFile);
-            DataInputStream in = new DataInputStream(fstream);
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(queryListFile), "UTF-8"));
             String strLine;
             String queryFileName;
             File queryFile;
@@ -235,14 +213,17 @@ public class MetadataTransactionsTest {
                     output.add(new Object[] { queryFileName, expectedFileName, actualFileName });
                 }
             }
-            in.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (br != null) {
+                br.close();
+            }
         }
     }
 
     @Parameters
-    public static Collection<Object[]> tests() {
+    public static Collection<Object[]> tests() throws IOException {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         prepareQuerySuite(QUERIES_FILE, TEST_QUERIES_PATH, null, null, testArgs);
         return testArgs;

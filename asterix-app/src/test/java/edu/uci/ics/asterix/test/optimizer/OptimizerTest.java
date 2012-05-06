@@ -2,7 +2,9 @@ package edu.uci.ics.asterix.test.optimizer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -120,8 +122,7 @@ public class OptimizerTest {
             Assume.assumeTrue(!skipped);
 
             LOGGER.severe("RUN TEST: \"" + queryFile.getPath() + "\"");
-
-            Reader query = new BufferedReader(new FileReader(queryFile));
+            Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
             PrintWriter plan = new PrintWriter(actualFile);
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan);
@@ -135,8 +136,10 @@ public class OptimizerTest {
             plan.close();
             query.close();
 
-            BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-            BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+            BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
+                    "UTF-8"));
+            BufferedReader readerActual = new BufferedReader(new InputStreamReader(new FileInputStream(actualFile),
+                    "UTF-8"));
 
             String lineExpected, lineActual;
             int num = 1;
