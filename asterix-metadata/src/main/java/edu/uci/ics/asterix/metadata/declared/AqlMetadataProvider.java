@@ -387,8 +387,8 @@ public class AqlMetadataProvider implements
 			}
 			ARecordType recType = (ARecordType) itemType;
 			for (i = 0; i < numSecondaryKeys; i++) {
-				IAType keyType = AqlCompiledIndexDecl.keyFieldType(
-						secondaryKeyFields.get(i), recType);
+				Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyFields.get(i), recType);
+				IAType keyType = keyTypePair.first;
 				ISerializerDeserializer keySerde = metadata.getFormat()
 						.getSerdeProvider().getSerializerDeserializer(keyType);
 				recordFields[i] = keySerde;
@@ -499,8 +499,8 @@ public class AqlMetadataProvider implements
 			}
 			ARecordType recType = (ARecordType) itemType;
 
-			IAType keyType = AqlCompiledIndexDecl.keyFieldType(
-					secondaryKeyFields.get(0), recType);
+			Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyFields.get(0), recType);
+			IAType keyType = keyTypePair.first;
 			if (keyType == null) {
 				throw new AlgebricksException("Could not find field "
 						+ secondaryKeyFields.get(0) + " in the schema.");

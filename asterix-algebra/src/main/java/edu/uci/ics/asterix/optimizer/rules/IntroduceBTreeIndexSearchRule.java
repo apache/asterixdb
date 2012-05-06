@@ -621,7 +621,8 @@ public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
             ARecordType itemType) throws AlgebricksException {
         List<Object> types = new ArrayList<Object>();
         for (String sk : acid.getFieldExprs()) {
-            types.add(AqlCompiledIndexDecl.keyFieldType(sk, itemType));
+            Pair<IAType, Boolean> keyPair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(sk, itemType);
+            types.add(keyPair.first);
         }
         for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> t : DatasetUtils
                 .getPartitioningFunctions(ddecl)) {

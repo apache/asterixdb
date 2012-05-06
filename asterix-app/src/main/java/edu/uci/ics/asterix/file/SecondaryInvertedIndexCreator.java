@@ -61,6 +61,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     }
 
     @Override
+    // TODO: This code has been completely rewritten in the asterix-fuzzy branch. No tests currently rely
+    // on this code, so I didn't do any cleanup here.
     public JobSpecification createJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
