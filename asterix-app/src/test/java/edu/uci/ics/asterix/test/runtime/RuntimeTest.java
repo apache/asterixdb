@@ -85,7 +85,9 @@ public class RuntimeTest {
         lsn.deleteOnExit();
 
         AsterixHyracksIntegrationUtil.init();
-        HDFSCluster.getInstance().setup();
+
+	// TODO: Uncomment when hadoop version is upgraded and adapters are ported
+        //HDFSCluster.getInstance().setup();
     }
 
     @AfterClass
@@ -107,7 +109,8 @@ public class RuntimeTest {
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
         
-        HDFSCluster.getInstance().cleanup();
+	// TODO: Uncomment when hadoop version is upgraded and adapters are ported
+        //HDFSCluster.getInstance().cleanup();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
