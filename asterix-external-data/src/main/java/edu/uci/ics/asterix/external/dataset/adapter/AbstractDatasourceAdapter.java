@@ -18,10 +18,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.data.parser.IDataParser;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.FloatParserFactory;

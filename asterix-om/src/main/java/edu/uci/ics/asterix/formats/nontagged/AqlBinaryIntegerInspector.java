@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class AqlBinaryIntegerInspector implements IBinaryIntegerInspector {

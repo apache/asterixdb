@@ -4,7 +4,7 @@ create dataverse test;
 
 use dataverse test;
 
-write output to nc1:"rttest/writers_serialized_01.adm" using "edu.uci.ics.hyracks.algebricks.core.algebra.runtime.writers.SerializedDataWriterFactory";
+write output to nc1:"rttest/writers_serialized_01.adm" using "edu.uci.ics.hyracks.algebricks.runtime.writers.SerializedDataWriterFactory";
 
 for $x in ["foo", "bar"]
 return $x

@@ -11,7 +11,7 @@ import edu.uci.ics.fuzzyjoin.IntArray;
 import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
 import edu.uci.ics.fuzzyjoin.tokenizer.NGramUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;

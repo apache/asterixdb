@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * Holder for Asterix properties values typically set as Java Properties.

@@ -17,7 +17,7 @@ import edu.uci.ics.fuzzyjoin.IntArray;
 import edu.uci.ics.fuzzyjoin.similarity.PartialIntersect;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetric;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
