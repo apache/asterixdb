@@ -117,7 +117,7 @@ public final class MetadataIndex implements IMetadataIndex {
         bcfs = new IBinaryComparatorFactory[keyTypes.length];
         for (int i = 0; i < keyTypes.length; i++) {
             bcfs[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
-                    .getBinaryComparatorFactory(keyTypes[i], OrderKind.ASC);
+                    .getBinaryComparatorFactory(keyTypes[i], true);
         }
         // Create binary hash function factories.
         bhffs = new IBinaryHashFunctionFactory[keyTypes.length];

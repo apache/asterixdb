@@ -18,10 +18,10 @@ package edu.uci.ics.asterix.metadata.declared;
 import java.util.ArrayList;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
 
 public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 

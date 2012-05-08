@@ -7,7 +7,7 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class ADGenDmlTranslator extends AbstractAqlTranslator {
 
