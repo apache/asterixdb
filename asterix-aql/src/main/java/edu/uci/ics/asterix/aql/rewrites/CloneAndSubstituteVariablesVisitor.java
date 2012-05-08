@@ -63,7 +63,7 @@ import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class CloneAndSubstituteVariablesVisitor implements
         IAqlExpressionVisitor<Pair<IAqlExpression, List<VariableSubstitution>>, List<VariableSubstitution>> {

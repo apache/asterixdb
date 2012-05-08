@@ -5,8 +5,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AInt32DescNorm
 import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AStringAscNormalizedKeyComputerFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AStringDescNormalizedKeyComputerFactory;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.INormalizedKeyComputerFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
+import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 
 public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyComputerFactoryProvider {
@@ -17,9 +16,9 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
     }
 
     @Override
-    public INormalizedKeyComputerFactory getNormalizedKeyComputerFactory(Object type, OrderKind order) {
+    public INormalizedKeyComputerFactory getNormalizedKeyComputerFactory(Object type, boolean ascending) {
         IAType aqlType = (IAType) type;
-        if (order == OrderKind.ASC) {
+        if (ascending) {
             switch (aqlType.getTypeTag()) {
                 case INT32: {
                     return AInt32AscNormalizedKeyComputerFactory.INSTANCE;
@@ -31,7 +30,7 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
                     return null;
                 }
             }
-        } else if (order == OrderKind.DESC) {
+        } else {
             switch (aqlType.getTypeTag()) {
                 case INT32: {
                     return AInt32DescNormalizedKeyComputerFactory.INSTANCE;
@@ -43,8 +42,7 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
                     return null;
                 }
             }
-        } else
-            return null;
+        }
     }
 
 }

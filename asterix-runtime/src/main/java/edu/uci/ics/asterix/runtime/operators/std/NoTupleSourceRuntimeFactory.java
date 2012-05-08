@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.runtime.operators.std;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntime;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.context.RuntimeContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.base.AbstractOneInputSourcePushRuntime;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputSourcePushRuntime;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class NoTupleSourceRuntimeFactory implements IPushRuntimeFactory {

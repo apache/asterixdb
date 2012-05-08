@@ -7,8 +7,8 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionManager;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class FunctionManagerImpl implements IFunctionManager {
     private final Map<FunctionIdentifier, IFunctionDescriptor> functions;
