@@ -33,35 +33,19 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceM
 public class TransactionalResourceRepository {
 
     private Map<ByteBuffer, Object> resourceRepository = new HashMap<ByteBuffer, Object>(); // repository
-    // containing
-    // resources
-    // that
-    // participate
-    // in
-    // transactions
 
     private Map<Byte, IResourceManager> resourceMgrRepository = new HashMap<Byte, IResourceManager>(); // repository
 
-    // containing
-    // resource
-    // managers
-
     public void registerTransactionalResource(byte[] resourceBytes, Object resource) {
+        // convert to ByteBuffer so that a byte[] can be used as a key in a hash map.
         ByteBuffer resourceId = ByteBuffer.wrap(resourceBytes); // need to
-        // convert to
-        // ByteBuffer so
-        // that a byte[]
-        // can be used
-        // as a key in a
-        // hash map.
+
         synchronized (resourceRepository) {
             if (resourceRepository.get(resourceId) == null) {
                 resourceRepository.put(resourceId, resource);
-                resourceRepository.notifyAll(); // notify all reader threads
-                // that are waiting to retrieve
-                // a resource from the
-                // repository
-
+                
+                // wake up threads waiting for the resource
+                resourceRepository.notifyAll();
             }
         }
     }
@@ -70,11 +54,9 @@ public class TransactionalResourceRepository {
         synchronized (resourceMgrRepository) {
             if (resourceMgrRepository.get(id) == null) {
                 resourceMgrRepository.put(id, resourceMgr);
-                resourceMgrRepository.notifyAll(); // notify all reader threads
-                // that are waiting to
-                // retrieve a resource
-                // manager from the
-                // repository
+                
+                // wake up threads waiting for the resource manager
+                resourceMgrRepository.notifyAll();
             }
         }
     }
@@ -97,15 +79,6 @@ public class TransactionalResourceRepository {
 
     public IResourceManager getTransactionalResourceMgr(byte id) {
         synchronized (resourceMgrRepository) {
-//            while (resourceMgrRepository.get(id) == null) {
-//                try {
-//                    resourceMgrRepository.wait();
-//                } catch (InterruptedException ie) {
-//                    ie.printStackTrace();
-//                    break; // the thread might be interrupted due to other
-//                    // failures occurring elsewhere, break from the loop
-//                }
-//            }
             return resourceMgrRepository.get(id);
         }
 

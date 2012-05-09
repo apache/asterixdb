@@ -24,7 +24,7 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
-import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
+import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
@@ -89,7 +89,7 @@ public class DatasetOperations {
 
         LOGGER.info("DROP DATASETPATH: " + datasetPath);
 
-        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         AqlCompiledDatasetDecl adecl = metadata.findDataset(datasetName);
@@ -201,7 +201,7 @@ public class DatasetOperations {
         }
         LOGGER.info("LOAD into File Splits: " + sb.toString());
 
-        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, btreeRegistryProvider, splitsAndConstraint.first, typeTraits, comparatorFactories,

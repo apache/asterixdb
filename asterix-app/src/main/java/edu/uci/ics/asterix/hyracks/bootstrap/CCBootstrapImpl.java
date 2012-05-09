@@ -117,7 +117,7 @@ public class CCBootstrapImpl implements ICCBootstrap {
             Set<String> nodeNames = entry.getValue();
             Iterator<String> it = nodeNames.iterator();
             while (it.hasNext()) {
-                APINodeState ns = new APINodeState();
+                AsterixNodeState ns = new AsterixNodeState();
                 ns.setAPINodeDataServerPort(startPort++);
                 proxy.setAsterixNodeState(it.next(), ns);
             }

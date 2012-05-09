@@ -8,7 +8,7 @@ import edu.uci.ics.asterix.aql.translator.DdlTranslator.CompiledIndexDropStateme
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
-import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
+import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -106,7 +106,7 @@ public class IndexOperations {
         String indexName = deleteStmt.getIndexName();
 
         JobSpecification spec = new JobSpecification();
-        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = datasetDecls
@@ -145,7 +145,7 @@ public class IndexOperations {
         int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(compiledDatasetDecl).size();
 
         // ---------- START GENERAL BTREE STUFF
-        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         // ---------- END GENERAL BTREE STUFF
@@ -351,7 +351,7 @@ public class IndexOperations {
 
         // ---------- START GENERAL BTREE STUFF
 
-        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         // ---------- END GENERAL BTREE STUFF
@@ -578,7 +578,7 @@ public class IndexOperations {
 
         // ---------- START GENERAL BTREE STUFF
 
-        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         // ---------- END GENERAL BTREE STUFF

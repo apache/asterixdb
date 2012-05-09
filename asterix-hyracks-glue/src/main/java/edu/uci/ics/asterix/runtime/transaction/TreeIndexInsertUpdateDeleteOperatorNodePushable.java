@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.runtime.transaction;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.common.api.INodeApplicationState;
+import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
@@ -54,7 +54,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private IIndexAccessor indexAccessor;
     private ILockManager lockManager;
     private final TransactionContext txnContext;
-    private TreeLogger bTreeLogger;
+    private TreeLogger treeLogger;
     private final TransactionProvider transactionProvider;
 
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
@@ -68,9 +68,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
         this.txnContext = txnContext;
-        INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject();
-        transactionProvider = applicationState.getTransactionProvider();
+        AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        transactionProvider = runtimeContext.getTransactionProvider();
     }
 
     public void initializeTransactionSupport() {
@@ -85,7 +84,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         transactionProvider.getTransactionalResourceRepository().registerTransactionalResource(resourceId,
                 treeIndexHelper.getIndex());
         lockManager = transactionProvider.getLockManager();
-        bTreeLogger = transactionProvider.getTreeLoggerRepository().getTreeLogger(resourceId);
+        treeLogger = transactionProvider.getTreeLoggerRepository().getTreeLogger(resourceId);
     }
 
     @Override
@@ -123,7 +122,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                         lockManager.lock(txnContext, resourceId,
                                 TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
                         indexAccessor.insert(tuple);
-                        bTreeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
+                        treeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
                         break;
                     }
 
@@ -131,7 +130,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                         lockManager.lock(txnContext, resourceId,
                                 TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
                         indexAccessor.delete(tuple);
-                        bTreeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
+                        treeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
                         break;
                     }
 

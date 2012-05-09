@@ -1,6 +1,5 @@
 package edu.uci.ics.asterix.common.context;
 
-import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -13,15 +12,13 @@ public class AsterixStorageManagerInterface implements IStorageManagerInterface 
 
     @Override
     public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
-        INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject();
-        return applicationState.getApplicationRuntimeContext().getBufferCache();
+        return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                .getBufferCache();
     }
 
     @Override
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
-        INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject();
-        return applicationState.getApplicationRuntimeContext().getFileMapManager();
+        return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                .getFileMapManager();
     }
 }

@@ -19,9 +19,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
@@ -83,15 +83,18 @@ public class MetadataNode implements IMetadataNode {
     // TODO: Temporary transactional resource id for metadata.
     private static final byte[] metadataResourceId = MetadataNode.class.toString().getBytes();
 
-    private final IndexRegistry<IIndex> indexRegistry;
-    private final TransactionProvider transactionProvider;
+    private IndexRegistry<IIndex> indexRegistry;
+    private TransactionProvider transactionProvider;
 
-    public static MetadataNode INSTANCE;
+    public static final MetadataNode INSTANCE = new MetadataNode();
 
-    public MetadataNode(INodeApplicationState applicationState) {
+    private MetadataNode() {
         super();
-        this.transactionProvider = applicationState.getTransactionProvider();
-        this.indexRegistry = applicationState.getApplicationRuntimeContext().getIndexRegistry();
+    }
+    
+    public void initialize(AsterixAppRuntimeContext runtimeContext) {
+        this.transactionProvider = runtimeContext.getTransactionProvider();
+        this.indexRegistry = runtimeContext.getIndexRegistry();
     }
 
     @Override

@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.io.Serializable;
 
-public class APINodeState implements Serializable {
+public class AsterixNodeState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

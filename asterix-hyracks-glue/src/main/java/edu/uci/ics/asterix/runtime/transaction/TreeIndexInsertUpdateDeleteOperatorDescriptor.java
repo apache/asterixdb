@@ -15,11 +15,10 @@
 
 package edu.uci.ics.asterix.runtime.transaction;
 
-import edu.uci.ics.asterix.common.api.INodeApplicationState;
+import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -64,9 +63,8 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         TransactionContext txnContext;
         try {
-            INodeApplicationState applicationState = (INodeApplicationState) ctx.getJobletContext()
-                    .getApplicationContext().getApplicationObject();
-            ITransactionManager transactionManager = applicationState.getTransactionProvider().getTransactionManager();
+            ITransactionManager transactionManager = ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+                    .getApplicationObject()).getTransactionProvider().getTransactionManager();
             txnContext = transactionManager.getTransactionContext(transactionId);
         } catch (ACIDException ae) {
             throw new RuntimeException(" could not obtain context for invalid transaction id " + transactionId);

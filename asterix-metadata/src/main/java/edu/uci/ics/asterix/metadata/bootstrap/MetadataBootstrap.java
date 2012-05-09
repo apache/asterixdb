@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.INodeApplicationState;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
@@ -103,10 +102,10 @@ public class MetadataBootstrap {
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
-    public static void startUniverse(AsterixProperties asterixProperities, INCApplicationContext ncApplicationContext)
+    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext)
             throws Exception {
-        INodeApplicationState applicationState = (INodeApplicationState) ncApplicationContext.getApplicationObject();
-        AsterixAppRuntimeContext runtimeContext = applicationState.getApplicationRuntimeContext();
+        AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext
+                .getApplicationObject();
 
         // Initialize static metadata objects, such as record types and metadata
         // index descriptors.
@@ -118,18 +117,18 @@ public class MetadataBootstrap {
         initLocalIndexArrays();
 
         boolean isNewUniverse = true;
-        TransactionalResourceRepository resourceRepository = applicationState.getTransactionProvider()
+        TransactionalResourceRepository resourceRepository = runtimeContext.getTransactionProvider()
                 .getTransactionalResourceRepository();
         resourceRepository.registerTransactionalResourceManager(TreeResourceManager.ID, new TreeResourceManager(
-                applicationState.getTransactionProvider()));
+                runtimeContext.getTransactionProvider()));
 
-        metadataNodeName = asterixProperities.getMetadataNodeName();
-        isNewUniverse = asterixProperities.isNewUniverse();
-        metadataStore = asterixProperities.getMetadataStore();
-        nodeNames = asterixProperities.getNodeNames();
+        metadataNodeName = asterixProperties.getMetadataNodeName();
+        isNewUniverse = asterixProperties.isNewUniverse();
+        metadataStore = asterixProperties.getMetadataStore();
+        nodeNames = asterixProperties.getNodeNames();
         // nodeStores = asterixProperity.getStores();
 
-        outputDir = asterixProperities.getOutputDir();
+        outputDir = asterixProperties.getOutputDir();
         if (outputDir != null) {
             (new File(outputDir)).mkdirs();
         }
