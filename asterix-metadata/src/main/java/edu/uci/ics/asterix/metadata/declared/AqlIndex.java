@@ -15,9 +15,9 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 

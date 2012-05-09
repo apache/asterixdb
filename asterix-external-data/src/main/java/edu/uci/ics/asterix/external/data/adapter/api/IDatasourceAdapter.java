@@ -18,8 +18,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**

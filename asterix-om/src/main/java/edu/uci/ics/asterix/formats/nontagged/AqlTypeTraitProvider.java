@@ -1,7 +1,7 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.ITypeTraitProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class AqlTypeTraitProvider implements ITypeTraitProvider {

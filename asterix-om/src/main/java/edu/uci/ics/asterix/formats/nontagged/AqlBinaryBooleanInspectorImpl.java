@@ -1,7 +1,7 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
 
 public class AqlBinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
 

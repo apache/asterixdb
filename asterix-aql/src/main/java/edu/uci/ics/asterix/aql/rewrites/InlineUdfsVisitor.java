@@ -6,8 +6,8 @@ import java.util.List;
 
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.base.IAqlExpression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
+import edu.uci.ics.asterix.aql.base.IAqlExpression;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
@@ -65,7 +65,7 @@ import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<FunctionDecl>> {
 

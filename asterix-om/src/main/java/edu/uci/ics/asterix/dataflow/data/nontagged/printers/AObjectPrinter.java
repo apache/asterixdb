@@ -4,9 +4,9 @@ import java.io.PrintStream;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class AObjectPrinter implements IPrinter {
 
