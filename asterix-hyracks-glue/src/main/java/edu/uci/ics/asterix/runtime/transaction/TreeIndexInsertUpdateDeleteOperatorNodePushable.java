@@ -57,6 +57,11 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private TreeLogger treeLogger;
     private final TransactionProvider transactionProvider;
 
+    /* TODO: Index operators should live in Hyracks. Right now, they are needed here in Asterix
+     * as a hack to provide transactionIDs. The Asterix verions of this operator will disappear 
+     * and the operator will come from Hyracks once the LSM/Recovery/Transactions world has 
+     * been introduced.
+     */
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
             AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             IOperationCallbackProvider opCallbackProvider, int partition, int[] fieldPermutation,
@@ -68,7 +73,9 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
         this.txnContext = txnContext;
-        AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+
+        AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
         transactionProvider = runtimeContext.getTransactionProvider();
     }
 

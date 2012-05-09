@@ -20,7 +20,7 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
     }
 
     @Override
-    public IIndexRegistryProvider<IIndex> getTreeRegisterProvider() {
+    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
         return AsterixIndexRegistryProvider.INSTANCE;
     }
 

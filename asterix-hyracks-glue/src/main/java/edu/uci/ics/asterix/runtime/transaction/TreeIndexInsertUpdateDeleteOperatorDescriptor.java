@@ -45,6 +45,11 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
 
     private final long transactionId;
 
+    /* TODO: Index operators should live in Hyracks. Right now, they are needed here in Asterix
+     * as a hack to provide transactionIDs. The Asterix verions of this operator will disappear 
+     * and the operator will come from Hyracks once the LSM/Recovery/Transactions world has 
+     * been introduced.
+     */
     public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,

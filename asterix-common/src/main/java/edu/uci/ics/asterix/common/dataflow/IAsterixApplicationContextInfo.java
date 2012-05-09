@@ -5,7 +5,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public interface IAsterixApplicationContextInfo {
-    public IIndexRegistryProvider<IIndex> getTreeRegisterProvider();
+    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider();
 
     public IStorageManagerInterface getStorageManagerInterface();
 }
