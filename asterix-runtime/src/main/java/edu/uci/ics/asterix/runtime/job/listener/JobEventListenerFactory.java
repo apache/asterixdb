@@ -1,9 +1,9 @@
 package edu.uci.ics.asterix.runtime.job.listener;
 
+import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext.TransactionType;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
@@ -28,9 +28,8 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             @Override
             public void jobletFinish(JobStatus jobStatus) {
                 try {
-                    TransactionProvider factory = (TransactionProvider) (jobletContext.getApplicationContext()
-                            .getApplicationObject());
-                    ITransactionManager txnManager = factory.getTransactionManager();
+                    ITransactionManager txnManager = ((AsterixAppRuntimeContext) jobletContext.getApplicationContext()
+                            .getApplicationObject()).getTransactionProvider().getTransactionManager();
                     TransactionContext txnContext = txnManager.getTransactionContext(txnId);
                     txnContext.setTransactionType(transactionalWrite ? TransactionType.READ_WRITE
                             : TransactionType.READ);

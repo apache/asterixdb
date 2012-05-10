@@ -436,7 +436,7 @@ public class AqlMetadataProvider implements
 
 		BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(
 				jobSpec, recDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(), spPc.first,
+				appContext.getIndexRegistryProvider(), spPc.first,
 				typeTraits,
 				comparatorFactories, lowKeyFields, highKeyFields,
 				lowKeyInclusive, highKeyInclusive,
@@ -558,7 +558,7 @@ public class AqlMetadataProvider implements
 
 		RTreeSearchOperatorDescriptor rtreeSearchOp = new RTreeSearchOperatorDescriptor(
 				jobSpec, recDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(), spPc.first,
+				appContext.getIndexRegistryProvider(), spPc.first,
 				typeTraits,
 				comparatorFactories, keyFields,
 				new RTreeDataflowHelperFactory(valueProviderFactories), NoOpOperationCallbackProvider.INSTANCE);
@@ -694,7 +694,7 @@ public class AqlMetadataProvider implements
 
 		TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(
 				spec, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(),
+				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
 				new BTreeDataflowHelperFactory(),
@@ -752,7 +752,7 @@ public class AqlMetadataProvider implements
 
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(),
+				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, IndexOp.INSERT,
 				new BTreeDataflowHelperFactory(),
@@ -810,7 +810,7 @@ public class AqlMetadataProvider implements
 
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(),
+				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, IndexOp.DELETE,
 				new BTreeDataflowHelperFactory(),
@@ -950,7 +950,7 @@ public class AqlMetadataProvider implements
 		}
 		TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(),
+				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, indexOp, new BTreeDataflowHelperFactory(),
 				NoOpOperationCallbackProvider.INSTANCE, txnId);
@@ -1036,7 +1036,7 @@ public class AqlMetadataProvider implements
 		}
 		TreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
 				spec, recordDesc, appContext.getStorageManagerInterface(),
-				appContext.getTreeRegisterProvider(),
+				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, indexOp, new RTreeDataflowHelperFactory(
 						valueProviderFactories),

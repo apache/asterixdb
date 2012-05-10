@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Server;
@@ -28,7 +29,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import edu.uci.ics.asterix.api.aqlj.server.APIClientThreadFactory;
 import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -41,63 +41,46 @@ public class CCBootstrapImpl implements ICCBootstrap {
     private static final Logger LOGGER = Logger.getLogger(CCBootstrapImpl.class.getName());
 
     private static final int DEFAULT_WEB_SERVER_PORT = 19001;
+
     public static final int DEFAULT_API_SERVER_PORT = 14600;
     private static final int DEFAULT_API_NODEDATA_SERVER_PORT = 14601;
 
-    private Server server;
+    private Server webServer;
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
     private ThreadedServer apiServer;
 
     @Override
     public void start() throws Exception {
-        LOGGER.info("Starting Asterix CC Bootstrap");
-        String portStr = System.getProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY);
-        int port = DEFAULT_WEB_SERVER_PORT;
-        if (portStr != null) {
-            port = Integer.parseInt(portStr);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting Asterix cluster controller");
         }
-        server = new Server(port);
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-        server.setHandler(context);
 
-        context.addServlet(new ServletHolder(new APIServlet()), "/*");
-        server.start();
+        // Set the AsterixStateProxy to be the distributed object
         proxy = AsterixStateProxy.registerRemoteObject();
         proxy.setAsterixProperties(AsterixProperties.INSTANCE);
-
-        // set the APINodeDataServer ports
-        int startPort = DEFAULT_API_NODEDATA_SERVER_PORT;
-        Map<String, Set<String>> nodeNameMap = new HashMap<String, Set<String>>();
-        try {
-            appCtx.getCCContext().getIPAddressNodeMap(nodeNameMap);
-        } catch (Exception e) {
-            throw new IOException(" unable to obtain IP address node map", e);
-        }
-        AsterixAppContextInfoImpl.setNodeControllerInfo(nodeNameMap);
-        for (Map.Entry<String, Set<String>> entry : nodeNameMap.entrySet()) {
-            Set<String> nodeNames = entry.getValue();
-            Iterator<String> it = nodeNames.iterator();
-            while (it.hasNext()) {
-                AsterixNodeState ns = new AsterixNodeState();
-                ns.setAPINodeDataServerPort(startPort);
-                proxy.setAsterixNodeState(it.next(), ns);
-                startPort++;
-            }
-        }
-
         appCtx.setDistributedState(proxy);
+
+        // Create the metadata manager
         MetadataManager.INSTANCE = new MetadataManager(proxy);
-        apiServer = new ThreadedServer(DEFAULT_API_SERVER_PORT, new APIClientThreadFactory(appCtx));
+
+        // Setup and start the web interface
+        setupWebServer();
+        webServer.start();
+
+        // Setup and start the API server
+        setupAPIServer();
         apiServer.start();
     }
 
     @Override
     public void stop() throws Exception {
-        LOGGER.info("Stopping Asterix CC Bootstrap");
-        AsterixStateProxy.deRegisterRemoteObject();
-        server.stop();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Stopping Asterix cluster controller");
+        }
+        AsterixStateProxy.unregisterRemoteObject();
+        
+        webServer.stop();
         apiServer.shutdown();
     }
 
@@ -106,4 +89,40 @@ public class CCBootstrapImpl implements ICCBootstrap {
         this.appCtx = appCtx;
     }
 
+    private void setupWebServer() throws Exception {
+        String portStr = System.getProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY);
+        int port = DEFAULT_WEB_SERVER_PORT;
+        if (portStr != null) {
+            port = Integer.parseInt(portStr);
+        }
+        webServer = new Server(port);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        webServer.setHandler(context);
+        context.addServlet(new ServletHolder(new APIServlet()), "/*");
+    }
+
+    private void setupAPIServer() throws Exception {
+        // set the APINodeDataServer ports
+        int startPort = DEFAULT_API_NODEDATA_SERVER_PORT;
+        Map<String, Set<String>> nodeNameMap = new HashMap<String, Set<String>>();
+        try {
+            appCtx.getCCContext().getIPAddressNodeMap(nodeNameMap);
+        } catch (Exception e) {
+            throw new IOException("Unable to obtain IP address node map", e);
+        }
+
+        for (Map.Entry<String, Set<String>> entry : nodeNameMap.entrySet()) {
+            Set<String> nodeNames = entry.getValue();
+            Iterator<String> it = nodeNames.iterator();
+            while (it.hasNext()) {
+                AsterixNodeState ns = new AsterixNodeState();
+                ns.setAPINodeDataServerPort(startPort++);
+                proxy.setAsterixNodeState(it.next(), ns);
+            }
+        }
+
+        apiServer = new ThreadedServer(DEFAULT_API_SERVER_PORT, new APIClientThreadFactory(appCtx));
+    }
 }

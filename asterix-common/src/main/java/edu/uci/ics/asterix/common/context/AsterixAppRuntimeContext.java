@@ -1,12 +1,11 @@
 package edu.uci.ics.asterix.common.context;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
+import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
@@ -21,90 +20,82 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class AsterixAppRuntimeContext {
-    private static AsterixAppRuntimeContext INSTANCE;
-
-    private IndexRegistry<IIndex> treeRegistry;
-    private IBufferCache bufferCache;
+    private final INCApplicationContext ncApplicationContext;
+    
+    private IndexRegistry<IIndex> indexRegistry;
     private IFileMapManager fileMapManager;
-    private INCApplicationContext ncAppContext;
+    private IBufferCache bufferCache;
+    private TransactionProvider provider;
 
-    private static Logger LOGGER = Logger.getLogger(AsterixAppRuntimeContext.class.getName());
-
-    private AsterixAppRuntimeContext() {
+    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
+        this.ncApplicationContext = ncApplicationContext;
     }
 
-    public static void initialize(INCApplicationContext ncAppContext) throws IOException {
-        if (INSTANCE != null) {
-            LOGGER.info("Asterix instance already initialized");
-            return;
-        }
+    public void initialize() throws IOException, ACIDException {
+        int pageSize = getBufferCachePageSize();
+        int numPages = getBufferCacheNumPages();
 
-        INSTANCE = new AsterixAppRuntimeContext();
-        INSTANCE.ncAppContext = ncAppContext;
-        INSTANCE.start();
-    }
-
-    public static void deinitialize() {
-        if (INSTANCE != null) {
-            INSTANCE.stop();
-            INSTANCE = null;
-        }
-    }
-
-    private void stop() {
-        bufferCache.close();
-    }
-
-    private void start() throws IOException {
+        // Initialize file map manager
         fileMapManager = new AsterixFileMapManager();
+
+        // Initialize the buffer cache
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        if (ncAppContext == null) {
-            throw new AsterixRuntimeException("NC Application Context has not been set.");
-        }
-        IIOManager ioMgr = ncAppContext.getRootContext().getIOManager();
-        String pgsizeStr = System.getProperty(GlobalConfig.BUFFER_CACHE_PAGE_SIZE_PROPERTY);
-        int pgSize = -1;
-        if (pgsizeStr != null) {
-            try {
-                pgSize = Integer.parseInt(pgsizeStr);
-            } catch (NumberFormatException nfe) {
-                StringWriter sw = new StringWriter();
-                nfe.printStackTrace(new PrintWriter(sw, true));
-                sw.close();
-                GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache page size argument. Picking frame size ("
-                        + ncAppContext.getRootContext().getFrameSize() + ") instead. \n" + sw.toString() + "\n");
-            }
-        }
-        if (pgSize < 0) {
-            // by default, pick the frame size
-            pgSize = ncAppContext.getRootContext().getFrameSize();
-        }
+        IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
+        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
 
-        int cacheSize = GlobalConfig.DEFAULT_BUFFER_CACHE_SIZE;
-        String cacheSizeStr = System.getProperty(GlobalConfig.BUFFER_CACHE_SIZE_PROPERTY);
-        if (cacheSizeStr != null) {
-            int cs = -1;
-            try {
-                cs = Integer.parseInt(cacheSizeStr);
-            } catch (NumberFormatException nfe) {
-                StringWriter sw = new StringWriter();
-                nfe.printStackTrace(new PrintWriter(sw, true));
-                sw.close();
-                GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache size argument. Picking default value ("
-                        + GlobalConfig.DEFAULT_BUFFER_CACHE_SIZE + ") instead.\n");
-            }
-            if (cs >= 0) {
-                cacheSize = cs;
-            }
-        }
-        System.out.println("BC :" + pgSize + " cache " + cacheSize);
-        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pgSize, cacheSize, Integer.MAX_VALUE);
-        treeRegistry = new IndexRegistry<IIndex>();
+        // Initialize the index registry
+        indexRegistry = new IndexRegistry<IIndex>();
+
+        // Initialize the transaction sub-system
+        provider = new TransactionProvider(ncApplicationContext.getNodeId());
     }
 
-    public static AsterixAppRuntimeContext getInstance() {
-        return INSTANCE;
+    private int getBufferCachePageSize() {
+        int pageSize = ncApplicationContext.getRootContext().getFrameSize();
+        String pageSizeStr = System.getProperty(GlobalConfig.BUFFER_CACHE_PAGE_SIZE_PROPERTY, null);
+        if (pageSizeStr != null) {
+            try {
+                pageSize = Integer.parseInt(pageSizeStr);
+            } catch (NumberFormatException nfe) {
+                if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.WARNING)) {
+                    GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache page size argument. "
+                            + "Using default value: " + pageSize);
+                }
+            }
+        }
+
+        if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.INFO)) {
+            GlobalConfig.ASTERIX_LOGGER.info("Buffer cache page size: " + pageSize);
+        }
+
+        return pageSize;
+    }
+
+    private int getBufferCacheNumPages() {
+        int numPages = GlobalConfig.DEFAULT_BUFFER_CACHE_NUM_PAGES;
+        String numPagesStr = System.getProperty(GlobalConfig.BUFFER_CACHE_NUM_PAGES_PROPERTY, null);
+        if (numPagesStr != null) {
+            try {
+                numPages = Integer.parseInt(numPagesStr);
+            } catch (NumberFormatException nfe) {
+                if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.WARNING)) {
+                    GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache size argument. " + "Using default value: "
+                            + numPages);
+                }
+                return numPages;
+            }
+        }
+
+        if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.INFO)) {
+            GlobalConfig.ASTERIX_LOGGER.info("Buffer cache size (number of pages): " + numPages);
+        }
+
+        return numPages;
+    }
+
+    public void deinitialize() {
+        bufferCache.close();
     }
 
     public IBufferCache getBufferCache() {
@@ -115,8 +106,12 @@ public class AsterixAppRuntimeContext {
         return fileMapManager;
     }
 
-    public IndexRegistry<IIndex> getTreeRegistry() {
-        return treeRegistry;
+    public IndexRegistry<IIndex> getIndexRegistry() {
+        return indexRegistry;
+    }
+
+    public TransactionProvider getTransactionProvider() {
+        return provider;
     }
 
 }

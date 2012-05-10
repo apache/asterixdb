@@ -12,11 +12,13 @@ public class AsterixStorageManagerInterface implements IStorageManagerInterface 
 
     @Override
     public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
-        return AsterixAppRuntimeContext.getInstance().getBufferCache();
+        return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                .getBufferCache();
     }
 
     @Override
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
-        return AsterixAppRuntimeContext.getInstance().getFileMapManager();
+        return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                .getFileMapManager();
     }
 }

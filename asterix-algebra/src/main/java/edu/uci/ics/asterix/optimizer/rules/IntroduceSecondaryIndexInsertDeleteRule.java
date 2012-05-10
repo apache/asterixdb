@@ -65,20 +65,21 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         FunctionIdentifier fid = null;
         AbstractLogicalOperator op2 = op1;
         List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
+        // Find assign op that creates record to be inserted/deleted.
         while (fid != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
-            if (op2.getInputs().size() == 0)
+            if (op2.getInputs().size() == 0) {
                 return false;
+            }
             op2 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
             if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
                 continue;
-            } else {
-                AssignOperator assignOp = (AssignOperator) op2;
-                ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
-                if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
-                            .get(0).getValue();
-                    fid = funcExpr.getFunctionIdentifier();
-                }
+            }
+            AssignOperator assignOp = (AssignOperator) op2;
+            ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
+            if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
+                        .get(0).getValue();
+                fid = funcExpr.getFunctionIdentifier();
             }
         }
         AssignOperator assignOp2 = (AssignOperator) op2;
@@ -92,12 +93,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         if (adecl == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        if (adecl.getDatasetType() == DatasetType.EXTERNAL)
+        if (adecl.getDatasetType() == DatasetType.EXTERNAL) {
             return false;
+        }
 
         List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getUsedVariables(op1, projectVars);
-        // create operators for secondary index insert
+        // Create operators for secondary index insert/delete.
         String itemTypeName = adecl.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
@@ -105,8 +107,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
         ARecordType recType = (ARecordType) itemType;
         List<AqlCompiledIndexDecl> secondaryIndexes = DatasetUtils.getSecondaryIndexes(adecl);
-        if (secondaryIndexes.size() <= 0)
+        if (secondaryIndexes.isEmpty()) {
             return false;
+        }
         ILogicalOperator currentTop = op1;
         for (AqlCompiledIndexDecl index : secondaryIndexes) {
             List<String> secondaryKeyFields = index.getFieldExprs();
@@ -118,9 +121,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         new VariableReferenceExpression(recordVar.get(0)));
                 String[] fieldNames = recType.getFieldNames();
                 int pos = -1;
-                for (int j = 0; j < fieldNames.length; j++)
-                    if (fieldNames[j].equals(secondaryKey))
+                for (int j = 0; j < fieldNames.length; j++) {
+                    if (fieldNames[j].equals(secondaryKey)) {
                         pos = j;
+                        break;
+                    }
+                }
+                // Assumes the indexed field is in the closed portion of the type.
                 Mutable<ILogicalExpression> indexRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
                         new AsterixConstantValue(new AInt32(pos))));
                 AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
@@ -133,9 +140,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             AssignOperator assign = new AssignOperator(secondaryKeyVars, expressions);
             ProjectOperator project = new ProjectOperator(projectVars);
             if (index.getKind() == IndexKind.BTREE) {
-                for (LogicalVariable secondaryKeyVar : secondaryKeyVars)
+                for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
+                }
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, insertOp.getOperation());
@@ -171,9 +179,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                                     new AInt32(i)))));
                     keyExprList.add(new MutableObject<ILogicalExpression>(createMBR));
                 }
-                for (LogicalVariable secondaryKeyVar : keyVarList)
+                for (LogicalVariable secondaryKeyVar : keyVarList) {
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
+                }
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, insertOp.getOperation());
