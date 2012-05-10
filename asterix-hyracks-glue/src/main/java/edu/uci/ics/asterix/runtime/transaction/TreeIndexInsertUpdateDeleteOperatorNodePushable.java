@@ -179,7 +179,20 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void fail() throws HyracksDataException {
-        writer.fail();
+        try {
+        	writer.fail();
+        } finally {
+        	txnContext.addCloseableResource(new ICloseable() {
+                @Override
+                public void close(TransactionContext txnContext) throws ACIDException {
+                    try {
+                        treeIndexHelper.deinit();
+                    } catch (Exception e) {
+                        throw new ACIDException(txnContext, "could not de-initialize " + treeIndexHelper, e);
+                    }
+                }
+            });
+        }
     }
 
 }
