@@ -2,9 +2,10 @@ package edu.uci.ics.asterix.test.runtime;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +54,7 @@ public class RuntimeTest {
         ArrayList<String> list = new ArrayList<String>();
         BufferedReader result;
         try {
-            result = new BufferedReader(new FileReader(PATH_BASE + fileName));
+            result = new BufferedReader(new InputStreamReader(new FileInputStream(PATH_BASE + fileName), "UTF-8"));
             while (true) {
                 String line = result.readLine();
                 if (line == null) {
@@ -86,7 +87,9 @@ public class RuntimeTest {
         lsn.deleteOnExit();
 
         AsterixHyracksIntegrationUtil.init();
-        HDFSCluster.getInstance().setup();
+
+	// TODO: Uncomment when hadoop version is upgraded and adapters are ported
+        //HDFSCluster.getInstance().setup();
     }
 
     @AfterClass
@@ -108,7 +111,8 @@ public class RuntimeTest {
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
         
-        HDFSCluster.getInstance().cleanup();
+	// TODO: Uncomment when hadoop version is upgraded and adapters are ported
+        //HDFSCluster.getInstance().cleanup();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {

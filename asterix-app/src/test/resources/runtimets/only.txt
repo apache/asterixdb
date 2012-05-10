@@ -1,0 +1,1 @@
+dml/insert-into-empty-dataset-with-index_01.aql
