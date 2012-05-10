@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.transaction;
+package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
-import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -121,9 +114,9 @@ public class TreeLogger implements ILogger, ICloseable {
         public static final byte DELETE = 1;
     }
 
-    public TreeLogger(byte[] resourceIdBytes) {
+    public TreeLogger(byte[] resourceIdBytes, ITreeIndex treeIndex) {
         this.resourceIdBytes = resourceIdBytes;
-        treeIndex = (ITreeIndex) TransactionalResourceRepository.getTransactionalResource(resourceIdBytes);
+        this.treeIndex = treeIndex;
         treeIndexTupleWriter = treeIndex.getLeafFrameFactory().getTupleWriterFactory().createTupleWriter();
         this.resourceIdLengthBytes = DataUtil.intToByteArray(resourceIdBytes.length);
     }

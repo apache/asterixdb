@@ -110,7 +110,7 @@ public class RecoveryManager implements IRecoveryManager {
                     break;
                 }
                 byte resourceMgrId = parser.getResourceMgrId(memLSN);
-                IResourceManager resourceMgr = TransactionalResourceRepository
+                IResourceManager resourceMgr = transactionProvider.getTransactionalResourceRepository()
                         .getTransactionalResourceMgr(resourceMgrId);
                 if (resourceMgr == null) {
                     throw new ACIDException("unknown resource mgr with id " + resourceMgrId);
@@ -217,7 +217,7 @@ public class RecoveryManager implements IRecoveryManager {
                     }
 
                     // look up the repository to get the resource manager
-                    IResourceManager resourceMgr = TransactionalResourceRepository
+                    IResourceManager resourceMgr = transactionProvider.getTransactionalResourceRepository()
                             .getTransactionalResourceMgr(resourceMgrId);
                     if (resourceMgr == null) {
                         throw new ACIDException(txnContext, " unknown resource manager " + resourceMgrId);

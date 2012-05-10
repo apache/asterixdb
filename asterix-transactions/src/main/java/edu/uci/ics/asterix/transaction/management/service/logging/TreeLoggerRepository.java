@@ -12,21 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.transaction;
+package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+
 public class TreeLoggerRepository {
 
-    private static final Map<ByteBuffer, TreeLogger> loggers = new HashMap<ByteBuffer, TreeLogger>();
+    private final Map<ByteBuffer, TreeLogger> loggers = new HashMap<ByteBuffer, TreeLogger>();
+    private final TransactionProvider provider;
 
-    public static synchronized TreeLogger getTreeLogger(byte[] resourceIdBytes) {
+    public TreeLoggerRepository(TransactionProvider provider) {
+        this.provider = provider;
+    }
+
+    public synchronized TreeLogger getTreeLogger(byte[] resourceIdBytes) {
         ByteBuffer resourceId = ByteBuffer.wrap(resourceIdBytes);
         TreeLogger logger = loggers.get(resourceId);
         if (logger == null) {
-            logger = new TreeLogger(resourceIdBytes);
+            ITreeIndex treeIndex = (ITreeIndex) provider.getTransactionalResourceRepository().getTransactionalResource(
+                    resourceIdBytes);
+            logger = new TreeLogger(resourceIdBytes, treeIndex);
             loggers.put(resourceId, logger);
         }
         return logger;
