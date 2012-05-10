@@ -8,6 +8,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -42,11 +43,8 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private IEvaluator eval = args[0].createEvaluator(outInput);
                     private int offset;
-                    private short hour, minute, second, msecond, year, month, day, timezoneHour, timezoneMinute, value;
-                    private byte timezonePart = 0;
-                    private boolean positive = true;
                     private String errorMessage = "This can not be an instance of datetime";
-                    private AMutableDateTime aDateTime = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    private AMutableDateTime aDateTime = new AMutableDateTime(0L);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
@@ -64,77 +62,8 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
                                 offset = 3;
-                                if (serString[offset] == '-') {
-                                    offset++;
-                                    positive = false;
-                                }
-
-                                if (serString[offset + 4] != '-' || serString[offset + 7] != '-')
-                                    throw new AlgebricksException(errorMessage);
-
-                                year = getValue(serString, offset, 4);
-                                month = getValue(serString, offset + 5, 2);
-                                day = getValue(serString, offset + 8, 2);
-
-                                if (year < 0 || year > 9999 || month < 0 || month > 12 || day < 0 || day > 31)
-                                    throw new AlgebricksException(errorMessage);
-
-                                if (!positive)
-                                    year *= -1;
-
-                                if (serString[offset + 10] != 'T')
-                                    throw new AlgebricksException(errorMessage);
-
-                                offset += 11;
-
-                                if (serString[offset + 2] != ':' || serString[offset + 5] != ':')
-                                    throw new AlgebricksException(errorMessage);
-
-                                hour = getValue(serString, offset, 2);
-                                minute = getValue(serString, offset + 3, 2);
-                                second = getValue(serString, offset + 6, 2);
-
-                                msecond = 0;
-                                if (serString[offset + 8] == ':') {
-                                    msecond = getValue(serString, offset + 9, 3);
-                                    if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59
-                                            || msecond < 0 || msecond > 999
-                                            || (hour == 24 && (minute != 0 || second != 0 || msecond != 0)))
-                                        throw new AlgebricksException(errorMessage);
-                                    offset += 12;
-                                } else {
-                                    if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59
-                                            || (hour == 24 && (minute != 0 || second != 0)))
-                                        throw new AlgebricksException(errorMessage);
-                                    offset += 8;
-                                }
-
-                                if (outInput.getLength() > offset) {
-                                    if (serString[offset] == 'Z')
-                                        timezonePart = 0;
-                                    else {
-                                        if ((serString[offset] != '+' && serString[offset] != '-')
-                                                || (serString[offset + 3] != ':'))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        timezoneHour = getValue(serString, offset + 1, 2);
-                                        timezoneMinute = getValue(serString, offset + 4, 2);
-
-                                        if (timezoneHour < 0
-                                                || timezoneHour > 24
-                                                || (timezoneHour == 24 && timezoneMinute != 0)
-                                                || (timezoneMinute != 0 && timezoneMinute != 15 && timezoneMinute != 30 && timezoneMinute != 45))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        if (serString[offset] == '-')
-                                            timezonePart = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                                        else
-                                            timezonePart = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                                    }
-
-                                }
-
-                                aDateTime.setValue(year, month, day, hour, minute, second, msecond, 0, timezonePart);
+                                GregorianCalendarSystem.getInstance().parseStringForADatetime(serString, offset,
+                                        aDateTime);
                                 datetimeSerde.serialize(aDateTime, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
@@ -143,18 +72,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         }
-                    }
-
-                    private short getValue(byte[] b, int offset, int numberOfDigits) throws AlgebricksException {
-                        value = 0;
-                        for (int i = 0; i < numberOfDigits; i++) {
-                            if ((b[offset] >= '0' && b[offset] <= '9'))
-                                value = (short) (value * 10 + b[offset++] - '0');
-                            else
-                                throw new AlgebricksException(errorMessage);
-
-                        }
-                        return value;
                     }
                 };
             }
