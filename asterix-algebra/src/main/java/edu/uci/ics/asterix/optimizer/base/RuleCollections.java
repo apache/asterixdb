@@ -15,6 +15,7 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineAssignIntoAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceBTreeIndexSearchRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceCastRecordRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceRTreeIndexSearchRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -82,6 +83,7 @@ public final class RuleCollections {
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());
         normalization.add(new TopDownTypeInferenceRule());
+        normalization.add(new IntroduceCastRecordRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());

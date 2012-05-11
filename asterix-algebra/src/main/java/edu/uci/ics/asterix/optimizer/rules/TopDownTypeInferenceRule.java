@@ -36,8 +36,8 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         /**
-         * pattern match: sink/insert/assign
-         * record type is propagated from insert data source to the record-constructor expression
+         * pattern match: sink/insert/assign record type is propagated from
+         * insert data source to the record-constructor expression
          */
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
@@ -93,7 +93,8 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
                         ILogicalExpression expr = expressionPointers.get(position).getValue();
                         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                             ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
-                            changed = TypeComputerUtilities.setRequiredType(funcExpr, requiredRecordType);
+                            changed = TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType,
+                                    inputRecordType);
                             List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
                             int openPartStart = requiredRecordType.getFieldTypes().length * 2;
                             for (int j = openPartStart; j < args.size(); j++) {
@@ -104,6 +105,7 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
                                 }
                             }
                         }
+                        context.computeAndSetTypeEnvironmentForOperator(originalAssign);
                     }
                 }
                 if (currentOperator.getInputs().size() > 0)

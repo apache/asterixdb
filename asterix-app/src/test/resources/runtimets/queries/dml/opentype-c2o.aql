@@ -1,0 +1,44 @@
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype as closed {
+  id: string,
+  name: string,
+  hobby: string
+}
+
+create type testtype2 as open {
+  id: string
+}
+
+create dataset testds(testtype) partitioned by key id;
+
+create dataset testds2(testtype2) partitioned by key id;
+ 
+insert into dataset testds (
+{ "id": "001", "name": "Person Three", "hobby": "music"}
+);
+
+insert into dataset testds (
+{ "id": "002", "name": "Person One", "hobby": "sports"}
+);
+
+insert into dataset testds (
+{ "id": "003", "name": "Person Two", "hobby": "movie"}
+);
+
+insert into dataset testds (
+{ "id": "004", "name": "Person Four", "hobby": "swimming"}
+);
+ 
+insert into dataset testds2 (
+ for $d in dataset("testds") 
+	return $d
+);
+
+write output to nc1:"rttest/dml_opentype-c2o.adm";
+
+for $d in dataset("testds2") 
+order by $d.id
+return $d

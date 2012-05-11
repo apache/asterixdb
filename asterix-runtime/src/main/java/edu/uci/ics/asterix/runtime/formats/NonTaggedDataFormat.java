@@ -32,6 +32,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.FunctionManagerHolder;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionManager;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -76,6 +77,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.AStringConstructorDes
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.CastRecordDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.ClosedRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.ContainsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
@@ -311,6 +313,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(new SwitchCaseDescriptor());
         temp.add(new RegExpDescriptor());
         temp.add(new InjectFailureDescriptor());
+        temp.add(new CastRecordDescriptor());
 
         IFunctionManager mgr = new FunctionManagerImpl();
         for (IFunctionDescriptor fd : temp) {
@@ -362,8 +365,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(), abvs
-                        .getLength()));
+                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(),
+                        abvs.getLength()));
                 IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
                 return evalFactory;
@@ -388,8 +391,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
-        IEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getBytes(), abvs1
-                .getLength()));
+        IEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getBytes(),
+                abvs1.getLength()));
 
         for (int i = 0; i < numOfFields; i++) {
             ArrayBackedValueStorage abvs2 = new ArrayBackedValueStorage();
@@ -400,8 +403,8 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getBytes(), abvs2
-                    .getLength()));
+            IEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getBytes(),
+                    abvs2.getLength()));
 
             evalFactories[i] = new CreateMBREvalFactory(evalFactory, dimensionEvalFactory, coordinateEvalFactory);
         }
@@ -427,8 +430,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(), abvs
-                        .getLength()));
+                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(),
+                        abvs.getLength()));
                 IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
                 IFunctionInfo finfoAccess = AsterixBuiltinFunctions
@@ -469,10 +472,15 @@ public class NonTaggedDataFormat implements IDataFormat {
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
             }
         }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
+            ARecordType rt = (ARecordType) TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) expr);
+            ARecordType it = (ARecordType) TypeComputerUtilities.getInputType((AbstractFunctionCallExpression) expr);
+            ((CastRecordDescriptor) fd).reset(rt, it);
+        }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
             ARecordType rt = (ARecordType) context.getType(expr);
-            ((OpenRecordConstructorDescriptor) fd).reset(rt, computeOpenFields((AbstractFunctionCallExpression) expr,
-                    rt));
+            ((OpenRecordConstructorDescriptor) fd).reset(rt,
+                    computeOpenFields((AbstractFunctionCallExpression) expr, rt));
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             ((ClosedRecordConstructorDescriptor) fd).reset((ARecordType) context.getType(expr));
