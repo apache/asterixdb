@@ -40,6 +40,6 @@ insert into dataset testds2 (
 
 write output to nc1:"rttest/dml_opentype-o2c.adm";
 
-for $d in dataset("testds") 
+for $d in dataset("testds2") 
 order by $d.id
 return $d
