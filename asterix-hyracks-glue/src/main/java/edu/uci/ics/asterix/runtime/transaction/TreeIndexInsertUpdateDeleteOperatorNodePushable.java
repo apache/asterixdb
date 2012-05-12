@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -51,6 +52,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private final IRecordDescriptorProvider recordDescProvider;
     private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+    private FrameTupleReference frameTuple;
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
     private ILockManager lockManager;
@@ -73,10 +75,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
         this.txnContext = txnContext;
-        ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
-        if (tupleFilterFactory != null) {
-            tupleFilter = tupleFilterFactory.createTupleFilter();
-        }
         AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         transactionProvider = runtimeContext.getTransactionProvider();
@@ -109,6 +107,11 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
             treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             indexAccessor = treeIndex.createAccessor();
+            ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
+            if (tupleFilterFactory != null) {
+                tupleFilter = tupleFilterFactory.createTupleFilter();
+                frameTuple = new FrameTupleReference();
+            }
             initializeTransactionSupport();
         } catch (Exception e) {
             // cleanup in case of failure
@@ -125,11 +128,14 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         byte[] resourceId = DataUtil.intToByteArray(fileId);
         int tupleCount = accessor.getTupleCount();
         try {
-            for (int i = 0; i < tupleCount; i++) {
-                tuple.reset(accessor, i);
-                if (tupleFilter != null && !tupleFilter.accept(tuple)) {
-                    continue;
+            for (int i = 0; i < tupleCount; i++) {                
+                if (tupleFilter != null) {
+                    frameTuple.reset(accessor, i);
+                    if (!tupleFilter.accept(frameTuple)) {
+                        continue;
+                    }
                 }
+                tuple.reset(accessor, i);
                 switch (op) {
                     case INSERT: {
                         lockManager.lock(txnContext, resourceId,

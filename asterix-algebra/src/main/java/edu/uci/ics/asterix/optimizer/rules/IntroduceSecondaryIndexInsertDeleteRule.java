@@ -222,7 +222,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             filterExpressions.add(new MutableObject<ILogicalExpression>(notFuncExpr));
         }
         Mutable<ILogicalExpression> filterExpression = null;
-        if (filterExpressions.size() > 0) {
+        if (filterExpressions.size() > 1) {
             filterExpression = new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.AND), filterExpressions));
         } else {
