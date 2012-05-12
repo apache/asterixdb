@@ -215,6 +215,9 @@ public class DdlTranslator extends AbstractAqlTranslator {
                     MetadataManager.INSTANCE.addDataset(mdTxnCtx,
                             new Dataset(compiledDeclarations.getDataverseName(), datasetName, itemTypeName,
                                     datasetDetails, dsType));
+                    if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
+                        runCreateDatasetJob(hcc, datasetName);
+                    }
                     break;
                 }
 
@@ -240,7 +243,8 @@ public class DdlTranslator extends AbstractAqlTranslator {
                         MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(compiledDeclarations.getDataverseName(),
                                 datasetName, indexName, stmtCreateIndex.getIndexType(),
                                 stmtCreateIndex.getFieldExprs(), false));
-                    }
+                        runCreateIndexJob(hcc, stmtCreateIndex);
+                    }                            
                     break;
                 }
                 case TYPE_DECL: {
@@ -475,6 +479,40 @@ public class DdlTranslator extends AbstractAqlTranslator {
         }
     }
 
+    private void runCreateDatasetJob(IHyracksClientConnection hcc, String datasetName) throws AsterixException,
+            AlgebricksException, Exception {
+        runJob(hcc, DatasetOperations.createDatasetJobSpec(datasetName, compiledDeclarations));
+    }
+    
+    private void runCreateIndexJob(IHyracksClientConnection hcc, CreateIndexStatement stmtCreateIndex) throws Exception {
+        JobSpecification spec = null;
+        switch (stmtCreateIndex.getIndexType()) {
+            case BTREE: {
+                spec = IndexOperations.buildBtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
+                        stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
+                        compiledDeclarations);
+                break;
+            }
+            case RTREE: {
+                spec = IndexOperations.buildRtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
+                        stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
+                        compiledDeclarations);
+                break;
+            }
+            default: {
+                throw new AsterixException("Create index not implemented for index type: "
+                        + stmtCreateIndex.getIndexType());
+            }
+        }
+		if (spec == null) {
+			throw new AsterixException(
+					"Failed to create job spec for creating index '"
+							+ stmtCreateIndex.getDatasetName() + "."
+							+ stmtCreateIndex.getIndexName() + "'");
+		}
+		runJob(hcc, spec);
+    }
+	
     private void compileDatasetDropStatement(IHyracksClientConnection hcc, MetadataTransactionContext mdTxnCtx,
             String datasetName) throws Exception {
         CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(datasetName);
@@ -495,7 +533,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
     private void compileIndexDropStatement(IHyracksClientConnection hcc, MetadataTransactionContext mdTxnCtx,
             String datasetName, String indexName) throws Exception {
         CompiledIndexDropStatement cds = new CompiledIndexDropStatement(datasetName, indexName);
-        runJob(hcc, IndexOperations.createSecondaryIndexDropJobSpec(cds, compiledDeclarations));
+        runJob(hcc, IndexOperations.buildDropSecondaryIndexJobSpec(cds, compiledDeclarations));
         MetadataManager.INSTANCE.dropIndex(mdTxnCtx, compiledDeclarations.getDataverseName(), datasetName, indexName);
     }
 

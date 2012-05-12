@@ -233,7 +233,7 @@ public class APIFramework {
                     }
                     case CREATE_INDEX: {
                         CompiledCreateIndexStatement cis = (CompiledCreateIndexStatement) stmt;
-                        JobSpecification jobSpec = IndexOperations.buildCreateIndexJobSpec(cis, metadata);
+                        JobSpecification jobSpec = IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, metadata);
                         dmlJobs.add(new Job(jobSpec));
                         break;
                     }

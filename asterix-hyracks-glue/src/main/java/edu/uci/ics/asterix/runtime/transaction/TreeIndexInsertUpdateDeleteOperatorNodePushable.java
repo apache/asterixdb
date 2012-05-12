@@ -36,7 +36,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
@@ -63,12 +62,11 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
      * been introduced.
      */
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
-            AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, int[] fieldPermutation,
+            AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         boolean createIfNotExists = (op == IndexOp.INSERT);
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+                opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -103,7 +101,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
         writer.open();
         try {
-            treeIndexHelper.init();
+            treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             indexAccessor = treeIndex.createAccessor();
             initializeTransactionSupport();
@@ -181,7 +179,20 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void fail() throws HyracksDataException {
-        writer.fail();
+        try {
+        	writer.fail();
+        } finally {
+        	txnContext.addCloseableResource(new ICloseable() {
+                @Override
+                public void close(TransactionContext txnContext) throws ACIDException {
+                    try {
+                        treeIndexHelper.deinit();
+                    } catch (Exception e) {
+                        throw new ACIDException(txnContext, "could not de-initialize " + treeIndexHelper, e);
+                    }
+                }
+            });
+        }
     }
 
 }

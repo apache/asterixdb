@@ -56,6 +56,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
@@ -68,20 +69,20 @@ public class IndexOperations {
     private static final PhysicalOptimizationConfig physicalOptimizationConfig = OptimizationConfUtil
             .getPhysicalOptimizationConfig();
 
-    public static JobSpecification buildCreateIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AsterixException, AlgebricksException {
 
         switch (createIndexStmt.getIndexType()) {
             case BTREE: {
-                return createBtreeIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildBtreeLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case RTREE: {
-                return createRtreeIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildRtreeLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case KEYWORD: {
-                return createKeywordIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildInvertedIndexLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case QGRAM: {
@@ -95,8 +96,8 @@ public class IndexOperations {
 
         }
     }
-
-    public static JobSpecification createSecondaryIndexDropJobSpec(CompiledIndexDropStatement deleteStmt,
+    
+    public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement deleteStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AlgebricksException, MetadataException {
         String datasetName = deleteStmt.getDatasetName();
         String indexName = deleteStmt.getIndexName();
@@ -116,8 +117,69 @@ public class IndexOperations {
         return spec;
     }
 
+    // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
+    public static JobSpecification buildBtreeCreationJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
+            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+        JobSpecification spec = new JobSpecification();
+
+        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
+        if (compiledDatasetDecl == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName);
+        }
+        ARecordType itemType = (ARecordType) metadata.findType(compiledDatasetDecl.getItemTypeName());
+        if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL) {
+            throw new AsterixException("Cannot index an external dataset (" + datasetName + ").");
+        }
+        AqlCompiledDatasetDecl srcCompiledDatasetDecl = compiledDatasetDecl;
+        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(compiledDatasetDecl).size();
+        IIndexRegistryProvider<IIndex> indexRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
+        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
+        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
+        ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
+        int i = 0;
+        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+                .getPartitioningFunctions(srcCompiledDatasetDecl);
+        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
+            IAType keyType = evalFactoryAndType.third;
+            primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    keyType, true);
+            primaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            ++i;
+        }
+        primaryTypeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
+        int numSecondaryKeys = secondaryKeyFields.size();
+        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[numSecondaryKeys];
+        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys
+                + numPrimaryKeys];
+        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
+        for (i = 0; i < numSecondaryKeys; i++) {
+            evalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType, secondaryKeyFields.get(i),
+                    numPrimaryKeys);
+            IAType keyType = AqlCompiledIndexDecl.keyFieldType(secondaryKeyFields.get(i), itemType);
+            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    keyType, true);
+            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+        }
+        // fill in serializers and comparators for primary index fields
+        for (i = 0; i < numPrimaryKeys; i++) {
+            secondaryComparatorFactories[numSecondaryKeys + i] = primaryComparatorFactories[i];
+            secondaryTypeTraits[numSecondaryKeys + i] = primaryTypeTraits[i];
+        }
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, secondaryIndexName);
+        TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
+                storageManager, indexRegistryProvider, secondarySplitsAndConstraint.first, secondaryTypeTraits,
+                secondaryComparatorFactories, new BTreeDataflowHelperFactory(),
+                NoOpOperationCallbackProvider.INSTANCE);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
+                secondarySplitsAndConstraint.second);
+        spec.addRoot(secondaryIndexCreateOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        return spec;
+    }
+    
     @SuppressWarnings("unchecked")
-    public static JobSpecification createBtreeIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildBtreeLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
@@ -319,8 +381,77 @@ public class IndexOperations {
 
     }
 
+    // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
+    public static JobSpecification buildRtreeCreationJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
+            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+        JobSpecification spec = new JobSpecification();
+        String primaryIndexName = datasetName;
+        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(primaryIndexName);
+        if (compiledDatasetDecl == null) {
+            throw new AsterixException("Could not find dataset " + primaryIndexName);
+        }
+        ARecordType itemType = (ARecordType) metadata.findType(compiledDatasetDecl.getItemTypeName());
+        if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL) {
+            throw new AsterixException("Cannot index an external dataset (" + primaryIndexName + ").");
+        }
+        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(compiledDatasetDecl).size();
+        IIndexRegistryProvider<IIndex> indexRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
+        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
+        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
+        ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
+        int i = 0;
+        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
+                .getPartitioningFunctions(compiledDatasetDecl)) {
+            IAType keyType = evalFactoryAndType.third;
+            primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    keyType, true);
+            primaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            ++i;
+        }
+        primaryTypeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
+        int numSecondaryKeys = secondaryKeyFields.size();
+        if (numSecondaryKeys != 1) {
+            throw new AsterixException(
+                    "Cannot use "
+                            + numSecondaryKeys
+                            + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
+        }
+        IAType spatialType = AqlCompiledIndexDecl.keyFieldType(secondaryKeyFields.get(0), itemType);
+        if (spatialType == null) {
+            throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
+        }
+        int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
+        int numNestedSecondaryKeyFields = dimension * 2;
+        IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
+        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numNestedSecondaryKeyFields + numPrimaryKeys];
+        IPrimitiveValueProviderFactory[] valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
+        IAType keyType = AqlCompiledIndexDecl.keyFieldType(secondaryKeyFields.get(0), itemType);
+        IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
+        for (i = 0; i < numNestedSecondaryKeyFields; i++) {
+            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    nestedKeyType, true);
+            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+            valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
+        }
+        // fill in serializers and comparators for primary index fields
+        for (i = 0; i < numPrimaryKeys; i++) {
+            secondaryTypeTraits[numNestedSecondaryKeyFields + i] = primaryTypeTraits[i];
+        }
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, secondaryIndexName);
+        TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
+                storageManager, indexRegistryProvider, secondarySplitsAndConstraint.first, secondaryTypeTraits,
+                secondaryComparatorFactories, new RTreeDataflowHelperFactory(valueProviderFactories),
+                NoOpOperationCallbackProvider.INSTANCE);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
+                secondarySplitsAndConstraint.second);
+        spec.addRoot(secondaryIndexCreateOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        return spec;
+    }
+    
     @SuppressWarnings("unchecked")
-    public static JobSpecification createRtreeIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildRtreeLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
@@ -527,7 +658,7 @@ public class IndexOperations {
     }
 
     @SuppressWarnings("unchecked")
-    public static JobSpecification createKeywordIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildInvertedIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
