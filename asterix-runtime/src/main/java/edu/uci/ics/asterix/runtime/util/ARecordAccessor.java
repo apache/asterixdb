@@ -37,7 +37,7 @@ public class ARecordAccessor implements IValueReference {
     private int offsetArrayOffset;
     private int[] fieldOffsets;
     private int fieldCursor = -1;
-    private ATypeTag typeTag = ATypeTag.ANY;
+    private ATypeTag typeTag;
     private SimpleValueReference nullReference = new SimpleValueReference();
 
     private byte[] data;
@@ -149,24 +149,23 @@ public class ARecordAccessor implements IValueReference {
                         }
                     }
                     IAType[] fieldTypes = inputRecType.getFieldTypes();
-                    ATypeTag tag = ATypeTag.ANY;
                     int fieldValueLength = 0;
 
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
                         if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
-                            tag = ((AUnionType) fieldTypes[fieldNumber]).getUnionList()
+                            typeTag = ((AUnionType) fieldTypes[fieldNumber]).getUnionList()
                                     .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
-                                    tag, false);
+                                    typeTag, false);
                         }
                     } else {
-                        tag = fieldTypes[fieldNumber].getTypeTag();
-                        fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber], tag,
-                                false);
+                        typeTag = fieldTypes[fieldNumber].getTypeTag();
+                        fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
+                                typeTag, false);
                     }
                     // set field value (including the type tag)
                     int fstart = dataBos.size();
-                    dataDos.writeByte(tag.serialize());
+                    dataDos.writeByte(typeTag.serialize());
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
                     nextFieldValue().reset(dataBuffer, fstart, fend - fstart);
@@ -193,7 +192,7 @@ public class ARecordAccessor implements IValueReference {
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
 
                     // set the field value (already including type tag)
-                    fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true);
+                    fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
                     nextFieldValue().reset(b, fieldOffset, fieldValueLength);
                     fieldOffset += fieldValueLength;
                 }
