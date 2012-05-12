@@ -216,7 +216,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                             new Dataset(compiledDeclarations.getDataverseName(), datasetName, itemTypeName,
                                     datasetDetails, dsType));
                     if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
-                        compileDatasetDeclStatement(hcc, datasetName);
+                        runCreateDatasetJob(hcc, datasetName);
                     }
                     break;
                 }
@@ -243,7 +243,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                         MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(compiledDeclarations.getDataverseName(),
                                 datasetName, indexName, stmtCreateIndex.getIndexType(),
                                 stmtCreateIndex.getFieldExprs(), false));
-                        compileCreateIndexStatement(hcc, stmtCreateIndex);
+                        runCreateIndexJob(hcc, stmtCreateIndex);
                     }                            
                     break;
                 }
@@ -479,22 +479,22 @@ public class DdlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void compileDatasetDeclStatement(IHyracksClientConnection hcc, String datasetName) throws AsterixException,
+    private void runCreateDatasetJob(IHyracksClientConnection hcc, String datasetName) throws AsterixException,
             AlgebricksException, Exception {
         runJob(hcc, DatasetOperations.createDatasetJobSpec(datasetName, compiledDeclarations));
     }
     
-    private void compileCreateIndexStatement(IHyracksClientConnection hcc, CreateIndexStatement stmtCreateIndex) throws Exception {
+    private void runCreateIndexJob(IHyracksClientConnection hcc, CreateIndexStatement stmtCreateIndex) throws Exception {
         JobSpecification spec = null;
         switch (stmtCreateIndex.getIndexType()) {
             case BTREE: {
-                spec = IndexOperations.createBtreeIndexJobSpec(stmtCreateIndex.getDatasetName().getValue(),
+                spec = IndexOperations.buildBtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
                         stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
                         compiledDeclarations);
                 break;
             }
             case RTREE: {
-                spec = IndexOperations.createRtreeIndexJobSpec(stmtCreateIndex.getDatasetName().getValue(),
+                spec = IndexOperations.buildRtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
                         stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
                         compiledDeclarations);
                 break;
@@ -504,9 +504,13 @@ public class DdlTranslator extends AbstractAqlTranslator {
                         + stmtCreateIndex.getIndexType());
             }
         }
-        if (spec != null) {
-            runJob(hcc, spec);
-        }
+		if (spec == null) {
+			throw new AsterixException(
+					"Failed to create job spec for creating index '"
+							+ stmtCreateIndex.getDatasetName() + "."
+							+ stmtCreateIndex.getIndexName() + "'");
+		}
+		runJob(hcc, spec);
     }
 	
     private void compileDatasetDropStatement(IHyracksClientConnection hcc, MetadataTransactionContext mdTxnCtx,
@@ -529,7 +533,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
     private void compileIndexDropStatement(IHyracksClientConnection hcc, MetadataTransactionContext mdTxnCtx,
             String datasetName, String indexName) throws Exception {
         CompiledIndexDropStatement cds = new CompiledIndexDropStatement(datasetName, indexName);
-        runJob(hcc, IndexOperations.createSecondaryIndexDropJobSpec(cds, compiledDeclarations));
+        runJob(hcc, IndexOperations.buildDropSecondaryIndexJobSpec(cds, compiledDeclarations));
         MetadataManager.INSTANCE.dropIndex(mdTxnCtx, compiledDeclarations.getDataverseName(), datasetName, indexName);
     }
 

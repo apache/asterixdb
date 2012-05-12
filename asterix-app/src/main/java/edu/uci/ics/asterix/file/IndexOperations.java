@@ -69,20 +69,20 @@ public class IndexOperations {
     private static final PhysicalOptimizationConfig physicalOptimizationConfig = OptimizationConfUtil
             .getPhysicalOptimizationConfig();
 
-    public static JobSpecification buildCreateIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AsterixException, AlgebricksException {
 
         switch (createIndexStmt.getIndexType()) {
             case BTREE: {
-                return loadBtreeIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildBtreeLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case RTREE: {
-                return loadRtreeIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildRtreeLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case KEYWORD: {
-                return loadKeywordIndexJobSpec(createIndexStmt, datasetDecls);
+                return buildInvertedIndexLoadingJobSpec(createIndexStmt, datasetDecls);
             }
 
             case QGRAM: {
@@ -97,7 +97,7 @@ public class IndexOperations {
         }
     }
     
-    public static JobSpecification createSecondaryIndexDropJobSpec(CompiledIndexDropStatement deleteStmt,
+    public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement deleteStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AlgebricksException, MetadataException {
         String datasetName = deleteStmt.getDatasetName();
         String indexName = deleteStmt.getIndexName();
@@ -118,7 +118,7 @@ public class IndexOperations {
     }
 
     // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
-    public static JobSpecification createBtreeIndexJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
+    public static JobSpecification buildBtreeCreationJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
 
@@ -179,7 +179,7 @@ public class IndexOperations {
     }
     
     @SuppressWarnings("unchecked")
-    public static JobSpecification loadBtreeIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildBtreeLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
@@ -382,7 +382,7 @@ public class IndexOperations {
     }
 
     // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
-    public static JobSpecification createRtreeIndexJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
+    public static JobSpecification buildRtreeCreationJobSpec(String datasetName, String secondaryIndexName, List<String> secondaryKeyFields,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
         String primaryIndexName = datasetName;
@@ -451,7 +451,7 @@ public class IndexOperations {
     }
     
     @SuppressWarnings("unchecked")
-    public static JobSpecification loadRtreeIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildRtreeLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
@@ -658,7 +658,7 @@ public class IndexOperations {
     }
 
     @SuppressWarnings("unchecked")
-    public static JobSpecification loadKeywordIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildInvertedIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = new JobSpecification();
