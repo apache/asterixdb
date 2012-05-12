@@ -26,13 +26,19 @@ public class IndexOperations {
     private static final PhysicalOptimizationConfig physicalOptimizationConfig = OptimizationConfUtil
             .getPhysicalOptimizationConfig();
 
-    public static JobSpecification buildCreateIndexJobSpec(CompiledCreateIndexStatement createIndexStmt,
+    public static JobSpecification buildSecondaryIndexCreationJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
-        SecondaryIndexCreator secondaryIndexCreator = SecondaryIndexCreator.createIndexCreator(createIndexStmt.getIndexType(), physicalOptimizationConfig);
-        return secondaryIndexCreator.createJobSpec(createIndexStmt, metadata);
+        SecondaryIndexCreator secondaryIndexCreator = SecondaryIndexCreator.createIndexCreator(createIndexStmt, metadata, physicalOptimizationConfig);
+        return secondaryIndexCreator.buildCreationJobSpec();
     }
-
-    public static JobSpecification createSecondaryIndexDropJobSpec(CompiledIndexDropStatement deleteStmt,
+    
+    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
+            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+        SecondaryIndexCreator secondaryIndexCreator = SecondaryIndexCreator.createIndexCreator(createIndexStmt, metadata, physicalOptimizationConfig);
+        return secondaryIndexCreator.buildLoadingJobSpec();
+    }
+    
+    public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement deleteStmt,
             AqlCompiledMetadataDeclarations datasetDecls) throws AlgebricksException, MetadataException {
         String datasetName = deleteStmt.getDatasetName();
         String indexName = deleteStmt.getIndexName();

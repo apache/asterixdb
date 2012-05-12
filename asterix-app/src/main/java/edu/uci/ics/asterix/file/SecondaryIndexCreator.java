@@ -4,7 +4,6 @@ import java.io.DataOutput;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -68,6 +67,8 @@ public abstract class SecondaryIndexCreator {
     protected ISerializerDeserializer payloadSerde;
     protected IFileSplitProvider primaryFileSplitProvider;
     protected AlgebricksPartitionConstraint primaryPartitionConstraint;
+    protected IFileSplitProvider secondaryFileSplitProvider;
+    protected AlgebricksPartitionConstraint secondaryPartitionConstraint;
     protected String secondaryIndexName;
     protected boolean anySecondaryKeyIsNullable = false;
 
@@ -77,30 +78,37 @@ public abstract class SecondaryIndexCreator {
     protected RecordDescriptor secondaryRecDesc;
     protected IEvaluatorFactory[] evalFactories;
     
-    // Prevent public construction.
+    // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf) {
         this.physOptConf = physOptConf;
     }
 
-    public static SecondaryIndexCreator createIndexCreator(IndexType indexType, PhysicalOptimizationConfig physOptConf) throws AsterixException {
-        switch (indexType) {
+    public static SecondaryIndexCreator createIndexCreator(CompiledCreateIndexStatement createIndexStmt, AqlCompiledMetadataDeclarations metadata, PhysicalOptimizationConfig physOptConf) throws AsterixException, AlgebricksException {
+        SecondaryIndexCreator indexCreator = null;
+        switch (createIndexStmt.getIndexType()) {
             case BTREE: {
-                return new SecondaryBTreeCreator(physOptConf);
+                indexCreator = new SecondaryBTreeCreator(physOptConf);
+                break;
             }
             case RTREE: {
-                return new SecondaryRTreeCreator(physOptConf);
+                indexCreator = new SecondaryRTreeCreator(physOptConf);
+                break;
             }
             case KEYWORD: {
-                return new SecondaryInvertedIndexCreator(physOptConf);
+                indexCreator = new SecondaryInvertedIndexCreator(physOptConf);
+                break;
             }
             default: {
-                throw new AsterixException("Unknown Index Type: " + indexType);
+                throw new AsterixException("Unknown Index Type: " + createIndexStmt.getIndexType());
             }
         }
+        indexCreator.init(createIndexStmt, metadata);
+        return indexCreator;
     }
     
-    public abstract JobSpecification createJobSpec(CompiledCreateIndexStatement createIndexStmt,
-            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException;
+    public abstract JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException;
+    
+    public abstract JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException;
     
     protected void init(CompiledCreateIndexStatement createIndexStmt, AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         this.metadata = metadata;
@@ -118,10 +126,14 @@ public abstract class SecondaryIndexCreator {
                 .getSerializerDeserializer(itemType);
         numPrimaryKeys = DatasetUtils.getPartitioningFunctions(datasetDecl).size();
         numSecondaryKeys = createIndexStmt.getKeyFields().size();
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndConstraint = metadata
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
-        primaryFileSplitProvider = splitProviderAndConstraint.first;
-        primaryPartitionConstraint = splitProviderAndConstraint.second;
+        primaryFileSplitProvider = primarySplitsAndConstraint.first;
+        primaryPartitionConstraint = primarySplitsAndConstraint.second;
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, secondaryIndexName);
+        secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
+        secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         // Must be called in this order.
         setPrimaryRecDescAndComparators();
         setSecondaryRecDescAndComparators(createIndexStmt.getKeyFields());
