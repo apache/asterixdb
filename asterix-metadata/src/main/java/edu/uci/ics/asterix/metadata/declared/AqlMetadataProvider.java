@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -756,7 +757,7 @@ public class AqlMetadataProvider implements
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, IndexOp.INSERT,
 				new BTreeDataflowHelperFactory(),
-				NoOpOperationCallbackProvider.INSTANCE, txnId);
+				null, NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -814,17 +815,18 @@ public class AqlMetadataProvider implements
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, IndexOp.DELETE,
 				new BTreeDataflowHelperFactory(),
-				NoOpOperationCallbackProvider.INSTANCE, txnId);
+				null, NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
 
 	@Override
+	// TODO: Use filterExpr.
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
 			IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
 			IOperatorSchema propagatedSchema,
 			List<LogicalVariable> primaryKeys,
-			List<LogicalVariable> secondaryKeys, RecordDescriptor recordDesc,
+			List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
 			JobGenContext context, JobSpecification spec)
 			throws AlgebricksException {
 		String indexName = dataSourceIndex.getId();
@@ -849,11 +851,12 @@ public class AqlMetadataProvider implements
 	}
 
 	@Override
+	// TODO: Use filterExpr.
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
 			IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
 			IOperatorSchema propagatedSchema,
 			List<LogicalVariable> primaryKeys,
-			List<LogicalVariable> secondaryKeys, RecordDescriptor recordDesc,
+			List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
 			JobGenContext context, JobSpecification spec)
 			throws AlgebricksException {
 		String indexName = dataSourceIndex.getId();
@@ -953,7 +956,7 @@ public class AqlMetadataProvider implements
 				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, indexOp, new BTreeDataflowHelperFactory(),
-				NoOpOperationCallbackProvider.INSTANCE, txnId);
+				null, NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				btreeBulkLoad, splitsAndConstraint.second);
 	}
@@ -1040,7 +1043,7 @@ public class AqlMetadataProvider implements
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, indexOp, new RTreeDataflowHelperFactory(
 						valueProviderFactories),
-				NoOpOperationCallbackProvider.INSTANCE, txnId);
+				null, NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				rtreeUpdate, splitsAndConstraint.second);
 	}

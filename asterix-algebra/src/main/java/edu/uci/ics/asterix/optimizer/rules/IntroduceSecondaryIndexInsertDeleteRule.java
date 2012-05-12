@@ -144,9 +144,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
                 }
+                Mutable<ILogicalExpression> filterExpression = createFilterExpression(secondaryKeyVars);
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
-                        insertOp.getPrimaryKeyExpressions(), secondaryExpressions, insertOp.getOperation());
+                        insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
+                        insertOp.getOperation());
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                 assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
                 project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
@@ -183,9 +185,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
                 }
+                Mutable<ILogicalExpression> filterExpression = createFilterExpression(keyVarList);
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
-                        insertOp.getPrimaryKeyExpressions(), secondaryExpressions, insertOp.getOperation());
+                        insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
+                        insertOp.getOperation());
                 AssignOperator assignCoordinates = new AssignOperator(keyVarList, keyExprList);
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
                 assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assign));
@@ -204,6 +208,29 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return true;
     }
 
+    // TODO: Return null here for non-nullable fields.
+    private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars) {
+        List<Mutable<ILogicalExpression>> filterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+        for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
+            // Add 'is not null' to all secondary index keys as a filtering condition.
+            ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL),
+                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
+            ScalarFunctionCallExpression notFuncExpr = new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT),
+                    new MutableObject<ILogicalExpression>(isNullFuncExpr));                    
+            filterExpressions.add(new MutableObject<ILogicalExpression>(notFuncExpr));
+        }
+        Mutable<ILogicalExpression> filterExpression = null;
+        if (filterExpressions.size() > 0) {
+            filterExpression = new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.AND), filterExpressions));
+        } else {
+            filterExpression = filterExpressions.get(0);
+        }
+        return filterExpression;
+    }
+    
     public static IAType keyFieldType(String expr, ARecordType recType) throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
