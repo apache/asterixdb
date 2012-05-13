@@ -1010,8 +1010,9 @@ public class AqlMetadataProvider implements
 		AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(
 				compiledDatasetDecl, indexName);
 		List<String> secondaryKeyExprs = cid.getFieldExprs();
-		IAType spatialType = AqlCompiledIndexDecl.keyFieldType(
-				secondaryKeyExprs.get(0).toString(), recType);
+		Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
+				secondaryKeyExprs.get(0), recType);
+        IAType spatialType = keyPairType.first;
 		int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType
 				.getTypeTag());
 		int numSecondaryKeys = dimension * 2;
@@ -1068,8 +1069,8 @@ public class AqlMetadataProvider implements
 				appContext.getIndexRegistryProvider(),
 				splitsAndConstraint.first, typeTraits, comparatorFactories,
 				fieldPermutation, indexOp, new RTreeDataflowHelperFactory(
-						valueProviderFactories),
-				null, NoOpOperationCallbackProvider.INSTANCE, txnId);
+						valueProviderFactories), filterFactory,
+				NoOpOperationCallbackProvider.INSTANCE, txnId);
 		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(
 				rtreeUpdate, splitsAndConstraint.second);
 	}
