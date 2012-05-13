@@ -55,6 +55,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorD
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 
 @SuppressWarnings("rawtypes")
+// TODO: We should eventually have a hierarchy of classes that can create all possible index job specs, 
+// not just for creation.
 public abstract class SecondaryIndexCreator {
     protected final PhysicalOptimizationConfig physOptConf;
     

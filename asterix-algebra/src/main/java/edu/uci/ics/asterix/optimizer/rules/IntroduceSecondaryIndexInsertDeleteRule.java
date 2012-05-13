@@ -21,6 +21,7 @@ import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,6 +33,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -139,22 +141,23 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
             AssignOperator assign = new AssignOperator(secondaryKeyVars, expressions);
             ProjectOperator project = new ProjectOperator(projectVars);
+            assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+            project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+            context.computeAndSetTypeEnvironmentForOperator(project);
+            context.computeAndSetTypeEnvironmentForOperator(assign);
             if (index.getKind() == IndexKind.BTREE) {
                 for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
                 }
-                Mutable<ILogicalExpression> filterExpression = createFilterExpression(secondaryKeyVars);
+                Mutable<ILogicalExpression> filterExpression = createFilterExpression(secondaryKeyVars,
+                        context.getOutputTypeEnvironment(assign));
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
-                project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
                 currentTop = indexUpdate;
-                context.computeAndSetTypeEnvironmentForOperator(project);
-                context.computeAndSetTypeEnvironmentForOperator(assign);
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             } else if (index.getKind() == IndexKind.RTREE) {
                 IAType spatialType = null;
@@ -185,20 +188,17 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
                 }
-                Mutable<ILogicalExpression> filterExpression = createFilterExpression(keyVarList);
+                AssignOperator assignCoordinates = new AssignOperator(keyVarList, keyExprList);
+                assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                context.computeAndSetTypeEnvironmentForOperator(assignCoordinates);
+                Mutable<ILogicalExpression> filterExpression = createFilterExpression(keyVarList,
+                        context.getOutputTypeEnvironment(assignCoordinates));
                 AqlIndex dataSourceIndex = new AqlIndex(index, metadata, datasetName);
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
-                AssignOperator assignCoordinates = new AssignOperator(keyVarList, keyExprList);
-                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
-                assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
-                project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
-                currentTop = indexUpdate;
-                context.computeAndSetTypeEnvironmentForOperator(project);
-                context.computeAndSetTypeEnvironmentForOperator(assign);
-                context.computeAndSetTypeEnvironmentForOperator(assignCoordinates);
+                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));                
+                currentTop = indexUpdate;                
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             }
 
@@ -208,27 +208,44 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return true;
     }
 
-    // TODO: Return null here for non-nullable fields.
-    private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars) {
+    @SuppressWarnings("unchecked")
+    private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> filterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+        // Add 'is not null' to all nullable secondary index keys as a filtering condition.
         for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
-            // Add 'is not null' to all secondary index keys as a filtering condition.
+            IAType secondaryKeyType = (IAType) typeEnv.getVarType(secondaryKeyVar);
+            if (!isNullableType(secondaryKeyType)) {
+                continue;
+            }            
             ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
             ScalarFunctionCallExpression notFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT),
-                    new MutableObject<ILogicalExpression>(isNullFuncExpr));                    
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT), new MutableObject<ILogicalExpression>(
+                            isNullFuncExpr));
             filterExpressions.add(new MutableObject<ILogicalExpression>(notFuncExpr));
+        }
+        // No nullable secondary keys.
+        if (filterExpressions.isEmpty()) {
+            return null;
         }
         Mutable<ILogicalExpression> filterExpression = null;
         if (filterExpressions.size() > 1) {
+            // Create a conjunctive condition.
             filterExpression = new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.AND), filterExpressions));
         } else {
             filterExpression = filterExpressions.get(0);
         }
         return filterExpression;
+    }
+    
+    private boolean isNullableType(IAType type) {
+        if (type.getTypeTag() == ATypeTag.UNION) {
+            return ((AUnionType)type).isNullableType();
+        }
+        return false;
     }
     
     public static IAType keyFieldType(String expr, ARecordType recType) throws AlgebricksException {

@@ -824,7 +824,6 @@ public class AqlMetadataProvider implements
 	}
 
 	@Override
-	// TODO: Use filterExpr.
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
 			IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
 			IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
@@ -857,7 +856,6 @@ public class AqlMetadataProvider implements
 	}
 
 	@Override
-	// TODO: Use filterExpr.
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
 			IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
 			IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
@@ -893,6 +891,10 @@ public class AqlMetadataProvider implements
 			IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
 			ILogicalExpression filterExpr, JobGenContext context)
 			throws AlgebricksException {
+		// No filtering condition.
+		if (filterExpr == null) {
+			return null;
+		}
 		ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
 		IEvaluatorFactory filterEvalFactory = exprJobGen
 				.createEvaluatorFactory(filterExpr, typeEnv, inputSchemas,
