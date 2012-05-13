@@ -39,6 +39,9 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
          * pattern match: sink/insert/assign record type is propagated from
          * insert data source to the record-constructor expression
          */
+        if (context.checkIfInDontApplySet(this, opRef.getValue()))
+            return false;
+        context.addToDontApplySet(this, opRef.getValue());
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
             return false;
@@ -73,28 +76,30 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator currentOperator = oldAssignOperator;
         List<LogicalVariable> producedVariables = new ArrayList<LogicalVariable>();
         boolean changed = false;
-        if (!requiredRecordType.equals(inputRecordType)) {
-            /**
-             * find the assign operator for the "input record" to the
-             * insert_delete operator
-             */
-            do {
-                if (currentOperator.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                    producedVariables.clear();
-                    VariableUtilities.getProducedVariables(currentOperator, producedVariables);
-                    int position = producedVariables.indexOf(oldRecordVariable);
 
-                    /**
-                     * set the top-down propagated type
-                     */
-                    if (position >= 0) {
-                        AssignOperator originalAssign = (AssignOperator) currentOperator;
-                        List<Mutable<ILogicalExpression>> expressionPointers = originalAssign.getExpressions();
-                        ILogicalExpression expr = expressionPointers.get(position).getValue();
-                        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                            ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
-                            changed = TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType,
-                                    inputRecordType);
+        /**
+         * find the assign operator for the "input record" to the insert_delete
+         * operator
+         */
+        do {
+            if (currentOperator.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                producedVariables.clear();
+                VariableUtilities.getProducedVariables(currentOperator, producedVariables);
+                int position = producedVariables.indexOf(oldRecordVariable);
+
+                /**
+                 * set the top-down propagated type
+                 */
+                if (position >= 0) {
+                    AssignOperator originalAssign = (AssignOperator) currentOperator;
+                    List<Mutable<ILogicalExpression>> expressionPointers = originalAssign.getExpressions();
+                    ILogicalExpression expr = expressionPointers.get(position).getValue();
+                    if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
+                        changed = TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType,
+                                inputRecordType);
+                        changed &= !requiredRecordType.equals(inputRecordType);
+                        if (changed) {
                             List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
                             int openPartStart = requiredRecordType.getFieldTypes().length * 2;
                             for (int j = openPartStart; j < args.size(); j++) {
@@ -105,15 +110,15 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
                                 }
                             }
                         }
-                        context.computeAndSetTypeEnvironmentForOperator(originalAssign);
                     }
+                    context.computeAndSetTypeEnvironmentForOperator(originalAssign);
                 }
-                if (currentOperator.getInputs().size() > 0)
-                    currentOperator = (AbstractLogicalOperator) currentOperator.getInputs().get(0).getValue();
-                else
-                    break;
-            } while (currentOperator != null);
-        }
+            }
+            if (currentOperator.getInputs().size() > 0)
+                currentOperator = (AbstractLogicalOperator) currentOperator.getInputs().get(0).getValue();
+            else
+                break;
+        } while (currentOperator != null);
         return changed;
     }
 }

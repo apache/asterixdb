@@ -1,0 +1,20 @@
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype as open {
+  name: string,
+  id: string
+}
+
+create dataset testds(testtype) partitioned by key id;
+
+insert into dataset testds (
+{ "name": "Person One",  "id": "001"}
+);
+
+write output to nc1:"rttest/dml_opentype-noexpand.adm";
+
+for $d in dataset("testds") 
+order by $d.id
+return $d
