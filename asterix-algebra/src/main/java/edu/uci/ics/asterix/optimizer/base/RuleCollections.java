@@ -82,6 +82,9 @@ public final class RuleCollections {
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());
+
+        // TopdownTypeInferenceRule should go before IntroduceCastRecordRule to
+        // avoid unnecessary casting
         normalization.add(new TopDownTypeInferenceRule());
         normalization.add(new IntroduceCastRecordRule());
         normalization.add(new ConstantFoldingRule());

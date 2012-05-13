@@ -63,7 +63,13 @@ public class IntroduceCastRecordRule implements IAlgebraicRewriteRule {
 
         List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
         VariableUtilities.getUsedVariables(oldAssignOperator, usedVariables);
-        LogicalVariable inputRecordVar = usedVariables.get(0);
+        LogicalVariable inputRecordVar;
+        if (usedVariables.size() > 0) {
+            inputRecordVar = usedVariables.get(0);
+        } else {
+            VariableUtilities.getLiveVariables(oldAssignOperator, usedVariables);
+            inputRecordVar = usedVariables.get(0);
+        }
         IVariableTypeEnvironment env = oldAssignOperator.computeInputTypeEnvironment(context);
         ARecordType inputRecordType = (ARecordType) env.getVarType(inputRecordVar);
 
