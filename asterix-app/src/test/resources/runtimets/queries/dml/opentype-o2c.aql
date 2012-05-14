@@ -10,7 +10,7 @@ create type testtype as open {
 create type testtype2 as closed {
   id: string,
   name: string,
-  hobby: string
+  hobby: string?
 }
 
 create dataset testds(testtype) partitioned by key id;

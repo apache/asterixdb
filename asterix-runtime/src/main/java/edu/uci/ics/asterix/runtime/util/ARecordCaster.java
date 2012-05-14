@@ -22,6 +22,7 @@ public class ARecordCaster {
 
     // describe fields (open or not) in the input records
     private boolean[] openFields;
+    private boolean[] optionalFields;
 
     private List<SimpleValueReference> reqFieldNames = new ArrayList<SimpleValueReference>();
     private List<SimpleValueReference> reqFieldTypeTags = new ArrayList<SimpleValueReference>();
@@ -33,6 +34,7 @@ public class ARecordCaster {
 
     private RecordBuilder recBuilder = new RecordBuilder();
     private SimpleValueReference nullReference = new SimpleValueReference();
+    private SimpleValueReference nullTypeTag = new SimpleValueReference();
 
     public ARecordCaster() {
         try {
@@ -42,6 +44,10 @@ public class ARecordCaster {
             nullWriter.writeNull(dos);
             int end = bos.size();
             nullReference.reset(buffer, start, end - start);
+            start = bos.size();
+            dos.write(ATypeTag.NULL.serialize());
+            end = bos.size();
+            nullTypeTag.reset(buffer, start, end);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -81,6 +87,9 @@ public class ARecordCaster {
         IAType[] fieldTypes = reqType.getFieldTypes();
         String[] fieldNames = reqType.getFieldNames();
         fieldPermutation = new int[numSchemaFields];
+        optionalFields = new boolean[numSchemaFields];
+        for (int i = 0; i < optionalFields.length; i++)
+            optionalFields[i] = false;
 
         bos.setByteArray(buffer, nullReference.getStartIndex() + nullReference.getLength());
         for (int i = 0; i < numSchemaFields; i++) {
@@ -88,6 +97,13 @@ public class ARecordCaster {
             String fname = fieldNames[i];
 
             // add type tag pointable
+            if (fieldTypes[i].getTypeTag() == ATypeTag.UNION
+                    && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i])) {
+                // optional field: add the embedded non-null type tag
+                ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
+                        .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                optionalFields[i] = true;
+            }
             int tagStart = bos.size();
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
@@ -139,9 +155,17 @@ public class ARecordCaster {
             for (int j = 0; j < fieldNames.size(); j++) {
                 SimpleValueReference fieldName = fieldNames.get(j);
                 SimpleValueReference fieldTypeTag = fieldTypeTags.get(j);
-                if (fieldName.equals(reqFieldName) && fieldTypeTag.equals(reqFieldTypeTag)) {
-                    matched = true;
-                    break;
+                if (fieldName.equals(reqFieldName)) {
+                    if (fieldTypeTag.equals(reqFieldTypeTag)) {
+                        matched = true;
+                        break;
+                    }
+
+                    // match the null type of optional field
+                    if (optionalFields[i] && fieldTypeTag.equals(nullTypeTag)) {
+                        matched = true;
+                        break;
+                    }
                 }
             }
             if (matched)

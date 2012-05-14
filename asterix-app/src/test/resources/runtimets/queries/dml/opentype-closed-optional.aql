@@ -2,7 +2,7 @@ drop dataverse testdv2 if exists;
 create dataverse testdv2;
 use dataverse testdv2;
 
-create type testtype as open {
+create type testtype as closed {
   name: string ?,
   id: string
 }
@@ -17,7 +17,7 @@ insert into dataset testds (
 { "id": "002"}
 );
 
-write output to nc1:"rttest/dml_opentype-noexpand.adm";
+write output to nc1:"rttest/dml_opentype-closed-optional.adm";
 
 for $d in dataset("testds") 
 order by $d.id

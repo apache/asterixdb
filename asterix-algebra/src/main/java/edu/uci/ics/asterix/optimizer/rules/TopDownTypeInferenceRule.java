@@ -4,11 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.AString;
+import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -17,6 +25,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -100,6 +109,7 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
                                 inputRecordType);
                         changed &= !requiredRecordType.equals(inputRecordType);
                         if (changed) {
+                            staticTypeCast(funcExpr, requiredRecordType, inputRecordType);
                             List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
                             int openPartStart = requiredRecordType.getFieldTypes().length * 2;
                             for (int j = openPartStart; j < args.size(); j++) {
@@ -120,5 +130,128 @@ public class TopDownTypeInferenceRule implements IAlgebraicRewriteRule {
                 break;
         } while (currentOperator != null);
         return changed;
+    }
+
+    private void staticTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType) {
+        IAType[] reqFieldTypes = reqType.getFieldTypes();
+        String[] reqFieldNames = reqType.getFieldNames();
+        IAType[] inputFieldTypes = inputType.getFieldTypes();
+        String[] inputFieldNames = inputType.getFieldNames();
+
+        int[] fieldPermutation = new int[reqFieldTypes.length];
+        boolean[] nullFields = new boolean[reqFieldTypes.length];
+        boolean[] openFields = new boolean[inputFieldTypes.length];
+
+        for (int i = 0; i < nullFields.length; i++)
+            nullFields[i] = false;
+        for (int i = 0; i < openFields.length; i++)
+            openFields[i] = true;
+        for (int i = 0; i < fieldPermutation.length; i++)
+            fieldPermutation[i] = -1;
+
+        // forward match: match from actual to required
+        boolean matched = false;
+        for (int i = 0; i < inputFieldNames.length; i++) {
+            String fieldName = inputFieldNames[i];
+            IAType fieldType = inputFieldTypes[i];
+            matched = false;
+            for (int j = 0; j < reqFieldNames.length; j++) {
+                String reqFieldName = reqFieldNames[j];
+                IAType reqFieldType = reqFieldTypes[j];
+                if (fieldName.equals(reqFieldName)) {
+                    if (fieldType.equals(reqFieldType)) {
+                        fieldPermutation[j] = i;
+                        openFields[i] = false;
+                        matched = true;
+                        break;
+                    }
+
+                    // match the optional field
+                    if (reqFieldType.getTypeTag() == ATypeTag.UNION
+                            && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
+                        IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
+                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                        if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
+                            fieldPermutation[j] = i;
+                            openFields[i] = false;
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (matched)
+                continue;
+            // the input has extra fields
+            if (!reqType.isOpen())
+                throw new IllegalStateException("static type mismatch: including extra closed fields");
+        }
+
+        // backward match: match from required to actual
+        for (int i = 0; i < reqFieldNames.length; i++) {
+            String reqFieldName = reqFieldNames[i];
+            IAType reqFieldType = reqFieldTypes[i];
+            matched = false;
+            for (int j = 0; j < inputFieldNames.length; j++) {
+                String fieldName = inputFieldNames[j];
+                IAType fieldType = inputFieldTypes[j];
+                if (fieldName.equals(reqFieldName)) {
+                    if (fieldType.equals(reqFieldType)) {
+                        matched = true;
+                        break;
+                    }
+
+                    // match the optional field
+                    if (reqFieldType.getTypeTag() == ATypeTag.UNION
+                            && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
+                        IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
+                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                        if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (matched)
+                continue;
+
+            IAType t = reqFieldTypes[i];
+            if (t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t)) {
+                // add a null field
+                nullFields[i] = true;
+            } else {
+                // no matched field in the input for a required closed field
+                throw new IllegalStateException("static type mismatch: miss a required closed field");
+            }
+        }
+
+        List<Mutable<ILogicalExpression>> arguments = func.getArguments();
+        List<Mutable<ILogicalExpression>> argumentsClone = new ArrayList<Mutable<ILogicalExpression>>();
+        argumentsClone.addAll(arguments);
+        arguments.clear();
+        // re-order the closed part and fill in null fields
+        for (int i = 0; i < fieldPermutation.length; i++) {
+            int pos = fieldPermutation[i];
+            if (pos >= 0) {
+                arguments.add(argumentsClone.get(2 * pos));
+                arguments.add(argumentsClone.get(2 * pos + 1));
+            }
+            if (nullFields[i]) {
+                // add a null field
+                arguments.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                        new AString(reqFieldNames[i])))));
+                arguments.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                        ANull.NULL))));
+            }
+        }
+
+        // add the open part
+        for (int i = 0; i < openFields.length; i++) {
+            if (openFields[i]) {
+                arguments.add(argumentsClone.get(2 * i));
+                arguments.add(argumentsClone.get(2 * i + 1));
+            }
+        }
     }
 }
