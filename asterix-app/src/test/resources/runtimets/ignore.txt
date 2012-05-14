@@ -15,6 +15,4 @@ fuzzyjoin/events-users-aqlplus_1.aql
 fuzzyjoin
 failure/q1_pricing_summary_report_failure.aql
 open-closed
-dml/insert-into-empty-dataset-with-index_02.aql
-dml/insert-into-empty-dataset-with-index_01.aql
 dml/load-from-hdfs.aql

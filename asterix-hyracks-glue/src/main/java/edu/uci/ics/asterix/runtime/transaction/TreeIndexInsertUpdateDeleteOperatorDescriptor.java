@@ -74,7 +74,7 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
         } catch (ACIDException ae) {
             throw new RuntimeException(" could not obtain context for invalid transaction id " + transactionId);
         }
-        return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext, this, ctx, opCallbackProvider,
-                partition, fieldPermutation, recordDescProvider, op);
+        return new TreeIndexInsertUpdateDeleteOperatorNodePushable(txnContext, this, ctx, partition, fieldPermutation,
+                recordDescProvider, op);
     }
 }
