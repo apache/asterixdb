@@ -15,19 +15,19 @@ create type testtype2 as closed {
 
 create dataset testds(testtype) partitioned by key id;
 
-create dataset testds2(testtype2) partitioned by key id;
+create dataset testds2(testtype2) partitioned by key id; 
  
-//insert into dataset testds (
-//{ "id": "001", "name": "Person Three", "hobby": "music"}
-//);
+insert into dataset testds (
+{ "id": "001", "name": "Person Three", "hobby": "music"}
+);
 
-//insert into dataset testds (
-//{ "id": "002", "name": "Person Three", "hobby": "football"}
-//);
+insert into dataset testds (
+{ "id": "002", "name": "Person Three", "hobby": "football"}
+);
 
-//insert into dataset testds (
-//{ "id": "003", "name": "Person Three", "hobby": "movie"}
-//);
+insert into dataset testds (
+{ "id": "003", "name": "Person Three", "hobby": "movie"}
+);
 
 insert into dataset testds (
 { "id": "004", "name": "Person Three", "hobby": "swimming"}

@@ -1,6 +1,8 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.SimilarityJaccardPrefixEvaluator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -14,6 +16,11 @@ public class SimilarityJaccardPrefixDescriptor extends AbstractScalarFunctionDyn
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "similarity-jaccard-prefix", 6, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SimilarityJaccardPrefixDescriptor();
+        }
+    };
 
     @Override
     public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {

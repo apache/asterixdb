@@ -36,6 +36,8 @@ public class ARecordCaster {
     private SimpleValueReference nullReference = new SimpleValueReference();
     private SimpleValueReference nullTypeTag = new SimpleValueReference();
 
+    private int numInputFields = 0;
+
     public ARecordCaster() {
         try {
             bos.setByteArray(buffer, 0);
@@ -57,9 +59,10 @@ public class ARecordCaster {
         List<SimpleValueReference> fieldNames = recordAccessor.getFieldNames();
         List<SimpleValueReference> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<SimpleValueReference> fieldValues = recordAccessor.getFieldValues();
+        numInputFields = recordAccessor.getCursor() + 1;
 
-        if (openFields == null || fieldNames.size() > openFields.length) {
-            openFields = new boolean[fieldNames.size()];
+        if (openFields == null || numInputFields > openFields.length) {
+            openFields = new boolean[numInputFields];
         }
         if (cachedReqType == null || !reqType.equals(cachedReqType)) {
             loadRequiredType(reqType);
@@ -72,7 +75,7 @@ public class ARecordCaster {
     }
 
     private void reset() {
-        for (int i = 0; i < openFields.length; i++)
+        for (int i = 0; i < numInputFields; i++)
             openFields[i] = true;
         for (int i = 0; i < fieldPermutation.length; i++)
             fieldPermutation[i] = -1;
@@ -126,7 +129,7 @@ public class ARecordCaster {
             List<SimpleValueReference> fieldValues) {
         // forward match: match from actual to required
         boolean matched = false;
-        for (int i = 0; i < fieldNames.size(); i++) {
+        for (int i = 0; i < numInputFields; i++) {
             SimpleValueReference fieldName = fieldNames.get(i);
             SimpleValueReference fieldTypeTag = fieldTypeTags.get(i);
             matched = false;
@@ -152,7 +155,7 @@ public class ARecordCaster {
             SimpleValueReference reqFieldName = reqFieldNames.get(i);
             SimpleValueReference reqFieldTypeTag = reqFieldTypeTags.get(i);
             matched = false;
-            for (int j = 0; j < fieldNames.size(); j++) {
+            for (int j = 0; j < numInputFields; j++) {
                 SimpleValueReference fieldName = fieldNames.get(j);
                 SimpleValueReference fieldTypeTag = fieldTypeTags.get(j);
                 if (fieldName.equals(reqFieldName)) {
@@ -172,14 +175,7 @@ public class ARecordCaster {
                 continue;
 
             IAType t = cachedReqType.getFieldTypes()[i];
-            if (t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t)) {
-                // add a null field into the end of field name list and type
-                // list
-                fieldNames.add(reqFieldName);
-                fieldTypeTags.add(reqFieldTypeTag);
-                fieldValues.add(nullReference);
-                fieldPermutation[i] = fieldNames.size() - 1;
-            } else {
+            if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
                 // no matched field in the input for a required closed field
                 throw new IllegalStateException("type mismatch: miss a required closed field");
             }
@@ -195,12 +191,17 @@ public class ARecordCaster {
         // write the closed part
         for (int i = 0; i < fieldPermutation.length; i++) {
             int pos = fieldPermutation[i];
-            SimpleValueReference field = fieldValues.get(pos);
+            SimpleValueReference field;
+            if (pos >= 0) {
+                field = fieldValues.get(pos);
+            } else {
+                field = nullReference;
+            }
             recBuilder.addField(i, field);
         }
 
         // write the open part
-        for (int i = 0; i < openFields.length; i++) {
+        for (int i = 0; i < numInputFields; i++) {
             if (openFields[i]) {
                 SimpleValueReference name = fieldNames.get(i);
                 SimpleValueReference field = fieldValues.get(i);

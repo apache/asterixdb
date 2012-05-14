@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.FunctionManagerHolder;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.functions.IFunctionManager;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -203,121 +204,121 @@ public class NonTaggedDataFormat implements IDataFormat {
             return;
         }
 
-        List<IFunctionDescriptor> temp = new ArrayList<IFunctionDescriptor>();
+        List<IFunctionDescriptorFactory> temp = new ArrayList<IFunctionDescriptorFactory>();
 
         // format-independent
-        temp.add(new ContainsDescriptor());
-        temp.add(new EndsWithDescriptor());
-        temp.add(new StartsWithDescriptor());
-        temp.add(new SubstringDescriptor());
-        temp.add(new TidRunningAggregateDescriptor());
+        temp.add(ContainsDescriptor.FACTORY);
+        temp.add(EndsWithDescriptor.FACTORY);
+        temp.add(StartsWithDescriptor.FACTORY);
+        temp.add(SubstringDescriptor.FACTORY);
+        temp.add(TidRunningAggregateDescriptor.FACTORY);
 
         // format-dependent
-        temp.add(new AndDescriptor());
-        temp.add(new OrDescriptor());
-        temp.add(new LikeDescriptor());
-        temp.add(new YearDescriptor());
-        temp.add(new ScanCollectionDescriptor());
-        temp.add(new AnyCollectionMemberDescriptor());
-        temp.add(new ClosedRecordConstructorDescriptor());
-        temp.add(new FieldAccessByIndexDescriptor());
-        temp.add(new FieldAccessByNameDescriptor());
-        temp.add(new GetItemDescriptor());
-        temp.add(new NumericUnaryMinusDescriptor());
-        temp.add(new OpenRecordConstructorDescriptor());
-        temp.add(new OrderedListConstructorDescriptor());
-        temp.add(new UnorderedListConstructorDescriptor());
-        temp.add(new EmbedTypeDescriptor());
+        temp.add(AndDescriptor.FACTORY);
+        temp.add(OrDescriptor.FACTORY);
+        temp.add(LikeDescriptor.FACTORY);
+        temp.add(YearDescriptor.FACTORY);
+        temp.add(ScanCollectionDescriptor.FACTORY);
+        temp.add(AnyCollectionMemberDescriptor.FACTORY);
+        temp.add(ClosedRecordConstructorDescriptor.FACTORY);
+        temp.add(FieldAccessByIndexDescriptor.FACTORY);
+        temp.add(FieldAccessByNameDescriptor.FACTORY);
+        temp.add(GetItemDescriptor.FACTORY);
+        temp.add(NumericUnaryMinusDescriptor.FACTORY);
+        temp.add(OpenRecordConstructorDescriptor.FACTORY);
+        temp.add(OrderedListConstructorDescriptor.FACTORY);
+        temp.add(UnorderedListConstructorDescriptor.FACTORY);
+        temp.add(EmbedTypeDescriptor.FACTORY);
 
-        temp.add(new NumericAddDescriptor());
-        temp.add(new NumericDivideDescriptor());
-        temp.add(new NumericMultiplyDescriptor());
-        temp.add(new NumericSubtractDescriptor());
-        temp.add(new IsNullDescriptor());
-        temp.add(new NotDescriptor());
-        temp.add(new LenDescriptor());
-        temp.add(new NonEmptyStreamAggregateDescriptor());
-        temp.add(new RangeDescriptor());
+        temp.add(NumericAddDescriptor.FACTORY);
+        temp.add(NumericDivideDescriptor.FACTORY);
+        temp.add(NumericMultiplyDescriptor.FACTORY);
+        temp.add(NumericSubtractDescriptor.FACTORY);
+        temp.add(IsNullDescriptor.FACTORY);
+        temp.add(NotDescriptor.FACTORY);
+        temp.add(LenDescriptor.FACTORY);
+        temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
+        temp.add(RangeDescriptor.FACTORY);
 
         // aggregates
-        temp.add(new ListifyAggregateDescriptor());
-        temp.add(new CountAggregateDescriptor());
-        temp.add(new AvgAggregateDescriptor());
-        temp.add(new LocalAvgAggregateDescriptor());
-        temp.add(new GlobalAvgAggregateDescriptor());
-        temp.add(new SumAggregateDescriptor());
-        temp.add(new MaxAggregateDescriptor());
-        temp.add(new MinAggregateDescriptor());
+        temp.add(ListifyAggregateDescriptor.FACTORY);
+        temp.add(CountAggregateDescriptor.FACTORY);
+        temp.add(AvgAggregateDescriptor.FACTORY);
+        temp.add(LocalAvgAggregateDescriptor.FACTORY);
+        temp.add(GlobalAvgAggregateDescriptor.FACTORY);
+        temp.add(SumAggregateDescriptor.FACTORY);
+        temp.add(MaxAggregateDescriptor.FACTORY);
+        temp.add(MinAggregateDescriptor.FACTORY);
 
         // serializable aggregates
-        temp.add(new SerializableCountAggregateDescriptor());
-        temp.add(new SerializableAvgAggregateDescriptor());
-        temp.add(new SerializableLocalAvgAggregateDescriptor());
-        temp.add(new SerializableGlobalAvgAggregateDescriptor());
-        temp.add(new SerializableSumAggregateDescriptor());
+        temp.add(SerializableCountAggregateDescriptor.FACTORY);
+        temp.add(SerializableAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableSumAggregateDescriptor.FACTORY);
 
         // new functions - constructors
-        temp.add(new ABooleanConstructorDescriptor());
-        temp.add(new ANullConstructorDescriptor());
-        temp.add(new AStringConstructorDescriptor());
-        temp.add(new AInt8ConstructorDescriptor());
-        temp.add(new AInt16ConstructorDescriptor());
-        temp.add(new AInt32ConstructorDescriptor());
-        temp.add(new AInt64ConstructorDescriptor());
-        temp.add(new AFloatConstructorDescriptor());
-        temp.add(new ADoubleConstructorDescriptor());
-        temp.add(new APointConstructorDescriptor());
-        temp.add(new APoint3DConstructorDescriptor());
-        temp.add(new ALineConstructorDescriptor());
-        temp.add(new APolygonConstructorDescriptor());
-        temp.add(new ACircleConstructorDescriptor());
-        temp.add(new ARectangleConstructorDescriptor());
-        temp.add(new ATimeConstructorDescriptor());
-        temp.add(new ADateConstructorDescriptor());
-        temp.add(new ADateTimeConstructorDescriptor());
-        temp.add(new ADurationConstructorDescriptor());
+        temp.add(ABooleanConstructorDescriptor.FACTORY);
+        temp.add(ANullConstructorDescriptor.FACTORY);
+        temp.add(AStringConstructorDescriptor.FACTORY);
+        temp.add(AInt8ConstructorDescriptor.FACTORY);
+        temp.add(AInt16ConstructorDescriptor.FACTORY);
+        temp.add(AInt32ConstructorDescriptor.FACTORY);
+        temp.add(AInt64ConstructorDescriptor.FACTORY);
+        temp.add(AFloatConstructorDescriptor.FACTORY);
+        temp.add(ADoubleConstructorDescriptor.FACTORY);
+        temp.add(APointConstructorDescriptor.FACTORY);
+        temp.add(APoint3DConstructorDescriptor.FACTORY);
+        temp.add(ALineConstructorDescriptor.FACTORY);
+        temp.add(APolygonConstructorDescriptor.FACTORY);
+        temp.add(ACircleConstructorDescriptor.FACTORY);
+        temp.add(ARectangleConstructorDescriptor.FACTORY);
+        temp.add(ATimeConstructorDescriptor.FACTORY);
+        temp.add(ADateConstructorDescriptor.FACTORY);
+        temp.add(ADateTimeConstructorDescriptor.FACTORY);
+        temp.add(ADurationConstructorDescriptor.FACTORY);
 
         // Spatial
-        temp.add(new CreatePointDescriptor());
-        temp.add(new CreateLineDescriptor());
-        temp.add(new CreatePolygonDescriptor());
-        temp.add(new CreateCircleDescriptor());
-        temp.add(new CreateRectangleDescriptor());
-        temp.add(new SpatialAreaDescriptor());
-        temp.add(new SpatialDistanceDescriptor());
-        temp.add(new SpatialIntersectDescriptor());
-        temp.add(new CreateMBRDescriptor());
-        temp.add(new SpatialCellDescriptor());
+        temp.add(CreatePointDescriptor.FACTORY);
+        temp.add(CreateLineDescriptor.FACTORY);
+        temp.add(CreatePolygonDescriptor.FACTORY);
+        temp.add(CreateCircleDescriptor.FACTORY);
+        temp.add(CreateRectangleDescriptor.FACTORY);
+        temp.add(SpatialAreaDescriptor.FACTORY);
+        temp.add(SpatialDistanceDescriptor.FACTORY);
+        temp.add(SpatialIntersectDescriptor.FACTORY);
+        temp.add(CreateMBRDescriptor.FACTORY);
+        temp.add(SpatialCellDescriptor.FACTORY);
 
         // fuzzyjoin function
-        temp.add(new FuzzyEqDescriptor());
-        temp.add(new SubsetCollectionDescriptor());
-        temp.add(new PrefixLenJaccardDescriptor());
+        temp.add(FuzzyEqDescriptor.FACTORY);
+        temp.add(SubsetCollectionDescriptor.FACTORY);
+        temp.add(PrefixLenJaccardDescriptor.FACTORY);
 
-        temp.add(new WordTokensDescriptor());
-        temp.add(new HashedWordTokensDescriptor());
-        temp.add(new CountHashedWordTokensDescriptor());
+        temp.add(WordTokensDescriptor.FACTORY);
+        temp.add(HashedWordTokensDescriptor.FACTORY);
+        temp.add(CountHashedWordTokensDescriptor.FACTORY);
 
-        temp.add(new GramTokensDescriptor());
-        temp.add(new HashedGramTokensDescriptor());
-        temp.add(new CountHashedGramTokensDescriptor());
+        temp.add(GramTokensDescriptor.FACTORY);
+        temp.add(HashedGramTokensDescriptor.FACTORY);
+        temp.add(CountHashedGramTokensDescriptor.FACTORY);
 
-        temp.add(new EditDistanceDescriptor());
-        temp.add(new EditDistanceCheckDescriptor());
+        temp.add(EditDistanceDescriptor.FACTORY);
+        temp.add(EditDistanceCheckDescriptor.FACTORY);
 
-        temp.add(new SimilarityJaccardDescriptor());
-        temp.add(new SimilarityJaccardCheckDescriptor());
-        temp.add(new SimilarityJaccardPrefixDescriptor());
-        temp.add(new SimilarityJaccardPrefixCheckDescriptor());
+        temp.add(SimilarityJaccardDescriptor.FACTORY);
+        temp.add(SimilarityJaccardCheckDescriptor.FACTORY);
+        temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
+        temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
-        temp.add(new SwitchCaseDescriptor());
-        temp.add(new RegExpDescriptor());
-        temp.add(new InjectFailureDescriptor());
-        temp.add(new CastRecordDescriptor());
+        temp.add(SwitchCaseDescriptor.FACTORY);
+        temp.add(RegExpDescriptor.FACTORY);
+        temp.add(InjectFailureDescriptor.FACTORY);
+        temp.add(CastRecordDescriptor.FACTORY);
 
         IFunctionManager mgr = new FunctionManagerImpl();
-        for (IFunctionDescriptor fd : temp) {
-            mgr.registerFunction(fd);
+        for (IFunctionDescriptorFactory fdFactory : temp) {
+            mgr.registerFunction(fdFactory);
         }
         FunctionManagerHolder.setFunctionManager(mgr);
     }
