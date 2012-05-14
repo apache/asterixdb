@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class IntroduceCastRecordRule implements IAlgebraicRewriteRule {
+public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {

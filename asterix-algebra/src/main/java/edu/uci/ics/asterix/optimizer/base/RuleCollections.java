@@ -15,7 +15,7 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineAssignIntoAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceBTreeIndexSearchRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceCastRecordRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceRTreeIndexSearchRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -28,7 +28,7 @@ import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
-import edu.uci.ics.asterix.optimizer.rules.TopDownTypeInferenceRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.UnnestToDataScanRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -85,8 +85,8 @@ public final class RuleCollections {
 
         // TopdownTypeInferenceRule should go before IntroduceCastRecordRule to
         // avoid unnecessary casting
-        normalization.add(new TopDownTypeInferenceRule());
-        normalization.add(new IntroduceCastRecordRule());
+        normalization.add(new IntroduceStaticTypeCastRule());
+        normalization.add(new IntroduceDynamicTypeCastRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
