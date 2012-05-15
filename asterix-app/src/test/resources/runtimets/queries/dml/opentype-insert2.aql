@@ -1,12 +1,16 @@
-//Test the case where SetClosedRecordRule should not rewrite
-//the plan to use closed-record-descriptor;
+/* 
+ * Test case Name  : opentype-insert2.aql
+ * Description     : verify that the case where SetClosedRecordRule should not rewrite
+ *					the plan to use closed-record-descriptor
+ * Expected Result : Success
+ */
 
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
 create type TestType as open {
-id:int32
+	id:int32
 }
 
 create dataset testds(TestType) partitioned by key id;

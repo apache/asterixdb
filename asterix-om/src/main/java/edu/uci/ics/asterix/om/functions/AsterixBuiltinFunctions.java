@@ -737,8 +737,6 @@ public class AsterixBuiltinFunctions {
         builtinFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
         asterixFunctionIdToInfo.put(fi, functionInfo);
-        // AsterixFunction asterixFunction = new AsterixFunction(fi.getName(),
-        // fi.getArity());
     }
 
     private static void addAgg(FunctionIdentifier fi) {

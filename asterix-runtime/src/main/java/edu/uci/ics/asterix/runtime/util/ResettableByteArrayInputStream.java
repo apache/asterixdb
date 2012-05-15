@@ -18,13 +18,13 @@ import java.io.ByteArrayInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ResetableByteArrayInputStream extends ByteArrayInputStream {
-    private static final Logger LOGGER = Logger.getLogger(ResetableByteArrayInputStream.class.getName());
+public class ResettableByteArrayInputStream extends ByteArrayInputStream {
+    private static final Logger LOGGER = Logger.getLogger(ResettableByteArrayInputStream.class.getName());
 
     private byte[] data;
     private int position;
 
-    public ResetableByteArrayInputStream(byte[] data) {
+    public ResettableByteArrayInputStream(byte[] data) {
         super(data);
     }
 

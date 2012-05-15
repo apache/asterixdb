@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
@@ -106,7 +121,6 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
-        // context.addToDontApplySet(this, op);
         return op.acceptExpressionTransform(cfv);
     }
 
@@ -167,6 +181,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             resStore.reset();
             eval.evaluate(null);
             Object t = _emptyTypeEnv.getType(expr);
+            
+            @SuppressWarnings("rawtypes")
             ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
             bbis.setByteBuffer(ByteBuffer.wrap(resStore.getBytes(), resStore.getStartIndex(), resStore.getLength()), 0);
             IAObject o;
