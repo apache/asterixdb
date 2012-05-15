@@ -15,7 +15,7 @@ id:int32,
 descrpt:string
 }
 
-create type TestType as {
+create type TestType as closed {
 id:int32,
 description:string,
 name:string,
@@ -30,3 +30,9 @@ insert into dataset T1({
 "name":"Cake",
 "batters":[{"id":345,"descprt":"Regular"},{"id":445,"descprt":"Chocolate"}] }
 );
+
+write output to nc1:"rttest/open-closed_heteror-list01.adm";
+
+for $d in dataset("T1") 
+return $d
+

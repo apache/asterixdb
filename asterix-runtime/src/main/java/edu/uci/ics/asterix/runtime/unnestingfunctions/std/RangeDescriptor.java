@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -25,7 +27,12 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     private static final long serialVersionUID = 1L;
 
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2, true);
-
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new RangeDescriptor();
+        }
+    };
+    
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;
@@ -44,7 +51,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                 return new IUnnestingFunction() {
 
                     private DataOutput out = provider.getDataOutput();
-                    @SuppressWarnings("unchecked")
+                    @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT32);
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();

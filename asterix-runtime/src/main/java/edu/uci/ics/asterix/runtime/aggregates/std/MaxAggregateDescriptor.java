@@ -17,6 +17,8 @@ import edu.uci.ics.asterix.om.base.AMutableInt16;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -38,6 +40,11 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1,
             true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new MaxAggregateDescriptor();
+        }
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -73,6 +80,7 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
+                    @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
 
                     @Override
@@ -202,5 +210,4 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             }
         };
     }
-
 }
