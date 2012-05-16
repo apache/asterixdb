@@ -1,3 +1,11 @@
+/* 
+ * Test case Name  : opentype-o2o.aql
+ * Description     : verify that the dynamic type cast from one open type to another compatible open type
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 use dataverse testdv2;
@@ -22,7 +30,7 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "name": "Person Two", "id": "002",  "hobby": "football", "city":"irvine"}
+{ "hobby": "football", "city":"irvine", "name": "Person Two", "id": "002"}
 );
 
 insert into dataset testds (
@@ -30,7 +38,7 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "name": "Person Four", "id": "004",  "hobby": "swimming", "phone":"102-304-506"}
+{ "hobby": "swimming", "name": "Person Four", "id": "004", "phone":"102-304-506"}
 );
 
 insert into dataset testds2 (

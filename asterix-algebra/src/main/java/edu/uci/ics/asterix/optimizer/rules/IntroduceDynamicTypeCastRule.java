@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.ArrayList;
@@ -73,50 +88,39 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         IVariableTypeEnvironment env = oldAssignOperator.computeInputTypeEnvironment(context);
         ARecordType inputRecordType = (ARecordType) env.getVarType(inputRecordVar);
 
-        boolean needCast = needCast(requiredRecordType, inputRecordType);
-        if (needCast) {
-            // insert
-            // project
-            // assign
-            // assign
-            AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
-            ARecordType[] types = new ARecordType[2];
-            types[0] = requiredRecordType;
-            types[1] = inputRecordType;
-            cast.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputRecordVar)));
-            cast.setOpaqueParameters(types);
-            LogicalVariable newAssignVar = context.newVar();
-            AssignOperator newAssignOperator = new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(
-                    cast));
-            newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op3));
-
-            List<LogicalVariable> projectVariables = new ArrayList<LogicalVariable>();
-            VariableUtilities.getProducedVariables(oldAssignOperator, projectVariables);
-            projectVariables.add(newAssignVar);
-            ProjectOperator projectOperator = new ProjectOperator(projectVariables);
-            projectOperator.getInputs().add(new MutableObject<ILogicalOperator>(newAssignOperator));
-
-            ILogicalExpression payloadExpr = new VariableReferenceExpression(newAssignVar);
-            MutableObject<ILogicalExpression> payloadRef = new MutableObject<ILogicalExpression>(payloadExpr);
-            InsertDeleteOperator newInserDeleteOperator = new InsertDeleteOperator(
-                    insertDeleteOperator.getDataSource(), payloadRef, insertDeleteOperator.getPrimaryKeyExpressions(),
-                    insertDeleteOperator.getOperation());
-            newInserDeleteOperator.getInputs().add(new MutableObject<ILogicalOperator>(projectOperator));
-            insertDeleteOperator.getInputs().clear();
-            op1.getInputs().get(0).setValue(newInserDeleteOperator);
-            return true;
-        }
-        return false;
-
-    }
-
-    private boolean needCast(ARecordType reqType, ARecordType inputType) {
-        if (!reqType.equals(inputType))
-            return true;
-        else
+        boolean needCast = !requiredRecordType.equals(inputRecordType);
+        if (!needCast)
             return false;
+
+        // insert
+        // project
+        // assign
+        // assign
+        AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
+        ARecordType[] types = new ARecordType[2];
+        types[0] = requiredRecordType;
+        types[1] = inputRecordType;
+        cast.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputRecordVar)));
+        cast.setOpaqueParameters(types);
+        LogicalVariable newAssignVar = context.newVar();
+        AssignOperator newAssignOperator = new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
+        newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op3));
+
+        List<LogicalVariable> projectVariables = new ArrayList<LogicalVariable>();
+        VariableUtilities.getProducedVariables(oldAssignOperator, projectVariables);
+        projectVariables.add(newAssignVar);
+        ProjectOperator projectOperator = new ProjectOperator(projectVariables);
+        projectOperator.getInputs().add(new MutableObject<ILogicalOperator>(newAssignOperator));
+
+        ILogicalExpression payloadExpr = new VariableReferenceExpression(newAssignVar);
+        MutableObject<ILogicalExpression> payloadRef = new MutableObject<ILogicalExpression>(payloadExpr);
+        InsertDeleteOperator newInserDeleteOperator = new InsertDeleteOperator(insertDeleteOperator.getDataSource(),
+                payloadRef, insertDeleteOperator.getPrimaryKeyExpressions(), insertDeleteOperator.getOperation());
+        newInserDeleteOperator.getInputs().add(new MutableObject<ILogicalOperator>(projectOperator));
+        insertDeleteOperator.getInputs().clear();
+        op1.getInputs().get(0).setValue(newInserDeleteOperator);
+        return true;
     }
 
 }

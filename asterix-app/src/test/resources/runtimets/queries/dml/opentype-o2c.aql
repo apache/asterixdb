@@ -1,3 +1,11 @@
+/* 
+ * Test case Name  : opentype-o2c.aql
+ * Description     : verify that open records can be inserted into a closed dataset
+ *					 verify missing optional fields in the closed part of the target closed dataset are allowed
+ * Expected Result : Success
+ */
+
+
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 use dataverse testdv2;
@@ -8,9 +16,9 @@ create type testtype as open {
 }
 
 create type testtype2 as closed {
+  hobby: string?,
   id: string,
-  name: string,
-  hobby: string?
+  name: string
 }
 
 create dataset testds(testtype) partitioned by key id;
@@ -18,7 +26,7 @@ create dataset testds(testtype) partitioned by key id;
 create dataset testds2(testtype2) partitioned by key id; 
  
 insert into dataset testds (
-{ "id": "001", "name": "Person Three", "hobby": "music"}
+{ "id": "001",  "hobby": "music", "name": "Person Three"}
 );
 
 insert into dataset testds (
@@ -30,7 +38,7 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "id": "004", "name": "Person Three", "hobby": "swimming"}
+{ "name": "Person Three", "hobby": "swimming", "id": "004"}
 );
 
 insert into dataset testds (

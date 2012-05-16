@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.runtime.util;
 
 import java.io.DataOutput;
@@ -13,23 +28,29 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
 public class ARecordCaster {
 
     // describe closed fields in the required type
     private int[] fieldPermutation;
+    private boolean[] optionalFields;
 
     // describe fields (open or not) in the input records
     private boolean[] openFields;
-    private boolean[] optionalFields;
+    private int[] fieldNamesSortedIndex;
 
     private List<SimpleValueReference> reqFieldNames = new ArrayList<SimpleValueReference>();
+    private int[] reqFieldNamesSortedIndex;
     private List<SimpleValueReference> reqFieldTypeTags = new ArrayList<SimpleValueReference>();
     private ARecordType cachedReqType = null;
 
     private byte[] buffer = new byte[32768];
-    private ResetableByteArrayOutputStream bos = new ResetableByteArrayOutputStream();
+    private ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
     private DataOutputStream dos = new DataOutputStream(bos);
 
     private RecordBuilder recBuilder = new RecordBuilder();
@@ -37,6 +58,8 @@ public class ARecordCaster {
     private SimpleValueReference nullTypeTag = new SimpleValueReference();
 
     private int numInputFields = 0;
+    private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
+            .createBinaryComparator();
 
     public ARecordCaster() {
         try {
@@ -63,6 +86,7 @@ public class ARecordCaster {
 
         if (openFields == null || numInputFields > openFields.length) {
             openFields = new boolean[numInputFields];
+            fieldNamesSortedIndex = new int[numInputFields];
         }
         if (cachedReqType == null || !reqType.equals(cachedReqType)) {
             loadRequiredType(reqType);
@@ -79,6 +103,8 @@ public class ARecordCaster {
             openFields[i] = true;
         for (int i = 0; i < fieldPermutation.length; i++)
             fieldPermutation[i] = -1;
+        for (int i = 0; i < numInputFields; i++)
+            fieldNamesSortedIndex[i] = i;
     }
 
     private void loadRequiredType(ARecordType reqType) throws IOException {
@@ -123,61 +149,56 @@ public class ARecordCaster {
             typeNamePointable.reset(buffer, nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }
+
+        reqFieldNamesSortedIndex = new int[reqFieldNames.size()];
+        for (int i = 0; i < reqFieldNamesSortedIndex.length; i++)
+            reqFieldNamesSortedIndex[i] = i;
+        // sort the field name index
+        quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
     private void matchClosedPart(List<SimpleValueReference> fieldNames, List<SimpleValueReference> fieldTypeTags,
             List<SimpleValueReference> fieldValues) {
-        // forward match: match from actual to required
-        boolean matched = false;
-        for (int i = 0; i < numInputFields; i++) {
-            SimpleValueReference fieldName = fieldNames.get(i);
-            SimpleValueReference fieldTypeTag = fieldTypeTags.get(i);
-            matched = false;
-            for (int j = 0; j < reqFieldNames.size(); j++) {
-                SimpleValueReference reqFieldName = reqFieldNames.get(j);
-                SimpleValueReference reqFieldTypeTag = reqFieldTypeTags.get(j);
-                if (fieldName.equals(reqFieldName) && fieldTypeTag.equals(reqFieldTypeTag)) {
-                    fieldPermutation[j] = i;
-                    openFields[i] = false;
-                    matched = true;
-                    break;
+        // sort-merge based match
+        quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
+        int fnStart = 0;
+        int reqFnStart = 0;
+        while (fnStart < numInputFields && reqFnStart < reqFieldNames.size()) {
+            int fnPos = fieldNamesSortedIndex[fnStart];
+            int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];
+            int c = compare(fieldNames.get(fnPos), reqFieldNames.get(reqFnPos));
+            if (c == 0) {
+                SimpleValueReference fieldTypeTag = fieldTypeTags.get(fnPos);
+                SimpleValueReference reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                if (fieldTypeTag.equals(reqFieldTypeTag) || (
+                // match the null type of optional field
+                        optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
+                    fieldPermutation[reqFnPos] = fnPos;
+                    openFields[fnPos] = false;
                 }
+                fnStart++;
+                reqFnStart++;
             }
-            if (matched)
-                continue;
-            // the input has extra fields
-            if (!cachedReqType.isOpen())
+            if (c > 0)
+                reqFnStart++;
+            if (c < 0)
+                fnStart++;
+        }
+
+        // check unmatched fields in the input type
+        for (int i = 0; i < openFields.length; i++) {
+            if (openFields[i] == true && !cachedReqType.isOpen())
                 throw new IllegalStateException("type mismatch: including extra closed fields");
         }
 
-        // backward match: match from required to actual
-        for (int i = 0; i < reqFieldNames.size(); i++) {
-            SimpleValueReference reqFieldName = reqFieldNames.get(i);
-            SimpleValueReference reqFieldTypeTag = reqFieldTypeTags.get(i);
-            matched = false;
-            for (int j = 0; j < numInputFields; j++) {
-                SimpleValueReference fieldName = fieldNames.get(j);
-                SimpleValueReference fieldTypeTag = fieldTypeTags.get(j);
-                if (fieldName.equals(reqFieldName)) {
-                    if (fieldTypeTag.equals(reqFieldTypeTag)) {
-                        matched = true;
-                        break;
-                    }
-
-                    // match the null type of optional field
-                    if (optionalFields[i] && fieldTypeTag.equals(nullTypeTag)) {
-                        matched = true;
-                        break;
-                    }
+        // check unmatched fields in the required type
+        for (int i = 0; i < fieldPermutation.length; i++) {
+            if (fieldPermutation[i] < 0) {
+                IAType t = cachedReqType.getFieldTypes()[i];
+                if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
+                    // no matched field in the input for a required closed field
+                    throw new IllegalStateException("type mismatch: miss a required closed field");
                 }
-            }
-            if (matched)
-                continue;
-
-            IAType t = cachedReqType.getFieldTypes()[i];
-            if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
-                // no matched field in the input for a required closed field
-                throw new IllegalStateException("type mismatch: miss a required closed field");
             }
         }
     }
@@ -209,5 +230,46 @@ public class ARecordCaster {
             }
         }
         recBuilder.write(output, true);
+    }
+
+    private void quickSort(int[] index, List<SimpleValueReference> names, int start, int end) {
+        if (end <= start)
+            return;
+        int i = partition(index, names, start, end);
+        quickSort(index, names, start, i - 1);
+        quickSort(index, names, i + 1, end);
+    }
+
+    private int partition(int[] index, List<SimpleValueReference> names, int left, int right) {
+        int i = left - 1;
+        int j = right;
+        while (true) {
+            // grow from the left
+            while (compare(names.get(index[++i]), names.get(index[right])) < 0)
+                ;
+            // lower from the right
+            while (compare(names.get(index[right]), names.get(index[--j])) < 0)
+                if (j == left)
+                    break;
+            if (i >= j)
+                break;
+            // swap i and j
+            swap(index, i, j);
+        }
+        // swap i and right
+        swap(index, i, right); // swap with partition element
+        return i;
+    }
+
+    private void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    private int compare(IValueReference a, IValueReference b) {
+        // start+1 and len-1 due to the type tag
+        return fieldNameComparator.compare(a.getBytes(), a.getStartIndex() + 1, a.getLength() - 1, b.getBytes(),
+                b.getStartIndex() + 1, b.getLength() - 1);
     }
 }
