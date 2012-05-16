@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -48,7 +48,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private final ITuplePairComparatorFactory comparatorFactory;
     private final int memSize;
 
-    public NestedLoopJoinOperatorDescriptor(JobSpecification spec, ITuplePairComparatorFactory comparatorFactory,
+    public NestedLoopJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, ITuplePairComparatorFactory comparatorFactory,
             RecordDescriptor recordDescriptor, int memSize) {
         super(spec, 2, 1);
         this.comparatorFactory = comparatorFactory;

@@ -23,7 +23,7 @@ PARSER_BEGIN(PigletParser)
 package edu.uci.ics.hyracks.algebricks.examples.piglet.parser;
 
 import java.util.*;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.*;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.types.*;
 

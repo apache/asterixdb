@@ -2,7 +2,7 @@ package edu.uci.ics.hyracks.algebricks.examples.piglet.types;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class Schema {
     private List<Pair<String, Type>> schema;

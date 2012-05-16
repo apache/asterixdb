@@ -18,19 +18,16 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * 
  * Runs rules sequentially (round-robin), until one iteration over all rules
  * produces no change.
  * 
- * 
  * @author Nicola
- * 
  */
 public class SequentialFixpointRuleController extends AbstractRuleController {
 

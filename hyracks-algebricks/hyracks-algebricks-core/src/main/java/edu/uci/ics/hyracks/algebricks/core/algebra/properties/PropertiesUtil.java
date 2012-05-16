@@ -23,10 +23,10 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
-import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
 
 public class PropertiesUtil {
 
@@ -180,7 +180,6 @@ public class PropertiesUtil {
     }
 
     /**
-     * 
      * @param pref
      * @param target
      * @return true iff pref is a prefix of target

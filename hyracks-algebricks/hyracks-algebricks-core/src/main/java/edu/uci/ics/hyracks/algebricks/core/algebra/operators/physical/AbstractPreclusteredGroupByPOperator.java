@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -34,8 +36,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
-import edu.uci.ics.hyracks.algebricks.core.utils.ListSet;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysicalOperator {
 

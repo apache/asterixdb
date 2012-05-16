@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
@@ -42,7 +42,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 
     protected final IOperationCallbackProvider opCallbackProvider;
 
-	public AbstractTreeIndexOperatorDescriptor(JobSpecification spec,
+	public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
 			int inputArity, int outputArity, RecordDescriptor recDesc,
 			IStorageManagerInterface storageManager,
 			IIndexRegistryProvider<IIndex> indexRegistryProvider,

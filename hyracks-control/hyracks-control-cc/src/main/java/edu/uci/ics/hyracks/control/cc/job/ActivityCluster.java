@@ -20,8 +20,6 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 
 public class ActivityCluster {
-    private final JobRun jobRun;
-
     private final Set<ActivityId> activities;
 
     private final Set<ActivityCluster> dependencies;
@@ -32,8 +30,7 @@ public class ActivityCluster {
 
     private ActivityClusterPlan acp;
 
-    public ActivityCluster(JobRun jobRun, Set<ActivityId> activities) {
-        this.jobRun = jobRun;
+    public ActivityCluster(Set<ActivityId> activities) {
         this.activities = activities;
         dependencies = new HashSet<ActivityCluster>();
         dependents = new HashSet<ActivityCluster>();
@@ -59,20 +56,12 @@ public class ActivityCluster {
         return dependents;
     }
 
-    public JobRun getJobRun() {
-        return jobRun;
-    }
-
     public ActivityClusterId getActivityClusterId() {
         return id;
     }
 
     public void setActivityClusterId(ActivityClusterId id) {
         this.id = id;
-    }
-
-    public int getMaxTaskClusterReattempts() {
-        return jobRun.getJobActivityGraph().getJobSpecification().getMaxReattempts();
     }
 
     public ActivityClusterPlan getPlan() {

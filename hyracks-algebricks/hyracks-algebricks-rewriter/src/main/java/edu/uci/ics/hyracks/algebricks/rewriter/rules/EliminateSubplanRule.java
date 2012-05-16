@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -30,7 +31,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class EliminateSubplanRule implements IAlgebraicRewriteRule {
@@ -42,7 +42,6 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
 
     /**
      * Eliminate Subplan above ETS
-     * 
      * and Subplan that has only ops. with one input and no free vars. (could we
      * modify it to consider free vars which are sources of Unnest or Assign, if
      * there are no aggregates?)

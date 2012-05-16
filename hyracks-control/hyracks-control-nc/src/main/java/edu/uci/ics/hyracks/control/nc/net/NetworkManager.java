@@ -40,6 +40,8 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 public class NetworkManager {
     private static final Logger LOGGER = Logger.getLogger(NetworkManager.class.getName());
 
+    private static final int MAX_CONNECTION_ATTEMPTS = 5;
+
     static final int INITIAL_MESSAGE_SIZE = 20;
 
     private final IHyracksRootContext ctx;
@@ -54,7 +56,8 @@ public class NetworkManager {
             IPartitionRequestListener partitionRequestListener, int nThreads) throws IOException {
         this.ctx = ctx;
         this.partitionRequestListener = partitionRequestListener;
-        md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads);
+        md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads,
+                MAX_CONNECTION_ATTEMPTS);
     }
 
     public void start() throws IOException {

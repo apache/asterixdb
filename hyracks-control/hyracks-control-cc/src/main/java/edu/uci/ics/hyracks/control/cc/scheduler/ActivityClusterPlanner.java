@@ -225,7 +225,7 @@ public class ActivityClusterPlanner {
             }
         }
 
-        JobRun jobRun = ac.getJobRun();
+        JobRun jobRun = scheduler.getJobRun();
         Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = jobRun.getConnectorPolicyMap();
         for (Map.Entry<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>> e : taskConnectivity.entrySet()) {
             Set<TaskId> cluster = taskClusterMap.get(e.getKey());
@@ -352,7 +352,7 @@ public class ActivityClusterPlanner {
                 }
             }
         }
-        ac.getJobRun().getConnectorPolicyMap().putAll(cPolicyMap);
+        scheduler.getJobRun().getConnectorPolicyMap().putAll(cPolicyMap);
     }
 
     private IConnectorPolicy assignConnectorPolicy(IConnectorDescriptor c, int nProducers, int nConsumers, int[] fanouts) {

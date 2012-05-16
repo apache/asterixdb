@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public interface IVariableTypeEnvironment {
     public Object getVarType(LogicalVariable var) throws AlgebricksException;

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;

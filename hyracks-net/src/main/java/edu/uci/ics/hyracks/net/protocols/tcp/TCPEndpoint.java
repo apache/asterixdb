@@ -88,7 +88,7 @@ public class TCPEndpoint {
 
         private final List<SocketChannel> workingIncomingConnections;
 
-        private Selector selector;
+        private final Selector selector;
 
         public IOThread() throws IOException {
             super("TCPEndpoint IO Thread");
@@ -116,7 +116,9 @@ public class TCPEndpoint {
                                 connect = channel.connect(address);
                             } catch (IOException e) {
                                 failure = true;
-                                connectionListener.connectionFailure(address);
+                                synchronized (connectionListener) {
+                                    connectionListener.connectionFailure(address);
+                                }
                             }
                             if (!failure) {
                                 if (!connect) {
@@ -173,7 +175,9 @@ public class TCPEndpoint {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     key.cancel();
-                                    connectionListener.connectionFailure((InetSocketAddress) key.attachment());
+                                    synchronized (connectionListener) {
+                                        connectionListener.connectionFailure((InetSocketAddress) key.attachment());
+                                    }
                                 }
                                 if (finishConnect) {
                                     createConnection(key, channel);
@@ -191,7 +195,9 @@ public class TCPEndpoint {
             TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, key, selector);
             key.attach(connection);
             key.interestOps(0);
-            connectionListener.connectionEstablished(connection);
+            synchronized (connectionListener) {
+                connectionListener.connectionEstablished(connection);
+            }
         }
 
         synchronized void initiateConnection(InetSocketAddress remoteAddress) {

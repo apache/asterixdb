@@ -61,7 +61,7 @@ public class ChannelSet {
     ChannelControlBlock allocateChannel() throws NetException {
         synchronized (mConn) {
             int idx = allocationBitmap.nextClearBit(0);
-            if (idx < 0 || idx == ccbArray.length) {
+            if (idx < 0 || idx >= ccbArray.length) {
                 cleanupClosedChannels();
                 idx = allocationBitmap.nextClearBit(0);
                 if (idx < 0 || idx == ccbArray.length) {
@@ -204,11 +204,11 @@ public class ChannelSet {
     }
 
     private ChannelControlBlock createChannel(int idx) throws NetException {
+        if (idx >= MAX_OPEN_CHANNELS) {
+            throw new NetException("More than " + MAX_OPEN_CHANNELS + " opened concurrently");
+        }
         if (idx >= ccbArray.length) {
             expand(idx);
-        }
-        if (idx > MAX_OPEN_CHANNELS) {
-            throw new NetException("More than " + MAX_OPEN_CHANNELS + " opened concurrently");
         }
         if (ccbArray[idx] != null) {
             assert ccbArray[idx].completelyClosed() : ccbArray[idx].toString();

@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.job.DeserializingJobSpecificationFactory;
@@ -104,7 +105,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public synchronized void notifyJobCreation(JobId jobId, JobSpecification specification) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, IOperatorDescriptorRegistry specification) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, specification);
         }

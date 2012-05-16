@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.visitors;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public interface ILogicalExpressionReferenceTransform {
     // returns true if any change is made to the expression

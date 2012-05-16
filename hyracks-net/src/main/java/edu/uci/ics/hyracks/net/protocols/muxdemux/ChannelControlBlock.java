@@ -128,21 +128,21 @@ public class ChannelControlBlock {
                 if (size <= 0) {
                     return size;
                 }
-                if (ri.currentReadBuffer == null) {
-                    ri.currentReadBuffer = ri.riEmptyStack.poll();
-                    assert ri.currentReadBuffer != null;
+                if (currentReadBuffer == null) {
+                    currentReadBuffer = riEmptyStack.poll();
+                    assert currentReadBuffer != null;
                 }
-                int rSize = Math.min(size, ri.currentReadBuffer.remaining());
+                int rSize = Math.min(size, currentReadBuffer.remaining());
                 if (rSize > 0) {
-                    ri.currentReadBuffer.limit(ri.currentReadBuffer.position() + rSize);
+                    currentReadBuffer.limit(currentReadBuffer.position() + rSize);
                     int len;
                     try {
-                        len = sc.read(ri.currentReadBuffer);
+                        len = sc.read(currentReadBuffer);
                         if (len < 0) {
                             throw new NetException("Socket Closed");
                         }
                     } finally {
-                        ri.currentReadBuffer.limit(ri.currentReadBuffer.capacity());
+                        currentReadBuffer.limit(currentReadBuffer.capacity());
                     }
                     size -= len;
                     if (len < rSize) {
@@ -151,7 +151,7 @@ public class ChannelControlBlock {
                 } else {
                     return size;
                 }
-                if (ri.currentReadBuffer.remaining() <= 0) {
+                if (currentReadBuffer.remaining() <= 0) {
                     flush();
                 }
             }
@@ -160,7 +160,7 @@ public class ChannelControlBlock {
         void flush() {
             if (currentReadBuffer != null) {
                 currentReadBuffer.flip();
-                fba.accept(ri.currentReadBuffer);
+                fba.accept(currentReadBuffer);
                 currentReadBuffer = null;
             }
         }
@@ -259,7 +259,7 @@ public class ChannelControlBlock {
                 ecodeSent = true;
                 localClose.set(true);
                 adjustChannelWritability();
-            } else if (wi.eos && !wi.eosSent) {
+            } else if (eos && !eosSent) {
                 writerState.command.setChannelId(channelId);
                 writerState.command.setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL);
                 writerState.command.setData(0);
@@ -347,7 +347,7 @@ public class ChannelControlBlock {
         return remoteClose.get();
     }
 
-    synchronized void reportLocalEOSAck() {
+    void reportLocalEOSAck() {
         localCloseAck.set(true);
     }
 

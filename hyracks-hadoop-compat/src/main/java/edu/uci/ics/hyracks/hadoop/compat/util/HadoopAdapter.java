@@ -30,6 +30,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.hadoop.HadoopMapperOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.hadoop.HadoopReducerOperatorDescriptor;
@@ -171,7 +173,7 @@ public class HadoopAdapter {
 	}
 
 	public HadoopReducerOperatorDescriptor getReducer(JobConf conf,
-			JobSpecification spec, boolean useAsCombiner) {
+			IOperatorDescriptorRegistry spec, boolean useAsCombiner) {
 		HadoopReducerOperatorDescriptor reduceOp = new HadoopReducerOperatorDescriptor(
 				spec, conf, null, new ClasspathBasedHadoopClassFactory(),
 				useAsCombiner);
@@ -334,7 +336,7 @@ public class HadoopAdapter {
 	}
 
 	public static InMemorySortOperatorDescriptor getInMemorySorter(
-			JobConf conf, JobSpecification spec) {
+			JobConf conf, IOperatorDescriptorRegistry spec) {
 		InMemorySortOperatorDescriptor inMemorySortOp = null;
 		RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf
 				.getMapOutputKeyClass().getName(), conf
@@ -352,7 +354,7 @@ public class HadoopAdapter {
 	}
 
 	public static ExternalSortOperatorDescriptor getExternalSorter(
-			JobConf conf, JobSpecification spec) {
+			JobConf conf, IOperatorDescriptorRegistry spec) {
 		ExternalSortOperatorDescriptor externalSortOp = null;
 		RecordDescriptor recordDescriptor = getHadoopRecordDescriptor(conf
 				.getMapOutputKeyClass().getName(), conf
@@ -371,7 +373,7 @@ public class HadoopAdapter {
 	}
 
 	public static MToNPartitioningConnectorDescriptor getMtoNHashPartitioningConnector(
-			JobConf conf, JobSpecification spec) {
+			JobConf conf, IConnectorDescriptorRegistry spec) {
 
 		Class mapOutputKeyClass = conf.getMapOutputKeyClass();
 		Class mapOutputValueClass = conf.getMapOutputValueClass();

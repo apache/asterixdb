@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -22,13 +23,12 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSc
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.StringStreamingRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.IScriptDescription;
 import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.IScriptDescription.ScriptKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.scripting.StringStreamingScriptDescription;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StringStreamingRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class StringStreamingScriptPOperator extends AbstractPropagatePropertiesForUsedVariablesPOperator {

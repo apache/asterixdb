@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
@@ -167,7 +167,7 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private final int splits;
 
-    public SplitVectorOperatorDescriptor(JobSpecification spec, int splits, RecordDescriptor recordDescriptor) {
+    public SplitVectorOperatorDescriptor(IOperatorDescriptorRegistry spec, int splits, RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.splits = splits;
         recordDescriptors[0] = recordDescriptor;

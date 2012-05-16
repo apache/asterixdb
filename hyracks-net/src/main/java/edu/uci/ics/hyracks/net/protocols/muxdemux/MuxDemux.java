@@ -36,6 +36,8 @@ public class MuxDemux {
 
     private final IChannelOpenListener channelOpenListener;
 
+    private final int maxConnectionAttempts;
+
     private final Map<InetSocketAddress, MultiplexedConnection> connectionMap;
 
     private final TCPEndpoint tcpEndpoint;
@@ -51,10 +53,14 @@ public class MuxDemux {
      *            - Callback interface to report channel events
      * @param nThreads
      *            - Number of threads to use for data transfer
+     * @param maxConnectionAttempts
+     *            - Maximum number of connection attempts
      */
-    public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads) {
+    public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads,
+            int maxConnectionAttempts) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
+        this.maxConnectionAttempts = maxConnectionAttempts;
         connectionMap = new HashMap<InetSocketAddress, MultiplexedConnection>();
         this.tcpEndpoint = new TCPEndpoint(new ITCPConnectionListener() {
             @Override
@@ -84,7 +90,7 @@ public class MuxDemux {
                     mConn = connectionMap.get(remoteAddress);
                     assert mConn != null;
                     int nConnectionAttempts = mConn.getConnectionAttempts();
-                    if (nConnectionAttempts > 5) {
+                    if (nConnectionAttempts > MuxDemux.this.maxConnectionAttempts) {
                         connectionMap.remove(remoteAddress);
                         mConn.setConnectionFailure();
                     } else {

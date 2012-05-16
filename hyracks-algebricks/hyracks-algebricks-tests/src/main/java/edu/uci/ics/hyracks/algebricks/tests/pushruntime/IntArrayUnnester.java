@@ -17,9 +17,9 @@ package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 

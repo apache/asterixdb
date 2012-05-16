@@ -3,12 +3,12 @@ package edu.uci.ics.hyracks.algebricks.examples.piglet.compiler;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.data.IntegerPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.utils.WriteValueTools;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
+import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.impl.IntegerPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 

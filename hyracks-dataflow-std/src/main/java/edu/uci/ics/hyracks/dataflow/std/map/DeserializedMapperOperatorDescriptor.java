@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
@@ -64,7 +64,7 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
 
     private final IDeserializedMapperFactory mapperFactory;
 
-    public DeserializedMapperOperatorDescriptor(JobSpecification spec, IDeserializedMapperFactory mapperFactory,
+    public DeserializedMapperOperatorDescriptor(IOperatorDescriptorRegistry spec, IDeserializedMapperFactory mapperFactory,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.mapperFactory = mapperFactory;

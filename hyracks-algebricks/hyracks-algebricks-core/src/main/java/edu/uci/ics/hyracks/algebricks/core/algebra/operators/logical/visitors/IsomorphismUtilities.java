@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.Map;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class IsomorphismUtilities {
 

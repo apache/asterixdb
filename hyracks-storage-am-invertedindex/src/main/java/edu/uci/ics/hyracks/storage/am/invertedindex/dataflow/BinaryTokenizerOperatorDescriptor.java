@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
@@ -36,7 +36,7 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     // WARNING: too many key fields can cause significant data blowup.
     private final int[] keyFields;
 
-    public BinaryTokenizerOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+    public BinaryTokenizerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IBinaryTokenizerFactory tokenizerFactory, int[] tokenFields, int[] keyFields) {
         super(spec, 1, 1);
         this.tokenizerFactory = tokenizerFactory;

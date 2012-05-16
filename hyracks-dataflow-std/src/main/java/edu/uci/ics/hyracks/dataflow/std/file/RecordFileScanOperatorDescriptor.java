@@ -21,12 +21,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public class RecordFileScanOperatorDescriptor extends AbstractDeserializedFileScanOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public RecordFileScanOperatorDescriptor(JobSpecification spec, FileSplit[] splits, RecordDescriptor recordDescriptor) {
+    public RecordFileScanOperatorDescriptor(IOperatorDescriptorRegistry spec, FileSplit[] splits, RecordDescriptor recordDescriptor) {
         super(spec, splits, recordDescriptor);
     }
 

@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -40,12 +40,11 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
 
     protected String displayName;
 
-    public AbstractOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity) {
-        odId = spec.createOperatorDescriptorId();
+    public AbstractOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity) {
+        odId = spec.createOperatorDescriptorId(this);
         this.inputArity = inputArity;
         this.outputArity = outputArity;
         recordDescriptors = new RecordDescriptor[outputArity];
-        spec.getOperatorMap().put(getOperatorId(), this);
         displayName = getClass().getName() + "[" + odId + "]";
     }
 

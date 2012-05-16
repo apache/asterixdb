@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
@@ -41,7 +41,7 @@ public class ReducerOperatorDescriptor<K2 extends Writable, V2 extends Writable,
 
     private MarshalledWritable<Configuration> mConfig;
 
-    public ReducerOperatorDescriptor(JobSpecification spec, int jobId, MarshalledWritable<Configuration> mConfig) {
+    public ReducerOperatorDescriptor(IOperatorDescriptorRegistry spec, int jobId, MarshalledWritable<Configuration> mConfig) {
         super(spec, 1, 0);
         this.jobId = jobId;
         this.mConfig = mConfig;

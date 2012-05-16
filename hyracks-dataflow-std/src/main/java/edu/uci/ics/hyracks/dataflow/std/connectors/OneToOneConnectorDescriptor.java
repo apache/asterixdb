@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
@@ -37,7 +38,7 @@ import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public OneToOneConnectorDescriptor(JobSpecification spec) {
+    public OneToOneConnectorDescriptor(IConnectorDescriptorRegistry spec) {
         super(spec);
     }
 

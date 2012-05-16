@@ -92,7 +92,7 @@ public class ActivityClusterGraphBuilder {
             for (ActivityId taskId : taskIds) {
                 Set<ActivityId> eqSet = new HashSet<ActivityId>();
                 eqSet.add(taskId);
-                ActivityCluster stage = new ActivityCluster(jobRun, eqSet);
+                ActivityCluster stage = new ActivityCluster(eqSet);
                 stageMap.put(taskId, stage);
                 stages.add(stage);
             }
@@ -156,7 +156,7 @@ public class ActivityClusterGraphBuilder {
 
         eqSets.remove(stage1);
         eqSets.remove(stage2);
-        ActivityCluster mergedStage = new ActivityCluster(jobRun, mergedSet);
+        ActivityCluster mergedStage = new ActivityCluster(mergedSet);
         eqSets.add(mergedStage);
 
         for (ActivityId t : mergedSet) {

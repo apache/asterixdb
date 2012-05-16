@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
-public class JobSpecification implements Serializable {
+public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
 
     private final List<OperatorDescriptorId> roots;
@@ -78,12 +78,18 @@ public class JobSpecification implements Serializable {
         maxReattempts = 2;
     }
 
-    public OperatorDescriptorId createOperatorDescriptorId() {
-        return new OperatorDescriptorId(operatorIdCounter++);
+    @Override
+    public OperatorDescriptorId createOperatorDescriptorId(IOperatorDescriptor op) {
+        OperatorDescriptorId odId = new OperatorDescriptorId(operatorIdCounter++);
+        opMap.put(odId, op);
+        return odId;
     }
 
-    public ConnectorDescriptorId createConnectorDescriptor() {
-        return new ConnectorDescriptorId(connectorIdCounter++);
+    @Override
+    public ConnectorDescriptorId createConnectorDescriptor(IConnectorDescriptor conn) {
+        ConnectorDescriptorId cdId = new ConnectorDescriptorId(connectorIdCounter++);
+        connMap.put(cdId, conn);
+        return cdId;
     }
 
     public void addRoot(IOperatorDescriptor op) {

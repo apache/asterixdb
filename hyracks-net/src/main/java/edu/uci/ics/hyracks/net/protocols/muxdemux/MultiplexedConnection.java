@@ -154,7 +154,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     class WriterState {
-        private final ByteBuffer writeBuffer;
+        private final ByteBuffer cmdWriteBuffer;
 
         final MuxDemuxCommand command;
 
@@ -165,29 +165,29 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         private ChannelControlBlock ccb;
 
         public WriterState() {
-            writeBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
-            writeBuffer.flip();
+            cmdWriteBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
+            cmdWriteBuffer.flip();
             command = new MuxDemuxCommand();
             ccb = null;
         }
 
         boolean writePending() {
-            return writeBuffer.remaining() > 0 || (pendingBuffer != null && pendingWriteSize > 0);
+            return cmdWriteBuffer.remaining() > 0 || (pendingBuffer != null && pendingWriteSize > 0);
         }
 
         void reset(ByteBuffer pendingBuffer, int pendingWriteSize, ChannelControlBlock ccb) {
-            writeBuffer.clear();
-            command.write(writeBuffer);
-            writeBuffer.flip();
+            cmdWriteBuffer.clear();
+            command.write(cmdWriteBuffer);
+            cmdWriteBuffer.flip();
             this.pendingBuffer = pendingBuffer;
             this.pendingWriteSize = pendingWriteSize;
             this.ccb = ccb;
         }
 
         boolean performPendingWrite(SocketChannel sc) throws IOException {
-            int len = writeBuffer.remaining();
+            int len = cmdWriteBuffer.remaining();
             if (len > 0) {
-                int written = sc.write(writeBuffer);
+                int written = sc.write(cmdWriteBuffer);
                 muxDemux.getPerformanceCounters().addSignalingBytesWritten(written);
                 if (written < len) {
                     return false;
@@ -290,9 +290,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 }
                 BitSet pendingChannelWriteBitmap = cSet.getPendingChannelWriteBitmap();
                 lastChannelWritten = pendingChannelWriteBitmap.nextSetBit(lastChannelWritten + 1);
-                if (lastChannelWritten < 0) {
+                if (lastChannelWritten == -1) {
                     lastChannelWritten = pendingChannelWriteBitmap.nextSetBit(0);
-                    if (lastChannelWritten < 0) {
+                    if (lastChannelWritten == -1) {
                         return;
                     }
                 }

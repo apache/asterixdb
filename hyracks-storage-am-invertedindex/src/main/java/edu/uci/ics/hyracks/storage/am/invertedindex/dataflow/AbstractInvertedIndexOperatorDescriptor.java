@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -57,7 +57,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IBinaryTokenizerFactory tokenizerFactory;
     protected final IFileSplitProvider invListsFileSplitProvider;
 
-    public AbstractInvertedIndexOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity,
+    public AbstractInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,

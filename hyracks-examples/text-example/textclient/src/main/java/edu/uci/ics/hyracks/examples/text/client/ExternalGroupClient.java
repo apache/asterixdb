@@ -54,12 +54,12 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.FrameFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.CountFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.hash.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 
 /**
@@ -201,7 +201,7 @@ public class ExternalGroupClient {
 
         switch (alg) {
             case 0: // new external hash graph
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor(spec, keys,
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec, keys,
                         framesLimit, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
@@ -238,7 +238,7 @@ public class ExternalGroupClient {
                         PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) }));
                 spec.connect(scanSortConn2, fileScanner, 0, sorter2, 0);
 
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.PreclusteredGroupOperatorDescriptor(spec, keys,
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor(spec, keys,
                         new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
@@ -274,7 +274,7 @@ public class ExternalGroupClient {
                 spec.connect(scanConn2, fileScanner, 0, grouper, 0);
                 break;
             default:
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor(spec, keys,
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec, keys,
                         framesLimit, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },

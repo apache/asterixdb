@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
@@ -39,8 +38,7 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
     @Override
     protected void performEvent(TaskAttempt ta) {
         try {
-            ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
-            JobRun run = ac.getJobRun();
+            JobRun run = ccs.getActiveRunMap().get(jobId);
             if (statistics != null) {
                 JobProfile jobProfile = run.getJobProfile();
                 Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
@@ -51,7 +49,7 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
                 }
                 jobletProfile.getTaskProfiles().put(taId, statistics);
             }
-            ac.getJobRun().getScheduler().notifyTaskComplete(ta);
+            run.getScheduler().notifyTaskComplete(ta);
         } catch (HyracksException e) {
             e.printStackTrace();
         }

@@ -16,23 +16,20 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * 
  * This rule sets the executionMode property of an operator, w/o introducing
  * EXCHANGE operators in the plan. Previously, i.e. before having physical
  * optimizations in place, we were using the IntroduceExchangeRule, which was
  * doing both, to both set excutionMode and introduce data exchange ops.
  * 
- * 
  * @author Nicola
- * 
  */
 public class SetExecutionModeRule implements IAlgebraicRewriteRule {
 

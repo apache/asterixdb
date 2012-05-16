@@ -18,21 +18,22 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
 public class TaskFailureWork extends AbstractTaskLifecycleWork {
     private final String details;
 
-    public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
-            String details) {
+    public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId, String details) {
         super(ccs, jobId, taId, nodeId);
         this.details = details;
     }
 
     @Override
     protected void performEvent(TaskAttempt ta) {
+        JobRun run = ccs.getActiveRunMap().get(jobId);
         ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
-        ac.getJobRun().getScheduler().notifyTaskFailure(ta, ac, details);
+        run.getScheduler().notifyTaskFailure(ta, ac, details);
     }
 
     @Override

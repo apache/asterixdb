@@ -23,14 +23,14 @@ import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
 import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 
 public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
-    public MToNReplicatingConnectorDescriptor(JobSpecification spec) {
+    public MToNReplicatingConnectorDescriptor(IConnectorDescriptorRegistry spec) {
         super(spec);
     }
 

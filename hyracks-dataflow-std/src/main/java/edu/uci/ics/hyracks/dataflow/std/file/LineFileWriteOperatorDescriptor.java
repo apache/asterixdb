@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -39,15 +39,15 @@ public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDe
     private int[] columns;
     private char separator;
 
-    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits) {
+    public LineFileWriteOperatorDescriptor(IOperatorDescriptorRegistry spec, FileSplit[] splits) {
         this(spec, splits, null, RecordWriter.COMMA);
     }
 
-    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits, int[] columns) {
+    public LineFileWriteOperatorDescriptor(IOperatorDescriptorRegistry spec, FileSplit[] splits, int[] columns) {
         this(spec, splits, columns, RecordWriter.COMMA);
     }
 
-    public LineFileWriteOperatorDescriptor(JobSpecification spec, FileSplit[] splits, int[] columns, char separator) {
+    public LineFileWriteOperatorDescriptor(IOperatorDescriptorRegistry spec, FileSplit[] splits, int[] columns, char separator) {
         super(spec, splits);
         this.columns = columns;
         this.separator = separator;

@@ -29,8 +29,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
@@ -47,12 +47,12 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
     private IBinaryComparatorFactory[] comparatorFactories;
 
-    public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
+    public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
         this(spec, sortFields, null, comparatorFactories, recordDescriptor);
     }
 
-    public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
+    public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);

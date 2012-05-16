@@ -6,8 +6,8 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.exceptions.PigletException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
 
 public class PigletFunctionRegistry {
     private static final Map<FunctionIdentifier, IPigletFunctionEvaluatorFactoryBuilder> builderMap;

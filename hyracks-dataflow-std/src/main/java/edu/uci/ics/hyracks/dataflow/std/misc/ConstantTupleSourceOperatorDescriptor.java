@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
 public class ConstantTupleSourceOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
@@ -30,7 +30,7 @@ public class ConstantTupleSourceOperatorDescriptor extends AbstractSingleActivit
     private byte[] tupleData;
     private int tupleSize;
 
-    public ConstantTupleSourceOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc, int[] fieldSlots,
+    public ConstantTupleSourceOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc, int[] fieldSlots,
             byte[] tupleData, int tupleSize) {
         super(spec, 0, 1);
         this.tupleData = tupleData;
