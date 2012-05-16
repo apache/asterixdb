@@ -160,7 +160,7 @@ public class ARecordCaster {
     private void matchClosedPart(List<SimpleValueReference> fieldNames, List<SimpleValueReference> fieldTypeTags,
             List<SimpleValueReference> fieldValues) {
         // sort-merge based match
-        quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields-1);
+        quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
         int reqFnStart = 0;
         while (fnStart < numInputFields && reqFnStart < reqFieldNames.size()) {
@@ -268,6 +268,7 @@ public class ARecordCaster {
     }
 
     private int compare(IValueReference a, IValueReference b) {
+        // start+1 and len-1 due to the type tag
         return fieldNameComparator.compare(a.getBytes(), a.getStartIndex() + 1, a.getLength() - 1, b.getBytes(),
                 b.getStartIndex() + 1, b.getLength() - 1);
     }
