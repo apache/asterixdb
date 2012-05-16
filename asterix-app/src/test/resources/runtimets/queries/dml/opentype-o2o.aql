@@ -30,7 +30,7 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "name": "Person Two", "id": "002",  "hobby": "football", "city":"irvine"}
+{ "hobby": "football", "city":"irvine", "name": "Person Two", "id": "002"}
 );
 
 insert into dataset testds (
@@ -38,7 +38,7 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "name": "Person Four", "id": "004",  "hobby": "swimming", "phone":"102-304-506"}
+{ "hobby": "swimming", "name": "Person Four", "id": "004", "phone":"102-304-506"}
 );
 
 insert into dataset testds2 (
