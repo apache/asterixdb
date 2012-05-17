@@ -13,26 +13,24 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.runtime.accessors;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class SimpleValueReference implements IValueReference {
+public class AFlatValueAccessor implements IBinaryAccessor {
 
     private byte[] data;
     private int start;
     private int len;
 
+    @Override
     public void reset(byte[] data, int start, int len) {
         this.data = data;
         this.start = start;
         this.len = len;
-    }
-
-    public void reset(IValueReference ivf) {
-        this.data = ivf.getBytes();
-        this.start = ivf.getStartIndex();
-        this.len = ivf.getLength();
     }
 
     @Override
@@ -66,5 +64,10 @@ public class SimpleValueReference implements IValueReference {
                 return false;
         }
         return true;
+    }
+
+    @Override
+    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException{
+        return vistor.visit(this, tag);
     }
 }

@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.runtime.accessors;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -28,14 +29,16 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
+import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class ARecordAccessor implements IValueReference {
+public class ARecordAccessor implements IBinaryAccessor {
 
-    private List<SimpleValueReference> fieldNames = new ArrayList<SimpleValueReference>();
-    private List<SimpleValueReference> fieldTypeTags = new ArrayList<SimpleValueReference>();
-    private List<SimpleValueReference> fieldValues = new ArrayList<SimpleValueReference>();
+    private List<AFlatValueAccessor> fieldNames = new ArrayList<AFlatValueAccessor>();
+    private List<AFlatValueAccessor> fieldTypeTags = new ArrayList<AFlatValueAccessor>();
+    private List<AFlatValueAccessor> fieldValues = new ArrayList<AFlatValueAccessor>();
 
     private byte[] typeBuffer = new byte[32768];
     private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
@@ -53,7 +56,7 @@ public class ARecordAccessor implements IValueReference {
     private int[] fieldOffsets;
     private int fieldCursor = -1;
     private ATypeTag typeTag;
-    private SimpleValueReference nullReference = new SimpleValueReference();
+    private AFlatValueAccessor nullReference = new AFlatValueAccessor();
 
     private byte[] data;
     private int start;
@@ -76,7 +79,7 @@ public class ARecordAccessor implements IValueReference {
                 int tagStart = typeBos.size();
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
-                SimpleValueReference typeTagReference = new SimpleValueReference();
+                AFlatValueAccessor typeTagReference = new AFlatValueAccessor();
                 typeTagReference.reset(typeBuffer, tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
@@ -85,7 +88,7 @@ public class ARecordAccessor implements IValueReference {
                 typeDos.writeByte(ATypeTag.STRING.serialize());
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
-                SimpleValueReference typeNameReference = new SimpleValueReference();
+                AFlatValueAccessor typeNameReference = new AFlatValueAccessor();
                 typeNameReference.reset(typeBuffer, nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }
@@ -159,7 +162,8 @@ public class ARecordAccessor implements IValueReference {
                         int p = 1 << (7 - (fieldNumber % 8));
                         if ((b1 & p) == 0) {
                             // set null value (including type tag inside)
-                            nextFieldValue().reset(nullReference);
+                            nextFieldValue().reset(nullReference.getBytes(), nullReference.getStartIndex(),
+                                    nullReference.getLength());
                             continue;
                         }
                     }
@@ -221,31 +225,31 @@ public class ARecordAccessor implements IValueReference {
         fieldCursor++;
     }
 
-    private SimpleValueReference nextFieldName() {
+    private AFlatValueAccessor nextFieldName() {
         if (fieldCursor < fieldNames.size()) {
             return fieldNames.get(fieldCursor);
         } else {
-            SimpleValueReference fieldNameReference = new SimpleValueReference();
+            AFlatValueAccessor fieldNameReference = new AFlatValueAccessor();
             fieldNames.add(fieldNameReference);
             return fieldNameReference;
         }
     }
 
-    private SimpleValueReference nextFieldType() {
+    private AFlatValueAccessor nextFieldType() {
         if (fieldCursor < fieldTypeTags.size()) {
             return fieldTypeTags.get(fieldCursor);
         } else {
-            SimpleValueReference fieldTypeReference = new SimpleValueReference();
+            AFlatValueAccessor fieldTypeReference = new AFlatValueAccessor();
             fieldTypeTags.add(fieldTypeReference);
             return fieldTypeReference;
         }
     }
 
-    private SimpleValueReference nextFieldValue() {
+    private AFlatValueAccessor nextFieldValue() {
         if (fieldCursor < fieldValues.size()) {
             return fieldValues.get(fieldCursor);
         } else {
-            SimpleValueReference fieldValueReference = new SimpleValueReference();
+            AFlatValueAccessor fieldValueReference = new AFlatValueAccessor();
             fieldValues.add(fieldValueReference);
             return fieldValueReference;
         }
@@ -255,15 +259,15 @@ public class ARecordAccessor implements IValueReference {
         return fieldCursor;
     }
 
-    public List<SimpleValueReference> getFieldNames() {
+    public List<AFlatValueAccessor> getFieldNames() {
         return fieldNames;
     }
 
-    public List<SimpleValueReference> getFieldTypeTags() {
+    public List<AFlatValueAccessor> getFieldTypeTags() {
         return fieldTypeTags;
     }
 
-    public List<SimpleValueReference> getFieldValues() {
+    public List<AFlatValueAccessor> getFieldValues() {
         return fieldValues;
     }
 
@@ -281,4 +285,10 @@ public class ARecordAccessor implements IValueReference {
     public int getLength() {
         return len;
     }
+
+    @Override
+    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException {
+        return vistor.visit(this, tag);
+    }
+
 }

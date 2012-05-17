@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.runtime.accessors.cast;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -28,13 +28,16 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
+import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class ARecordCaster {
+class ARecordCaster {
 
     // describe closed fields in the required type
     private int[] fieldPermutation;
@@ -44,9 +47,9 @@ public class ARecordCaster {
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
 
-    private List<SimpleValueReference> reqFieldNames = new ArrayList<SimpleValueReference>();
+    private List<AFlatValueAccessor> reqFieldNames = new ArrayList<AFlatValueAccessor>();
     private int[] reqFieldNamesSortedIndex;
-    private List<SimpleValueReference> reqFieldTypeTags = new ArrayList<SimpleValueReference>();
+    private List<AFlatValueAccessor> reqFieldTypeTags = new ArrayList<AFlatValueAccessor>();
     private ARecordType cachedReqType = null;
 
     private byte[] buffer = new byte[32768];
@@ -54,12 +57,16 @@ public class ARecordCaster {
     private DataOutputStream dos = new DataOutputStream(bos);
 
     private RecordBuilder recBuilder = new RecordBuilder();
-    private SimpleValueReference nullReference = new SimpleValueReference();
-    private SimpleValueReference nullTypeTag = new SimpleValueReference();
+    private AFlatValueAccessor nullReference = new AFlatValueAccessor();
+    private AFlatValueAccessor nullTypeTag = new AFlatValueAccessor();
 
     private int numInputFields = 0;
     private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
             .createBinaryComparator();
+
+    private byte[] outputBuffer = new byte[32768];
+    private ResettableByteArrayOutputStream outputBos = new ResettableByteArrayOutputStream();
+    private DataOutputStream outputDos = new DataOutputStream(outputBos);
 
     public ARecordCaster() {
         try {
@@ -78,10 +85,11 @@ public class ARecordCaster {
         }
     }
 
-    public void castRecord(ARecordAccessor recordAccessor, ARecordType reqType, DataOutput output) throws IOException {
-        List<SimpleValueReference> fieldNames = recordAccessor.getFieldNames();
-        List<SimpleValueReference> fieldTypeTags = recordAccessor.getFieldTypeTags();
-        List<SimpleValueReference> fieldValues = recordAccessor.getFieldValues();
+    public void castRecord(ARecordAccessor recordAccessor, ARecordAccessor resultAccessor, ARecordType reqType,
+            ACastVisitor visitor) throws IOException {
+        List<AFlatValueAccessor> fieldNames = recordAccessor.getFieldNames();
+        List<AFlatValueAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
+        List<AFlatValueAccessor> fieldValues = recordAccessor.getFieldValues();
         numInputFields = recordAccessor.getCursor() + 1;
 
         if (openFields == null || numInputFields > openFields.length) {
@@ -95,7 +103,8 @@ public class ARecordCaster {
         // clear the previous states
         reset();
         matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
-        writeOutput(fieldNames, fieldTypeTags, fieldValues, output);
+        writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
+        resultAccessor.reset(outputBuffer, 0, outputBos.size());
     }
 
     private void reset() {
@@ -105,6 +114,7 @@ public class ARecordCaster {
             fieldPermutation[i] = -1;
         for (int i = 0; i < numInputFields; i++)
             fieldNamesSortedIndex[i] = i;
+        outputBos.setByteArray(outputBuffer, 0);
     }
 
     private void loadRequiredType(ARecordType reqType) throws IOException {
@@ -136,7 +146,7 @@ public class ARecordCaster {
             int tagStart = bos.size();
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
-            SimpleValueReference typeTagPointable = new SimpleValueReference();
+            AFlatValueAccessor typeTagPointable = new AFlatValueAccessor();
             typeTagPointable.reset(buffer, tagStart, tagEnd - tagStart);
             reqFieldTypeTags.add(typeTagPointable);
 
@@ -145,7 +155,7 @@ public class ARecordCaster {
             dos.write(ATypeTag.STRING.serialize());
             dos.writeUTF(fname);
             int nameEnd = bos.size();
-            SimpleValueReference typeNamePointable = new SimpleValueReference();
+            AFlatValueAccessor typeNamePointable = new AFlatValueAccessor();
             typeNamePointable.reset(buffer, nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }
@@ -157,8 +167,8 @@ public class ARecordCaster {
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
-    private void matchClosedPart(List<SimpleValueReference> fieldNames, List<SimpleValueReference> fieldTypeTags,
-            List<SimpleValueReference> fieldValues) {
+    private void matchClosedPart(List<AFlatValueAccessor> fieldNames, List<AFlatValueAccessor> fieldTypeTags,
+            List<AFlatValueAccessor> fieldValues) {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -168,8 +178,8 @@ public class ARecordCaster {
             int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];
             int c = compare(fieldNames.get(fnPos), reqFieldNames.get(reqFnPos));
             if (c == 0) {
-                SimpleValueReference fieldTypeTag = fieldTypeTags.get(fnPos);
-                SimpleValueReference reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                AFlatValueAccessor fieldTypeTag = fieldTypeTags.get(fnPos);
+                AFlatValueAccessor reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
                         optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
@@ -203,8 +213,8 @@ public class ARecordCaster {
         }
     }
 
-    private void writeOutput(List<SimpleValueReference> fieldNames, List<SimpleValueReference> fieldTypeTags,
-            List<SimpleValueReference> fieldValues, DataOutput output) throws IOException {
+    private void writeOutput(List<AFlatValueAccessor> fieldNames, List<AFlatValueAccessor> fieldTypeTags,
+            List<AFlatValueAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();
@@ -212,7 +222,7 @@ public class ARecordCaster {
         // write the closed part
         for (int i = 0; i < fieldPermutation.length; i++) {
             int pos = fieldPermutation[i];
-            SimpleValueReference field;
+            AFlatValueAccessor field;
             if (pos >= 0) {
                 field = fieldValues.get(pos);
             } else {
@@ -224,15 +234,15 @@ public class ARecordCaster {
         // write the open part
         for (int i = 0; i < numInputFields; i++) {
             if (openFields[i]) {
-                SimpleValueReference name = fieldNames.get(i);
-                SimpleValueReference field = fieldValues.get(i);
+                AFlatValueAccessor name = fieldNames.get(i);
+                AFlatValueAccessor field = fieldValues.get(i);
                 recBuilder.addField(name, field);
             }
         }
         recBuilder.write(output, true);
     }
 
-    private void quickSort(int[] index, List<SimpleValueReference> names, int start, int end) {
+    private void quickSort(int[] index, List<AFlatValueAccessor> names, int start, int end) {
         if (end <= start)
             return;
         int i = partition(index, names, start, end);
@@ -240,7 +250,7 @@ public class ARecordCaster {
         quickSort(index, names, i + 1, end);
     }
 
-    private int partition(int[] index, List<SimpleValueReference> names, int left, int right) {
+    private int partition(int[] index, List<AFlatValueAccessor> names, int left, int right) {
         int i = left - 1;
         int j = right;
         while (true) {
