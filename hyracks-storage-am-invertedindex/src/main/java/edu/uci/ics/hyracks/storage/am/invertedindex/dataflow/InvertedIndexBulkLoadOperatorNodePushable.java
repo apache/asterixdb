@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodeP
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexBulkLoadContext;
 
@@ -43,8 +42,8 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
     public InvertedIndexBulkLoadOperatorNodePushable(AbstractInvertedIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider) {
         btreeDataflowHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, partition, true);
-        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition, true);
+                .createIndexDataflowHelper(opDesc, ctx, partition);
+        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
@@ -58,7 +57,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
 
         // BTree.
         try {
-            btreeDataflowHelper.init();
+            btreeDataflowHelper.init(false);
         } catch (Exception e) {
             // Cleanup in case of failure.
             btreeDataflowHelper.deinit();
@@ -71,7 +70,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
 
         // Inverted Index.
         try {
-            invIndexDataflowHelper.init();
+            invIndexDataflowHelper.init(false);
             invIndex = (InvertedIndex) invIndexDataflowHelper.getIndex();
             bulkLoadCtx = (InvertedIndexBulkLoadContext) invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
         } catch (Exception e) {

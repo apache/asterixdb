@@ -98,4 +98,9 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
 		return dataflowHelperFactory;
 	}
+	
+	@Override
+	public IOperationCallbackProvider getOpCallbackProvider() {
+	    return opCallbackProvider;
+	}
 }

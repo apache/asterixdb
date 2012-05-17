@@ -54,6 +54,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -171,6 +172,16 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories,
             IBinaryComparatorFactory[] btreeComparatorFactories);
 
+    protected void createPrimaryIndex() throws Exception {
+        JobSpecification spec = new JobSpecification();
+        TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
+                indexRegistryProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
+        spec.addRoot(primaryCreateOp);
+        runTest(spec);
+    }
+
     protected void loadPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -213,6 +224,16 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0, primaryBulkLoad, 0);
 
         spec.addRoot(primaryBulkLoad);
+        runTest(spec);
+    }
+
+    protected void createSecondaryIndex() throws Exception {
+        JobSpecification spec = new JobSpecification();
+        TreeIndexCreateOperatorDescriptor secondaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
+                storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
+                secondaryComparatorFactories, rtreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
+        spec.addRoot(secondaryCreateOp);
         runTest(spec);
     }
 

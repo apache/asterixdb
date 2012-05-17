@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -27,7 +26,7 @@ public class LSMBTreeDataflowHelperFactory implements IIndexDataflowHelperFactor
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+            int partition) {
+        return new LSMBTreeDataflowHelper(opDesc, ctx, partition);
     }
 }

@@ -40,6 +40,6 @@ public class TreeIndexDiskOrderScanOperatorDescriptor extends AbstractTreeIndexO
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexDiskOrderScanOperatorNodePushable(this, ctx, opCallbackProvider, partition);
+        return new TreeIndexDiskOrderScanOperatorNodePushable(this, ctx, partition);
     }
 }

@@ -35,6 +35,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     @Before
     public void setup() throws Exception {
         super.setup();
+	createPrimaryIndex();
         loadPrimaryIndex();
     }
 

@@ -33,7 +33,7 @@ public class RTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
     public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             IOperationCallbackProvider opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider,
             int[] keyFields) {
-        super(opDesc, ctx, opCallbackProvider, partition, recordDescProvider);
+        super(opDesc, ctx, partition, recordDescProvider);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();
             searchKey.setFieldPermutation(keyFields);

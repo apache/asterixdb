@@ -45,7 +45,9 @@ public class RTreeSecondaryIndexInsertOperatorTest extends AbstractRTreeOperator
     @Before
     public void setup() throws Exception {
         super.setup();
+        createPrimaryIndex();
         loadPrimaryIndex();
+        createSecondaryIndex();
         loadSecondaryIndex();
         insertPipeline();
     }

@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
@@ -37,17 +36,15 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final int memPageSize;
     private final int memNumPages;
 
-    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+        super(opDesc, ctx, partition);
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
         memNumPages = DEFAULT_MEM_NUM_PAGES;
     }
 
-    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
-            int memNumPages) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+    public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int memPageSize, int memNumPages) {
+        super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
     }
@@ -63,9 +60,9 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
             file.delete();
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        return LSMBTreeUtils.createLSMTree(memBufferCache, opCallbackProvider.getOperationCallback(),
-                memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc
-                        .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
-                treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories());
+        return LSMBTreeUtils.createLSMTree(memBufferCache, opDesc.getOpCallbackProvider().getOperationCallback(),
+                memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc.getStorageManager()
+                        .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
+                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories());
     }
 }

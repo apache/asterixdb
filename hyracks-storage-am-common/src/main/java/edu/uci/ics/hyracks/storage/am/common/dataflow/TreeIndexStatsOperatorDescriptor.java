@@ -44,6 +44,6 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexStatsOperatorNodePushable(this, ctx, opCallbackProvider, partition);
+        return new TreeIndexStatsOperatorNodePushable(this, ctx, partition);
     }
 }

@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
@@ -38,12 +37,10 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private IIndexAccessor indexAccessor;
 
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, IOperationCallbackProvider opCallbackProvider, int partition,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOp op) {
-        // Only create the if insert operation is an insert.
-        boolean createIfNotExists = (op == IndexOp.INSERT);
+            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
+            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+                opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -58,7 +55,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
         writer.open();
         try {
-            treeIndexHelper.init();
+            treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             indexAccessor = treeIndex.createAccessor();
         } catch (Exception e) {

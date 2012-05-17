@@ -20,23 +20,21 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 
 public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
-    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+        super(opDesc, ctx, partition);
     }
 
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         try {
-            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx),
-                    opCallbackProvider.getOperationCallback(), treeOpDesc.getTreeIndexTypeTraits(),
-                    treeOpDesc.getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM);
+            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc
+                    .getOpCallbackProvider().getOperationCallback(), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+                    .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM);
         } catch (BTreeException e) {
             throw new HyracksDataException(e);
         }

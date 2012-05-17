@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
@@ -28,10 +27,9 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
 
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
 
-    public RTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists,
+    public RTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IPrimitiveValueProviderFactory[] valueProviderFactories) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+        super(opDesc, ctx, partition);
         this.valueProviderFactories = valueProviderFactories;
     }
 

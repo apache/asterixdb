@@ -58,7 +58,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new BTreeSearchOperatorNodePushable(this, ctx, opCallbackProvider, partition, recordDescProvider,
+        return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider,
                 lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive);
     }
 }

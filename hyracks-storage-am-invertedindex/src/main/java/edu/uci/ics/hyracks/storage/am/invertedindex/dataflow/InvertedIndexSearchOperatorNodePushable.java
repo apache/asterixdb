@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
@@ -63,8 +62,8 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         btreeDataflowHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, NoOpOperationCallbackProvider.INSTANCE, partition, false);
-        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition, false);
+                .createIndexDataflowHelper(opDesc, ctx, partition);
+        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(searchModifier);
         this.recordDescProvider = recordDescProvider;
@@ -77,7 +76,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         tuple = new FrameTupleReference();
         // BTree.
         try {
-            btreeDataflowHelper.init();
+            btreeDataflowHelper.init(false);
         } catch (Exception e) {
             // Cleanup in case of failure/
             btreeDataflowHelper.deinit();
@@ -89,7 +88,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         }
         // Inverted Index.
         try {
-            invIndexDataflowHelper.init();
+            invIndexDataflowHelper.init(false);
             invIndex = (InvertedIndex) invIndexDataflowHelper.getIndex();
         } catch (Exception e) {
             // Cleanup in case of failure.

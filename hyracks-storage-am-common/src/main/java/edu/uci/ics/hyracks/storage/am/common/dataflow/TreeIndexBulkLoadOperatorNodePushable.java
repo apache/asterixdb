@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
@@ -38,11 +37,9 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, int[] fieldPermutation, float fillFactor,
-            IRecordDescriptorProvider recordDescProvider) {
-
+            int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, opCallbackProvider, partition, true);
+                opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -55,7 +52,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
         try {
-            treeIndexHelper.init();
+            treeIndexHelper.init(false);
             treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             treeIndex.open(treeIndexHelper.getIndexFileId());
             bulkLoadCtx = treeIndex.beginBulkLoad(fillFactor);

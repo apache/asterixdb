@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
@@ -37,9 +36,9 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
     private TreeIndexStatsGatherer statsGatherer;
 
     public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition) {
+            int partition) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, opCallbackProvider, partition, false);
+                opDesc, ctx, partition);
         this.ctx = ctx;
     }
 
@@ -56,7 +55,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
     public void initialize() throws HyracksDataException {
         try {
             writer.open();
-            treeIndexHelper.init();
+            treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             IBufferCache bufferCache = treeIndexHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
             statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(),

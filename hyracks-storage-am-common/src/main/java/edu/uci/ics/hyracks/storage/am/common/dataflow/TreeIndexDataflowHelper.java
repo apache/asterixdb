@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -26,9 +25,8 @@ import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
     protected ITreeIndexOperatorDescriptor treeOpDesc;
 
-    public TreeIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+    public TreeIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+        super(opDesc, ctx, partition);
         this.treeOpDesc = (ITreeIndexOperatorDescriptor) opDesc;
     }
 

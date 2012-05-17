@@ -44,10 +44,9 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final IBinaryComparatorFactory[] btreeComparatorFactories;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
 
-    public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists,
+    public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories, IPrimitiveValueProviderFactory[] valueProviderFactories) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+        super(opDesc, ctx, partition);
         memPageSize = DEFAULT_MEM_PAGE_SIZE;
         memNumPages = DEFAULT_MEM_NUM_PAGES;
         this.btreeComparatorFactories = btreeComparatorFactories;
@@ -58,7 +57,7 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
             IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
             int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists);
+        super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.btreeComparatorFactories = btreeComparatorFactories;
@@ -77,8 +76,8 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
         }
         InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
-        return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file
-                .getFile().getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+        return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file.getFile()
+                .getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                 .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
                 .getTreeIndexComparatorFactories(), btreeComparatorFactories, valueProviderFactories);
     }

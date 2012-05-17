@@ -42,7 +42,9 @@ public class BTreeSecondaryIndexInsertOperatorTest extends AbstractBTreeOperator
     @Before
     public void setup() throws Exception {
         super.setup();
+	createPrimaryIndex();
         loadPrimaryIndex();
+	createSecondaryIndex();
         loadSecondaryIndex();
         insertPipeline(false);
     }
