@@ -9,6 +9,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerD
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -35,6 +37,12 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SubsetCollectionDescriptor();
+        }
+    };
 
     @Override
     public IUnnestingFunctionFactory createUnnestingFunctionFactory(final IEvaluatorFactory[] args)

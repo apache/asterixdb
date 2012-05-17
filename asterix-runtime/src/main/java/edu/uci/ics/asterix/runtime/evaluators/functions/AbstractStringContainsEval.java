@@ -21,7 +21,7 @@ public abstract class AbstractStringContainsEval implements IEvaluator {
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private IEvaluator evalString;
     private IEvaluator evalPattern;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 

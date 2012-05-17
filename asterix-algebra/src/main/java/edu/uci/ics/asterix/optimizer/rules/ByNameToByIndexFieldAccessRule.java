@@ -1,6 +1,22 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -41,80 +57,83 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
         AssignOperator assign = (AssignOperator) op;
-        // if
-        // (assign.getAnnotations().get(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS)
-        // == null) {
-        // return false;
-        // }
         if (assign.getExpressions().get(0).getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) assign.getExpressions().get(0)
-                .getValue();
-        if (fce.getFunctionIdentifier() != AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-            return false;
-        }
-        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
 
-        ILogicalExpression a0 = fce.getArguments().get(0).getValue();
-        if (a0.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            LogicalVariable var1 = context.newVar();
-            ArrayList<LogicalVariable> varArray = new ArrayList<LogicalVariable>(1);
-            varArray.add(var1);
-            ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<Mutable<ILogicalExpression>>(1);
-            exprArray.add(new MutableObject<ILogicalExpression>(a0));
-            AssignOperator assignVar = new AssignOperator(varArray, exprArray);
-            fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
-            assignVar.getInputs().add(new MutableObject<ILogicalOperator>(assign.getInputs().get(0).getValue()));
-            assign.getInputs().get(0).setValue(assignVar);
-            context.computeAndSetTypeEnvironmentForOperator(assignVar);
-            context.computeAndSetTypeEnvironmentForOperator(assign);
-        }
-
-        IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        switch (t.getTypeTag()) {
-            case ANY: {
-                return false;
+        List<Mutable<ILogicalExpression>> expressions = assign.getExpressions();
+        boolean changed = false;
+        for (int i = 0; i < expressions.size(); i++) {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expressions.get(i).getValue();
+            if (fce.getFunctionIdentifier() != AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+                continue;
             }
-            case RECORD: {
-                ARecordType recType = (ARecordType) t;
-                ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                if (fai == null) {
+            IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
+
+            ILogicalExpression a0 = fce.getArguments().get(0).getValue();
+            if (a0.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                LogicalVariable var1 = context.newVar();
+                ArrayList<LogicalVariable> varArray = new ArrayList<LogicalVariable>(1);
+                varArray.add(var1);
+                ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<Mutable<ILogicalExpression>>(1);
+                exprArray.add(new MutableObject<ILogicalExpression>(a0));
+                AssignOperator assignVar = new AssignOperator(varArray, exprArray);
+                fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
+                assignVar.getInputs().add(new MutableObject<ILogicalOperator>(assign.getInputs().get(0).getValue()));
+                assign.getInputs().get(0).setValue(assignVar);
+                context.computeAndSetTypeEnvironmentForOperator(assignVar);
+                context.computeAndSetTypeEnvironmentForOperator(assign);
+            }
+
+            IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
+            switch (t.getTypeTag()) {
+                case ANY: {
                     return false;
                 }
-                assign.getExpressions().get(0).setValue(fai);
-                break;
-            }
-            case UNION: {
-                AUnionType unionT = (AUnionType) t;
-                if (unionT.isNullableType()) {
-                    IAType t2 = unionT.getUnionList().get(1);
-                    if (t2.getTypeTag() == ATypeTag.RECORD) {
-                        ARecordType recType = (ARecordType) t2;
-                        ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                        if (fai == null) {
-                            return false;
-                        }
-                        assign.getExpressions().get(0).setValue(fai);
-                        break;
+                case RECORD: {
+                    ARecordType recType = (ARecordType) t;
+                    ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
+                    if (fai == null) {
+                        return false;
                     }
+                    expressions.get(i).setValue(fai);
+                    changed = true;
+                    break;
                 }
-                throw new NotImplementedException("Union " + unionT);
-            }
-            default: {
-                throw new AlgebricksException("Cannot call field-access on data of type " + t);
+                case UNION: {
+                    AUnionType unionT = (AUnionType) t;
+                    if (unionT.isNullableType()) {
+                        IAType t2 = unionT.getUnionList().get(1);
+                        if (t2.getTypeTag() == ATypeTag.RECORD) {
+                            ARecordType recType = (ARecordType) t2;
+                            ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
+                            if (fai == null) {
+                                return false;
+                            }
+                            expressions.get(i).setValue(fai);
+                            changed = true;
+                            break;
+                        }
+                    }
+                    throw new NotImplementedException("Union " + unionT);
+                }
+                default: {
+                    throw new AlgebricksException("Cannot call field-access on data of type " + t);
+                }
             }
         }
         assign.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
-        return true;
+        return changed;
     }
 
+    @SuppressWarnings("unchecked")
     private static ILogicalExpression createFieldAccessByIndex(ARecordType recType, AbstractFunctionCallExpression fce) {
         String s = getStringSecondArgument(fce);
         if (s == null) {
