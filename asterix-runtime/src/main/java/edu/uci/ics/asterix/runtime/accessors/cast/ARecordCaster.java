@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
 import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
@@ -47,9 +48,9 @@ class ARecordCaster {
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
 
-    private List<AFlatValueAccessor> reqFieldNames = new ArrayList<AFlatValueAccessor>();
+    private List<IBinaryAccessor> reqFieldNames = new ArrayList<IBinaryAccessor>();
     private int[] reqFieldNamesSortedIndex;
-    private List<AFlatValueAccessor> reqFieldTypeTags = new ArrayList<AFlatValueAccessor>();
+    private List<IBinaryAccessor> reqFieldTypeTags = new ArrayList<IBinaryAccessor>();
     private ARecordType cachedReqType = null;
 
     private byte[] buffer = new byte[32768];
@@ -87,9 +88,9 @@ class ARecordCaster {
 
     public void castRecord(ARecordAccessor recordAccessor, ARecordAccessor resultAccessor, ARecordType reqType,
             ACastVisitor visitor) throws IOException {
-        List<AFlatValueAccessor> fieldNames = recordAccessor.getFieldNames();
-        List<AFlatValueAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
-        List<AFlatValueAccessor> fieldValues = recordAccessor.getFieldValues();
+        List<IBinaryAccessor> fieldNames = recordAccessor.getFieldNames();
+        List<IBinaryAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
+        List<IBinaryAccessor> fieldValues = recordAccessor.getFieldValues();
         numInputFields = recordAccessor.getCursor() + 1;
 
         if (openFields == null || numInputFields > openFields.length) {
@@ -167,8 +168,8 @@ class ARecordCaster {
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
-    private void matchClosedPart(List<AFlatValueAccessor> fieldNames, List<AFlatValueAccessor> fieldTypeTags,
-            List<AFlatValueAccessor> fieldValues) {
+    private void matchClosedPart(List<IBinaryAccessor> fieldNames, List<IBinaryAccessor> fieldTypeTags,
+            List<IBinaryAccessor> fieldValues) {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -178,8 +179,8 @@ class ARecordCaster {
             int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];
             int c = compare(fieldNames.get(fnPos), reqFieldNames.get(reqFnPos));
             if (c == 0) {
-                AFlatValueAccessor fieldTypeTag = fieldTypeTags.get(fnPos);
-                AFlatValueAccessor reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                IBinaryAccessor fieldTypeTag = fieldTypeTags.get(fnPos);
+                IBinaryAccessor reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
                         optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
@@ -213,8 +214,8 @@ class ARecordCaster {
         }
     }
 
-    private void writeOutput(List<AFlatValueAccessor> fieldNames, List<AFlatValueAccessor> fieldTypeTags,
-            List<AFlatValueAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException {
+    private void writeOutput(List<IBinaryAccessor> fieldNames, List<IBinaryAccessor> fieldTypeTags,
+            List<IBinaryAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();
@@ -222,7 +223,7 @@ class ARecordCaster {
         // write the closed part
         for (int i = 0; i < fieldPermutation.length; i++) {
             int pos = fieldPermutation[i];
-            AFlatValueAccessor field;
+            IBinaryAccessor field;
             if (pos >= 0) {
                 field = fieldValues.get(pos);
             } else {
@@ -234,15 +235,15 @@ class ARecordCaster {
         // write the open part
         for (int i = 0; i < numInputFields; i++) {
             if (openFields[i]) {
-                AFlatValueAccessor name = fieldNames.get(i);
-                AFlatValueAccessor field = fieldValues.get(i);
+                IBinaryAccessor name = fieldNames.get(i);
+                IBinaryAccessor field = fieldValues.get(i);
                 recBuilder.addField(name, field);
             }
         }
         recBuilder.write(output, true);
     }
 
-    private void quickSort(int[] index, List<AFlatValueAccessor> names, int start, int end) {
+    private void quickSort(int[] index, List<IBinaryAccessor> names, int start, int end) {
         if (end <= start)
             return;
         int i = partition(index, names, start, end);
@@ -250,7 +251,7 @@ class ARecordCaster {
         quickSort(index, names, i + 1, end);
     }
 
-    private int partition(int[] index, List<AFlatValueAccessor> names, int left, int right) {
+    private int partition(int[] index, List<IBinaryAccessor> names, int left, int right) {
         int i = left - 1;
         int j = right;
         while (true) {

@@ -36,9 +36,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
 public class ARecordAccessor implements IBinaryAccessor {
 
-    private List<AFlatValueAccessor> fieldNames = new ArrayList<AFlatValueAccessor>();
-    private List<AFlatValueAccessor> fieldTypeTags = new ArrayList<AFlatValueAccessor>();
-    private List<AFlatValueAccessor> fieldValues = new ArrayList<AFlatValueAccessor>();
+    private List<IBinaryAccessor> fieldNames = new ArrayList<IBinaryAccessor>();
+    private List<IBinaryAccessor> fieldTypeTags = new ArrayList<IBinaryAccessor>();
+    private List<IBinaryAccessor> fieldValues = new ArrayList<IBinaryAccessor>();
 
     private byte[] typeBuffer = new byte[32768];
     private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
@@ -225,7 +225,7 @@ public class ARecordAccessor implements IBinaryAccessor {
         fieldCursor++;
     }
 
-    private AFlatValueAccessor nextFieldName() {
+    private IBinaryAccessor nextFieldName() {
         if (fieldCursor < fieldNames.size()) {
             return fieldNames.get(fieldCursor);
         } else {
@@ -235,7 +235,7 @@ public class ARecordAccessor implements IBinaryAccessor {
         }
     }
 
-    private AFlatValueAccessor nextFieldType() {
+    private IBinaryAccessor nextFieldType() {
         if (fieldCursor < fieldTypeTags.size()) {
             return fieldTypeTags.get(fieldCursor);
         } else {
@@ -245,7 +245,7 @@ public class ARecordAccessor implements IBinaryAccessor {
         }
     }
 
-    private AFlatValueAccessor nextFieldValue() {
+    private IBinaryAccessor nextFieldValue() {
         if (fieldCursor < fieldValues.size()) {
             return fieldValues.get(fieldCursor);
         } else {
@@ -259,15 +259,15 @@ public class ARecordAccessor implements IBinaryAccessor {
         return fieldCursor;
     }
 
-    public List<AFlatValueAccessor> getFieldNames() {
+    public List<IBinaryAccessor> getFieldNames() {
         return fieldNames;
     }
 
-    public List<AFlatValueAccessor> getFieldTypeTags() {
+    public List<IBinaryAccessor> getFieldTypeTags() {
         return fieldTypeTags;
     }
 
-    public List<AFlatValueAccessor> getFieldValues() {
+    public List<IBinaryAccessor> getFieldValues() {
         return fieldValues;
     }
 
