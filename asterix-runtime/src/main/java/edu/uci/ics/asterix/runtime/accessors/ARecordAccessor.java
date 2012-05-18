@@ -124,6 +124,7 @@ public class ARecordAccessor implements IBinaryAccessor {
     private void reset() {
         typeBos.setByteArray(typeBuffer, closedPartTypeInfoSize);
         dataBos.setByteArray(dataBuffer, 0);
+        //reset the allocator
         allocator.reset();
 
         //clean up the returned containers

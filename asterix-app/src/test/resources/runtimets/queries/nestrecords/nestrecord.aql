@@ -1,0 +1,41 @@
+/* 
+ * Test case Name  : opentype-closed-optional.aql
+ * Description     : verify that closed type can have optional fields
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+
+create type AddressType as open{
+  street: string,
+  city: string
+}
+
+create type testtype as closed {
+  name: string,
+  id: string,
+  address: AddressType?
+}
+
+create dataset testds(testtype) partitioned by key id;
+
+insert into dataset testds (
+{ "id": "001", "name": "Person One", "address": {"street": "3019 DBH",  "city": "Irvine", "zip": 92697} }
+);
+
+insert into dataset testds (
+{ "id": "002", "name": "Person Two" }
+);
+
+insert into dataset testds (
+{ "id": "003", "name": "Person Three", "address": {"street": "2019 DBH",  "city": "Irvine"} }
+);
+
+write output to nc1:"rttest/nestrecords_nestrecord.adm";
+
+for $d in dataset("testds") 
+order by $d.id
+return $d

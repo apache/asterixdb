@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -32,6 +33,7 @@ import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
 import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -69,6 +71,10 @@ class ARecordCaster {
     private ResettableByteArrayOutputStream outputBos = new ResettableByteArrayOutputStream();
     private DataOutputStream outputDos = new DataOutputStream(outputBos);
 
+    private IBinaryAccessor fieldTempReference = AFlatValueAccessor.FACTORY.createElement(null);
+    private Triple<IBinaryAccessor, IAType, Boolean> nestedVisitorArg = new Triple<IBinaryAccessor, IAType, Boolean>(
+            fieldTempReference, null, null);
+
     public ARecordCaster() {
         try {
             bos.setByteArray(buffer, 0);
@@ -87,7 +93,7 @@ class ARecordCaster {
     }
 
     public void castRecord(ARecordAccessor recordAccessor, IBinaryAccessor resultAccessor, ARecordType reqType,
-            ACastVisitor visitor) throws IOException {
+            ACastVisitor visitor) throws IOException, AsterixException {
         List<IBinaryAccessor> fieldNames = recordAccessor.getFieldNames();
         List<IBinaryAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IBinaryAccessor> fieldValues = recordAccessor.getFieldValues();
@@ -215,7 +221,8 @@ class ARecordCaster {
     }
 
     private void writeOutput(List<IBinaryAccessor> fieldNames, List<IBinaryAccessor> fieldTypeTags,
-            List<IBinaryAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException {
+            List<IBinaryAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException,
+            AsterixException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();
@@ -229,7 +236,12 @@ class ARecordCaster {
             } else {
                 field = nullReference;
             }
-            recBuilder.addField(i, field);
+            IAType fType = cachedReqType.getFieldTypes()[i];
+            nestedVisitorArg.second = fType;
+            
+            //recursively casting, the result of casting can always be thought as flat
+            field.accept(visitor, nestedVisitorArg);
+            recBuilder.addField(i, nestedVisitorArg.first);
         }
 
         // write the open part
