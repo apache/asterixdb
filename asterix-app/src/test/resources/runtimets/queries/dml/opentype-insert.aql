@@ -1,3 +1,10 @@
+/* 
+ * Test case Name  : opentype-insert.aql
+ * Description     : verify static type casting
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
 create dataverse testdv2;
 use dataverse testdv2;
 

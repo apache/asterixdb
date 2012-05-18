@@ -47,7 +47,7 @@ for $l in dataset('LineItem')
 	where $l.l_orderkey<1000
 	return {
 		"l_orderkey": $l.l_orderkey,
-		"l_partkey": $l.l_linenumber,
+		"l_linenumber": $l.l_linenumber,
 		"l_suppkey": $l.l_partkey
 	}
 );
@@ -58,7 +58,7 @@ for $l in dataset('LineItem')
 	die after 1000
 	return {
 		"l_orderkey": $l.l_orderkey,
-		"l_partkey": $l.l_linenumber,
+		"l_linenumber": $l.l_linenumber,
 		"l_suppkey": $l.l_partkey
 	}
 );

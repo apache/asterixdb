@@ -1,0 +1,4 @@
+{ "id": "001", "name": "Person One", "hobby": "music" }
+{ "id": "002", "name": "Person Two", "hobby": "football", "city": "irvine" }
+{ "id": "003", "name": "Person Three", "hobby": "movie" }
+{ "id": "004", "name": "Person Four", "hobby": "swimming", "phone": "102-304-506" }

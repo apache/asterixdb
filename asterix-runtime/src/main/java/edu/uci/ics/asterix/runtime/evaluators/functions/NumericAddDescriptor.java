@@ -16,6 +16,8 @@ import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.AMutableInt8;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -37,6 +39,11 @@ public class NumericAddDescriptor extends AbstractScalarFunctionDynamicDescripto
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
             "numeric-add", 2, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new NumericAddDescriptor();
+        }
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -67,7 +74,7 @@ public class NumericAddDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
                     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
-                    @SuppressWarnings("unchecked")
+                    @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
 
                     @SuppressWarnings("unchecked")

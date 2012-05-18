@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -21,6 +23,11 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "unordered-list-constructor", FunctionIdentifier.VARARGS, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new UnorderedListConstructorDescriptor();
+        }
+    };
 
     private AUnorderedListType ultype;
 

@@ -1,0 +1,30 @@
+/* 
+ * Test case Name  : opentype-closed-optional.aql
+ * Description     : verify that closed type can have optional fields
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype as closed {
+  name: string?,
+  id: string
+}
+
+create dataset testds(testtype) partitioned by key id;
+
+insert into dataset testds (
+{ "id": "001", "name": "Person One"}
+);
+
+insert into dataset testds (
+{ "id": "002"}
+);
+
+write output to nc1:"rttest/dml_opentype-closed-optional.adm";
+
+for $d in dataset("testds") 
+order by $d.id
+return $d
