@@ -8,6 +8,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.cast.ACastVisitor;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -60,7 +61,7 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                     final ARecordAccessor recAccessor = new ARecordAccessor(inputType);
                     final ARecordAccessor resultAccessor = new ARecordAccessor(reqType);
                     final ACastVisitor castVisitor = new ACastVisitor();
-                    final Triple<ARecordAccessor, IAType, Boolean> arg = new Triple<ARecordAccessor, IAType, Boolean>(
+                    final Triple<IBinaryAccessor, IAType, Boolean> arg = new Triple<IBinaryAccessor, IAType, Boolean>(
                             resultAccessor, reqType, Boolean.FALSE);
 
                     @Override

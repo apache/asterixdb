@@ -9,20 +9,21 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
 import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
 import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
-public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<ARecordAccessor, IAType, Boolean>> {
+public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<IBinaryAccessor, IAType, Boolean>> {
 
-    private Map<ARecordAccessor, ARecordCaster> raccessorToCaster = new HashMap<ARecordAccessor, ARecordCaster>();
+    private Map<IBinaryAccessor, ARecordCaster> raccessorToCaster = new HashMap<IBinaryAccessor, ARecordCaster>();
 
     @Override
-    public Void visit(AListAccessor accessor, Triple<ARecordAccessor, IAType, Boolean> arg) {
+    public Void visit(AListAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) {
         return null;
     }
 
     @Override
-    public Void visit(ARecordAccessor accessor, Triple<ARecordAccessor, IAType, Boolean> arg) throws AsterixException {
+    public Void visit(ARecordAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) throws AsterixException {
         ARecordCaster caster = raccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new ARecordCaster();
@@ -37,7 +38,9 @@ public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<ARecord
     }
 
     @Override
-    public Void visit(AFlatValueAccessor accessor, Triple<ARecordAccessor, IAType, Boolean> arg) {
+    public Void visit(AFlatValueAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) {
+        //set the pointer for result
+        arg.first.reset(accessor.getBytes(), accessor.getStartIndex(), accessor.getLength());
         return null;
     }
 

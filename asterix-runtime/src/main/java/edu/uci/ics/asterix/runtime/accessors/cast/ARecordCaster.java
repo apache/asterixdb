@@ -58,8 +58,8 @@ class ARecordCaster {
     private DataOutputStream dos = new DataOutputStream(bos);
 
     private RecordBuilder recBuilder = new RecordBuilder();
-    private AFlatValueAccessor nullReference = new AFlatValueAccessor();
-    private AFlatValueAccessor nullTypeTag = new AFlatValueAccessor();
+    private IBinaryAccessor nullReference = AFlatValueAccessor.FACTORY.createElement(null);
+    private IBinaryAccessor nullTypeTag = AFlatValueAccessor.FACTORY.createElement(null);
 
     private int numInputFields = 0;
     private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
@@ -86,12 +86,12 @@ class ARecordCaster {
         }
     }
 
-    public void castRecord(ARecordAccessor recordAccessor, ARecordAccessor resultAccessor, ARecordType reqType,
+    public void castRecord(ARecordAccessor recordAccessor, IBinaryAccessor resultAccessor, ARecordType reqType,
             ACastVisitor visitor) throws IOException {
         List<IBinaryAccessor> fieldNames = recordAccessor.getFieldNames();
         List<IBinaryAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IBinaryAccessor> fieldValues = recordAccessor.getFieldValues();
-        numInputFields = recordAccessor.getCursor() + 1;
+        numInputFields = fieldNames.size();
 
         if (openFields == null || numInputFields > openFields.length) {
             openFields = new boolean[numInputFields];
@@ -147,7 +147,7 @@ class ARecordCaster {
             int tagStart = bos.size();
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
-            AFlatValueAccessor typeTagPointable = new AFlatValueAccessor();
+            IBinaryAccessor typeTagPointable = AFlatValueAccessor.FACTORY.createElement(null);
             typeTagPointable.reset(buffer, tagStart, tagEnd - tagStart);
             reqFieldTypeTags.add(typeTagPointable);
 
@@ -156,7 +156,7 @@ class ARecordCaster {
             dos.write(ATypeTag.STRING.serialize());
             dos.writeUTF(fname);
             int nameEnd = bos.size();
-            AFlatValueAccessor typeNamePointable = new AFlatValueAccessor();
+            IBinaryAccessor typeNamePointable = AFlatValueAccessor.FACTORY.createElement(null);
             typeNamePointable.reset(buffer, nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }

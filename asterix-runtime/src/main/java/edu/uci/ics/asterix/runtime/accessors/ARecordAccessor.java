@@ -32,13 +32,24 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
 public class ARecordAccessor implements IBinaryAccessor {
 
+    public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
+        public IBinaryAccessor createElement(IAType type) {
+            return new ARecordAccessor((ARecordType) type);
+        }
+    };
+
+    // access results: field names, field types, and field values
     private List<IBinaryAccessor> fieldNames = new ArrayList<IBinaryAccessor>();
     private List<IBinaryAccessor> fieldTypeTags = new ArrayList<IBinaryAccessor>();
     private List<IBinaryAccessor> fieldValues = new ArrayList<IBinaryAccessor>();
+
+    // accessor allocator
+    AccessorAllocator allocator = new AccessorAllocator();
 
     private byte[] typeBuffer = new byte[32768];
     private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
@@ -54,13 +65,17 @@ public class ARecordAccessor implements IBinaryAccessor {
     private int numberOfSchemaFields;
     private int offsetArrayOffset;
     private int[] fieldOffsets;
-    private int fieldCursor = -1;
     private ATypeTag typeTag;
-    private AFlatValueAccessor nullReference = new AFlatValueAccessor();
+    private IBinaryAccessor nullReference = AFlatValueAccessor.FACTORY.createElement(null);
 
     private byte[] data;
     private int start;
     private int len;
+
+    // nested open field rec type
+    // private static ARecordType nestedOpenRecType = new
+    // ARecordType("nested-open", new String[] {}, new IAType[] {},
+    // true);
 
     public ARecordAccessor(ARecordType inputType) {
         this.inputRecType = inputType;
@@ -79,7 +94,7 @@ public class ARecordAccessor implements IBinaryAccessor {
                 int tagStart = typeBos.size();
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
-                AFlatValueAccessor typeTagReference = new AFlatValueAccessor();
+                IBinaryAccessor typeTagReference = AFlatValueAccessor.FACTORY.createElement(null);
                 typeTagReference.reset(typeBuffer, tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
@@ -88,7 +103,7 @@ public class ARecordAccessor implements IBinaryAccessor {
                 typeDos.writeByte(ATypeTag.STRING.serialize());
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
-                AFlatValueAccessor typeNameReference = new AFlatValueAccessor();
+                IBinaryAccessor typeNameReference = AFlatValueAccessor.FACTORY.createElement(null);
                 typeNameReference.reset(typeBuffer, nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }
@@ -109,7 +124,14 @@ public class ARecordAccessor implements IBinaryAccessor {
     private void reset() {
         typeBos.setByteArray(typeBuffer, closedPartTypeInfoSize);
         dataBos.setByteArray(dataBuffer, 0);
-        fieldCursor = -1;
+        allocator.reset();
+
+        //clean up the returned containers
+        for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--)
+            fieldNames.remove(i);
+        for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--)
+            fieldTypeTags.remove(i);
+        fieldValues.clear();
     }
 
     public void reset(byte[] b, int start, int len) {
@@ -156,14 +178,12 @@ public class ARecordAccessor implements IBinaryAccessor {
                     offsetArrayOffset += 4;
                 }
                 for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
-                    next();
                     if (hasNullableFields) {
                         byte b1 = b[nullBitMapOffset + fieldNumber / 8];
                         int p = 1 << (7 - (fieldNumber % 8));
                         if ((b1 & p) == 0) {
                             // set null value (including type tag inside)
-                            nextFieldValue().reset(nullReference.getBytes(), nullReference.getStartIndex(),
-                                    nullReference.getLength());
+                            fieldValues.add(nullReference);
                             continue;
                         }
                     }
@@ -187,14 +207,15 @@ public class ARecordAccessor implements IBinaryAccessor {
                     dataDos.writeByte(typeTag.serialize());
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
-                    nextFieldValue().reset(dataBuffer, fstart, fend - fstart);
+                    IBinaryAccessor fieldValue = allocator.allocateFieldValue(fieldTypes[fieldNumber]);
+                    fieldValue.reset(dataBuffer, fstart, fend - fstart);
+                    fieldValues.add(fieldValue);
                 }
             }
             if (isExpanded) {
                 int numberOfOpenFields = AInt32SerializerDeserializer.getInt(b, openPartOffset);
                 int fieldOffset = openPartOffset + 4 + (8 * numberOfOpenFields);
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    next();
                     // set the field name (including a type tag, which is
                     // astring)
                     int fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING,
@@ -203,60 +224,28 @@ public class ARecordAccessor implements IBinaryAccessor {
                     dataDos.writeByte(ATypeTag.STRING.serialize());
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
-                    nextFieldName().reset(dataBuffer, fnstart, fnend - fnstart);
+                    IBinaryAccessor fieldName = allocator.allocateFieldName();
+                    fieldName.reset(dataBuffer, fnstart, fnend - fnstart);
+                    fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 
                     // set the field type tag
-                    nextFieldType().reset(b, fieldOffset, 1);
+                    IBinaryAccessor fieldTypeTag = allocator.allocateFieldType();
+                    fieldTypeTag.reset(b, fieldOffset, 1);
+                    fieldTypeTags.add(fieldTypeTag);
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
 
                     // set the field value (already including type tag)
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
-                    nextFieldValue().reset(b, fieldOffset, fieldValueLength);
+                    IBinaryAccessor fieldValueAccessor = allocator.allocateFieldName();
+                    fieldValueAccessor.reset(b, fieldOffset, fieldValueLength);
+                    fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;
                 }
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private void next() {
-        fieldCursor++;
-    }
-
-    private IBinaryAccessor nextFieldName() {
-        if (fieldCursor < fieldNames.size()) {
-            return fieldNames.get(fieldCursor);
-        } else {
-            AFlatValueAccessor fieldNameReference = new AFlatValueAccessor();
-            fieldNames.add(fieldNameReference);
-            return fieldNameReference;
-        }
-    }
-
-    private IBinaryAccessor nextFieldType() {
-        if (fieldCursor < fieldTypeTags.size()) {
-            return fieldTypeTags.get(fieldCursor);
-        } else {
-            AFlatValueAccessor fieldTypeReference = new AFlatValueAccessor();
-            fieldTypeTags.add(fieldTypeReference);
-            return fieldTypeReference;
-        }
-    }
-
-    private IBinaryAccessor nextFieldValue() {
-        if (fieldCursor < fieldValues.size()) {
-            return fieldValues.get(fieldCursor);
-        } else {
-            AFlatValueAccessor fieldValueReference = new AFlatValueAccessor();
-            fieldValues.add(fieldValueReference);
-            return fieldValueReference;
-        }
-    }
-
-    public int getCursor() {
-        return fieldCursor;
     }
 
     public List<IBinaryAccessor> getFieldNames() {
