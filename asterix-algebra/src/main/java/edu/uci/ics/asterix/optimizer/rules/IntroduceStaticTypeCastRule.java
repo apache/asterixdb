@@ -10,6 +10,7 @@ import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -109,7 +110,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                     ILogicalExpression expr = expressionPointers.get(position).getValue();
                     if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
-                        if(TypeComputerUtilities.getRequiredType(funcExpr)!=null)
+                        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
                             return false;
                         rewriteFuncExpr(funcExpr, requiredRecordType, inputRecordType);
                     }
@@ -135,7 +136,10 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                 ILogicalExpression arg = args.get(j).getValue();
                 if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression argFunc = (AbstractFunctionCallExpression) arg;
-                    TypeComputerUtilities.setOpenType(argFunc, true);
+                    if (argFunc.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR
+                            || argFunc.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
+                        TypeComputerUtilities.setOpenType(argFunc, true);
+                    }
                 }
             }
         }

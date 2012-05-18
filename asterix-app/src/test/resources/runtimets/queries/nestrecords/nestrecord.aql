@@ -14,7 +14,7 @@ create type AddressType as open{
   city: string
 }
 
-create type testtype as closed {
+create type testtype as open {
   name: string,
   id: string,
   address: AddressType?
@@ -32,6 +32,10 @@ insert into dataset testds (
 
 insert into dataset testds (
 { "id": "003", "name": "Person Three", "address": {"street": "2019 DBH",  "city": "Irvine"} }
+);
+
+insert into dataset testds (
+{ "id": "004", "name": "Person Four", "home": {"street": "2019 DBH",  "city": {"name": "Irvine", "zip": 92697} } }
 );
 
 write output to nc1:"rttest/nestrecords_nestrecord.adm";
