@@ -27,10 +27,12 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
 import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
@@ -238,10 +240,17 @@ class ARecordCaster {
             }
             IAType fType = cachedReqType.getFieldTypes()[i];
             nestedVisitorArg.second = fType;
-            
-            //recursively casting, the result of casting can always be thought as flat
+
+            // recursively casting, the result of casting can always be thought
+            // as flat
+            if (optionalFields[i]) {
+                nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(
+                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            }
             field.accept(visitor, nestedVisitorArg);
             recBuilder.addField(i, nestedVisitorArg.first);
+            //reset the req type
+            nestedVisitorArg.second = null;
         }
 
         // write the open part
@@ -249,7 +258,17 @@ class ARecordCaster {
             if (openFields[i]) {
                 IBinaryAccessor name = fieldNames.get(i);
                 IBinaryAccessor field = fieldValues.get(i);
-                recBuilder.addField(name, field);
+                IBinaryAccessor fieldTypeTag = fieldTypeTags.get(i);
+
+                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                        .deserialize(fieldTypeTag.getBytes()[fieldTypeTag.getStartIndex()]);
+                if (typeTag.equals(ATypeTag.RECORD))
+                    nestedVisitorArg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                field.accept(visitor, nestedVisitorArg);
+                recBuilder.addField(name, nestedVisitorArg.first);
+                
+                //reset the req type
+                nestedVisitorArg.second = null;
             }
         }
         recBuilder.write(output, true);

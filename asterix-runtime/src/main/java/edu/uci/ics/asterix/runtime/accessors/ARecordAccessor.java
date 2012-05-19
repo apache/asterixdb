@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
@@ -72,11 +73,6 @@ public class ARecordAccessor implements IBinaryAccessor {
     private int start;
     private int len;
 
-    // nested open field rec type
-    // private static ARecordType nestedOpenRecType = new
-    // ARecordType("nested-open", new String[] {}, new IAType[] {},
-    // true);
-
     public ARecordAccessor(ARecordType inputType) {
         this.inputRecType = inputType;
         IAType[] fieldTypes = inputType.getFieldTypes();
@@ -89,6 +85,12 @@ public class ARecordAccessor implements IBinaryAccessor {
         try {
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
+
+                if (fieldTypes[i].getTypeTag() == ATypeTag.UNION
+                        && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i]))
+                    // optional field: add the embedded non-null type tag
+                    ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
+                            .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
 
                 // add type tag Reference
                 int tagStart = typeBos.size();
@@ -124,10 +126,10 @@ public class ARecordAccessor implements IBinaryAccessor {
     private void reset() {
         typeBos.setByteArray(typeBuffer, closedPartTypeInfoSize);
         dataBos.setByteArray(dataBuffer, 0);
-        //reset the allocator
+        // reset the allocator
         allocator.reset();
 
-        //clean up the returned containers
+        // clean up the returned containers
         for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--)
             fieldNames.remove(i);
         for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--)
@@ -191,10 +193,12 @@ public class ARecordAccessor implements IBinaryAccessor {
                     IAType[] fieldTypes = inputRecType.getFieldTypes();
                     int fieldValueLength = 0;
 
+                    IAType fieldType = fieldTypes[fieldNumber];
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
                         if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
-                            typeTag = ((AUnionType) fieldTypes[fieldNumber]).getUnionList()
-                                    .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
+                                    NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                            typeTag = fieldType.getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
                                     typeTag, false);
                         }
@@ -208,7 +212,7 @@ public class ARecordAccessor implements IBinaryAccessor {
                     dataDos.writeByte(typeTag.serialize());
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
-                    IBinaryAccessor fieldValue = allocator.allocateFieldValue(fieldTypes[fieldNumber]);
+                    IBinaryAccessor fieldValue = allocator.allocateFieldValue(fieldType);
                     fieldValue.reset(dataBuffer, fstart, fend - fstart);
                     fieldValues.add(fieldValue);
                 }
@@ -238,7 +242,14 @@ public class ARecordAccessor implements IBinaryAccessor {
 
                     // set the field value (already including type tag)
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
-                    IBinaryAccessor fieldValueAccessor = allocator.allocateFieldName();
+
+                    // allocate
+                    IBinaryAccessor fieldValueAccessor;
+
+                    if (typeTag == ATypeTag.RECORD)
+                        fieldValueAccessor = allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+                    else
+                        fieldValueAccessor = allocator.allocateFieldValue(null);
                     fieldValueAccessor.reset(b, fieldOffset, fieldValueLength);
                     fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;

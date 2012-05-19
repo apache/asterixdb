@@ -24,7 +24,9 @@ public class AccessorAllocator {
     }
 
     public IBinaryAccessor allocateFieldValue(IAType type) {
-        if (type.getTypeTag().equals(ATypeTag.RECORD))
+        if(type == null)
+            return flatArtifactAllocator.allocate(null);
+        else if (type.getTypeTag().equals(ATypeTag.RECORD))
             return nestedRecValueAllocator.allocate(type);
         else if (type.getTypeTag().equals(ATypeTag.UNORDEREDLIST) || type.getTypeTag().equals(ATypeTag.ORDEREDLIST))
             return nestedListValueAllocator.allocate(type);
