@@ -22,11 +22,7 @@ import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class AFlatValueAccessor implements IBinaryAccessor {
-
-    private byte[] data;
-    private int start;
-    private int len;
+public class AFlatValueAccessor extends AbstractBinaryAccessor {
 
     public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
         public AFlatValueAccessor createElement(IAType type) {
@@ -39,28 +35,6 @@ public class AFlatValueAccessor implements IBinaryAccessor {
     }
 
     @Override
-    public void reset(byte[] data, int start, int len) {
-        this.data = data;
-        this.start = start;
-        this.len = len;
-    }
-
-    @Override
-    public byte[] getBytes() {
-        return data;
-    }
-
-    @Override
-    public int getStartIndex() {
-        return start;
-    }
-
-    @Override
-    public int getLength() {
-        return len;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof IValueReference))
             return false;
@@ -69,7 +43,10 @@ public class AFlatValueAccessor implements IBinaryAccessor {
         int ostart = ivf.getStartIndex();
         int olen = ivf.getLength();
 
-        if (len != olen)
+        byte[] data = getBytes();
+        int start = getStartIndex();
+        int len = getLength();
+        if ( len!= olen)
             return false;
         for (int i = 0; i < len; i++) {
             if (data[start + i] != odata[ostart + i])

@@ -36,7 +36,7 @@ import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
-public class ARecordAccessor implements IBinaryAccessor {
+public class ARecordAccessor extends AbstractBinaryAccessor {
 
     public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
         public IBinaryAccessor createElement(IAType type) {
@@ -68,10 +68,6 @@ public class ARecordAccessor implements IBinaryAccessor {
     private int[] fieldOffsets;
     private ATypeTag typeTag;
     private IBinaryAccessor nullReference = AFlatValueAccessor.FACTORY.createElement(null);
-
-    private byte[] data;
-    private int start;
-    private int len;
 
     public ARecordAccessor(ARecordType inputType) {
         this.inputRecType = inputType;
@@ -140,9 +136,7 @@ public class ARecordAccessor implements IBinaryAccessor {
     public void reset(byte[] b, int start, int len) {
         // clear the previous states
         reset();
-        this.data = b;
-        this.start = start;
-        this.len = len;
+        super.reset(b, start, len);
 
         boolean isExpanded = false;
         int openPartOffset = 0;
@@ -270,21 +264,6 @@ public class ARecordAccessor implements IBinaryAccessor {
 
     public List<IBinaryAccessor> getFieldValues() {
         return fieldValues;
-    }
-
-    @Override
-    public byte[] getBytes() {
-        return data;
-    }
-
-    @Override
-    public int getStartIndex() {
-        return start;
-    }
-
-    @Override
-    public int getLength() {
-        return len;
     }
 
     @Override
