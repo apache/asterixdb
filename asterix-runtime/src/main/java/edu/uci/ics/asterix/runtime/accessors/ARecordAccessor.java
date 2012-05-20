@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
@@ -238,12 +237,7 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
 
                     // allocate
-                    IBinaryAccessor fieldValueAccessor;
-
-                    if (typeTag == ATypeTag.RECORD)
-                        fieldValueAccessor = allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-                    else
-                        fieldValueAccessor = allocator.allocateFieldValue(null);
+                    IBinaryAccessor fieldValueAccessor = allocator.allocateFieldValue(typeTag);
                     fieldValueAccessor.reset(b, fieldOffset, fieldValueLength);
                     fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;

@@ -15,9 +15,11 @@ import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -25,7 +27,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -36,10 +37,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
-
-    // nested open field rec type
-    private static ARecordType nestedOpenRecType = new ARecordType("nested-open", new String[] {}, new IAType[] {},
-            true);
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
@@ -112,7 +109,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
                         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
                             return false;
-                        rewriteFuncExpr(funcExpr, requiredRecordType, inputRecordType);
+                        rewriteRecordFuncExpr(funcExpr, requiredRecordType, inputRecordType);
                     }
                     context.computeAndSetTypeEnvironmentForOperator(originalAssign);
                 }
@@ -125,27 +122,47 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         return true;
     }
 
-    private void rewriteFuncExpr(ScalarFunctionCallExpression funcExpr, ARecordType requiredRecordType,
+    private void rewriteRecordFuncExpr(ScalarFunctionCallExpression funcExpr, ARecordType requiredRecordType,
             ARecordType inputRecordType) {
+        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
+            return;
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
-        staticTypeCast(funcExpr, requiredRecordType, inputRecordType);
+        staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType);
+    }
+
+    private void rewriteFuncExpr(ScalarFunctionCallExpression funcExpr, IAType reqType, IAType inputType) {
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+            rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType);
+        }
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+            rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType);
+        } else if (reqType.getTypeTag().equals(ATypeTag.RECORD)) {
+            rewriteRecordFuncExpr(funcExpr, (ARecordType) reqType, (ARecordType) inputType);
+        }
+    }
+
+    private void rewriteListFuncExpr(ScalarFunctionCallExpression funcExpr, AbstractCollectionType requiredListType,
+            AbstractCollectionType inputListType) {
+        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
+            return;
+
+        TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
-        int openPartStart = requiredRecordType.getFieldTypes().length * 2;
-        if (requiredRecordType.isOpen()) {
-            for (int j = openPartStart; j < args.size(); j++) {
-                ILogicalExpression arg = args.get(j).getValue();
-                if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    AbstractFunctionCallExpression argFunc = (AbstractFunctionCallExpression) arg;
-                    if (argFunc.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR
-                            || argFunc.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
-                        TypeComputerUtilities.setOpenType(argFunc, true);
-                    }
-                }
+
+        IAType itemType = requiredListType.getItemType();
+        if (itemType == null || itemType.getTypeTag().equals(ATypeTag.ANY))
+            return;
+        IAType inputItemType = inputListType.getItemType();
+        for (int j = 0; j < args.size(); j++) {
+            ILogicalExpression arg = args.get(j).getValue();
+            if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
+                rewriteFuncExpr(argFunc, itemType, inputItemType);
             }
         }
     }
 
-    private void staticTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType) {
+    private void staticRecordTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType) {
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
         IAType[] inputFieldTypes = inputType.getFieldTypes();
@@ -167,6 +184,8 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         for (int i = 0; i < inputFieldNames.length; i++) {
             String fieldName = inputFieldNames[i];
             IAType fieldType = inputFieldTypes[i];
+
+            ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
             matched = false;
             for (int j = 0; j < reqFieldNames.length; j++) {
                 String reqFieldName = reqFieldNames[j];
@@ -177,10 +196,9 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                         openFields[i] = false;
                         matched = true;
 
-                        if (fieldType.getTypeTag() == ATypeTag.RECORD) {
-                            ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) func
-                                    .getArguments().get(2 * i + 1).getValue();
-                            rewriteFuncExpr(scalarFunc, (ARecordType) reqFieldType, (ARecordType) fieldType);
+                        if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                            ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) arg;
+                            rewriteFuncExpr(scalarFunc, reqFieldType, fieldType);
                         }
                         break;
                     }
@@ -197,21 +215,18 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                             matched = true;
 
                             // rewrite record expr
-                            if (reqFieldType.getTypeTag() == ATypeTag.RECORD
-                                    && fieldType.getTypeTag() == ATypeTag.RECORD) {
-                                ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) func
-                                        .getArguments().get(2 * i + 1).getValue();
-                                rewriteFuncExpr(scalarFunc, (ARecordType) reqFieldType, (ARecordType) fieldType);
+                            if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                                ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) arg;
+                                rewriteFuncExpr(scalarFunc, reqFieldType, fieldType);
                             }
                             break;
                         }
                     }
 
                     // match the record field: need cast
-                    if (reqFieldType.getTypeTag() == ATypeTag.RECORD && fieldType.getTypeTag() == ATypeTag.RECORD) {
-                        ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) func.getArguments()
-                                .get(2 * i + 1).getValue();
-                        rewriteFuncExpr(scalarFunc, (ARecordType) reqFieldType, (ARecordType) fieldType);
+                    if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) arg;
+                        rewriteFuncExpr(scalarFunc, reqFieldType, fieldType);
                         fieldPermutation[j] = i;
                         openFields[i] = false;
                         matched = true;
@@ -290,9 +305,23 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             if (openFields[i]) {
                 arguments.add(argumentsClone.get(2 * i));
                 Mutable<ILogicalExpression> fExprRef = argumentsClone.get(2 * i + 1);
-                if (inputFieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
-                    ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) fExprRef.getValue();
-                    rewriteFuncExpr(funcExpr, nestedOpenRecType, (ARecordType) inputFieldTypes[i]);
+                ILogicalExpression argExpr = fExprRef.getValue();
+
+                if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    IAType reqFieldType = inputFieldTypes[i];
+                    if (inputFieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
+                        reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                    }
+                    if (inputFieldTypes[i].getTypeTag() == ATypeTag.ORDEREDLIST) {
+                        reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                    }
+                    if (inputFieldTypes[i].getTypeTag() == ATypeTag.UNORDEREDLIST) {
+                        reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                    }
+                    if (!reqFieldType.equals(inputFieldTypes[i])) {
+                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) fExprRef.getValue();
+                        rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i]);
+                    }
                 }
                 arguments.add(fExprRef);
             }

@@ -24,7 +24,6 @@ public class AListAccessor extends AbstractBinaryAccessor {
         }
     };
 
-    private AbstractCollectionType inputType;
     private IAType itemType;
     private ATypeTag itemTag;
     private boolean typedItemList = false;
@@ -33,16 +32,11 @@ public class AListAccessor extends AbstractBinaryAccessor {
     private List<IBinaryAccessor> itemTags = new ArrayList<IBinaryAccessor>();
     private AccessorAllocator allocator = new AccessorAllocator();
 
-    private byte[] typeBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream typeDos = new DataOutputStream(typeBos);
-
     private byte[] dataBuffer = new byte[32768];
     private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private DataOutputStream dataDos = new DataOutputStream(dataBos);
 
     private AListAccessor(AbstractCollectionType inputType) {
-        this.inputType = inputType;
         if (inputType != null && inputType.getItemType() != null) {
             itemType = inputType.getItemType();
             if (itemType.getTypeTag() == ATypeTag.ANY) {
@@ -59,17 +53,8 @@ public class AListAccessor extends AbstractBinaryAccessor {
     private void reset() {
         allocator.reset();
         items.clear();
-        
-        typeBos.setByteArray(typeBuffer, 0);
+        itemTags.clear();
         dataBos.setByteArray(dataBuffer, 0);
-    }
-
-    public List<IBinaryAccessor> getItems() {
-        return items;
-    }
-
-    public List<IBinaryAccessor> getItemTags() {
-        return itemTags;
     }
 
     @Override
@@ -97,20 +82,46 @@ public class AListAccessor extends AbstractBinaryAccessor {
             if (typedItemList) {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, false);
-                    IBinaryAccessor field = allocator.allocateFieldValue(itemType);
-                    field.reset(b, itemOffset, itemLength);
+                    IBinaryAccessor tag = allocator.allocateFieldType();
+                    IBinaryAccessor item = allocator.allocateFieldValue(itemType);
+
+                    // set item type tag
+                    int start = dataBos.size();
+                    dataDos.writeByte(itemTag.serialize());
+                    int end = dataBos.size();
+                    tag.reset(dataBuffer, start, end - start);
+                    itemTags.add(tag);
+                    
+                    // set item value
+                    start = dataBos.size();
+                    dataDos.writeByte(itemTag.serialize());
+                    dataDos.write(b, itemOffset, itemLength);
+                    end = dataBos.size();
+                    item.reset(dataBuffer, start, end - start);
                     itemOffset += itemLength;
+                    items.add(item);
                 }
             } else {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
-                    IBinaryAccessor field = allocator.allocateFieldValue(itemType);
-                    field.reset(b, itemOffset, itemLength);
+                    IBinaryAccessor tag = allocator.allocateFieldType();
+                    IBinaryAccessor item = allocator.allocateFieldValue(itemType);
+
+                    // set item type tag
+                    int start = dataBos.size();
+                    dataDos.writeByte(itemTag.serialize());
+                    int end = dataBos.size();
+                    tag.reset(dataBuffer, start, end - start);
+                    itemTags.add(tag);
+
+                    // open part field already include the type tag
+                    item.reset(b, itemOffset, itemLength);
                     itemOffset += itemLength;
+                    items.add(item);
                 }
             }
-        } catch (AsterixException e) {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
@@ -120,4 +131,11 @@ public class AListAccessor extends AbstractBinaryAccessor {
         return vistor.visit(this, tag);
     }
 
+    public List<IBinaryAccessor> getItems() {
+        return items;
+    }
+
+    public List<IBinaryAccessor> getItemTags() {
+        return itemTags;
+    }
 }

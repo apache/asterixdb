@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.runtime.accessors;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.util.container.IElementAllocator;
 import edu.uci.ics.asterix.runtime.util.container.ListElementAllocator;
@@ -30,6 +31,19 @@ public class AccessorAllocator {
             return nestedRecValueAllocator.allocate(type);
         else if (type.getTypeTag().equals(ATypeTag.UNORDEREDLIST) || type.getTypeTag().equals(ATypeTag.ORDEREDLIST))
             return nestedListValueAllocator.allocate(type);
+        else
+            return flatArtifactAllocator.allocate(null);
+    }
+    
+    public IBinaryAccessor allocateFieldValue(ATypeTag typeTag) {
+        if(typeTag == null)
+            return flatArtifactAllocator.allocate(null);
+        else if (typeTag.equals(ATypeTag.RECORD))
+            return nestedRecValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        else if (typeTag.equals(ATypeTag.UNORDEREDLIST))
+            return nestedListValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
+        else if(typeTag.equals(ATypeTag.ORDEREDLIST))
+            return nestedListValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
         else
             return flatArtifactAllocator.allocate(null);
     }

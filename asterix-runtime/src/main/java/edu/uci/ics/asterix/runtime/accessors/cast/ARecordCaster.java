@@ -249,8 +249,6 @@ class ARecordCaster {
             }
             field.accept(visitor, nestedVisitorArg);
             recBuilder.addField(i, nestedVisitorArg.first);
-            //reset the req type
-            nestedVisitorArg.second = null;
         }
 
         // write the open part
@@ -262,13 +260,9 @@ class ARecordCaster {
 
                 ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                         .deserialize(fieldTypeTag.getBytes()[fieldTypeTag.getStartIndex()]);
-                if (typeTag.equals(ATypeTag.RECORD))
-                    nestedVisitorArg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                nestedVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
                 field.accept(visitor, nestedVisitorArg);
                 recBuilder.addField(name, nestedVisitorArg.first);
-                
-                //reset the req type
-                nestedVisitorArg.second = null;
             }
         }
         recBuilder.write(output, true);
