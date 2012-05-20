@@ -7,6 +7,7 @@ import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -43,7 +44,7 @@ public class OrderedListConstructorResultType implements IResultTypeComputer {
         if (types.size() == 1) {
             return new AOrderedListType(types.get(0), null);
         } else {
-            throw new AlgebricksException("You can not construct a heterogenous list.");
+            return new AOrderedListType(BuiltinType.ANY, null);
         }
 
     }

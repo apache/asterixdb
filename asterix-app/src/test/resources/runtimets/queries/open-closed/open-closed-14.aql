@@ -48,6 +48,7 @@ for $d in dataset("testds02")
 return $d
 );
 
+write output to nc1:"rttest/open-closed_open-closed-14.adm";
 for $d in dataset("testds01")
 return $d
 

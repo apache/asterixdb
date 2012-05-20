@@ -39,5 +39,6 @@ insert into dataset employee({"id":204,"name":"Raj Singh","sex":"M"});
 // missing dept field
 insert into dataset employee({"id":205,"name":"Mike Tyson","age":44,"sex":"M","dob":date("1970-12-22")});
 
+write output to nc1:"rttest/open-closed_open-closed-22.adm";
 for $l in dataset('employee')
 return $l 
