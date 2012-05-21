@@ -163,6 +163,9 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
     }
 
     private void staticRecordTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType) {
+        if (reqType.equals(inputType))
+            return;
+
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
         IAType[] inputFieldTypes = inputType.getFieldTypes();

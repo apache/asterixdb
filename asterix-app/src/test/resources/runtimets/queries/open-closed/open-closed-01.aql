@@ -23,4 +23,6 @@ insert into dataset testds({"id": 123, "name": "John Doe", "hobbies": {{ "scuba"
 );
 
 write output to nc1:"rttest/open-closed_open-closed-01.adm";
-for $l in dataset("testds") return $l
+for $l in dataset("testds") 
+order by $l.id
+return $l
