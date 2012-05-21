@@ -1,79 +1,54 @@
 package edu.uci.ics.asterix.om.base;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
 public class ATime implements IAObject {
 
-    protected int hour;
-    protected int minutes;
-    protected int seconds;
-    protected int timezone;
-    protected int milliseconds;
-    protected int microseconds;
-
-    public ATime(int hour, int minutes, int seconds, int timezone) {
-        this.hour = hour;
-        this.minutes = minutes;
-        this.seconds = seconds;
-        this.timezone = timezone;
+    protected int ora;
+    
+    public ATime(int ora) {
+        this.ora = ora;
     }
-
-    public ATime(int hour, int minutes, int seconds, int milliseconds, int microseconds, int timezone) {
-        this.hour = hour;
-        this.minutes = minutes;
-        this.seconds = seconds;
-        this.milliseconds = milliseconds;
-        this.microseconds = microseconds;
-        this.timezone = timezone;
-    }
-
-    public int getHours() {
-        return hour;
-    }
-
-    public int getMinutes() {
-        return minutes;
-    }
-
-    public int getSeconds() {
-        return seconds;
-    }
-
-    public int getTimeZone() {
-        return timezone;
-    }
-
+    
     @Override
     public IAType getType() {
         return BuiltinType.ATIME;
     }
+      
+    public int compare(Object o) {
+        if (!(o instanceof ATime)) {
+            return -1;
+        }
 
-    public int getMicroseconds() {
-        return microseconds;
+        ATime d = (ATime) o;
+        if (this.ora > d.ora) {
+            return 1;
+        } else if (this.ora < d.ora) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
-
-    public int getMilliseconds() {
-        return milliseconds;
-    }
-
+      
     @Override
     public boolean equals(Object o) {
+    	
         if (!(o instanceof ATime)) {
             return false;
         } else {
             ATime t = (ATime) o;
-            return t.getMicroseconds() == microseconds && t.getMilliseconds() == milliseconds
-                    && t.getSeconds() == seconds && t.getMinutes() == minutes && t.getHours() == hour
-                    && t.getTimeZone() == timezone;
+            return t.ora == this.ora;
+            
         }
     }
 
     @Override
     public int hashCode() {
-        return ((((timezone * 31 + hour) * 31 + minutes) * 31 + seconds) * 31 + milliseconds) * 31 + microseconds;
+    	return ora;
     }
 
     @Override
@@ -93,7 +68,16 @@ public class ATime implements IAObject {
 
     @Override
     public String toString() {
-        return "ATime: { " + hour + ":" + minutes + ":" + seconds + ":" + milliseconds + ":" + microseconds + ":"
-                + timezone + " }";
+    	StringBuilder sbder = new StringBuilder();
+        sbder.append("ATime: { ");
+        GregorianCalendarSystem.getInstance().getStringRepTime(ora, sbder);
+        sbder.append(" }");
+        return sbder.toString();
+
     }
+    
+    public int getOra() {
+    	return ora;
+    }
+    
 }
