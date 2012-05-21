@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors;
+package edu.uci.ics.asterix.runtime.util;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
+import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
+import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
 import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.util.container.IElementAllocator;

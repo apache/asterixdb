@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
 import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
+import edu.uci.ics.asterix.runtime.util.AccessorAllocator;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 
