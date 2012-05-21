@@ -83,6 +83,7 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
+import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -485,32 +486,18 @@ public class DdlTranslator extends AbstractAqlTranslator {
     }
     
     private void runCreateIndexJob(IHyracksClientConnection hcc, CreateIndexStatement stmtCreateIndex) throws Exception {
-        JobSpecification spec = null;
-        switch (stmtCreateIndex.getIndexType()) {
-            case BTREE: {
-                spec = IndexOperations.buildBtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
-                        stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
-                        compiledDeclarations);
-                break;
-            }
-            case RTREE: {
-                spec = IndexOperations.buildRtreeCreationJobSpec(stmtCreateIndex.getDatasetName().getValue(),
-                        stmtCreateIndex.getIndexName().getValue(), stmtCreateIndex.getFieldExprs(),
-                        compiledDeclarations);
-                break;
-            }
-            default: {
-                throw new AsterixException("Create index not implemented for index type: "
-                        + stmtCreateIndex.getIndexType());
-            }
+        // TODO: Eventually CreateIndexStatement and CompiledCreateIndexStatement should be replaced by the corresponding metadata entity.
+        // For now we must still convert to a CompiledCreateIndexStatement here.
+        CompiledCreateIndexStatement createIndexStmt = new CompiledCreateIndexStatement(stmtCreateIndex.getIndexName()
+                .getValue(), stmtCreateIndex.getDatasetName().getValue(), stmtCreateIndex.getFieldExprs(),
+                stmtCreateIndex.getIndexType());
+        JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(createIndexStmt,
+                compiledDeclarations);
+        if (spec == null) {
+            throw new AsterixException("Failed to create job spec for creating index '"
+                    + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
         }
-		if (spec == null) {
-			throw new AsterixException(
-					"Failed to create job spec for creating index '"
-							+ stmtCreateIndex.getDatasetName() + "."
-							+ stmtCreateIndex.getIndexName() + "'");
-		}
-		runJob(hcc, spec);
+        runJob(hcc, spec);
     }
 	
     private void compileDatasetDropStatement(IHyracksClientConnection hcc, MetadataTransactionContext mdTxnCtx,

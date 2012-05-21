@@ -783,6 +783,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = pointInRectangle(outInput0.getBytes(), outInput1.getBytes());
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
@@ -832,6 +835,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         case RECTANGLE:
                                             res = lineRectangleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            break;
+                                        case NULL:
+                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(
@@ -929,6 +935,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = rectanglePolygonIntersection(outInput1.getBytes(),
                                                     outInput0.getBytes());
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
@@ -953,6 +962,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = rectangleCircleIntersection(outInput1.getBytes(),
                                                     outInput0.getBytes());
+                                            break;
+                                        case NULL:
+                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(
@@ -1004,12 +1016,18 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                 }
                                             }
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
                                                             + tag1
                                                             + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
+                                    break;
+                                case NULL:
+                                    res = false;
                                     break;
                                 default:
                                     throw new NotImplementedException(

@@ -1,0 +1,54 @@
+/* 
+ * Test case Name  : scan-insert-rtree-secondary-index-nullable.aql
+ * Description     : This test is intended to test insertion into secondary rtree indexes that are built on nullable fields 
+ * Expected Result : Success
+ * Date            : May 12 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int32,
+  point: point?,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle
+}
+
+create type MyMiniRecord as closed {
+  id: int32,
+  point: point?
+}
+
+create dataset MyData(MyRecord)
+  partitioned by key id;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm")) pre-sorted;
+
+create dataset MyMiniData(MyMiniRecord)
+  partitioned by key id;
+
+create index rtree_index_point on MyMiniData(point) type rtree;
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	return {
+		"id": $m.id,
+		"point": $m.point
+	}
+);
+
+write output to nc1:"rttest/dml_scan-insert-rtree-secondary-index-nullable.adm";
+
+for $o in dataset('MyMiniData')
+where spatial-intersect($o.point, create-polygon(create-point(0.0,1.0), create-point(0.0,4.0), create-point(12.0,4.0), create-point(12.0,1.0)))
+order by $o.id
+return {"id":$o.id}
