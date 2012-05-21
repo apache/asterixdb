@@ -36,5 +36,4 @@ public class TypeComputerUtilities {
         } else
             return null;
     }
-
 }

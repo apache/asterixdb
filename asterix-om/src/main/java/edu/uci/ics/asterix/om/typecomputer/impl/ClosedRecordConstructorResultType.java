@@ -34,7 +34,7 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
         ARecordType type = (ARecordType) TypeComputerUtilities.getRequiredType(f);
         if (type != null)
             return type;
-
+        
         int n = f.getArguments().size() / 2;
         String[] fieldNames = new String[n];
         IAType[] fieldTypes = new IAType[n];

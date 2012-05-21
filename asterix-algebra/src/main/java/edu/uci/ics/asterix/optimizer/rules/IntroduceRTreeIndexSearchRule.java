@@ -173,16 +173,13 @@ public class IntroduceRTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
             }
 
             if (fieldName == null) {
-                if (recordType.isOpen()) {
-                    continue;
-                }
                 fieldName = recordType.getFieldNames()[fieldIndex];
             }
 
             foundVar = findIdxExprs(adecl, primIdxFields, primIdxDecl, foundIdxExprs, outComparedVars, var, fieldName);
             if (foundVar) {
-                IAType spatialType = AqlCompiledIndexDecl.keyFieldType(fieldName, recordType);
-                dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
+                Pair<IAType, Boolean> spatialTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(fieldName, recordType);
+                dimension = NonTaggedFormatUtil.getNumDimensions(spatialTypePair.first.getTypeTag());
             }
 
             fldPos++;
@@ -383,8 +380,8 @@ public class IntroduceRTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
     private static List<Object> secondaryIndexTypes(AqlCompiledDatasetDecl ddecl, AqlCompiledIndexDecl acid,
             ARecordType itemType, int numKeys) throws AlgebricksException {
         List<Object> types = new ArrayList<Object>();
-        IAType keyType = AqlCompiledIndexDecl.keyFieldType(acid.getFieldExprs().get(0), itemType);
-        IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
+        Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(acid.getFieldExprs().get(0), itemType);
+        IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyTypePair.first.getTypeTag());
 
         for (int i = 0; i < numKeys; i++) {
             types.add(nestedKeyType);
