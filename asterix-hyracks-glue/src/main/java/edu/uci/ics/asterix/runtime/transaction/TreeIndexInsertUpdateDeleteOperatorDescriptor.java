@@ -46,36 +46,32 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
 
     private final long transactionId;
 
-	/*
-	 * TODO: Index operators should live in Hyracks. Right now, they are needed
-	 * here in Asterix as a hack to provide transactionIDs. The Asterix verions
-	 * of this operator will disappear and the operator will come from Hyracks
-	 * once the LSM/Recovery/Transactions world has been introduced.
-	 */
-	public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec,
-			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<IIndex> indexRegistryProvider,
-			IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-			IBinaryComparatorFactory[] comparatorFactories,
-			int[] fieldPermutation, IndexOp op,
-			IIndexDataflowHelperFactory dataflowHelperFactory,
-			ITupleFilterFactory tupleFilterFactory,
-			IOperationCallbackProvider opCallbackProvider, long transactionId) {
-		super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider,
-				fileSplitProvider, typeTraits, comparatorFactories,
-				dataflowHelperFactory, tupleFilterFactory, opCallbackProvider);
-		this.fieldPermutation = fieldPermutation;
-		this.op = op;
-		this.transactionId = transactionId;
-	}
+    /**
+     * TODO: Index operators should live in Hyracks. Right now, they are needed
+     * here in Asterix as a hack to provide transactionIDs. The Asterix verions
+     * of this operator will disappear and the operator will come from Hyracks
+     * once the LSM/Recovery/Transactions world has been introduced.
+     */
+    public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
+            IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
+            IOperationCallbackProvider opCallbackProvider, long transactionId) {
+        super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, opCallbackProvider);
+        this.fieldPermutation = fieldPermutation;
+        this.op = op;
+        this.transactionId = transactionId;
+    }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         TransactionContext txnContext;
         try {
-            ITransactionManager transactionManager = ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                    .getApplicationObject()).getTransactionProvider().getTransactionManager();
+            ITransactionManager transactionManager = ((AsterixAppRuntimeContext) ctx.getJobletContext()
+                    .getApplicationContext().getApplicationObject()).getTransactionProvider().getTransactionManager();
             txnContext = transactionManager.getTransactionContext(transactionId);
         } catch (ACIDException ae) {
             throw new RuntimeException(" could not obtain context for invalid transaction id " + transactionId);
