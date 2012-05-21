@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -163,9 +164,6 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
     }
 
     private void staticRecordTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType) {
-        if (reqType.equals(inputType))
-            return;
-
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
         IAType[] inputFieldTypes = inputType.getFieldTypes();
@@ -321,8 +319,8 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                     if (inputFieldTypes[i].getTypeTag() == ATypeTag.UNORDEREDLIST) {
                         reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                     }
-                    if (!reqFieldType.equals(inputFieldTypes[i])) {
-                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) fExprRef.getValue();
+                    if (TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression)argExpr) == null) {
+                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
                         rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i]);
                     }
                 }
