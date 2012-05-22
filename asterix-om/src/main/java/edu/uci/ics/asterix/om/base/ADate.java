@@ -1,38 +1,22 @@
 package edu.uci.ics.asterix.om.base;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
+/**
+ * ADate type represents dates in a gregorian calendar system.
+ */
 public class ADate implements IAObject {
 
-    protected int day;
-    protected int month;
-    protected int year;
-    protected int timezone;
+    protected int chrononTimeInDay;
 
-    public ADate(int year, int month, int day, int timezone) {
-        this.day = day;
-        this.month = month;
-        this.year = year;
-        this.timezone = timezone;
-    }
+    private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
 
-    public int getDay() {
-        return day;
-    }
-
-    public int getMonth() {
-        return month;
-    }
-
-    public int getTimeZone() {
-        return timezone;
-    }
-
-    public int getYear() {
-        return year;
+    public ADate(int chrononTimeInDay) {
+        this.chrononTimeInDay = chrononTimeInDay;
     }
 
     public IAType getType() {
@@ -43,14 +27,13 @@ public class ADate implements IAObject {
         if (!(o instanceof ADate)) {
             return false;
         } else {
-            ADate d = (ADate) o;
-            return d.getDay() == day && d.getMonth() == month && d.getYear() == year && d.getTimeZone() == timezone;
+            return ((ADate) o).chrononTimeInDay == this.chrononTimeInDay;
         }
     }
 
     @Override
     public int hashCode() {
-        return ((year * 31 + month) * 31 + day) * 31 + timezone;
+        return chrononTimeInDay;
     }
 
     @Override
@@ -70,6 +53,15 @@ public class ADate implements IAObject {
 
     @Override
     public String toString() {
-        return "ADate: { " + year + "-" + month + "-" + day + ":" + timezone + " }";
+        StringBuilder sbder = new StringBuilder();
+        sbder.append("ADate: { ");
+        GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
+                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.YEAR, GregorianCalendarSystem.DAY);
+        sbder.append(" }");
+        return sbder.toString();
+    }
+
+    public int getChrononTimeInDays() {
+        return chrononTimeInDay;
     }
 }

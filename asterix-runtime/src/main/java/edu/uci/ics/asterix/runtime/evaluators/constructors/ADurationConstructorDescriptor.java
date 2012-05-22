@@ -42,9 +42,10 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private IEvaluator eval = args[0].createEvaluator(outInput);
                     private int offset;
-                    private int value = 0, hour = 0, minute = 0, second = 0, year = 0, month = 0, day = 0;
+                    private int value = 0, hour = 0, minute = 0, second = 0, millisecond = 0, year = 0, month = 0,
+                            day = 0;
                     private boolean isYear = true, isMonth = true, isDay = true, isHour = true, isMinute = true,
-                            isSecond = true, isTime = false, timeItem = true, positive = true;
+                            isSecond = true, isMillisecond = true, isTime = false, timeItem = true, positive = true;
                     private String errorMessage = "This can not be an instance of duration";
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);
                     @SuppressWarnings("unchecked")
@@ -67,7 +68,7 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                                     offset++;
                                     positive = false;
                                 }
-                                if (serString[offset++] != 'D')
+                                if (serString[offset++] != 'P')
                                     throw new AlgebricksException(errorMessage);
 
                                 for (; offset < outInput.getLength(); offset++) {
@@ -85,33 +86,21 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                                             case 'M':
                                                 if (!isTime) {
                                                     if (isMonth) {
-                                                        if (value < 0 || value > 11)
-                                                            throw new AlgebricksException(errorMessage);
-                                                        else {
-                                                            month = value;
-                                                            isMonth = false;
-                                                        }
+                                                        month = value;
+                                                        isMonth = false;
                                                     } else
                                                         throw new AlgebricksException(errorMessage);
                                                 } else if (isMinute) {
-                                                    if (value < 0 || value > 59)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        minute = value;
-                                                        isMinute = false;
-                                                        timeItem = false;
-                                                    }
+                                                    minute = value;
+                                                    isMinute = false;
+                                                    timeItem = false;
                                                 } else
                                                     throw new AlgebricksException(errorMessage);
                                                 break;
                                             case 'D':
                                                 if (isDay) {
-                                                    if (value < 0 || value > 30)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        day = value;
-                                                        isDay = false;
-                                                    }
+                                                    day = value;
+                                                    isDay = false;
                                                 } else
                                                     throw new AlgebricksException(errorMessage);
                                                 break;
@@ -125,25 +114,34 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                             case 'H':
                                                 if (isHour) {
-                                                    if (value < 0 || value > 23)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        hour = value;
-                                                        isHour = false;
-                                                        timeItem = false;
-                                                    }
+                                                    hour = value;
+                                                    isHour = false;
+                                                    timeItem = false;
                                                 } else
                                                     throw new AlgebricksException(errorMessage);
                                                 break;
+                                            case '.':
+                                                if (isMillisecond) {
+                                                    int i = 1;
+                                                    for (; offset + i < outInput.getLength(); i++) {
+                                                        if (serString[offset + i] >= '0'
+                                                                && serString[offset + i] <= '9') {
+                                                            if (i < 4)
+                                                                millisecond = millisecond * 10 + serString[offset + i]
+                                                                        - '0';
+                                                        } else
+                                                            break;
+                                                    }
+                                                    offset += i;
+                                                    isMillisecond = false;
+                                                    timeItem = false;
+                                                } else
+                                                    throw new AlgebricksException(errorMessage);
                                             case 'S':
                                                 if (isSecond) {
-                                                    if (value < 0 || value > 59)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        second = value;
-                                                        isSecond = false;
-                                                        timeItem = false;
-                                                    }
+                                                    second = value;
+                                                    isSecond = false;
+                                                    timeItem = false;
                                                 } else
                                                     throw new AlgebricksException(errorMessage);
                                                 break;
@@ -158,15 +156,16 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                                 if (isTime && timeItem)
                                     throw new AlgebricksException(errorMessage);
 
-                                if (isYear && isMonth && isDay && !isTime)
-                                    throw new AlgebricksException(errorMessage);
+                                //                                if (isYear && isMonth && isDay && !isTime)
+                                //                                    throw new AlgebricksException(errorMessage);
 
                                 if (positive)
-                                    aDuration.setValue(year * 12 + month, day * 24 * 3600 + 3600 * hour + 60 * minute
-                                            + second);
+                                    aDuration.setValue(year * 12 + month, day * 24 * 3600 * 1000L + 3600 * 1000L * hour
+                                            + 60 * minute * 1000L + second * 1000L + millisecond);
                                 else
                                     aDuration.setValue(-1 * (year * 12 + month), -1
-                                            * (day * 24 * 3600 + 3600 * hour + 60 * minute + second));
+                                            * (day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute * 1000L
+                                                    + second * 1000L + millisecond));
                                 durationSerde.serialize(aDuration, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);

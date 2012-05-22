@@ -8,47 +8,47 @@ import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
 public class ATime implements IAObject {
 
-    protected int ora;
-    
+    protected int chrononTime;
+
     public ATime(int ora) {
-        this.ora = ora;
+        this.chrononTime = ora;
     }
-    
+
     @Override
     public IAType getType() {
         return BuiltinType.ATIME;
     }
-      
+
     public int compare(Object o) {
         if (!(o instanceof ATime)) {
             return -1;
         }
 
         ATime d = (ATime) o;
-        if (this.ora > d.ora) {
+        if (this.chrononTime > d.chrononTime) {
             return 1;
-        } else if (this.ora < d.ora) {
+        } else if (this.chrononTime < d.chrononTime) {
             return -1;
         } else {
             return 0;
         }
     }
-      
+
     @Override
     public boolean equals(Object o) {
-    	
+
         if (!(o instanceof ATime)) {
             return false;
         } else {
             ATime t = (ATime) o;
-            return t.ora == this.ora;
-            
+            return t.chrononTime == this.chrononTime;
+
         }
     }
 
     @Override
     public int hashCode() {
-    	return ora;
+        return chrononTime;
     }
 
     @Override
@@ -68,16 +68,17 @@ public class ATime implements IAObject {
 
     @Override
     public String toString() {
-    	StringBuilder sbder = new StringBuilder();
+        StringBuilder sbder = new StringBuilder();
         sbder.append("ATime: { ");
-        GregorianCalendarSystem.getInstance().getStringRepTime(ora, sbder);
+        GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(chrononTime, 0, sbder,
+                GregorianCalendarSystem.HOUR, GregorianCalendarSystem.MILLISECOND);
         sbder.append(" }");
         return sbder.toString();
 
     }
-    
+
     public int getOra() {
-    	return ora;
+        return chrononTime;
     }
-    
+
 }

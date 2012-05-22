@@ -7,7 +7,7 @@ public class AMutableTime extends ATime {
     }
 
     public void setValue(int ora) {
-        this.ora = ora;
+        this.chrononTime = ora;
     }
 
 }

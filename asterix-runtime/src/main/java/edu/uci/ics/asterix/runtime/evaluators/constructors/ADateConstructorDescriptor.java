@@ -8,6 +8,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -41,17 +42,16 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private IEvaluator eval = args[0].createEvaluator(outInput);
                     private int offset;
-                    private short year, month, day, hour, minute, value;
-                    private byte timezonePart = 0;
-                    private boolean positive = true;
                     private String errorMessage = "This can not be an instance of date";
-                    private AMutableDate aDate = new AMutableDate(0, 0, 0, 0);
+                    private AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+
+                    private GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -61,72 +61,228 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getBytes();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
+
+                                int length = ((serString[1] & 0xff) << 8) + ((serString[2] & 0xff) << 0) + 3;
+
                                 offset = 3;
 
-                                if (serString[offset] == '-') {
-                                    offset++;
-                                    positive = false;
-                                }
-
-                                if (serString[offset + 4] != '-' || serString[offset + 7] != '-')
-                                    throw new AlgebricksException(errorMessage);
-
-                                year = getValue(serString, offset, 4);
-                                month = getValue(serString, offset + 5, 2);
-                                day = getValue(serString, offset + 8, 2);
-
-                                if (year < 0 || year > 9999 || month < 0 || month > 12 || day < 0 || day > 31)
-                                    throw new AlgebricksException(errorMessage);
-
-                                offset += 10;
-
-                                if (outInput.getLength() > offset) {
-                                    if (serString[offset] == 'Z')
-                                        timezonePart = 0;
-                                    else {
-                                        if ((serString[offset] != '+' && serString[offset] != '-')
-                                                || (serString[offset + 3] != ':'))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        hour = getValue(serString, offset + 1, 2);
-                                        minute = getValue(serString, offset + 4, 2);
-
-                                        if (hour < 0 || hour > 24 || (hour == 24 && minute != 0)
-                                                || (minute != 0 && minute != 15 && minute != 30 && minute != 45))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        if (serString[offset] == '-')
-                                            timezonePart = (byte) -((hour * 4) + minute / 15);
-                                        else
-                                            timezonePart = (byte) ((hour * 4) + minute / 15);
+                                int year = 0, month = 0, day = 0;
+                                int timezone = 0;
+                                boolean positive = true;
+                                if (serString[offset + 4] == '-' || serString[offset + 5] == '-') {
+                                    // parse extended form
+                                    if (serString[offset] == '-') {
+                                        offset++;
+                                        positive = false;
                                     }
 
+                                    if (serString[offset + 4] != '-' || serString[offset + 7] != '-')
+                                        throw new AlgebricksException(errorMessage);
+
+                                    // year
+                                    for (int i = 0; i < 4; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            year = year * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (year < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.YEAR]
+                                            || year > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.YEAR]) {
+                                        throw new AlgebricksException(errorMessage + ": year " + year);
+                                    }
+
+                                    offset += 5;
+
+                                    // month
+                                    for (int i = 0; i < 2; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            month = month * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (month < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.MONTH]
+                                            || month > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.MONTH]) {
+                                        throw new AlgebricksException(errorMessage + ": month " + month);
+                                    }
+
+                                    offset += 3;
+
+                                    // day
+                                    for (int i = 0; i < 2; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            day = day * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (day < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.DAY]
+                                            || day > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.DAY]) {
+                                        throw new AlgebricksException(errorMessage + ": day " + day);
+                                    }
+
+                                    offset += 2;
+
+                                    if (!positive)
+                                        year *= -1;
+
+                                    if (length > offset) {
+                                        if (serString[offset] != 'Z') {
+                                            if ((serString[offset] != '+' && serString[offset] != '-')
+                                                    || (serString[offset + 3] != ':'))
+                                                throw new AlgebricksException(errorMessage);
+
+                                            short timezoneHour = 0;
+                                            short timezoneMinute = 0;
+
+                                            for (int i = 0; i < 2; i++) {
+                                                if ((serString[offset + 1 + i] >= '0' && serString[offset + 1 + i] <= '9'))
+                                                    timezoneHour = (short) (timezoneHour * 10
+                                                            + serString[offset + 1 + i] - '0');
+                                                else
+                                                    throw new AlgebricksException(errorMessage);
+
+                                            }
+
+                                            for (int i = 0; i < 2; i++) {
+                                                if ((serString[offset + 4 + i] >= '0' && serString[offset + 4 + i] <= '9'))
+                                                    timezoneMinute = (short) (timezoneMinute * 10
+                                                            + serString[offset + 4 + i] - '0');
+                                                else
+                                                    throw new AlgebricksException(errorMessage);
+
+                                                if (serString[offset] == '-')
+                                                    timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
+                                                else
+                                                    timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+                                            }
+                                        }
+                                    }
+
+                                } else {
+                                    // parse basic form
+                                    if (serString[offset] == '-') {
+                                        offset++;
+                                        positive = false;
+                                    }
+
+                                    // year
+                                    for (int i = 0; i < 4; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            year = year * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (year < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.YEAR]
+                                            || year > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.YEAR]) {
+                                        throw new AlgebricksException(errorMessage + ": year " + year);
+                                    }
+
+                                    offset += 4;
+
+                                    // month
+                                    for (int i = 0; i < 2; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            month = month * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (month < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.MONTH]
+                                            || month > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.MONTH]) {
+                                        throw new AlgebricksException(errorMessage + ": month " + month);
+                                    }
+
+                                    offset += 2;
+
+                                    // day
+                                    for (int i = 0; i < 2; i++) {
+                                        if ((serString[offset + i] >= '0' && serString[offset + i] <= '9')) {
+                                            day = day * 10 + serString[offset + i] - '0';
+                                        } else {
+                                            throw new AlgebricksException(errorMessage);
+                                        }
+                                    }
+
+                                    if (day < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.DAY]
+                                            || day > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.DAY]) {
+                                        throw new AlgebricksException(errorMessage + ": day " + day);
+                                    }
+
+                                    offset += 2;
+
+                                    if (!positive)
+                                        year *= -1;
+
+                                    if (length > offset) {
+                                        if (serString[offset] != 'Z') {
+                                            if ((serString[offset] != '+' && serString[offset] != '-'))
+                                                throw new AlgebricksException(errorMessage);
+
+                                            short timezoneHour = 0;
+                                            short timezoneMinute = 0;
+
+                                            for (int i = 0; i < 2; i++) {
+                                                if (serString[offset + 1 + i] >= '0'
+                                                        && serString[offset + 1 + i] <= '9')
+                                                    timezoneHour = (short) (timezoneHour * 10
+                                                            + serString[offset + 1 + i] - '0');
+                                                else
+                                                    throw new AlgebricksException(errorMessage);
+
+                                            }
+
+                                            if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
+                                                    || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
+                                                throw new AlgebricksException(errorMessage + ": time zone hour "
+                                                        + timezoneHour);
+                                            }
+
+                                            for (int i = 0; i < 2; i++) {
+                                                if (serString[offset + 3 + i] >= '0'
+                                                        && serString[offset + 3 + i] <= '9')
+                                                    timezoneMinute = (short) (timezoneMinute * 10
+                                                            + serString[offset + 3 + i] - '0');
+                                                else
+                                                    throw new AlgebricksException(errorMessage);
+                                            }
+
+                                            if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
+                                                    || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
+                                                throw new AlgebricksException(errorMessage + ": time zone minute "
+                                                        + timezoneMinute);
+                                            }
+
+                                            if (serString[offset] == '-')
+                                                timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
+                                            else
+                                                timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+                                        }
+                                    }
                                 }
 
-                                if (!positive)
-                                    year *= -1;
+                                long chrononTimeInMs = gCalInstance.getChronon(year, month, day, 0, 0, 0, 0, timezone);
+                                aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY));
+                                if (chrononTimeInMs < 0
+                                        && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0)
+                                    aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - 1);
 
-                                aDate.setValue(year, month, day, timezonePart);
                                 dateSerde.serialize(aDate, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);
+
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         }
-                    }
-
-                    private short getValue(byte[] b, int offset, int numberOfDigits) throws AlgebricksException {
-                        value = 0;
-                        for (int i = 0; i < numberOfDigits; i++) {
-                            if ((b[offset] >= '0' && b[offset] <= '9'))
-                                value = (short) (value * 10 + b[offset++] - '0');
-                            else
-                                throw new AlgebricksException(errorMessage);
-
-                        }
-                        return value;
                     }
                 };
             }

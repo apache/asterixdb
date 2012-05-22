@@ -30,36 +30,28 @@
  */
 package edu.uci.ics.asterix.om.base.temporal;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import edu.uci.ics.asterix.om.base.AMutableDateTime;
-import edu.uci.ics.asterix.om.base.AMutableTime;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
 /**
  * A simple implementation of the Gregorian calendar system.
  * <p/>
  */
 public class GregorianCalendarSystem implements ICalendarSystem {
 
-    private static final int[] DAYS_OF_MONTH_ORDI = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    private static final int[] DAYS_OF_MONTH_LEAP = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    public static final int YEAR = 0, MONTH = 1, DAY = 2, HOUR = 3, MINUTE = 4, SECOND = 5, MILLISECOND = 6;
 
-    private static final int[] DAYS_SINCE_MONTH_BEGIN_ORDI = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    public static final int[] DAYS_OF_MONTH_ORDI = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    public static final int[] DAYS_OF_MONTH_LEAP = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-    private static final String ERROR_FORMAT = ": unrecognizable datetime format.";
+    public static final int[] DAYS_SINCE_MONTH_BEGIN_ORDI = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
-    private static final int CHRONON_OF_SECOND = 1000;
-    private static final int CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
-    private static final int CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
-    private static final long CHRONON_OF_DAY = 24 * CHRONON_OF_HOUR;
+    public static final int CHRONON_OF_SECOND = 1000;
+    public static final int CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
+    public static final int CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
+    public static final long CHRONON_OF_DAY = 24 * CHRONON_OF_HOUR;
 
     /**
      * Minimum feasible value of each field
      */
-    private static final int[] FIELD_MINS = { Integer.MIN_VALUE, // year
+    public static final int[] FIELD_MINS = { Integer.MIN_VALUE, // year
             1, // month
             1, // day
             0, // hour
@@ -68,7 +60,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             0 // millisecond
     };
 
-    private static final int[] FIELD_MAXS = { Integer.MAX_VALUE, // year
+    public static final int[] FIELD_MAXS = { Integer.MAX_VALUE, // year
             12, // month
             31, // day
             23, // hour
@@ -76,6 +68,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             59, // second
             999 // millisecond
     };
+
+    public static final int TIMEZONE_HOUR_MIN = -12, TIMEZONE_HOUR_MAX = 14, TIMEZONE_MIN_MIN = -60,
+            TIMEZONE_MIN_MAX = 60;
 
     /**
      * From Joda API: GregorianChronology.java
@@ -131,28 +126,6 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return true;
     }
 
-    //ATime s
-    /**
-     * Check whether the given time value is a valid time following the gregorian calendar system.
-     * 
-     * @param fields
-     * @return
-     */
-    public boolean validateTime(int hour, int min, int sec, int millis) {
-        // Check whether each field is within the value domain
-        if (hour < FIELD_MINS[3] || hour > FIELD_MAXS[3])
-            return false;
-        if (min < FIELD_MINS[4] || min > FIELD_MAXS[4])
-            return false;
-        if (sec < FIELD_MINS[5] || sec > FIELD_MAXS[5])
-            return false;
-        if (millis < FIELD_MINS[6] || millis > FIELD_MAXS[6])
-            return false;
-     
-        return true;
-    }
-    //ATime e
-    
     /**
      * Check whether the given time zone value is a valid time zone following the gregorian calendar system.
      * 
@@ -191,25 +164,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis, int timezone) {
         return validate(year, month, day, hour, min, sec, millis) && validateTimeZone(timezone);
     }
-    
-    //ATime s
-    /**
-     * Validate the given ora time and time zone.
-     * 
-     * @param hour
-     * @param min
-     * @param sec
-     * @param millis
-     * @param timezone
-     * @return
-     */
-    public boolean validateTime(int hour, int min, int sec, int millis, int timezone) {
-        return validateTime(hour, min, sec, millis) && validateTimeZone(timezone);
-    }
-    //ATime e
 
     /**
-     * Get the chronon time of the given date time and time zone.
+     * Get the UTC chronon time of the given date time and time zone.
      * 
      * @param year
      * @param month
@@ -236,10 +193,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
         return chrononTime;
     }
-    
-    //ATime s
+
     /**
-     * Get the ora of the given time and time zone.
+     * Get the chronon time (number of milliseconds) of the given time and time zone.
      * 
      * @param hour
      * @param min
@@ -248,46 +204,73 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param timezone
      * @return
      */
-    public int getOra(int hour, int min, int sec, int millis, int timezone) {
+    public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        int ora = (hour - timezone / 4) * CHRONON_OF_HOUR
-                + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis;
-
+        int ora = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE + sec
+                * CHRONON_OF_SECOND + millis;
         return ora;
     }
-    //ATime e
-    
+
     /**
-     * Get the ISO8601 compatible representation of the given chronon time, using the extended form as<br/>
-     * [-]YYYY-MM-DDThh:mm:ss.xxx[+|-]hh:mm
+     * Get the extended string representation of the given UTC chronon time under the given time zone. Only fields before
+     * the given field index will be returned.
+     * <p/>
+     * The extended string representation is like:<br/>
+     * [-]YYYY-MM-DDThh:mm:ss.xxx[Z|[+|-]hh:mm]
+     * 
+     * @param chrononTime
+     * @param timezone
+     * @param sbder
+     * @param untilField
      */
-    @Override
-    public void getStringRep(long chrononTime, StringBuilder sbder) {
-        getExtendStringRepWithTimezone(chrononTime, 0, sbder);
-    }
+    public void getExtendStringRepWithTimezoneUntilField(long chrononTime, int timezone, StringBuilder sbder,
+            int startField, int untilField) {
 
-    public void getStringRep(long chrononTime, DataOutput out) throws IOException {
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
 
-        out.writeUTF(String.format(year < 0 ? "%05d" : "%04d", year) + "-" + String.format("%02d", month) + "-"
-                + String.format("%02d", getDayOfMonthYear(chrononTime, year, month)) + "T"
-                + String.format("%02d", getHourOfDay(chrononTime)) + ":"
-                + String.format("%02d", getMinOfHour(chrononTime)) + ":"
-                + String.format("%02d", getSecOfMin(chrononTime)) + "."
-                + String.format("%03d", getMillisOfSec(chrononTime)) + "Z");
-    }
-
-    public void getExtendStringRepWithTimezone(long chrononTime, int timezone, StringBuilder sbder) {
-        int year = getYear(chrononTime);
-        int month = getMonthOfYear(chrononTime, year);
-
-        sbder.append(String.format(year < 0 ? "%05d" : "%04d", year)).append("-").append(String.format("%02d", month)).append("-")
-                .append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month))).append("T")
-                .append(String.format("%02d", getHourOfDay(chrononTime))).append(":")
-                .append(String.format("%02d", getMinOfHour(chrononTime))).append(":")
-                .append(String.format("%02d", getSecOfMin(chrononTime))).append(".")
-                .append(String.format("%03d", getMillisOfSec(chrononTime)));
+        switch (startField) {
+            case YEAR:
+                sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
+                if (untilField == YEAR) {
+                    return;
+                }
+            case MONTH:
+                if (startField != MONTH)
+                    sbder.append("-");
+                sbder.append(String.format("%02d", month));
+                if (untilField == MONTH) {
+                    return;
+                }
+            case DAY:
+                if (startField != DAY)
+                    sbder.append("-");
+                sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
+                if (untilField == DAY) {
+                    break;
+                }
+            case HOUR:
+                if (startField != HOUR)
+                    sbder.append("T");
+                sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
+                if (untilField == HOUR) {
+                    break;
+                }
+            case MINUTE:
+                if (startField != MINUTE)
+                    sbder.append(":");
+                sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
+                if (untilField == MINUTE) {
+                    break;
+                }
+            case SECOND:
+                if (startField != SECOND)
+                    sbder.append(":");
+                sbder.append(String.format("%02d", getSecOfMin(chrononTime)));
+                // add millisecond as the precision fields of a second
+                sbder.append(".").append(String.format("%03d", getMillisOfSec(chrononTime)));
+                break;
+        }
 
         if (timezone == 0) {
             sbder.append("Z");
@@ -298,17 +281,51 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                     .append(String.format("%02d", tzMin));
         }
     }
-    
-    public void getBasicStringRepWithTimezone(long chrononTime, int timezone, StringBuilder sbder) {
+
+    /**
+     * Get the basic string representation of a chronon time with the given time zone.
+     * 
+     * @param chrononTime
+     * @param timezone
+     * @param sbder
+     */
+    public void getBasicStringRepWithTimezoneUntiField(long chrononTime, int timezone, StringBuilder sbder,
+            int startField, int untilField) {
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
 
-        sbder.append(String.format(year < 0 ? "%05d" : "%04d", year)).append(String.format("%02d", month))
-                .append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month))).append("T")
-                .append(String.format("%02d", getHourOfDay(chrononTime)))
-                .append(String.format("%02d", getMinOfHour(chrononTime)))
-                .append(String.format("%02d", getSecOfMin(chrononTime)))
-                .append(String.format("%03d", getMillisOfSec(chrononTime)));
+        switch (startField) {
+            case YEAR:
+                sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
+                if (untilField == YEAR) {
+                    return;
+                }
+            case MONTH:
+                sbder.append(String.format("%02d", month));
+                if (untilField == MONTH) {
+                    return;
+                }
+            case DAY:
+                sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
+                if (untilField == DAY) {
+                    break;
+                }
+            case HOUR:
+                sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
+                if (untilField == HOUR) {
+                    break;
+                }
+            case MINUTE:
+                sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
+                if (untilField == MINUTE) {
+                    break;
+                }
+            case SECOND:
+                sbder.append(String.format("%02d", getSecOfMin(chrononTime)));
+                // add millisecond as the precision fields of a second
+                sbder.append(String.format("%03d", getMillisOfSec(chrononTime)));
+                break;
+        }
 
         if (timezone == 0) {
             sbder.append("Z");
@@ -318,644 +335,6 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
                     .append(String.format("%02d", tzMin));
         }
-    }
-    
-    //ATime s
-    /**
-     * Get the ISO8601 compatible representation of the given ora time, using the extended form as<br/>
-     * hh:mm:ss.xxx[+|-]hh:mm
-     */
-    public void getStringRepTime(int ora, StringBuilder sbder) {
-    	getExtendStringRepTimeWithTimezone(ora, 0, sbder);
-    }
-
-    public void getStringRepTime(int ora, DataOutput out) throws IOException {
-
-        out.writeUTF(String.format("%02d", getHourOfDay(ora)) + ":"
-                + String.format("%02d", getMinOfHour(ora)) + ":"
-                + String.format("%02d", getSecOfMin(ora)) + "."
-                + String.format("%03d", getMillisOfSec(ora)) + "Z");
-    }
-
-    public void getExtendStringRepTimeWithTimezone(int chrononTime, int timezone, StringBuilder sbder) {
-
-        sbder.append(String.format("%02d", getHourOfDay(chrononTime))).append(":")
-                .append(String.format("%02d", getMinOfHour(chrononTime))).append(":")
-                .append(String.format("%02d", getSecOfMin(chrononTime))).append(".")
-                .append(String.format("%03d", getMillisOfSec(chrononTime)));
-
-        if (timezone == 0) {
-            sbder.append("Z");
-        } else {
-            short tzMin = (short) ((timezone % 4) * 15);
-            short tzHr = (short) (timezone / 4);
-            sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr))).append(":")
-                    .append(String.format("%02d", tzMin));
-        }
-    }
-    
-    public void getBasicStringRepTimeWithTimezone(int ora, int timezone, StringBuilder sbder) {
-       
-    	sbder.append(String.format("%02d", getHourOfDay(ora)))
-                .append(String.format("%02d", getMinOfHour(ora)))
-                .append(String.format("%02d", getSecOfMin(ora)))
-                .append(String.format("%03d", getMillisOfSec(ora)));
-
-        if (timezone == 0) {
-            sbder.append("Z");
-        } else {
-            short tzMin = (short) ((timezone % 4) * 15);
-            short tzHr = (short) (timezone / 4);
-            sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
-                    .append(String.format("%02d", tzMin));
-        }
-    }
-    //ATime e
-
-    /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.temporal.ICalendarSystem#parseStringRep(java.lang.String, java.io.DataOutput)
-     */
-    @Override
-    public void parseStringRep(String datetime, DataOutput out) throws HyracksDataException {
-        int offset = 0;
-        int year, month, day, hour, min, sec, millis = 0;
-        int timezone = 0;
-        boolean positive = true;
-        if (datetime.contains(":")) {
-            // parse extended form
-            if (datetime.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-
-            if (datetime.charAt(offset + 4) != '-' || datetime.charAt(offset + 7) != '-')
-                throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-            year = Short.parseShort(datetime.substring(offset, offset + 4));
-            month = Short.parseShort(datetime.substring(offset + 5, offset + 7));
-            day = Short.parseShort(datetime.substring(offset + 8, offset + 10));
-
-            if (!positive)
-                year *= -1;
-
-            offset += 11;
-
-            if (datetime.charAt(offset + 2) != ':' || datetime.charAt(offset + 5) != ':')
-                throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-            hour = Short.parseShort(datetime.substring(offset, offset + 2));
-            min = Short.parseShort(datetime.substring(offset + 3, offset + 5));
-            sec = Short.parseShort(datetime.substring(offset + 6, offset + 8));
-
-            offset += 8;
-            if (datetime.length() > offset && datetime.charAt(offset) == '.') {
-                millis = Short.parseShort(datetime.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (datetime.length() > offset) {
-                if (datetime.charAt(offset) != 'Z') {
-                    if ((datetime.charAt(offset) != '+' && datetime.charAt(offset) != '-')
-                            || (datetime.charAt(offset + 3) != ':'))
-                        throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(datetime.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-
-                    if (datetime.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-            if (datetime.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-
-            year = Short.parseShort(datetime.substring(offset, offset + 4));
-            month = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-            day = Short.parseShort(datetime.substring(offset + 6, offset + 8));
-
-            if (!positive)
-                day *= -1;
-
-            offset += 9;
-
-            hour = Short.parseShort(datetime.substring(offset, offset + 2));
-            min = Short.parseShort(datetime.substring(offset + 2, offset + 4));
-            sec = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-
-            offset += 6;
-            if (datetime.length() > offset && datetime.charAt(offset) == '.') {
-                millis = Short.parseShort(datetime.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (datetime.length() > offset) {
-                if (datetime.charAt(offset) != 'Z') {
-                    if ((datetime.charAt(offset) != '+' && datetime.charAt(offset) != '-'))
-                        throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(datetime.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(datetime.substring(offset + 3, offset + 5));
-
-                    if (datetime.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validate(year, month, day, hour, min, sec, millis, timezone)) {
-            throw new HyracksDataException(datetime + ERROR_FORMAT);
-        }
-
-        long chrononTime = getChronon(year, month, day, hour, min, sec, (int) millis, timezone);
-
-        try {
-            out.writeLong(chrononTime);
-            out.writeInt(timezone);
-        } catch (IOException e) {
-            throw new HyracksDataException(e.toString());
-        }
-    }
-    
-    //ATime s
-    public void parseStringRepTime(String time, DataOutput out) throws HyracksDataException {
-        int offset = 0;
-        int hour, min, sec, millis = 0;
-        int timezone = 0;
-        if (time.contains(":")) {
-//            // parse extended form
-
-            if (time.charAt(offset) == '-')
-                throw new HyracksDataException(time + ERROR_FORMAT);
-
-
-            if (time.charAt(offset + 2) != ':' || time.charAt(offset + 5) != ':')
-                throw new HyracksDataException(time + ERROR_FORMAT);
-
-            hour = Short.parseShort(time.substring(offset, offset + 2));
-            min = Short.parseShort(time.substring(offset + 3, offset + 5));
-            sec = Short.parseShort(time.substring(offset + 6, offset + 8));
-
-            offset += 8;
-            if (time.length() > offset && time.charAt(offset) == '.') {
-                millis = Short.parseShort(time.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (time.length() > offset) {
-                if (time.charAt(offset) != 'Z') {
-                    if ((time.charAt(offset) != '+' && time.charAt(offset) != '-')
-                            || (time.charAt(offset + 3) != ':'))
-                        throw new HyracksDataException(time + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(time.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(time.substring(offset + 4, offset + 6));
-
-                    if (time.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-            if (time.charAt(offset) == '-')
-                throw new HyracksDataException(time + ERROR_FORMAT);
-
-            hour = Short.parseShort(time.substring(offset, offset + 2));
-            min = Short.parseShort(time.substring(offset + 2, offset + 4));
-            sec = Short.parseShort(time.substring(offset + 4, offset + 6));
-
-            offset += 6;
-            //TODO: Remove the "." requirement from the basic of datetime
-            if (time.length() > offset) {
-                millis = Short.parseShort(time.substring(offset, offset + 3));
-                offset += 3;
-            }
-
-            if (time.length() > offset) {
-                if (time.charAt(offset) != 'Z') {
-                    if ((time.charAt(offset) != '+' && time.charAt(offset) != '-'))
-                        throw new HyracksDataException(time + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(time.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(time.substring(offset + 3, offset + 5));
-
-                    if (time.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validateTime(hour, min, sec, millis, timezone)) {
-            throw new HyracksDataException(time + ERROR_FORMAT);
-        }
-
-        int ora = getOra(hour, min, sec, (int) millis, timezone);
-
-        try {
-            out.writeInt(ora);
-            out.writeInt(timezone);
-        } catch (IOException e) {
-            throw new HyracksDataException(e.toString());
-        }
-    }
-    //ATime e
-
-    public void parseStringForADatetime(String datetime, AMutableDateTime aMutableDatetime) throws HyracksDataException {
-        int offset = 0;
-        int year, month, day, hour, min, sec, millis = 0;
-        int timezone = 0;
-        boolean positive = true;
-        if (datetime.contains(":")) {
-            // parse extended form
-            if (datetime.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-
-            if (datetime.charAt(offset + 4) != '-' || datetime.charAt(offset + 7) != '-')
-                throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-            year = Short.parseShort(datetime.substring(offset, offset + 4));
-            month = Short.parseShort(datetime.substring(offset + 5, offset + 7));
-            day = Short.parseShort(datetime.substring(offset + 8, offset + 10));
-
-            if (!positive)
-                year *= -1;
-
-            offset += 11;
-
-            if (datetime.charAt(offset + 2) != ':' || datetime.charAt(offset + 5) != ':')
-                throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-            hour = Short.parseShort(datetime.substring(offset, offset + 2));
-            min = Short.parseShort(datetime.substring(offset + 3, offset + 5));
-            sec = Short.parseShort(datetime.substring(offset + 6, offset + 8));
-
-            offset += 8;
-            if (datetime.length() > offset && datetime.charAt(offset) == '.') {
-                millis = Short.parseShort(datetime.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (datetime.length() > offset) {
-                if (datetime.charAt(offset) != 'Z') {
-                    if ((datetime.charAt(offset) != '+' && datetime.charAt(offset) != '-')
-                            || (datetime.charAt(offset + 3) != ':'))
-                        throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(datetime.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-
-                    if (datetime.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-            if (datetime.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-
-            year = Short.parseShort(datetime.substring(offset, offset + 4));
-            month = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-            day = Short.parseShort(datetime.substring(offset + 6, offset + 8));
-
-            if (!positive)
-                day *= -1;
-
-            offset += 9;
-
-            hour = Short.parseShort(datetime.substring(offset, offset + 2));
-            min = Short.parseShort(datetime.substring(offset + 2, offset + 4));
-            sec = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-
-            offset += 6;
-            if (datetime.length() > offset && datetime.charAt(offset) == '.') {
-                millis = Short.parseShort(datetime.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (datetime.length() > offset) {
-                if (datetime.charAt(offset) != 'Z') {
-                    if ((datetime.charAt(offset) != '+' && datetime.charAt(offset) != '-'))
-                        throw new HyracksDataException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(datetime.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(datetime.substring(offset + 3, offset + 5));
-
-                    if (datetime.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validate(year, month, day, hour, min, sec, millis, timezone)) {
-            throw new HyracksDataException(datetime + ERROR_FORMAT);
-        }
-
-        aMutableDatetime.setValue(getChronon(year, month, day, hour, min, sec, (int) millis, timezone));
-    }
-
-    //ATime s
-    public void parseStringForATime(String time, AMutableTime aMutableTime) throws HyracksDataException {
-        int offset = 0;
-        int hour, min, sec, millis = 0;
-        int timezone = 0;
-        if (time.contains(":")) {
-            // parse extended form
-            if (time.charAt(offset) == '-') {
-            	throw new HyracksDataException(time + ERROR_FORMAT);
-            	}
-
-            if (time.charAt(offset + 2) != ':' || time.charAt(offset + 5) != ':')
-                throw new HyracksDataException(time + ERROR_FORMAT);
-
-            hour = Short.parseShort(time.substring(offset, offset + 2));
-            min = Short.parseShort(time.substring(offset + 3, offset + 5));
-            sec = Short.parseShort(time.substring(offset + 6, offset + 8));
-
-            offset += 8;
-            if (time.length() > offset && time.charAt(offset) == '.') {
-                millis = Short.parseShort(time.substring(offset + 1, offset + 4));
-                offset += 4;
-            }
-
-            if (time.length() > offset) {
-                if (time.charAt(offset) != 'Z') {
-                    if ((time.charAt(offset) != '+' && time.charAt(offset) != '-')
-                            || (time.charAt(offset + 3) != ':'))
-                        throw new HyracksDataException(time + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(time.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(time.substring(offset + 4, offset + 6));
-
-                    if (time.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-            if (time.charAt(offset) == '-') {
-            	throw new HyracksDataException(time + ERROR_FORMAT);
-            }
-
-            hour = Short.parseShort(time.substring(offset, offset + 2));
-            min = Short.parseShort(time.substring(offset + 2, offset + 4));
-            sec = Short.parseShort(time.substring(offset + 4, offset + 6));
-
-            offset += 6;
-            //TODO: Remove the "."
-            if (time.length() > offset) {
-                millis = Short.parseShort(time.substring(offset, offset + 3));
-                offset += 3;
-            }
-
-            if (time.length() > offset) {
-                if (time.charAt(offset) != 'Z') {
-                    if ((time.charAt(offset) != '+' && time.charAt(offset) != '-'))
-                        throw new HyracksDataException(time + ERROR_FORMAT);
-
-                    short timezoneHour = Short.parseShort(time.substring(offset + 1, offset + 3));
-                    short timezoneMinute = Short.parseShort(time.substring(offset + 3, offset + 5));
-
-                    if (time.charAt(offset) == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validateTime(hour, min, sec, millis, timezone)) {
-            throw new HyracksDataException(time + ERROR_FORMAT);
-        }
-
-        aMutableTime.setValue(getOra(hour, min, sec, millis, timezone));
-    }
-    //ATime e
-
-    public void parseStringForADatetime(byte[] datetime, int offset, AMutableDateTime aMutableDatetime)
-            throws AlgebricksException {
-        int year, month, day, hour, min, sec, millis = 0;
-        int timezone = 0;
-        boolean positive = true;
-        boolean isExtendedForm = false;
-        if (datetime[offset + 13] == ':' || datetime[offset + 14] == ':') {
-            isExtendedForm = true;
-        }
-        if (isExtendedForm) {
-            // parse extended form
-            if (datetime[offset] == '-') {
-                offset++;
-                positive = false;
-            }
-
-            if (datetime[offset + 4] != '-' || datetime[offset + 7] != '-')
-                throw new AlgebricksException(datetime + ERROR_FORMAT);
-
-            year = getValue(datetime, offset, 4);
-            month = getValue(datetime, offset + 5, 2);
-            day = getValue(datetime, offset + 8, 2);
-
-            if (!positive)
-                year *= -1;
-
-            offset += 11;
-
-            if (datetime[offset + 2] != ':' || datetime[offset + 5] != ':')
-                throw new AlgebricksException(datetime + ERROR_FORMAT);
-
-            hour = getValue(datetime, offset, 2);
-            min = getValue(datetime, offset + 3, 2);
-            sec = getValue(datetime, offset + 6, 2);
-
-            offset += 8;
-            if (datetime.length > offset && datetime[offset] == '.') {
-                millis = getValue(datetime, offset + 1, 3);
-                offset += 4;
-            }
-
-            if (datetime.length > offset) {
-                if (datetime[offset] != 'Z') {
-                    if ((datetime[offset] != '+' && datetime[offset] != '-') || (datetime[offset + 3] != ':'))
-                        throw new AlgebricksException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = getValue(datetime, offset + 1, 2);
-                    short timezoneMinute = getValue(datetime, offset + 4, 2);
-
-                    if (datetime[offset] == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-            if (datetime[offset] == '-') {
-                offset++;
-                positive = false;
-            }
-
-            year = getValue(datetime, offset, 4);
-            month = getValue(datetime, offset + 4, 2);
-            day = getValue(datetime, offset + 6, 2);
-
-            if (!positive)
-                day *= -1;
-
-            offset += 9;
-
-            hour = getValue(datetime, offset, 2);
-            min = getValue(datetime, offset + 2, 2);
-            sec = getValue(datetime, offset + 4, 2);
-
-            offset += 6;
-            if (datetime.length > offset && datetime[offset] == '.') {
-                millis = getValue(datetime, offset + 1, 3);
-                offset += 4;
-            }
-
-            if (datetime.length > offset) {
-                if (datetime[offset] != 'Z') {
-                    if ((datetime[offset] != '+' && datetime[offset] != '-'))
-                        throw new AlgebricksException(datetime + ERROR_FORMAT);
-
-                    short timezoneHour = getValue(datetime, offset + 1, 2);
-                    short timezoneMinute = getValue(datetime, offset + 3, 2);
-
-                    if (datetime[offset] == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validate(year, month, day, hour, min, sec, millis, timezone)) {
-            throw new AlgebricksException(datetime + ERROR_FORMAT);
-        }
-
-        aMutableDatetime.setValue(getChronon(year, month, day, hour, min, sec, (int) millis, timezone));
-    }
-
-    //ATime s
-    public void parseStringForATime(byte[] time, int offset, int length, AMutableTime aMutableTime)
-            throws AlgebricksException {
-        int hour, min, sec, millis = 0;
-        int timezone = 0;
-        boolean isExtendedForm = false;
-        if (time[offset + 2] == ':') {
-            isExtendedForm = true;
-        }
-        if (isExtendedForm) {
-            // parse extended form
-            if (time[offset] == '-') 
-            	throw new AlgebricksException(time + ERROR_FORMAT);
-            	
-
-            if (time[offset + 5] != ':')
-                throw new AlgebricksException(time + ERROR_FORMAT);
-
-            hour = getValue(time, offset, 2);
-            min = getValue(time, offset + 3, 2);
-            sec = getValue(time, offset + 6, 2);
-
-            //if (hour==24) hour=0;
-            
-            offset += 8;
-            if (length > offset && time[offset] == '.') {
-                millis = getValue(time, offset + 1, 3);
-                offset += 4;
-            }
-
-            if (length > offset) {
-                if (time[offset] != 'Z') {
-                    if ((time[offset] != '+' && time[offset] != '-') || (time[offset + 3] != ':'))
-                        throw new AlgebricksException(time + ERROR_FORMAT);
-
-                    short timezoneHour = getValue(time, offset + 1, 2);
-                    short timezoneMinute = getValue(time, offset + 4, 2);
-
-                    if (time[offset] == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-
-        } else {
-            // parse basic form
-        	if (time[offset] == '-') 
-            	throw new AlgebricksException(time + ERROR_FORMAT);
-
-            hour = getValue(time, offset, 2);
-            min = getValue(time, offset + 2, 2);
-            sec = getValue(time, offset + 4, 2);
-
-            offset += 6;
-            //TODO: Remove "."
-            if (length > offset) {
-                millis = getValue(time, offset, 3);
-                offset += 3;
-            }
-
-            if (length > offset) {
-                if (time[offset] != 'Z') {
-                    if ((time[offset] != '+' && time[offset] != '-'))
-                        throw new AlgebricksException(time + ERROR_FORMAT);
-
-                    short timezoneHour = getValue(time, offset + 1, 2);
-                    short timezoneMinute = getValue(time, offset + 3, 2);
-
-                    if (time[offset] == '-')
-                        timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                    else
-                        timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
-        }
-
-        if (!validateTime(hour, min, sec, millis, timezone)) {
-            throw new AlgebricksException(time + ERROR_FORMAT);
-        }
-
-        aMutableTime.setValue(getOra(hour, min, sec, millis, timezone));
-    }
-    //ATime e
-    
-    private short getValue(byte[] b, int offset, int numberOfDigits) throws AlgebricksException {
-        short value = 0;
-        for (int i = 0; i < numberOfDigits; i++) {
-            if ((b[offset] >= '0' && b[offset] <= '9'))
-                value = (short) (value * 10 + b[offset++] - '0');
-            else
-                throw new AlgebricksException(ERROR_FORMAT);
-
-        }
-        return value;
     }
 
     /**
@@ -1095,6 +474,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return (int) ((millis - dateMillis) / CHRONON_OF_DAY) + 1;
     }
 
+    /**
+     * Get the hour of the day for the given chronon time.
+     * 
+     * @param millis
+     * @return
+     */
     public int getHourOfDay(long millis) {
         int hour = (int) ((millis % CHRONON_OF_DAY) / CHRONON_OF_HOUR);
 
@@ -1107,10 +492,16 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 hour += 23;
             }
         }
-        
+
         return hour;
     }
 
+    /**
+     * Get the minute of the hour for the given chronon time.
+     * 
+     * @param millis
+     * @return
+     */
     public int getMinOfHour(long millis) {
         int min = (int) ((millis % CHRONON_OF_HOUR) / CHRONON_OF_MINUTE);
         if (millis < 0) {
@@ -1125,6 +516,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return min;
     }
 
+    /**
+     * Get the second of the minute for the given chronon time.
+     * 
+     * @param millis
+     * @return
+     */
     public int getSecOfMin(long millis) {
         int sec = (int) ((millis % CHRONON_OF_MINUTE) / CHRONON_OF_SECOND);
         if (millis < 0) {
@@ -1139,6 +536,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return sec;
     }
 
+    /**
+     * Get the millisecond of the second for the given chronon time.
+     * 
+     * @param millis
+     * @return
+     */
     public int getMillisOfSec(long millis) {
         int ms = (int) (millis % CHRONON_OF_SECOND);
         if (millis < 0 && ms < 0) {

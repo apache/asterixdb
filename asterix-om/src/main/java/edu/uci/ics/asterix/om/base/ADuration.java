@@ -7,20 +7,20 @@ import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
 public class ADuration implements IAObject {
 
-    protected int months;
-    protected int seconds;
+    protected int chrononInMonth;
+    protected long chrononInMillisecond;
 
-    public ADuration(int months, int seconds) {
-        this.months = months;
-        this.seconds = seconds;
+    public ADuration(int months, long seconds) {
+        this.chrononInMonth = months;
+        this.chrononInMillisecond = seconds;
     }
 
     public int getMonths() {
-        return months;
+        return chrononInMonth;
     }
 
-    public int getSeconds() {
-        return seconds;
+    public long getMilliseconds() {
+        return chrononInMillisecond;
     }
 
     @Override
@@ -34,13 +34,13 @@ public class ADuration implements IAObject {
             return false;
         } else {
             ADuration d = (ADuration) o;
-            return d.getMonths() == months && d.getSeconds() == seconds;
+            return d.getMonths() == chrononInMonth && d.getMilliseconds() == chrononInMillisecond;
         }
     }
 
     @Override
     public int hashCode() {
-        return months * 31 + seconds;
+        return (int) (chrononInMonth ^ (chrononInMillisecond) ^ (chrononInMillisecond >>> 32));
     }
 
     @Override

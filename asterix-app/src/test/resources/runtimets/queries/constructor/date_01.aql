@@ -11,5 +11,11 @@ let $c4 := date("1987-11-19Z")
 let $c5 := date("-1987-11-19+08:30")
 let $c6 := date("0001-12-27")
 let $c7 := date("-1951-01-27-01:45")
-return {"date1": $c1, "date2": $c2, "date3": $c3, "date4": $c4, "date5": $c5, "date6": $c6, "date7": $c7}
+let $c8 := date("-2043-11-19Z")
+let $c9 := date("-19280329-0630")
+let $c10 := date("-19280329+0630")
+let $c11 := date("-19280329")
+let $c12 := date("-19280229")
+let $c13 := date("-19280301+0630")
+return {"date1": $c1, "date2": $c2, "date3": $c3, "date4": $c4, "date5": $c5, "date6": $c6, "date7": $c7, "date8": $c8, "date9": $c9, "date10": $c10, "date11": $c11, "date12": $c12, "date13": $c13}
 

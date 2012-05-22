@@ -29,7 +29,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
     @Override
     public ADuration deserialize(DataInput in) throws HyracksDataException {
         try {
-            return new ADuration(in.readInt(), in.readInt());
+            return new ADuration(in.readInt(), in.readLong());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -39,7 +39,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
     public void serialize(ADuration instance, DataOutput out) throws HyracksDataException {
         try {
             out.writeInt(instance.getMonths());
-            out.writeInt(instance.getSeconds());
+            out.writeLong(instance.getMilliseconds());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -49,8 +49,8 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
         try {
             boolean positive = true;
             int offset = 0;
-            int value = 0, hour = 0, minute = 0, second = 0, year = 0, month = 0, day = 0;
-            boolean isYear = true, isMonth = true, isDay = true, isHour = true, isMinute = true, isSecond = true;
+            int value = 0, hour = 0, minute = 0, second = 0, millisecond = 0, year = 0, month = 0, day = 0;
+            boolean isYear = true, isMonth = true, isDay = true, isHour = true, isMinute = true, isSecond = true, isMillisecond = true;
             boolean isTime = false;
             boolean timeItem = true;
             if (duration.charAt(offset) == '-') {
@@ -58,11 +58,12 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
                 positive = false;
             }
 
-            if (duration.charAt(offset++) != 'D')
+            if (duration.charAt(offset++) != 'P')
                 throw new HyracksDataException(duration + errorMessage);
 
             for (; offset < duration.length(); offset++) {
                 if (duration.charAt(offset) >= '0' && duration.charAt(offset) <= '9')
+                    // accumulate the digit fields
                     value = value * 10 + duration.charAt(offset) - '0';
                 else {
                     switch (duration.charAt(offset)) {
@@ -76,33 +77,21 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
                         case 'M':
                             if (!isTime) {
                                 if (isMonth) {
-                                    if (value < 0 || value > 11)
-                                        throw new HyracksDataException(duration + errorMessage);
-                                    else {
-                                        month = value;
-                                        isMonth = false;
-                                    }
+                                    month = value;
+                                    isMonth = false;
                                 } else
                                     throw new HyracksDataException(duration + errorMessage);
                             } else if (isMinute) {
-                                if (value < 0 || value > 59)
-                                    throw new HyracksDataException(duration + errorMessage);
-                                else {
-                                    minute = value;
-                                    isMinute = false;
-                                    timeItem = false;
-                                }
+                                minute = value;
+                                isMinute = false;
+                                timeItem = false;
                             } else
                                 throw new HyracksDataException(duration + errorMessage);
                             break;
                         case 'D':
                             if (isDay) {
-                                if (value < 0 || value > 30)
-                                    throw new HyracksDataException(duration + errorMessage);
-                                else {
-                                    day = value;
-                                    isDay = false;
-                                }
+                                day = value;
+                                isDay = false;
                             } else
                                 throw new HyracksDataException(duration + errorMessage);
                             break;
@@ -116,25 +105,25 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
 
                         case 'H':
                             if (isHour) {
-                                if (value < 0 || value > 23)
-                                    throw new HyracksDataException(duration + errorMessage);
-                                else {
-                                    hour = value;
-                                    isHour = false;
-                                    timeItem = false;
-                                }
+                                hour = value;
+                                isHour = false;
+                                timeItem = false;
                             } else
                                 throw new HyracksDataException(duration + errorMessage);
                             break;
                         case 'S':
                             if (isSecond) {
-                                if (value < 0 || value > 59)
-                                    throw new HyracksDataException(duration + errorMessage);
-                                else {
-                                    second = value;
-                                    isSecond = false;
-                                    timeItem = false;
-                                }
+                                second = value;
+                                isSecond = false;
+                                timeItem = false;
+                            } else
+                                throw new HyracksDataException(duration + errorMessage);
+                            break;
+                        case '.':
+                            if (isMillisecond) {
+                                millisecond = value;
+                                isMillisecond = false;
+                                timeItem = false;
                             } else
                                 throw new HyracksDataException(duration + errorMessage);
                             break;
@@ -149,14 +138,18 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
             if (isTime && timeItem)
                 throw new HyracksDataException(duration + errorMessage);
 
-            if (isYear && isMonth && isDay && !isTime)
-                throw new HyracksDataException(duration + errorMessage);
+            //            if (isYear && isMonth && isDay && !isTime)
+            //                throw new HyracksDataException(duration + errorMessage);
 
             if (positive)
-                aDuration.setValue(year * 12 + month, day * 24 * 3600 + 3600 * hour + 60 * minute + second);
+                aDuration.setValue(year * 12 + month, day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute
+                        * 1000L + second * 1000L + millisecond);
             else
-                aDuration.setValue(-1 * (year * 12 + month), -1
-                        * (day * 24 * 3600 + 3600 * hour + 60 * minute + second));
+                aDuration
+                        .setValue(-1 * (year * 12 + month),
+                                -1
+                                        * (day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute * 1000L + second
+                                                * 1000L + millisecond));
             durationSerde.serialize(aDuration, out);
         } catch (HyracksDataException e) {
             throw new HyracksDataException(duration + errorMessage);
