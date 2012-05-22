@@ -1,16 +1,18 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.accessors.cast.ACastVisitor;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.util.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.util.ARecordCaster;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
@@ -57,7 +59,10 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                 return new IEvaluator() {
                     final ARecordAccessor recAccessor = new ARecordAccessor(inputType);
-                    final ARecordCaster caster = new ARecordCaster();
+                    final ARecordAccessor resultAccessor = new ARecordAccessor(reqType);
+                    final ACastVisitor castVisitor = new ACastVisitor();
+                    final Triple<IBinaryAccessor, IAType, Boolean> arg = new Triple<IBinaryAccessor, IAType, Boolean>(
+                            resultAccessor, reqType, Boolean.FALSE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -66,8 +71,10 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                             recEvaluator.evaluate(tuple);
                             recAccessor.reset(recordBuffer.getBytes(), recordBuffer.getStartIndex(),
                                     recordBuffer.getLength());
-                            caster.castRecord(recAccessor, reqType, out);
-                        } catch (IOException ioe) {
+                            recAccessor.accept(castVisitor, arg);
+                            out.write(resultAccessor.getBytes(), resultAccessor.getStartIndex(),
+                                    resultAccessor.getLength());
+                        } catch (Exception ioe) {
                             throw new AlgebricksException(ioe);
                         }
                     }

@@ -33,9 +33,9 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     private ARecordType recordType;
     private int numberOfSchemaFields = 0;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer serializers[];
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer deserializers[];
 
     private ARecordSerializerDeserializer() {

@@ -31,10 +31,10 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
         /**
          * if type has been top-down propagated, use the enforced type
          */
-        ARecordType type = TypeComputerUtilities.getRequiredType(f);
+        ARecordType type = (ARecordType) TypeComputerUtilities.getRequiredType(f);
         if (type != null)
             return type;
-
+        
         int n = f.getArguments().size() / 2;
         String[] fieldNames = new String[n];
         IAType[] fieldTypes = new IAType[n];

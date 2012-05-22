@@ -13,41 +13,25 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.runtime.accessors;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
+import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class SimpleValueReference implements IValueReference {
+public class AFlatValueAccessor extends AbstractBinaryAccessor {
 
-    private byte[] data;
-    private int start;
-    private int len;
+    public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
+        public AFlatValueAccessor createElement(IAType type) {
+            return new AFlatValueAccessor();
+        }
+    };
 
-    public void reset(byte[] data, int start, int len) {
-        this.data = data;
-        this.start = start;
-        this.len = len;
-    }
+    private AFlatValueAccessor() {
 
-    public void reset(IValueReference ivf) {
-        this.data = ivf.getBytes();
-        this.start = ivf.getStartIndex();
-        this.len = ivf.getLength();
-    }
-
-    @Override
-    public byte[] getBytes() {
-        return data;
-    }
-
-    @Override
-    public int getStartIndex() {
-        return start;
-    }
-
-    @Override
-    public int getLength() {
-        return len;
     }
 
     @Override
@@ -59,12 +43,20 @@ public class SimpleValueReference implements IValueReference {
         int ostart = ivf.getStartIndex();
         int olen = ivf.getLength();
 
-        if (len != olen)
+        byte[] data = getBytes();
+        int start = getStartIndex();
+        int len = getLength();
+        if ( len!= olen)
             return false;
         for (int i = 0; i < len; i++) {
             if (data[start + i] != odata[ostart + i])
                 return false;
         }
         return true;
+    }
+
+    @Override
+    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException {
+        return vistor.visit(this, tag);
     }
 }
