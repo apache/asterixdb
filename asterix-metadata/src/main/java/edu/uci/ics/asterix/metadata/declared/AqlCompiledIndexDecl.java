@@ -19,8 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class AqlCompiledIndexDecl {
 
@@ -67,4 +70,17 @@ public class AqlCompiledIndexDecl {
         throw new AlgebricksException("Could not find field " + expr + " in the schema.");
     }
 
+    public static Pair<IAType, Boolean> getNonNullableKeyFieldType(String expr, ARecordType recType) throws AlgebricksException {
+        IAType keyType = AqlCompiledIndexDecl.keyFieldType(expr, recType);
+        boolean nullable = false;
+        if (keyType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) keyType;
+            if (unionType.isNullableType()) {
+                // The non-null type is always at index 1.
+                keyType = unionType.getUnionList().get(1);
+                nullable = true;
+            }
+        }
+        return new Pair<IAType, Boolean>(keyType, nullable);
+    }
 }

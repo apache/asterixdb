@@ -13,18 +13,20 @@ create type MyRecord as closed {
   rec: rectangle
 }
 
+create nodegroup group1  if not exists on nc1, nc2;
+
 create dataset MyData(MyRecord)
-  partitioned by key id;
+  partitioned by key id on group1;
 
 load dataset MyData 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
 create index rtree_index_point on MyData(point) type rtree;
 
-write output to nc1:"rttest/index_rtree-secondary-index.adm";
+
+write output to nc1:"rttest/index_rtree-secondary-index-open.adm";
 
 for $o in dataset('MyData')
 where spatial-intersect($o.point, create-polygon(create-point(4.0,1.0), create-point(4.0,4.0), create-point(12.0,4.0), create-point(12.0,1.0)))
-order by $o.id
 return {"id":$o.id}
