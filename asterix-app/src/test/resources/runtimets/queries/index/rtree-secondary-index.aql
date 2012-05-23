@@ -22,7 +22,6 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 
 create index rtree_index_point on MyData(point) type rtree;
 
-
 write output to nc1:"rttest/index_rtree-secondary-index.adm";
 
 for $o in dataset('MyData')

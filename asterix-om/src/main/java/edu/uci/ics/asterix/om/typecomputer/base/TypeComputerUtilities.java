@@ -21,13 +21,14 @@ public class TypeComputerUtilities {
         return openType;
     }
 
-    public static boolean setRequiredType(AbstractFunctionCallExpression expr, ARecordType requiredRecordType) {
+    public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, ARecordType requiredRecordType,
+            ARecordType inputRecordType) {
         boolean changed = false;
         Object opaqueParameter = expr.getOpaqueParameters();
         if (opaqueParameter == null) {
-            opaqueParameter = requiredRecordType;
-            Object[] opaqueParameters = new Object[1];
-            opaqueParameters[0] = opaqueParameter;
+            Object[] opaqueParameters = new Object[2];
+            opaqueParameters[0] = requiredRecordType;
+            opaqueParameters[1] = inputRecordType;
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;
         }
@@ -38,6 +39,15 @@ public class TypeComputerUtilities {
         Object[] type = expr.getOpaqueParameters();
         if (type != null) {
             ARecordType recordType = (ARecordType) type[0];
+            return recordType;
+        } else
+            return null;
+    }
+
+    public static ARecordType getInputType(AbstractFunctionCallExpression expr) {
+        Object[] type = expr.getOpaqueParameters();
+        if (type != null) {
+            ARecordType recordType = (ARecordType) type[1];
             return recordType;
         } else
             return null;

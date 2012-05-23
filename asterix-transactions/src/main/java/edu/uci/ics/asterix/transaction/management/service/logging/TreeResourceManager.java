@@ -12,14 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.transaction;
+package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
-import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -28,13 +25,10 @@ public class TreeResourceManager implements IResourceManager {
 
     public static final byte ID = (byte) 1;
 
-    private static final TreeResourceManager treeResourceMgr = new TreeResourceManager();
+    private final TransactionProvider provider;
 
-    private TreeResourceManager() {
-    }
-
-    public static TreeResourceManager getInstance() {
-        return treeResourceMgr;
+    public TreeResourceManager(TransactionProvider provider) {
+        this.provider = provider;
     }
 
     public byte getResourceManagerId() {
@@ -53,7 +47,8 @@ public class TreeResourceManager implements IResourceManager {
         System.arraycopy(logBufferContent, logContentBeginPos + 4, resourceIdBytes, 0, resourceIdLength);
 
         // look up the repository to obtain the resource object
-        ITreeIndex treeIndex = (ITreeIndex) TransactionalResourceRepository.getTransactionalResource(resourceIdBytes);
+        ITreeIndex treeIndex = (ITreeIndex) provider.getTransactionalResourceRepository().getTransactionalResource(
+                resourceIdBytes);
         int operationOffset = logContentBeginPos + 4 + resourceIdLength;
         int tupleBeginPos = operationOffset + 1;
 

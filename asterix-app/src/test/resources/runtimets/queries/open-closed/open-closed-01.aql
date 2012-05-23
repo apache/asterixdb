@@ -18,7 +18,9 @@ name : string
 
 create dataset testds(testType) partitioned by key id;
 
+
 insert into dataset testds({"id": 123, "name": "John Doe", "hobbies": {{ "scuba", "music" }} }
 );
 
+write output to nc1:"rttest/open-closed_open-closed-01.adm";
 for $l in dataset("testds") return $l

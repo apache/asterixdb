@@ -50,11 +50,13 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op1)) {
             return false;
         }
+
         if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator a1 = (AssignOperator) op1;
             ILogicalExpression expr = getFirstExpr(a1);
@@ -209,7 +211,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
      * @param toPushThroughChildRef
      */
     private static void pushAccessAboveOpRef(AssignOperator toPush, Mutable<ILogicalOperator> toPushThroughChildRef,
-            IOptimizationContext context) {
+            IOptimizationContext context) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> tpInpList = toPush.getInputs();
         tpInpList.clear();
         tpInpList.add(new MutableObject<ILogicalOperator>(toPushThroughChildRef.getValue()));
@@ -233,7 +235,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
      * 
      * @param toPush
      */
-    private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign) {
+    private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign) throws AlgebricksException {
         ILogicalExpression expr = getFirstExpr(assign);
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
         ILogicalExpression arg0 = f.getArguments().get(0).getValue();
@@ -250,9 +252,20 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             String fldName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
             ILogicalExpression fldExpr = findFieldExpression(assign, recordVar, fldName);
+
             if (fldExpr != null) {
-                assign.getExpressions().get(0).setValue(fldExpr);
-                return true;
+                // check the liveness of the new expression
+                List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
+                fldExpr.getUsedVariables(usedVariables);
+                List<LogicalVariable> liveInputVars = new ArrayList<LogicalVariable>();
+                VariableUtilities.getLiveVariables(assign, liveInputVars);
+                usedVariables.removeAll(liveInputVars);
+                if (usedVariables.size() == 0) {
+                    assign.getExpressions().get(0).setValue(fldExpr);
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 return false;
             }

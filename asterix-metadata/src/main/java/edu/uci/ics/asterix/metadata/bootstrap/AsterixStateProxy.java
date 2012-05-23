@@ -41,7 +41,7 @@ public class AsterixStateProxy implements IAsterixStateProxy {
         return stub;
     }
 
-    public static void deRegisterRemoteObject() throws RemoteException {
+    public static void unregisterRemoteObject() throws RemoteException {
         UnicastRemoteObject.unexportObject(cc, true);
         LOGGER.info("Asterix Distributed State Proxy Unbound");
     }

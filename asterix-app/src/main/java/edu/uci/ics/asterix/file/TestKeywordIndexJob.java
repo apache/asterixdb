@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
-import edu.uci.ics.asterix.common.context.AsterixTreeRegistryProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
@@ -66,7 +66,7 @@ public class TestKeywordIndexJob {
 
         // ---------- START GENERAL BTREE STUFF
 
-        IIndexRegistryProvider<IIndex> btreeRegistryProvider = AsterixTreeRegistryProvider.INSTANCE;
+        IIndexRegistryProvider<IIndex> indexRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         // ---------- END GENERAL BTREE STUFF
@@ -104,25 +104,25 @@ public class TestKeywordIndexJob {
 
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[2];
         secondaryTypeTraits[0] = new ITypeTraits() {
-            
+
             @Override
             public boolean isFixedLength() {
                 return false;
             }
-            
+
             @Override
             public int getFixedLength() {
                 return -1;
             }
         };
-        
+
         secondaryTypeTraits[1] = new ITypeTraits() {
-            
+
             @Override
             public boolean isFixedLength() {
                 return true;
             }
-            
+
             @Override
             public int getFixedLength() {
                 return 5;
@@ -144,8 +144,8 @@ public class TestKeywordIndexJob {
                 new FileSplit("nc1", new FileReference(new File("/tmp/nc1/demo1112/Customers_idx_NameInvIndex"))),
                 new FileSplit("nc2", new FileReference(new File("/tmp/nc2/demo1112/Customers_idx_NameInvIndex"))) });
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
-                storageManager, btreeRegistryProvider, secondarySplitProvider, 
-                secondaryTypeTraits, secondaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
+                storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
+                secondaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
                 new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
         String[] secondarySearchOpLocationConstraint = new String[nodeGroup.size()];
         for (int p = 0; p < nodeGroup.size(); p++) {

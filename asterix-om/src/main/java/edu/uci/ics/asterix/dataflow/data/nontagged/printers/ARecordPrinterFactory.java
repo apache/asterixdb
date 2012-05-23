@@ -123,7 +123,7 @@ public class ARecordPrinterFactory implements IPrinterFactory {
                                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b,
                                             fieldOffsets[fieldNumber], tag, false);
                                     fieldPrinters[fieldNumber].print(b, fieldOffsets[fieldNumber] - 1,
-                                            fieldOffsets[fieldNumber], ps);
+                                            fieldValueLength, ps);
                                 }
                             } else {
                                 tag = fieldTypes[fieldNumber].getTypeTag();

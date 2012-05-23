@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -23,6 +25,11 @@ public class NonEmptyStreamAggregateDescriptor extends AbstractAggregateFunction
 
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "non-empty-stream", 0, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new NonEmptyStreamAggregateDescriptor();
+        }
+    };
 
     @Override
     public IAggregateFunctionFactory createAggregateFunctionFactory(IEvaluatorFactory[] args)
@@ -38,7 +45,7 @@ public class NonEmptyStreamAggregateDescriptor extends AbstractAggregateFunction
                 return new IAggregateFunction() {
 
                     private DataOutput out = provider.getDataOutput();
-                    @SuppressWarnings("unchecked")
+                    @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 

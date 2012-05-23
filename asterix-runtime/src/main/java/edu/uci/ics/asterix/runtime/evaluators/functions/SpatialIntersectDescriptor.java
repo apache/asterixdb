@@ -14,6 +14,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeser
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -36,6 +38,11 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "spatial-intersect", 2, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SpatialIntersectDescriptor();
+        }
+    };
 
     @Override
     public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
@@ -776,6 +783,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = pointInRectangle(outInput0.getBytes(), outInput1.getBytes());
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
@@ -825,6 +835,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         case RECTANGLE:
                                             res = lineRectangleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            break;
+                                        case NULL:
+                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(
@@ -922,6 +935,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             res = rectanglePolygonIntersection(outInput1.getBytes(),
                                                     outInput0.getBytes());
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
@@ -946,6 +962,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         case RECTANGLE:
                                             res = rectangleCircleIntersection(outInput1.getBytes(),
                                                     outInput0.getBytes());
+                                            break;
+                                        case NULL:
+                                            res = false;
                                             break;
                                         default:
                                             throw new NotImplementedException(
@@ -997,12 +1016,18 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                 }
                                             }
                                             break;
+                                        case NULL:
+                                            res = false;
+                                            break;
                                         default:
                                             throw new NotImplementedException(
                                                     "spatial-intersection does not support the type: "
                                                             + tag1
                                                             + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
+                                    break;
+                                case NULL:
+                                    res = false;
                                     break;
                                 default:
                                     throw new NotImplementedException(

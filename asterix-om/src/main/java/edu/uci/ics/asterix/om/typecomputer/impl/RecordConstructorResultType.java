@@ -7,6 +7,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,6 +33,9 @@ public class RecordConstructorResultType implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
+        IAType reqType = TypeComputerUtilities.getRequiredType(f);
+        if (reqType != null)
+            return reqType;
         int n = f.getArguments().size() / 2;
         String[] fieldNames = new String[n];
         IAType[] fieldTypes = new IAType[n];

@@ -54,8 +54,8 @@ public class TransactionSimulator {
         logManager = transactionProvider.getLogManager();
         lockManager = transactionProvider.getLockManager();
         recoveryManager = transactionProvider.getRecoveryManager();
-        TransactionalResourceRepository.registerTransactionalResourceManager(resourceMgr.getResourceManagerId(),
-                resourceMgr);
+        transactionProvider.getTransactionalResourceRepository().registerTransactionalResourceManager(
+                resourceMgr.getResourceManagerId(), resourceMgr);
         this.resourceMgr = resourceMgr;
         this.logger = resource.getLogger();
         this.resource = resource;

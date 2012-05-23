@@ -283,9 +283,14 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     }
                                 }
                                 break;
+                            case NULL: {
+                            	out.writeByte(ATypeTag.NULL.serialize());
+                            	return;
+                            }
                             default:
                                 throw new NotImplementedException(
-                                        "create-mbr is only implemented for POINT, LINE, POLYGON, CIRCLE and RECTANGLE.");
+									"create-mbr is only implemented for POINT, LINE, POLYGON, CIRCLE and RECTANGLE. Encountered type: "
+											+ tag + ".");
 
                         }
                     } else {
