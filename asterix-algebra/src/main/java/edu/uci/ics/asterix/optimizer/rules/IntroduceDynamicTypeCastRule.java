@@ -43,6 +43,15 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * dynamically cast a constant from its type produced by the originated
+ * expression to its required type, in a recursive way
+ * it enables:
+ * 1. bag-based fields in a record
+ * 2. bidirectional cast of a open field and a matched closed field
+ * 3. put in null fields when necessary
+ * since we have open records, so dynamic cast is needed
+ */
 public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     @Override
