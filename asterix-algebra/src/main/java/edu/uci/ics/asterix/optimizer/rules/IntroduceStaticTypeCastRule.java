@@ -295,7 +295,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             }
             // the input has extra fields
             if (!matched && !reqType.isOpen())
-                throw new AlgebricksException("static type mismatch: including extra closed fields");
+                throw new AlgebricksException("static type mismatch: including an extra closed field" + fieldName);
         }
 
         // backward match: match from required to actual
@@ -338,7 +338,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                 nullFields[i] = true;
             } else {
                 // no matched field in the input for a required closed field
-                throw new AlgebricksException("static type mismatch: miss a required closed field");
+                throw new AlgebricksException("static type mismatch: miss a required closed field" + reqFieldName);
             }
         }
 
