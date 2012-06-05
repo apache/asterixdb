@@ -23,8 +23,7 @@ open-closed/open-closed-19
 open-closed/open-closed-20
 open-closed/open-closed-21
 open-closed/open-closed-22
-open-closed/open-closed-24
-open-closed/open-closed-25
-open-closed/open-closed-26
+open-closed/open-closed-28
+open-closed/open-closed-30
 open-closed/heterog-list02
 open-closed/heterog-list03

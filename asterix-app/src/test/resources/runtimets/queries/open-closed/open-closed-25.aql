@@ -21,5 +21,6 @@ create dataset testds(testType) partitioned by key id;
 
 insert into dataset testds({"id": 32,"name": "UCI","opt_tag":{{"optional text","put any text here","and more"}}});
 
+write output to nc1:"rttest/open-closed_open-closed-25.adm";
 for $l in dataset('testds')
 return $l

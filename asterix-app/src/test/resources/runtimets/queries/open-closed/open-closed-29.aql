@@ -43,7 +43,8 @@ return $d
 );
 
 // select all hobbies where hiking is one of the hobbies
-
+write output to nc1:"rttest/open-closed_open-closed-29.adm";
 for $d in dataset('testds01')
 where some $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
 return $d

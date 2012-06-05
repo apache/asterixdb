@@ -22,5 +22,6 @@ create dataset testds(testType) partitioned by key id;
 
 insert into dataset testds({"id": 32,"name": "UCI"});
 
+write output to nc1:"rttest/open-closed_open-closed-26.adm";
 for $l in dataset('testds')
 return $l

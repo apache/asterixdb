@@ -46,7 +46,9 @@ for $d in dataset("testds02")
 return $d
 );
 
+write output to nc1:"rttest/open-closed_open-closed-32.adm";
 for $d in dataset('testds01')
 where some $h in $d.interests satisfies $h='biking' 
+order by $d.id
 return $d.interests
 
