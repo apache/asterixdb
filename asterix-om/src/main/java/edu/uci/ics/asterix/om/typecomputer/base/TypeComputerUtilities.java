@@ -37,8 +37,8 @@ public class TypeComputerUtilities {
     public static IAType getRequiredType(AbstractFunctionCallExpression expr) {
         Object[] type = expr.getOpaqueParameters();
         if (type != null) {
-            IAType recordType = (IAType) type[0];
-            return recordType;
+            IAType returnType = (IAType) type[0];
+            return returnType;
         } else
             return null;
     }
@@ -46,8 +46,8 @@ public class TypeComputerUtilities {
     public static IAType getInputType(AbstractFunctionCallExpression expr) {
         Object[] type = expr.getOpaqueParameters();
         if (type != null) {
-            IAType recordType = (IAType) type[1];
-            return recordType;
+            IAType returnType = (IAType) type[1];
+            return returnType;
         } else
             return null;
     }

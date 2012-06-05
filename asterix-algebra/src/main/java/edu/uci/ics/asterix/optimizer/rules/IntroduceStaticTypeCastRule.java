@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -52,6 +53,16 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDelet
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * statically cast a constant from its type produced by the originated
+ * expression to its required type, in a recursive way it enables: 1. bag-based
+ * fields in a record 2. bidirectional cast of a open field and a matched closed
+ * field 3. put in null fields when necessary It should be fired before the
+ * constant folding rule
+ * 
+ * This rule is not responsible for type casting between primitive types Tests
+ * open-closed/open-closed-15 and after are not to test this rule
+ */
 public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -83,7 +94,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
          * get required record type
          */
         InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
-        AssignOperator oldAssignOperator = (AssignOperator) op3;
+        AssignOperator topAssignOperator = (AssignOperator) op3;
         AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
         IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
         ARecordType requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
@@ -92,15 +103,19 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
          * get input record type to the insert operator
          */
         List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(oldAssignOperator, usedVariables);
+        VariableUtilities.getUsedVariables(topAssignOperator, usedVariables);
+
+        // the used variable should contain the record that will be inserted
+        // but it will not fail in many cases even if the used variable set is
+        // empty
         if (usedVariables.size() == 0)
             return false;
         LogicalVariable oldRecordVariable = usedVariables.get(0);
         LogicalVariable inputRecordVar = usedVariables.get(0);
-        IVariableTypeEnvironment env = oldAssignOperator.computeOutputTypeEnvironment(context);
+        IVariableTypeEnvironment env = topAssignOperator.computeOutputTypeEnvironment(context);
         ARecordType inputRecordType = (ARecordType) env.getVarType(inputRecordVar);
 
-        AbstractLogicalOperator currentOperator = oldAssignOperator;
+        AbstractLogicalOperator currentOperator = topAssignOperator;
         List<LogicalVariable> producedVariables = new ArrayList<LogicalVariable>();
 
         /**
@@ -119,13 +134,15 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                  */
                 if (position >= 0) {
                     AssignOperator originalAssign = (AssignOperator) currentOperator;
-                    List<Mutable<ILogicalExpression>> expressionPointers = originalAssign.getExpressions();
-                    ILogicalExpression expr = expressionPointers.get(position).getValue();
+                    List<Mutable<ILogicalExpression>> expressionRefs = originalAssign.getExpressions();
+                    ILogicalExpression expr = expressionRefs.get(position).getValue();
                     if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
+                        // that expression has been rewritten, and it will not
+                        // fail but just return false
                         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
                             return false;
-                        IVariableTypeEnvironment assignEnv = oldAssignOperator.computeOutputTypeEnvironment(context);
+                        IVariableTypeEnvironment assignEnv = topAssignOperator.computeOutputTypeEnvironment(context);
                         rewriteFuncExpr(funcExpr, requiredRecordType, inputRecordType, assignEnv);
                     }
                     context.computeAndSetTypeEnvironmentForOperator(originalAssign);
@@ -143,22 +160,38 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType, env);
-        }
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+        } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
             rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType, env);
         } else if (reqType.getTypeTag().equals(ATypeTag.RECORD)) {
             rewriteRecordFuncExpr(funcExpr, (ARecordType) reqType, (ARecordType) inputType, env);
         }
     }
 
+    /**
+     * only called when funcExpr is record constructor
+     * @param funcExpr  record constructor function expression
+     * @param requiredListType  required record type
+     * @param inputRecordType 
+     * @param env   type environment
+     * @throws AlgebricksException
+     */
     private void rewriteRecordFuncExpr(ScalarFunctionCallExpression funcExpr, ARecordType requiredRecordType,
             ARecordType inputRecordType, IVariableTypeEnvironment env) throws AlgebricksException {
+        // if already rewritten, the required type is not null
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return;
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
         staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
     }
 
+    /**
+     * only called when funcExpr is list constructor
+     * @param funcExpr  list constructor function expression
+     * @param requiredListType  required list type
+     * @param inputListType 
+     * @param env   type environment
+     * @throws AlgebricksException
+     */
     private void rewriteListFuncExpr(ScalarFunctionCallExpression funcExpr, AbstractCollectionType requiredListType,
             AbstractCollectionType inputListType, IVariableTypeEnvironment env) throws AlgebricksException {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
@@ -196,13 +229,10 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         int[] fieldPermutation = new int[reqFieldTypes.length];
         boolean[] nullFields = new boolean[reqFieldTypes.length];
         boolean[] openFields = new boolean[inputFieldTypes.length];
-
-        for (int i = 0; i < nullFields.length; i++)
-            nullFields[i] = false;
-        for (int i = 0; i < openFields.length; i++)
-            openFields[i] = true;
-        for (int i = 0; i < fieldPermutation.length; i++)
-            fieldPermutation[i] = -1;
+        
+        Arrays.fill(nullFields, false);
+        Arrays.fill(openFields, true);
+        Arrays.fill(fieldPermutation, -1);
 
         // forward match: match from actual to required
         boolean matched = false;
@@ -211,8 +241,9 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             IAType fieldType = inputFieldTypes[i];
 
             if (2 * i + 1 > func.getArguments().size())
-                break;
+                throw new AlgebricksException("expression index out of bound");
 
+            // 2*i+1 is the index of field value expression
             ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
             matched = false;
             for (int j = 0; j < reqFieldNames.length; j++) {
@@ -262,11 +293,9 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            if (matched)
-                continue;
             // the input has extra fields
-            if (!reqType.isOpen())
-                throw new IllegalStateException("static type mismatch: including extra closed fields");
+            if (!matched && !reqType.isOpen())
+                throw new AlgebricksException("static type mismatch: including an extra closed field "  + fieldName);
         }
 
         // backward match: match from required to actual
@@ -277,47 +306,52 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             for (int j = 0; j < inputFieldNames.length; j++) {
                 String fieldName = inputFieldNames[j];
                 IAType fieldType = inputFieldTypes[j];
-                if (fieldName.equals(reqFieldName)) {
-                    if (!openFields[j]) {
+                if (!fieldName.equals(reqFieldName))
+                    continue;
+                // should check open field here
+                // because number of entries in fieldPermuations is the
+                // number of required schema fields
+                // here we want to check if an input field is matched
+                // the entry index of fieldPermuatons is req field index
+                if (!openFields[j]) {
+                    matched = true;
+                    break;
+                }
+
+                // match the optional field
+                if (reqFieldType.getTypeTag() == ATypeTag.UNION
+                        && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
+                    IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
+                            NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
                         matched = true;
                         break;
-                    }
-
-                    // match the optional field
-                    if (reqFieldType.getTypeTag() == ATypeTag.UNION
-                            && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
-                        IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
-                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
-                        if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
-                            matched = true;
-                            break;
-                        }
                     }
                 }
             }
             if (matched)
                 continue;
 
-            IAType t = reqFieldTypes[i];
-            if (t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t)) {
+            if (reqFieldType.getTypeTag() == ATypeTag.UNION
+                    && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
                 // add a null field
                 nullFields[i] = true;
             } else {
                 // no matched field in the input for a required closed field
-                throw new IllegalStateException("static type mismatch: miss a required closed field");
+                throw new AlgebricksException("static type mismatch: miss a required closed field " + reqFieldName);
             }
         }
 
         List<Mutable<ILogicalExpression>> arguments = func.getArguments();
-        List<Mutable<ILogicalExpression>> argumentsClone = new ArrayList<Mutable<ILogicalExpression>>();
-        argumentsClone.addAll(arguments);
+        List<Mutable<ILogicalExpression>> originalArguments = new ArrayList<Mutable<ILogicalExpression>>();
+        originalArguments.addAll(arguments);
         arguments.clear();
         // re-order the closed part and fill in null fields
         for (int i = 0; i < fieldPermutation.length; i++) {
             int pos = fieldPermutation[i];
             if (pos >= 0) {
-                arguments.add(argumentsClone.get(2 * pos));
-                arguments.add(argumentsClone.get(2 * pos + 1));
+                arguments.add(originalArguments.get(2 * pos));
+                arguments.add(originalArguments.get(2 * pos + 1));
             }
             if (nullFields[i]) {
                 // add a null field
@@ -331,10 +365,14 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         // add the open part
         for (int i = 0; i < openFields.length; i++) {
             if (openFields[i]) {
-                arguments.add(argumentsClone.get(2 * i));
-                Mutable<ILogicalExpression> fExprRef = argumentsClone.get(2 * i + 1);
+                arguments.add(originalArguments.get(2 * i));
+                Mutable<ILogicalExpression> fExprRef = originalArguments.get(2 * i + 1);
                 ILogicalExpression argExpr = fExprRef.getValue();
 
+                // we need to handle open fields recursively by their default
+                // types
+                // for list, their item type is any
+                // for record, their
                 if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     IAType reqFieldType = inputFieldTypes[i];
                     if (inputFieldTypes[i].getTypeTag() == ATypeTag.RECORD) {

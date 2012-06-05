@@ -1,0 +1,48 @@
+/*
+ * Test case Name : open-closed-31.aql
+ * Description    : 
+ * Success        : Yes
+ * Date           : 31st May 2012
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype01 as open {
+  id: string
+}
+
+create type testtype02 as open {
+id : string,
+name : string
+}
+
+create dataset testds01(testtype01) partitioned by key id;
+
+create dataset testds02(testtype02) partitioned by key id;
+
+insert into dataset testds02 (
+{ "id": "011", "name": "John Doe", "hobbies": {{"scuba", "music"}}}
+);
+
+insert into dataset testds02 (
+{ "id": "102", "name": "Roger Sanders", "hobbies": {{"fishing", "dance"}}}
+);
+
+
+insert into dataset testds02 (
+{ "id": "203", "name": "Phil Smith", "hobbies": {{"hiking", "surfing"}}}
+);
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+
+write output to nc1:"rttest/open-closed_open-closed-31.adm";
+for $d in dataset('testds01')
+where some $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
+return $d.hobbies
+
